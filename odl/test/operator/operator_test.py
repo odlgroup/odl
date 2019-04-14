@@ -779,7 +779,10 @@ def test_nonlinear_functional_operators():
     assert C(x) == pytest.approx(mat(x / 2.0))
 
 
-# test functions to dispatch
+# Test functions to dispatch
+# First doc line is the true signature
+# Second doc line contains `has_out` and `out_optional` booleans
+# Third doc line indicates whether the signature is OK for Operator._call
 def f1(x):
     """f1(x)
     False, False
@@ -898,7 +901,6 @@ def func(request):
 
 
 def test_function_signature(func):
-
     true_sig = func.__doc__.splitlines()[0].strip()
     sig = _function_signature(func)
     assert true_sig == sig
@@ -906,17 +908,17 @@ def test_function_signature(func):
 
 def test_dispatch_call_args(func):
     # Unbound functions
-    true_has, true_opt = eval(func.__doc__.splitlines()[1].strip())
+    true_has_out, true_out_opt = eval(func.__doc__.splitlines()[1].strip())
     good = func.__doc__.splitlines()[2].strip() == 'good'
 
     if good:
         truespec = getargspec(func)
         truespec.args.insert(0, 'self')
 
-        has, opt, spec = _dispatch_call_args(unbound_call=func)
+        has_out, out_opt, spec = _dispatch_call_args(unbound_call=func)
 
-        assert has == true_has
-        assert opt == true_opt
+        assert has_out == true_has_out
+        assert out_opt == true_out_opt
         assert spec == truespec
     else:
         with pytest.raises(ValueError):
@@ -926,6 +928,7 @@ def test_dispatch_call_args(func):
 def test_dispatch_call_args_class():
 
     # Two sneaky classes whose _call method would pass the signature check
+    # because it looks okay from the second argument on
     class WithStaticMethod(object):
         @staticmethod
         def _call(x, y, out):

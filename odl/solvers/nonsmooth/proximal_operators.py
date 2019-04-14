@@ -169,10 +169,10 @@ def proximal_convex_conj(prox_factory):
         # prox_factory accepts stepsize objects of the type given by sigma.
         space = prox_factory(sigma).domain
 
-        mult_inner = MultiplyOperator(space, 1.0 / sigma)
+        mult_inner = MultiplyOperator(space, 1 / sigma)
         mult_outer = MultiplyOperator(space, sigma)
         result = (IdentityOperator(space) -
-                  mult_outer * prox_factory(1.0 / sigma) * mult_inner)
+                  mult_outer * prox_factory(1 / sigma) * mult_inner)
         return result
 
     return convex_conj_prox_factory
@@ -292,7 +292,7 @@ def proximal_arg_scaling(prox_factory, scaling):
     # unconditionally, but only if the scaling factor is a scalar:
     if np.isscalar(scaling):
         if scaling == 0:
-            return proximal_const_func(prox_factory(1.0).domain)
+            return proximal_const_func(prox_factory(1).domain)
         elif scaling.imag != 0:
             raise ValueError("Complex scaling not supported.")
         else:
@@ -327,7 +327,7 @@ def proximal_arg_scaling(prox_factory, scaling):
 
 
 def proximal_quadratic_perturbation(prox_factory, a, u=None):
-    r"""Calculate the proximal of function F(x) + a * \|x\|^2 + <u,x>.
+    r"""Calculate the proximal of function F(x) + a * ||x||^2 + <u,x>.
 
     Parameters
     ----------
@@ -377,8 +377,9 @@ def proximal_quadratic_perturbation(prox_factory, a, u=None):
     """
     a = float(a)
     if a < 0:
-        raise ValueError('scaling parameter muts be non-negative, got {}'
-                         ''.format(a))
+        raise ValueError(
+            'scaling parameter must be non-negative, got {}'.format(a)
+        )
 
     def quadratic_perturbation_prox_factory(sigma):
         r"""Create proximal for the quadratic perturbation with a given sigma.
@@ -399,7 +400,7 @@ def proximal_quadratic_perturbation(prox_factory, a, u=None):
         else:
             sigma = np.asarray(sigma)
 
-        const = 1.0 / np.sqrt(sigma * 2.0 * a + 1)
+        const = 1 / np.sqrt(2 * sigma * a + 1)
         prox = proximal_arg_scaling(prox_factory, const)(sigma)
         space = prox.domain
         if u is not None:
@@ -486,8 +487,7 @@ def proximal_composition(proximal, operator, mu):
         Id = IdentityOperator(operator.domain)
         Ir = IdentityOperator(operator.range)
         prox_muf = proximal(mu * sigma)
-        return (Id +
-                (1.0 / mu) * operator.adjoint * ((prox_muf - Ir) * operator))
+        return Id + (1 / mu) * operator.adjoint * ((prox_muf - Ir) * operator)
 
     return proximal_composition_factory
 
@@ -788,7 +788,7 @@ def proximal_l2(space, lam=1, g=None):
                 else:
                     step = np.infty
 
-                if step < 1.0:
+                if step < 1:
                     self.range.lincomb(1 - step, x, out=out)
                 else:
                     self.range.lincomb(0, out, out=out)
@@ -800,7 +800,7 @@ def proximal_l2(space, lam=1, g=None):
                 else:
                     step = np.infty
 
-                if step < 1.0:
+                if step < 1:
                     self.range.lincomb(1 - step, x, step, g, out=out)
                 else:
                     self.range.assign(out, g)
@@ -1012,7 +1012,7 @@ def proximal_l2_squared(space, lam=1, g=None):
                         space.lincomb(1, x, 1, tmp, out=out)
                     else:
                         F.multiply(sig, 2 * lam * g, out=out)
-                        space.lincomb.lincomb(1, x, 1, out, out=out)
+                        space.lincomb(1, x, 1, out, out=out)
                     F.divide(out, 1 + 2 * sig * lam, out=out)
 
     return ProximalL2Squared
@@ -1363,7 +1363,7 @@ def proximal_l1(space, lam=1, g=None):
             F.divide(diff, denom, out=out)
 
             # out = x - ...
-            space.lincomb(1, x, -1, out, out=out)
+            space.lincomb(1, x_old, -1, out, out=out)
 
     return ProximalL1
 
@@ -1810,7 +1810,7 @@ def proximal_convex_conj_kl(space, lam=1, g=None):
             # out = ... + 4*lam*sigma*g
             # If g is None, it is taken as the one element
             if g is None:
-                out += 4.0 * lam * self.sigma
+                out += 4 * lam * self.sigma
             else:
                 space.lincomb(1, out, 4 * lam * self.sigma, g, out=out)
 

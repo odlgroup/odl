@@ -555,8 +555,9 @@ class IndicatorLpUnitBall(Functional):
         elif self.exponent == 1:
             return proximal_convex_conj_linfty(space=self.domain)
         else:
-            raise NotImplementedError('`proximal` only implemented for p=1, '
-                                      'p=2 or p=inf')
+            raise NotImplementedError(
+                '`proximal` only implemented for p=2 and p=inf'
+            )
 
     def __repr__(self):
         """Return ``repr(self)``."""

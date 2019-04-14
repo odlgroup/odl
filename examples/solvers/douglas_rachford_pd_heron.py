@@ -63,14 +63,15 @@ odl.solvers.douglas_rachford_pd(x, f, g, lin_ops,
                                 tau=tau, sigma=sigma, niter=20, lam=lam,
                                 callback=print_objective, l=l)
 
-# plot the result
+# Plot the result
+fig, ax = plt.subplots()
 for minp, maxp in rectangles:
     xp = [minp[0], maxp[0], maxp[0], minp[0], minp[0]]
     yp = [minp[1], minp[1], maxp[1], maxp[1], minp[1]]
-    plt.plot(xp, yp)
+    ax.plot(xp, yp)
 
-plt.scatter(x[0], x[1])
+ax.scatter(x[0], x[1])
 
-plt.xlim(-1, 4)
-plt.ylim(-1, 4)
-plt.show()
+ax.set_xlim(-1, 4)
+ax.set_ylim(-1, 4)
+fig.show()

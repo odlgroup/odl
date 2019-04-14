@@ -61,7 +61,6 @@ r5 = SimpleRn(5)
 # Do some tests to compare
 n = 10 ** 7
 iterations = 10
-cuda_supported = 'cuda' in odl.space.entry_points.tensor_space_impl_names()
 
 # Perform some benchmarks with rn
 opt_space = odl.rn(n)
@@ -70,10 +69,6 @@ simple_space = SimpleRn(n)
 x, y, z = np.random.rand(n), np.random.rand(n), np.random.rand(n)
 ox, oy, oz = (opt_space.copy(a) for a in (x, y, z))
 sx, sy, sz = (simple_space.copy(a) for a in (x, y, z))
-
-if cuda_supported:
-    cu_space = odl.rn(n, impl='cuda')
-    cx, cy, cz = (cu_space.element(a.copy()) for a in (x, y, z))
 
 print(" lincomb:")
 with timer("SimpleRn"):
@@ -86,13 +81,6 @@ with timer("odl numpy"):
         opt_space.lincomb(2.13, ox, 3.14, oy, out=oz)
 print("result: {}".format(oz[1:5]))
 
-if cuda_supported:
-    with timer("odl cuda"):
-        for _ in range(iterations):
-            cu_space.lincomb(2.13, cx, 3.14, cy, out=cz)
-    print("result: {}".format(cz[1:5]))
-
-
 print("\n Norm:")
 with timer("SimpleRn"):
     for _ in range(iterations):
@@ -103,12 +91,6 @@ with timer("odl numpy"):
     for _ in range(iterations):
         result = opt_space.norm(oz)
 print("result: {}".format(result))
-
-if cuda_supported:
-    with timer("odl cuda"):
-        for _ in range(iterations):
-            result = cu_space.norm(cz)
-    print("result: {}".format(result))
 
 
 print("\n Inner:")
@@ -121,9 +103,3 @@ with timer("odl numpy"):
     for _ in range(iterations):
         result = opt_space.inner(ox, oz)
 print("result: {}".format(result))
-
-if cuda_supported:
-    with timer("odl cuda"):
-        for _ in range(iterations):
-            result = cu_space.inner(cx, cz)
-    print("result: {}".format(result))

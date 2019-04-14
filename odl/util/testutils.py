@@ -308,6 +308,8 @@ def simple_fixture(name, params, fmt=None):
 
 
 # Helpers to generate data
+
+# TODO(kohr-h): rename to noise_np_array
 def noise_array(space):
     """Generate a white noise array for ``space``.
 

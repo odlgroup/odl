@@ -28,8 +28,8 @@ mri_op = sampling_mask * ft
 # Create noisy MRI data
 phantom = odl.phantom.shepp_logan(space, modified=True)
 noisy_data = mri_op(phantom) + odl.phantom.white_noise(mri_op.range) * 0.1
-phantom.show('Phantom')
-noisy_data.show('Noisy MRI Data')
+space.show(phantom, 'Phantom')
+ft.range.show(noisy_data, 'Noisy MRI Data')
 
 # Gradient for TV regularization
 gradient = odl.Gradient(space)
@@ -44,11 +44,11 @@ f = odl.solvers.IndicatorBox(space, 0, 1)
 
 # Solve
 x = mri_op.domain.zero()
-callback = (odl.solvers.CallbackShow(step=5, clim=[0, 1]) &
+callback = (odl.solvers.CallbackShow(space, step=5, clim=[0, 1]) &
             odl.solvers.CallbackPrintIteration())
 odl.solvers.douglas_rachford_pd(x, f, g, lin_ops,
                                 tau=2.0, sigma=[1.0, 0.1],
                                 niter=500, callback=callback)
 
-x.show('Douglas-Rachford Result')
-ft.inverse(noisy_data).show('Fourier Inversion Result', force_show=True)
+space.show(x, 'TV-regularized Result (Douglas-Rachford)')
+space.show(ft.inverse(noisy_data), 'Fourier Inversion Result', force_show=True)
