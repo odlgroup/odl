@@ -237,7 +237,7 @@ def pdhg(x, f, g, L, niter, tau=None, sigma=None, **kwargs):
     # Initialize the relaxation variable
     x_relax = kwargs.pop('x_relax', None)
     if x_relax is None:
-        x_relax = x.copy()
+        x_relax = primal_space.copy(x)
     elif x_relax not in L.domain:
         raise TypeError(
             '`x_relax` {} is not in the domain of `L` {}'

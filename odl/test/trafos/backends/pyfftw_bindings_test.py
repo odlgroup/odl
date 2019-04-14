@@ -275,7 +275,7 @@ def test_pyfftw_call_plan_preserve_input(planning):
 
     for shape in [(10,), (3, 4)]:
         arr = _random_array(shape, dtype='complex128')
-        arr_cpy = arr.copy()
+        arr_cpy = np.copy(arr)
 
         idft_scaling = np.prod(shape)
         true_idft = np.fft.ifftn(arr) * idft_scaling
@@ -346,7 +346,7 @@ def test_pyfftw_call_forward_with_plan():
 
     for shape in [(10,), (3, 4, 5)]:
         arr = _random_array(shape, dtype='complex128')
-        arr_cpy = arr.copy()
+        arr_cpy = np.copy(arr)
         true_dft = np.fft.fftn(arr)
 
         # First run, create plan
@@ -367,7 +367,7 @@ def test_pyfftw_call_backward_with_plan():
 
     for shape in [(10,), (3, 4, 5)]:
         arr = _random_array(shape, dtype='complex128')
-        arr_cpy = arr.copy()
+        arr_cpy = np.copy(arr)
         idft_scaling = np.prod(shape)
         true_idft = np.fft.ifftn(arr) * idft_scaling
 

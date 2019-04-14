@@ -191,7 +191,7 @@ def accelerated_proximal_gradient(x, f, g, gamma, niter, callback=None,
 
     # Create temporary
     tmp = space.element()
-    y = x.copy()
+    y = space.copy(x)
     t = 1
 
     for k in range(niter):

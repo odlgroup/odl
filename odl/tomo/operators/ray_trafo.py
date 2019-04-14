@@ -453,7 +453,7 @@ class RayTransform(RayTransformBase):
         if self._adjoint is not None:
             return self._adjoint
 
-        kwargs = self._extra_kwargs.copy()
+        kwargs = dict(self._extra_kwargs)
         kwargs['domain'] = self.range
         self._adjoint = RayBackProjection(self.domain, self.geometry,
                                           impl=self.impl,
@@ -577,7 +577,7 @@ class RayBackProjection(RayTransformBase):
         if self._adjoint is not None:
             return self._adjoint
 
-        kwargs = self._extra_kwargs.copy()
+        kwargs = dict(self._extra_kwargs)
         kwargs['range'] = self.domain
         self._adjoint = RayTransform(self.range, self.geometry,
                                      impl=self.impl,

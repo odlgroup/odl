@@ -54,7 +54,7 @@ def _bfgs_direction(space, s, y, x, hessinv_estimate=None):
     """
     assert len(s) == len(y)
 
-    r = x.copy()
+    r = space.copy(x)
     alphas = np.zeros(len(s))
     rhos = np.zeros(len(s))
 
@@ -115,7 +115,7 @@ def _broydens_direction(space, s, y, x, hessinv_estimate=None, impl='first'):
     if hessinv_estimate is not None:
         r = hessinv_estimate(x)
     else:
-        r = x.copy()
+        r = space.copy(x)
 
     for i in range(len(s)):
         if impl == 'first':

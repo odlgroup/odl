@@ -196,7 +196,7 @@ def npy_printoptions(**extra_opts):
     orig_opts = np.get_printoptions()
 
     try:
-        new_opts = orig_opts.copy()
+        new_opts = dict(orig_opts)
         new_opts.update(extra_opts)
         np.set_printoptions(**new_opts)
         yield

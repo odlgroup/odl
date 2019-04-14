@@ -557,7 +557,7 @@ class ComponentProjection(Operator):
     def _call(self, x, out=None):
         """Project ``x`` onto the subspace."""
         if out is None:
-            out = x[self.index].copy()
+            out = self.range.copy(x[self.index])
         else:
             self.range.assign(out, x[self.index])
         return out

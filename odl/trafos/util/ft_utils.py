@@ -104,11 +104,11 @@ def reciprocal_grid(grid, shift=True, axes=None, halfcomplex=False):
                                               param_conv=bool)
 
     # Full-length vectors
-    stride = grid.stride.copy()
+    stride = np.copy(grid.stride)
     stride[stride == 0] = 1
     shape = np.array(grid.shape)
-    rmin = grid.min_pt.copy()
-    rmax = grid.max_pt.copy()
+    rmin = np.copy(grid.min_pt)
+    rmax = np.copy(grid.max_pt)
     rshape = list(shape)
 
     # Shifted axes (full length to avoid ugly double indexing)

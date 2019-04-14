@@ -315,7 +315,7 @@ class SpaceTest(object):
         ) as counter:
 
             for [n_x, x_in], [n_y, y] in samples(self.space, self.space):
-                x = x_in.copy()
+                x = self.space.copy(x_in)
                 self.space.lincomb(1, x, 1, y, x)
                 correct = _approx_equal(self.space, x, x_in + y, self.tol)
                 if not correct:
@@ -323,7 +323,7 @@ class SpaceTest(object):
                                  'x={:25s} y={:25s} '
                                  ''.format(n_x, n_y))
 
-                x = x_in.copy()
+                x = self.space.copy(x_in)
                 self.space.lincomb(1, x, 1, x, x)
                 correct = _approx_equal(self.space, x, x_in + x_in, self.tol)
                 if not correct:

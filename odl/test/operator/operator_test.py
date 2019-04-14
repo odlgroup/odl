@@ -82,7 +82,7 @@ def check_call(operator, x, expected):
 
     # In-place check, aliased
     if operator.domain == operator.range:
-        y = x.copy()
+        y = operator.domain.copy(x)
         operator(y, out=y)
         assert all_almost_equal(y, expected)
 

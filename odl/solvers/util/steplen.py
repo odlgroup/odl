@@ -206,7 +206,7 @@ class BacktrackingLineSearch(LineSearch):
                              'point ({})'.format(fx, x))
 
         # Create temporary
-        point = x.copy()
+        point = self.space.copy(x)
 
         num_iter = 0
         while True:

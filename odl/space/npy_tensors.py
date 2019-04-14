@@ -318,7 +318,7 @@ class NumpyTensorSpace(TensorSpace):
             # Make sure the result is writeable, if not make copy.
             # This happens for e.g. results of `np.broadcast_to()`.
             if not arr.flags.writeable:
-                arr = arr.copy()
+                arr = np.copy(arr.copy)
             if arr.shape != self.shape:
                 raise ValueError('shape of `inp` not equal to space shape: '
                                  '{} != {}'.format(arr.shape, self.shape))

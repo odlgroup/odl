@@ -170,7 +170,7 @@ def power_method_opnorm(op, xstart=None, maxiter=100, rtol=1e-05, atol=1e-08,
         x = noise_element(op.domain)
     else:
         # copy to ensure xstart is not modified
-        x = op.domain.element(xstart).copy()
+        x = op.domain.copy(xstart)
 
     # Take first iteration step to normalize input
     x_norm = op.domain.norm(x)

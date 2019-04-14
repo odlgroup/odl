@@ -26,7 +26,7 @@ def test_admm_lin_input_handling():
     # Check that the algorithm runs. With the above operators and functionals,
     # the algorithm should not modify the initial value.
     x0 = noise_element(space)
-    x = x0.copy()
+    x = space.copy(x0)
     niter = 3
 
     admm_linearized(x, f, g, L, tau=1.0, sigma=1.0, niter=niter)

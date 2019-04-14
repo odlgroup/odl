@@ -45,7 +45,7 @@ f = odl.solvers.IndicatorBox(space, 0, 255)
 h = 0.5 * odl.solvers.L2NormSquared(space).translated(noisy_data)
 
 # Create initial guess for the solver.
-x = noisy_data.copy()
+x = space.copy(noisy_data)
 
 # Used to display intermediate results and print iteration number.
 callback = (odl.solvers.CallbackShow(step=20, clim=[0, 255]) &

@@ -117,9 +117,9 @@ def apply_on_boundary(array, func, only_once=True, which_boundaries=None,
                          ''.format(len(axis_order), array.ndim))
 
     if out is None:
-        out = array.copy()
+        out = np.copy(array)
     else:
-        out[:] = array  # Self assignment is free, in case out is array
+        out[:] = array  # Self-assignment is free, in case `out is array`
 
     # The 'only_once' functionality is implemented by storing for each axis
     # if the left and right boundaries have been processed. This information
@@ -490,7 +490,7 @@ def resize_array(arr, newshp, offset=None, pad_mode='constant', pad_const=0,
         else:
             # Apply adjoint padding to a copy of the input and copy the inner
             # part when finished
-            tmp = arr.copy()
+            tmp = np.copy(arr)
             _apply_padding(tmp, out, offset, pad_mode, 'adjoint')
             _assign_intersection(out, tmp, offset)
 

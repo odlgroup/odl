@@ -23,18 +23,18 @@ LOW_ACCURACY = 4
 def test_forward_backward_input_handling():
     """Test to see that input is handled correctly."""
 
-    space1 = odl.uniform_discr(0, 1, 10)
+    space = odl.uniform_discr(0, 1, 10)
 
-    L = [odl.ZeroOperator(space1), odl.ZeroOperator(space1)]
-    g = [odl.solvers.ZeroFunctional(space1),
-         odl.solvers.ZeroFunctional(space1)]
-    f = odl.solvers.ZeroFunctional(space1)
-    h = odl.solvers.ZeroFunctional(space1)
+    L = [odl.ZeroOperator(space), odl.ZeroOperator(space)]
+    g = [odl.solvers.ZeroFunctional(space),
+         odl.solvers.ZeroFunctional(space)]
+    f = odl.solvers.ZeroFunctional(space)
+    h = odl.solvers.ZeroFunctional(space)
 
     # Check that the algorithm runs. With the above operators, the algorithm
     # returns the input.
-    x0 = noise_element(space1)
-    x = x0.copy()
+    x0 = noise_element(space)
+    x = space.copy(x0)
     niter = 3
 
     forward_backward_pd(x, f, g, L, h, tau=1.0,
@@ -49,9 +49,9 @@ def test_forward_backward_input_handling():
                             sigma=[1.0], niter=niter)
 
     # Too many operators
-    g_too_many = [odl.solvers.ZeroFunctional(space1),
-                  odl.solvers.ZeroFunctional(space1),
-                  odl.solvers.ZeroFunctional(space1)]
+    g_too_many = [odl.solvers.ZeroFunctional(space),
+                  odl.solvers.ZeroFunctional(space),
+                  odl.solvers.ZeroFunctional(space)]
     with pytest.raises(ValueError):
         forward_backward_pd(x, f, g_too_many, L, h,
                             tau=1.0, sigma=[1.0, 1.0], niter=niter)

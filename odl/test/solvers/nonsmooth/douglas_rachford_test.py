@@ -23,35 +23,34 @@ LOW_ACCURACY = 4
 
 def test_primal_dual_input_handling():
     """Test to see that input is handled correctly."""
+    space = odl.uniform_discr(0, 1, 10)
 
-    space1 = odl.uniform_discr(0, 1, 10)
-
-    lin_ops = [odl.ZeroOperator(space1), odl.ZeroOperator(space1)]
-    g = [odl.solvers.ZeroFunctional(space1),
-         odl.solvers.ZeroFunctional(space1)]
-    f = odl.solvers.ZeroFunctional(space1)
+    lin_ops = [odl.ZeroOperator(space), odl.ZeroOperator(space)]
+    g = [odl.solvers.ZeroFunctional(space),
+         odl.solvers.ZeroFunctional(space)]
+    f = odl.solvers.ZeroFunctional(space)
 
     # Check that the algorithm runs. With the above operators, the algorithm
     # returns the input.
-    x0 = noise_element(space1)
-    x = x0.copy()
+    x0 = noise_element(space)
+    x = space.copy(x0)
     niter = 3
 
-    douglas_rachford_pd(x, f, g, lin_ops, tau=1.0,
-                        sigma=[1.0, 1.0], niter=niter)
-
+    douglas_rachford_pd(
+        x, f, g, lin_ops, tau=1.0, sigma=[1.0, 1.0], niter=niter
+    )
     assert all_almost_equal(x, x0)
 
     # Testing that sizes needs to agree:
-    # Too few sigma_i:s
+    # Too few sigmas
     with pytest.raises(ValueError):
         douglas_rachford_pd(x, f, g, lin_ops, tau=1.0,
                             sigma=[1.0], niter=niter)
 
     # Too many operators
-    g_too_many = [odl.solvers.ZeroFunctional(space1),
-                  odl.solvers.ZeroFunctional(space1),
-                  odl.solvers.ZeroFunctional(space1)]
+    g_too_many = [odl.solvers.ZeroFunctional(space),
+                  odl.solvers.ZeroFunctional(space),
+                  odl.solvers.ZeroFunctional(space)]
     with pytest.raises(ValueError):
         douglas_rachford_pd(x, f, g_too_many, lin_ops,
                             tau=1.0, sigma=[1.0, 1.0], niter=niter)
@@ -66,26 +65,17 @@ def test_primal_dual_l1():
 
     which has optimum value data_1.
     """
-
-    # Define the space
     space = odl.rn(5)
-
-    # Operator
     L = [odl.IdentityOperator(space)]
+    data1 = odl.util.testutils.noise_element(space)
+    data2 = odl.util.testutils.noise_element(space)
 
-    # Data
-    data_1 = odl.util.testutils.noise_element(space)
-    data_2 = odl.util.testutils.noise_element(space)
+    f = odl.solvers.L1Norm(space).translated(data1)
+    g = [0.5 * odl.solvers.L1Norm(space).translated(data2)]
 
-    # Proximals
-    f = odl.solvers.L1Norm(space).translated(data_1)
-    g = [0.5 * odl.solvers.L1Norm(space).translated(data_2)]
-
-    # Solve with f term dominating
     x = space.zero()
     douglas_rachford_pd(x, f, g, L, tau=3.0, sigma=[1.0], niter=10)
-
-    assert all_almost_equal(x, data_1, ndigits=2)
+    assert all_almost_equal(x, data1, ndigits=2)
 
 
 def test_primal_dual_no_operator():

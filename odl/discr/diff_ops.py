@@ -863,7 +863,7 @@ def finite_diff(f, axis, dx=1.0, method='forward', out=None,
 
     In-place evaluation:
 
-    >>> out = f.copy()
+    >>> out = np.copy(f)
     >>> out is finite_diff(f, axis=0, out=out)
     True
     """

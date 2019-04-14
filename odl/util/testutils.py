@@ -461,9 +461,7 @@ def noise_elements(space, n=1):
     noise_element
     """
     arrs = tuple(noise_array(space) for _ in range(n))
-
-    # Make space elements from arrays
-    elems = tuple(space.element(arr.copy()) for arr in arrs)
+    elems = tuple(space.copy(arr) for arr in arrs)
 
     if n == 1:
         return tuple(arrs + elems)

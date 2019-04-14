@@ -1129,10 +1129,7 @@ def proximal_convex_conj_l1(space, lam=1, g=None):
                 # Handle aliased `x` and `out`
                 # This is necessary since we write to both `diff` and `out`
                 if x is out:
-                    if isinstance(space, ProductSpace):
-                        diff = space.apply(lambda xi: xi.copy(), x)
-                    else:
-                        diff = x.copy()
+                    diff = space.copy(x)
                 else:
                     diff = x
             else:
@@ -1345,14 +1342,16 @@ def proximal_l1(space, lam=1, g=None):
             F = space.ufuncs
 
             # diff = x - g
-            if g is not None:
-                diff = x - g
-            else:
+            # Handle aliased `x` and `out` (original `x` needed later)
+            if g is None:
                 if x is out:
-                    # Handle aliased `x` and `out` (original `x` needed later)
-                    diff = x.copy()
-                else:
+                    x_old = space.copy(x)
                     diff = x
+                else:
+                    diff = x_old = x
+            else:
+                x_old = x
+                diff = x - g
 
             # We write the operator as
             # x - (x - g) / max(|x - g| / sig*lam, 1)
@@ -1450,7 +1449,7 @@ def proximal_l1_l2(space, lam=1, g=None):
             else:
                 if x is out:
                     # Handle aliased `x` and `out` (original `x` needed later)
-                    diff = x.copy()
+                    diff = space.copy(x)
                 else:
                     diff = x
 
@@ -1519,7 +1518,7 @@ def proximal_linfty(space):
             radius = 1
 
             if x is out:
-                x = x.copy()
+                x = space.copy(x)
 
             proj_l1(self.domain, x, radius, out=out)
             self.range.lincomb(-1, out, 1, x, out=out)
@@ -1802,10 +1801,7 @@ def proximal_convex_conj_kl(space, lam=1, g=None):
             # out = (x - lam)^2
             if x is out:
                 # Handle aliased `x` and `out` (need original `x` later on)
-                if isinstance(space, ProductSpace):
-                    x = space.apply(lambda xi: xi.copy(), x)
-                else:
-                    x = x.copy()
+                x = space.copy(x)
             else:
                 space.assign(out, x)
             out -= lam

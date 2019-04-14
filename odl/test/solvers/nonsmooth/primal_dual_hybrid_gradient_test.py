@@ -31,10 +31,10 @@ def test_pdhg_simple_space():
     """Test for the Primal-Dual Hybrid Gradient algorithm."""
     space = odl.uniform_discr(0, 1, DATA.size)
     op = odl.IdentityOperator(space)
-    x = op.domain.element(DATA)
+    x = space.element(DATA)
 
     # Relaxation and dual variables required to resume iteration
-    x_relax = x.copy()
+    x_relax = space.copy(x)
     y = op.range.zero()
 
     # Use the same functional for f^* and g
@@ -96,12 +96,12 @@ def test_pdhg_product_space():
     op = odl.BroadcastOperator(I, -2 * I)
 
     # Starting point for explicit computation
-    x_0 = op.domain.element(DATA)
+    x_0 = space.element(DATA)
 
     # Copy to be overwritten by the algorithm
-    x = x_0.copy()
+    x = space.copy(DATA)
 
-    # Proximal operators using the same for f^* and g
+    # Using f and g such that f = g^*
     f = odl.solvers.ZeroFunctional(op.domain)
     g = odl.solvers.ZeroFunctional(op.range).convex_conj
 

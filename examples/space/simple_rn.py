@@ -68,8 +68,8 @@ opt_space = odl.rn(n)
 simple_space = SimpleRn(n)
 
 x, y, z = np.random.rand(n), np.random.rand(n), np.random.rand(n)
-ox, oy, oz = (opt_space.element(a.copy()) for a in (x, y, z))
-sx, sy, sz = (simple_space.element(a.copy()) for a in (x, y, z))
+ox, oy, oz = (opt_space.copy(a) for a in (x, y, z))
+sx, sy, sz = (simple_space.copy(a) for a in (x, y, z))
 
 if cuda_supported:
     cu_space = odl.rn(n, impl='cuda')

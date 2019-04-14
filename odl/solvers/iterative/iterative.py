@@ -176,7 +176,7 @@ def conjugate_gradient(op, x, rhs, niter, callback=None):
 
     r = op(x)
     dom.lincomb(1, rhs, -1, r, out=r)  # r = rhs - A x
-    p = r.copy()
+    p = ran.copy(r)
     d = dom.element()  # Extra storage for storing A x
 
     sqnorm_r_old = dom.norm(r) ** 2  # Only recalculate norm after update
@@ -262,7 +262,7 @@ Conjugate_gradient_on_the_normal_equations>`_.
     d = op(x)
     ran.lincomb(1, rhs, -1, d, out=d)      # d <- rhs - A(x)
     p = op.derivative(x).adjoint(d)
-    s = p.copy()
+    s = dom.copy(p)
     q = op.range.element()
     sqnorm_s_old = dom.norm(s) ** 2  # Only recalculate norm after update
 
@@ -361,7 +361,7 @@ def gauss_newton(op, x, rhs, niter, zero_seq=exp_zero_seq(2.0),
         raise TypeError('`x` {!r} is not in the domain of `op` {!r}'
                         ''.format(x, dom))
 
-    x0 = x.copy()
+    x0 = dom.copy(x)
     id_op = IdentityOperator(dom)
     dx = dom.zero()
 

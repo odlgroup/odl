@@ -872,7 +872,7 @@ class Operator(object):
             else:
                 return OperatorRightScalarMult(self, other)
         elif other in self.domain:
-            return OperatorRightVectorMult(self, other.copy())
+            return OperatorRightVectorMult(self, self.domain.copy(other))
         else:
             return NotImplemented
 
