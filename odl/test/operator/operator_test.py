@@ -16,10 +16,9 @@ import pytest
 
 import odl
 from odl import (
-    FunctionalLeftVectorMult, MatrixOperator, OpDomainError, Operator,
-    OperatorComp, OperatorLeftScalarMult, OperatorLeftVectorMult,
-    OperatorRightScalarMult, OperatorRightVectorMult, OperatorSum,
-    OpRangeError, OpTypeError)
+    MatrixOperator, OpDomainError, Operator, OperatorComp,
+    OperatorLeftScalarMult, OperatorLeftVectorMult, OperatorRightScalarMult,
+    OperatorRightVectorMult, OperatorSum, OpRangeError, OpTypeError)
 from odl.operator.operator import _dispatch_call_args, _function_signature
 from odl.util.testutils import (
     all_almost_equal, noise_element, noise_elements, simple_fixture)
@@ -208,9 +207,11 @@ def test_operator_scaling(dom_eq_ran):
         with pytest.raises(TypeError):
             op * wrong_shape
 
-        with pytest.raises(ValueError):
-            # Tries to cast to range element, thus `ValueError`
-            wrong_shape * op
+    # Multiplication from with non-scalar of wrong shape should result in
+    # `NotImplemented`
+    for non_scalar in [[1, 2], np.ones(5)]:
+        assert op.__mul__(non_scalar) is NotImplemented
+        assert op.__rmul__(non_scalar) is NotImplemented
 
 
 def test_operator_vector_mult(dom_eq_ran):
@@ -654,33 +655,6 @@ def test_functional_scale():
                                 scalar * y * np.ones(3))
         assert all_almost_equal((op * scalar).adjoint(y),
                                 scalar * y * np.ones(3))
-
-
-def test_functional_left_vector_mult():
-    r3 = odl.rn(3)
-    r4 = odl.rn(4)
-
-    op = SumFunctional(r3)
-    x = r3.element([1, 2, 3])
-    y = r4.element([3, 2, 1, 5])
-
-    # Test a range of scalars (scalar multiplication could implement
-    # optimizations for (-1, 0, 1).
-    C = FunctionalLeftVectorMult(op, y, range=r4)
-
-    assert C.is_linear
-    assert C.adjoint.is_linear
-
-    assert all_almost_equal(C(x), y * np.sum(x))
-    assert all_almost_equal(C.adjoint(y), r4.inner(y, y) * np.ones(3))
-    assert all_almost_equal(C.adjoint.adjoint(x), C(x))
-
-    # Using operator overloading
-    with pytest.xfail(reason='currently broken'):
-        assert all_almost_equal((y * op)(x), y * np.sum(x))
-        assert all_almost_equal(
-            (y * op).adjoint(y), r4.inner(y ,y) * np.ones(3)
-        )
 
 
 def test_functional_right_vector_mult():

@@ -27,7 +27,6 @@ __all__ = (
     'OperatorVectorSum',
     'OperatorLeftScalarMult',
     'OperatorRightScalarMult',
-    'FunctionalLeftVectorMult',
     'OperatorLeftVectorMult',
     'OperatorRightVectorMult',
     'OperatorPointwiseProduct',
@@ -950,10 +949,7 @@ class Operator(object):
         elif isinstance(other, Number):
             return OperatorLeftScalarMult(self, other)
         elif other in self.range:
-            return OperatorLeftVectorMult(self, other.copy())
-        elif hasattr(other, 'copy'):
-            # TODO(kohr-h): check for appropriate field?
-            return FunctionalLeftVectorMult(self, other.copy())
+            return OperatorLeftVectorMult(self, self.range.copy(other))
         else:
             return NotImplemented
 
@@ -1873,126 +1869,6 @@ class OperatorRightScalarMult(Operator):
     def __str__(self):
         """Return ``str(self)``."""
         return '{} * {}'.format(self.operator, self.scalar)
-
-
-class FunctionalLeftVectorMult(Operator):
-
-    """Expression type for the functional left vector multiplication.
-
-    A functional is an `Operator` whose `Operator.range` is
-    a `Field`. It is multiplied from left with a `LinearSpaceElement`,
-    resulting in an operator mapping from the `Operator.domain` to the
-    element's `LinearSpaceElement.space`.
-
-        ``FunctionalLeftVectorMult(op, y)(x) == y * op(x)``
-    """
-
-    def __init__(self, functional, vector, range=None):
-        """Initialize a new instance.
-
-        Parameters
-        ----------
-        functional : `Operator`
-            Functional in the vector multiplication. Its `range` must
-            be a `Field`.
-        vector
-            The element to multiply with.
-        range : `LinearSpace`, optional
-            Space to which the resulting operator maps.
-            Default: ``functional.range``
-
-        Examples
-        --------
-        Create the operator ``(y * y^T)(x) = y * <x, y>``
-
-        >>> space = odl.rn(3)
-        >>> y = space.element([1, 2, 3])
-        >>> functional = odl.InnerProductOperator(space, y)
-        >>> left_mul_op = FunctionalLeftVectorMult(functional, y, range=space)
-        >>> left_mul_op([1, 2, 3])
-        array([ 14.,  28.,  42.])
-        """
-        # TODO(kohr-h): check for appropriate field?
-        if range is None:
-            range = functional.range
-
-        super(FunctionalLeftVectorMult, self).__init__(
-            functional.domain, range, linear=functional.is_linear)
-
-        self.__functional = functional
-        self.__vector = range.element(vector)
-
-    @property
-    def functional(self):
-        """The functional part of this multiplication."""
-        return self.__functional
-
-    @property
-    def vector(self):
-        """The element part of this multiplication."""
-        return self.__vector
-
-    def _call(self, x, out=None):
-        """Implement ``self(x[, out])``."""
-        if out is None:
-            return self.vector * self.functional(x)
-        else:
-            scalar = self.functional(x)
-            self.range.lincomb(scalar, self.vector, out=out)
-
-    def derivative(self, x):
-        """Return the derivative at ``x``.
-
-        Left scalar multiplication and derivative are commutative:
-
-            ``FunctionalLeftVectorMult(op, y).derivative(z) ==
-            FunctionalLeftVectorMult(op.derivative(z), y)``
-
-        Returns
-        -------
-        derivative : `FunctionalLeftVectorMult`
-        """
-        if self.is_linear:
-            return self
-        else:
-            return FunctionalLeftVectorMult(
-                self.functional.derivative(x), self.vector, self.range
-            )
-
-    @property
-    def adjoint(self):
-        """Adjoint of this operator.
-
-            ``FunctionalLeftVectorMult(op, y).adjoint ==
-            OperatorComp(op.adjoint, y.T)``
-
-        Returns
-        -------
-        adjoint : `OperatorComp`
-
-        Raises
-        ------
-        OpNotImplementedError
-            If the underlying operator is non-linear.
-        """
-        from odl.operator.default_ops import InnerProductOperator
-
-        if not self.is_linear:
-            raise OpNotImplementedError('nonlinear operators have no adjoint')
-
-        return OperatorComp(
-            self.functional.adjoint,
-            InnerProductOperator(self.range, self.vector),
-        )
-
-    def __repr__(self):
-        """Return ``repr(self)``."""
-        return '{}({!r}, {!r})'.format(self.__class__.__name__,
-                                       self.functional, self.vector)
-
-    def __str__(self):
-        """Return ``str(self)``."""
-        return '{} * {}'.format(self.vector, self.functional)
 
 
 class OperatorLeftVectorMult(Operator):

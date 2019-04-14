@@ -177,8 +177,7 @@ All available functional arithmetic, including which properties and methods that
 | ``(S * a)(x)``      | ``S(a * x)``    | `FunctionalRightScalarMult`                                                    |
 |                     |                 | - Retains all properties.                                                      |
 +---------------------+-----------------+--------------------------------------------------------------------------------+
-| ``(v * S)(x)``      | ``v * S(x)``    | `FunctionalLeftVectorMult`                                                     |
-|                     |                 | - Results in an operator rather than a functional.                             |
+| ``(v * S)(x)``      | ``v * S(x)``    | Not supported                                                                  |
 +---------------------+-----------------+--------------------------------------------------------------------------------+
 | ``(S * v)(x)``      | ``S(v * x)``    | `FunctionalRightVectorMult`                                                    |
 |                     |                 | - Retains gradient and convex conjugate.                                       |
