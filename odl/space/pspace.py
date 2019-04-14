@@ -10,15 +10,22 @@
 
 from __future__ import absolute_import, division, print_function
 
+import inspect
 from itertools import product
 from numbers import Integral
 
 import numpy as np
 
 from odl.set import LinearSpace
-from odl.util import getargspec, indent, signature_string
+from odl.util import indent, signature_string
 
 __all__ = ('ProductSpace',)
+
+
+try:
+    getargspec = inspect.getfullargspec
+except AttributeError:
+    getargspec = inspect.getargspec
 
 
 class ProductSpace(LinearSpace):
