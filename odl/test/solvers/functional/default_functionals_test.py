@@ -47,6 +47,18 @@ def space(request, odl_tspace_impl):
 # --- functional tests --- #
 
 
+def _test_op(op, x, true_res):
+    assert op.domain == op.range
+
+    assert all_almost_equal(op(x), true_res)  # out-of-place
+    out = op.range.element()
+    op(x, out=out)
+    assert all_almost_equal(out, true_res)  # in-place
+    y = op.domain.copy(x)
+    op(y, out=y)
+    assert all_almost_equal(y, true_res)  # in-place, aliased
+
+
 def test_L1_norm(space, sigma):
     """Test the L1-norm."""
     func = odl.solvers.L1Norm(space)
@@ -289,39 +301,126 @@ def test_kullback_leibler_cross_entropy(space):
 
 def test_quadratic_form(space):
     """Test the quadratic form functional."""
-    operator = odl.IdentityOperator(space)
+    # TODO: move this to largescale tests
+    if False:
+        # Non-symmetric operator
+        mat = np.eye(space.size)
+        mat[0, 1] = 1
+        operator = odl.MatrixOperator(mat, domain=space, range=space)
+
+        mat_sym = (mat + mat.T) / 2
+        mat_sym_inv = np.linalg.inv(mat_sym)
+        sym_inv_op = odl.MatrixOperator(mat_sym_inv, domain=space, range=space)
+        kwargs['operator_sym_inv'] = sym_inv_op
+
+        def prox_inv_fact(sigma):
+            minv = np.linalg.inv(np.eye(space.size) + sigma * mat_sym)
+            return odl.MatrixOperator(minv, domain=space, range=space)
+
+        kwargs['operator_prox_inv_fact'] = prox_inv_fact
+
+    I = odl.IdentityOperator(space)
     vector = noise_element(space)
     constant = np.random.rand()
-    func = odl.solvers.QuadraticForm(space, operator, vector, constant)
+
+    def prox_inv_fact(sigma):
+        return odl.ScalingOperator(space, 1 / (1 + sigma))
+
     x = noise_element(space)
+    sigma = 1.2
 
-    # General case with operator, vector and constant
+    # Quadratic form with operator, vector and constant
+
+    func = odl.solvers.QuadraticForm(
+        space, operator=I, vector=vector, constant=constant,
+        operator_sym_inv=I, operator_prox_inv_fact=prox_inv_fact
+    )
+
+    # Evaluation
     assert func(x) == pytest.approx(
-        space.inner(x, operator(x)) + space.inner(x, vector) + constant
-    )
-    assert all_almost_equal(func.gradient(x), 2 * operator(x) + vector)
-    assert func.convex_conj(x) == pytest.approx(
-        space.inner(x - vector, x - vector) - constant
+        space.inner(x, x) + space.inner(x, vector) + constant
     )
 
-    # Without operator, i.e., an affine functional
+    # Gradient
+    func_grad_x = 2 * x + vector
+    _test_op(func.gradient, x, func_grad_x)
+
+    # Proximal
+    func_prox_x = (x - sigma * vector) / (1 + 2 * sigma)
+    _test_op(func.proximal(sigma), x, func_prox_x)
+
+    # CC evaluation
+    func_cc = func.convex_conj
+    assert func_cc(x) == pytest.approx(
+        space.inner(x - vector, x - vector) / 4 - constant
+    )
+
+    # CC gradient has nothing special
+
+    # CC proximal
+    # Same as above, but with vector -> -vector/2 and sigma -> sigma/2
+    # in the denominator
+    func_cc_prox_x = (x + sigma * vector / 2) / (1 + sigma / 2)
+    _test_op(func_cc.proximal(sigma), x, func_cc_prox_x)
+
+    # Quadratic form without operator, i.e., an affine functional
+
     func_affine = odl.solvers.QuadraticForm(
         space, vector=vector, constant=constant
     )
+    # Evaluation
     assert func_affine(x) == pytest.approx(space.inner(x, vector) + constant)
-    assert all_almost_equal(func_affine.gradient(x), vector)
-    # The convex conjugate is a translation of IndicatorZero
+
+    # Gradient
+    func_affine_grad_x = vector
+    _test_op(func_affine.gradient, x, func_affine_grad_x)
+
+    # Proximal
+    func_affine_prox_x = x - sigma * vector
+    _test_op(func_affine.proximal(sigma), x, func_affine_prox_x)
+
+    # CC evaluation
+    # Translation of IndicatorZero by `vector` with offset `-constant`
     func_affine_cc = func_affine.convex_conj
     assert func_affine_cc(vector) == -constant
     assert func_affine_cc(vector + 1) == float('inf')
 
-    # Without vector
-    func_no_vector = odl.solvers.QuadraticForm(
-        space, operator, constant=constant
+    # CC gradient not implemented
+
+    # CC prox
+    # projection onto the point set `{vector}`
+    func_affine_cc_prox_x = vector
+    _test_op(func_affine_cc.proximal(sigma), x, func_affine_cc_prox_x)
+
+    # Quadratic form without vector
+
+    func_no_vec = odl.solvers.QuadraticForm(
+        space, I, constant=constant, operator_sym_inv=I,
+        operator_prox_inv_fact=prox_inv_fact
+
     )
-    assert func_no_vector(x) == pytest.approx(
-        space.inner(x, operator(x)) + constant
-    )
+
+    # Evaluation
+    assert func_no_vec(x) == pytest.approx(space.inner(x, x) + constant)
+
+    # Gradient
+    func_no_vec_grad_x = 2 * x
+    _test_op(func_no_vec.gradient, x, func_no_vec_grad_x)
+
+    # Proximal
+    func_no_vec_prox_x = x / (1 + 2 * sigma)
+    _test_op(func_no_vec.proximal(sigma), x, func_no_vec_prox_x)
+
+    # CC evaluation
+    func_no_vec_cc = func_no_vec.convex_conj
+    assert func_no_vec_cc(x) == pytest.approx(space.inner(x, x) / 4 - constant)
+
+    # CC gradient has nothing special
+
+    # CC proximal
+    # Same as above, but with sigma/2 in the denominator
+    func_no_vec_cc_prox_x = x / (1 + sigma / 2)
+    _test_op(func_no_vec_cc.proximal(sigma), x, func_no_vec_cc_prox_x)
 
 
 def test_separable_sum(space):

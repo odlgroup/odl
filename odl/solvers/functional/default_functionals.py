@@ -15,8 +15,8 @@ from numbers import Integral
 import numpy as np
 
 from odl.operator import (
-    ConstantOperator, DiagonalOperator, Operator, PointwiseNorm,
-    ScalingOperator, ZeroOperator)
+    ConstantOperator, DiagonalOperator, IdentityOperator, Operator,
+    PointwiseNorm, ScalingOperator, ZeroOperator)
 from odl.set import LinearSpace
 from odl.solvers.functional.functional import (
     Functional, FunctionalQuadraticPerturb)
@@ -1798,14 +1798,19 @@ class SeparableSum(Functional):
 
 class QuadraticForm(Functional):
 
-    """Functional for a general quadratic form ``x^T A x + b^T x + c``."""
+    """The quadratic form functional ``<x, Ax + b> + c``.
 
-    def __init__(self, space, operator=None, vector=None, constant=0):
+    It is important to note that this functional is only (provably) convex if
+    the operator ``A`` is linear and positive semi-definite. The `convex_conj`
+    property relies on this to be true, and its computation requires the
+    inverse of the symmetric part ``(A^* + A) / 2``.
+    The `gradient` of the functional is also defined for operators ``A`` that
+    lack these properties.
+    """
+
+    def __init__(self, space, operator=None, vector=None, constant=0,
+                 **kwargs):
         """Initialize a new instance.
-
-        The computed value for given ``x`` is ::
-
-            space.inner(x, operator(x)) + space.inner(vector, x) + constant
 
         Parameters
         ----------
@@ -1817,8 +1822,17 @@ class QuadraticForm(Functional):
         vector : `LinearSpaceElement`, optional
             Vector for the linear part of the functional.
             ``None`` means that this part is ignored.
-        constant : `Operator`, optional
+        constant : float, optional
             Constant offset of the functional.
+        operator_sym_inv : `Operator`, optional
+            Inverse of the symmetric part ``(A + A^*) / 2`` of ``operator``,
+            assuming the latter is linear. This operator is used in the
+            computation of the convex conjugate. If not given, ``operator``
+            is assumed to be symmetric.
+        operator_prox_inv_fact : callable, optional
+            Function that takes the proximal ``sigma`` parameter and returns
+            the operator ``(I + sigma * (A + A^*) / 2).inverse``. It is
+            required for `proximal` if ``operator`` is not ``None``.
         """
         if not isinstance(space, LinearSpace):
             raise TypeError(
@@ -1829,17 +1843,41 @@ class QuadraticForm(Functional):
             and (operator.domain != space or operator.range != space)
         ):
             raise ValueError(
-                '`operator.domain` and `operator.range` must be equal to '
+                '`domain` and `range` of `operator` must be equal to '
                 '`space`, but {!r}, {!r}, {!r} are not all equal'
                 ''.format(operator.domain, operator.range, space))
 
         super(QuadraticForm, self).__init__(
             space=space, linear=(operator is None and constant == 0))
 
+        operator_sym_inv = kwargs.pop('operator_sym_inv', None)
+        if (
+            operator_sym_inv is not None
+            and (operator_sym_inv.domain != space
+                 or operator_sym_inv.range != space)
+        ):
+            raise ValueError(
+                '`domain` and `range` of `operator_sym_inv` must be equal to '
+                '`space`, but {!r}, {!r}, {!r} are not all equal'
+                ''.format(operator.domain, operator.range, space))
+
+        operator_prox_inv_fact = kwargs.pop('operator_prox_inv_fact', None)
+        if (
+            operator_prox_inv_fact is not None
+            and not callable(operator_prox_inv_fact)
+        ):
+            raise TypeError('`operator_prox_inv_fact` must be callable')
+
         self.__operator = operator
         self.__vector = None if vector is None else space.element(vector)
         self.__constant = space.field.element(constant)
+        self.__operator_sym_inv = operator_sym_inv
+        self.__operator_prox_inv_fact = operator_prox_inv_fact
 
+        if kwargs:
+            raise TypeError(
+                'got unexpected keyword arguments {}'.format(kwargs)
+            )
 
     @property
     def operator(self):
@@ -1856,6 +1894,16 @@ class QuadraticForm(Functional):
         """Constant offset of the functional."""
         return self.__constant
 
+    @property
+    def operator_sym_inv(self):
+        """Inverse of the symmetric part of `operator`."""
+        return self.__operator_sym_inv
+
+    @property
+    def operator_prox_inv_fact(self):
+        """Factory for ``sigma --> (I + sigma * (A + A^*)/2).inverse``."""
+        return self.__operator_prox_inv_fact
+
     def _call(self, x):
         """Return ``self(x)``."""
         if self.operator is None:
@@ -1869,54 +1917,118 @@ class QuadraticForm(Functional):
 
     @property
     def gradient(self):
-        """Gradient operator of the functional."""
+        r"""Gradient operator of the quadratic form functional.
+
+        The gradient of :math:`Q(x) = \langle x, A(x) + b \rangle + c` is
+        given by
+
+        .. math::
+            \nabla Q(x) = A(x) + A'(x)^* x + b.
+
+        If :math:`A` is linear, this expression simplifies to
+
+        .. math::
+            \nabla Q(x) = (A + A^*) x + b.
+        """
         if self.operator is None:
             return ConstantOperator(self.domain, self.vector)
+
+        if not self.operator.is_linear:
+            # TODO(kohr-h): add this
+            raise NotImplementedError(
+                '`gradient` not implemented for nonlinear `operator`'
+            )
+
+        # Figure out whether operator is symmetric
+        # NB: this check is equivalent to `op is op.adjoint` since
+        # there are no semantics for operator comparison
+        op = self.operator
+        adj = self.operator.adjoint
+        grad = 2 * op if op == adj else op + adj
+
+        if self.vector is None:
+            return grad
         else:
+            return grad + self.vector
+
+    @property
+    def proximal(self):
+        r"""Factory function for the proximal operator.
+
+        The proximal operator of :math:`Q(x) = \langle x, Ax + b \rangle + c`
+        is given by
+
+        .. math::
+            \text{prox}_{\sigma Q}(x) = (I + 2\sigma \bar A)^{-1}
+            (x - \sigma b),
+
+        with the symmetric part :math:`\bar A = (A + A^*) / 2`.
+        """
+        if self.operator is not None:
             if not self.operator.is_linear:
-                # TODO: Acutally works otherwise, but needs more work
-                raise NotImplementedError('`operator` must be linear')
+                # TODO(kohr-h): add this
+                raise NotImplementedError(
+                    '`proximal` not available for nonlinear `operator`'
+                )
+            if self.operator_prox_inv_fact is None:
+                raise TypeError(
+                    '`operator_prox_inv_fact` is required for proximal with '
+                    'operator'
+                )
 
-            # Figure out if operator is symmetric
-            # Note: this check is equivalent to `op is op.adjoint` since
-            # there are no semantics for comparing operators
-            op_adj = self.operator.adjoint
-            if op_adj == self.operator:
-                grad = 2 * self.operator
-            else:
-                grad = self.operator + op_adj
+        def prox_fact(sigma):
+            """Proximal factory function."""
+            rhs_op = IdentityOperator(self.domain)
+            if self.vector is not None:
+                rhs_op = rhs_op - sigma * self.vector
 
-            if self.vector is None:
-                return grad
+            if self.operator_prox_inv_fact is None:
+                return rhs_op
             else:
-                return grad + self.vector
+                return self.operator_prox_inv_fact(2 * sigma) * rhs_op
+
+        return prox_fact
 
     @property
     def convex_conj(self):
         r"""The convex conjugate functional of the quadratic form.
 
-        Notes
-        -----
-        The convex conjugate of the quadratic form :math:`<x, Ax> + <b, x> + c`
-        is given by
+        The convex conjugate of the quadratic form
+        :math:`Q(x) = \langle x, Ax + b \rangle + c` with linear operator
+        :math:`A` and its symmetric part :math:`\bar A = (A + A^*)/2` is
+        given by
 
         .. math::
-            (<x, Ax> + <b, x> + c)^* (x) =
-            <(x - b), A^-1 (x - b)> - c =
-            <x , A^-1 x> - <x, A^-* b> - <x, A^-1 b> + <b, A^-1 b> - c.
+            Q^*(x)
+            &= \frac{1}{4} \langle A \bar A^{-1}(x - b), \bar A^{-1}(x - b)
+            \rangle - c \\
+            &= \frac{1}{4}\langle x, \bar A^{-1} x \rangle
+            - \frac{1}{2} \langle x, \bar A^{-1} b \rangle
+            + \frac{1}{4} \langle b,  \bar A^{-1} b \rangle - c.
 
-        If the quadratic part of the functional is zero it is instead given
-        by a translated indicator function on zero, i.e., if
+        Thus, :math:`Q^*` is a quadratic form with operator
+        :math:`\bar A^{-1} / 4`,
+        vector :math:`-\bar A^{-1} b / 2` and constant
+        :math:`\frac{1}{4} \langle b,  \bar A^{-1} b \rangle - c`.
+
+        For the proximal, the required inverse operator is
 
         .. math::
-            f(x) = <b, x> + c,
+            (I + 2 \sigma \bar A^{-1} / 4)^{-1} =
+            \frac{2}{\sigma} \bar A (I + 2/\sigma \bar A)^{-1}.
 
-        then
+        If the quadratic part of the functional is zero, i.e.,
 
         .. math::
-            f^*(x^*) =
+            Q(x) = \langle x, b \rangle + c,
+
+        then :math:`Q^*` is an indicator function of the point set
+        :math:`\{b\}` with constant :math:`-c`:
+
+        .. math::
+            Q^*(x) =
             \begin{cases}
-                -c & \text{if } x^* = b \\
+                -c & \text{if } x = b \\
                 \infty & \text{else.}
             \end{cases}
 
@@ -1928,20 +2040,42 @@ class QuadraticForm(Functional):
             fn = IndicatorZero(self.domain, constant=-self.constant)
             return fn if self.vector is None else fn.translated(self.vector)
 
-        op_inv = self.operator.inverse
-
-        if self.vector is None:
-            return QuadraticForm(
-                self.domain, operator=op_inv, constant=-self.constant
+        if not self.operator.is_linear:
+            raise NotImplementedError(
+                '`convex_conj` not available for nonlinear `operator`'
             )
 
-        vector = -op_inv.adjoint(self.vector) - op_inv(self.vector)
-        constant = (
-            self.domain.inner(self.vector, op_inv(self.vector)) - self.constant
-        )
+        if self.operator_sym_inv is None:
+            op_inv = self.operator.inverse
+        else:
+            op_inv = self.operator_sym_inv
+
+        constant = -self.constant
+        if self.vector is None:
+            vector = None
+        else:
+            vector = -op_inv(self.vector) / 2
+            constant -= self.domain.inner(self.vector, vector) / 2
+
+        op = self.operator
+        adj = self.operator.adjoint
+
+        kwargs = {}
+        # Inverse of 1/4 * [(A + A^*) / 2]^(-1) --> 2 * (A + A^*)
+        sym_op = 4 * op if op == adj else 2 * (op + adj)
+        kwargs['operator_sym_inv'] = sym_op
+
+        if self.operator_prox_inv_fact is not None:
+
+            def prox_inv_fact(sigma):
+                tmp_op = (4 / sigma) * op if op == adj else (op + adj) / sigma
+                return tmp_op * self.operator_prox_inv_fact(4 / sigma)
+
+            kwargs['operator_prox_inv_fact'] = prox_inv_fact
 
         return QuadraticForm(
-            self.domain, operator=op_inv, vector=vector, constant=constant
+            self.domain, operator=op_inv / 4, vector=vector, constant=constant,
+            **kwargs
         )
 
 
