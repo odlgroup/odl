@@ -164,73 +164,90 @@ def douglas_rachford_pd(x, f, g, L, niter, tau=None, sigma=None,
     p1 = x.space.zero()
     p2 = [Li.range.zero() for Li in L]
     z1 = x.space.zero()
-    z2 = [Li.range.zero() for Li in L]
+    # Save a bit of memory: z2 elements are local to the loop where they
+    # are used
+    rans = {Li.range for Li in L}
+    z2 = {ran: ran.zero() for ran in rans}
     w1 = x.space.zero()
     w2 = [Li.range.zero() for Li in L]
-
-    # Temporaries (not in original article)
-    tmp_domain = x.space.zero()
 
     for k in range(niter):
         lam_k = lam(k)
 
         if len(L) > 0:
-            # Compute tmp_domain = sum(Li.adjoint(vi) for Li, vi in zip(L, v))
-            L[0].adjoint(v[0], out=tmp_domain)
+            # Compute z1 = sum(Li.adjoint(vi) for Li, vi in zip(L, v))
+            # NB: we abuse z1 as temporary here, in contrast to the algorithm
+            # in the paper
+            L[0].adjoint(v[0], out=z1)
             for Li, vi in zip(L[1:], v[1:]):
                 Li.adjoint(vi, out=p1)
-                tmp_domain += p1
+                z1 += p1
 
-            tmp_domain.lincomb(1, x, -tau / 2, tmp_domain)
+            z1.lincomb(1, x, -tau / 2, z1)
         else:
-            tmp_domain.assign(x)
+            z1.assign(x)
 
-        f.proximal(tau)(tmp_domain, out=p1)
+        f.proximal(tau)(z1, out=p1)
+        # Now p1 = prox[tau*f](x - tau/2 * sum(Li^* vi))
+        # Temporary z1 is no longer needed
+
+        # w1 = 2 * p1 - x
         w1.lincomb(2, p1, -1, x)
 
-        for i in range(m):
-            tmp = v[i] + (sigma[i] / 2.0) * L[i](w1)
-            prox_cc_g[i](sigma[i])(tmp, out=p2[i])
-            w2[i].lincomb(2.0, p2[i], -1, v[i])
-
-        if len(L) > 0:
-            # Compute:
-            # tmp_domain = sum(Li.adjoint(w2i) for Li, w2i in zip(L, w2))
-            L[0].adjoint(w2[0], out=tmp_domain)
-            for Li, w2i in zip(L[1:], w2[1:]):
-                Li.adjoint(w2i, out=z1)
-                tmp_domain += z1
-        else:
-            tmp_domain.set_zero()
-
-        z1.lincomb(1.0, w1, - (tau / 2.0), tmp_domain)
-
-        # Compute x += lam(k) * (z1 - p1)
-        x.lincomb(1, x, lam_k, z1)
+        # Part 1 of x += lam(k) * (z1 - p1)
         x.lincomb(1, x, -lam_k, p1)
 
-        tmp_domain.lincomb(2, z1, -1, w1)
-        for i in range(m):
-            if l is not None:
-                # In this case the infimal convolution is used.
-                tmp = w2[i] + (sigma[i] / 2.0) * L[i](tmp_domain)
-                prox_cc_l[i](sigma[i])(tmp, out=z2[i])
-            else:
-                # If the infimal convolution is not given, prox_cc_l is the
-                # identity and hence omitted. For more details, see the
-                # documentation.
-                z2[i].lincomb(1, w2[i], sigma[i] / 2.0, L[i](tmp_domain))
-
-            # Compute v[i] += lam(k) * (z2[i] - p2[i])
-            v[i].lincomb(1, v[i], lam_k, z2[i])
-            v[i].lincomb(1, v[i], -lam_k, p2[i])
-
+        # Now p1 is free to use as temporary; however, since p1 holds the
+        # current primal iterate (not x) we call the callback here already
+        # and return early if we're in the last iteration (also saves some
+        # computation)
         if callback is not None:
             callback(p1)
+        if k == niter - 1:
+            x.assign(p1)
+            return
 
-    # The final result is actually in p1 according to the algorithm, so we need
-    # to assign here.
-    x.assign(p1)
+        for i in range(m):
+            # Compute p2[i] = prox[sigma * g^*](v[i] + sigma[i]/2 * L[i](w1))
+            L[i](w1, out=p2[i])
+            p2[i].lincomb(1, v[i], sigma[i] / 2, p2[i])
+            prox_cc_g[i](sigma[i])(p2[i], out=p2[i])
+            # w2[i] = 2 * p2[i] - v[i]
+            w2[i].lincomb(2, p2[i], -1, v[i])
+
+        if len(L) > 0:
+            # Compute p1 = sum(Li.adjoint(w2i) for Li, w2i in zip(L, w2))
+            # NB: we abuse p1 as temporary here, in contrast to the algorithm
+            # in the paper
+            L[0].adjoint(w2[0], out=p1)
+            for Li, w2i in zip(L[1:], w2[1:]):
+                Li.adjoint(w2i, out=z1)
+                p1 += z1
+        else:
+            p1.set_zero()
+
+        # z1 = w2 - tau/2 * p1
+        z1.lincomb(1, w1, -tau / 2, p1)
+
+        # Part 2 of x += lam(k) * (z1 - p1)
+        x.lincomb(1, x, lam_k, z1)
+
+        # p1 = 2 * z1 - w1
+        p1.lincomb(2, z1, -1, w1)
+        for i in range(m):
+            z2i = z2[L[i].range]
+            # Compute
+            # z2[i] = prox[sigma[i] * l[i]^*](w2[i] + sigma[i]/2 * L[i](p1))
+            L[i](p1, out=z2i)
+            z2i.lincomb(1, w2[i], sigma[i] / 2, L[i](p1))
+            # prox_cc_l is the identity if `l is None`, thus omitted in that
+            # case
+            if l is not None:
+                prox_cc_l[i](sigma[i])(z2i, out=z2i)
+
+            # Compute v[i] += lam(k) * (z2[i] - p2[i])
+            v[i].lincomb(1, v[i], lam_k, z2i)
+            v[i].lincomb(1, v[i], -lam_k, p2[i])
 
 
 def _operator_norms(L):
