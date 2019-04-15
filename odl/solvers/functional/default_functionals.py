@@ -1406,7 +1406,6 @@ class KullbackLeiblerCrossEntropy(Functional):
         # Lazy import to improve `import odl` time
         import scipy.special
 
-
         with np.errstate(invalid='ignore', divide='ignore'):
             if self.prior is None:
                 xlogx = scipy.special.xlogy(x, x)
