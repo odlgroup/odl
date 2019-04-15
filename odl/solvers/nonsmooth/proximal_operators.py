@@ -892,20 +892,26 @@ def proximal_convex_conj_l2_squared(space, lam=1, g=None):
             sig = self.sigma
             if np.isscalar(sig):
                 if g is None:
-                    out.lincomb(1.0 / (1 + 0.5 * sig / lam), x)
+                    out.lincomb(1 / (1 + 0.5 * sig / lam), x)
                 else:
-                    out.lincomb(1.0 / (1 + 0.5 * sig / lam), x,
+                    out.lincomb(1 / (1 + 0.5 * sig / lam), x,
                                 -sig / (1 + 0.5 * sig / lam), g)
             elif sig in space:
                 if g is None:
                     x.divide(1 + 0.5 / lam * sig, out=out)
                 else:
-                    sig.multiply(g, out=out)
-                    out.lincomb(1.0, x, -1.0, out=out)
+                    if x is out:
+                        # Can't write to `out` since old `x` is still needed
+                        tmp = sig.multiply(g)
+                        out.lincomb(1, x, -1, tmp)
+                    else:
+                        sig.multiply(g, out=out)
+                        out.lincomb(1, x, -1, out)
                     out.divide(1 + 0.5 / lam * sig, out=out)
             else:
-                raise RuntimeError('Error in ProximalConvexConjL2Squared: sig '
-                                   'is neither a scalar nor a space element.')
+                raise RuntimeError(
+                    '`sigma` is neither a scalar nor a space element.'
+                )
 
     return ProximalConvexConjL2Squared
 
@@ -980,17 +986,22 @@ def proximal_l2_squared(space, lam=1, g=None):
             sig = self.sigma
             if np.isscalar(sig):
                 if g is None:
-                    out.lincomb(1.0 / (1 + 2 * sig * lam), x)
+                    out.lincomb(1 / (1 + 2 * sig * lam), x)
                 else:
-                    out.lincomb(1.0 / (1 + 2 * sig * lam), x,
+                    out.lincomb(1 / (1 + 2 * sig * lam), x,
                                 2 * sig * lam / (1 + 2 * sig * lam), g)
             else:   # sig in space
                 if g is None:
-                    x.divide(1.0 + 2.0 * sig * lam, out=out)
+                    x.divide(1 + 2 * sig * lam, out=out)
                 else:
-                    sig.multiply(2.0 * lam * g, out=out)
-                    out.lincomb(1.0, x, 1.0, out=out)
-                    out.divide(1.0 + 2 * sig * lam, out=out)
+                    if x is out:
+                        # Can't write to `out` since old `x` is still needed
+                        tmp = sig.multiply(2 * lam * g)
+                        out.lincomb(1, x, 1, tmp)
+                    else:
+                        sig.multiply(2 * lam * g, out=out)
+                        out.lincomb(1, x, 1, out)
+                    out.divide(1 + 2 * sig * lam, out=out)
 
     return ProximalL2Squared
 
