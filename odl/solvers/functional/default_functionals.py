@@ -1125,17 +1125,18 @@ class KullbackLeibler(Functional):
         # Lazy import to improve `import odl` time
         import scipy.special
 
-        if self.prior is None:
-            tmp = ((x - 1 - np.log(x)).inner(self.domain.one()))
-        else:
-            tmp = ((x - self.prior +
-                    scipy.special.xlogy(self.prior, self.prior / x))
-                   .inner(self.domain.one()))
-        if np.isnan(tmp):
+        with np.errstate(invalid='ignore', divide='ignore'):
+            if self.prior is None:
+                res = (x - 1 - np.log(x)).inner(self.domain.one())
+            else:
+                xlogy = scipy.special.xlogy(self.prior, self.prior / x)
+                res = (x - self.prior + xlogy).inner(self.domain.one())
+
+        if not np.isfinite(res):
             # In this case, some element was less than or equal to zero
             return np.inf
         else:
-            return tmp
+            return res
 
     @property
     def gradient(self):
@@ -1258,17 +1259,18 @@ class KullbackLeiblerConvexConj(Functional):
         # Lazy import to improve `import odl` time
         import scipy.special
 
-        if self.prior is None:
-            tmp = self.domain.element(
-                -1.0 * (np.log(1 - x))).inner(self.domain.one())
-        else:
-            tmp = self.domain.element(-scipy.special.xlogy(
-                self.prior, 1 - x)).inner(self.domain.one())
-        if np.isnan(tmp):
+        with np.errstate(invalid='ignore'):
+            if self.prior is None:
+                res = -(np.log(1 - x)).inner(self.domain.one())
+            else:
+                xlogy = scipy.special.xlogy(self.prior, 1 - x)
+                res = -self.domain.element(xlogy).inner(self.domain.one())
+
+        if not np.isfinite(res):
             # In this case, some element was larger than or equal to one
             return np.inf
         else:
-            return tmp
+            return res
 
     @property
     def gradient(self):
@@ -1404,16 +1406,19 @@ class KullbackLeiblerCrossEntropy(Functional):
         # Lazy import to improve `import odl` time
         import scipy.special
 
-        if self.prior is None:
-            tmp = (1 - x + scipy.special.xlogy(x, x)).inner(self.domain.one())
-        else:
-            tmp = ((self.prior - x + scipy.special.xlogy(x, x / self.prior))
-                   .inner(self.domain.one()))
-        if np.isnan(tmp):
+        with np.errstate(invalid='ignore', divide='ignore'):
+            if self.prior is None:
+                xlogx = scipy.special.xlogy(x, x)
+                res = (1 - x + xlogx).inner(self.domain.one())
+            else:
+                xlogy = scipy.special.xlogy(x, x / self.prior)
+                res = (self.prior - x + xlogy).inner(self.domain.one())
+
+        if not np.isfinite(res):
             # In this case, some element was less than or equal to zero
             return np.inf
         else:
-            return tmp
+            return res
 
     @property
     def gradient(self):
