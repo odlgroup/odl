@@ -123,9 +123,7 @@ class OperatorAsAutogradFunction(torch.autograd.Function):
             op_result = np.array(op_result, ndmin=1,
                                  dtype=self.operator.domain.dtype)
         tensor = torch.from_numpy(np.array(op_result, copy=False, ndmin=1))
-        if input.is_cuda:
-            # Push back to GPU
-            tensor = tensor.cuda()
+        tensor = tensor.to(input.device)
         return tensor
 
     def backward(self, grad_output):
@@ -252,10 +250,7 @@ class OperatorAsAutogradFunction(torch.autograd.Function):
                 grad_odl *= scaling
 
             grad = torch.from_numpy(np.array(grad_odl, copy=False, ndmin=1))
-
-            if grad_output.is_cuda:
-                # Push back to GPU
-                grad = grad.cuda()
+            grad = grad.to(grad_output.device)
 
         return grad
 
