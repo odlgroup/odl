@@ -1,4 +1,4 @@
-# Copyright 2014-2017 The ODL contributors
+# Copyright 2014-2019 The ODL contributors
 #
 # This file is part of ODL.
 #
@@ -6,20 +6,21 @@
 # v. 2.0. If a copy of the MPL was not distributed with this file, You can
 # obtain one at https://mozilla.org/MPL/2.0/.
 
-"""Test astra setup functions."""
+"""Test ASTRA setup functions."""
 
 from __future__ import division
+
 import numpy as np
 import pytest
-try:
-    import astra
-except ImportError:
-    pass
 
 import odl
 from odl.tomo.backends.astra_setup import astra_supports
 from odl.util.testutils import is_subdict
 
+try:
+    import astra
+except ImportError:
+    pass
 
 pytestmark = pytest.mark.skipif("not odl.tomo.ASTRA_AVAILABLE")
 
@@ -40,7 +41,7 @@ def _discrete_domain(ndim, interp):
         Returns a `DiscreteLp` instance
     """
     max_pt = np.arange(1, ndim + 1)
-    min_pt = - max_pt
+    min_pt = -max_pt
     shape = np.arange(1, ndim + 1) * 10
 
     return odl.uniform_discr(min_pt, max_pt, shape=shape, interp=interp,
@@ -281,46 +282,44 @@ PROJ_GEOM_3D = {
 
 def test_parallel_2d_projector():
     """Create ASTRA 2D projectors."""
-
     # We can just test if it runs
-    odl.tomo.astra_projector('nearest', VOL_GEOM_2D, PROJ_GEOM_2D,
-                             ndim=2, impl='cpu')
-    odl.tomo.astra_projector('linear', VOL_GEOM_2D, PROJ_GEOM_2D,
-                             ndim=2, impl='cpu')
+    odl.tomo.astra_projector('line', VOL_GEOM_2D, PROJ_GEOM_2D, ndim=2)
+    odl.tomo.astra_projector('linear', VOL_GEOM_2D, PROJ_GEOM_2D, ndim=2)
+
+    with pytest.raises(AssertionError):
+        odl.tomo.astra_projector(
+            'line_fanflat', VOL_GEOM_2D, PROJ_GEOM_2D, ndim=2
+        )
+    with pytest.raises(AssertionError):
+        odl.tomo.astra_projector(
+            'linearcone', VOL_GEOM_2D, PROJ_GEOM_2D, ndim=2
+        )
 
 
+@pytest.mark.xfail(reason='3D CPU projectors not supported by ASTRA')
 def test_parallel_3d_projector():
     """Create ASTRA 3D projectors."""
-
-    # Run as a real test once ASTRA supports this construction
-    with pytest.raises(ValueError):
-        odl.tomo.astra_projector('nearest', VOL_GEOM_3D, PROJ_GEOM_3D,
-                                 ndim=3, impl='cpu')
-
-    with pytest.raises(ValueError):
-        odl.tomo.astra_projector('linear', VOL_GEOM_3D, PROJ_GEOM_3D,
-                                 ndim=3, impl='cpu')
+    # We can just test if it runs
+    odl.tomo.astra_projector('linear3d', VOL_GEOM_3D, PROJ_GEOM_3D, ndim=3)
 
 
 @pytest.mark.skipif(not odl.tomo.ASTRA_CUDA_AVAILABLE,
                     reason="ASTRA cuda not available")
 def test_parallel_3d_projector_gpu():
     """Create ASTRA 3D projectors on GPU."""
-
-    odl.tomo.astra_projector('nearest', VOL_GEOM_3D, PROJ_GEOM_3D, ndim=3,
-                             impl='cuda')
+    odl.tomo.astra_projector('cuda3d', VOL_GEOM_3D, PROJ_GEOM_3D, ndim=3)
 
 
 def test_astra_algorithm():
     """Create ASTRA algorithm object."""
-
     direction = 'forward'
     ndim = 2
     impl = 'cpu'
     vol_id = odl.tomo.astra_data(VOL_GEOM_2D, 'volume', ndim=ndim)
     sino_id = odl.tomo.astra_data(PROJ_GEOM_2D, 'projection', ndim=ndim)
-    proj_id = odl.tomo.astra_projector('nearest', VOL_GEOM_2D, PROJ_GEOM_2D,
-                                       ndim=ndim, impl=impl)
+    proj_id = odl.tomo.astra_projector(
+        'linear', VOL_GEOM_2D, PROJ_GEOM_2D, ndim=ndim
+    )
 
     # Checks
     with pytest.raises(ValueError):

@@ -1,4 +1,4 @@
-# Copyright 2014-2018 The ODL contributors
+# Copyright 2014-2019 The ODL contributors
 #
 # This file is part of ODL.
 #
@@ -8,26 +8,27 @@
 
 """Backend for ASTRA using CUDA."""
 
-from __future__ import print_function, division, absolute_import
+from __future__ import absolute_import, division, print_function
+
 from builtins import object
 from multiprocessing import Lock
+
 import numpy as np
 from packaging.version import parse as parse_version
+
+from odl.discr import DiscreteLp
+from odl.tomo.backends.astra_setup import (
+    ASTRA_VERSION, astra_algorithm, astra_data, astra_projection_geometry,
+    astra_projector, astra_volume_geometry)
+from odl.tomo.geometry import (
+    ConeBeamGeometry, FanBeamGeometry, Geometry, Parallel2dGeometry,
+    Parallel3dAxisGeometry)
 
 try:
     import astra
     ASTRA_CUDA_AVAILABLE = astra.astra.use_cuda()
 except ImportError:
     ASTRA_CUDA_AVAILABLE = False
-
-from odl.discr import DiscreteLp
-from odl.tomo.backends.astra_setup import (
-    ASTRA_VERSION,
-    astra_projection_geometry, astra_volume_geometry, astra_projector,
-    astra_data, astra_algorithm)
-from odl.tomo.geometry import (
-    Geometry, Parallel2dGeometry, FanBeamGeometry, Parallel3dAxisGeometry,
-    ConeBeamGeometry)
 
 
 __all__ = ('ASTRA_CUDA_AVAILABLE',
@@ -153,8 +154,10 @@ class AstraCudaProjectorImpl(object):
                                  data=self.in_array,
                                  allow_copy=False)
 
-        self.proj_id = astra_projector('nearest', vol_geom, proj_geom,
-                                       ndim=proj_ndim, impl='cuda')
+        proj_type = 'cuda' if proj_ndim == 2 else 'cuda3d'
+        self.proj_id = astra_projector(
+            proj_type, vol_geom, proj_geom, proj_ndim
+        )
 
         self.sino_id = astra_data(proj_geom,
                                   datatype='projection',
@@ -303,8 +306,10 @@ class AstraCudaBackProjectorImpl(object):
                                   ndim=proj_ndim,
                                   allow_copy=False)
 
-        self.proj_id = astra_projector('nearest', vol_geom, proj_geom,
-                                       proj_ndim, impl='cuda')
+        proj_type = 'cuda' if proj_ndim == 2 else 'cuda3d'
+        self.proj_id = astra_projector(
+            proj_type, vol_geom, proj_geom, proj_ndim
+        )
 
         self.vol_id = astra_data(vol_geom,
                                  datatype='volume',
