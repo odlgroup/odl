@@ -126,7 +126,7 @@ def skimage_radon_back_projector(sinogram, geometry, vol_space, out=None):
     skimage_range = skimage_proj_space(geometry, vol_space, sinogram.space)
 
     skimage_sinogram = skimage_range.element()
-    skimage_sinogram.sampling(clamped_interpolation(vol_space, sinogram))
+    skimage_sinogram.sampling(clamped_interpolation(skimage_range, sinogram))
 
     if out is None:
         out = vol_space.element()
