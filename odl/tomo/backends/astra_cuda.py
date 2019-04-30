@@ -30,9 +30,11 @@ try:
 except ImportError:
     ASTRA_CUDA_AVAILABLE = False
 
-
-__all__ = ('ASTRA_CUDA_AVAILABLE',
-           'AstraCudaProjectorImpl', 'AstraCudaBackProjectorImpl')
+__all__ = (
+    'ASTRA_CUDA_AVAILABLE',
+    'AstraCudaProjectorImpl',
+    'AstraCudaBackProjectorImpl',
+)
 
 
 class AstraCudaProjectorImpl(object):
