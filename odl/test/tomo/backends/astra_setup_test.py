@@ -286,11 +286,11 @@ def test_parallel_2d_projector():
     odl.tomo.astra_projector('line', VOL_GEOM_2D, PROJ_GEOM_2D, ndim=2)
     odl.tomo.astra_projector('linear', VOL_GEOM_2D, PROJ_GEOM_2D, ndim=2)
 
-    with pytest.raises(AssertionError):
+    with pytest.raises(ValueError):
         odl.tomo.astra_projector(
             'line_fanflat', VOL_GEOM_2D, PROJ_GEOM_2D, ndim=2
         )
-    with pytest.raises(AssertionError):
+    with pytest.raises(ValueError):
         odl.tomo.astra_projector(
             'linearcone', VOL_GEOM_2D, PROJ_GEOM_2D, ndim=2
         )

@@ -115,6 +115,11 @@ ASTRA_FEATURES = {
     # Linking instead of copying of GPU memory, see
     # https://github.com/astra-toolbox/astra-toolbox/pull/93
     'gpulink': '>=1.8.3',
+
+    # Distance-driven projector for parallel 2d geometry, will be in the
+    # next release, see
+    # https://github.com/astra-toolbox/astra-toolbox/pull/183
+    'par2d_distance_driven_proj': '>1.8.3',
 }
 
 
@@ -590,9 +595,8 @@ def astra_projector(astra_proj_type, astra_vol_geom, astra_proj_geom, ndim):
     ----------
     astra_proj_type : str
         ASTRA projector type. Available selections depend on the type of
-        geometry.
-        Interpolation type of the volume discretization. This determines
-        the projection model that is chosen.
+        geometry. See `the ASTRA documentation
+        <http://www.astra-toolbox.com/docs/proj2d.html>`_ for details.
     astra_vol_geom : dict
         ASTRA volume geometry.
     astra_proj_geom : dict
@@ -625,16 +629,35 @@ def astra_projector(astra_proj_type, astra_vol_geom, astra_proj_geom, ndim):
     # but the errors from ASTRA are rather unspecific, so we check ourselves
     # to know what's wrong.
     astra_proj_type = str(astra_proj_type).lower()
+
+    if (
+        astra_proj_type == 'distance_driven'
+        and not astra_supports('par2d_distance_driven_proj')
+    ):
+        raise ValueError(
+            "'distance_driven' projector not supported in the current "
+            "version of ASTRA"
+        )
+
     if astra_geom in {'parallel', 'parallel_vec'}:
-        assert astra_proj_type in {'line', 'linear', 'strip', 'cuda'}
+        valid_proj_types = ['line', 'linear', 'strip', 'cuda']
+        if astra_supports('par2d_distance_driven_proj'):
+            valid_proj_types.append('distance_driven')
     elif astra_geom in {'fanflat', 'fanflat_vec'}:
-        assert astra_proj_type in {'line_fanflat', 'strip_fanflat', 'cuda'}
+        valid_proj_types = ['line_fanflat', 'strip_fanflat', 'cuda']
     elif astra_geom in {'parallel3d', 'parallel3d_vec'}:
-        assert astra_proj_type in {'linear3d', 'cuda3d'}
+        valid_proj_types = ['linear3d', 'cuda3d']
     elif astra_geom in {'cone', 'cone_vec'}:
-        assert astra_proj_type in {'linearcone', 'cuda3d'}
+        valid_proj_types = ['linearcone', 'cuda3d']
     else:
         raise ValueError('invalid geometry type {!r}'.format(astra_geom))
+
+    if astra_proj_type not in valid_proj_types:
+        raise ValueError(
+            'projector type {!r} not in the set {} of valid types for '
+            'geometry type {!r}'
+            ''.format(astra_proj_type, valid_proj_types, astra_geom)
+        )
 
     # Create config dict
     proj_cfg = {}
