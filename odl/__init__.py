@@ -13,23 +13,32 @@ restricted to) inverse problems.
 """
 
 from __future__ import absolute_import
+
+from os import pardir, path
+
 import numpy as np
 
-__version__ = '1.0.0.dev0'
-__all__ = ('set',
-           'space',
-           'operator',
-           'discr',
-           'contrib',
-           'deform',
-           'diagnostics',
-           'phantom',
-           'solvers',
-           'tomo',
-           'trafos',
-           'ufunc_ops',
-           'util',
-           )
+__all__ = (
+    'set',
+    'space',
+    'operator',
+    'discr',
+    'contrib',
+    'deform',
+    'diagnostics',
+    'phantom',
+    'solvers',
+    'tomo',
+    'trafos',
+    'ufunc_ops',
+    'util',
+)
+
+# Set package version
+curdir = path.abspath(path.dirname(__file__))
+
+with open(path.join(curdir, pardir, 'VERSION')) as version_file:
+    __version__ = version_file.read().strip()
 
 # Set old Numpy printing behavior as to not invalidate all doctests.
 # TODO(kohr-h): switch to new behavior when Numpy 1.14 is minimum
