@@ -91,7 +91,9 @@ def skimage_radon_forward_projector(volume, geometry, proj_space, out=None):
     if out is None:
         out = proj_space.element()
 
-    out.sampling(clamped_interpolation(skimage_range, sinogram))
+    out.sampling(
+        clamped_interpolation(skimage_range, sinogram), bounds_check=False
+    )
 
     scale = volume.space.cell_sides[0]
     out *= scale
@@ -126,7 +128,9 @@ def skimage_radon_back_projector(sinogram, geometry, vol_space, out=None):
     skimage_range = skimage_proj_space(geometry, vol_space, sinogram.space)
 
     skimage_sinogram = skimage_range.element()
-    skimage_sinogram.sampling(clamped_interpolation(skimage_range, sinogram))
+    skimage_sinogram.sampling(
+        clamped_interpolation(skimage_range, sinogram), bounds_check=False
+    )
 
     if out is None:
         out = vol_space.element()
