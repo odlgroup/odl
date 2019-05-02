@@ -799,10 +799,10 @@ def _cuboid_phantom_2d(space, cuboids):
             # Parentheses to get best order for broadcasting
             max_distance = np.maximum(squared_dist[0], squared_dist[1])
 
-        # Find the points within the ellipse
+        # Find the points within the rectangle
         inside = max_distance <= 1
 
-        # Add the ellipse intensity to those points
+        # Add the rectangle intensity to those points
         p[idx][inside] += intensity
 
     return space.element(p)
@@ -814,10 +814,10 @@ def cuboid_phantom(space, cuboids, min_pt=None, max_pt=None):
     Parameters
     ----------
     space : `DiscreteLp`
-        Space in which the phantom should be created, must be 2- or
-        3-dimensional. If ``space.shape`` is 1 in an axis, a corresponding
-        slice of the phantom is created (instead of squashing the whole
-        phantom into the slice).
+        Space in which the phantom should be created, must be 2--dimensional.
+        If ``space.shape`` is 1 in an axis, a corresponding slice of the
+        phantom is created (instead of squashing the whole phantom into the
+        slice).
     cuboids : sequence of sequences
         If ``space`` is 2-dimensional, each row should contain the entries ::
 
@@ -829,7 +829,6 @@ def cuboid_phantom(space, cuboids, min_pt=None, max_pt=None):
         The provided cuboids need to be specified relative to the
         reference rectangle ``[-1, -1] x [1, 1]``.
         The angles are to be given in radians.
-
     min_pt, max_pt : array-like, optional
         If provided, use these vectors to determine the bounding box of the
         phantom instead of ``space.min_pt`` and ``space.max_pt``.
@@ -848,10 +847,9 @@ def cuboid_phantom(space, cuboids, min_pt=None, max_pt=None):
     -----
     The phantom is created by adding the values of each cuboid. The
     cuboid are defined by a center point
-    ``(center_x, center_y, [center_z])``, the lengths of its principial
-    axes ``(axis_1, axis_2, [axis_2])``, and a rotation angle ``rotation``
-    in 2D or Euler angles ``(rotation_phi, rotation_theta, rotation_psi)``
-    in 3D.
+    ``(center_x, center_y)``, the lengths of its principial
+    axes ``(axis_1, axis_2)``, and a rotation angle ``rotation``
+    in 2D.
 
     This function is heavily optimized, achieving runtimes about 20 times
     faster than "trivial" implementations. It is therefore recommended to use
@@ -871,14 +869,14 @@ def cuboid_phantom(space, cuboids, min_pt=None, max_pt=None):
     Create a circle with a smaller circle inside:
 
     >>> space = odl.uniform_discr([-1, -1], [1, 1], [5, 5])
-    >>> cuboids = [[1.0, 1.0, 1.0, 0.0, 0.0, 0.0],
-    ...             [1.0, 0.6, 0.6, 0.0, 0.0, 0.0]]
+    >>> cuboids = [[1.0, 0.6, 0.6, 0.0, 0.0, 0.0],
+    ...             [1.0, 0.2, 0.2, 0.0, 0.0, 0.0]]
     >>> print(cuboid_phantom(space, cuboids))
-    [[ 0.,  0.,  1.,  0.,  0.],
+    [[ 0.,  0.,  0.,  0.,  0.],
+     [ 0.,  1.,  1.,  1.,  0.],
      [ 0.,  1.,  2.,  1.,  0.],
-     [ 1.,  2.,  2.,  2.,  1.],
-     [ 0.,  1.,  2.,  1.,  0.],
-     [ 0.,  0.,  1.,  0.,  0.]]
+     [ 0.,  1.,  1.,  1.,  0.],
+     [ 0.,  0.,  0.,  0.,  0.]]
 
     See Also
     --------
@@ -924,7 +922,7 @@ def cuboid_phantom(space, cuboids, min_pt=None, max_pt=None):
             space, min_pt=snapped_min_pt, max_pt=snapped_max_pt,
             cell_sides=space.cell_sides)
 
-        tmp_phantom = _phantom(tmp_space, ellipsoids)
+        tmp_phantom = _phantom(tmp_space, cuboids)
         offset = space.partition.index(tmp_space.min_pt)
         return space.element(
             resize_array(tmp_phantom, space.shape, offset))
