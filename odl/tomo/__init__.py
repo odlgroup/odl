@@ -23,11 +23,12 @@ from .analytic import *
 __all__ += analytic.__all__
 
 from .backends import (
-    ASTRA_AVAILABLE, ASTRA_CUDA_AVAILABLE, astra_conebeam_2d_geom_to_vec,
-    astra_conebeam_3d_geom_to_vec)
+    ASTRA_AVAILABLE, ASTRA_CUDA_AVAILABLE, SKIMAGE_AVAILABLE,
+    astra_conebeam_2d_geom_to_vec, astra_conebeam_3d_geom_to_vec)
 __all__ += (
     'ASTRA_AVAILABLE',
     'ASTRA_CUDA_AVAILABLE',
+    'SKIMAGE_AVAILABLE',
     'astra_conebeam_2d_geom_to_vec',
     'astra_conebeam_3d_geom_to_vec',
 )
