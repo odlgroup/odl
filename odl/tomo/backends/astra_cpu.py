@@ -25,25 +25,49 @@ try:
 except ImportError:
     pass
 
+__all__ = (
+    'astra_cpu_forward_projector',
+    'astra_cpu_back_projector',
+    'default_astra_proj_type',
+)
 
-__all__ = ('astra_cpu_forward_projector', 'astra_cpu_back_projector')
 
+def default_astra_proj_type(geom):
+    """Return the default ASTRA projector type for a given geometry.
 
-def _default_proj_type(geom):
-    """Return the default projector type for a given geometry."""
+    Parameters
+    ----------
+    geom : `Geometry`
+        ODL geometry object for which to get the default projector type.
+
+    Returns
+    -------
+    astra_proj_type : str
+        Default projector type for the given geometry.
+
+        In 2D:
+
+        - `ParallelBeamGeometry`: ``'linear'``
+        - `DivergentBeamGeometry`: ``'line_fanflat'``
+
+        In 3D:
+
+        - `ParallelBeamGeometry`: ``'linear3d'``
+        - `DivergentBeamGeometry`: ``'linearcone'``
+    """
     if isinstance(geom, ParallelBeamGeometry):
         return 'linear' if geom.ndim == 2 else 'linear3d'
     elif isinstance(geom, DivergentBeamGeometry):
         return 'line_fanflat' if geom.ndim == 2 else 'linearcone'
     else:
         raise TypeError(
-            'no default exists for {}, `proj_type` must be given explicitly'
+            'no default exists for {}, `astra_proj_type` must be given explicitly'
             ''.format(type(geom))
         )
 
 
 def astra_cpu_forward_projector(vol_data, geometry, proj_space, out=None,
-                                proj_type=None):
+                                astra_proj_type=None):
     """Run an ASTRA forward projection on the given data using the CPU.
 
     Parameters
@@ -57,11 +81,11 @@ def astra_cpu_forward_projector(vol_data, geometry, proj_space, out=None,
     out : ``proj_space`` element, optional
         Element of the projection space to which the result is written. If
         ``None``, an element in ``proj_space`` is created.
-    proj_type : str, optional
+    astra_proj_type : str, optional
         Type of projector that should be used. See `the ASTRA documentation
         <http://www.astra-toolbox.com/docs/proj2d.html>`_ for details.
         By default, a suitable projector type for the given geometry is
-        selected.
+        selected, see `default_astra_proj_type`.
 
     Returns
     -------
@@ -102,9 +126,9 @@ def astra_cpu_forward_projector(vol_data, geometry, proj_space, out=None,
     proj_geom = astra_projection_geometry(geometry)
 
     # Create projector
-    if proj_type is None:
-        proj_type = _default_proj_type(geometry)
-    proj_id = astra_projector(proj_type, vol_geom, proj_geom, ndim)
+    if astra_proj_type is None:
+        astra_proj_type = default_astra_proj_type(geometry)
+    proj_id = astra_projector(astra_proj_type, vol_geom, proj_geom, ndim)
 
     # Create ASTRA data structures
     vol_data_arr = np.asarray(vol_data)
@@ -131,7 +155,7 @@ def astra_cpu_forward_projector(vol_data, geometry, proj_space, out=None,
 
 
 def astra_cpu_back_projector(proj_data, geometry, vol_space, out=None,
-                             proj_type=None):
+                             astra_proj_type=None):
     """Run an ASTRA back-projection on the given data using the CPU.
 
     Parameters
@@ -145,11 +169,11 @@ def astra_cpu_back_projector(proj_data, geometry, vol_space, out=None,
     out : ``vol_space`` element, optional
         Element of the reconstruction space to which the result is written.
         If ``None``, an element in ``vol_space`` is created.
-    proj_type : str, optional
+    astra_proj_type : str, optional
         Type of projector that should be used. See `the ASTRA documentation
         <http://www.astra-toolbox.com/docs/proj2d.html>`_ for details.
         By default, a suitable projector type for the given geometry is
-        selected.
+        selected, see `default_astra_proj_type`.
 
     Returns
     -------
@@ -196,9 +220,9 @@ def astra_cpu_back_projector(proj_data, geometry, vol_space, out=None,
                          allow_copy=True)
 
     # Create projector
-    if proj_type is None:
-        proj_type = _default_proj_type(geometry)
-    proj_id = astra_projector(proj_type, vol_geom, proj_geom, ndim)
+    if astra_proj_type is None:
+        astra_proj_type = default_astra_proj_type(geometry)
+    proj_id = astra_projector(astra_proj_type, vol_geom, proj_geom, ndim)
 
     # Convert out to correct dtype and order if needed.
     with writable_array(out, dtype='float32', order='C') as out_arr:

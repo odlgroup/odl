@@ -40,14 +40,13 @@ def skimage_proj_space(geometry, volume_space, proj_space):
 def clamped_interpolation(skimage_proj_space, sinogram):
     """Interpolate in a possibly smaller space.
 
-    Sets all points that would be outside the domain to match the
-    boundary values.
+    Clip all points to fit within the bounds of the given space.
     """
     min_x = skimage_proj_space.domain.min()[1]
     max_x = skimage_proj_space.domain.max()[1]
 
     def interpolator(x):
-        x = (x[0], np.maximum(min_x, np.minimum(max_x, x[1])))
+        x = (x[0], np.clip(x[1], min_x, max_x))
         return sinogram.interpolation(x, bounds_check=False)
 
     return interpolator

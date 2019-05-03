@@ -61,12 +61,20 @@ if ASTRA_AVAILABLE:
                 'to 1.7 or higher'.format(_maj, _min), RuntimeWarning)
 
 
-__all__ = ('ASTRA_AVAILABLE', 'ASTRA_VERSION', 'astra_supports',
-           'astra_volume_geometry', 'astra_projection_geometry',
-           'astra_data', 'astra_projector', 'astra_algorithm',
-           'astra_conebeam_3d_geom_to_vec',
-           'astra_conebeam_2d_geom_to_vec',
-           'astra_parallel_3d_geom_to_vec')
+__all__ = (
+    'ASTRA_AVAILABLE',
+    'ASTRA_VERSION',
+    'astra_supports',
+    'astra_versions_supporting',
+    'astra_volume_geometry',
+    'astra_conebeam_3d_geom_to_vec',
+    'astra_conebeam_2d_geom_to_vec',
+    'astra_parallel_3d_geom_to_vec',
+    'astra_projection_geometry',
+    'astra_data',
+    'astra_projector',
+    'astra_algorithm',
+)
 
 
 # ASTRA_FEATURES contains a set of features along with version specifiers
@@ -87,7 +95,7 @@ ASTRA_FEATURES = {
     'anisotropic_voxels_3d': '>=1.8',
 
     # ASTRA geometry defined by vectors supported in the current
-    # development version, will be in the next release. See
+    # development version, will be in the next release after 1.8.3. See
     # https://github.com/astra-toolbox/astra-toolbox/issues/54
     'par2d_vec_geometry': '>1.8.3',
 
@@ -96,12 +104,10 @@ ASTRA_FEATURES = {
     # https://github.com/astra-toolbox/astra-toolbox/issues/71
     'cone2d_density_weighting': None,
 
-    # Hacky version of ray-density weighting in cone beam backprojection for
-    # constant source-detector distance, see
-    # https://github.com/astra-toolbox/astra-toolbox/issues/71
-    # and
+    # Approximate version of ray-density weighting in cone beam
+    # backprojection for constant source-detector distance, see
     # https://github.com/astra-toolbox/astra-toolbox/pull/84
-    'cone3d_hacky_density_weighting': '>=1.8',
+    'cone3d_approx_density_weighting': '>=1.8',
 
     # General case not supported yet, see the discussion in
     # https://github.com/astra-toolbox/astra-toolbox/issues/71
@@ -117,7 +123,7 @@ ASTRA_FEATURES = {
     'gpulink': '>=1.8.3',
 
     # Distance-driven projector for parallel 2d geometry, will be in the
-    # next release, see
+    # next release after 1.8.3, see
     # https://github.com/astra-toolbox/astra-toolbox/pull/183
     'par2d_distance_driven_proj': '>1.8.3',
 }
@@ -140,6 +146,27 @@ def astra_supports(feature):
     """
     from odl.util.utility import pkg_supports
     return pkg_supports(feature, ASTRA_VERSION, ASTRA_FEATURES)
+
+
+def astra_versions_supporting(feature):
+    """Return version spec for support of the given feature.
+
+    Parameters
+    ----------
+    feature : str
+        Name of a potential feature of ASTRA. See ``ASTRA_FEATURES`` for
+        possible values.
+
+    Returns
+    -------
+    version_spec : str
+        Specifier for versions of ASTRA that support ``feature``. See
+        `odl.util.utility.pkg_supports` for details.
+    """
+    try:
+        return ASTRA_FEATURES[str(feature)]
+    except KeyError:
+        raise ValueError('unknown feature {!r}'.format(feature))
 
 
 def astra_volume_geometry(vol_space):
@@ -189,9 +216,10 @@ def astra_volume_geometry(vol_space):
             not vol_space.partition.has_isotropic_cells
             and not astra_supports('anisotropic_voxels_2d')
         ):
+            req_ver = astra_versions_supporting('anisotropic_voxels_2d')
             raise NotImplementedError(
-                'non-isotropic pixels in 2d volumes not supported by ASTRA '
-                'v{}'.format(ASTRA_VERSION)
+                'support for non-isotropic pixels in 2d volumes requires '
+                'ASTRA {}'.format(req_ver)
             )
         # Given a 2D array of shape (x, y), a volume geometry is created as:
         #    astra.create_vol_geom(x, y, y_min, y_max, x_min, x_max)
@@ -218,9 +246,11 @@ def astra_volume_geometry(vol_space):
             not vol_space.partition.has_isotropic_cells
             and not astra_supports('anisotropic_voxels_3d')
         ):
+            req_ver = astra_versions_supporting('anisotropic_voxels_3d')
             raise NotImplementedError(
-                'non-isotropic voxels in 3d volumes not supported by ASTRA '
-                'v{}'.format(ASTRA_VERSION))
+                'support for non-isotropic pixels in 3d volumes requires '
+                'ASTRA {}'.format(req_ver)
+            )
         # Given a 3D array of shape (x, y, z), a volume geometry is created as:
         #    astra.create_vol_geom(y, z, x, z_min, z_max, y_min, y_max,
         #                          x_min, x_max),
@@ -620,9 +650,9 @@ def astra_projector(astra_proj_type, astra_vol_geom, astra_proj_geom, ndim):
         astra_geom == 'parallel_vec'
         and not astra_supports('par2d_vec_geometry')
     ):
+        req_ver = astra_versions_supporting('par2d_vec_geometry')
         raise ValueError(
-            "'parallel_vec' geometry not supported in the current version "
-            "of ASTRA"
+            "'parallel_vec' geometry requires ASTRA {}".format(req_ver)
         )
 
     # Check if projector types are valid. We should not have to do this,
@@ -634,9 +664,9 @@ def astra_projector(astra_proj_type, astra_vol_geom, astra_proj_geom, ndim):
         astra_proj_type == 'distance_driven'
         and not astra_supports('par2d_distance_driven_proj')
     ):
+        req_ver = astra_versions_supporting('par2d_distance_driven_proj')
         raise ValueError(
-            "'distance_driven' projector not supported in the current "
-            "version of ASTRA"
+            "'distance_driven' projector requires ASTRA {}".format(req_ver)
         )
 
     if astra_geom in {'parallel', 'parallel_vec'}:
@@ -666,11 +696,11 @@ def astra_projector(astra_proj_type, astra_vol_geom, astra_proj_geom, ndim):
     proj_cfg['ProjectionGeometry'] = astra_proj_geom
     proj_cfg['options'] = {}
 
-    # Add the hacky 1/r^2 weighting exposed in intermediate versions of ASTRA
-    # TODO(kohr-h): add non-hacky version when available
+    # Add the approximate 1/r^2 weighting exposed in intermediate versions of
+    # ASTRA
     if (
         astra_proj_type in ('cone', 'cone_vec')
-        and astra_supports('cone3d_hacky_density_weighting')
+        and astra_supports('cone3d_approx_density_weighting')
     ):
         proj_cfg['options']['DensityWeighting'] = True
 

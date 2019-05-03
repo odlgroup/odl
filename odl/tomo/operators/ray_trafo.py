@@ -22,7 +22,8 @@ from odl.tomo.backends import (
     ASTRA_AVAILABLE, ASTRA_CUDA_AVAILABLE, ASTRA_VERSION, SKIMAGE_AVAILABLE,
     AstraCudaBackProjectorImpl, AstraCudaProjectorImpl,
     astra_cpu_back_projector, astra_cpu_forward_projector, astra_supports,
-    skimage_radon_back_projector, skimage_radon_forward_projector)
+    astra_versions_supporting, skimage_radon_back_projector,
+    skimage_radon_forward_projector)
 from odl.tomo.geometry import (
     Geometry, Parallel2dGeometry, Parallel3dAxisGeometry)
 
@@ -161,8 +162,13 @@ class RayTransformBase(Operator):
             # Print a warning if the detector midpoint normal vector at any
             # angle is perpendicular to the geometry axis in parallel 3d
             # single-axis geometry -- this is broken in some ASTRA versions
-            if (isinstance(geometry, Parallel3dAxisGeometry) and
-                    not astra_supports('par3d_det_mid_pt_perp_to_axis')):
+            if (
+                isinstance(geometry, Parallel3dAxisGeometry) and
+                not astra_supports('par3d_det_mid_pt_perp_to_axis')
+            ):
+                req_ver = astra_versions_supporting(
+                    'par3d_det_mid_pt_perp_to_axis'
+                )
                 axis = geometry.axis
                 mid_pt = geometry.det_params.mid_pt
                 for i, angle in enumerate(geometry.angles):
@@ -172,9 +178,9 @@ class RayTransformBase(Operator):
                             'angle {}: detector midpoint normal {} is '
                             'perpendicular to the geometry axis {} in '
                             '`Parallel3dAxisGeometry`; this is broken in '
-                            'ASTRA v{}, please upgrade to v1.8 or later'
+                            'ASTRA {}, please upgrade to ASTRA {}'
                             ''.format(i, geometry.det_to_src(angle, mid_pt),
-                                      axis, ASTRA_VERSION),
+                                      axis, ASTRA_VERSION, req_ver),
                             RuntimeWarning)
                         break
 
