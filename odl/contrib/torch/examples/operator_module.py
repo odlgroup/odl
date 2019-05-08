@@ -79,7 +79,7 @@ target = autograd.Variable(torch.zeros(2))[None, ...]
 
 # Compute the loss and backpropagate
 loss = loss_fun(model(inp), target)
-print('Loss function value:', loss.data[0])
+print('Loss function value:', loss.item())
 print('')
 
 loss.backward()
@@ -88,3 +88,5 @@ for p in model.named_parameters():
     name, value = p
     print('{}:'.format(name))
     print(value)
+    print('gradient')
+    print(value.grad)
