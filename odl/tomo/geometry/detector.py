@@ -901,7 +901,7 @@ class CylindricalDetector(Detector):
 
     The cylindrical surface that corresponds to the partition
     is rotated to be aligned with given axes and
-    shifted to cross the origin. Note, the partition angle increases
+    shifted to cross the origin. Note that the partition angle increases
     in the clockwise direction, by analogy to flat detectors."""
 
     def __init__(self, partition, axes, radius, check_bounds=True):
@@ -912,10 +912,9 @@ class CylindricalDetector(Detector):
         partition : 2-dim. `RectPartition`
             Partition of the parameter interval, corresponding to the
             angular partition and height partition.
-        axes : sequence of `array-like`'s
+        axes : sequence of `array-like`
             Fixed pair of of unit vectors with which the detector is aligned.
-            The vectors must have shape ``(3,)`` and be linearly
-            independent.
+            The vectors must have shape ``(3,)`` and be perpendicular.
         radius : nonnegative float
             Radius of the cylinder.
         check_bounds : bool, optional
@@ -930,7 +929,7 @@ class CylindricalDetector(Detector):
         >>> part = odl.uniform_partition(
         ...     [-np.pi / 2, -4], [np.pi / 2, 4], [10, 8])
         >>> det = CylindricalDetector(
-        ...     part, axes=[(1, 0, 0), (0, 0, 1)], radius = 2)
+        ...     part, axes=[(1, 0, 0), (0, 0, 1)], radius=2)
         >>> det.axes
         array([[ 1.,  0.,  0.],
                [ 0.,  0.,  1.]])
@@ -951,6 +950,9 @@ class CylindricalDetector(Detector):
         if np.linalg.norm(np.cross(*axes)) == 0:
             raise ValueError('`axes` {} are linearly dependent'
                              ''.format(axes_in))
+        if np.linalg.norm(np.dot(*axes)) != 0:
+            raise ValueError('`axes` {} are not perpendicular'
+                             ''.format(axes_in))
 
         self.__axes = axes / np.linalg.norm(axes, axis=1, keepdims=True)
 
@@ -960,8 +962,8 @@ class CylindricalDetector(Detector):
 
         initial_axes = np.array([[0, -1, 0], [0, 0, 1]])
         r1 = rotation_matrix_from_to(initial_axes[0], axes[0])
-        r2 = rotation_matrix_from_to(initial_axes[1], axes[1])
-        self.__rotation_matrix = np.matmul(r1, r2)
+        r2 = rotation_matrix_from_to(np.matmul(r1, initial_axes[1]), axes[1])
+        self.__rotation_matrix = np.matmul(r2, r1)
         self.__translation = (- self.__radius
                               * np.matmul(self.__rotation_matrix, (1, 0, 0)))
 
@@ -991,7 +993,7 @@ class CylindricalDetector(Detector):
 
         For parameters ``phi`` and ``h``, the returned point is given by ::
 
-            surf = R * (radius*cos(phi), -radius*sin(phi), h) + t
+            surf = R * (radius * cos(phi), -radius * sin(phi), h) + t
 
         where ``R`` is a rotation matrix and ``t`` is a translation vector.
         Note that increase of ``phi`` corresponds to rotation
@@ -1062,9 +1064,9 @@ class CylindricalDetector(Detector):
 
         The derivative at parameters ``phi`` and ``h`` is given by ::
 
-            deriv = R * ((-radius*sin(phi), 0),
-                         (-radius*cos(phi), 0),
-                         (               0, 1))
+            deriv = R * ((-radius * sin(phi), 0),
+                         (-radius * cos(phi), 0),
+                         (                 0, 1))
 
         where R is a rotation matrix.
 
@@ -1224,13 +1226,12 @@ class SphericalDetector(Detector):
         ----------
         partition : 2-dim. `RectPartition`
             Partition of the parameter interval, corresponding to the
-            angular partition and height partition.
+            angular partition in two directions.
         axes : sequence of `array-like`'s
             Fixed pair of of unit vectors with which the detector is aligned.
-            The vectors must have shape ``(3,)`` and be linearly
-            independent.
+            The vectors must have shape ``(3,)`` and be perpendicular.
         radius : nonnegative float
-            Radius of the cylinder.
+            Radius of the sphere.
         check_bounds : bool, optional
             If ``True``, methods computing vectors check input arguments.
             Checks are vectorized and add only a small overhead.
@@ -1265,6 +1266,9 @@ class SphericalDetector(Detector):
         if np.linalg.norm(np.cross(*axes)) == 0:
             raise ValueError('`axes` {} are linearly dependent'
                              ''.format(axes_in))
+        if np.linalg.norm(np.dot(*axes)) != 0:
+            raise ValueError('`axes` {} are not perpendicular'
+                             ''.format(axes_in))
 
         self.__axes = axes / np.linalg.norm(axes, axis=1, keepdims=True)
 
@@ -1274,8 +1278,8 @@ class SphericalDetector(Detector):
 
         initial_axes = np.array([[0, -1, 0], [0, 0, 1]])
         r1 = rotation_matrix_from_to(initial_axes[0], axes[0])
-        r2 = rotation_matrix_from_to(initial_axes[1], axes[1])
-        self.__rotation_matrix = np.matmul(r1, r2)
+        r2 = rotation_matrix_from_to(np.matmul(r1, initial_axes[1]), axes[1])
+        self.__rotation_matrix = np.matmul(r2, r1)
         self.__translation = (- self.__radius
                               * np.matmul(self.__rotation_matrix, (1, 0, 0)))
 
@@ -1305,9 +1309,9 @@ class SphericalDetector(Detector):
 
         For parameters ``phi`` and ``theta``, the surface point is given by ::
 
-            surf = R * radius * ( cos(phi)*cos(theta),
-                                 -sin(phi)*cos(theta),
-                                           sin(theta)) + t
+            surf = R * radius * ( cos(phi) * cos(theta),
+                                 -sin(phi) * cos(theta),
+                                             sin(theta)) + t
 
         where ``R`` is a rotation matrix and ``t`` is a translation vector.
         Note that increase of ``phi`` corresponds to rotation
@@ -1380,9 +1384,10 @@ class SphericalDetector(Detector):
 
         The derivative at parameters ``phi`` and ``theta`` is given by ::
 
-            deriv = R * radius * ((-sin(phi)*cos(theta), -cos(phi)*sin(theta)),
-                                  (-cos(phi)*cos(theta),  sin(phi)*sin(theta)),
-                                  (                   0,           cos(theta)))
+            deriv = R * radius
+                      * ((-sin(phi) * cos(theta), -cos(phi) * sin(theta)),
+                         (-cos(phi) * cos(theta),  sin(phi) * sin(theta)),
+                         (                     0,             cos(theta)))
 
         where R is a rotation matrix.
 

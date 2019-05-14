@@ -626,13 +626,12 @@ class ConeBeamGeometry(DivergentBeamGeometry, AxisOrientedGeometry):
         det_radius : nonnegative float
             Radius of the detector circle. Must be nonzero if ``src_radius``
             is zero.
-        det_curvature_radius : nonnegative float or a sequence of
-            two nonnegative floats, optional
+        det_curvature_radius :  2-tuple of nonnegative floats, optional
             Radius or radii of the detector curvature.
-            If ``None``, a flat detector is used,
-            if one value, a cylindrical detector is used,
-            if a sequence of two elements, e.g. [r, r], a spherical detector
-            is used.
+            If ``None``, a flat detector is used.
+            If ``(r, None)`` or ``(r, float('inf'))``, a cylindrical
+            detector is used.
+            If ``(r, r)``, a spherical detector is used.
         pitch : float, optional
             Constant distance along ``axis`` that a point on the helix
             traverses when increasing the angle parameter by ``2 * pi``.
@@ -715,7 +714,7 @@ class ConeBeamGeometry(DivergentBeamGeometry, AxisOrientedGeometry):
         >>> dpart = odl.uniform_partition(
         ...     [-np.pi / 2, -1], [np.pi / 2, 1], (20, 20))
         >>> geom = ConeBeamGeometry(apart, dpart,
-        ...     src_radius=5, det_radius=10, det_curvature_radius=10)
+        ...     src_radius=5, det_radius=10, det_curvature_radius=(10, None))
         >>> # (10*sin(pi/2), 10*cos(pi/2), 1)
         >>> np.round(geom.det_point_position(0, [ np.pi / 2, 1] ), 2)
         array([ 10., 0., 1.])
@@ -726,7 +725,7 @@ class ConeBeamGeometry(DivergentBeamGeometry, AxisOrientedGeometry):
         >>> dpart = odl.uniform_partition([-np.pi / 2, -np.pi / 4],
         ...                               [ np.pi / 2,  np.pi / 4], (20, 20))
         >>> geom = ConeBeamGeometry(apart, dpart,
-        ...     src_radius=5, det_radius=10, det_curvature_radius=[10, 10])
+        ...     src_radius=5, det_radius=10, det_curvature_radius=(10, 10))
         >>> # 10*( cos(pi/4), 0, sin(pi/4))
         >>> np.round(geom.det_point_position(0, [ np.pi / 2, np.pi / 4] ), 2)
         array([ 7.07, 0.  , 7.07])
@@ -831,26 +830,27 @@ class ConeBeamGeometry(DivergentBeamGeometry, AxisOrientedGeometry):
         if det_curvature_radius is None:
             detector = Flat2dDetector(dpart, axes=det_axes_init,
                                       check_bounds=check_bounds)
-        else:
-            if np.array(det_curvature_radius).shape == ():
-                detector = CylindricalDetector(dpart,
-                                               radius=det_curvature_radius,
-                                               axes=det_axes_init,
-                                               check_bounds=check_bounds)
-            elif np.array(det_curvature_radius).shape == (2,):
-                if det_curvature_radius[0] != det_curvature_radius[1]:
-                    raise ValueError('Curvature of spherical detector - '
-                                     'det_curvature_radius {} must be the '
-                                     'same in both directions'
-                                     .format(det_curvature_radius))
+        elif len(det_curvature_radius) == 2:
+            if det_curvature_radius[0] == det_curvature_radius[1]:
                 detector = SphericalDetector(dpart,
                                              radius=det_curvature_radius[0],
                                              axes=det_axes_init,
                                              check_bounds=check_bounds)
+            elif (det_curvature_radius[1] is None
+                  or det_curvature_radius[1] == float('inf')):
+                detector = CylindricalDetector(dpart,
+                                               radius=det_curvature_radius[0],
+                                               axes=det_axes_init,
+                                               check_bounds=check_bounds)
             else:
-                raise ValueError('det_curvature_radius {} must be a float or '
-                                 'a sequence of 2 floats'
-                                 ''.format(det_curvature_radius))
+                raise ValueError('For a spherical detector, '
+                                 'det_curvature_radius {} must be the same '
+                                 'in both directions. For a cylindrical '
+                                 'detector, the second value can '
+                                 'be ``None``'.format(det_curvature_radius))
+        else:
+            raise ValueError('det_curvature_radius {} must be a 2-tuple'
+                             ''.format(det_curvature_radius))
         super(ConeBeamGeometry, self).__init__(
             ndim=3, motion_part=apart, detector=detector, **kwargs)
 
