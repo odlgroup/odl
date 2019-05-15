@@ -176,7 +176,7 @@ class NonUniformFourierTransformAdjoint(NonUniformFourierTransformBase):
         """
         if not self._has_run:
             self._normalize()
-            self.nfft.x = self.samplesspace
+            self.nfft.x = self.samples
             self.nfft.precompute()
             self._has_run = True
         self.nfft.f = np.asarray(x)
