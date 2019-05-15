@@ -64,8 +64,6 @@ class NonUniformFourierTransformBase(Operator):
             self.samples /= (self.space.max_pt - self.space.min_pt)
             self.samples -= 0.5
             self.samples[np.where(self.samples == 0.5)] = -0.5
-            self.nfft.x = self.samples
-
 
 class NonUniformFourierTransform(NonUniformFourierTransformBase):
     """Forward Non uniform Fast Fourier Transform.
@@ -117,6 +115,7 @@ class NonUniformFourierTransform(NonUniformFourierTransformBase):
         """
         if not self._has_run:
             self._normalize()
+            self.nfft.x = self.samples
             self.nfft.precompute()
             self._has_run = True
         self.nfft.f_hat = np.asarray(x)
@@ -177,6 +176,7 @@ class NonUniformFourierTransformAdjoint(NonUniformFourierTransformBase):
         """
         if not self._has_run:
             self._normalize()
+            self.nfft.x = self.samples
             self.nfft.precompute()
             self._has_run = True
         self.nfft.f = np.asarray(x)
