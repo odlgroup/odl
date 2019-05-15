@@ -156,7 +156,7 @@ class NonUniformFourierTransformAdjoint(NonUniformFourierTransformBase):
     @property
     def adjoint(self):
         return NonUniformFourierTransform(
-            shape=self.shape,
+            space=self.space,
             samples=self.samples,
             skip_normalization=True
         )
