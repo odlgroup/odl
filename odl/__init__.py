@@ -37,7 +37,7 @@ __all__ = (
 # Set package version
 curdir = path.abspath(path.dirname(__file__))
 
-with open(path.join(curdir, pardir, 'VERSION')) as version_file:
+with open(path.join(curdir, 'VERSION')) as version_file:
     __version__ = version_file.read().strip()
 
 # Set old Numpy printing behavior as to not invalidate all doctests.
