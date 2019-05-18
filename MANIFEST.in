@@ -1,10 +1,10 @@
 include CONTRIBUTING.md
 include LICENSE
 include README.md
-include VERSION
 include setup.cfg
 include setup.py
 include odl/pytest.ini
+include odl/VERSION
 exclude .*
 recursive-include odl/test test*.py *test.py
 prune conda
