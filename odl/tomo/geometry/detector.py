@@ -1139,64 +1139,6 @@ class CylindricalDetector(Detector):
 
         return deriv
 
-    def surface_measure(self, param):
-        """Return the arc length measure at ``param``.
-
-        This is a constant function evaluating to (`radius`, 1) everywhere.
-
-        Parameters
-        ----------
-        param : `array-like` or sequence
-            Parameter value(s) at which to evaluate. A sequence of
-            parameters must have length 2.
-
-        Returns
-        -------
-        measure : `numpy.ndarray`
-            Array containing measure vectors.
-            If ``param`` is a single parameter, the returned array has
-            shape ``(2,)``, otherwise ``broadcast(*param).shape + (2,)``.
-
-        See Also
-        --------
-        surface
-        surface_deriv
-
-        Examples
-        --------
-        The method works with a single parameter, resulting in a float:
-
-        >>> part = odl.uniform_partition(
-        ...     [-np.pi / 2, -4], [np.pi / 2, 4], (10,8))
-        >>> det = CylindricalDetector(
-        ...     part, axes=[(1, 0, 0), (0, 0, 1)], radius = 2)
-        >>> det.surface_measure([0, 0])
-        array([ 2.,  1.])
-
-        It is also vectorized, i.e., it can be called with multiple
-        parameters at once (or an n-dimensional array of parameters):
-
-        >>> det.surface_measure([[0, np.pi / 2], [0, 1]])
-        array([[ 2.,  1.],
-               [ 2.,  1.]])
-        >>> param = (np.zeros((4, 5)), np.zeros((4, 5)))  # pairs of params
-        >>> det.surface_measure(param).shape
-        (4, 5, 2)
-        """
-        squeeze_out = (np.broadcast(*param).shape == ())
-        param_in = param
-        param = tuple(np.array(p, dtype=float, copy=False, ndmin=1)
-                      for p in param)
-        if self.check_bounds and not is_inside_bounds(param, self.params):
-            raise ValueError('`param` {} not in the valid range '
-                             '{}'.format(param_in, self.params))
-
-        if squeeze_out:
-            return np.array([self.radius, 1])
-        else:
-            return np.broadcast_to([self.radius, 1],
-                                   np.broadcast(*param).shape + (2,))
-
     def __repr__(self):
         """Return ``repr(self)``."""
         posargs = [self.partition]
@@ -1462,65 +1404,6 @@ class SphericalDetector(Detector):
             deriv = deriv.squeeze()
 
         return deriv
-
-    def surface_measure(self, param):
-        """Return the arc length measure at ``param``.
-
-        This is a constant function evaluating to (`radius`, `radius`)
-        everywhere.
-
-        Parameters
-        ----------
-        param : `array-like` or sequence
-            Parameter value(s) at which to evaluate. A sequence of
-            parameters must have length 2.
-
-        Returns
-        -------
-        measure : `numpy.ndarray`
-            Array containing measure vectors.
-            If ``param`` is a single parameter, the returned array has
-            shape ``(2,)``, otherwise ``broadcast(*param).shape + (2,)``.
-
-        See Also
-        --------
-        surface
-        surface_deriv
-
-        Examples
-        --------
-        The method works with a single parameter, resulting in a float:
-
-        >>> part = odl.uniform_partition([-np.pi / 2, -np.pi / 3],
-        ...                              [ np.pi / 2,  np.pi / 3], [20, 10])
-        >>> det = SphericalDetector(
-        ...     part, axes=[(1, 0, 0), (0, 0, 1)], radius = 2)
-        >>> det.surface_measure([0, 0])
-        array([ 2.,  2.])
-
-        It is also vectorized, i.e., it can be called with multiple
-        parameters at once (or an n-dimensional array of parameters):
-
-        >>> det.surface_measure([[0, np.pi / 2], [0, np.pi / 3]])
-        array([[ 2.,  2.],
-               [ 2.,  2.]])
-        >>> param = (np.zeros((4, 5)), np.zeros((4, 5)))  # pairs of params
-        >>> det.surface_measure(param).shape
-        (4, 5, 2)
-        """
-        squeeze_out = (np.broadcast(*param).shape == ())
-        param_in = param
-        param = tuple(np.array(p, dtype=float, copy=False, ndmin=1)
-                      for p in param)
-        if self.check_bounds and not is_inside_bounds(param, self.params):
-            raise ValueError('`param` {} not in the valid range '
-                             '{}'.format(param_in, self.params))
-
-        if squeeze_out:
-            return np.array([self.radius] * 2)
-        else:
-            return np.broadcast_to([self.radius] * 2,
-                                   np.broadcast(*param).shape + (2,))
 
     def __repr__(self):
         """Return ``repr(self)``."""
