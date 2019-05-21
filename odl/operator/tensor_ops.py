@@ -18,8 +18,8 @@ from odl.set import RealNumbers, ComplexNumbers
 from odl.space import ProductSpace, tensor_space
 from odl.space.base_tensors import TensorSpace
 from odl.space.weighting import ArrayWeighting
-from odl.util import (
-    signature_string, indent, dtype_repr, moveaxis, writable_array)
+from odl.util import signature_string, indent, dtype_repr, writable_array
+from odl.util.npy_compat import moveaxis
 
 
 __all__ = ('PointwiseNorm', 'PointwiseInner', 'PointwiseSum', 'MatrixOperator',

@@ -12,10 +12,12 @@ from __future__ import print_function, division, absolute_import
 import numpy as np
 
 
-__all__ = ('moveaxis', 'flip')
+__all__ = ('moveaxis', 'flip', 'roll')
 
 
-# TODO: Remove when Numpy 1.11 is an ODL dependency
+# --- Numpy 1.11 --- #
+
+
 def moveaxis(a, source, destination):
     """Move axes of an array to new positions.
 
@@ -28,31 +30,33 @@ def moveaxis(a, source, destination):
     --------
     numpy.moveaxis
     """
-    import numpy
-    if hasattr(numpy, 'moveaxis'):
-        return numpy.moveaxis(a, source, destination)
+    major, minor, _ = [int(s) for s in np.version.short_version.split('.')]
+    if (major, minor) >= (1, 11):
+        return np.moveaxis(a, source, destination)
+    else:
+        try:
+            source = list(source)
+        except TypeError:
+            source = [source]
+        try:
+            destination = list(destination)
+        except TypeError:
+            destination = [destination]
 
-    try:
-        source = list(source)
-    except TypeError:
-        source = [source]
-    try:
-        destination = list(destination)
-    except TypeError:
-        destination = [destination]
+        source = [ax + a.ndim if ax < 0 else ax for ax in source]
+        destination = [ax + a.ndim if ax < 0 else ax for ax in destination]
 
-    source = [ax + a.ndim if ax < 0 else ax for ax in source]
-    destination = [ax + a.ndim if ax < 0 else ax for ax in destination]
+        order = [n for n in range(a.ndim) if n not in source]
 
-    order = [n for n in range(a.ndim) if n not in source]
+        for dest, src in sorted(zip(destination, source)):
+            order.insert(dest, src)
 
-    for dest, src in sorted(zip(destination, source)):
-        order.insert(dest, src)
-
-    return a.transpose(order)
+        return a.transpose(order)
 
 
-# TODO: Remove when Numpy 1.12 is an ODL dependency
+# --- Numpy 1.12 --- #
+
+
 def flip(a, axis):
     """Reverse the order of elements in an array along the given axis.
 
@@ -62,15 +66,60 @@ def flip(a, axis):
     --------
     numpy.flip
     """
-    if not hasattr(a, 'ndim'):
-        a = np.asarray(a)
-    indexer = [slice(None)] * a.ndim
-    try:
-        indexer[axis] = slice(None, None, -1)
-    except IndexError:
-        raise ValueError('axis={} is invalid for the {}-dimensional input '
-                         'array'.format(axis, a.ndim))
-    return a[tuple(indexer)]
+    major, minor, _ = [int(s) for s in np.version.short_version.split('.')]
+    if (major, minor) >= (1, 12):
+        return np.flip(a, axis)
+    else:
+        if not hasattr(a, 'ndim'):
+            a = np.asarray(a)
+        indexer = [slice(None)] * a.ndim
+        try:
+            indexer[axis] = slice(None, None, -1)
+        except IndexError:
+            raise ValueError('axis={} is invalid for the {}-dimensional input '
+                             'array'.format(axis, a.ndim))
+        return a[tuple(indexer)]
+
+
+# --- Numpy 1.13 --- #
+
+
+def roll(a, shift, axis=None):
+    """Roll array elements along a given axis.
+
+    Elements that roll beyond the last position are re-introduced at
+    the first.
+
+    This function is a backport of `numpy.roll` introduced in NumPy 1.13.
+
+    See Also
+    --------
+    numpy.roll
+    """
+    major, minor, _ = [int(s) for s in np.version.short_version.split('.')]
+    if (major, minor) >= (1, 13):
+        return np.roll(a, shift, axis)
+    else:
+        if axis is None:
+            return roll(a.ravel(), shift, 0).reshape(a.shape)
+        elif np.isscalar(axis):
+            return np.roll(a, shift, axis)
+        else:
+            axis = tuple(axis)
+            if axis == ():
+                return a.copy()
+
+            if np.isscalar(shift):
+                shift = [shift] * len(axis)
+            elif len(shift) != len(axis):
+                raise ValueError('`shift` must be integer or of the same '
+                                 'length as `axis`')
+
+            rolled = np.roll(a, shift[0], axis[0])
+            for sh, ax in zip(shift[1:], axis[1:]):
+                rolled = np.roll(rolled, sh, ax)
+
+            return rolled
 
 
 if __name__ == '__main__':

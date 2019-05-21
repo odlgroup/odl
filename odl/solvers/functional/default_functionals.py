@@ -27,7 +27,8 @@ from odl.solvers.nonsmooth.proximal_operators import (
     proximal_const_func, proximal_box_constraint,
     proximal_convex_conj_kl, proximal_convex_conj_kl_cross_entropy,
     combine_proximals, proximal_convex_conj)
-from odl.util import conj_exponent, moveaxis
+from odl.util import conj_exponent
+from odl.util.npy_compat import moveaxis
 
 
 __all__ = ('ZeroFunctional', 'ConstantFunctional', 'ScalingFunctional',

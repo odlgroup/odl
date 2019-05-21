@@ -10,7 +10,7 @@ import odl
 # Create space and functionals
 r2 = odl.rn(2)
 rosenbrock = odl.solvers.RosenbrockFunctional(r2, scale=2.0)
-log = odl.ufunc_ops.log()
+log = odl.oplib.log()
 
 # Create goal functional by composing log with rosenbrock and add 0.1 to
 # avoid singularity at 0

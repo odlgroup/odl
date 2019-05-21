@@ -96,7 +96,7 @@ Examples
 --------
 >>> import odl
 >>> space = odl.{space!r}
->>> op = odl.ufunc_ops.{name}(space)
+>>> op = odl.oplib.{name}(space)
 >>> print(op({arg}))
 {result!s}
 """
@@ -382,14 +382,14 @@ Examples
 RAW_UFUNC_FACTORY_FUNCTIONAL_DOCSTRING = """
 Create functional with domain/range as real numbers:
 
->>> func = odl.ufunc_ops.{name}()
+>>> func = odl.oplib.{name}()
 """
 
 RAW_UFUNC_FACTORY_OPERATOR_DOCSTRING = """
 Create operator that acts pointwise on a `TensorSpace`
 
 >>> space = odl.rn(3)
->>> op = odl.ufunc_ops.{name}(space)
+>>> op = odl.oplib.{name}(space)
 """
 
 
