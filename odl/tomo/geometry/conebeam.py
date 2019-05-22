@@ -631,7 +631,7 @@ class ConeBeamGeometry(DivergentBeamGeometry, AxisOrientedGeometry):
             If ``None``, a flat detector is used.
             If ``(r, None)`` or ``(r, float('inf'))``, a cylindrical
             detector is used.
-            If ``(r, r)``, a spherical detector is used.
+            If ``(r1, r2)``, a spherical detector is used.
         pitch : float, optional
             Constant distance along ``axis`` that a point on the helix
             traverses when increasing the angle parameter by ``2 * pi``.
@@ -843,11 +843,8 @@ class ConeBeamGeometry(DivergentBeamGeometry, AxisOrientedGeometry):
                                                axes=det_axes_init,
                                                check_bounds=check_bounds)
             else:
-                raise ValueError('For a spherical detector, '
-                                 'det_curvature_radius {} must be the same '
-                                 'in both directions. For a cylindrical '
-                                 'detector, the second value can '
-                                 'be ``None``'.format(det_curvature_radius))
+                raise NotImplementedError('Curved detector with different '
+                                          'curvature radii')
         else:
             raise ValueError('det_curvature_radius {} must be a 2-tuple'
                              ''.format(det_curvature_radius))
