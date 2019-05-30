@@ -11,6 +11,7 @@
 from __future__ import absolute_import, division, print_function
 from future.moves.itertools import zip_longest
 
+from contextlib import contextmanager
 import os
 import sys
 import warnings
@@ -36,8 +37,8 @@ __all__ = (
     'noise_array',
     'noise_element',
     'noise_elements',
-    'FailCounter',
-    'Timer',
+    'fail_counter',
+    'timer',
     'timeit',
     'ProgressBar',
     'ProgressRange',
@@ -459,80 +460,78 @@ def noise_elements(space, n=1):
         return arrs, elems
 
 
-class FailCounter(object):
-
-    """Used to count the number of failures of something
+@contextmanager
+def fail_counter(test_name, err_msg=None, logger=print):
+    """Used to count the number of failures of something.
 
     Usage::
 
-        with FailCounter() as counter:
+        with fail_counter("my_test") as counter:
             # Do stuff
 
             counter.fail()
 
-    When done, it prints
+    When done, it prints ::
 
-    ``*** FAILED 1 TEST CASE(S) ***``
+        my_test
+        *** FAILED 1 TEST CASE(S) ***
     """
 
-    def __init__(self, test_name, err_msg=None, logger=print):
-        self.num_failed = 0
-        self.test_name = test_name
-        self.err_msg = err_msg
-        self.fail_strings = []
-        self.log = logger
+    class _Counter(object):
 
-    def __enter__(self):
-        return self
+        def __init__(self):
+            self.num_failed = 0
+            self.fail_strings = []
 
-    def fail(self, string=None):
-        """Add failure with reason as string."""
-        self.num_failed += 1
+        def fail(self, string=None):
+            """Add failure with reason as string."""
+            # TODO: possibly limit number of printed strings
+            self.num_failed += 1
+            if string is not None:
+                self.fail_strings.append(str(string))
 
-        # TODO: possibly limit number of printed strings
-        if string is not None:
-            self.fail_strings += [str(string)]
+    try:
+        counter = _Counter()
+        yield counter
 
-    def __exit__(self, type, value, traceback):
-        if self.num_failed == 0:
-            self.log('{:<70}: Completed all test cases.'
-                     ''.format(self.test_name))
+    finally:
+
+        if counter.num_failed == 0:
+            logger('{:<70}: Completed all test cases.'.format(test_name))
         else:
-            print(self.test_name)
+            print(test_name)
 
-            for fail_string in self.fail_strings:
+            for fail_string in counter.fail_strings:
                 print(fail_string)
 
-            if self.err_msg is not None:
-                print(self.err_msg)
-            print('*** FAILED {} TEST CASE(S) ***'.format(self.num_failed))
+            if err_msg is not None:
+                print(err_msg)
+            print('*** FAILED {} TEST CASE(S) ***'.format(counter.num_failed))
 
 
-class Timer(object):
-
+@contextmanager
+def timer(name=None):
     """A timer context manager.
 
     Usage::
 
-        with Timer('name'):
+        with timer('name'):
             # Do stuff
 
     Prints the time stuff took to execute.
     """
+    if name is None:
+        name = "Elapsed"
 
-    def __init__(self, name=None):
-        if name is not None:
-            self.name = name
-        else:
-            self.name = 'Elapsed'
-        self.tstart = None
+    tstart = None
+    try:
+        tstart = time()
+        yield
 
-    def __enter__(self):
-        self.tstart = time()
-
-    def __exit__(self, type, value, traceback):
-        time_str = '{:.3f}'.format(time() - self.tstart)
-        print('{:>30s} : {:>10s} '.format(self.name, time_str))
+    finally:
+        if tstart is not None:
+            time_str = '{:.3f}'.format(time() - tstart)
+            print('{:>30s} : {:>10s} '.format(name, time_str))
 
 
 def timeit(arg):

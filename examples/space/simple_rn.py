@@ -6,7 +6,7 @@ Including some benchmarks with an optimized version.
 import numpy as np
 import odl
 from odl.space.base_tensors import TensorSpace, Tensor
-from odl.util.testutils import Timer
+from odl.util.testutils import timer
 
 
 class SimpleRn(TensorSpace):
@@ -86,54 +86,54 @@ if 'cuda' in odl.space.entry_points.tensor_space_impl_names():
                   cu_spc.element(z.copy()))
 
 print(" lincomb:")
-with Timer("SimpleRn"):
+with timer("SimpleRn"):
     for _ in range(iterations):
         simple_spc.lincomb(2.13, sx, 3.14, sy, out=sz)
 print("result: {}".format(sz[1:5]))
 
-with Timer("odl numpy"):
+with timer("odl numpy"):
     for _ in range(iterations):
         opt_spc.lincomb(2.13, ox, 3.14, oy, out=oz)
 print("result: {}".format(oz[1:5]))
 
 if 'cuda' in odl.space.entry_points.tensor_space_impl_names():
-    with Timer("odl cuda"):
+    with timer("odl cuda"):
         for _ in range(iterations):
             cu_spc.lincomb(2.13, cx, 3.14, cy, out=cz)
     print("result: {}".format(cz[1:5]))
 
 
 print("\n Norm:")
-with Timer("SimpleRn"):
+with timer("SimpleRn"):
     for _ in range(iterations):
         result = sz.norm()
 print("result: {}".format(result))
 
-with Timer("odl numpy"):
+with timer("odl numpy"):
     for _ in range(iterations):
         result = oz.norm()
 print("result: {}".format(result))
 
 if 'cuda' in odl.space.entry_points.tensor_space_impl_names():
-    with Timer("odl cuda"):
+    with timer("odl cuda"):
         for _ in range(iterations):
             result = cz.norm()
     print("result: {}".format(result))
 
 
 print("\n Inner:")
-with Timer("SimpleRn"):
+with timer("SimpleRn"):
     for _ in range(iterations):
         result = sz.inner(sx)
 print("result: {}".format(result))
 
-with Timer("odl numpy"):
+with timer("odl numpy"):
     for _ in range(iterations):
         result = oz.inner(ox)
 print("result: {}".format(result))
 
 if 'cuda' in odl.space.entry_points.tensor_space_impl_names():
-    with Timer("odl cuda"):
+    with timer("odl cuda"):
         for _ in range(iterations):
             result = cz.inner(cx)
     print("result: {}".format(result))

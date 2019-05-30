@@ -21,15 +21,36 @@ from itertools import product
 import numpy as np
 
 __all__ = (
-    'array_str', 'dtype_str', 'dtype_repr', 'npy_printoptions',
-    'signature_string', 'signature_string_parts', 'repr_string',
-    'indent', 'dedent', 'attribute_repr_string', 'method_repr_string',
-    'is_numeric_dtype', 'is_int_dtype', 'is_floating_dtype', 'is_real_dtype',
-    'is_real_floating_dtype', 'is_complex_floating_dtype',
-    'real_dtype', 'complex_dtype', 'is_string', 'nd_iterator', 'conj_exponent',
-    'writable_array', 'run_from_ipython', 'npy_random_seed',
-    'cache_arguments', 'unique',
-    'REPR_PRECISION')
+    'REPR_PRECISION',
+    'indent',
+    'dedent',
+    'npy_printoptions',
+    'array_str',
+    'dtype_repr',
+    'dtype_str',
+    'cache_arguments',
+    'is_numeric_dtype',
+    'is_int_dtype',
+    'is_floating_dtype',
+    'is_real_dtype',
+    'is_real_floating_dtype',
+    'is_complex_floating_dtype',
+    'real_dtype',
+    'complex_dtype',
+    'is_string',
+    'nd_iterator',
+    'conj_exponent',
+    'none_context',
+    'writable_array',
+    'signature_string',
+    'signature_string_parts',
+    'repr_string',
+    'attribute_repr_string',
+    'method_repr_string',
+    'run_from_ipython',
+    'npy_random_seed',
+    'unique',
+)
 
 
 REPR_PRECISION = 4  # For printing scalars and array entries
