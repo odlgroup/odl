@@ -8,23 +8,24 @@
 
 """NumPy implementation of tensor spaces."""
 
-from __future__ import print_function, division, absolute_import
+from __future__ import absolute_import, division, print_function
 from future.utils import native
-from builtins import object
+
 import ctypes
+from builtins import object
 from functools import partial
+
 import numpy as np
 
-from odl.set.sets import RealNumbers, ComplexNumbers
+from odl.set.sets import ComplexNumbers, RealNumbers
 from odl.set.space import LinearSpaceTypeError
-from odl.space.base_tensors import TensorSpace, Tensor
+from odl.space.base_tensors import Tensor, TensorSpace
 from odl.space.weighting import (
-    Weighting, ArrayWeighting, ConstWeighting,
-    CustomInner, CustomNorm, CustomDist)
+    ArrayWeighting, ConstWeighting, CustomDist, CustomInner, CustomNorm,
+    Weighting)
 from odl.util import (
-    dtype_str, signature_string, is_real_dtype, is_numeric_dtype,
-    writable_array, is_floating_dtype)
-
+    dtype_str, is_floating_dtype, is_numeric_dtype, is_real_dtype,
+    none_context, signature_string, writable_array)
 
 __all__ = ('NumpyTensorSpace',)
 
@@ -1654,26 +1655,11 @@ numpy.ufunc.reduceat.html
 
         # --- Evaluate ufunc --- #
 
-        # Trivial context used to create a single code path for the ufunc
-        # evaluation. For `None` output parameter(s), this is used instead of
-        # `writable_array`.
-        class CtxNone(object):
-            """Trivial context manager class.
-
-            When used as ::
-
-                with CtxNone() as obj:
-                    # do stuff with `obj`
-
-            the returned ``obj`` is ``None``.
-            """
-            __enter__ = __exit__ = lambda *_: None
-
         if method == '__call__':
             if ufunc.nout == 1:
                 # Make context for output (trivial one returns `None`)
                 if out is None:
-                    out_ctx = CtxNone()
+                    out_ctx = none_context()
                 else:
                     out_ctx = writable_array(out, **array_kwargs)
 
@@ -1701,11 +1687,11 @@ numpy.ufunc.reduceat.html
                 if out1 is not None:
                     out1_ctx = writable_array(out1, **array_kwargs)
                 else:
-                    out1_ctx = CtxNone()
+                    out1_ctx = none_context()
                 if out2 is not None:
                     out2_ctx = writable_array(out2, **array_kwargs)
                 else:
-                    out2_ctx = CtxNone()
+                    out2_ctx = none_context()
 
                 # Evaluate ufunc
                 with out1_ctx as out1_arr, out2_ctx as out2_arr:
@@ -1731,7 +1717,7 @@ numpy.ufunc.reduceat.html
         else:  # method != '__call__'
             # Make context for output (trivial one returns `None`)
             if out is None:
-                out_ctx = CtxNone()
+                out_ctx = none_context()
             else:
                 out_ctx = writable_array(out, **array_kwargs)
 

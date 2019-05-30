@@ -1,4 +1,4 @@
-# Copyright 2014-2018 The ODL contributors
+# Copyright 2014-2019 The ODL contributors
 #
 # This file is part of ODL.
 #
@@ -8,20 +8,20 @@
 
 """Base classes for implementations of tensor spaces."""
 
-from __future__ import print_function, division, absolute_import
-from builtins import object
+from __future__ import absolute_import, division, print_function
+
 from numbers import Integral
+
 import numpy as np
 
-from odl.set.sets import RealNumbers, ComplexNumbers
+from odl.set.sets import ComplexNumbers, RealNumbers
 from odl.set.space import LinearSpace, LinearSpaceElement
 from odl.util import (
-    is_numeric_dtype, is_real_dtype, is_floating_dtype,
-    is_real_floating_dtype, is_complex_floating_dtype, safe_int_conv,
-    array_str, dtype_str, signature_string, indent, writable_array)
+    array_str, dtype_str, indent, is_complex_floating_dtype, is_floating_dtype,
+    is_numeric_dtype, is_real_dtype, is_real_floating_dtype, safe_int_conv,
+    signature_string, writable_array)
 from odl.util.ufuncs import TensorSpaceUfuncs
-from odl.util.utility import TYPE_MAP_R2C, TYPE_MAP_C2R
-
+from odl.util.utility import TYPE_MAP_C2R, TYPE_MAP_R2C, none_context
 
 __all__ = ('TensorSpace',)
 
@@ -815,26 +815,11 @@ numpy.ufunc.reduceat.html
 
         # --- Evaluate ufunc --- #
 
-        # Trivial context used to create a single code path for the ufunc
-        # evaluation. For `None` output parameter(s), this is used instead of
-        # `writable_array`.
-        class CtxNone(object):
-            """Trivial context manager class.
-
-            When used as ::
-
-                with CtxNone() as obj:
-                    # do stuff with `obj`
-
-            the returned ``obj`` is ``None``.
-            """
-            __enter__ = __exit__ = lambda *_: None
-
         if method == '__call__':
             if ufunc.nout == 1:
                 # Make context for output (trivial one returns `None`)
                 if out is None:
-                    out_ctx = CtxNone()
+                    out_ctx = none_context()
                 else:
                     out_ctx = writable_array(out, **array_kwargs)
 
@@ -851,11 +836,11 @@ numpy.ufunc.reduceat.html
                 if out1 is not None:
                     out1_ctx = writable_array(out1, **array_kwargs)
                 else:
-                    out1_ctx = CtxNone()
+                    out1_ctx = none_context()
                 if out2 is not None:
                     out2_ctx = writable_array(out2, **array_kwargs)
                 else:
-                    out2_ctx = CtxNone()
+                    out2_ctx = none_context()
 
                 # Evaluate ufunc
                 with out1_ctx as out1_arr, out2_ctx as out2_arr:
@@ -872,7 +857,7 @@ numpy.ufunc.reduceat.html
         else:  # method != '__call__'
             # Make context for output (trivial one returns `None`)
             if out is None:
-                out_ctx = CtxNone()
+                out_ctx = none_context()
             else:
                 out_ctx = writable_array(out, **array_kwargs)
 
