@@ -1,4 +1,4 @@
-﻿"""Example of a deconvolution problem with different solvers (CPU)."""
+"""Example of a deconvolution problem with different solvers (CPU)."""
 
 import numpy as np
 import matplotlib.pyplot as plt
