@@ -477,7 +477,7 @@ def fail_counter(test_name, err_msg=None, logger=print):
         *** FAILED 1 TEST CASE(S) ***
     """
 
-    class _Counter(object):
+    class _FailCounter(object):
 
         def __init__(self):
             self.num_failed = 0
@@ -491,19 +491,16 @@ def fail_counter(test_name, err_msg=None, logger=print):
                 self.fail_strings.append(str(string))
 
     try:
-        counter = _Counter()
+        counter = _FailCounter()
         yield counter
-
     finally:
 
         if counter.num_failed == 0:
             logger('{:<70}: Completed all test cases.'.format(test_name))
         else:
             print(test_name)
-
             for fail_string in counter.fail_strings:
                 print(fail_string)
-
             if err_msg is not None:
                 print(err_msg)
             print('*** FAILED {} TEST CASE(S) ***'.format(counter.num_failed))
@@ -523,15 +520,12 @@ def timer(name=None):
     if name is None:
         name = "Elapsed"
 
-    tstart = None
     try:
         tstart = time()
         yield
-
     finally:
-        if tstart is not None:
-            time_str = '{:.3f}'.format(time() - tstart)
-            print('{:>30s} : {:>10s} '.format(name, time_str))
+        time_str = '{:.3f}'.format(time() - tstart)
+        print('{:>30s} : {:>10s} '.format(name, time_str))
 
 
 def timeit(arg):
@@ -550,13 +544,13 @@ def timeit(arg):
 
     if callable(arg):
         def timed_function(*args, **kwargs):
-            with Timer(str(arg)):
+            with timer(str(arg)):
                 return arg(*args, **kwargs)
         return timed_function
     else:
         def _timeit_helper(func):
             def timed_function(*args, **kwargs):
-                with Timer(arg):
+                with timer(arg):
                     return func(*args, **kwargs)
             return timed_function
         return _timeit_helper

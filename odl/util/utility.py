@@ -1561,7 +1561,6 @@ def npy_random_seed(seed):
             orig_rng_state = np.random.get_state()
             np.random.seed(seed)
         yield
-
     finally:
         if do_seed:
             np.random.set_state(orig_rng_state)
