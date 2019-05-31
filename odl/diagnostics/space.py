@@ -8,14 +8,14 @@
 
 """Standardized tests for ``LinearSpace``."""
 
-from __future__ import print_function, division, absolute_import
+from __future__ import absolute_import, division, print_function
+
 from builtins import object
 from copy import copy, deepcopy
 
-from odl.set import Field
 from odl.diagnostics.examples import samples
-from odl.util.testutils import FailCounter
-
+from odl.set import Field
+from odl.util.testutils import fail_counter
 
 __all__ = ('SpaceTest',)
 
@@ -73,8 +73,9 @@ class SpaceTest(object):
 
     def element_method(self):
         """Verify `LinearSpace.element`."""
-        with FailCounter(test_name='Verifying element method',
-                         logger=self.log) as counter:
+        with fail_counter(
+            test_name='Verifying element method', logger=self.log
+        ) as counter:
             try:
                 elem = self.space.element()
             except NotImplementedError:
@@ -86,8 +87,9 @@ class SpaceTest(object):
 
     def field(self):
         """Verify `LinearSpace.field`."""
-        with FailCounter(test_name='Verifying field property',
-                         logger=self.log) as counter:
+        with fail_counter(
+            test_name='Verifying field property', logger=self.log
+        ) as counter:
             try:
                 field = self.space.field
             except NotImplementedError:
@@ -136,10 +138,11 @@ class SpaceTest(object):
 
     def _associativity_of_addition(self):
         """Verify addition associativity."""
-        with FailCounter(
-                test_name='Verifying associativity of addition',
-                err_msg='error = dist(x + (y + z), (x + y) + z)',
-                logger=self.log) as counter:
+        with fail_counter(
+            test_name='Verifying associativity of addition',
+            err_msg='error = dist(x + (y + z), (x + y) + z)',
+            logger=self.log
+        ) as counter:
 
             for [n_x, x], [n_y, y], [n_z, z] in samples(self.space,
                                                         self.space,
@@ -151,10 +154,11 @@ class SpaceTest(object):
 
     def _commutativity_of_addition(self):
         """Verify addition commutativity."""
-        with FailCounter(
-                test_name='Verifying commutativity of addition',
-                err_msg='error = dist(x + y, y + x)',
-                logger=self.log) as counter:
+        with fail_counter(
+            test_name='Verifying commutativity of addition',
+            err_msg='error = dist(x + y, y + x)',
+            logger=self.log
+        ) as counter:
 
             for [n_x, x], [n_y, y] in samples(self.space, self.space):
                 correct = _approx_equal(x + y, y + x, self.tol)
@@ -170,10 +174,11 @@ class SpaceTest(object):
             print('*** SPACE HAS NO ZERO VECTOR ***')
             return
 
-        with FailCounter(
-                test_name='Verifying identity element of addition',
-                err_msg='error = dist(x + 0, x)',
-                logger=self.log) as counter:
+        with fail_counter(
+            test_name='Verifying identity element of addition',
+            err_msg='error = dist(x + 0, x)',
+            logger=self.log
+        ) as counter:
 
             for [n_x, x] in samples(self.space):
                 correct = _approx_equal(x + zero, x, self.tol)
@@ -188,10 +193,11 @@ class SpaceTest(object):
             print('*** SPACE HAS NO ZERO VECTOR ***')
             return
 
-        with FailCounter(
-                test_name='Verifying inverse element of addition',
-                err_msg='error = dist(x + (-x), 0)',
-                logger=self.log) as counter:
+        with fail_counter(
+            test_name='Verifying inverse element of addition',
+            err_msg='error = dist(x + (-x), 0)',
+            logger=self.log
+        ) as counter:
 
             for [n_x, x] in samples(self.space):
                 correct = _approx_equal(x + (-x), zero, self.tol)
@@ -200,10 +206,11 @@ class SpaceTest(object):
 
     def _commutativity_of_scalar_mult(self):
         """Verify scalar multiplication commutativity."""
-        with FailCounter(
-                test_name='Verifying commutativity of scalar multiplication',
-                err_msg='error = dist(a * (b * x), (a * b) * x)',
-                logger=self.log) as counter:
+        with fail_counter(
+            test_name='Verifying commutativity of scalar multiplication',
+            err_msg='error = dist(a * (b * x), (a * b) * x)',
+            logger=self.log
+        ) as counter:
 
             for [n_x, x], [_, a], [_, b] in samples(self.space,
                                                     self.space.field,
@@ -215,10 +222,11 @@ class SpaceTest(object):
 
     def _identity_of_mult(self):
         """Verify multiplicative neutral element ('one')."""
-        with FailCounter(
-                test_name='Verifying identity element of multiplication',
-                err_msg='error = dist(1 * x, x)',
-                logger=self.log) as counter:
+        with fail_counter(
+            test_name='Verifying identity element of multiplication',
+            err_msg='error = dist(1 * x, x)',
+            logger=self.log
+        ) as counter:
 
             for [n_x, x] in samples(self.space):
                 correct = _approx_equal(1 * x, x, self.tol)
@@ -227,11 +235,12 @@ class SpaceTest(object):
 
     def _distributivity_of_mult_vector(self):
         """Verify scalar multiplication distributivity wrt vector addition."""
-        with FailCounter(
-                test_name='Verifying distributivity of scalar multiplication '
-                          'under vector addition',
-                err_msg='error = dist(a * (x + y), a * x + a * y)',
-                logger=self.log) as counter:
+        with fail_counter(
+            test_name='Verifying distributivity of scalar multiplication '
+                      'under vector addition',
+            err_msg='error = dist(a * (x + y), a * x + a * y)',
+            logger=self.log
+        ) as counter:
 
             for [n_x, x], [n_y, y], [_, a] in samples(self.space,
                                                       self.space,
@@ -243,11 +252,12 @@ class SpaceTest(object):
 
     def _distributivity_of_mult_scalar(self):
         """Verify scalar multiplication distributivity wrt scalar addition."""
-        with FailCounter(
-                test_name='Verifying distributivity of scalar multiplication '
-                          'under scalar addition',
-                err_msg='error = dist((a + b) * x, a * x + b * x)',
-                logger=self.log) as counter:
+        with fail_counter(
+            test_name='Verifying distributivity of scalar multiplication '
+                      'under scalar addition',
+            err_msg='error = dist((a + b) * x, a * x + b * x)',
+            logger=self.log
+        ) as counter:
 
             for [n_x, x], [_, a], [_, b] in samples(self.space,
                                                     self.space.field,
@@ -259,10 +269,11 @@ class SpaceTest(object):
 
     def _subtraction(self):
         """Verify element subtraction as addition of additive inverse."""
-        with FailCounter(
-                test_name='Verifying element subtraction',
-                err_msg='error = dist(x - y, x + (-1 * y))',
-                logger=self.log) as counter:
+        with fail_counter(
+            test_name='Verifying element subtraction',
+            err_msg='error = dist(x - y, x + (-1 * y))',
+            logger=self.log
+        ) as counter:
 
             for [n_x, x], [n_y, y] in samples(self.space, self.space):
                 correct = (_approx_equal(x - y, x + (-1 * y), self.tol) and
@@ -273,10 +284,11 @@ class SpaceTest(object):
 
     def _division(self):
         """Verify scalar division as multiplication with mult. inverse."""
-        with FailCounter(
-                test_name='Verifying scalar division',
-                err_msg='error = dist(x / a, x * (1/a))',
-                logger=self.log) as counter:
+        with fail_counter(
+            test_name='Verifying scalar division',
+            err_msg='error = dist(x / a, x * (1/a))',
+            logger=self.log
+        ) as counter:
 
             for [n_x, x], [_, a] in samples(self.space, self.space.field):
                 if a != 0:
@@ -287,10 +299,11 @@ class SpaceTest(object):
 
     def _lincomb_aliased(self):
         """Verify several scenarios of aliased linear combination."""
-        with FailCounter(
-                test_name='Verifying linear combination with aliased input',
-                err_msg='error = dist(aliased, non-aliased)',
-                logger=self.log) as counter:
+        with fail_counter(
+            test_name='Verifying linear combination with aliased input',
+            err_msg='error = dist(aliased, non-aliased)',
+            logger=self.log
+        ) as counter:
 
             for [n_x, x_in], [n_y, y] in samples(self.space, self.space):
                 x = x_in.copy()
@@ -346,11 +359,12 @@ class SpaceTest(object):
 
     def _inner_linear_scalar(self):
         """Verify homogeneity of the inner product in the first argument."""
-        with FailCounter(
-                test_name='Verifying homogeneity of the inner product in the '
-                          'first argument',
-                err_msg='error = |<a*x, y> - a*<x, y>|',
-                logger=self.log) as counter:
+        with fail_counter(
+            test_name='Verifying homogeneity of the inner product in the '
+                      'first argument',
+            err_msg='error = |<a*x, y> - a*<x, y>|',
+            logger=self.log
+        ) as counter:
 
             for [n_x, x], [n_y, y], [_, a] in samples(self.space,
                                                       self.space,
@@ -362,10 +376,11 @@ class SpaceTest(object):
 
     def _inner_conjugate_symmetry(self):
         """Verify conjugate symmetry of the inner product."""
-        with FailCounter(
-                test_name='Verifying conjugate symmetry of the inner product',
-                err_msg='error = |<x, y> - <y, x>.conj()|',
-                logger=self.log) as counter:
+        with fail_counter(
+            test_name='Verifying conjugate symmetry of the inner product',
+            err_msg='error = |<x, y> - <y, x>.conj()|',
+            logger=self.log
+        ) as counter:
 
             for [n_x, x], [n_y, y] in samples(self.space, self.space):
                 error = abs((x).inner(y) - y.inner(x).conjugate())
@@ -375,11 +390,12 @@ class SpaceTest(object):
 
     def _inner_linear_sum(self):
         """Verify distributivity of the inner product in the first argument."""
-        with FailCounter(
-                test_name='Verifying distributivity of the inner product'
-                          'in the first argument',
-                err_msg='error = |<x+y, z> - (<x, z> + <y, z>)|',
-                logger=self.log) as counter:
+        with fail_counter(
+            test_name='Verifying distributivity of the inner product'
+                      'in the first argument',
+            err_msg='error = |<x+y, z> - (<x, z> + <y, z>)|',
+            logger=self.log
+        ) as counter:
 
             for [n_x, x], [n_y, y], [n_z, z] in samples(self.space,
                                                         self.space,
@@ -391,10 +407,11 @@ class SpaceTest(object):
 
     def _inner_positive(self):
         """Verify positive definiteness of the inner product."""
-        with FailCounter(
-                test_name='Verifying positive definiteness of the inner '
-                          'product',
-                logger=self.log) as counter:
+        with fail_counter(
+            test_name='Verifying positive definiteness of the inner '
+                      'product',
+            logger=self.log
+        ) as counter:
 
             for [n_x, x] in samples(self.space):
                 inner = x.inner(x)
@@ -452,9 +469,10 @@ class SpaceTest(object):
 
     def _norm_positive(self):
         """Verify positive definiteness of the norm."""
-        with FailCounter(
-                test_name='Verifying positive definiteness of the norm',
-                logger=self.log) as counter:
+        with fail_counter(
+            test_name='Verifying positive definiteness of the norm',
+            logger=self.log
+        ) as counter:
 
             for [n_x, x] in samples(self.space):
                 norm = x.norm()
@@ -469,10 +487,11 @@ class SpaceTest(object):
 
     def _norm_subadditive(self):
         """Verify subadditivity of the norm."""
-        with FailCounter(
-                test_name='Verifying sub-additivity of the norm',
-                err_msg='error = max(||x+y|| - (||x|| + ||y||), 0)',
-                logger=self.log) as counter:
+        with fail_counter(
+            test_name='Verifying sub-additivity of the norm',
+            err_msg='error = max(||x+y|| - (||x|| + ||y||), 0)',
+            logger=self.log
+        ) as counter:
 
             for [n_x, x], [n_y, y] in samples(self.space, self.space):
                 norm_x = x.norm()
@@ -487,10 +506,11 @@ class SpaceTest(object):
 
     def _norm_homogeneity(self):
         """Verify positive homogeneity of the norm."""
-        with FailCounter(
-                test_name='Verifying positive homogeneity of the norm',
-                err_msg='error = | ||a*x|| - |a|*||x|| |',
-                logger=self.log) as counter:
+        with fail_counter(
+            test_name='Verifying positive homogeneity of the norm',
+            err_msg='error = | ||a*x|| - |a|*||x|| |',
+            logger=self.log
+        ) as counter:
 
             for [n_x, x], [_, a] in samples(self.space, self.space.field):
                 error = abs((a * x).norm() - abs(a) * x.norm())
@@ -507,10 +527,11 @@ class SpaceTest(object):
             self.log('Space has no inner product')
             return
 
-        with FailCounter(
-                test_name='Verifying compatibility of norm and inner product',
-                err_msg='error = | ||x||^2 - <x, x> |',
-                logger=self.log) as counter:
+        with fail_counter(
+            test_name='Verifying compatibility of norm and inner product',
+            err_msg='error = | ||x||^2 - <x, x> |',
+            logger=self.log
+        ) as counter:
 
             for [n_x, x] in samples(self.space):
                 error = abs(x.norm() ** 2 - x.inner(x))
@@ -568,9 +589,10 @@ class SpaceTest(object):
     def _dist_positivity(self):
         """Verify nonnegativity of the distance."""
 
-        with FailCounter(
-                test_name='Verifying nonnegativity of the distance',
-                logger=self.log) as counter:
+        with fail_counter(
+            test_name='Verifying nonnegativity of the distance',
+            logger=self.log
+        ) as counter:
 
             for [n_x, x], [n_y, y] in samples(self.space, self.space):
                 dist = x.dist(y)
@@ -584,10 +606,11 @@ class SpaceTest(object):
 
     def _dist_symmetric(self):
         """Verify symmetry of the distance."""
-        with FailCounter(
-                test_name='Verifying symmetry of the distance',
-                err_msg='error = |d(x, y) - d(y, x)|',
-                logger=self.log) as counter:
+        with fail_counter(
+            test_name='Verifying symmetry of the distance',
+            err_msg='error = |d(x, y) - d(y, x)|',
+            logger=self.log
+        ) as counter:
 
             for [n_x, x], [n_y, y] in samples(self.space, self.space):
                 dist_1 = x.dist(y)
@@ -600,10 +623,11 @@ class SpaceTest(object):
 
     def _dist_subtransitive(self):
         """Verify sub-transitivity of the distance."""
-        with FailCounter(
-                test_name='Verifying sub-additivity of the distance',
-                err_msg='error = max(d(x,z) - (d(x, y) + d(y, z)), 0)',
-                logger=self.log) as counter:
+        with fail_counter(
+            test_name='Verifying sub-additivity of the distance',
+            err_msg='error = max(d(x,z) - (d(x, y) + d(y, z)), 0)',
+            logger=self.log
+        ) as counter:
 
             for [n_x, x], [n_y, y], [n_z, z] in samples(self.space,
                                                         self.space,
@@ -625,10 +649,11 @@ class SpaceTest(object):
             self.log('Space has no norm')
             return
 
-        with FailCounter(
-                test_name='Verifying compatibility of distance and norm',
-                err_msg='error = |d(x, y) - ||x-y|| |',
-                logger=self.log) as counter:
+        with fail_counter(
+            test_name='Verifying compatibility of distance and norm',
+            err_msg='error = |d(x, y) - ||x-y|| |',
+            logger=self.log
+        ) as counter:
 
             for [n_x, x], [n_y, y] in samples(self.space,
                                               self.space):
@@ -689,10 +714,11 @@ class SpaceTest(object):
             print('*** SPACE HAS NO ZERO VECTOR ***')
             return
 
-        with FailCounter(
-                test_name='Verifying vector multiplication with zero',
-                err_msg='error = ||x * 0||',
-                logger=self.log) as counter:
+        with fail_counter(
+            test_name='Verifying vector multiplication with zero',
+            err_msg='error = ||x * 0||',
+            logger=self.log
+        ) as counter:
             for [n_x, x] in samples(self.space):
                 error = (zero * x).norm()
 
@@ -702,10 +728,11 @@ class SpaceTest(object):
 
     def _multiply_commutative(self):
         """Verify commutativity of vector multiplication."""
-        with FailCounter(
-                test_name='Verifying commutativity of vector multiplication',
-                err_msg='error = dist(x * y, y * x)',
-                logger=self.log) as counter:
+        with fail_counter(
+            test_name='Verifying commutativity of vector multiplication',
+            err_msg='error = dist(x * y, y * x)',
+            logger=self.log
+        ) as counter:
 
             for [n_x, x], [n_y, y], _ in samples(self.space,
                                                  self.space,
@@ -717,10 +744,11 @@ class SpaceTest(object):
 
     def _multiply_associative(self):
         """Verify associativity of vector multiplication."""
-        with FailCounter(
-                test_name='Verifying associativity of vector multiplication',
-                err_msg='error = dist(x * (y * z), (x * y) * z)',
-                logger=self.log) as counter:
+        with fail_counter(
+            test_name='Verifying associativity of vector multiplication',
+            err_msg='error = dist(x * (y * z), (x * y) * z)',
+            logger=self.log
+        ) as counter:
 
             for [n_x, x], [n_y, y], [n_z, z] in samples(self.space,
                                                         self.space,
@@ -732,11 +760,12 @@ class SpaceTest(object):
 
     def _multiply_distributive_scalar(self):
         """Verify distributivity of scalar multiplication."""
-        with FailCounter(
-                test_name='Verifying distributivity of vector multiplication '
-                          'under scalar multiplication',
-                err_msg='error = dist(a * (x + y), a * x + a * y)',
-                logger=self.log) as counter:
+        with fail_counter(
+            test_name='Verifying distributivity of vector multiplication '
+                      'under scalar multiplication',
+            err_msg='error = dist(a * (x + y), a * x + a * y)',
+            logger=self.log
+        ) as counter:
 
             for [n_x, x], [n_y, y], [_, a] in samples(self.space,
                                                       self.space,
@@ -748,11 +777,12 @@ class SpaceTest(object):
 
     def _multiply_distributive_vector(self):
         """Verify distributivity of vector multiplication."""
-        with FailCounter(
-                test_name='Verifying distributivity of vector multiplication '
-                          'under vector multiplication',
-                err_msg='error = dist(x * (y + z), x * y + x * z)',
-                logger=self.log) as counter:
+        with fail_counter(
+            test_name='Verifying distributivity of vector multiplication '
+                      'under vector multiplication',
+            err_msg='error = dist(x * (y + z), x * y + x * z)',
+            logger=self.log
+        ) as counter:
 
             for [n_x, x], [n_y, y], [n_z, z] in samples(self.space,
                                                         self.space,
@@ -822,10 +852,11 @@ class SpaceTest(object):
         if self.space != deepcopy(self.space):
             print('** space == deepcopy(space) failed***')
 
-        with FailCounter(
-                test_name='Verify behavior of `space == obj` when `obj` '
-                          'is not a space',
-                logger=self.log) as counter:
+        with fail_counter(
+            test_name='Verify behavior of `space == obj` when `obj` '
+                      'is not a space',
+            logger=self.log
+        ) as counter:
 
             for obj in [[1, 2], list(), tuple(), dict(), 5.0]:
                 if self.space == obj:
@@ -838,9 +869,10 @@ class SpaceTest(object):
 
     def contains(self):
         """Verify `LinearSpace.__contains__`."""
-        with FailCounter(
-                test_name='Verify behavior of `obj in space`',
-                logger=self.log) as counter:
+        with fail_counter(
+            test_name='Verify behavior of `obj in space`',
+            logger=self.log
+        ) as counter:
 
             for [n_x, x] in samples(self.space):
                 if x not in self.space:
@@ -862,9 +894,10 @@ class SpaceTest(object):
 
     def element_assign(self):
         """Verify `LinearSpaceElement.assign`."""
-        with FailCounter(
-                test_name='Verify behavior of `LinearSpaceElement.assign`',
-                logger=self.log) as counter:
+        with fail_counter(
+            test_name='Verify behavior of `LinearSpaceElement.assign`',
+            logger=self.log
+        ) as counter:
 
             for [n_x, x], [n_y, y] in samples(self.space,
                                               self.space):
@@ -876,9 +909,10 @@ class SpaceTest(object):
 
     def element_copy(self):
         """Verify `LinearSpaceElement.copy`."""
-        with FailCounter(
-                test_name='Verify behavior of `LinearSpaceElement.copy`',
-                logger=self.log) as counter:
+        with fail_counter(
+            test_name='Verify behavior of `LinearSpaceElement.copy`',
+            logger=self.log
+        ) as counter:
 
             for [n_x, x] in samples(self.space):
                 # equal after copy
@@ -903,9 +937,10 @@ class SpaceTest(object):
             print('*** SPACE HAS NO ZERO VECTOR ***')
             return
 
-        with FailCounter(
-                test_name='Verify behavior of `LinearSpaceElement.set_zero`',
-                logger=self.log) as counter:
+        with fail_counter(
+            test_name='Verify behavior of `LinearSpaceElement.set_zero`',
+            logger=self.log
+        ) as counter:
 
             for [n_x, x] in samples(self.space):
                 x.set_zero()
@@ -928,9 +963,10 @@ class SpaceTest(object):
             self.log('Vector has no __eq__')
             return
 
-        with FailCounter(
-                test_name='Verify behavior of `element1 == element2`',
-                logger=self.log) as counter:
+        with fail_counter(
+            test_name='Verify behavior of `element1 == element2`',
+            logger=self.log
+        ) as counter:
 
             for [n_x, x], [n_y, y] in samples(self.space,
                                               self.space):
@@ -953,9 +989,10 @@ class SpaceTest(object):
 
     def element_space(self):
         """Verify `LinearSpaceElement.space`."""
-        with FailCounter(
-                test_name='Verify `LinearSpaceElement.space`',
-                logger=self.log) as counter:
+        with fail_counter(
+            test_name='Verify `LinearSpaceElement.space`',
+            logger=self.log
+        ) as counter:
 
             for [n_x, x] in samples(self.space):
                 if x.space != self.space:

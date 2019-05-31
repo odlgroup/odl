@@ -9,27 +9,48 @@
 """Utilities mainly for internal use."""
 
 from __future__ import absolute_import, division, print_function
+from future.moves.itertools import zip_longest
 
 import inspect
 import sys
-from builtins import object
 from collections import OrderedDict
+from contextlib import contextmanager
 from functools import wraps
-from future.moves.itertools import zip_longest
 from itertools import product
 
 import numpy as np
 
 __all__ = (
-    'array_str', 'dtype_str', 'dtype_repr', 'npy_printoptions',
-    'signature_string', 'signature_string_parts', 'repr_string',
-    'indent', 'dedent', 'attribute_repr_string', 'method_repr_string',
-    'is_numeric_dtype', 'is_int_dtype', 'is_floating_dtype', 'is_real_dtype',
-    'is_real_floating_dtype', 'is_complex_floating_dtype',
-    'real_dtype', 'complex_dtype', 'is_string', 'nd_iterator', 'conj_exponent',
-    'writable_array', 'run_from_ipython', 'NumpyRandomSeed',
-    'cache_arguments', 'unique',
-    'REPR_PRECISION')
+    'REPR_PRECISION',
+    'indent',
+    'dedent',
+    'npy_printoptions',
+    'array_str',
+    'dtype_repr',
+    'dtype_str',
+    'cache_arguments',
+    'is_numeric_dtype',
+    'is_int_dtype',
+    'is_floating_dtype',
+    'is_real_dtype',
+    'is_real_floating_dtype',
+    'is_complex_floating_dtype',
+    'real_dtype',
+    'complex_dtype',
+    'is_string',
+    'nd_iterator',
+    'conj_exponent',
+    'none_context',
+    'writable_array',
+    'signature_string',
+    'signature_string_parts',
+    'repr_string',
+    'attribute_repr_string',
+    'method_repr_string',
+    'run_from_ipython',
+    'npy_random_seed',
+    'unique',
+)
 
 
 REPR_PRECISION = 4  # For printing scalars and array entries
@@ -158,9 +179,9 @@ def dedent(string, indent_str='   ', max_levels=None):
     return '\n'.join(line[dedent_len:] for line in lines)
 
 
-class npy_printoptions(object):
-
-    """Context manager to temporarily set Numpy print options.
+@contextmanager
+def npy_printoptions(**extra_opts):
+    """Context manager to temporarily set NumPy print options.
 
     See Also
     --------
@@ -178,18 +199,16 @@ class npy_printoptions(object):
     ...     print(np.array([np.nan, 1.00001]))
     [  whoah!  1.00001]
     """
+    orig_opts = np.get_printoptions()
 
-    def __init__(self, **extra_opts):
-        self.extra_opts = extra_opts
-        self.orig_opts = np.get_printoptions()
-
-    def __enter__(self):
-        new_opts = self.orig_opts.copy()
-        new_opts.update(self.extra_opts)
+    try:
+        new_opts = orig_opts.copy()
+        new_opts.update(extra_opts)
         np.set_printoptions(**new_opts)
+        yield
 
-    def __exit__(self, type, value, traceback):
-        np.set_printoptions(**self.orig_opts)
+    finally:
+        np.set_printoptions(**orig_opts)
 
 
 def array_str(a, nprint=6):
@@ -648,85 +667,67 @@ def preload_first_arg(instance, mode):
     return decorator
 
 
-class writable_array(object):
-    """Context manager that casts obj to a `numpy.array` and saves changes."""
+@contextmanager
+def none_context(*args, **kwargs):
+    """Trivial context manager, accepts arbitrary args and returns ``None``."""
+    yield
 
-    def __init__(self, obj, **kwargs):
-        """initialize a new instance.
 
-        Parameters
-        ----------
-        obj : `array-like`
-            Object that should be made available as writable array.
-            It must be valid as input to `numpy.asarray` and needs to
-            support the syntax ``obj[:] = arr``.
-        kwargs :
-            Keyword arguments that should be passed to `numpy.asarray`.
+@contextmanager
+def writable_array(obj, **kwargs):
+    """Context manager that casts obj to a `numpy.array` and saves changes.
 
-        Examples
-        --------
-        Convert list to array and use with numpy:
+    Parameters
+    ----------
+    obj : `array-like`
+        Object that should be made available as writable array.
+        It must be valid as input to `numpy.asarray` and needs to
+        support the syntax ``obj[:] = arr``.
+    kwargs :
+        Keyword arguments that should be passed to `numpy.asarray`.
 
-        >>> lst = [1, 2, 3]
-        >>> with writable_array(lst) as arr:
-        ...    arr *= 2
-        >>> lst
-        [2, 4, 6]
+    Examples
+    --------
+    Convert list to array and use with numpy:
 
-        Usage with ODL vectors:
+    >>> lst = [1, 2, 3]
+    >>> with writable_array(lst) as arr:
+    ...    arr *= 2
+    >>> lst
+    [2, 4, 6]
 
-        >>> space = odl.uniform_discr(0, 1, 3)
-        >>> x = space.element([1, 2, 3])
-        >>> with writable_array(x) as arr:
-        ...    arr += [1, 1, 1]
-        >>> x
-        uniform_discr(0.0, 1.0, 3).element([ 2.,  3.,  4.])
+    Usage with ODL vectors:
 
-        Additional keyword arguments are passed to `numpy.asarray`:
+    >>> space = odl.uniform_discr(0, 1, 3)
+    >>> x = space.element([1, 2, 3])
+    >>> with writable_array(x) as arr:
+    ...     arr += [1, 1, 1]
+    >>> x
+    uniform_discr(0.0, 1.0, 3).element([ 2.,  3.,  4.])
 
-        >>> lst = [1, 2, 3]
-        >>> with writable_array(lst, dtype='complex') as arr:
-        ...    arr  # print array
-        array([ 1.+0.j,  2.+0.j,  3.+0.j])
+    Additional keyword arguments are passed to `numpy.asarray`:
 
-        Note that the changes are only saved upon exiting the context
-        manger exits. Before, the input object is unchanged:
+    >>> lst = [1, 2, 3]
+    >>> with writable_array(lst, dtype='complex') as arr:
+    ...     print(arr)
+    [ 1.+0.j  2.+0.j  3.+0.j]
 
-        >>> lst = [1, 2, 3]
-        >>> with writable_array(lst) as arr:
-        ...    arr *= 2
-        ...    lst  # print content of lst before exiting
-        [1, 2, 3]
-        >>> lst  # print content of lst after exit
-        [2, 4, 6]
-        """
-        self.obj = obj
-        self.kwargs = kwargs
-        self.arr = None
+    Note that the changes are only saved upon exiting the context
+    manger exits. Before, the input object is unchanged:
 
-    def __enter__(self):
-        """called by ``with writable_array(obj):``.
-
-        Returns
-        -------
-        arr : `numpy.ndarray`
-            Array representing ``self.obj``, created by calling
-            ``numpy.asarray``. Any changes to ``arr`` will be passed through
-            to ``self.obj`` after the context manager exits.
-        """
-        self.arr = np.asarray(self.obj, **self.kwargs)
-        return self.arr
-
-    def __exit__(self, type, value, traceback):
-        """called when ``with writable_array(obj):`` ends.
-
-        Saves any changes to ``self.arr`` to ``self.obj``, also "frees"
-        self.arr in case the manager is used multiple times.
-
-        Extra arguments are ignored, any exceptions are passed through.
-        """
-        self.obj[:] = self.arr
-        self.arr = None
+    >>> lst = [1, 2, 3]
+    >>> with writable_array(lst) as arr:
+    ...     arr *= 2
+    ...     print(lst)
+    [1, 2, 3]
+    >>> print(lst)
+    [2, 4, 6]
+    """
+    try:
+        arr = np.asarray(obj, **kwargs)
+        yield arr
+    finally:
+        obj[:] = arr
 
 
 def signature_string(posargs, optargs, sep=', ', mod='!r'):
@@ -974,7 +975,7 @@ def signature_string_parts(posargs, optargs, mod='!r'):
         elif (np.isscalar(arg) and
               np.array(arg).real.astype('int64') != arg and
               modifier in ('', '!s', '!r')):
-            # Floating point value, use Numpy print option 'precision'
+            # Floating point value, use numpy print option 'precision'
             fmt = '{{:.{}}}'.format(precision)
             posargs_conv.append(fmt.format(arg))
         else:
@@ -1533,41 +1534,36 @@ def pkg_supports(feature, pkg_version, pkg_feat_dict):
     return False
 
 
-class NumpyRandomSeed(object):
-    """Context manager for Numpy random seeds."""
+@contextmanager
+def npy_random_seed(seed):
+    """Context manager to temporarily set the NumPy random generator seed.
 
-    def __init__(self, seed):
-        """Initialize an instance.
+    Parameters
+    ----------
+    seed : int or None
+        Seed value for the random number generator.
+        ``None`` is interpreted as keeping the current seed.
 
-        Parameters
-        ----------
-        seed : int or None
-            Seed value for the random number generator.
-            ``None`` is interpreted as keeping the current seed.
+    Examples
+    --------
+    Use this to make drawing pseudo-random numbers repeatable:
 
-        Examples
-        --------
-        Use this to make drawing pseudo-random numbers repeatable:
-
-        >>> with NumpyRandomSeed(42):
-        ...     rand_int = np.random.randint(10)
-        >>> with NumpyRandomSeed(42):
-        ...     same_rand_int = np.random.randint(10)
-        >>> rand_int == same_rand_int
-        True
-        """
-        self.seed = seed
-
-    def __enter__(self):
-        """Called by ``with`` command."""
-        if self.seed is not None:
-            self.startstate = np.random.get_state()
-            np.random.seed(self.seed)
-
-    def __exit__(self, exc_type, exc_value, traceback):
-        """Called upon exiting ``with`` command."""
-        if self.seed is not None:
-            np.random.set_state(self.startstate)
+    >>> with npy_random_seed(42):
+    ...     rand_int = np.random.randint(10)
+    >>> with npy_random_seed(42):
+    ...     same_rand_int = np.random.randint(10)
+    >>> rand_int == same_rand_int
+    True
+    """
+    do_seed = seed is not None
+    try:
+        if do_seed:
+            orig_rng_state = np.random.get_state()
+            np.random.seed(seed)
+        yield
+    finally:
+        if do_seed:
+            np.random.set_state(orig_rng_state)
 
 
 def unique(seq):

@@ -8,14 +8,15 @@
 
 """Standardized tests for `Operator`'s."""
 
-from __future__ import print_function, division, absolute_import
+from __future__ import absolute_import, division, print_function
+
 from builtins import object
+
 import numpy as np
 
 from odl.diagnostics.examples import samples
 from odl.operator import power_method_opnorm
-from odl.util.testutils import FailCounter
-
+from odl.util.testutils import fail_counter
 
 __all__ = ('OperatorTest',)
 
@@ -97,10 +98,11 @@ class OperatorTest(object):
         left_inner_vals = []
         right_inner_vals = []
 
-        with FailCounter(
-                test_name='Verifying the identity <Ax, y> = <x, Ay>',
-                err_msg='error = |<Ax, y> - <x, Ay>| / ||A|| ||x|| ||y||',
-                logger=self.log) as counter:
+        with fail_counter(
+            test_name='Verifying the identity <Ax, y> = <x, Ay>',
+            err_msg='error = |<Ax, y> - <x, Ay>| / ||A|| ||x|| ||y||',
+            logger=self.log
+        ) as counter:
 
             for [name_x, x], [name_y, y] in samples(self.operator.domain,
                                                     self.operator.range):
@@ -129,10 +131,11 @@ class OperatorTest(object):
         left_inner_vals = []
         right_inner_vals = []
 
-        with FailCounter(
-                test_name='Verifying the identity <Ax, y> = <x, A^T y>',
-                err_msg='error = |<Ax, y< - <x, A^* y>| / ||A|| ||x|| ||y||',
-                logger=self.log) as counter:
+        with fail_counter(
+            test_name='Verifying the identity <Ax, y> = <x, A^T y>',
+            err_msg='error = |<Ax, y< - <x, A^* y>| / ||A|| ||x|| ||y||',
+            logger=self.log
+        ) as counter:
 
             for [name_x, x], [name_y, y] in samples(self.operator.domain,
                                                     self.operator.range):
@@ -168,10 +171,11 @@ class OperatorTest(object):
             self.log('(A^*)^* == A')
             return
 
-        with FailCounter(
-                test_name='\nVerifying the identity Ax = (A^*)^* x',
-                err_msg='error = ||Ax - (A^*)^* x|| / ||A|| ||x||',
-                logger=self.log) as counter:
+        with fail_counter(
+            test_name='\nVerifying the identity Ax = (A^*)^* x',
+            err_msg='error = ||Ax - (A^*)^* x|| / ||A|| ||x||',
+            logger=self.log
+        ) as counter:
             for [name_x, x] in self.operator.domain.examples:
                 opx = self.operator(x)
                 op_adj_adj_x = self.operator.adjoint.adjoint(x)
@@ -229,11 +233,12 @@ class OperatorTest(object):
 
         for ``c --> 0``.
         """
-        with FailCounter(
-                test_name='Verifying that derivative is a first-order '
-                          'approximation',
-                err_msg="error = inf_c ||A(x+c*p)-A(x)-A'(x)(c*p)|| / c",
-                logger=self.log) as counter:
+        with fail_counter(
+            test_name='Verifying that derivative is a first-order '
+                      'approximation',
+            err_msg="error = inf_c ||A(x+c*p)-A(x)-A'(x)(c*p)|| / c",
+            logger=self.log
+        ) as counter:
             for [name_x, x], [name_dx, dx] in samples(self.operator.domain,
                                                       self.operator.domain):
                 # Precompute some values
@@ -301,10 +306,11 @@ class OperatorTest(object):
 
     def _scale_invariance(self):
         """Verify ``A(c*x) = c * A(x)``."""
-        with FailCounter(
-                test_name='Verifying homogeneity under scalar multiplication',
-                err_msg='error = ||A(c*x)-c*A(x)|| / |c| ||A|| ||x||',
-                logger=self.log) as counter:
+        with fail_counter(
+            test_name='Verifying homogeneity under scalar multiplication',
+            err_msg='error = ||A(c*x)-c*A(x)|| / |c| ||A|| ||x||',
+            logger=self.log
+        ) as counter:
             for [name_x, x], [_, scale] in samples(self.operator.domain,
                                                    self.operator.domain.field):
                 opx = self.operator(x)
@@ -320,11 +326,12 @@ class OperatorTest(object):
 
     def _addition_invariance(self):
         """Verify ``A(x+y) = A(x) + A(y)``."""
-        with FailCounter(
-                test_name='Verifying distributivity under vector addition',
-                err_msg='error = ||A(x+y) - A(x) - A(y)|| / '
-                        '||A||(||x|| + ||y||)',
-                logger=self.log) as counter:
+        with fail_counter(
+            test_name='Verifying distributivity under vector addition',
+            err_msg='error = ||A(x+y) - A(x) - A(y)|| / '
+                    '||A||(||x|| + ||y||)',
+            logger=self.log
+        ) as counter:
             for [name_x, x], [name_y, y] in samples(self.operator.domain,
                                                     self.operator.domain):
                 opx = self.operator(x)
