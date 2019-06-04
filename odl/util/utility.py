@@ -1610,7 +1610,7 @@ def unique(seq):
 
 def nextpow2(n):
     """
-    Compute the integer exponent of the next higher power of 2.
+    Compute the integer which is a power of two.
 
     Parameters
     ----------
@@ -1619,15 +1619,15 @@ def nextpow2(n):
     Examples
     ========
     >>> odl.util.nextpow2(0)
-    0
+    1
     >>> odl.util.nextpow2(7)
-    3
-    >>> odl.util.nextpow2(1024)
-    10
+    8
+    >>> odl.util.nextpow2(513)
+    1024
     """
     if n == 0:
-        return 0
-    return int(np.ceil(np.log2(n)))
+        return 1
+    return 2 ** int(np.ceil(np.log2(n)))
 
 
 if __name__ == '__main__':
