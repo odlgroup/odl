@@ -34,7 +34,7 @@ geometry = odl.tomo.Parallel2dGeometry(angle_partition, detector_partition)
 
 
 # Ray transform (= forward projection).
-ray_trafo = odl.tomo.RayTransform(reco_space, geometry, impl='astra_cuda')
+ray_trafo = odl.tomo.RayTransform(reco_space, geometry)
 
 # Create filtered back-projection operator
 fbp = odl.tomo.fbp_op(ray_trafo)
