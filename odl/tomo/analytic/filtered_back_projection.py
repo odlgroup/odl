@@ -12,7 +12,7 @@ import numpy as np
 
 from odl.discr import ResizingOperator
 from odl.trafos import FourierTransform, PYFFTW_AVAILABLE
-from odl.util import nextpow2
+from odl.trafos.util import next_fast_len
 
 
 __all__ = ('fbp_op', 'fbp_filter_op', 'tam_danielson_window',
@@ -380,7 +380,8 @@ def fbp_filter_op(ray_trafo, padding=True, filter_type='Ram-Lak',
         if padding:
             # Define padding operator
             ran_shp = (ray_trafo.range.shape[0],
-                       nextpow2(ray_trafo.range.shape[1] * 2 - 1))
+                       next_fast_len(
+                           ray_trafo.range.shape[1] * 2 - 1, impl, rfft=True))
             resizing = ResizingOperator(ray_trafo.range, ran_shp=ran_shp)
 
             fourier = FourierTransform(resizing.range, axes=1, impl=impl)
@@ -436,12 +437,14 @@ def fbp_filter_op(ray_trafo, padding=True, filter_type='Ram-Lak',
         if padding:
             # Define padding operator
             if used_axes[0]:
-                padded_shape_u = nextpow2(ray_trafo.range.shape[1] * 2 - 1)
+                padded_shape_u = next_fast_len(
+                    ray_trafo.range.shape[1] * 2 - 1, impl, rfft=True)
             else:
                 padded_shape_u = ray_trafo.range.shape[1]
 
             if used_axes[1]:
-                padded_shape_v = nextpow2(ray_trafo.range.shape[2] * 2 - 1)
+                padded_shape_v = next_fast_len(
+                    ray_trafo.range.shape[2] * 2 - 1, impl, rfft=True)
             else:
                 padded_shape_v = ray_trafo.range.shape[2]
 
