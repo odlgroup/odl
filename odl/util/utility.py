@@ -1626,8 +1626,8 @@ def nextpow2(n):
     1024
     """
     if n == 0:
-        return 1
-    return 2 ** int(np.ceil(np.log2(n)))
+        return 0
+    return int(np.ceil(np.log2(n)))
 
 
 if __name__ == '__main__':
