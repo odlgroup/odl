@@ -964,7 +964,7 @@ class CylindricalDetector(Detector):
         r1 = rotation_matrix_from_to(initial_axes[0], axes[0])
         r2 = rotation_matrix_from_to(np.matmul(r1, initial_axes[1]), axes[1])
         self.__rotation_matrix = np.matmul(r2, r1)
-        self.__translation = (- self.__radius
+        self.__translation = (-self.__radius
                               * np.matmul(self.__rotation_matrix, (1, 0, 0)))
 
     @property
@@ -1068,7 +1068,7 @@ class CylindricalDetector(Detector):
                          (-radius * cos(phi), 0),
                          (                 0, 1))
 
-        where R is a rotation matrix.
+        where ``R`` is a rotation matrix.
 
         Parameters
         ----------

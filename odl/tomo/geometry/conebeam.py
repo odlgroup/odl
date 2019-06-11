@@ -894,13 +894,12 @@ class ConeBeamGeometry(DivergentBeamGeometry, AxisOrientedGeometry):
             determine the new vectors. If present, the fourth column acts
             as a translation after the initial transformation.
             The resulting ``det_axes_init`` will be normalized.
-        det_curvature_radius : nonnegative float or a sequence of
-            two nonnegative floats, optional
+        det_curvature_radius :  2-tuple of nonnegative floats, optional
             Radius or radii of the detector curvature.
-            If ``None``, a flat detector is used,
-            if one value, a cylindrical detector is used,
-            if a sequence of two elements, e.g. [r, r], a spherical detector
-            is used.
+            If ``None``, a flat detector is used.
+            If ``(r, None)`` or ``(r, float('inf'))``, a cylindrical
+            detector is used.
+            If ``(r1, r2)``, a spherical detector is used.
         pitch : float, optional
             Constant distance along the rotation axis that a point on the
             helix traverses when increasing the angle parameter by
