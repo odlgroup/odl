@@ -49,7 +49,7 @@ assert np.allclose(detector_partition.cell_sides, 1)
 # %% Test case 1: Axis = [0, 0, 1]
 
 
-geometry = odl.tomo.ConeFlatGeometry(
+geometry = odl.tomo.ConeBeamGeometry(
     angle_partition, detector_partition, src_radius, det_radius,
     axis=[0, 0, 1])
 
@@ -66,7 +66,7 @@ phantom.show('Phantom, Middle Z Slice',
 # %% Test case 2: Axis = [0, 1, 0]
 
 
-geometry = odl.tomo.ConeFlatGeometry(
+geometry = odl.tomo.ConeBeamGeometry(
     angle_partition, detector_partition, src_radius, det_radius,
     axis=[0, 1, 0])
 
@@ -83,7 +83,7 @@ phantom.show('Phantom, Middle Y Slice',
 # %% Test case 3: Axis = [1, 0, 0]
 
 
-geometry = odl.tomo.ConeFlatGeometry(
+geometry = odl.tomo.ConeBeamGeometry(
     angle_partition, detector_partition, src_radius, det_radius,
     axis=[1, 0, 0])
 

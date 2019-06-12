@@ -13,7 +13,8 @@ import numpy as np
 
 from odl.discr import uniform_partition
 from odl.tomo.geometry.detector import (
-    Flat1dDetector, Flat2dDetector, CircularDetector)
+    Flat1dDetector, Flat2dDetector,
+    CircularDetector, CylindricalDetector, SphericalDetector)
 from odl.tomo.geometry.geometry import (
     DivergentBeamGeometry, AxisOrientedGeometry)
 from odl.tomo.util.utility import (
@@ -21,7 +22,7 @@ from odl.tomo.util.utility import (
 from odl.util import signature_string, indent, array_str
 
 
-__all__ = ('FanBeamGeometry', 'ConeFlatGeometry',
+__all__ = ('FanBeamGeometry', 'ConeBeamGeometry',
            'cone_beam_geometry', 'helical_geometry')
 
 
@@ -579,14 +580,15 @@ class FanBeamGeometry(DivergentBeamGeometry):
         return FanBeamGeometry(apart, dpart,
                                src_radius=self.src_radius,
                                det_radius=self.det_radius,
+                               det_curvature_radius=self.det_curvature_radius,
                                src_to_det_init=self.src_to_det_init,
                                det_axis_init=self._det_axis_init_arg,
                                translation=self.translation)
 
 
-class ConeFlatGeometry(DivergentBeamGeometry, AxisOrientedGeometry):
+class ConeBeamGeometry(DivergentBeamGeometry, AxisOrientedGeometry):
 
-    """Cone beam geometry with circular/helical source curve and flat detector.
+    """Cone beam geometry with circular/helical source curve.
 
     The source moves along a spiral oriented along a fixed ``axis``, with
     radius ``src_radius`` in the azimuthal plane and a given ``pitch``.
@@ -609,8 +611,8 @@ class ConeFlatGeometry(DivergentBeamGeometry, AxisOrientedGeometry):
                            src_to_det_init=(0, 1, 0),
                            det_axes_init=((1, 0, 0), (0, 0, 1)))
 
-    def __init__(self, apart, dpart, src_radius, det_radius, pitch=0,
-                 axis=(0, 0, 1), **kwargs):
+    def __init__(self, apart, dpart, src_radius, det_radius,
+                 det_curvature_radius=None, pitch=0, axis=(0, 0, 1), **kwargs):
         """Initialize a new instance.
 
         Parameters
@@ -624,6 +626,12 @@ class ConeFlatGeometry(DivergentBeamGeometry, AxisOrientedGeometry):
         det_radius : nonnegative float
             Radius of the detector circle. Must be nonzero if ``src_radius``
             is zero.
+        det_curvature_radius :  2-tuple of nonnegative floats, optional
+            Radius or radii of the detector curvature.
+            If ``None``, a flat detector is used.
+            If ``(r, None)`` or ``(r, float('inf'))``, a cylindrical
+            detector is used.
+            If ``(r1, r2)``, a spherical detector is used.
         pitch : float, optional
             Constant distance along ``axis`` that a point on the helix
             traverses when increasing the angle parameter by ``2 * pi``.
@@ -680,7 +688,7 @@ class ConeFlatGeometry(DivergentBeamGeometry, AxisOrientedGeometry):
 
         >>> apart = odl.uniform_partition(0, 4 * np.pi, 10)
         >>> dpart = odl.uniform_partition([-1, -1], [1, 1], (20, 20))
-        >>> geom = ConeFlatGeometry(
+        >>> geom = ConeBeamGeometry(
         ...     apart, dpart, src_radius=5, det_radius=10, pitch=2)
         >>> geom.src_position(0)
         array([ 0., -5.,  0.])
@@ -700,11 +708,33 @@ class ConeFlatGeometry(DivergentBeamGeometry, AxisOrientedGeometry):
         array([[ 1.,  0.,  0.],
                [ 0.,  0.,  1.]])
 
+        Specifying curvature of the cylindrical detector:
+
+        >>> apart = odl.uniform_partition(0, 4 * np.pi, 10)
+        >>> dpart = odl.uniform_partition(
+        ...     [-np.pi / 2, -1], [np.pi / 2, 1], (20, 20))
+        >>> geom = ConeBeamGeometry(apart, dpart,
+        ...     src_radius=5, det_radius=10, det_curvature_radius=(10, None))
+        >>> # (10*sin(pi/2), 10*cos(pi/2), 1)
+        >>> np.round(geom.det_point_position(0, [ np.pi / 2, 1] ), 2)
+        array([ 10., 0., 1.])
+
+        Specifying curvature of the spherical detector:
+
+        >>> apart = odl.uniform_partition(0, 4 * np.pi, 10)
+        >>> dpart = odl.uniform_partition([-np.pi / 2, -np.pi / 4],
+        ...                               [ np.pi / 2,  np.pi / 4], (20, 20))
+        >>> geom = ConeBeamGeometry(apart, dpart,
+        ...     src_radius=5, det_radius=10, det_curvature_radius=(10, 10))
+        >>> # 10*( cos(pi/4), 0, sin(pi/4))
+        >>> np.round(geom.det_point_position(0, [ np.pi / 2, np.pi / 4] ), 2)
+        array([ 7.07, 0.  , 7.07])
+
         Specifying an axis by default rotates the standard configuration
         to this position:
 
         >>> e_x, e_y, e_z = np.eye(3)  # standard unit vectors
-        >>> geom = ConeFlatGeometry(
+        >>> geom = ConeBeamGeometry(
         ...     apart, dpart, src_radius=5, det_radius=10, pitch=2,
         ...     axis=(0, 1, 0))
         >>> np.allclose(geom.axis, e_y)
@@ -713,7 +743,7 @@ class ConeFlatGeometry(DivergentBeamGeometry, AxisOrientedGeometry):
         True
         >>> np.allclose(geom.det_axes_init, (e_x, e_y))
         True
-        >>> geom = ConeFlatGeometry(
+        >>> geom = ConeBeamGeometry(
         ...     apart, dpart, src_radius=5, det_radius=10, pitch=2,
         ...     axis=(1, 0, 0))
         >>> np.allclose(geom.axis, e_x)
@@ -726,7 +756,7 @@ class ConeFlatGeometry(DivergentBeamGeometry, AxisOrientedGeometry):
         The initial source-to-detector vector and the detector axes can
         also be set explicitly:
 
-        >>> geom = ConeFlatGeometry(
+        >>> geom = ConeBeamGeometry(
         ...     apart, dpart, src_radius=5, det_radius=10, pitch=2,
         ...     src_to_det_init=(-1, 0, 0),
         ...     det_axes_init=((0, 1, 0), (0, 0, 1)))
@@ -797,9 +827,28 @@ class ConeFlatGeometry(DivergentBeamGeometry, AxisOrientedGeometry):
         AxisOrientedGeometry.__init__(self, axis)
         # `check_bounds` is needed for both detector and geometry
         check_bounds = kwargs.get('check_bounds', True)
-        detector = Flat2dDetector(dpart, axes=det_axes_init,
-                                  check_bounds=check_bounds)
-        super(ConeFlatGeometry, self).__init__(
+        if det_curvature_radius is None:
+            detector = Flat2dDetector(dpart, axes=det_axes_init,
+                                      check_bounds=check_bounds)
+        elif len(det_curvature_radius) == 2:
+            if det_curvature_radius[0] == det_curvature_radius[1]:
+                detector = SphericalDetector(dpart,
+                                             radius=det_curvature_radius[0],
+                                             axes=det_axes_init,
+                                             check_bounds=check_bounds)
+            elif (det_curvature_radius[1] is None
+                  or det_curvature_radius[1] == float('inf')):
+                detector = CylindricalDetector(dpart,
+                                               radius=det_curvature_radius[0],
+                                               axes=det_axes_init,
+                                               check_bounds=check_bounds)
+            else:
+                raise NotImplementedError('Curved detector with different '
+                                          'curvature radii')
+        else:
+            raise ValueError('det_curvature_radius {} must be a 2-tuple'
+                             ''.format(det_curvature_radius))
+        super(ConeBeamGeometry, self).__init__(
             ndim=3, motion_part=apart, detector=detector, **kwargs)
 
         # Check parameters
@@ -821,8 +870,8 @@ class ConeFlatGeometry(DivergentBeamGeometry, AxisOrientedGeometry):
 
     @classmethod
     def frommatrix(cls, apart, dpart, src_radius, det_radius, init_matrix,
-                   pitch=0, **kwargs):
-        """Create an instance of `ConeFlatGeometry` using a matrix.
+                   det_curvature_radius=None, pitch=0, **kwargs):
+        """Create an instance of `ConeBeamGeometry` using a matrix.
 
         This alternative constructor uses a matrix to rotate and
         translate the default configuration. It is most useful when
@@ -845,6 +894,12 @@ class ConeFlatGeometry(DivergentBeamGeometry, AxisOrientedGeometry):
             determine the new vectors. If present, the fourth column acts
             as a translation after the initial transformation.
             The resulting ``det_axes_init`` will be normalized.
+        det_curvature_radius :  2-tuple of nonnegative floats, optional
+            Radius or radii of the detector curvature.
+            If ``None``, a flat detector is used.
+            If ``(r, None)`` or ``(r, float('inf'))``, a cylindrical
+            detector is used.
+            If ``(r1, r2)``, a spherical detector is used.
         pitch : float, optional
             Constant distance along the rotation axis that a point on the
             helix traverses when increasing the angle parameter by
@@ -855,7 +910,7 @@ class ConeFlatGeometry(DivergentBeamGeometry, AxisOrientedGeometry):
 
         Returns
         -------
-        geometry : `ConeFlatGeometry`
+        geometry : `ConeBeamGeometry`
 
         Examples
         --------
@@ -867,7 +922,7 @@ class ConeFlatGeometry(DivergentBeamGeometry, AxisOrientedGeometry):
         >>> matrix = np.array([[1, 0, 0],
         ...                    [0, 0, -1],
         ...                    [0, 1, 0]])
-        >>> geom = ConeFlatGeometry.frommatrix(
+        >>> geom = ConeBeamGeometry.frommatrix(
         ...     apart, dpart, src_radius=5, det_radius=10, pitch=2,
         ...     init_matrix=matrix)
         >>> geom.axis
@@ -883,7 +938,7 @@ class ConeFlatGeometry(DivergentBeamGeometry, AxisOrientedGeometry):
         >>> matrix = np.array([[0, 0, -1, 0],
         ...                    [0, 1, 0, 1],
         ...                    [1, 0, 0, 1]])
-        >>> geom = ConeFlatGeometry.frommatrix(
+        >>> geom = ConeBeamGeometry.frommatrix(
         ...     apart, dpart, src_radius=5, det_radius=10, pitch=2,
         ...     init_matrix=matrix)
         >>> geom.translation
@@ -920,7 +975,10 @@ class ConeFlatGeometry(DivergentBeamGeometry, AxisOrientedGeometry):
         else:
             kwargs['translation'] = translation
 
-        return cls(apart, dpart, src_radius, det_radius, pitch, axis,
+        return cls(apart, dpart, src_radius, det_radius,
+                   det_curvature_radius=det_curvature_radius,
+                   pitch=pitch,
+                   axis=axis,
                    src_to_det_init=src_to_det,
                    det_axes_init=[det_axis_0, det_axis_1],
                    **kwargs)
@@ -934,6 +992,11 @@ class ConeFlatGeometry(DivergentBeamGeometry, AxisOrientedGeometry):
     def det_radius(self):
         """Detector circle radius of this geometry."""
         return self.__det_radius
+
+    @property
+    def det_curvature_radius(self):
+        """Detector curve radius of this geometry."""
+        return getattr(self.detector, 'radius', None)
 
     @property
     def pitch(self):
@@ -1029,7 +1092,7 @@ class ConeFlatGeometry(DivergentBeamGeometry, AxisOrientedGeometry):
 
         >>> apart = odl.uniform_partition(0, 4 * np.pi, 10)
         >>> dpart = odl.uniform_partition([-1, -1], [1, 1], (20, 20))
-        >>> geom = ConeFlatGeometry(
+        >>> geom = ConeBeamGeometry(
         ...     apart, dpart, src_radius=5, det_radius=10, pitch=2)
         >>> geom.det_refpoint(0)
         array([  0.,  10.,   0.])
@@ -1115,7 +1178,7 @@ class ConeFlatGeometry(DivergentBeamGeometry, AxisOrientedGeometry):
 
         >>> apart = odl.uniform_partition(0, 4 * np.pi, 10)
         >>> dpart = odl.uniform_partition([-1, -1], [1, 1], (20, 20))
-        >>> geom = ConeFlatGeometry(
+        >>> geom = ConeBeamGeometry(
         ...     apart, dpart, src_radius=5, det_radius=10, pitch=2)
         >>> geom.src_position(0)
         array([ 0., -5.,  0.])
@@ -1207,12 +1270,12 @@ class ConeFlatGeometry(DivergentBeamGeometry, AxisOrientedGeometry):
         --------
         >>> apart = odl.uniform_partition(0, 4, 4)
         >>> dpart = odl.uniform_partition([-1, -1], [1, 1], [20, 20])
-        >>> geom = odl.tomo.ConeFlatGeometry(apart, dpart, 50, 100, pitch=2)
+        >>> geom = odl.tomo.ConeBeamGeometry(apart, dpart, 50, 100, pitch=2)
 
         Extract sub-geometry with every second angle:
 
         >>> geom[::2]
-        ConeFlatGeometry(
+        ConeBeamGeometry(
             nonuniform_partition(
                 [ 0.5,  2.5],
                 min_pt=0.0, max_pt=4.0
@@ -1227,9 +1290,10 @@ class ConeFlatGeometry(DivergentBeamGeometry, AxisOrientedGeometry):
         apart = part.byaxis[0]
         dpart = part.byaxis[1:]
 
-        return ConeFlatGeometry(apart, dpart,
+        return ConeBeamGeometry(apart, dpart,
                                 src_radius=self.src_radius,
                                 det_radius=self.det_radius,
+                                det_curvature_radius=self.det_curvature_radius,
                                 pitch=self.pitch,
                                 axis=self.axis,
                                 offset_along_axis=self.offset_along_axis,
@@ -1292,7 +1356,7 @@ def cone_beam_geometry(space, src_radius, det_radius, num_angles=None,
         detector as determined by sampling criteria.
 
             - If ``space`` is 2D, the result is a `FanBeamGeometry`.
-            - If ``space`` is 3D, the result is a `ConeFlatGeometry`.
+            - If ``space`` is 3D, the result is a `ConeBeamGeometry`.
 
     Examples
     --------
@@ -1457,7 +1521,7 @@ def cone_beam_geometry(space, src_radius, det_radius, num_angles=None,
         return FanBeamGeometry(angle_partition, det_partition,
                                src_radius, det_radius)
     elif space.ndim == 3:
-        return ConeFlatGeometry(angle_partition, det_partition,
+        return ConeBeamGeometry(angle_partition, det_partition,
                                 src_radius, det_radius)
     else:
         raise ValueError('``space.ndim`` must be 2 or 3.')
@@ -1509,7 +1573,7 @@ def helical_geometry(space, src_radius, det_radius, num_turns,
 
     Returns
     -------
-    geometry : `ConeFlatGeometry`
+    geometry : `ConeBeamGeometry`
         Projection geometry with equidistant angles and zero-centered
         detector as determined by sampling criteria.
 
@@ -1608,7 +1672,7 @@ def helical_geometry(space, src_radius, det_radius, num_turns,
     angle_partition = uniform_partition(0, max_angle, num_angles)
     det_partition = uniform_partition(det_min_pt, det_max_pt, det_shape)
 
-    return ConeFlatGeometry(angle_partition, det_partition,
+    return ConeBeamGeometry(angle_partition, det_partition,
                             src_radius, det_radius,
                             offset_along_axis=offset_along_axis,
                             pitch=pitch)

@@ -52,7 +52,7 @@ def elekta_icon_geometry(sad=780.0, sdd=1000.0,
 
     Returns
     -------
-    elekta_icon_geometry : `ConeFlatGeometry`
+    elekta_icon_geometry : `ConeBeamGeometry`
 
     Examples
     --------
@@ -107,7 +107,7 @@ def elekta_icon_geometry(sad=780.0, sdd=1000.0,
                                                shape=detector_shape)
 
     # Create the geometry
-    geometry = odl.tomo.ConeFlatGeometry(
+    geometry = odl.tomo.ConeBeamGeometry(
         angles, detector_partition,
         src_radius=sad, det_radius=sdd - sad)
 
@@ -235,7 +235,7 @@ def elekta_xvi_geometry(sad=1000.0, sdd=1500.0,
 
     Returns
     -------
-    elekta_xvi_geometry : `ConeFlatGeometry`
+    elekta_xvi_geometry : `ConeBeamGeometry`
 
     Examples
     --------
@@ -285,7 +285,7 @@ def elekta_xvi_geometry(sad=1000.0, sdd=1500.0,
                                                shape=detector_shape)
 
     # Create the geometry
-    geometry = odl.tomo.ConeFlatGeometry(
+    geometry = odl.tomo.ConeBeamGeometry(
         angles, detector_partition,
         src_radius=sad, det_radius=sdd - sad)
 

@@ -16,11 +16,12 @@ from odl.discr import RectPartition
 from odl.tomo.util import perpendicular_vector, is_inside_bounds
 from odl.util import indent, signature_string, array_str
 from odl.util.npy_compat import moveaxis
+from odl.tomo.util.utility import rotation_matrix_from_to
 
 
 __all__ = ('Detector',
-           'Flat1dDetector', 'Flat2dDetector',
-           'CircularDetector')
+           'Flat1dDetector', 'Flat2dDetector', 'CircularDetector',
+           'CylindricalDetector', 'SphericalDetector')
 
 
 class Detector(object):
@@ -881,6 +882,528 @@ class CircularDetector(Detector):
             return self.radius
         else:
             return self.radius * np.ones(param.shape)
+
+    def __repr__(self):
+        """Return ``repr(self)``."""
+        posargs = [self.partition]
+        optargs = [('radius', array_str(self.center), '')]
+        inner_str = signature_string(posargs, optargs, sep=',\n')
+        return '{}(\n{}\n)'.format(self.__class__.__name__, indent(inner_str))
+
+    def __str__(self):
+        """Return ``str(self)``."""
+        return repr(self)
+
+
+class CylindricalDetector(Detector):
+
+    """A 2D detector on a cylindrical surface in 3D space.
+
+    The cylindrical surface that corresponds to the partition
+    is rotated to be aligned with given axes and
+    shifted to cross the origin. Note that the partition angle increases
+    in the clockwise direction, by analogy to flat detectors."""
+
+    def __init__(self, partition, axes, radius, check_bounds=True):
+        """Initialize a new instance.
+
+        Parameters
+        ----------
+        partition : 2-dim. `RectPartition`
+            Partition of the parameter interval, corresponding to the
+            angular partition and height partition.
+        axes : sequence of `array-like`
+            Fixed pair of of unit vectors with which the detector is aligned.
+            The vectors must have shape ``(3,)`` and be perpendicular.
+        radius : nonnegative float
+            Radius of the cylinder.
+        check_bounds : bool, optional
+            If ``True``, methods computing vectors check input arguments.
+            Checks are vectorized and add only a small overhead.
+
+        Examples
+        --------
+        Initialize a detector with height 8 and circle radius 2 extending to
+        90 degrees on both sides of the origin (a half cylinder).
+
+        >>> part = odl.uniform_partition(
+        ...     [-np.pi / 2, -4], [np.pi / 2, 4], [10, 8])
+        >>> det = CylindricalDetector(
+        ...     part, axes=[(1, 0, 0), (0, 0, 1)], radius=2)
+        >>> det.axes
+        array([[ 1.,  0.,  0.],
+               [ 0.,  0.,  1.]])
+        >>> det.radius
+        2.0
+        >>> np.allclose(det.surface_normal([0, 0]), [ 0, -1,  0])
+        True
+        """
+        super(CylindricalDetector, self).__init__(partition, 3, check_bounds)
+        if self.ndim != 2:
+            raise ValueError('`partition` must be 2-dimensional, got ndim={}'
+                             ''.format(self.ndim))
+
+        axes, axes_in = np.asarray(axes, dtype=float), axes
+        if axes.shape != (2, 3):
+            raise ValueError('`axes` must be a sequence of 2 3-dimensional '
+                             'vectors, got {}'.format(axes_in))
+        if np.linalg.norm(np.cross(*axes)) == 0:
+            raise ValueError('`axes` {} are linearly dependent'
+                             ''.format(axes_in))
+        if np.linalg.norm(np.dot(*axes)) != 0:
+            raise ValueError('`axes` {} are not perpendicular'
+                             ''.format(axes_in))
+
+        self.__axes = axes / np.linalg.norm(axes, axis=1, keepdims=True)
+
+        self.__radius = float(radius)
+        if self.__radius <= 0:
+            raise ValueError('`radius` must be positive')
+
+        initial_axes = np.array([[0, -1, 0], [0, 0, 1]])
+        r1 = rotation_matrix_from_to(initial_axes[0], axes[0])
+        r2 = rotation_matrix_from_to(np.matmul(r1, initial_axes[1]), axes[1])
+        self.__rotation_matrix = np.matmul(r2, r1)
+        self.__translation = (-self.__radius
+                              * np.matmul(self.__rotation_matrix, (1, 0, 0)))
+
+    @property
+    def axes(self):
+        """Fixed array of unit vectors with which the detector is aligned."""
+        return self.__axes
+
+    @property
+    def radius(self):
+        """Curvature radius of the detector."""
+        return self.__radius
+
+    @property
+    def rotation_matrix(self):
+        """Rotation matrix that is used to align the detector
+        with a given axis."""
+        return self.__rotation_matrix
+
+    @property
+    def translation(self):
+        """A vector used to shift the detector towards the origin."""
+        return self.__translation
+
+    def surface(self, param):
+        """Return the detector surface point corresponding to ``param``.
+
+        For parameters ``phi`` and ``h``, the returned point is given by ::
+
+            surf = R * (radius * cos(phi), -radius * sin(phi), h) + t
+
+        where ``R`` is a rotation matrix and ``t`` is a translation vector.
+        Note that increase of ``phi`` corresponds to rotation
+        in the clockwise direction, by analogy to flat detectors.
+
+        Parameters
+        ----------
+        param : `array-like` or sequence
+            Parameter value(s) at which to evaluate. A sequence of
+            parameters must have length 2.
+
+        Returns
+        -------
+        point : `numpy.ndarray`
+            Vector(s) pointing from the origin to the detector surface
+            point at ``param``.
+            If ``param`` is a single parameter, the returned array has
+            shape ``(3,)``, otherwise ``broadcast(*param).shape + (3,)``.
+
+        Examples
+        --------
+        The method works with a single parameter, resulting in a single
+        vector:
+
+        >>> part = odl.uniform_partition(
+        ...     [-np.pi / 2, -4], [np.pi / 2, 4], (10, 8))
+        >>> det = CylindricalDetector(
+        ...     part, axes=[(1, 0, 0), (0, 0, 1)], radius = 2)
+        >>> det.surface([0, 0])
+        array([ 0., 0.,  0.])
+        >>> np.round(det.surface([np.pi / 2, 1]), 10)
+        array([ 2., -2.,  1.])
+
+        It is also vectorized, i.e., it can be called with multiple
+        parameters at once (or an n-dimensional array of parameters):
+
+        >>> # 3 pairs of parameters, resulting in 3 vectors
+        >>> np.round(det.surface([[-np.pi / 2, 0, np.pi / 2], [-1, 0, 1]]), 10)
+        array([[-2., -2., -1.],
+               [ 0.,  0.,  0.],
+               [ 2., -2.,  1.]])
+        >>> # Pairs of parameters in a (4, 5) array each
+        >>> param = (np.zeros((4, 5)), np.zeros((4, 5)))
+        >>> det.surface(param).shape
+        (4, 5, 3)
+        """
+        squeeze_out = (np.broadcast(*param).shape == ())
+        param_in = param
+        param = tuple(np.array(p, dtype=float, copy=False, ndmin=1)
+                      for p in param)
+        if self.check_bounds and not is_inside_bounds(param, self.params):
+            raise ValueError('`param` {} not in the valid range '
+                             '{}'.format(param_in, self.params))
+
+        surf = np.empty(param[0].shape + (3,))
+        surf[..., 0] = self.radius * np.cos(param[0])
+        surf[..., 1] = self.radius * (-np.sin(param[0]))
+        surf[..., 2] = param[1]
+        surf = np.matmul(surf, np.transpose(self.rotation_matrix))
+        surf += self.translation
+        if squeeze_out:
+            surf = surf.squeeze()
+
+        return surf
+
+    def surface_deriv(self, param):
+        """Return the surface derivative at ``param``.
+
+        The derivative at parameters ``phi`` and ``h`` is given by ::
+
+            deriv = R * ((-radius * sin(phi), 0),
+                         (-radius * cos(phi), 0),
+                         (                 0, 1))
+
+        where ``R`` is a rotation matrix.
+
+        Parameters
+        ----------
+        param : `array-like` or sequence
+            Parameter value(s) at which to evaluate. A sequence of
+            parameters must have length 2.
+
+        Returns
+        -------
+        deriv : `numpy.ndarray`
+            Array representing the derivative vector(s) at ``param``.
+            If ``param`` is a single parameter, the returned array has
+            shape ``(2,)``, otherwise ``param.shape + (2,)``.
+
+        See Also
+        --------
+        surface
+
+        Examples
+        --------
+        The method works with a single parameter, resulting in a single
+        vector:
+
+        >>> part = odl.uniform_partition(
+        ...     [-np.pi / 2, -4], [np.pi / 2, 4], (10,8))
+        >>> det = CylindricalDetector(
+        ...     part, axes=[(1, 0, 0), (0, 0, 1)], radius = 2)
+        >>> np.round(det.surface_deriv([0, 0]), 10)
+        array([[ 2., -0.,  0.],
+               [ 0.,  0.,  1.]])
+
+        It is also vectorized, i.e., it can be called with multiple
+        parameters at once (or an n-dimensional array of parameters):
+
+        >>> # 2 pairs of parameters, resulting in 3 vectors for each axis
+        >>> deriv = det.surface_deriv([[0, np.pi / 2], [0, 1]])
+        >>> np.round(deriv[0], 10)
+        array([[ 2., -0.,  0.],
+               [ 0.,  0.,  1.]])
+        >>> np.round(deriv[1], 10)
+        array([[ 0., -2.,  0.],
+               [ 0.,  0.,  1.]])
+        >>> # Pairs of parameters in a (4, 5) array each
+        >>> param = (np.zeros((4, 5)), np.zeros((4, 5)))  # pairs of params
+        >>> det.surface_deriv(param).shape
+        (4, 5, 2, 3)
+        """
+        squeeze_out = (np.broadcast(*param).shape == ())
+        param_in = param
+        param = tuple(np.array(p, dtype=float, copy=False, ndmin=1)
+                      for p in param)
+        if self.check_bounds and not is_inside_bounds(param, self.params):
+            raise ValueError('`param` {} not in the valid range '
+                             '{}'.format(param_in, self.params))
+
+        deriv_phi = np.empty(param[0].shape + (3,))
+        deriv_phi[..., 0] = -np.sin(param[0])
+        deriv_phi[..., 1] = -np.cos(param[0])
+        deriv_phi[..., 2] = 0
+        deriv_phi *= self.radius
+        deriv_h = np.broadcast_to((0, 0, 1),
+                                  np.broadcast(*param).shape + (3,))
+        deriv = np.stack((deriv_phi, deriv_h), axis=-2)
+        deriv = np.matmul(deriv, np.transpose(self.rotation_matrix))
+
+        if squeeze_out:
+            deriv = deriv.squeeze()
+
+        return deriv
+
+    def __repr__(self):
+        """Return ``repr(self)``."""
+        posargs = [self.partition]
+        optargs = [('radius', array_str(self.center), '')]
+        inner_str = signature_string(posargs, optargs, sep=',\n')
+        return '{}(\n{}\n)'.format(self.__class__.__name__, indent(inner_str))
+
+    def __str__(self):
+        """Return ``str(self)``."""
+        return repr(self)
+
+
+class SphericalDetector(Detector):
+
+    """A 2D detector on a spherical surface in 3D space.
+
+    The spherical surface that corresponds to the partition
+    is rotated to be aligned with given axes and
+    shifted to cross the origin. Note, the partition angles
+    increase in the direction of -y (clockwise) and z axis,
+    by analogy to flat detectors."""
+
+    def __init__(self, partition, axes, radius, check_bounds=True):
+        """Initialize a new instance.
+
+        Parameters
+        ----------
+        partition : 2-dim. `RectPartition`
+            Partition of the parameter interval, corresponding to the
+            angular partition in two directions.
+        axes : sequence of `array-like`'s
+            Fixed pair of of unit vectors with which the detector is aligned.
+            The vectors must have shape ``(3,)`` and be perpendicular.
+        radius : nonnegative float
+            Radius of the sphere.
+        check_bounds : bool, optional
+            If ``True``, methods computing vectors check input arguments.
+            Checks are vectorized and add only a small overhead.
+
+        Examples
+        --------
+        Initialize a detector with radius 2 extending to
+        90 degrees in both directions along the equator and
+        45 degrees in both directions towards the poles.
+
+        >>> part = odl.uniform_partition([-np.pi / 2, -np.pi / 3],
+        ...                              [ np.pi / 2,  np.pi / 3], [20, 10])
+        >>> det = SphericalDetector(
+        ...     part, axes=[(1, 0, 0), (0, 0, 1)], radius = 2)
+        >>> det.axes
+        array([[ 1.,  0.,  0.],
+               [ 0.,  0.,  1.]])
+        >>> det.radius
+        2.0
+        >>> np.allclose(det.surface_normal([0, 0]), [0, -1, 0])
+        True
+        """
+        super(SphericalDetector, self).__init__(partition, 3, check_bounds)
+        if self.ndim != 2:
+            raise ValueError('`partition` must be 2-dimensional, got ndim={}'
+                             ''.format(self.ndim))
+
+        axes, axes_in = np.asarray(axes, dtype=float), axes
+        if axes.shape != (2, 3):
+            raise ValueError('`axes` must be a sequence of 2 3-dimensional '
+                             'vectors, got {}'.format(axes_in))
+        if np.linalg.norm(np.cross(*axes)) == 0:
+            raise ValueError('`axes` {} are linearly dependent'
+                             ''.format(axes_in))
+        if np.linalg.norm(np.dot(*axes)) != 0:
+            raise ValueError('`axes` {} are not perpendicular'
+                             ''.format(axes_in))
+
+        self.__axes = axes / np.linalg.norm(axes, axis=1, keepdims=True)
+
+        self.__radius = float(radius)
+        if self.__radius <= 0:
+            raise ValueError('`radius` must be positive')
+
+        initial_axes = np.array([[0, -1, 0], [0, 0, 1]])
+        r1 = rotation_matrix_from_to(initial_axes[0], axes[0])
+        r2 = rotation_matrix_from_to(np.matmul(r1, initial_axes[1]), axes[1])
+        self.__rotation_matrix = np.matmul(r2, r1)
+        self.__translation = (- self.__radius
+                              * np.matmul(self.__rotation_matrix, (1, 0, 0)))
+
+    @property
+    def axes(self):
+        """Fixed array of unit vectors with which the detector is aligned."""
+        return self.__axes
+
+    @property
+    def radius(self):
+        """Curvature radius of the detector."""
+        return self.__radius
+
+    @property
+    def rotation_matrix(self):
+        """Rotation matrix that is used to align the detector
+        with a given axis."""
+        return self.__rotation_matrix
+
+    @property
+    def translation(self):
+        """A vector used to shift the detector towards the origin."""
+        return self.__translation
+
+    def surface(self, param):
+        """Return the detector surface point corresponding to ``param``.
+
+        For parameters ``phi`` and ``theta``, the surface point is given by ::
+
+            surf = R * radius * ( cos(phi) * cos(theta),
+                                 -sin(phi) * cos(theta),
+                                             sin(theta)) + t
+
+        where ``R`` is a rotation matrix and ``t`` is a translation vector.
+        Note that increase of ``phi`` corresponds to rotation
+        in the clockwise direction, by analogy to flat detectors.
+
+        Parameters
+        ----------
+        param : `array-like` or sequence
+            Parameter value(s) at which to evaluate. A sequence of
+            parameters must have length 2.
+
+        Returns
+        -------
+        point : `numpy.ndarray`
+            Vector(s) pointing from the origin to the detector surface
+            point at ``param``.
+            If ``param`` is a single parameter, the returned array has
+            shape ``(3,)``, otherwise ``broadcast(*param).shape + (3,)``.
+
+        Examples
+        --------
+        The method works with a single parameter, resulting in a single
+        vector:
+
+        >>> part = odl.uniform_partition([-np.pi / 2, -np.pi / 3],
+        ...                              [ np.pi / 2,  np.pi / 3], [20, 10])
+        >>> det = SphericalDetector(
+        ...     part, axes=[(1, 0, 0), (0, 0, 1)], radius = 2)
+        >>> det.surface([0, 0])
+        array([ 0., 0.,  0.])
+        >>> np.round(det.surface([ np.pi / 2, np.pi / 3]), 2)
+        array([ 1.  , -2.  ,  1.73])
+
+        It is also vectorized, i.e., it can be called with multiple
+        parameters at once (or an n-dimensional array of parameters):
+
+        >>> # 3 pairs of parameters, resulting in 3 vectors
+        >>> np.round(det.surface([[-np.pi / 2, 0, np.pi / 2],
+        ...                       [-np.pi / 3, 0, np.pi / 3]]), 2)
+        array([[-1.  , -2.  , -1.73],
+               [ 0.  ,  0.  ,  0.  ],
+               [ 1.  , -2.  ,  1.73]])
+        >>> # Pairs of parameters in a (4, 5) array each
+        >>> param = (np.zeros((4, 5)), np.zeros((4, 5)))
+        >>> det.surface(param).shape
+        (4, 5, 3)
+        """
+        squeeze_out = (np.broadcast(*param).shape == ())
+        param_in = param
+        param = tuple(np.array(p, dtype=float, copy=False, ndmin=1)
+                      for p in param)
+        if self.check_bounds and not is_inside_bounds(param, self.params):
+            raise ValueError('`param` {} not in the valid range '
+                             '{}'.format(param_in, self.params))
+
+        surf = np.empty(param[0].shape + (3,))
+        surf[..., 0] = np.cos(param[0]) * np.cos(param[1])
+        surf[..., 1] = -np.sin(param[0]) * np.cos(param[1])
+        surf[..., 2] = np.sin(param[1])
+        surf *= self.radius
+        surf = np.matmul(surf, np.transpose(self.rotation_matrix))
+        surf += self.translation
+        if squeeze_out:
+            surf = surf.squeeze()
+
+        return surf
+
+    def surface_deriv(self, param):
+        """Return the surface derivative at ``param``.
+
+        The derivative at parameters ``phi`` and ``theta`` is given by ::
+
+            deriv = R * radius
+                      * ((-sin(phi) * cos(theta), -cos(phi) * sin(theta)),
+                         (-cos(phi) * cos(theta),  sin(phi) * sin(theta)),
+                         (                     0,             cos(theta)))
+
+        where R is a rotation matrix.
+
+        Parameters
+        ----------
+        param : `array-like` or sequence
+            Parameter value(s) at which to evaluate. A sequence of
+            parameters must have length 2.
+
+        Returns
+        -------
+        deriv : `numpy.ndarray`
+            Array representing the derivative vector(s) at ``param``.
+            If ``param`` is a single parameter, the returned array has
+            shape ``(2,)``, otherwise ``param.shape + (2,)``.
+
+        See Also
+        --------
+        surface
+
+        Examples
+        --------
+        The method works with a single parameter, resulting in a single
+        vector:
+
+        >>> part = odl.uniform_partition([-np.pi / 2, -np.pi / 3],
+        ...                              [ np.pi / 2,  np.pi / 3], [20, 10])
+        >>> det = SphericalDetector(
+        ...     part, axes=[(1, 0, 0), (0, 0, 1)], radius = 2)
+        >>> np.round(det.surface_deriv([0, 0]), 10)
+        array([[ 2., -0.,  0.],
+               [ 0.,  0.,  2.]])
+
+        It is also vectorized, i.e., it can be called with multiple
+        parameters at once (or an n-dimensional array of parameters):
+
+        >>> # 2 pairs of parameters, resulting in 3 vectors for each axis
+        >>> deriv = det.surface_deriv([[0, np.pi / 2], [0, np.pi / 3]])
+        >>> np.round(deriv[0], 10)
+        array([[ 2., -0.,  0.],
+               [ 0.,  0.,  2.]])
+        >>> np.round(deriv[1], 2)
+        array([[ 0.  , -1.  ,  0.  ],
+               [-1.73,  0.  ,  1.  ]])
+        >>> # Pairs of parameters in a (4, 5) array each
+        >>> param = (np.zeros((4, 5)), np.zeros((4, 5)))  # pairs of params
+        >>> det.surface_deriv(param).shape
+        (4, 5, 2, 3)
+        """
+        squeeze_out = (np.broadcast(*param).shape == ())
+        param_in = param
+        param = tuple(np.array(p, dtype=float, copy=False, ndmin=1)
+                      for p in param)
+        if self.check_bounds and not is_inside_bounds(param, self.params):
+            raise ValueError('`param` {} not in the valid range '
+                             '{}'.format(param_in, self.params))
+
+        deriv_phi = np.empty(param[0].shape + (3,))
+        deriv_phi[..., 0] = -np.sin(param[0]) * np.cos(param[1])
+        deriv_phi[..., 1] = -np.cos(param[0]) * np.cos(param[1])
+        deriv_phi[..., 2] = 0
+        deriv_phi *= self.radius
+        deriv_theta = np.empty(param[0].shape + (3,))
+        deriv_theta[..., 0] = -np.cos(param[0]) * np.sin(param[1])
+        deriv_theta[..., 1] = np.sin(param[0]) * np.sin(param[1])
+        deriv_theta[..., 2] = np.cos(param[1])
+        deriv_theta *= self.radius
+        deriv = np.stack((deriv_phi, deriv_theta), axis=-2)
+        deriv = np.matmul(deriv, np.transpose(self.rotation_matrix))
+
+        if squeeze_out:
+            deriv = deriv.squeeze()
+
+        return deriv
 
     def __repr__(self):
         """Return ``repr(self)``."""
