@@ -31,8 +31,10 @@ from odl.util.ufuncs import UFUNCS
 
 PYTHON2 = sys.version_info.major < 3
 
+
 # Functions to return arrays and classes corresponding to impls. Extend
 # when a new impl is available.
+
 
 def _pos_array(space):
     """Create an array with positive real entries in ``space``."""
