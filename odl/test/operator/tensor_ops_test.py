@@ -17,7 +17,6 @@ import odl
 from odl.operator.tensor_ops import (
     PointwiseNorm, PointwiseInner, PointwiseSum, MatrixOperator)
 from odl.space.pspace import ProductSpace
-from odl.util import moveaxis
 from odl.util.testutils import (
     all_almost_equal, all_equal, simple_fixture, noise_element, noise_elements)
 
@@ -652,7 +651,7 @@ def test_matrix_op_call(matrix):
     domain = odl.rn((2, 2, 4))
     mat_op = MatrixOperator(dense_matrix, domain, axis=2)
     xarr, x = noise_elements(mat_op.domain)
-    true_result = moveaxis(np.tensordot(dense_matrix, xarr, (1, 2)), 0, 2)
+    true_result = np.moveaxis(np.tensordot(dense_matrix, xarr, (1, 2)), 0, 2)
     assert all_almost_equal(mat_op(x), true_result)
     out = mat_op.range.element()
     mat_op(x, out=out)

@@ -8,27 +8,26 @@
 
 """Default functionals defined on any space similar to R^n or L^2."""
 
-from __future__ import print_function, division, absolute_import
+from __future__ import absolute_import, division, print_function
+
 from numbers import Integral
+
 import numpy as np
 
-from odl.solvers.functional.functional import (Functional,
-                                               FunctionalQuadraticPerturb)
-from odl.space import ProductSpace
-from odl.operator import (Operator, ConstantOperator, ZeroOperator,
-                          ScalingOperator, DiagonalOperator, PointwiseNorm)
+from odl.operator import (
+    ConstantOperator, DiagonalOperator, Operator, PointwiseNorm,
+    ScalingOperator, ZeroOperator)
+from odl.solvers.functional.functional import (
+    Functional, FunctionalQuadraticPerturb)
 from odl.solvers.nonsmooth.proximal_operators import (
-    proj_simplex,
-    proximal_l1, proximal_convex_conj_l1,
-    proximal_l1_l2, proximal_convex_conj_l1_l2,
-    proximal_l2, proximal_convex_conj_l2, proximal_l2_squared,
-    proximal_linfty, proximal_convex_conj_linfty,
-    proximal_huber,
-    proximal_const_func, proximal_box_constraint,
-    proximal_convex_conj_kl, proximal_convex_conj_kl_cross_entropy,
-    combine_proximals, proximal_convex_conj)
-from odl.util import conj_exponent, moveaxis
-
+    combine_proximals, proj_simplex, proximal_box_constraint,
+    proximal_const_func, proximal_convex_conj, proximal_convex_conj_kl,
+    proximal_convex_conj_kl_cross_entropy, proximal_convex_conj_l1,
+    proximal_convex_conj_l1_l2, proximal_convex_conj_l2,
+    proximal_convex_conj_linfty, proximal_huber, proximal_l1, proximal_l1_l2,
+    proximal_l2, proximal_l2_squared, proximal_linfty)
+from odl.space import ProductSpace
+from odl.util import conj_exponent
 
 __all__ = ('ZeroFunctional', 'ConstantFunctional', 'ScalingFunctional',
            'IdentityFunctional',
@@ -2002,7 +2001,7 @@ class NuclearNorm(Functional):
 
         This is the inverse of `_asarray`.
         """
-        result = moveaxis(arr, [-2, -1], [0, 1])
+        result = np.moveaxis(arr, [-2, -1], [0, 1])
         return self.domain.element(result)
 
     def _call(self, x):
@@ -2013,7 +2012,7 @@ class NuclearNorm(Functional):
         svd_diag = np.linalg.svd(arr, compute_uv=False)
 
         # Rotate the axes so the svd-direction is first
-        s_reordered = moveaxis(svd_diag, -1, 0)
+        s_reordered = np.moveaxis(svd_diag, -1, 0)
 
         # Return nuclear norm
         return self.outernorm(self.pwisenorm(s_reordered))
@@ -2075,7 +2074,7 @@ class NuclearNorm(Functional):
                     abss = np.abs(s) - (self.sigma - eps)
                     sprox = np.sign(s) * np.maximum(abss, 0)
                 elif func.pwisenorm.exponent == 2:
-                    s_reordered = moveaxis(s, -1, 0)
+                    s_reordered = np.moveaxis(s, -1, 0)
                     snorm = func.pwisenorm(s_reordered).asarray()
                     snorm = np.maximum(self.sigma, snorm, out=snorm)
                     sprox = ((1 - eps) - self.sigma / snorm)[..., None] * s

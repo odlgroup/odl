@@ -19,8 +19,7 @@ from odl.set import ComplexNumbers, RealNumbers
 from odl.space import ProductSpace, tensor_space
 from odl.space.base_tensors import TensorSpace
 from odl.space.weighting import ArrayWeighting
-from odl.util import (
-    dtype_repr, indent, moveaxis, signature_string, writable_array)
+from odl.util import dtype_repr, indent, signature_string, writable_array
 
 __all__ = ('PointwiseNorm', 'PointwiseInner', 'PointwiseSum', 'MatrixOperator',
            'SamplingOperator', 'WeightedSumSamplingOperator',
@@ -919,7 +918,7 @@ class MatrixOperator(Operator):
             else:
                 dot = np.tensordot(self.matrix, x, axes=(1, self.axis))
                 # New axis ends up as first, need to swap it to its place
-                out = moveaxis(dot, 0, self.axis)
+                out = np.moveaxis(dot, 0, self.axis)
         else:
             if scipy.sparse.isspmatrix(self.matrix):
                 # Unfortunately, there is no native in-place dot product for
@@ -933,7 +932,7 @@ class MatrixOperator(Operator):
                 # TODO: investigate speed issue
                 dot = np.tensordot(self.matrix, x, axes=(1, self.axis))
                 # New axis ends up as first, need to move it to its place
-                out[:] = moveaxis(dot, 0, self.axis)
+                out[:] = np.moveaxis(dot, 0, self.axis)
 
         return out
 
