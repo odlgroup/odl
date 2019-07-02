@@ -1536,10 +1536,12 @@ class FlatteningOperator(Operator):
                 return np.reshape(x.asarray(), self.range.shape,
                                   order=op.order)
 
+            @property
             def adjoint(self):
                 """Adjoint of this operator, a scaled `FlatteningOperator`."""
                 return scaling * op
 
+            @property
             def inverse(self):
                 """Inverse of this operator."""
                 return op
