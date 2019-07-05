@@ -486,11 +486,13 @@ class FanBeamGeometry(DivergentBeamGeometry):
                      + np.multiply.outer(flying_focal_spot[:, 1], tangent))
         center_to_src_init = center_to_src_init + ffs_shift
         # broadcasting to perform matrix multiplication "manually",
-        # since existing numpy functions do cross product along the outer dimensions,
-        # which we don't need here
-        center_to_src_init = np.repeat(center_to_src_init, 2, axis=-2).reshape(-1, 2, 2)
+        # since existing numpy functions do cross product along the outer
+        # dimensions, which we don't need here
+        center_to_src_init = np.repeat(center_to_src_init, 2,
+                                       axis=-2).reshape(-1, 2, 2)
         pos_vec = (self.translation[None, :]
-                   + np.sum(self.rotation_matrix(angle) * center_to_src_init, axis=-1))
+                   + np.sum(self.rotation_matrix(angle) * center_to_src_init,
+                            axis=-1))
         if squeeze_out:
             pos_vec = pos_vec.squeeze()
 
@@ -1347,9 +1349,10 @@ class ConeBeamGeometry(DivergentBeamGeometry, AxisOrientedGeometry):
                      + np.multiply.outer(flying_focal_spot[:, 1], tangent))
         center_to_src_init = center_to_src_init + ffs_shift
         # broadcasting to perform matrix multiplication "manually",
-        # since existing numpy functions do cross product along the outer dimensions,
-        # which we don't need here
-        center_to_src_init = np.repeat(center_to_src_init, 3, axis=-2).reshape(-1, 3, 3)
+        # since existing numpy functions do cross product along the outer
+        # dimensions, which we don't need here
+        center_to_src_init = np.repeat(center_to_src_init, 3,
+                                       axis=-2).reshape(-1, 3, 3)
         # `circle_component` has shape (a, ndim)
         circle_component = np.sum(rot_matrix * center_to_src_init, axis=-1)
 
