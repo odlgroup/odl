@@ -1,5 +1,4 @@
-# coding: utf-8
-# Copyright 2014-2019 The ODL contributors
+# Copyright 2014-2018 The ODL contributors
 #
 # This file is part of ODL.
 #
@@ -77,31 +76,30 @@ def _fbp_filter(norm_freq, filter_type, frequency_scaling):
     ...                    filter_type='Hann',
     ...                    frequency_scaling=0.8)
     """
-    filter_type, filter_type_in = str(filter_type).lower(), filter_type
     if callable(filter_type):
         filt = filter_type(norm_freq)
-    elif filter_type == 'ram-lak':
+    elif filter_type == 'Ram-Lak':
         filt = np.copy(norm_freq)
-    elif filter_type == 'shepp-logan':
+    elif filter_type == 'Shepp-Logan':
         filt = norm_freq * np.sinc(norm_freq / (2 * frequency_scaling))
-    elif filter_type == 'cosine':
+    elif filter_type == 'Cosine':
         filt = norm_freq * np.cos(norm_freq * np.pi / (2 * frequency_scaling))
-    elif filter_type == 'hamming':
+    elif filter_type == 'Hamming':
         filt = norm_freq * (
             0.54 + 0.46 * np.cos(norm_freq * np.pi / (frequency_scaling)))
-    elif filter_type == 'hann':
+    elif filter_type == 'Hann':
         filt = norm_freq * (
             np.cos(norm_freq * np.pi / (2 * frequency_scaling)) ** 2)
     else:
         raise ValueError('unknown `filter_type` ({})'
-                         ''.format(filter_type_in))
+                         ''.format(filter_type))
 
     indicator = (norm_freq <= frequency_scaling)
     filt *= indicator
     return filt
 
 
-def tam_danielson_window(ray_trafo, smoothing_width=0.05, n_pi=1):
+def tam_danielson_window(ray_trafo, smoothing_width=0.05, n_half_rot=1):
     """Create Tam-Danielson window from a `RayTransform`.
 
     The Tam-Danielson window is an indicator function on the minimal set of
@@ -109,8 +107,7 @@ def tam_danielson_window(ray_trafo, smoothing_width=0.05, n_pi=1):
     analytic reconstruction methods such as FBP to give a more accurate
     reconstruction.
 
-    See [TAM1998] for more informationon the window.
-    See [PKGT2000] for information on the ``n_pi`` parameter.
+    See [TSS1998] for more information.
 
     Parameters
     ----------
@@ -119,7 +116,7 @@ def tam_danielson_window(ray_trafo, smoothing_width=0.05, n_pi=1):
     smoothing_width : positive float, optional
         Width of the smoothing applied to the window's edges given as a
         fraction of the width of the full window.
-    n_pi : odd int, optional
+    n_half_rot : odd int, optional
         Total number of half rotations to include in the window. Values larger
         than 1 should be used if the pitch is much smaller than the detector
         height.
@@ -132,7 +129,7 @@ def tam_danielson_window(ray_trafo, smoothing_width=0.05, n_pi=1):
     --------
     fbp_op : Filtered back-projection operator from `RayTransform`
     tam_danielson_window : Weighting for short scan data
-    odl.tomo.geometry.conebeam.ConeBeamGeometry :
+    odl.tomo.geometry.conebeam.ConeFlatGeometry :
         Primary use case for this window function.
 
     References
@@ -141,11 +138,6 @@ def tam_danielson_window(ray_trafo, smoothing_width=0.05, n_pi=1):
     *Exact cone beam CT with a spiral scan*.
     Physics in Medicine & Biology 4 (1998), p 1015.
     https://dx.doi.org/10.1088/0031-9155/43/4/028
-
-    [PKGT2000] Proksa R, Köhler T, Grass M, Timmer J.
-    *The n-PI-method for helical cone-beam CT*
-    IEEE Trans Med Imaging. 2000 Sep;19(9):848-63.
-    https://www.ncbi.nlm.nih.gov/pubmed/11127600
     """
     # Extract parameters
     src_radius = ray_trafo.geometry.src_radius
@@ -160,29 +152,30 @@ def tam_danielson_window(ray_trafo, smoothing_width=0.05, n_pi=1):
     if smoothing_width < 0:
         raise ValueError('`smoothing_width` should be a positive float')
 
-    if n_pi % 2 != 1:
-        raise ValueError('`n_pi` must be odd, got {}'.format(n_pi))
+    if n_half_rot % 2 != 1:
+        raise ValueError('`n_half_rot` must be odd, got {}'.format(n_half_rot))
 
     # Find projection of axis on detector
     axis_proj = _axis_in_detector(ray_trafo.geometry)
     rot_dir = _rotation_direction_in_detector(ray_trafo.geometry)
 
     # Find distance from projection of rotation axis for each pixel
-    dx = (rot_dir[0] * ray_trafo.range.meshgrid[1]
-          + rot_dir[1] * ray_trafo.range.meshgrid[2])
+    dx = (rot_dir[0] * ray_trafo.range.meshgrid[1] +
+          rot_dir[1] * ray_trafo.range.meshgrid[2])
 
-    dx_axis = dx * src_radius / (src_radius + det_radius)
+    # Compute angles
+    phi = np.arctan(dx / (src_radius + det_radius))
+    theta = phi * 2
 
-    def Vn(u):
-        return (pitch / (2 * np.pi)
-                * (1 + (u / src_radius) ** 2)
-                * (n_pi * np.pi / 2.0 - np.arctan(u / src_radius)))
+    # Compute lower and upper bound
+    source_to_line_distance = src_radius + src_radius * np.cos(theta)
+    scale = (src_radius + det_radius) / source_to_line_distance
 
-    lower_proj_axis = -Vn(dx_axis)
-    upper_proj_axis = Vn(-dx_axis)
+    source_to_line_lower = pitch * (theta - n_half_rot * np.pi) / (2 * np.pi)
+    source_to_line_upper = pitch * (theta + n_half_rot * np.pi) / (2 * np.pi)
 
-    lower_proj = lower_proj_axis * (src_radius + det_radius) / src_radius
-    upper_proj = upper_proj_axis * (src_radius + det_radius) / src_radius
+    lower_proj = source_to_line_lower * scale
+    upper_proj = source_to_line_upper * scale
 
     # Compute a smoothed width
     interval = (upper_proj - lower_proj)
@@ -205,7 +198,7 @@ def tam_danielson_window(ray_trafo, smoothing_width=0.05, n_pi=1):
 
         return lower_wndw * upper_wndw
 
-    return ray_trafo.range.element(window_fcn) / n_pi
+    return ray_trafo.range.element(window_fcn) / n_half_rot
 
 
 def parker_weighting(ray_trafo, q=0.25):
@@ -236,8 +229,8 @@ def parker_weighting(ray_trafo, q=0.25):
     --------
     fbp_op : Filtered back-projection operator from `RayTransform`
     tam_danielson_window : Indicator function for helical data
-    odl.tomo.geometry.conebeam.FanBeamGeometry : Use case in 2d
-    odl.tomo.geometry.conebeam.ConeBeamGeometry : Use case in 3d (for pitch 0)
+    odl.tomo.geometry.conebeam.FanFlatGeometry : Use case in 2d
+    odl.tomo.geometry.conebeam.ConeFlatGeometry : Use case in 3d (for pitch 0)
 
     References
     ----------
@@ -273,8 +266,8 @@ def parker_weighting(ray_trafo, q=0.25):
         elif rot_dir[1] == 0:
             dx = rot_dir[0] * ray_trafo.range.meshgrid[1]
         else:
-            dx = (rot_dir[0] * ray_trafo.range.meshgrid[1]
-                  + rot_dir[1] * ray_trafo.range.meshgrid[2])
+            dx = (rot_dir[0] * ray_trafo.range.meshgrid[1] +
+                  rot_dir[1] * ray_trafo.range.meshgrid[2])
 
     # Compute parameters
     dx_abs_max = np.max(np.abs(dx))
@@ -287,8 +280,8 @@ def parker_weighting(ray_trafo, q=0.25):
 
     # Define utility functions
     def S(betap):
-        return (0.5 * (1.0 + np.sin(np.pi * betap)) * (np.abs(betap) < 0.5)
-                + (betap >= 0.5))
+        return (0.5 * (1.0 + np.sin(np.pi * betap)) * (np.abs(betap) < 0.5) +
+                (betap >= 0.5))
 
     def b(alpha):
         return q * (2 * delta - 2 * alpha + epsilon)
@@ -324,14 +317,16 @@ def fbp_filter_op(ray_trafo, padding=True, filter_type='Ram-Lak',
 
         `Parallel3dAxisGeometry` : Exact reconstruction
 
-        `FanBeamGeometry` : Approximate reconstruction, correct in limit of
-        fan angle = 0.
-        Only flat detectors are supported (det_curvature_radius is None).
+        `Parallel3dEulerGeometry` : Exact reconstruction, only implemented for
+        2d angle partitions.
 
-        `ConeBeamGeometry`, pitch = 0 (circular) : Approximate reconstruction,
+        `FanFlatGeometry` : Approximate reconstruction, correct in limit of
+        fan angle = 0.
+
+        `ConeFlatGeometry`, pitch = 0 (circular) : Approximate reconstruction,
         correct in the limit of fan angle = 0 and cone angle = 0.
 
-        `ConeBeamGeometry`, pitch > 0 (helical) : Very approximate unless a
+        `ConeFlatGeometry`, pitch > 0 (helical) : Very approximate unless a
         `tam_danielson_window` is used. Accurate with the window.
 
         Other geometries: Not supported
@@ -364,7 +359,7 @@ def fbp_filter_op(ray_trafo, padding=True, filter_type='Ram-Lak',
     tam_danielson_window : Windowing for helical data
     """
     impl = 'pyfftw' if PYFFTW_AVAILABLE else 'numpy'
-    alen = ray_trafo.geometry.motion_params.length
+    alen = ray_trafo.geometry.motion_params.extent[0]
 
     if ray_trafo.domain.ndim == 2:
         # Define ramp filter
@@ -387,7 +382,46 @@ def fbp_filter_op(ray_trafo, padding=True, filter_type='Ram-Lak',
         else:
             fourier = FourierTransform(ray_trafo.range, axes=1, impl=impl)
 
-    elif ray_trafo.domain.ndim == 3:
+    elif ray_trafo.domain.ndim == 3 and ray_trafo.geometry.angles.ndim == 2:
+        
+        if hasattr(ray_trafo.geometry, 'src_radius'):
+            raise NotImplementedError('FBP not yet implemented for 3D cone-beam')
+        else:
+            scale = 1.0
+
+        phi = ray_trafo.geometry.grid.coord_vectors[1]
+        avol = alen * (abs(np.cos(phi)).sum()*abs(phi[1]-phi[0]))
+        
+        # Define ramp filter
+        def fourier_filter(x):
+            abs_freq = (abs(x[2])**2 + abs(x[3])**2)**.5 * abs(np.cos(x[1]))
+            norm_freq = abs_freq / np.max(abs_freq)
+            filt = _fbp_filter(norm_freq, filter_type, frequency_scaling)
+
+            coverage = avol/(4*np.pi) # fraction of the sphere sampled
+            c = (np.pi/2)**.5 # Fourier transform of |x|^{1-n} = 1/(c|y|)
+            fudge = 0.03/ray_trafo.domain.cell_volume # I don't understand this factor
+
+            scaling = scale * np.max(abs_freq) / (c*coverage) * fudge
+            return filt * scaling
+        if padding:
+            # Define padding operator
+            padded_shape_u = ray_trafo.range.shape[2] * 2 - 1
+            padded_shape_v = ray_trafo.range.shape[3] * 2 - 1
+
+            ran_shp = (ray_trafo.range.shape[0],
+                       ray_trafo.range.shape[1],
+                       padded_shape_u,
+                       padded_shape_v)
+            resizing = ResizingOperator(ray_trafo.range, ran_shp=ran_shp)
+
+            fourier = FourierTransform(resizing.range, axes=[2,3], impl=impl)
+            fourier = fourier * resizing
+        else:
+            fourier = FourierTransform(ray_trafo.range, axes=[2,3], impl=impl)
+
+    
+    elif ray_trafo.domain.ndim == 3 and hasattr(ray_trafo.geometry, 'axis'):
         # Find the direction that the filter should be taken in
         rot_dir = _rotation_direction_in_detector(ray_trafo.geometry)
 
@@ -402,9 +436,9 @@ def fbp_filter_op(ray_trafo, padding=True, filter_type='Ram-Lak',
 
         # Add scaling for cone-beam case
         if hasattr(ray_trafo.geometry, 'src_radius'):
-            scale = (ray_trafo.geometry.src_radius
-                     / (ray_trafo.geometry.src_radius
-                        + ray_trafo.geometry.det_radius))
+            scale = (ray_trafo.geometry.src_radius /
+                     (ray_trafo.geometry.src_radius +
+                      ray_trafo.geometry.det_radius))
 
             if ray_trafo.geometry.pitch != 0:
                 # In helical geometry the whole volume is not in each
@@ -428,6 +462,7 @@ def fbp_filter_op(ray_trafo, padding=True, filter_type='Ram-Lak',
                 abs_freq = np.abs(rot_dir[0] * x[1] + rot_dir[1] * x[2])
             norm_freq = abs_freq / np.max(abs_freq)
             filt = _fbp_filter(norm_freq, filter_type, frequency_scaling)
+
             scaling = scale * np.max(abs_freq) / (2 * alen)
             return filt * scaling
 
@@ -453,8 +488,10 @@ def fbp_filter_op(ray_trafo, padding=True, filter_type='Ram-Lak',
             fourier = fourier * resizing
         else:
             fourier = FourierTransform(ray_trafo.range, axes=axes, impl=impl)
+                        
+
     else:
-        raise NotImplementedError('FBP only implemented in 2d and 3d')
+        raise NotImplementedError('FBP is not yet implemented in this geometry')
 
     # Create ramp in the detector direction
     ramp_function = fourier.range.element(fourier_filter)
@@ -491,14 +528,16 @@ def fbp_op(ray_trafo, padding=True, filter_type='Ram-Lak',
 
         `Parallel3dAxisGeometry` : Exact reconstruction
 
-        `FanBeamGeometry` : Approximate reconstruction, correct in limit of fan
-        angle = 0.
-        Only flat detectors are supported (det_curvature_radius is None).
+        `Parallel3dEulerGeometry` : Exact reconstruction, only implemented for
+        2d angle partitions.
 
-        `ConeBeamGeometry`, pitch = 0 (circular) : Approximate reconstruction,
+        `FanFlatGeometry` : Approximate reconstruction, correct in limit of fan
+        angle = 0.
+
+        `ConeFlatGeometry`, pitch = 0 (circular) : Approximate reconstruction,
         correct in the limit of fan angle = 0 and cone angle = 0.
 
-        `ConeBeamGeometry`, pitch > 0 (helical) : Very approximate unless a
+        `ConeFlatGeometry`, pitch > 0 (helical) : Very approximate unless a
         `tam_danielson_window` is used. Accurate with the window.
 
         Other geometries: Not supported
@@ -559,7 +598,7 @@ if __name__ == '__main__':
         min_pt=[-20, -20, 0], max_pt=[20, 20, 40], shape=[300, 300, 300])
     angle_partition = odl.uniform_partition(0, 8 * 2 * np.pi, 2000)
     detector_partition = odl.uniform_partition([-40, -4], [40, 4], [500, 500])
-    geometry = odl.tomo.ConeBeamGeometry(
+    geometry = odl.tomo.ConeFlatGeometry(
         angle_partition, detector_partition, src_radius=100, det_radius=100,
         pitch=5.0)
     ray_trafo = odl.tomo.RayTransform(reco_space, geometry, impl='astra_cuda')
