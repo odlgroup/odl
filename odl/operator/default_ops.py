@@ -1748,7 +1748,9 @@ class ComplexModulusSquared(Operator):
                     deriv.range, deriv.domain, linear=True
                 )
 
-        return ComplexModulusSquaredDerivative(op.domain, op.range, linear=True)
+        return ComplexModulusSquaredDerivative(
+            op.domain, op.range, linear=True
+        )
 
 
 if __name__ == '__main__':
