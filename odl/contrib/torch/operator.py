@@ -68,13 +68,13 @@ class OperatorAsAutogradFunction(torch.autograd.Function):
 
         Parameters
         ----------
-        input : `torch.tensor._TensorBase`
+        input : `torch.Tensor`
             Point at which to evaluate the operator.
 
         Returns
         -------
-        result : `torch.autograd.variable.Variable`
-            Variable holding the result of the evaluation.
+        result : `torch.Tensor`
+            Tensor holding the result of the evaluation.
 
         Examples
         --------
@@ -85,23 +85,16 @@ class OperatorAsAutogradFunction(torch.autograd.Function):
         >>> odl_op = odl.MatrixOperator(matrix)
         >>> torch_op = OperatorAsAutogradFunction(odl_op)
         >>> x = torch.Tensor([1, 2, 3])
-        >>> x_var = torch.autograd.Variable(x)
-        >>> torch_op(x_var)
-        Variable containing:
-         4
-         5
-        [torch.FloatTensor of size 2]
+        >>> torch_op(x)
+        tensor([4., 5.])
 
         Evaluate a functional, i.e., an operator with scalar output:
 
         >>> odl_func = odl.solvers.L2NormSquared(odl.rn(3, dtype='float32'))
         >>> torch_func = OperatorAsAutogradFunction(odl_func)
         >>> x = torch.Tensor([1, 2, 3])
-        >>> x_var = torch.autograd.Variable(x)
-        >>> torch_func(x_var)
-        Variable containing:
-         14
-        [torch.FloatTensor of size 1]
+        >>> torch_func(x)
+        tensor([14.])
         """
         # TODO: batched evaluation
         if not self.operator.is_linear:
@@ -134,14 +127,14 @@ class OperatorAsAutogradFunction(torch.autograd.Function):
 
         Parameters
         ----------
-        grad_output : `torch.tensor._TensorBase`
+        grad_output : `torch.Tensor`
             Tensor to which the Jacobian should be applied. See Notes
             for details.
 
         Returns
         -------
-        result : `torch.autograd.variable.Variable`
-            Variable holding the result of applying the Jacobian to
+        result : `torch.Tensor`
+            Tensor holding the result of applying the Jacobian to
             ``grad_output``. See Notes for details.
 
         Examples
@@ -154,37 +147,25 @@ class OperatorAsAutogradFunction(torch.autograd.Function):
         ...                    [0, 1, 1]], dtype='float32')
         >>> odl_op = odl.MatrixOperator(matrix)
         >>> torch_op = OperatorAsAutogradFunction(odl_op)
-        >>> x = torch.Tensor([1, 2, 3])
-        >>> x_var = torch.autograd.Variable(x, requires_grad=True)
-        >>> op_x_var = torch_op(x_var)
-        >>> cost = op_x_var.sum()
-        >>> cost.backward()
-        >>> x_var.grad  # should be matrix.T.dot([1, 1])
-        Variable containing:
-         1
-         1
-         2
-        [torch.FloatTensor of size 3]
+        >>> x = torch.tensor([1.0, 2.0, 3.0], requires_grad=True)
+        >>> op_x = torch_op(x)
+        >>> loss = op_x.sum()
+        >>> loss.backward()
+        >>> x.grad  # should be matrix.T.dot([1, 1])
+        tensor([1., 1., 2.])
 
         Compute the gradient of a custom functional:
 
         >>> odl_func = odl.solvers.L2NormSquared(odl.rn(3, dtype='float32'))
         >>> torch_func = OperatorAsAutogradFunction(odl_func)
-        >>> x = torch.Tensor([1, 2, 3])
-        >>> x_var = torch.autograd.Variable(x, requires_grad=True)
-        >>> func_x_var = torch_func(x_var)
-        >>> func_x_var
-        Variable containing:
-         14
-        [torch.FloatTensor of size 1]
+        >>> x = torch.tensor([1.0, 2.0, 3.0], requires_grad=True)
+        >>> func_x = torch_func(x)
+        >>> func_x
+        tensor([14.], grad_fn=<OperatorAsAutogradFunction>)
 
-        >>> func_x_var.backward()
-        >>> x_var.grad  # Should be 2 * x
-        Variable containing:
-         2
-         4
-         6
-        [torch.FloatTensor of size 3]
+        >>> func_x.backward()
+        >>> x.grad  # Should be 2 * x
+        tensor([2., 4., 6.])
 
         Notes
         -----
@@ -194,7 +175,7 @@ class OperatorAsAutogradFunction(torch.autograd.Function):
         of this node.
 
         Example: Assume that this node computes :math:`x \mapsto C(f(x))`,
-        where :math:`x` is a tensor variable and :math:`C` is a scalar-valued
+        where :math:`x` is a tensor and :math:`C` is a scalar-valued
         function. In ODL language, what ``backward`` should compute is
 
         .. math::
@@ -204,17 +185,17 @@ class OperatorAsAutogradFunction(torch.autograd.Function):
 
             f.derivative(x).adjoint(C.gradient(f(x))).
 
-        Hence, the parameter ``grad_output`` is a tensor variable containing
+        Hence, the parameter ``grad_output`` is a tensor containing
         :math:`y = \nabla C(f(x))`. Then, ``backward`` boils down to
         computing ``[f'(x)^*(y)]`` using the input ``x`` stored during
         the previous `forward` pass.
         """
         # TODO: implement directly for GPU data
         if not self.operator.is_linear:
-            input_arr = self.saved_variables[0].data.cpu().numpy()
-            if any(s == 0 for s in input_arr.strides):
-                # TODO: remove when Numpy issue #9165 is fixed
-                # https://github.com/numpy/numpy/pull/9177
+            input_arr = self.saved_tensors[0].detach().cpu().numpy()
+            if 0 in input_arr.strides:
+                # TODO(kohr-h): remove when Numpy issue #9165 is fixed
+                # Update: fixed in 1.16.0
                 input_arr = input_arr.copy()
 
         grad = None
@@ -288,7 +269,7 @@ class OperatorAsModule(torch.nn.Module):
         ...                    [0, 1, 1]], dtype='float32')
         >>> odl_op = odl.MatrixOperator(matrix)
         >>> torch_op = OperatorAsModule(odl_op)
-        >>> torch_op.op_func.operator is odl_op
+        >>> torch_op.operator is odl_op
         True
         """
         super(OperatorAsModule, self).__init__()
@@ -304,14 +285,14 @@ class OperatorAsModule(torch.nn.Module):
 
         Parameters
         ----------
-        x : `torch.autograd.variable.Variable`
+        x : `torch.Tensor`
             Input of this layer. The contained tensor must have shape
             ``extra_shape + operator.domain.shape``, and
             ``len(extra_shape)`` must be at least 1 (batch axis).
 
         Returns
         -------
-        out : `torch.autograd.variable.Variable`
+        out : `torch.Tensor`
             The computed output. Its tensor will have shape
             ``extra_shape + operator.range.shape``, where ``extra_shape``
             are the extra axes of ``x``.
@@ -329,51 +310,39 @@ class OperatorAsModule(torch.nn.Module):
         >>> odl_op.range.shape
         (2,)
         >>> op_mod = OperatorAsModule(odl_op)
-        >>> t = torch.ones(3)
-        >>> x = autograd.Variable(t[None, :]) # "fake" batch axis
+        >>> x = torch.ones((1, 3))  # with trivial batch axis
         >>> op_mod(x)
-        Variable containing:
-         1  2
-        [torch.FloatTensor of size 1x2]
+        tensor([[1., 2.]])
         >>> t = torch.ones(3)
-        >>> x_tensor = torch.stack([0 * t, 1 * t])
-        >>> x = autograd.Variable(x_tensor)  # batch of 2 inputs
+        >>> x = torch.stack([0 * t, 1 * t])  # batch size 2
         >>> op_mod(x)
-        Variable containing:
-         0  0
-         1  2
-        [torch.FloatTensor of size 2x2]
+        tensor([[0., 0.],
+                [1., 2.]])
 
         An arbitrary number of axes is supported:
 
-        >>> x = autograd.Variable(t[None, None, :])  # "fake" batch and channel
+        >>> x = t[None, None, :]  # trivial batch and channel
         >>> op_mod(x)
-        Variable containing:
-        (0 ,.,.) =
-          1  2
-        [torch.FloatTensor of size 1x1x2]
-        >>> x_tensor = torch.stack([torch.stack([0 * t, 1 * t]),
-        ...                         torch.stack([2 * t, 3 * t]),
-        ...                         torch.stack([4 * t, 5 * t])])
-        >>> x = autograd.Variable(x_tensor)  # batch of 3x2 inputs
+        tensor([[[1., 2.]]])
+        >>> x = torch.stack([torch.stack([0 * t, 1 * t]),
+        ...                  torch.stack([2 * t, 3 * t]),
+        ...                  torch.stack([4 * t, 5 * t])])
         >>> op_mod(x)
-        Variable containing:
-        (0 ,.,.) =
-           0   0
-           1   2
+        tensor([[[ 0.,  0.],
+                 [ 1.,  2.]],
         <BLANKLINE>
-        (1 ,.,.) =
-           2   4
-           3   6
+                [[ 2.,  4.],
+                 [ 3.,  6.]],
         <BLANKLINE>
-        (2 ,.,.) =
-           4   8
-           5  10
-        [torch.FloatTensor of size 3x2x2]
+                [[ 4.,  8.],
+                 [ 5., 10.]]])
         """
         in_shape = x.data.shape
-        op_in_shape = self.op_func.operator.domain.shape
-        op_out_shape = self.op_func.operator.range.shape
+        op_in_shape = self.operator.domain.shape
+        if self.operator.is_functional:
+            op_out_shape = ()
+        else:
+            op_out_shape = self.operator.range.shape
 
         extra_shape = in_shape[:-len(op_in_shape)]
 
@@ -395,11 +364,11 @@ class OperatorAsModule(torch.nn.Module):
 
     def __repr__(self):
         """Return ``repr(self)``."""
-        op_name = self.op_func.operator.__class__.__name__
-        op_dom_shape = self.op_func.operator.domain.shape
+        op_name = self.operator.__class__.__name__
+        op_dom_shape = self.operator.domain.shape
         if len(op_dom_shape) == 1:
             op_dom_shape = op_dom_shape[0]
-        op_ran_shape = self.op_func.operator.range.shape
+        op_ran_shape = self.operator.range.shape
         if len(op_ran_shape) == 1:
             op_ran_shape = op_ran_shape[0]
 
