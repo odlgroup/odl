@@ -54,12 +54,15 @@ print('ODL gradient    : ', np.asarray(odl_grad))
 
 # --- Gradients for input batches --- #
 
+# This time without operator
 l2sq = odl.solvers.L2NormSquared(odl.rn(3))
+
 
 # To define a loss, we need to handle two arguments and the final
 # reduction over the batch axis
 def mse(x, y):
     return OperatorFunction.apply(l2sq, x - y).mean()
+
 
 x = torch.ones((2, 1, 3), dtype=torch.float64, requires_grad=True)
 y = -torch.ones((2, 1, 3), dtype=torch.float64)

@@ -328,7 +328,9 @@ class OperatorFunction(torch.autograd.Function):
         scaling = dom_weight / ran_weight
 
         # Convert `grad_output` to NumPy array
-        grad_output_arr = copy_if_zero_strides(grad_output.detach().cpu().numpy())
+        grad_output_arr = copy_if_zero_strides(
+            grad_output.detach().cpu().numpy()
+        )
 
         # Get shape information from the context object
         op_in_shape = ctx.op_in_shape
@@ -346,8 +348,11 @@ class OperatorFunction(torch.autograd.Function):
 
         # Evaluate the (derivative) adjoint on all inputs in a loop
         if extra_shape:
-            # Multiple gradients: flatten extra axes, then do one entry at a time
-            grad_output_arr_flat_extra = grad_output_arr.reshape((-1,) + op_out_shape)
+            # Multiple gradients: flatten extra axes, then do one entry
+            # at a time
+            grad_output_arr_flat_extra = grad_output_arr.reshape(
+                (-1,) + op_out_shape
+            )
 
             results = []
             if operator.is_linear:
@@ -356,8 +361,12 @@ class OperatorFunction(torch.autograd.Function):
             else:
                 # Need inputs, flattened in the same way as the gradients
                 input_arr_flat_extra = input_arr.reshape((-1,) + op_in_shape)
-                for ograd, inp in zip(grad_output_arr_flat_extra, input_arr_flat_extra):
-                    results.append(np.asarray(operator.derivative(inp).adjoint(ograd)))
+                for ograd, inp in zip(
+                    grad_output_arr_flat_extra, input_arr_flat_extra
+                ):
+                    results.append(
+                        np.asarray(operator.derivative(inp).adjoint(ograd))
+                    )
 
             # Stack results, reshape to the expected output shape and enforce
             # correct dtype
@@ -475,9 +484,10 @@ class OperatorModule(torch.nn.Module):
         --------
         """
         in_shape = tuple(x.shape)
+        in_ndim = len(in_shape)
         op_in_shape = self.operator.domain.shape
         op_in_ndim = len(op_in_shape)
-        if len(in_shape) <= op_in_ndim or in_shape[-op_in_ndim:] != op_in_shape:
+        if in_ndim <= op_in_ndim or in_shape[-op_in_ndim:] != op_in_shape:
             shp_str = str(op_in_shape).strip('()')
             raise ValueError(
                 'input tensor has wrong shape: expected (N, *, {}), got {}'
