@@ -25,7 +25,6 @@ op = odl.MatrixOperator(matrix)
 x = torch.ones(3, dtype=torch.float64, requires_grad=True)
 
 # Evalueate using ODL
-# ODL result
 odl_res = op(x.detach().numpy())
 
 # Evaluate using torch function
