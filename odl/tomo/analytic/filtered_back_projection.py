@@ -168,7 +168,7 @@ def tam_danielson_window(ray_trafo, smoothing_width=0.05, n_pi=1):
 
     # Find distance from projection of rotation axis for each pixel
     dx = (rot_dir[0] * ray_trafo.range.meshgrid[1]
-          +rot_dir[1] * ray_trafo.range.meshgrid[2])
+          + rot_dir[1] * ray_trafo.range.meshgrid[2])
 
     dx_axis = dx * src_radius / (src_radius + det_radius)
 
@@ -273,7 +273,7 @@ def parker_weighting(ray_trafo, q=0.25):
             dx = rot_dir[0] * ray_trafo.range.meshgrid[1]
         else:
             dx = (rot_dir[0] * ray_trafo.range.meshgrid[1]
-                  +rot_dir[1] * ray_trafo.range.meshgrid[2])
+                  + rot_dir[1] * ray_trafo.range.meshgrid[2])
 
     # Compute parameters
     dx_abs_max = np.max(np.abs(dx))
@@ -287,7 +287,7 @@ def parker_weighting(ray_trafo, q=0.25):
     # Define utility functions
     def S(betap):
         return (0.5 * (1.0 + np.sin(np.pi * betap)) * (np.abs(betap) < 0.5)
-                +(betap >= 0.5))
+                + (betap >= 0.5))
 
     def b(alpha):
         return q * (2 * delta - 2 * alpha + epsilon)
@@ -391,24 +391,26 @@ def fbp_filter_op(ray_trafo, padding=True, filter_type='Ram-Lak',
             fourier = FourierTransform(ray_trafo.range, axes=1, impl=impl)
 
     elif ray_trafo.domain.ndim == 3 and ray_trafo.geometry.angles.ndim == 2:
-        
         if hasattr(ray_trafo.geometry, 'src_radius'):
-            raise NotImplementedError('FBP not yet implemented for 3D cone-beam')
+            raise NotImplementedError(
+                'FBP not yet implemented for 3D cone-beam')
         else:
             scale = 1.0
 
         phi = ray_trafo.geometry.grid.coord_vectors[1]
         avol = alen * (abs(np.cos(phi)).sum() * abs(phi[1] - phi[0]))
-        
+
         # Define ramp filter
         def fourier_filter(x):
-            abs_freq = (abs(x[2]) ** 2 + abs(x[3]) ** 2) ** .5 * abs(np.cos(x[1]))
+            abs_freq = ((abs(x[2]) ** 2 + abs(x[3]) ** 2) ** .5
+                        * abs(np.cos(x[1])))
             norm_freq = abs_freq / np.max(abs_freq)
             filt = _fbp_filter(norm_freq, filter_type, frequency_scaling)
 
             coverage = avol / (4 * np.pi)  # fraction of the sphere sampled
             c = (np.pi / 2) ** .5  # Fourier transform of |x|^{1-n} = 1/(c|y|)
-            fudge = 0.03 / ray_trafo.domain.cell_volume  # I don't understand this factor
+            # I don't understand this factor
+            fudge = 0.03 / ray_trafo.domain.cell_volume
 
             scaling = scale * np.max(abs_freq) / (c * coverage) * fudge
             return filt * scaling
@@ -428,7 +430,7 @@ def fbp_filter_op(ray_trafo, padding=True, filter_type='Ram-Lak',
             fourier = fourier * resizing
         else:
             fourier = FourierTransform(ray_trafo.range, axes=[2, 3], impl=impl)
-    
+
     elif ray_trafo.domain.ndim == 3 and hasattr(ray_trafo.geometry, 'axis'):
         # Find the direction that the filter should be taken in
         rot_dir = _rotation_direction_in_detector(ray_trafo.geometry)
@@ -446,7 +448,7 @@ def fbp_filter_op(ray_trafo, padding=True, filter_type='Ram-Lak',
         if hasattr(ray_trafo.geometry, 'src_radius'):
             scale = (ray_trafo.geometry.src_radius
                      / (ray_trafo.geometry.src_radius
-                        +ray_trafo.geometry.det_radius))
+                        + ray_trafo.geometry.det_radius))
 
             if ray_trafo.geometry.pitch != 0:
                 # In helical geometry the whole volume is not in each
@@ -496,7 +498,8 @@ def fbp_filter_op(ray_trafo, padding=True, filter_type='Ram-Lak',
         else:
             fourier = FourierTransform(ray_trafo.range, axes=axes, impl=impl)
     else:
-        raise NotImplementedError('FBP is not yet implemented in this geometry')
+        raise NotImplementedError(
+            'FBP is not yet implemented in this geometry')
 
     # Create ramp in the detector direction
     ramp_function = fourier.range.element(fourier_filter)
