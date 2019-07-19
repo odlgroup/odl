@@ -1,8 +1,8 @@
-'''
-Created on 12 Jul 2019
-
-@author: Rob Tovey
-'''
+"""Example using FBP in parallel 3D Euler geometry with regular 2D grid of
+angles using `fbp_op`.
+Compared against Landweber iteration which computes least squares solution for
+discrete matrix system.
+"""
 
 import numpy as np
 import odl
@@ -35,8 +35,9 @@ ray_trafo = odl.tomo.RayTransform(reco_space, geometry)
 phantom = odl.phantom.shepp_logan(reco_space, modified=True)
 
 # # Alternative phantom, anisotropic Gaussian
-# x = reco_space.meshgrid; 
-# phantom = reco_space.element(np.exp(-.25 * (x[0] ** 2 + 2 * x[1] ** 2 + .5 * x[2] ** 2) / 2))
+# x = reco_space.meshgrid
+# phantom = reco_space.element(
+#     np.exp(-.25 * (x[0] ** 2 + 2 * x[1] ** 2 + .5 * x[2] ** 2) / 2))
 
 # Create FBP operator using utility function
 # Default filter approximates least-squares solution
@@ -56,15 +57,21 @@ lsqr_rec = fbp_rec.copy()
 odl.solvers.landweber(ray_trafo, lsqr_rec, proj_data, 20)
 
 plt.figure('FBP vs Landweber least-squares reconstruction')
-plt.subplot(131); plt.plot(fbp_rec.data[mid, mid, :]); 
-plt.plot(lsqr_rec.data[mid, mid, :]); plt.plot(phantom.data[mid, mid, :])
+plt.subplot(131)
+plt.plot(fbp_rec.data[mid, mid, :])
+plt.plot(lsqr_rec.data[mid, mid, :])
+plt.plot(phantom.data[mid, mid, :])
 plt.legend(('FBP', 'Landweber', 'phantom'))
 plt.title('Slice x=y=0')
-plt.subplot(132); plt.plot(fbp_rec.data[:, mid, mid]); 
-plt.plot(lsqr_rec.data[:, mid, mid]); plt.plot(phantom.data[:, mid, mid])
+plt.subplot(132)
+plt.plot(fbp_rec.data[:, mid, mid])
+plt.plot(lsqr_rec.data[:, mid, mid])
+plt.plot(phantom.data[:, mid, mid])
 plt.title('Slice y=z=0')
-plt.subplot(133); plt.plot(fbp_rec.data[mid, :, mid]); 
-plt.plot(lsqr_rec.data[mid, :, mid]); plt.plot(phantom.data[mid, :, mid])
+plt.subplot(133)
+plt.plot(fbp_rec.data[mid, :, mid])
+plt.plot(lsqr_rec.data[mid, :, mid])
+plt.plot(phantom.data[mid, :, mid])
 plt.title('Slice x=z=0')
 
 fbp_rec.show(title='FBP')
