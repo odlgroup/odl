@@ -26,7 +26,7 @@ __all__ = ('brain_phantom', 'resolution_phantom', 'building', 'rings',
 
 
 DATA_SUBSET = 'images_cambridge'
-URL_CAM = 'http://store.maths.cam.ac.uk/DAMTP/me404/data_sets/'
+URL_CAM = 'https://raw.github.com/mehrhardt/spdhg/master/data/'
 
 
 def convert(image, shape, gray=False, dtype='float64', normalize='max'):
