@@ -1,4 +1,4 @@
-# Copyright 2014-2017 The ODL contributors
+# Copyright 2014-2019 The ODL contributors
 #
 # This file is part of ODL.
 #
@@ -8,41 +8,84 @@
 
 """Backend for ASTRA using CPU."""
 
-from __future__ import print_function, division, absolute_import
+from __future__ import absolute_import, division, print_function
+
 import numpy as np
+
+from odl.discr import DiscreteLp, DiscreteLpElement
+from odl.tomo.backends.astra_setup import (
+    astra_algorithm, astra_data, astra_projection_geometry, astra_projector,
+    astra_volume_geometry)
+from odl.tomo.geometry import (
+    DivergentBeamGeometry, Geometry, ParallelBeamGeometry)
+from odl.util import writable_array
+
 try:
     import astra
 except ImportError:
     pass
 
-from odl.discr import DiscreteLp, DiscreteLpElement
-from odl.tomo.backends.astra_setup import (
-    astra_projection_geometry, astra_volume_geometry, astra_data,
-    astra_projector, astra_algorithm)
-from odl.tomo.geometry import Geometry
-from odl.util import writable_array
+__all__ = (
+    'astra_cpu_forward_projector',
+    'astra_cpu_back_projector',
+    'default_astra_proj_type',
+)
 
 
-__all__ = ('astra_cpu_forward_projector', 'astra_cpu_back_projector')
+def default_astra_proj_type(geom):
+    """Return the default ASTRA projector type for a given geometry.
+
+    Parameters
+    ----------
+    geom : `Geometry`
+        ODL geometry object for which to get the default projector type.
+
+    Returns
+    -------
+    astra_proj_type : str
+        Default projector type for the given geometry.
+
+        In 2D:
+
+        - `ParallelBeamGeometry`: ``'linear'``
+        - `DivergentBeamGeometry`: ``'line_fanflat'``
+
+        In 3D:
+
+        - `ParallelBeamGeometry`: ``'linear3d'``
+        - `DivergentBeamGeometry`: ``'linearcone'``
+    """
+    if isinstance(geom, ParallelBeamGeometry):
+        return 'linear' if geom.ndim == 2 else 'linear3d'
+    elif isinstance(geom, DivergentBeamGeometry):
+        return 'line_fanflat' if geom.ndim == 2 else 'linearcone'
+    else:
+        raise TypeError(
+            'no default exists for {}, `astra_proj_type` must be given explicitly'
+            ''.format(type(geom))
+        )
 
 
-# TODO: use context manager when creating data structures
-# TODO: is magnification scaling at the right place?
-
-def astra_cpu_forward_projector(vol_data, geometry, proj_space, out=None):
+def astra_cpu_forward_projector(vol_data, geometry, proj_space, out=None,
+                                astra_proj_type=None):
     """Run an ASTRA forward projection on the given data using the CPU.
 
     Parameters
     ----------
     vol_data : `DiscreteLpElement`
-        Volume data to which the forward projector is applied
+        Volume data to which the forward projector is applied.
     geometry : `Geometry`
-        Geometry defining the tomographic setup
+        Geometry defining the tomographic setup.
     proj_space : `DiscreteLp`
-        Space to which the calling operator maps
+        Space to which the calling operator maps.
     out : ``proj_space`` element, optional
         Element of the projection space to which the result is written. If
         ``None``, an element in ``proj_space`` is created.
+    astra_proj_type : str, optional
+        Type of projector that should be used. See `the ASTRA documentation
+        <http://www.astra-toolbox.com/docs/proj2d.html>`_ for details.
+        By default, a suitable projector type for the given geometry is
+        selected, see `default_astra_proj_type`.
 
     Returns
     -------
@@ -83,13 +126,9 @@ def astra_cpu_forward_projector(vol_data, geometry, proj_space, out=None):
     proj_geom = astra_projection_geometry(geometry)
 
     # Create projector
-    if not all(s == vol_data.space.interp_byaxis[0]
-               for s in vol_data.space.interp_byaxis):
-        raise ValueError('volume interpolation must be the same in each '
-                         'dimension, got {}'.format(vol_data.space.interp))
-    vol_interp = vol_data.space.interp
-    proj_id = astra_projector(vol_interp, vol_geom, proj_geom, ndim,
-                              impl='cpu')
+    if astra_proj_type is None:
+        astra_proj_type = default_astra_proj_type(geometry)
+    proj_id = astra_projector(astra_proj_type, vol_geom, proj_geom, ndim)
 
     # Create ASTRA data structures
     vol_data_arr = np.asarray(vol_data)
@@ -115,24 +154,30 @@ def astra_cpu_forward_projector(vol_data, geometry, proj_space, out=None):
     return out
 
 
-def astra_cpu_back_projector(proj_data, geometry, reco_space, out=None):
+def astra_cpu_back_projector(proj_data, geometry, vol_space, out=None,
+                             astra_proj_type=None):
     """Run an ASTRA back-projection on the given data using the CPU.
 
     Parameters
     ----------
     proj_data : `DiscreteLpElement`
-        Projection data to which the back-projector is applied
+        Projection data to which the back-projector is applied.
     geometry : `Geometry`
-        Geometry defining the tomographic setup
-    reco_space : `DiscreteLp`
-        Space to which the calling operator maps
-    out : ``reco_space`` element, optional
+        Geometry defining the tomographic setup.
+    vol_space : `DiscreteLp`
+        Space to which the calling operator maps.
+    out : ``vol_space`` element, optional
         Element of the reconstruction space to which the result is written.
-        If ``None``, an element in ``reco_space`` is created.
+        If ``None``, an element in ``vol_space`` is created.
+    astra_proj_type : str, optional
+        Type of projector that should be used. See `the ASTRA documentation
+        <http://www.astra-toolbox.com/docs/proj2d.html>`_ for details.
+        By default, a suitable projector type for the given geometry is
+        selected, see `default_astra_proj_type`.
 
     Returns
     -------
-    out : ``reco_space`` element
+    out : ``vol_space`` element
         Reconstruction data resulting from the application of the backward
         projector. If ``out`` was provided, the returned object is a
         reference to it.
@@ -147,27 +192,27 @@ def astra_cpu_back_projector(proj_data, geometry, reco_space, out=None):
     if not isinstance(geometry, Geometry):
         raise TypeError('geometry  {!r} is not a Geometry instance'
                         ''.format(geometry))
-    if not isinstance(reco_space, DiscreteLp):
-        raise TypeError('reconstruction space {!r} is not a DiscreteLp '
-                        'instance'.format(reco_space))
-    if reco_space.impl != 'numpy':
-        raise TypeError("`reco_space.impl` must be 'numpy', got {!r}"
-                        "".format(reco_space.impl))
-    if reco_space.ndim != geometry.ndim:
+    if not isinstance(vol_space, DiscreteLp):
+        raise TypeError('volume space {!r} is not a DiscreteLp '
+                        'instance'.format(vol_space))
+    if vol_space.impl != 'numpy':
+        raise TypeError("`vol_space.impl` must be 'numpy', got {!r}"
+                        "".format(vol_space.impl))
+    if vol_space.ndim != geometry.ndim:
         raise ValueError('dimensions {} of reconstruction space and {} of '
                          'geometry do not match'.format(
-                             reco_space.ndim, geometry.ndim))
+                             vol_space.ndim, geometry.ndim))
     if out is None:
-        out = reco_space.element()
+        out = vol_space.element()
     else:
-        if out not in reco_space:
+        if out not in vol_space:
             raise TypeError('`out` {} is neither None nor a '
                             'DiscreteLpElement instance'.format(out))
 
     ndim = proj_data.ndim
 
     # Create astra geometries
-    vol_geom = astra_volume_geometry(reco_space)
+    vol_geom = astra_volume_geometry(vol_space)
     proj_geom = astra_projection_geometry(geometry)
 
     # Create ASTRA data structure
@@ -175,20 +220,14 @@ def astra_cpu_back_projector(proj_data, geometry, reco_space, out=None):
                          allow_copy=True)
 
     # Create projector
-    # TODO: implement with different schemes for angles and detector
-    if not all(s == proj_data.space.interp_byaxis[0]
-               for s in proj_data.space.interp_byaxis):
-        raise ValueError('data interpolation must be the same in each '
-                         'dimension, got {}'
-                         ''.format(proj_data.space.interp_byaxis))
-    proj_interp = proj_data.space.interp
-    proj_id = astra_projector(proj_interp, vol_geom, proj_geom, ndim,
-                              impl='cpu')
+    if astra_proj_type is None:
+        astra_proj_type = default_astra_proj_type(geometry)
+    proj_id = astra_projector(astra_proj_type, vol_geom, proj_geom, ndim)
 
     # Convert out to correct dtype and order if needed.
     with writable_array(out, dtype='float32', order='C') as out_arr:
         vol_id = astra_data(vol_geom, datatype='volume', data=out_arr,
-                            ndim=reco_space.ndim)
+                            ndim=vol_space.ndim)
         # Create algorithm
         algo_id = astra_algorithm('backward', ndim, vol_id, sino_id, proj_id,
                                   impl='cpu')
@@ -198,7 +237,7 @@ def astra_cpu_back_projector(proj_data, geometry, reco_space, out=None):
 
     # Weight the adjoint by appropriate weights
     scaling_factor = float(proj_data.space.weighting.const)
-    scaling_factor /= float(reco_space.weighting.const)
+    scaling_factor /= float(vol_space.weighting.const)
 
     out *= scaling_factor
 

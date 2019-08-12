@@ -16,11 +16,19 @@ __all__ = ()
 from .geometry import *
 __all__ += geometry.__all__
 
-from .backends import *
-__all__ += backends.__all__
-
 from .operators import *
 __all__ += operators.__all__
 
 from .analytic import *
 __all__ += analytic.__all__
+
+from .backends import (
+    ASTRA_AVAILABLE, ASTRA_CUDA_AVAILABLE, SKIMAGE_AVAILABLE,
+    astra_conebeam_2d_geom_to_vec, astra_conebeam_3d_geom_to_vec)
+__all__ += (
+    'ASTRA_AVAILABLE',
+    'ASTRA_CUDA_AVAILABLE',
+    'SKIMAGE_AVAILABLE',
+    'astra_conebeam_2d_geom_to_vec',
+    'astra_conebeam_3d_geom_to_vec',
+)
