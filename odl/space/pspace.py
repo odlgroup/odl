@@ -1080,6 +1080,13 @@ class ProductSpaceElement(LinearSpaceElement):
         wrapper : `ProductSpaceElement`
             Product space element wrapping ``array``.
         """
+        # HACK(kohr-h): This is to support (full) reductions like
+        # `np.sum(x)` for numpy>=1.16, where many such reductions
+        # moved from plain functions to `ufunc.reduce.*`, thus
+        # invoking the `__array__` and `__array_wrap__` machinery.
+        if array.shape == ():
+            return array.item()
+
         return self.space.element(array)
 
     @property
