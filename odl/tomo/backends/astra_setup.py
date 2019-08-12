@@ -58,12 +58,20 @@ if ASTRA_AVAILABLE:
                 'your version {}.{} of ASTRA is unsupported, please upgrade '
                 'to 1.7 or higher'.format(_maj, _min), RuntimeWarning)
 
-__all__ = ('ASTRA_AVAILABLE', 'ASTRA_VERSION', 'astra_supports',
-           'astra_volume_geometry', 'astra_projection_geometry',
-           'astra_data', 'astra_projector', 'astra_algorithm',
-           'astra_conebeam_3d_geom_to_vec',
-           'astra_conebeam_2d_geom_to_vec',
-           'astra_parallel_3d_geom_to_vec')
+__all__ = (
+    'ASTRA_AVAILABLE',
+    'ASTRA_VERSION',
+    'astra_supports',
+    'astra_versions_supporting',
+    'astra_volume_geometry',
+    'astra_conebeam_3d_geom_to_vec',
+    'astra_conebeam_2d_geom_to_vec',
+    'astra_parallel_3d_geom_to_vec',
+    'astra_projection_geometry',
+    'astra_data',
+    'astra_projector',
+    'astra_algorithm',
+)
 
 
 # ASTRA_FEATURES contains a set of features along with version specifiers
