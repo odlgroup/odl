@@ -8,14 +8,15 @@
 
 """Basic abstract and concrete sets."""
 
-from __future__ import print_function, division, absolute_import
+from __future__ import absolute_import, division, print_function
+
 from builtins import int, object
-from numbers import Integral, Real, Complex
-from past.types.basestring import basestring
+from numbers import Complex, Integral, Real
+
 import numpy as np
+from past.types.basestring import basestring
 
-from odl.util import is_int_dtype, is_real_dtype, is_numeric_dtype, unique
-
+from odl.util import is_int_dtype, is_numeric_dtype, is_real_dtype, unique
 
 __all__ = ('Set', 'EmptySet', 'UniversalSet', 'Field', 'Integers',
            'RealNumbers', 'ComplexNumbers', 'Strings', 'CartesianProduct',
@@ -361,16 +362,10 @@ class ComplexNumbers(Field):
 
     def element(self, inp=None):
         """Return a complex number from ``inp`` or from scratch."""
-        if inp is not None:
-            # Workaround for missing __complex__ of numpy.ndarray
-            # for Numpy version < 1.12
-            # TODO: remove when Numpy >= 1.12 is required
-            if isinstance(inp, np.ndarray):
-                return complex(inp.reshape([1])[0])
-            else:
-                return complex(inp)
-        else:
+        if inp is None:
             return complex(0.0, 0.0)
+        else:
+            return complex(inp)
 
     @property
     def examples(self):

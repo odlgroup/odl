@@ -1,4 +1,4 @@
-# Copyright 2014-2017 The ODL contributors
+# Copyright 2014-2019 The ODL contributors
 #
 # This file is part of ODL.
 #
@@ -8,16 +8,16 @@
 
 """Detectors for tomographic imaging."""
 
-from __future__ import print_function, division, absolute_import
+from __future__ import absolute_import, division, print_function
+
 from builtins import object
+
 import numpy as np
 
 from odl.discr import RectPartition
-from odl.tomo.util import perpendicular_vector, is_inside_bounds
-from odl.util import indent, signature_string, array_str
-from odl.util.npy_compat import moveaxis
+from odl.tomo.util import is_inside_bounds, perpendicular_vector
 from odl.tomo.util.utility import rotation_matrix_from_to
-
+from odl.util import array_str, indent, signature_string
 
 __all__ = ('Detector',
            'Flat1dDetector', 'Flat2dDetector', 'CircularDetector',
@@ -189,7 +189,7 @@ class Detector(object):
             deriv = self.surface_deriv(param)
             if deriv.ndim > 2:
                 # Vectorized, need to reshape (N, 2, 3) to (2, N, 3)
-                deriv = moveaxis(deriv, -2, 0)
+                deriv = np.moveaxis(deriv, -2, 0)
             normal = np.cross(*deriv, axis=-1)
             normal /= np.linalg.norm(normal, axis=-1, keepdims=True)
             return normal
@@ -245,7 +245,7 @@ class Detector(object):
             deriv = self.surface_deriv(param)
             if deriv.ndim > 2:
                 # Vectorized, need to reshape (N, 2, 3) to (2, N, 3)
-                deriv = moveaxis(deriv, -2, 0)
+                deriv = np.moveaxis(deriv, -2, 0)
             cross = np.cross(*deriv, axis=-1)
             measure = np.linalg.norm(cross, axis=-1)
             if scalar_out:

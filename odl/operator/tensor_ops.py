@@ -8,19 +8,19 @@
 
 """Operators defined for tensor fields."""
 
-from __future__ import print_function, division, absolute_import
+from __future__ import absolute_import, division, print_function
+
 from numbers import Integral
+
 import numpy as np
-from packaging.version import parse as parse_version
 
 from odl.operator.operator import Operator
-from odl.set import RealNumbers, ComplexNumbers
+from odl.set import ComplexNumbers, RealNumbers
 from odl.space import ProductSpace, tensor_space
 from odl.space.base_tensors import TensorSpace
 from odl.space.weighting import ArrayWeighting
 from odl.util import (
-    signature_string, indent, dtype_repr, moveaxis, writable_array)
-
+    dtype_repr, indent, moveaxis, signature_string, writable_array)
 
 __all__ = ('PointwiseNorm', 'PointwiseInner', 'PointwiseSum', 'MatrixOperator',
            'SamplingOperator', 'WeightedSumSamplingOperator',
@@ -924,12 +924,6 @@ class MatrixOperator(Operator):
             if scipy.sparse.isspmatrix(self.matrix):
                 # Unfortunately, there is no native in-place dot product for
                 # sparse matrices
-                out[:] = self.matrix.dot(x)
-            elif (parse_version(np.__version__) < parse_version('1.13.0') and
-                  x is out and
-                  self.range.ndim == 1):
-                # Workaround for bug in Numpy < 1.13 with aliased in and
-                # out in np.dot
                 out[:] = self.matrix.dot(x)
             elif self.range.ndim == 1:
                 with writable_array(out) as out_arr:

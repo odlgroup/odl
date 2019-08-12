@@ -34,7 +34,6 @@ from odl.tomo.geometry import (
     DivergentBeamGeometry, Flat1dDetector, Flat2dDetector, Geometry,
     ParallelBeamGeometry)
 from odl.tomo.util.utility import euler_matrix
-from odl.util.npy_compat import moveaxis
 
 try:
     import astra
@@ -43,7 +42,6 @@ except ImportError:
     ASTRA_VERSION = ''
 else:
     ASTRA_AVAILABLE = True
-
 
 # Make sure that ASTRA >= 1.7 is used
 if ASTRA_AVAILABLE:
@@ -60,21 +58,12 @@ if ASTRA_AVAILABLE:
                 'your version {}.{} of ASTRA is unsupported, please upgrade '
                 'to 1.7 or higher'.format(_maj, _min), RuntimeWarning)
 
-
-__all__ = (
-    'ASTRA_AVAILABLE',
-    'ASTRA_VERSION',
-    'astra_supports',
-    'astra_versions_supporting',
-    'astra_volume_geometry',
-    'astra_conebeam_3d_geom_to_vec',
-    'astra_conebeam_2d_geom_to_vec',
-    'astra_parallel_3d_geom_to_vec',
-    'astra_projection_geometry',
-    'astra_data',
-    'astra_projector',
-    'astra_algorithm',
-)
+__all__ = ('ASTRA_AVAILABLE', 'ASTRA_VERSION', 'astra_supports',
+           'astra_volume_geometry', 'astra_projection_geometry',
+           'astra_data', 'astra_projector', 'astra_algorithm',
+           'astra_conebeam_3d_geom_to_vec',
+           'astra_conebeam_2d_geom_to_vec',
+           'astra_parallel_3d_geom_to_vec')
 
 
 # ASTRA_FEATURES contains a set of features along with version specifiers
@@ -320,7 +309,7 @@ def astra_conebeam_3d_geom_to_vec(geometry):
 
     # Vectors from detector pixel (0, 0) to (1, 0) and (0, 0) to (0, 1)
     # `det_axes` gives shape (N, 2, 3), swap to get (2, N, 3)
-    det_axes = moveaxis(geometry.det_axes(angles), -2, 0)
+    det_axes = np.moveaxis(geometry.det_axes(angles), -2, 0)
     px_sizes = geometry.det_partition.cell_sides
     # Swap detector axes to have better memory layout in  projection data.
     # ASTRA produces `(v, theta, u)` layout, and to map to ODL layout
@@ -448,7 +437,7 @@ def astra_parallel_3d_geom_to_vec(geometry):
 
     # Vectors from detector pixel (0, 0) to (1, 0) and (0, 0) to (0, 1)
     # `det_axes` gives shape (N, 2, 3), swap to get (2, N, 3)
-    det_axes = moveaxis(geometry.det_axes(angles), -2, 0)
+    det_axes = np.moveaxis(geometry.det_axes(angles), -2, 0)
     px_sizes = geometry.det_partition.cell_sides
     # Swap detector axes to have better memory layout in  projection data.
     # ASTRA produces `(v, theta, u)` layout, and to map to ODL layout
