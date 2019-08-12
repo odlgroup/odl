@@ -993,8 +993,7 @@ class RealPart(Operator):
         """
         real_space = space.real_space
         self.space_is_real = (space == real_space)
-        linear = True
-        super(RealPart, self).__init__(space, real_space, linear=linear)
+        super(RealPart, self).__init__(space, real_space, linear=True)
 
     def _call(self, x):
         """Return ``self(x)``."""
@@ -1121,8 +1120,7 @@ class ImagPart(Operator):
         """
         real_space = space.real_space
         self.space_is_real = (space == real_space)
-        linear = True
-        super(ImagPart, self).__init__(space, real_space, linear=linear)
+        super(ImagPart, self).__init__(space, real_space, linear=True)
 
     def _call(self, x):
         """Return ``self(x)``."""
@@ -1553,10 +1551,10 @@ class ComplexModulus(Operator):
                         return deriv
 
                 return ComplexModulusDerivativeAdjoint(
-                    deriv.range, deriv.domain, linear=deriv.domain.is_real)
+                    deriv.range, deriv.domain, linear=True
+                )
 
-        return ComplexModulusDerivative(op.domain, op.range,
-                                        linear=op.domain.is_real)
+        return ComplexModulusDerivative(op.domain, op.range, linear=True)
 
 
 class ComplexModulusSquared(Operator):
@@ -1747,10 +1745,12 @@ class ComplexModulusSquared(Operator):
                         return deriv
 
                 return ComplexModulusSquaredDerivAdj(
-                    deriv.range, deriv.domain, linear=deriv.domain.is_real)
+                    deriv.range, deriv.domain, linear=True
+                )
 
-        return ComplexModulusSquaredDerivative(op.domain, op.range,
-                                               linear=op.domain.is_real)
+        return ComplexModulusSquaredDerivative(
+            op.domain, op.range, linear=True
+        )
 
 
 if __name__ == '__main__':
