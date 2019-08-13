@@ -8,7 +8,7 @@ for, e.g., batches and channels.
 
 import numpy as np
 import torch
-from torch import autograd, nn
+from torch import nn
 
 import odl
 from odl.contrib import torch as odl_torch
