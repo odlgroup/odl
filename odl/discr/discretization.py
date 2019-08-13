@@ -10,7 +10,6 @@
 
 from __future__ import print_function, division, absolute_import
 
-from odl.operator import Operator
 from odl.set.sets import Set
 from odl.space.base_tensors import TensorSpace, Tensor
 from odl.space.entry_points import tensor_space_impl
@@ -38,17 +37,9 @@ class DiscretizedSpace(TensorSpace):
     ("tensor space" or ``tspace``).
     Since function spaces represent by far the most significant application,
     the non-discretized set is called ``fspace``.
-
-    As additional information, two mappings can be provided.
-    The first one is an explicit way to map an (abstract) element from
-    ``fspace`` to a tensor in ``tspace``. This mapping is called
-    **sampling** in ODL.
-    The second one encodes the converse way of mapping a tensor to
-    an element of the original set. This mapping is called
-    **interpolation**.
     """
 
-    def __init__(self, fspace, tspace, sampling=None, interpol=None):
+    def __init__(self, fspace, tspace):
         """Abstract initialization method.
 
         Intended to be called by subclasses for proper type checking
@@ -61,14 +52,6 @@ class DiscretizedSpace(TensorSpace):
         tspace : `TensorSpace`
             Space providing containers for the values/coefficients of a
             discretized object.
-        sampling : `Operator`, optional
-            Operator mapping an `fspace` element to a `tspace` element.
-            Must satisfy ``sampling.domain == fspace``,
-            ``sampling.range == tspace``.
-        interpol : `Operator`, optional
-            Operator mapping a `tspace` element to an `fspace` element.
-            Must satisfy ``interpol.domain == tspace``,
-            ``interpol.range == fspace``.
             """
         if not isinstance(fspace, Set):
             raise TypeError('`fspace` must be a `Set` instance, '
@@ -77,37 +60,9 @@ class DiscretizedSpace(TensorSpace):
             raise TypeError('`tspace` {!r} not a `TensorSpace` instance'
                             ''.format(tspace))
 
-        if sampling is not None:
-            if not isinstance(sampling, Operator):
-                raise TypeError('`sampling` {!r} not an `Operator` '
-                                'instance'.format(sampling))
-            if sampling.domain != fspace:
-                raise ValueError('`sampling.domain` {!r} not equal to '
-                                 '`fspace` {!r}'
-                                 ''.format(sampling.domain, tspace))
-            if sampling.range != tspace:
-                raise ValueError('`sampling.range` {!r} not equal to'
-                                 '`tspace` {!r}'
-                                 ''.format(sampling.range, tspace))
-
-        if interpol is not None:
-            if not isinstance(interpol, Operator):
-                raise TypeError('`interpol` {!r} not an Operator '
-                                'instance'.format(interpol))
-            if interpol.domain != tspace:
-                raise ValueError('`interpol.domain` {} not equal to '
-                                 '`tspace` {!r}'
-                                 ''.format(interpol.domain, tspace))
-            if interpol.range != fspace:
-                raise ValueError('`interpol.range` {!r} not equal to '
-                                 '`fspace` {!r}'
-                                 ''.format(interpol.range, fspace))
-
         super(DiscretizedSpace, self).__init__(tspace.shape, tspace.dtype)
         self.__fspace = fspace
         self.__tspace = tspace
-        self.__sampling = sampling
-        self.__interpolation = interpol
 
     @property
     def fspace(self):
@@ -124,61 +79,27 @@ class DiscretizedSpace(TensorSpace):
         """Tensor space type of this discretization."""
         return type(self.tspace)
 
-    @property
-    def sampling(self):
-        """Operator mapping an `fspace` element to a `Tensor`."""
-        if self.__sampling is not None:
-            return self.__sampling
-        else:
-            raise NotImplementedError('no sampling operator provided')
-
-    @property
-    def interpolation(self):
-        """Operator mapping a `Tensor` to an `fspace` element."""
-        if self.__interpolation is not None:
-            return self.__interpolation
-        else:
-            raise NotImplementedError('no interpolation operator provided')
-
     def element(self, inp=None, order=None, **kwargs):
         """Create an element from ``inp`` or from scratch.
 
         Parameters
         ----------
         inp : optional
-            Input data to create an element from. It needs to be
-            understood by either the `sampling` operator of this
-            instance or by its ``tspace.element`` method.
+            Input data to create an element from.
         order : {None, 'C', 'F'}, optional
             Storage order of the returned element. For ``'C'`` and ``'F'``,
             contiguous memory in the respective ordering is enforced.
             The default ``None`` enforces no contiguousness.
         kwargs :
-            Additional arguments passed on to `sampling` when called
-            on ``inp``, in the form ``sampling(inp, **kwargs)``.
-            This can be used e.g. for functions with parameters.
+            Additional keyword arguments passed on to the sampler when called
+            on ``inp``. This can be used e.g. for functions with parameters.
 
         Returns
         -------
         element : `DiscretizedSpaceElement`
-            The discretized element, calculated as ``sampling(inp)`` or
-            ``tspace.element(inp)``, tried in this order.
-
-        See Also
-        --------
-        sampling : create a discrete element from a non-discretized one
+            The discretized element.
         """
-        if inp is None:
-            return self.element_type(self, self.tspace.element(order=order))
-        elif inp in self and order is None:
-            return inp
-        elif callable(inp):
-            sampled = self.sampling(inp, **kwargs)
-            return self.element_type(self,
-                                     self.tspace.element(sampled, order=order))
-        else:
-            return self.element_type(self,
-                                     self.tspace.element(inp, order=order))
+        raise NotImplementedError('abstract method')
 
     def __eq__(self, other):
         """Return ``self == other``.
@@ -188,7 +109,6 @@ class DiscretizedSpace(TensorSpace):
         equals : bool
             ``True`` if ``other`` is a `DiscretizedSpace`
             instance and all attributes `fspace`, `tspace`,
-            `DiscretizedSpace.sampling` and `DiscretizedSpace.interpolation`
             of ``other`` and this discretization are equal, ``False``
             otherwise.
         """
@@ -200,27 +120,15 @@ class DiscretizedSpace(TensorSpace):
         else:
             return (super(DiscretizedSpace, self).__eq__(other) and
                     other.fspace == self.fspace and
-                    other.tspace == self.tspace and
-                    (getattr(other, 'sampling', None) ==
-                     getattr(self, 'sampling', None)) and
-                    (getattr(other, 'interpolation', None) ==
-                     getattr(self, 'interpolation', None)))
+                    other.tspace == self.tspace)
 
     def __hash__(self):
         """Return ``hash(self)``."""
-        prop_list = [super(DiscretizedSpace, self).__hash__(),
-                     self.fspace, self.tspace]
-        # May not exist
-        try:
-            prop_list.append(self.sampling)
-        except NotImplementedError:
-            pass
-        try:
-            prop_list.append(self.interpolation)
-        except NotImplementedError:
-            pass
-
-        return hash(tuple(prop_list))
+        return hash(
+            (super(DiscretizedSpace, self).__hash__(),
+             self.fspace,
+             self.tspace)
+        )
 
     @property
     def domain(self):
@@ -410,66 +318,6 @@ class DiscretizedSpaceElement(Tensor):
         if isinstance(values, type(self)):
             values = values.tensor
         self.tensor.__setitem__(indices, values)
-
-    def sampling(self, ufunc, **kwargs):
-        """Sample a continuous function and assign to this element.
-
-        Parameters
-        ----------
-        ufunc : ``self.space.fspace`` element
-            The continuous function that should be samplingicted.
-        kwargs :
-            Additional arugments for the sampling operator implementation
-
-        Examples
-        --------
-        >>> space = odl.uniform_discr(0, 1, 5)
-        >>> x = space.element()
-
-        Assign x according to a continuous function:
-
-        >>> x.sampling(lambda t: t)
-        >>> x  # Print values at grid points (which are centered)
-        uniform_discr(0.0, 1.0, 5).element([ 0.1,  0.3,  0.5,  0.7,  0.9])
-
-        See Also
-        --------
-        DiscretizedSpace.sampling : For full description
-        """
-        self.space.sampling(ufunc, out=self.tensor, **kwargs)
-
-    @property
-    def interpolation(self):
-        """Interpolation operator associated with this element.
-
-        Returns
-        -------
-        interpolation_op : `FunctionSpaceMapping`
-            Operatior representing a continuous interpolation of this
-            element.
-
-        Examples
-        --------
-        Create continuous version of a discrete 1d function with nearest
-        neighbour interpolation:
-
-        >>> X = odl.uniform_discr(0, 1, 3, nodes_on_bdry=True)
-        >>> x = X.element([0, 1, 0])
-        >>> x.interpolation(np.array([0.24, 0.26]))
-        array([ 0.,  1.])
-
-        Linear interpolation:
-
-        >>> X = odl.uniform_discr(0, 1, 3, nodes_on_bdry=True, interp='linear')
-        >>> x = X.element([0, 1, 0])
-        >>> x.interpolation(np.array([0.24, 0.26]))
-        array([ 0.48,  0.52])
-
-        See Also
-        --------
-        DiscretizedSpace.interpolation : For full description
-        """
-        return self.space.interpolation(self.tensor)
 
     def __ipow__(self, p):
         """Implement ``self **= p``."""

@@ -23,9 +23,8 @@ import odl
 
 
 # Template space: discretized functions on the rectangle [-1, 1]^2 with
-# 100 samples per dimension. Usage of 'linear' interpolation ensures that
-# the template gradient is well-defined.
-templ_space = odl.uniform_discr([-1, -1], [1, 1], (100, 100), interp='linear')
+# 100 samples per dimension.
+templ_space = odl.uniform_discr([-1, -1], [1, 1], (100, 100))
 
 # The template is a rectangle of size 1.0 x 0.5
 template = odl.phantom.cuboid(templ_space, [-0.5, -0.25], [0.5, 0.25])

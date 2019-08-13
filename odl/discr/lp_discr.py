@@ -8,40 +8,38 @@
 
 """Lebesgue L^p type discretizations of function spaces."""
 
-from __future__ import print_function, division, absolute_import
+from __future__ import absolute_import, division, print_function
+
 from numbers import Integral
+
 import numpy as np
 
+from odl.discr.discr_utils import point_collocation
 from odl.discr.discretization import (
     DiscretizedSpace, DiscretizedSpaceElement, tspace_type)
-from odl.discr.discr_mappings import (
-    PointCollocation, NearestInterpolation, LinearInterpolation,
-    PerAxisInterpolation)
 from odl.discr.partition import (
-    RectPartition, uniform_partition_fromintv, uniform_partition)
-from odl.set import RealNumbers, ComplexNumbers, IntervalProd
+    RectPartition, uniform_partition, uniform_partition_fromintv)
+from odl.set import ComplexNumbers, IntervalProd, RealNumbers
 from odl.space import FunctionSpace, ProductSpace
 from odl.space.entry_points import tensor_space_impl
 from odl.space.weighting import ConstWeighting
 from odl.util import (
-    apply_on_boundary, is_real_dtype, is_complex_floating_dtype, is_string,
-    is_floating_dtype, is_numeric_dtype,
-    dtype_str, array_str, signature_string, indent, npy_printoptions,
-    normalized_scalar_param_list, safe_int_conv, normalized_nodes_on_bdry)
+    apply_on_boundary, array_str, dtype_str, indent, is_complex_floating_dtype,
+    is_floating_dtype, is_numeric_dtype, is_real_dtype,
+    normalized_nodes_on_bdry, normalized_scalar_param_list, npy_printoptions,
+    safe_int_conv, signature_string)
 
 __all__ = ('DiscreteLp', 'DiscreteLpElement',
            'uniform_discr_frompartition', 'uniform_discr_fromspace',
            'uniform_discr_fromintv', 'uniform_discr',
            'uniform_discr_fromdiscr', 'discr_sequence_space')
 
-_SUPPORTED_INTERP = ('nearest', 'linear')
-
 
 class DiscreteLp(DiscretizedSpace):
 
     """Discretization of a Lebesgue :math:`L^p` space."""
 
-    def __init__(self, fspace, partition, tspace, interp='nearest', **kwargs):
+    def __init__(self, fspace, partition, tspace, **kwargs):
         """Initialize a new instance.
 
         Parameters
@@ -54,14 +52,6 @@ class DiscreteLp(DiscretizedSpace):
             Space of elements used for data storage. It must have the
             same `TensorSpace.field` as ``fspace`` and the same
             `TensorSpace.shape` as ``partition``.
-        interp : str or sequence of str, optional
-            Interpolation type to be used for discretization.
-            A sequence is interpreted as interpolation scheme per axis.
-            Possible values:
-
-            - ``'nearest'`` : use nearest-neighbor interpolation.
-            - ``'linear'`` : use linear interpolation.
-
         axis_labels : sequence of str, optional
             Names of the axes to use for plotting etc.
             Default:
@@ -90,38 +80,9 @@ class DiscreteLp(DiscretizedSpace):
                              '`tspace.dtype`: {} != {}'
                              ''.format(fspace.scalar_out_dtype, tspace.dtype))
 
+        super(DiscreteLp, self).__init__(fspace, tspace)
+
         self.__partition = partition
-
-        # Handle interp
-        if is_string(interp):
-            interp, interp_in = str(interp).lower(), interp
-            if interp not in _SUPPORTED_INTERP:
-                raise ValueError('`interp` {!r} not understood'
-                                 ''.format(interp_in))
-            # Ensure that there is 1 entry for ndim == 0
-            self.__interp_byaxis = (interp,) * max(partition.ndim, 1)
-        else:
-            # Got sequence of strings
-            if len(interp) != partition.ndim:
-                raise ValueError('expected {} (ndim) entries in `interp`, '
-                                 'got {}'.format(partition.ndim, len(interp)))
-
-            self.__interp_byaxis = tuple(str(s).lower() for s in interp)
-            if any(s not in _SUPPORTED_INTERP for s in self.interp_byaxis):
-                raise ValueError('`interp` sequence {} contains illegal '
-                                 'values'.format(interp))
-
-        # Assign sampling and interpolation operators
-        sampling = PointCollocation(fspace, self.partition, tspace)
-        if all(s == 'nearest' for s in self.interp_byaxis):
-            interpol = NearestInterpolation(fspace, self.partition, tspace)
-        elif all(s == 'linear' for s in self.interp_byaxis):
-            interpol = LinearInterpolation(fspace, self.partition, tspace)
-        else:
-            interpol = PerAxisInterpolation(
-                fspace, self.partition, tspace, self.interp_byaxis)
-
-        super(DiscreteLp, self).__init__(fspace, tspace, sampling, interpol)
 
         # Set axis labels
         axis_labels = kwargs.pop('axis_labels', None)
@@ -137,22 +98,6 @@ class DiscreteLp(DiscretizedSpace):
         if kwargs:
             raise ValueError('got unexpected keyword arguments {}'
                              ''.format(kwargs))
-
-    @property
-    def interp(self):
-        """Interpolation type of this discretization."""
-        if self.ndim == 0:
-            return 'nearest'
-        elif all(interp == self.interp_byaxis[0]
-                 for interp in self.interp_byaxis):
-            return self.interp_byaxis[0]
-        else:
-            return self.interp_byaxis
-
-    @property
-    def interp_byaxis(self):
-        """Interpolation by axis type of this discretization."""
-        return self.__interp_byaxis
 
     @property
     def axis_labels(self):
@@ -302,7 +247,7 @@ class DiscreteLp(DiscretizedSpace):
               If any of these conditions is not met, a copy is made.
 
             - callable: a new element is created by sampling the function
-              using the `sampling` operator.
+              using `point_collocation`.
 
         order : {None, 'C', 'F'}, optional
             Storage order of the returned element. For ``'C'`` and ``'F'``,
@@ -313,15 +258,16 @@ class DiscreteLp(DiscretizedSpace):
             vectorized evaluation. Otherwise, wrap it in a vectorizer.
             Default: ``True``.
         kwargs :
-            Additional arguments passed on to `sampling` when called
-            on ``inp``, in the form ``sampling(inp, **kwargs)``.
+            Additional arguments passed on to `point_collocation` when
+            called on ``inp``, in the form
+            ``point_collocation(inp, points, **kwargs)``.
             This can be used e.g. for functions with parameters.
 
         Returns
         -------
         element : `DiscreteLpElement`
-            The discretized element, calculated as ``sampling(inp)`` or
-            ``tspace.element(inp)``, tried in this order.
+            The discretized element, calculated as ``point_collocation(inp)``
+            or ``tspace.element(inp)``, tried in this order.
 
         Examples
         --------
@@ -351,10 +297,6 @@ class DiscreteLp(DiscretizedSpace):
         >>> space = odl.uniform_discr(-1, 1, 4)
         >>> space.element(f, c=0.5)
         uniform_discr(-1.0, 1.0, 4).element([ 0.5 ,  0.5 ,  0.5 ,  0.75])
-
-        See Also
-        --------
-        sampling : create a discrete element from a non-discretized one
         """
         if inp is None:
             return self.element_type(self, self.tspace.element(order=order))
@@ -366,7 +308,7 @@ class DiscreteLp(DiscretizedSpace):
             vectorized = kwargs.pop('vectorized', True)
             # fspace element -> discretize
             inp_elem = self.fspace.element(inp, vectorized=vectorized)
-            sampled = self.sampling(inp_elem, **kwargs)
+            sampled = point_collocation(inp_elem, self.meshgrid, **kwargs)
             return self.element_type(
                 self, self.tspace.element(sampled, order=order))
         else:
@@ -379,8 +321,8 @@ class DiscreteLp(DiscretizedSpace):
         fspace = self.fspace.astype(dtype)
         tspace = self.tspace.astype(dtype)
         return type(self)(
-            fspace, self.partition, tspace, interp=self.interp,
-            axis_labels=self.axis_labels)
+            fspace, self.partition, tspace, axis_labels=self.axis_labels
+        )
 
     # Overrides for space functions depending on partition
     #
@@ -493,16 +435,12 @@ class DiscreteLp(DiscretizedSpace):
                 try:
                     iter(indices)
                 except TypeError:
-                    interp = space.interp_byaxis[indices]
                     labels = space.axis_labels[indices]
                 else:
-                    interp = tuple(space.interp_byaxis[int(i)]
-                                   for i in indices)
                     labels = tuple(space.axis_labels[int(i)]
                                    for i in indices)
 
-                return DiscreteLp(fspace, part, tspace, interp,
-                                  axis_labels=labels)
+                return DiscreteLp(fspace, part, tspace, axis_labels=labels)
 
             def __repr__(self):
                 """Return ``repr(self)``."""
@@ -539,8 +477,7 @@ class DiscreteLp(DiscretizedSpace):
                 self.tspace.default_dtype(RealNumbers()))
 
             dtype_s = dtype_str(self.dtype)
-            optargs = [('interp', self.interp, 'nearest'),
-                       ('impl', self.impl, 'numpy'),
+            optargs = [('impl', self.impl, 'numpy'),
                        ('nodes_on_bdry', nodes_on_bdry, False),
                        ('dtype', dtype_s, default_dtype_s)]
 
@@ -570,10 +507,9 @@ class DiscreteLp(DiscretizedSpace):
         else:
             ctor = self.__class__.__name__
             posargs = [self.fspace, self.partition, self.tspace]
-            optargs = [('interp', self.interp, 'nearest')]
 
             with npy_printoptions(precision=4):
-                inner_str = signature_string(posargs, optargs,
+                inner_str = signature_string(posargs, [],
                                              sep=[',\n', ', ', ',\n'],
                                              mod=['!r', '!s'])
 
@@ -1042,9 +978,11 @@ class DiscreteLpElement(DiscretizedSpaceElement):
                     fspace = FunctionSpace(self.space.fspace.domain,
                                            out_dtype)
                     res_space = DiscreteLp(
-                        fspace, self.space.partition,
-                        res_tens.space, self.space.interp_byaxis,
-                        axis_labels=self.space.axis_labels)
+                        fspace,
+                        self.space.partition,
+                        res_tens.space,
+                        axis_labels=self.space.axis_labels
+                    )
                     result = res_space.element(res_tens)
                 else:
                     result = out_tuple[0]
@@ -1062,9 +1000,11 @@ class DiscreteLpElement(DiscretizedSpaceElement):
                     fspace = FunctionSpace(self.space.fspace.domain,
                                            out_dtype)
                     res_space = DiscreteLp(
-                        fspace, self.space.partition,
-                        res1_tens.space, self.space.interp_byaxis,
-                        axis_labels=self.space.axis_labels)
+                        fspace,
+                        self.space.partition,
+                        res1_tens.space,
+                        axis_labels=self.space.axis_labels
+                    )
                     result1 = res_space.element(res1_tens)
                 else:
                     result1 = out_tuple[0]
@@ -1075,9 +1015,11 @@ class DiscreteLpElement(DiscretizedSpaceElement):
                     fspace = FunctionSpace(self.space.fspace.domain,
                                            out_dtype)
                     res_space = DiscreteLp(
-                        fspace, self.space.partition,
-                        res2_tens.space, self.space.interp_byaxis,
-                        axis_labels=self.space.axis_labels)
+                        fspace,
+                        self.space.partition,
+                        res2_tens.space,
+                        axis_labels=self.space.axis_labels
+                    )
                     result2 = res_space.element(res2_tens)
                 else:
                     result2 = out_tuple[1]
@@ -1131,20 +1073,20 @@ class DiscreteLpElement(DiscretizedSpaceElement):
                                            out_dtype=res_tens.dtype)
 
                     res_space = DiscreteLp(
-                        fspace, self.space.partition, res_tens.space,
-                        self.space.interp_byaxis,
-                        axis_labels=self.space.axis_labels)
+                        fspace,
+                        self.space.partition,
+                        res_tens.space,
+                        axis_labels=self.space.axis_labels
+                    )
                     result = res_space.element(res_tens)
 
                 elif method == 'outer':
-                    # Concatenate domains, partitions, interp, axis_labels,
+                    # Concatenate domains, partitions, axis_labels,
                     # and determine `tspace` from the result tensor
                     inp1, inp2 = inputs
                     domain = inp1.space.domain.append(inp2.space.domain)
                     fspace = FunctionSpace(domain, out_dtype=res_tens.dtype)
                     part = inp1.space.partition.append(inp2.space.partition)
-                    interp = (inp1.space.interp_byaxis +
-                              inp2.space.interp_byaxis)
                     labels1 = [lbl + ' (1)' for lbl in inp1.space.axis_labels]
                     labels2 = [lbl + ' (2)' for lbl in inp2.space.axis_labels]
                     labels = labels1 + labels2
@@ -1166,7 +1108,8 @@ class DiscreteLpElement(DiscretizedSpaceElement):
                         tspace = res_tens.space
 
                     res_space = DiscreteLp(
-                        fspace, part, tspace, interp, axis_labels=labels)
+                        fspace, part, tspace, axis_labels=labels
+                    )
                     result = res_space.element(res_tens)
 
                 elif method == 'reduce':
@@ -1273,9 +1216,8 @@ class DiscreteLpElement(DiscretizedSpaceElement):
         """
         from odl.util.graphics import show_discrete_data
 
-        if 'interp' not in kwargs and not isinstance(self.space.interp, tuple):
-            # Otherwise different interp per axis
-            kwargs['interp'] = self.space.interp
+        if 'interp' not in kwargs:
+            kwargs['interp'] = 'linear'
 
         if self.ndim == 0:
             raise ValueError('nothing to show for 0-dimensional vector')
@@ -1576,14 +1518,6 @@ def uniform_discr(min_pt, max_pt, shape, dtype=None, impl='numpy', **kwargs):
     exponent : positive float, optional
         The parameter :math:`p` in :math:`L^p`. If the exponent is not
         equal to the default 2.0, the space has no inner product.
-    interp : string or sequence of strings, optional
-        Interpolation type to be used for discretization.
-        A sequence is interpreted as interpolation scheme per axis.
-        Possible values:
-
-        - ``'nearest'`` : use nearest-neighbor interpolation.
-        - ``'linear'`` : use linear interpolation.
-
     nodes_on_bdry : bool or sequence, optional
         If a sequence is provided, it determines per axis whether to
         place the last grid point on the boundary (``True``) or shift it
@@ -1885,9 +1819,9 @@ def uniform_discr_fromdiscr(discr, min_pt=None, max_pt=None,
                                  cell_sides=new_csides,
                                  nodes_on_bdry=nodes_on_bdry)
 
-    return uniform_discr_frompartition(new_part, exponent=discr.exponent,
-                                       interp=discr.interp, impl=discr.impl,
-                                       **kwargs)
+    return uniform_discr_frompartition(
+        new_part, exponent=discr.exponent, impl=discr.impl, **kwargs
+    )
 
 
 def _scaling_func_list(bdry_fracs, exponent):

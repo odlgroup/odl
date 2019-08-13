@@ -24,6 +24,7 @@ import odl
 import tqdm
 
 from dicom.datadict import DicomDictionary, NameDict, CleanName
+from odl.discr.discr_utils import linear_interpolator
 from odl.contrib.datasets.ct.mayo_dicom_dict import new_dict_items
 
 # Update the DICOM dictionary with the extra Mayo tags
@@ -187,9 +188,8 @@ def load_projections(folder, indices=None):
 
     # Calculate projection data in rectangular coordinates since we have no
     # backend that supports cylindrical
-    proj_data_cylinder = ray_trafo.range.element(data_array)
-    interpolated_values = proj_data_cylinder.interpolation((theta, u, v))
-    proj_data = ray_trafo.range.element(interpolated_values)
+    interpolator = linear_interpolator(data_array, (theta, u, v))
+    proj_data = ray_trafo.range.element(interpolator)
 
     return geometry, proj_data.asarray()
 

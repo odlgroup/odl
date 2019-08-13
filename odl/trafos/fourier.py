@@ -1282,10 +1282,12 @@ class FourierTransform(FourierTransformBase):
                 out = self._tmp_r if self._tmp_r is not None else self._tmp_f
             else:
                 out = self._tmp_f
+        # TODO(kohr-h): Add `interp` to operator or simplify it by not
+        # performing interpolation filter
         return dft_postprocess_data(
             out, real_grid=self.domain.grid, recip_grid=self.range.grid,
             shift=self.shifts, axes=self.axes, sign=self.sign,
-            interp=self.domain.interp, op='multiply', out=out)
+            interp='nearest', op='multiply', out=out)
 
     def _call_numpy(self, x):
         """Return ``self(x)`` for numpy back-end.
@@ -1501,10 +1503,12 @@ class FourierTransformInverse(FourierTransformBase):
                 out = self._tmp_r if self._tmp_r is not None else self._tmp_f
             else:
                 out = self._tmp_f
+        # TODO(kohr-h): Add `interp` to operator or simplify it by not
+        # performing interpolation filter
         return dft_postprocess_data(
             x, real_grid=self.range.grid, recip_grid=self.domain.grid,
             shift=self.shifts, axes=self.axes, sign=self.sign,
-            interp=self.domain.interp, op='divide', out=out)
+            interp='nearest', op='divide', out=out)
 
     def _postprocess(self, x, out=None):
         """Return the post-processed version of ``x``.
