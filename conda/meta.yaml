@@ -23,14 +23,14 @@ requirements:
         - setuptools
         - nomkl # [not win]
         - future >=0.14
-        - numpy >=1.10
+        - numpy >=1.13.3
         - scipy >=0.14
         - packaging >=15.0
 
     run:
         - python
         - future >=0.14
-        - numpy >=1.10
+        - numpy >=1.13.3
         - scipy >=0.14
         - packaging >=15.0
         - matplotlib
@@ -38,7 +38,7 @@ requirements:
 test:
     requires:
         - nomkl # [not win]
-        - pytest >=3.0.3
+        - pytest >=3.0.3,<5.1
     imports:
         - odl
     commands:
