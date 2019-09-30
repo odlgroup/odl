@@ -375,10 +375,7 @@ def astra_cuda_bp_scaling_factor(proj_space, reco_space, geometry):
     scaling_factor /= (reco_space.weighting.const /
                        reco_space.cell_volume)
 
-    if parse_version(ASTRA_VERSION) >= parse_version('1.9.9.dev'):
-        scaling_factor /= float(reco_space.cell_volume)
-        scaling_factor *= float(geometry.det_partition.cell_volume)
-    elif parse_version(ASTRA_VERSION) < parse_version('1.8rc1'):
+    if parse_version(ASTRA_VERSION) < parse_version('1.8rc1'):
         if isinstance(geometry, Parallel2dGeometry):
             # Scales with 1 / cell_volume
             scaling_factor *= float(reco_space.cell_volume)
@@ -405,39 +402,7 @@ def astra_cuda_bp_scaling_factor(proj_space, reco_space, geometry):
             src_radius = geometry.src_radius
             det_radius = geometry.det_radius
             scaling_factor *= ((src_radius + det_radius) / src_radius) ** 2
-    # Check if an intermediate development version of astra is used
-    elif parse_version(ASTRA_VERSION) == parse_version('1.9.0dev'):
-        if isinstance(geometry, Parallel2dGeometry):
-            # Scales with 1 / cell_volume
-            scaling_factor *= float(reco_space.cell_volume)
-        elif (isinstance(geometry, FanBeamGeometry)
-              and geometry.det_curvature_radius is None):
-            # Scales with 1 / cell_volume
-            scaling_factor *= float(reco_space.cell_volume)
-            # Magnification correction
-            src_radius = geometry.src_radius
-            det_radius = geometry.det_radius
-            scaling_factor *= ((src_radius + det_radius) / src_radius)
-        elif isinstance(geometry, Parallel3dAxisGeometry):
-            # Scales with cell volume
-            # currently only square voxels are supported
-            scaling_factor /= reco_space.cell_volume
-        elif (isinstance(geometry, ConeBeamGeometry)
-              and geometry.det_curvature_radius is None):
-            # Scales with cell volume
-            scaling_factor /= reco_space.cell_volume
-            # Magnification correction (scaling = 1 / magnification ** 2)
-            src_radius = geometry.src_radius
-            det_radius = geometry.det_radius
-            scaling_factor *= ((src_radius + det_radius) / src_radius) ** 2
-
-            # Correction for scaled 1/r^2 factor in ASTRA's density weighting.
-            # This compensates for scaled voxels and pixels, as well as a
-            # missing factor src_radius ** 2 in the ASTRA BP with
-            # density weighting.
-            det_px_area = geometry.det_partition.cell_volume
-            scaling_factor *= (src_radius ** 2 * det_px_area ** 2)
-    else:
+    elif parse_version(ASTRA_VERSION) < parse_version('1.9.0dev'):
         if isinstance(geometry, Parallel2dGeometry):
             # Scales with 1 / cell_volume
             scaling_factor *= float(reco_space.cell_volume)
@@ -469,8 +434,40 @@ def astra_cuda_bp_scaling_factor(proj_space, reco_space, geometry):
             det_px_area = geometry.det_partition.cell_volume
             scaling_factor *= (src_radius ** 2 * det_px_area ** 2 /
                                reco_space.cell_volume ** 2)
+    elif parse_version(ASTRA_VERSION) < parse_version('1.9.9.dev'):
+        if isinstance(geometry, Parallel2dGeometry):
+            # Scales with 1 / cell_volume
+            scaling_factor *= float(reco_space.cell_volume)
+        elif (isinstance(geometry, FanBeamGeometry)
+              and geometry.det_curvature_radius is None):
+            # Scales with 1 / cell_volume
+            scaling_factor *= float(reco_space.cell_volume)
+            # Magnification correction
+            src_radius = geometry.src_radius
+            det_radius = geometry.det_radius
+            scaling_factor *= ((src_radius + det_radius) / src_radius)
+        elif isinstance(geometry, Parallel3dAxisGeometry):
+            # Scales with cell volume
+            # currently only square voxels are supported
+            scaling_factor /= reco_space.cell_volume
+        elif (isinstance(geometry, ConeBeamGeometry)
+              and geometry.det_curvature_radius is None):
+            # Scales with cell volume
+            scaling_factor /= reco_space.cell_volume
+            # Magnification correction (scaling = 1 / magnification ** 2)
+            src_radius = geometry.src_radius
+            det_radius = geometry.det_radius
+            scaling_factor *= ((src_radius + det_radius) / src_radius) ** 2
 
-        # TODO: add case with new ASTRA release
+            # Correction for scaled 1/r^2 factor in ASTRA's density weighting.
+            # This compensates for scaled voxels and pixels, as well as a
+            # missing factor src_radius ** 2 in the ASTRA BP with
+            # density weighting.
+            det_px_area = geometry.det_partition.cell_volume
+            scaling_factor *= (src_radius ** 2 * det_px_area ** 2)
+    else:
+        scaling_factor /= float(reco_space.cell_volume)
+        scaling_factor *= float(geometry.det_partition.cell_volume)
 
     return scaling_factor
 
