@@ -116,7 +116,7 @@ class AstraCudaProjectorImpl(object):
 
             # Fix scaling to weight by pixel size
             if (isinstance(self.geometry, Parallel2dGeometry) and
-                parse_version(ASTRA_VERSION) < parse_version('1.9.9.dev')):
+                    parse_version(ASTRA_VERSION) < parse_version('1.9.9.dev')):
                 # parallel2d scales with pixel stride
                 out *= 1 / float(self.geometry.det_partition.cell_volume)
 
