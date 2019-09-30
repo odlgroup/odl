@@ -376,6 +376,7 @@ def astra_cuda_bp_scaling_factor(proj_space, reco_space, geometry):
                        reco_space.cell_volume)
 
     if parse_version(ASTRA_VERSION) < parse_version('1.8rc1'):
+        # Scaling for the old, pre-1.8 behaviour
         if isinstance(geometry, Parallel2dGeometry):
             # Scales with 1 / cell_volume
             scaling_factor *= float(reco_space.cell_volume)
@@ -403,6 +404,7 @@ def astra_cuda_bp_scaling_factor(proj_space, reco_space, geometry):
             det_radius = geometry.det_radius
             scaling_factor *= ((src_radius + det_radius) / src_radius) ** 2
     elif parse_version(ASTRA_VERSION) < parse_version('1.9.0dev'):
+        # Scaling for the 1.8.x releases
         if isinstance(geometry, Parallel2dGeometry):
             # Scales with 1 / cell_volume
             scaling_factor *= float(reco_space.cell_volume)
@@ -435,6 +437,7 @@ def astra_cuda_bp_scaling_factor(proj_space, reco_space, geometry):
             scaling_factor *= (src_radius ** 2 * det_px_area ** 2 /
                                reco_space.cell_volume ** 2)
     elif parse_version(ASTRA_VERSION) < parse_version('1.9.9.dev'):
+        # Scaling for intermediate dev releases between 1.8.3 and 1.9.9.dev
         if isinstance(geometry, Parallel2dGeometry):
             # Scales with 1 / cell_volume
             scaling_factor *= float(reco_space.cell_volume)
@@ -466,6 +469,7 @@ def astra_cuda_bp_scaling_factor(proj_space, reco_space, geometry):
             det_px_area = geometry.det_partition.cell_volume
             scaling_factor *= (src_radius ** 2 * det_px_area ** 2)
     else:
+        # Scaling for versions since 1.9.9.dev
         scaling_factor /= float(reco_space.cell_volume)
         scaling_factor *= float(geometry.det_partition.cell_volume)
 
