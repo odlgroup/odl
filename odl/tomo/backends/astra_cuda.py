@@ -115,7 +115,8 @@ class AstraCudaProjectorImpl(object):
                     self.proj_space.shape)
 
             # Fix scaling to weight by pixel size
-            if isinstance(self.geometry, Parallel2dGeometry):
+            if (isinstance(self.geometry, Parallel2dGeometry) and
+                parse_version(ASTRA_VERSION) < parse_version('1.9.9.dev')):
                 # parallel2d scales with pixel stride
                 out *= 1 / float(self.geometry.det_partition.cell_volume)
 
@@ -374,7 +375,10 @@ def astra_cuda_bp_scaling_factor(proj_space, reco_space, geometry):
     scaling_factor /= (reco_space.weighting.const /
                        reco_space.cell_volume)
 
-    if parse_version(ASTRA_VERSION) < parse_version('1.8rc1'):
+    if parse_version(ASTRA_VERSION) >= parse_version('1.9.9.dev'):
+        scaling_factor /= float(reco_space.cell_volume)
+        scaling_factor *= float(geometry.det_partition.cell_volume)
+    elif parse_version(ASTRA_VERSION) < parse_version('1.8rc1'):
         if isinstance(geometry, Parallel2dGeometry):
             # Scales with 1 / cell_volume
             scaling_factor *= float(reco_space.cell_volume)
@@ -401,8 +405,8 @@ def astra_cuda_bp_scaling_factor(proj_space, reco_space, geometry):
             src_radius = geometry.src_radius
             det_radius = geometry.det_radius
             scaling_factor *= ((src_radius + det_radius) / src_radius) ** 2
-    # Check if the development version of astra is used
-    if parse_version(ASTRA_VERSION) == parse_version('1.9.0dev'):
+    # Check if an intermediate development version of astra is used
+    elif parse_version(ASTRA_VERSION) == parse_version('1.9.0dev'):
         if isinstance(geometry, Parallel2dGeometry):
             # Scales with 1 / cell_volume
             scaling_factor *= float(reco_space.cell_volume)
