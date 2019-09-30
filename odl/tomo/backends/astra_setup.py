@@ -699,7 +699,7 @@ def astra_projector(astra_proj_type, astra_vol_geom, astra_proj_geom, ndim):
     # Add the approximate 1/r^2 weighting exposed in intermediate versions of
     # ASTRA
     if (
-        astra_proj_type in ('cone', 'cone_vec')
+        astra_geom in ('cone', 'cone_vec')
         and astra_supports('cone3d_approx_density_weighting')
     ):
         proj_cfg['options']['DensityWeighting'] = True
