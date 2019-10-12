@@ -15,6 +15,7 @@ import numpy as np
 
 import odl
 from odl.util.testutils import all_almost_equal, all_equal, simple_fixture
+from odl.tomo.util.source_detector_shifts import flying_focal_spot
 
 
 # --- pytest fixtures --- #
@@ -561,10 +562,13 @@ def test_fanbeam_flying_focal_spot():
     shift1 = np.array([2, -3])
     shift2 = np.array([-2, 3])
     init = np.array([1, 0], dtype=np.float32)
-    geom_ffs = odl.tomo.FanBeamGeometry(apart, dpart, src_rad, det_rad,
-                                        src_to_det_init=init,
-                                        flying_focal_spot=[shift1,
-                                                           shift2])
+    geom_ffs = odl.tomo.FanBeamGeometry(
+        apart, dpart,
+        src_rad, det_rad,
+        src_to_det_init=init,
+        src_shift_func=lambda angle: flying_focal_spot(
+            angle, apart=apart,
+            shifts=[shift1, shift2]))
     # angles must be shifted to match discretization of apart
     ang1 = -full_angle / 20
     apart1 = odl.uniform_partition(ang1, full_angle + ang1, 5)
@@ -583,7 +587,7 @@ def test_fanbeam_flying_focal_spot():
 
     sp1 = geom1.src_position(geom1.angles)
     sp2 = geom2.src_position(geom2.angles)
-    sp = geom_ffs.src_position(geom_ffs.angles, geom_ffs.flying_focal_spot)
+    sp = geom_ffs.src_position(geom_ffs.angles)
     assert all_almost_equal(sp[0::2], sp1)
     assert all_almost_equal(sp[1::2], sp2)
 
@@ -737,10 +741,13 @@ def test_conebeam_flying_focal_spot():
     shift1 = np.array([2, -3, 1])
     shift2 = np.array([-2, 3, -1])
     init = np.array([1, 0, 0], dtype=np.float32)
-    geom_ffs = odl.tomo.ConeBeamGeometry(apart, dpart, src_rad, det_rad,
-                                         src_to_det_init=init,
-                                         flying_focal_spot=[shift1,
-                                                            shift2])
+    geom_ffs = odl.tomo.ConeBeamGeometry(
+        apart, dpart,
+        src_rad, det_rad,
+        src_to_det_init=init,
+        src_shift_func=lambda angle: flying_focal_spot(
+            angle, apart=apart,
+            shifts=[shift1, shift2]))
     # angles must be shifted to match discretization of apart
     ang1 = -full_angle / 20
     apart1 = odl.uniform_partition(ang1, full_angle + ang1, 5)
@@ -761,7 +768,7 @@ def test_conebeam_flying_focal_spot():
 
     sp1 = geom1.src_position(geom1.angles)
     sp2 = geom2.src_position(geom2.angles)
-    sp = geom_ffs.src_position(geom_ffs.angles, geom_ffs.flying_focal_spot)
+    sp = geom_ffs.src_position(geom_ffs.angles)
     assert all_almost_equal(sp[0::2], sp1)
     assert all_almost_equal(sp[1::2], sp2)
 

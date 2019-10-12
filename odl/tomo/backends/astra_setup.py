@@ -307,10 +307,9 @@ def astra_conebeam_3d_geom_to_vec(geometry):
     """
     angles = geometry.angles
     vectors = np.zeros((angles.size, 12))
-    ffs = geometry.flying_focal_spot
 
     # Source position
-    vectors[:, 0:3] = geometry.src_position(angles, ffs)
+    vectors[:, 0:3] = geometry.src_position(angles)
 
     # Center of detector in 3D space
     mid_pt = geometry.det_params.mid_pt
@@ -379,10 +378,9 @@ def astra_conebeam_2d_geom_to_vec(geometry):
     rot_minus_90 = euler_matrix(-np.pi / 2)
     angles = geometry.angles
     vectors = np.zeros((angles.size, 6))
-    ffs = geometry.flying_focal_spot
 
     # Source position
-    src_pos = geometry.src_position(angles, ffs)
+    src_pos = geometry.src_position(angles)
     vectors[:, 0:2] = rot_minus_90.dot(src_pos.T).T  # dot along 2nd axis
 
     # Center of detector
@@ -750,7 +748,6 @@ def astra_algorithm(direction, ndim, vol_id, sino_id, proj_id, impl):
     algo_map = {'forward': {2: {'cpu': 'FP', 'cuda': 'FP_CUDA'},
                             3: {'cpu': None, 'cuda': 'FP3D_CUDA'}},
                 'backward': {2: {'cpu': 'BP', 'cuda': 'BP_CUDA'},
-                             3: {'cpu': None, 'cuda': 'BP3D_CUDA'},
                              3: {'cpu': None, 'cuda': 'BP3D_CUDA'}}}
 
     algo_cfg = {'type': algo_map[direction][ndim][impl],
