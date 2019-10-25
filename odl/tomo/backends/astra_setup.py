@@ -107,7 +107,7 @@ ASTRA_FEATURES = {
     # Approximate version of ray-density weighting in cone beam
     # backprojection for constant source-detector distance, see
     # https://github.com/astra-toolbox/astra-toolbox/pull/84
-    'cone3d_approx_density_weighting': '>=1.8',
+    'cone3d_approx_density_weighting': '>=1.8,<1.9.9.dev',
 
     # General case not supported yet, see the discussion in
     # https://github.com/astra-toolbox/astra-toolbox/issues/71
@@ -699,7 +699,7 @@ def astra_projector(astra_proj_type, astra_vol_geom, astra_proj_geom, ndim):
     # Add the approximate 1/r^2 weighting exposed in intermediate versions of
     # ASTRA
     if (
-        astra_proj_type in ('cone', 'cone_vec')
+        astra_geom in ('cone', 'cone_vec')
         and astra_supports('cone3d_approx_density_weighting')
     ):
         proj_cfg['options']['DensityWeighting'] = True
