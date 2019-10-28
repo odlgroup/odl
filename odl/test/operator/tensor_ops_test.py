@@ -1,4 +1,4 @@
-# Copyright 2014-2017 The ODL contributors
+# Copyright 2014-2019 The ODL contributors
 #
 # This file is part of ODL.
 #
@@ -9,18 +9,17 @@
 """Unit tests for `tensor_ops`."""
 
 from __future__ import division
-import pytest
+
 import numpy as np
 import scipy.sparse
 
 import odl
+import pytest
 from odl.operator.tensor_ops import (
-    PointwiseNorm, PointwiseInner, PointwiseSum, MatrixOperator)
+    MatrixOperator, PointwiseInner, PointwiseNorm, PointwiseSum)
 from odl.space.pspace import ProductSpace
-from odl.util import moveaxis
 from odl.util.testutils import (
-    all_almost_equal, all_equal, simple_fixture, noise_element, noise_elements)
-
+    all_almost_equal, all_equal, noise_element, noise_elements, simple_fixture)
 
 matrix_dtype = simple_fixture(
     name='matrix_dtype',
@@ -652,7 +651,7 @@ def test_matrix_op_call(matrix):
     domain = odl.rn((2, 2, 4))
     mat_op = MatrixOperator(dense_matrix, domain, axis=2)
     xarr, x = noise_elements(mat_op.domain)
-    true_result = moveaxis(np.tensordot(dense_matrix, xarr, (1, 2)), 0, 2)
+    true_result = np.moveaxis(np.tensordot(dense_matrix, xarr, (1, 2)), 0, 2)
     assert all_almost_equal(mat_op(x), true_result)
     out = mat_op.range.element()
     mat_op(x, out=out)
