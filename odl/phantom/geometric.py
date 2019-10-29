@@ -14,7 +14,8 @@ import numpy as np
 from odl.discr.lp_discr import uniform_discr_fromdiscr
 from odl.util.numerics import resize_array
 
-__all__ = ('cuboid', 'defrise', 'ellipsoid_phantom', 'indicate_proj_axis',
+__all__ = ('cuboid', 'defrise',
+           'cuboid_phantom', 'ellipsoid_phantom', 'indicate_proj_axis',
            'smooth_cuboid', 'tgv_phantom')
 
 
@@ -703,6 +704,230 @@ def ellipsoid_phantom(space, ellipsoids, min_pt=None, max_pt=None):
             resize_array(tmp_phantom, space.shape, offset))
 
 
+def _cuboid_phantom_2d(space, cuboids):
+    """Create a phantom of cuboids in 2d space.
+
+    Parameters
+    ----------
+    space : `DiscreteLp`
+        Uniformly discretized space in which the phantom should be generated.
+        If ``space.shape`` is 1 in an axis, a corresponding slice of the
+        phantom is created (instead of squashing the whole phantom into the
+        slice).
+    cuboids : list of lists
+        Each row should contain the entries ::
+
+            'value',
+            'axis_1', 'axis_2',
+            'center_x', 'center_y',
+            'rotation'
+
+        The provided cuboids need to be specified relative to the
+        reference rectangle ``[-1, -1] x [1, 1]``. Angles are to be given
+        in radians.
+
+    Returns
+    -------
+    phantom : ``space`` element
+        2D cuboids phantom in ``space``.
+    """
+    # Blank image
+    p = np.zeros(space.shape, dtype=space.dtype)
+
+    minp = space.grid.min_pt
+    maxp = space.grid.max_pt
+
+    # Create the pixel grid
+    grid_in = space.grid.meshgrid
+
+    # move points to [-1, 1]
+    grid = []
+    for i in range(2):
+        mean_i = (minp[i] + maxp[i]) / 2.0
+        # Where space.shape = 1, we have minp = maxp, so we set diff_i = 1
+        # to avoid division by zero. Effectively, this allows constructing
+        # a slice of a 2D phantom.
+        diff_i = (maxp[i] - minp[i]) / 2.0 or 1.0
+        grid.append((grid_in[i] - mean_i) / diff_i)
+
+    for cuboid in cuboids:
+        assert len(cuboid) == 6
+
+        intensity = cuboid[0]
+        a_squared = cuboid[1] ** 2
+        b_squared = cuboid[2] ** 2
+        x0 = cuboid[3]
+        y0 = cuboid[4]
+        theta = cuboid[5]
+
+        scales = [1 / a_squared, 1 / b_squared]
+        center = (np.array([x0, y0]) + 1.0) / 2.0
+
+        # Create the offset x,y and z values for the grid
+        if theta != 0:
+            # Rotate the points to the expected coordinate system.
+            ctheta = np.cos(theta)
+            stheta = np.sin(theta)
+
+            mat = np.array([[ctheta, stheta],
+                            [-stheta, ctheta]])
+
+            # Calculate the points that could possibly be inside the volume
+            # Since the points are rotated, we cannot do anything directional
+            # without more logic
+            max_radius = np.abs(mat).dot(np.sqrt([a_squared, b_squared]))
+            idx, shapes = _getshapes_2d(center, max_radius, space.shape)
+
+            subgrid = [g[idi] for g, idi in zip(grid, shapes)]
+            offset_points = [vec * (xi - x0i)[..., None]
+                             for xi, vec, x0i in zip(subgrid, mat.T, [x0, y0])]
+            rotated = offset_points[0] + offset_points[1]
+            np.square(rotated, out=rotated)
+            max_distance = np.maximum(scales[0] * rotated[..., 0],
+                                      scales[1] * rotated[..., 1])
+        else:
+            # Calculate the points that could possibly be inside the volume
+            max_radius = np.sqrt([a_squared, b_squared])
+            idx, shapes = _getshapes_2d(center, max_radius, space.shape)
+
+            subgrid = [g[idi] for g, idi in zip(grid, shapes)]
+            squared_dist = [ai * (xi - x0i) ** 2
+                            for xi, ai, x0i in zip(subgrid,
+                                                   scales,
+                                                   [x0, y0])]
+
+            # Parentheses to get best order for broadcasting
+            max_distance = np.maximum(squared_dist[0], squared_dist[1])
+
+        # Find the points within the rectangle
+        inside = max_distance <= 1
+
+        # Add the rectangle intensity to those points
+        p[idx][inside] += intensity
+
+    return space.element(p)
+
+
+def cuboid_phantom(space, cuboids, min_pt=None, max_pt=None):
+    """Return a phantom given by cuboids.
+
+    Parameters
+    ----------
+    space : `DiscreteLp`
+        Space in which the phantom should be created, must be 2--dimensional.
+        If ``space.shape`` is 1 in an axis, a corresponding slice of the
+        phantom is created (instead of squashing the whole phantom into the
+        slice).
+    cuboids : sequence of sequences
+        If ``space`` is 2-dimensional, each row should contain the entries ::
+
+            'value',
+            'axis_1', 'axis_2',
+            'center_x', 'center_y',
+            'rotation'
+
+        The provided cuboids need to be specified relative to the
+        reference rectangle ``[-1, -1] x [1, 1]``.
+        The angles are to be given in radians.
+    min_pt, max_pt : array-like, optional
+        If provided, use these vectors to determine the bounding box of the
+        phantom instead of ``space.min_pt`` and ``space.max_pt``.
+        It is currently required that ``min_pt >= space.min_pt`` and
+        ``max_pt <= space.max_pt``, i.e., shifting or scaling outside the
+        original space is not allowed.
+
+        Providing one of them results in a shift, e.g., for ``min_pt``::
+
+            new_min_pt = min_pt
+            new_max_pt = space.max_pt + (min_pt - space.min_pt)
+
+        Providing both results in a scaled version of the phantom.
+
+    Notes
+    -----
+    The phantom is created by adding the values of each cuboid. The
+    cuboid are defined by a center point
+    ``(center_x, center_y)``, the lengths of its principial
+    axes ``(axis_1, axis_2)``, and a rotation angle ``rotation``
+    in 2D.
+
+    This function is heavily optimized, achieving runtimes about 20 times
+    faster than "trivial" implementations. It is therefore recommended to use
+    it in all phantoms where applicable.
+
+    The main optimization is that it only considers a subset of all the
+    points when updating for each cuboids. It does this by first finding
+    a subset of points that could possibly be inside the cuboids. This
+    optimization is very good for "square" cuboids, but not so
+    much for elongated or rotated ones.
+
+    It also does calculations wherever possible on the meshgrid instead of
+    individual points.
+
+    Examples
+    --------
+    Create a circle with a smaller circle inside:
+
+    >>> space = odl.uniform_discr([-1, -1], [1, 1], [5, 5])
+    >>> cuboids = [[1.0, 0.6, 0.6, 0.0, 0.0, 0.0],
+    ...             [1.0, 0.2, 0.2, 0.0, 0.0, 0.0]]
+    >>> print(cuboid_phantom(space, cuboids))
+    [[ 0.,  0.,  0.,  0.,  0.],
+     [ 0.,  1.,  1.,  1.,  0.],
+     [ 0.,  1.,  2.,  1.,  0.],
+     [ 0.,  1.,  1.,  1.,  0.],
+     [ 0.,  0.,  0.,  0.,  0.]]
+
+    See Also
+    --------
+    odl.phantom.transmission.shepp_logan : Classical Shepp-Logan phantom,
+        typically used for transmission imaging
+    odl.phantom.geometric.defrise_ellipses : Ellipses for the
+        Defrise phantom
+    """
+    if space.ndim == 2:
+        _phantom = _cuboid_phantom_2d
+    else:
+        raise ValueError('dimension not 2, no phantom available')
+
+    if min_pt is None and max_pt is None:
+        return _phantom(space, cuboids)
+
+    else:
+        # Generate a temporary space with given `min_pt` and `max_pt`
+        # (snapped to the cell grid), create the phantom in that space and
+        # resize to the target size for `space`.
+        # The snapped points are constructed by finding the index of
+        # `min/max_pt` in the space partition, indexing the partition with
+        # that index, yielding a single-cell partition, and then taking
+        # the lower-left/upper-right corner of that cell.
+        if min_pt is None:
+            snapped_min_pt = space.min_pt
+        else:
+            min_pt_cell = space.partition[space.partition.index(min_pt)]
+            snapped_min_pt = min_pt_cell.min_pt
+
+        if max_pt is None:
+            snapped_max_pt = space.max_pt
+        else:
+            max_pt_cell = space.partition[space.partition.index(max_pt)]
+            snapped_max_pt = max_pt_cell.max_pt
+            # Avoid snapping to the next cell where max_pt falls exactly on
+            # a boundary
+            for i in range(space.ndim):
+                if max_pt[i] in space.partition.cell_boundary_vecs[i]:
+                    snapped_max_pt[i] = max_pt[i]
+
+        tmp_space = uniform_discr_fromdiscr(
+            space, min_pt=snapped_min_pt, max_pt=snapped_max_pt,
+            cell_sides=space.cell_sides)
+
+        tmp_phantom = _phantom(tmp_space, cuboids)
+        offset = space.partition.index(tmp_space.min_pt)
+        return space.element(
+            resize_array(tmp_phantom, space.shape, offset))
+
+
 def smooth_cuboid(space, min_pt=None, max_pt=None, axis=0):
     """Cuboid with smooth variations.
 
@@ -875,6 +1100,12 @@ if __name__ == '__main__':
 
     # Indicate proj axis 3D
     indicate_proj_axis(space).show('indicate_proj_axis 3d')
+
+    # cuboid phantom 2D
+    space = odl.uniform_discr([-1, -1], [1, 1], [300, 300])
+    ellipses = [[1.0, 0.6, 0.6, 0.0, 0.0, 1.5],
+                [1.0, 0.1, 0.3, 0.0, 0.0, 0.3]]
+    cuboid_phantom(space, ellipses).show('cuboid phantom 2d')
 
     # ellipsoid phantom 2D
     space = odl.uniform_discr([-1, -1], [1, 1], [300, 300])
