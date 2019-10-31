@@ -1038,8 +1038,8 @@ class KullbackLeibler(Functional):
         F(x)
         =
         \begin{cases}
-            \sum_{i} \left( x_i - g_i + g_i \log \left( \frac{g_i}{x_i}
-            \right) \right) & \text{if } x_i > 0 \forall i
+            \int \left( x(t) - g(t) + g(t) \log \left( \frac{g(t)}{x(t)}
+            \right) \right) dt & \text{if } x(t) > 0  \; \forall t
             \\
             +\infty & \text{else.}
         \end{cases}
