@@ -15,8 +15,8 @@ from itertools import product
 import numpy as np
 
 from odl.util import (
-    is_string, is_valid_input_meshgrid, out_shape_from_array,
-    out_shape_from_meshgrid)
+    is_string, is_valid_input_array, is_valid_input_meshgrid,
+    out_shape_from_array, out_shape_from_meshgrid)
 
 __all__ = (
     'point_collocation',
@@ -294,10 +294,19 @@ def nearest_interpolator(f, coord_vecs, variant='left'):
     # TODO(kohr-h): pass reasonable options on to the interpolator
     def nearest_interp(arg, out=None):
         """Interpolating function with vectorization."""
+        if np.isscalar(arg):
+            arg = np.asarray([arg])
+
         if is_valid_input_meshgrid(arg, f.ndim):
             input_type = 'meshgrid'
-        else:
+            scalar = False
+        elif is_valid_input_array(arg, f.ndim):
             input_type = 'array'
+            arg = np.asarray(arg)
+            scalar = arg.shape == (f.ndim,)
+        else:
+            # TODO: better error message
+            raise ValueError('bad input')
 
         interpolator = _NearestInterpolator(
             coord_vecs,
@@ -306,7 +315,10 @@ def nearest_interpolator(f, coord_vecs, variant='left'):
             input_type=input_type
         )
 
-        return interpolator(arg, out=out)
+        res = interpolator(arg, out=out)
+        if scalar:
+            res = res.item()
+        return res
 
     return nearest_interp
 
@@ -372,10 +384,19 @@ def linear_interpolator(f, coord_vecs):
     # TODO(kohr-h): pass reasonable options on to the interpolator
     def linear_interp(arg, out=None):
         """Interpolating function with vectorization."""
+        if np.isscalar(arg):
+            arg = np.asarray([arg])
+
         if is_valid_input_meshgrid(arg, f.ndim):
             input_type = 'meshgrid'
-        else:
+            scalar = False
+        elif is_valid_input_array(arg, f.ndim):
             input_type = 'array'
+            arg = np.asarray(arg)
+            scalar = arg.shape == (f.ndim,)
+        else:
+            # TODO: better error message
+            raise ValueError('bad input')
 
         interpolator = _LinearInterpolator(
             coord_vecs,
@@ -383,7 +404,10 @@ def linear_interpolator(f, coord_vecs):
             input_type=input_type
         )
 
-        return interpolator(arg, out=out)
+        res = interpolator(arg, out=out)
+        if scalar:
+            res = res.item()
+        return res
 
     return linear_interp
 
@@ -488,10 +512,19 @@ def per_axis_interpolator(f, coord_vecs, schemes, nn_variants=None):
 
     def per_axis_interp(arg, out=None):
         """Interpolating function with vectorization."""
+        if np.isscalar(arg):
+            arg = np.asarray([arg])
+
         if is_valid_input_meshgrid(arg, f.ndim):
             input_type = 'meshgrid'
-        else:
+            scalar = False
+        elif is_valid_input_array(arg, f.ndim):
             input_type = 'array'
+            arg = np.asarray(arg)
+            scalar = arg.shape == (f.ndim,)
+        else:
+            # TODO: better error message
+            raise ValueError('bad input')
 
         interpolator = _PerAxisInterpolator(
             coord_vecs,
@@ -501,7 +534,10 @@ def per_axis_interpolator(f, coord_vecs, schemes, nn_variants=None):
             input_type=input_type
         )
 
-        return interpolator(arg, out=out)
+        res = interpolator(arg, out=out)
+        if scalar:
+            res = res.item()
+        return res
 
     return per_axis_interp
 
@@ -849,3 +885,8 @@ class _LinearInterpolator(_PerAxisInterpolator):
             coord_vecs, values, input_type,
             schemes=['linear'] * len(coord_vecs),
             nn_variants=[None] * len(coord_vecs))
+
+
+if __name__ == '__main__':
+    from odl.util.testutils import run_doctests
+    run_doctests()
