@@ -356,7 +356,6 @@ class LinDeformFixedDisp(Operator):
         interpolation and an offset of half the distance between two
         points, 0.1, one gets the mean of the values.
 
-        >>> space = odl.uniform_discr(0, 1, 5)
         >>> disp_field = space.tangent_bundle.element([[0, 0, 0, -0.1, 0]])
         >>> op = odl.deform.LinDeformFixedDisp(disp_field, interp='linear')
         >>> template = [0, 0, 1, 0, 0]

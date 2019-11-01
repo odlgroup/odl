@@ -37,11 +37,8 @@ def _all_interp_equal(interp_byaxis):
 
 def _normalize_interp(interp, ndim):
     """Turn interpolation type into a tuple with one entry per axis."""
-    interp_in = interp
     if is_string(interp):
         interp = str(interp).lower()
-        if interp not in _SUPPORTED_INTERP_SCHEMES:
-            raise ValueError('`interp` {!r} not understood'.format(interp_in))
         interp_byaxis = (interp,) * ndim
     else:
         interp_byaxis = tuple(str(itp).lower() for itp in interp)
@@ -51,14 +48,24 @@ def _normalize_interp(interp, ndim):
                 ''.format(len(interp_byaxis, ndim))
             )
 
+    if not all(
+        interp in _SUPPORTED_INTERP_SCHEMES for interp in interp_byaxis
+    ):
+        raise ValueError(
+            'invalid `interp`; supported are: {}'
+            ''.format(_SUPPORTED_INTERP_SCHEMES)
+        )
+
     return interp_byaxis
 
 
 def point_collocation(func, points, out=None, **kwargs):
     """Sample a function on a grid of points.
+
     This function represents the simplest way of discretizing a function.
     It does little more than calling the function on a single point or a
     set of points, and returning the result.
+
     Parameters
     ----------
     func : callable
@@ -72,28 +79,35 @@ def point_collocation(func, points, out=None, **kwargs):
         Array to which the result should be written.
     kwargs :
         Additional arguments that are passed on to ``func``.
+
     Returns
     -------
     out : numpy.ndarray
         Array holding the values of ``func`` at ``points``. If ``out`` was
         given, the returned object is a reference to it.
+
     Examples
     --------
     Sample a 1D function:
+
     >>> from odl.discr.grid import sparse_meshgrid
     >>> domain = odl.IntervalProd(0, 5)
     >>> func = make_func_for_sampling(lambda x: x ** 2, domain)
     >>> mesh = sparse_meshgrid([1, 2, 3])
     >>> point_collocation(func, mesh)
     array([ 1.,  4.,  9.])
+
     By default, inputs are checked against ``domain`` to be in bounds. This
     can be switched off by passing ``bounds_check=False``:
+
     >>> mesh = np.meshgrid([-1, 0, 4])
     >>> point_collocation(func, mesh, bounds_check=False)
     array([  1.,   0.,  16.])
+
     In two or more dimensions, the function to be sampled can be written as
     if its arguments were the components of a point, and an implicit loop
     around the call would iterate over all points:
+
     >>> domain = odl.IntervalProd([0, 0], [5, 5])
     >>> xs = [1, 2]
     >>> ys = [3, 4, 5]
@@ -102,8 +116,10 @@ def point_collocation(func, points, out=None, **kwargs):
     >>> point_collocation(func, mesh)
     array([[-2., -3., -4.],
            [-1., -2., -3.]])
+
     It is possible to return results that require broadcasting, and to use
     *optional* function parameters:
+
     >>> def f(x, c=0):
     ...     return x[0] + c
     >>> func = make_func_for_sampling(f, domain)
@@ -113,9 +129,11 @@ def point_collocation(func, points, out=None, **kwargs):
     >>> point_collocation(func, mesh, c=2)
     array([[ 3.,  3.,  3.],
            [ 4.,  4.,  4.]])
+
     The ``point_collocation`` function also supports vector- and tensor-valued
     functions. They can be given either as a single function returning an
     array-like of results, or as an array-like of member functions:
+
     >>> domain = odl.IntervalProd([0, 0], [5, 5])
     >>> xs = [1, 2]
     >>> ys = [3, 4]
@@ -150,16 +168,20 @@ def point_collocation(func, points, out=None, **kwargs):
     <BLANKLINE>
            [[ 4.,  5.],
             [ 5.,  6.]]])
+
     Notes
     -----
     This function expects its input functions to be written in a
     vectorization-conforming manner to ensure fast evaluation.
     See the `ODL vectorization guide`_ for a detailed introduction.
+
     See Also
     --------
-    make_func_for_sampling : wrap a function
+    make_func_for_sampling :
+        wrap a function so it can handle all valid types of input
     odl.discr.grid.RectGrid.meshgrid
     numpy.meshgrid
+
     References
     ----------
     .. _ODL vectorization guide:
@@ -174,6 +196,7 @@ def point_collocation(func, points, out=None, **kwargs):
 
 def nearest_interpolator(f, coord_vecs, variant='left'):
     """Return the nearest neighbor interpolator for discrete values.
+
     Given points ``x[1] < x[2] < ... < x[N]``, and function values
     ``f[1], ..., f[N]``, nearest neighbor interpolation at ``x`` is defined
     as ::
@@ -181,6 +204,7 @@ def nearest_interpolator(f, coord_vecs, variant='left'):
     The ambiguity at the midpoints is resolved by preferring one of the
     neighbors. In higher dimensions, this principle is applied per axis.
     The returned interpolator is the piecewise constant function ``x -> I(x)``.
+
     Parameters
     ----------
     f : numpy.ndarray
@@ -191,16 +215,19 @@ def nearest_interpolator(f, coord_vecs, variant='left'):
         they are obtained as ``grid.coord_vectors`` from a `RectGrid`.
     variant : {'left', 'right'}, optional
         Which neighbor to prefer at the midpoint between two nodes.
+
     Returns
     -------
     interpolator : function
         Python function that will interpolate the given values when called
         with a point or multiple points (vectorized).
+
     Examples
     --------
     We interpolate a 1d function. If called with a single point, the
     interpolator returns a single value, and with multiple points at once,
     an array of values is returned:
+
     >>> part = odl.uniform_partition(0, 2, 5)
     >>> part.coord_vectors  # grid points
     (array([ 0.2,  0.6,  1. ,  1.4,  1.8]),)
@@ -210,7 +237,9 @@ def nearest_interpolator(f, coord_vecs, variant='left'):
     1
     >>> interpolator([0.6, 1.3, 1.9])  # closest to [0.6, 1.4, 1.8]
     array([2, 4, 5])
+
     In 2 dimensions, we can either use a list of points or a meshgrid:
+
     >>> part = odl.uniform_partition([0, 0], [1, 5], shape=(2, 4))
     >>> part.coord_vectors  # grid points
     (array([ 0.25,  0.75]), array([ 0.625,  1.875,  3.125,  4.375]))
@@ -230,8 +259,10 @@ def nearest_interpolator(f, coord_vecs, variant='left'):
     array([[ 2.,  3.],
            [ 2.,  3.],
            [ 6.,  7.]])
+
     With nearest neighbor interpolation, we can also use non-scalar data
     types like strings:
+
     >>> part = odl.uniform_partition(0, 3, 6)
     >>> part.coord_vectors  # grid points
     (array([ 0.25,  0.75,  1.25,  1.75,  2.25,  2.75]),)
@@ -239,10 +270,12 @@ def nearest_interpolator(f, coord_vecs, variant='left'):
     >>> interpolator = nearest_interpolator(f, part.coord_vectors)
     >>> print(interpolator(1.0))
     t
+
     See Also
     --------
     linear_interpolator : (bi-/tri-/...)linear interpolation
     per_axis_interpolator : potentially different interpolation in each axis
+
     Notes
     -----
     - **Important:** if called on a point array, the points are
@@ -280,6 +313,7 @@ def nearest_interpolator(f, coord_vecs, variant='left'):
 
 def linear_interpolator(f, coord_vecs):
     """Return the linear interpolator for discrete values.
+
     Parameters
     ----------
     f : numpy.ndarray
@@ -288,16 +322,19 @@ def linear_interpolator(f, coord_vecs):
         Coordinate vectors of the rectangular grid on which interpolation
         should be based. They must be sorted in ascending order. Usually
         they are obtained as ``grid.coord_vectors`` from a `RectGrid`.
+
     Returns
     -------
     interpolator : function
         Python function that will interpolate the given values when called
         with a point or multiple points (vectorized).
+
     Examples
     --------
     We interpolate a 1d function. If called with a single point, the
     interpolator returns a single value, and with multiple points at once,
     an array of values is returned:
+
     >>> part = odl.uniform_partition(0, 2, 5)
     >>> part.coord_vectors  # grid points
     (array([ 0.2,  0.6,  1. ,  1.4,  1.8]),)
@@ -307,7 +344,9 @@ def linear_interpolator(f, coord_vecs):
     1.25
     >>> interpolator([0.6, 1.3, 1.9])
     array([ 2.  ,  3.75,  3.75])
+
     In 2 dimensions, we can either use a list of points or a meshgrid:
+
     >>> part = odl.uniform_partition([0, 0], [1, 5], shape=(2, 4))
     >>> part.coord_vectors  # grid points
     (array([ 0.25,  0.75]), array([ 0.625,  1.875,  3.125,  4.375]))
@@ -351,8 +390,10 @@ def linear_interpolator(f, coord_vecs):
 
 def per_axis_interpolator(f, coord_vecs, schemes, nn_variants=None):
     """Return a per axis defined interpolator for discrete values.
+
     With this function, the interpolation scheme can be chosen for each axis
     separately.
+
     Parameters
     ----------
     f : numpy.ndarray
@@ -371,10 +412,12 @@ def per_axis_interpolator(f, coord_vecs, schemes, nn_variants=None):
         as a global variant for all axes.
         This option has no effect for schemes other than nearest
         neighbor.
+
     Examples
     --------
     Choose linear interpolation in the first axis and nearest neighbor in
     the second:
+
     >>> part = odl.uniform_partition([0, 0], [1, 5], shape=(2, 4))
     >>> part.coord_vectors
     (array([ 0.25,  0.75]), array([ 0.625,  1.875,  3.125,  4.375]))
@@ -464,7 +507,6 @@ def per_axis_interpolator(f, coord_vecs, schemes, nn_variants=None):
 
 
 class _Interpolator(object):
-
     """Abstract interpolator class.
 
     The code is adapted from SciPy's `RegularGridInterpolator
@@ -584,7 +626,6 @@ scipy.interpolate.RegularGridInterpolator.html>`_ class.
 
 
 class _NearestInterpolator(_Interpolator):
-
     """Nearest neighbor interpolator.
 
     The code is adapted from SciPy's `RegularGridInterpolator
@@ -720,7 +761,6 @@ def _create_weight_edge_lists(indices, norm_distances, schemes, variants):
 
 
 class _PerAxisInterpolator(_Interpolator):
-
     """Interpolator where the scheme is set per axis.
 
     This allows to use e.g. nearest neighbor interpolation in the
@@ -790,7 +830,6 @@ class _PerAxisInterpolator(_Interpolator):
 
 
 class _LinearInterpolator(_PerAxisInterpolator):
-
     """Linear (i.e. bi-/tri-/multi-linear) interpolator.
 
     Convenience class.
