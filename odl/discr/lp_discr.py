@@ -1,4 +1,4 @@
-# Copyright 2014-2018 The ODL contributors
+# Copyright 2014-2019 The ODL contributors
 #
 # This file is part of ODL.
 #
@@ -24,10 +24,10 @@ from odl.space import FunctionSpace, ProductSpace
 from odl.space.entry_points import tensor_space_impl
 from odl.space.weighting import ConstWeighting
 from odl.util import (
-    apply_on_boundary, array_str, dtype_str, indent, is_complex_floating_dtype,
+    apply_on_boundary, array_str, dtype_str, is_complex_floating_dtype,
     is_floating_dtype, is_numeric_dtype, is_real_dtype,
-    normalized_nodes_on_bdry, normalized_scalar_param_list, npy_printoptions,
-    safe_int_conv, signature_string)
+    normalized_nodes_on_bdry, normalized_scalar_param_list, repr_string,
+    safe_int_conv, signature_string_parts)
 
 __all__ = ('DiscreteLp', 'DiscreteLpElement',
            'uniform_discr_frompartition', 'uniform_discr_fromspace',
@@ -451,14 +451,14 @@ class DiscreteLp(DiscretizedSpace):
     def __repr__(self):
         """Return ``repr(self)``."""
         # Clunky check if the factory repr can be used
-        if (uniform_partition_fromintv(
-                self.fspace.domain, self.shape,
-                nodes_on_bdry=False) == self.partition):
+        if uniform_partition_fromintv(
+            self.fspace.domain, self.shape, nodes_on_bdry=False
+        ) == self.partition:
             use_uniform = True
             nodes_on_bdry = False
-        elif (uniform_partition_fromintv(
-                self.fspace.domain, self.shape,
-                nodes_on_bdry=True) == self.partition):
+        elif uniform_partition_fromintv(
+            self.fspace.domain, self.shape, nodes_on_bdry=True
+        ) == self.partition:
             use_uniform = True
             nodes_on_bdry = True
         else:
@@ -468,52 +468,55 @@ class DiscreteLp(DiscretizedSpace):
             ctor = 'uniform_discr'
             if self.ndim == 1:
                 posargs = [self.min_pt[0], self.max_pt[0], self.shape[0]]
-                posmod = [':.4', ':.4', '']
+                posmod = ['', '', '']
             else:
                 posargs = [self.min_pt, self.max_pt, self.shape]
                 posmod = [array_str, array_str, '']
 
             default_dtype_s = dtype_str(
-                self.tspace.default_dtype(RealNumbers()))
+                self.tspace.default_dtype(RealNumbers())
+            )
 
             dtype_s = dtype_str(self.dtype)
-            optargs = [('impl', self.impl, 'numpy'),
-                       ('nodes_on_bdry', nodes_on_bdry, False),
-                       ('dtype', dtype_s, default_dtype_s)]
+            optargs = [
+                ('impl', self.impl, 'numpy'),
+                ('nodes_on_bdry', nodes_on_bdry, False),
+                ('dtype', dtype_s, default_dtype_s)
+            ]
 
             # Add weighting stuff if not equal to default
-            if (self.exponent == float('inf') or
-                    self.ndim == 0 or
-                    not is_floating_dtype(self.dtype)):
+            if (
+                self.exponent == float('inf')
+                or self.ndim == 0
+                or not is_floating_dtype(self.dtype)
+            ):
                 # In these cases, weighting constant 1 is the default
-                if (not isinstance(self.weighting, ConstWeighting) or
-                        not np.isclose(self.weighting.const, 1.0)):
+                if (
+                    not isinstance(self.weighting, ConstWeighting)
+                    or not np.isclose(self.weighting.const, 1.0)
+                ):
                     optargs.append(('weighting', self.weighting.const, None))
             else:
-                if (not isinstance(self.weighting, ConstWeighting) or
-                        not np.isclose(self.weighting.const,
-                                       self.cell_volume)):
+                if (
+                    not isinstance(self.weighting, ConstWeighting)
+                    or not np.isclose(self.weighting.const, self.cell_volume)
+                ):
                     optargs.append(('weighting', self.weighting.const, None))
 
             optmod = [''] * len(optargs)
             if self.dtype in (float, complex, int, bool):
-                optmod[3] = '!s'
+                optmod[2] = '!s'
 
-            with npy_printoptions(precision=4):
-                inner_str = signature_string(posargs, optargs,
-                                             mod=[posmod, optmod])
-            return '{}({})'.format(ctor, inner_str)
+            inner_parts = signature_string_parts(
+                posargs, optargs, [posmod, optmod]
+            )
+            return repr_string(ctor, inner_parts)
 
         else:
             ctor = self.__class__.__name__
             posargs = [self.fspace, self.partition, self.tspace]
-
-            with npy_printoptions(precision=4):
-                inner_str = signature_string(posargs, [],
-                                             sep=[',\n', ', ', ',\n'],
-                                             mod=['!r', '!s'])
-
-            return '{}({})'.format(ctor, indent(inner_str))
+            inner_parts = signature_string_parts(posargs, [])
+            return repr_string(ctor, inner_parts, allow_mixed_seps=False)
 
     def __str__(self):
         """Return ``str(self)``."""
