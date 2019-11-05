@@ -173,7 +173,7 @@ def test_astra_projection_geometry():
     # Parallel 2D geometry
     geom_p2d = odl.tomo.Parallel2dGeometry(apart, dpart)
     astra_geom = astra_projection_geometry(geom_p2d)
-    if odl.tomo.astra_supports('par2d_vec_geometry'):
+    if astra_supports('par2d_vec_geometry'):
         assert astra_geom['type'] == 'parallel_vec'
     else:
         assert astra_geom['type'] == 'parallel'
