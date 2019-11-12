@@ -143,7 +143,7 @@ class Resampling(Operator):
 
         >>> coarse_discr = odl.uniform_discr(0, 1, 3)
         >>> fine_discr = odl.uniform_discr(0, 1, 6)
-        >>> resampling = odl.Resampling(coarse_discr, fine_discrr, 'nearest')
+        >>> resampling = odl.Resampling(coarse_discr, fine_discr, 'nearest')
         >>> resampling_inv = resampling.inverse
 
         The inverse is a proper left inverse if the resampling goes from a
