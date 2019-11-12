@@ -25,38 +25,7 @@ __all__ = (
     'per_axis_interpolator',
 )
 
-_SUPPORTED_INTERP_SCHEMES = ['nearest', 'linear']
-
-
-def _all_interp_equal(interp_byaxis):
-    """Whether all entries are equal, with ``False`` for length 0."""
-    if len(interp_byaxis) == 0:
-        return False
-    return all(itp == interp_byaxis[0] for itp in interp_byaxis)
-
-
-def _normalize_interp(interp, ndim):
-    """Turn interpolation type into a tuple with one entry per axis."""
-    if is_string(interp):
-        interp = str(interp).lower()
-        interp_byaxis = (interp,) * ndim
-    else:
-        interp_byaxis = tuple(str(itp).lower() for itp in interp)
-        if len(interp_byaxis) != ndim:
-            raise ValueError(
-                'length of `interp` ({}) does not match number of axes ({})'
-                ''.format(len(interp_byaxis, ndim))
-            )
-
-    if not all(
-        interp in _SUPPORTED_INTERP_SCHEMES for interp in interp_byaxis
-    ):
-        raise ValueError(
-            'invalid `interp`; supported are: {}'
-            ''.format(_SUPPORTED_INTERP_SCHEMES)
-        )
-
-    return interp_byaxis
+SUPPORTED_INTERP = ['nearest', 'linear']
 
 
 def point_collocation(func, points, out=None, **kwargs):
@@ -92,7 +61,8 @@ def point_collocation(func, points, out=None, **kwargs):
 
     >>> from odl.discr.grid import sparse_meshgrid
     >>> domain = odl.IntervalProd(0, 5)
-    >>> func = make_func_for_sampling(lambda x: x ** 2, domain)
+    >>> fspace = odl.FunctionSpace(domain)
+    >>> func = fspace.element(lambda x: x ** 2)
     >>> mesh = sparse_meshgrid([1, 2, 3])
     >>> point_collocation(func, mesh)
     array([ 1.,  4.,  9.])
@@ -100,7 +70,7 @@ def point_collocation(func, points, out=None, **kwargs):
     By default, inputs are checked against ``domain`` to be in bounds. This
     can be switched off by passing ``bounds_check=False``:
 
-    >>> mesh = np.meshgrid([-1, 0, 4])
+    >>> mesh = sparse_meshgrid([-1, 0, 4])
     >>> point_collocation(func, mesh, bounds_check=False)
     array([  1.,   0.,  16.])
 
@@ -109,10 +79,11 @@ def point_collocation(func, points, out=None, **kwargs):
     around the call would iterate over all points:
 
     >>> domain = odl.IntervalProd([0, 0], [5, 5])
+    >>> fspace = odl.FunctionSpace(domain)
     >>> xs = [1, 2]
     >>> ys = [3, 4, 5]
     >>> mesh = sparse_meshgrid(xs, ys)
-    >>> func = make_func_for_sampling(lambda x: x[0] - x[1], domain)
+    >>> func = fspace.element(lambda x: x[0] - x[1])
     >>> point_collocation(func, mesh)
     array([[-2., -3., -4.],
            [-1., -2., -3.]])
@@ -122,7 +93,7 @@ def point_collocation(func, points, out=None, **kwargs):
 
     >>> def f(x, c=0):
     ...     return x[0] + c
-    >>> func = make_func_for_sampling(f, domain)
+    >>> func = fspace.element(f)
     >>> point_collocation(func, mesh)  # uses default c=0
     array([[ 1.,  1.,  1.],
            [ 2.,  2.,  2.]])
@@ -135,14 +106,14 @@ def point_collocation(func, points, out=None, **kwargs):
     array-like of results, or as an array-like of member functions:
 
     >>> domain = odl.IntervalProd([0, 0], [5, 5])
+    >>> # Need to tell the wrapper that we want a 3-component function
+    >>> fspace = odl.FunctionSpace(domain, out_dtype=(float, (3,)))
     >>> xs = [1, 2]
     >>> ys = [3, 4]
     >>> mesh = sparse_meshgrid(xs, ys)
     >>> def vec_valued(x):
     ...     return (x[0] - 1, 0, x[0] + x[1])  # broadcasting
-    >>> # We must tell the wrapper that we want a 3-component function
-    >>> func1 = make_func_for_sampling(
-    ...     vec_valued, domain, out_dtype=(float, (3,)))
+    >>> func1 = fspace.element(vec_valued)
     >>> point_collocation(func1, mesh)
     array([[[ 0.,  0.],
             [ 1.,  1.]],
@@ -152,13 +123,12 @@ def point_collocation(func, points, out=None, **kwargs):
     <BLANKLINE>
            [[ 4.,  5.],
             [ 5.,  6.]]])
-    >>> array_of_funcs = [  # equivalent to `vec_valued`
+    >>> list_of_funcs = [
     ...     lambda x: x[0] - 1,
     ...     0,                   # constants are allowed
     ...     lambda x: x[0] + x[1]
     ... ]
-    >>> func2 = make_func_for_sampling(
-    ...     array_of_funcs, domain, out_dtype=(float, (3,)))
+    >>> func2 = fspace.element(list_of_funcs)
     >>> point_collocation(func2, mesh)
     array([[[ 0.,  0.],
             [ 1.,  1.]],
@@ -192,6 +162,82 @@ def point_collocation(func, points, out=None, **kwargs):
     else:
         func(points, out=out, **kwargs)
     return out
+
+
+def _all_interp_equal(interp_byaxis):
+    """Whether all entries are equal, with ``False`` for length 0."""
+    if len(interp_byaxis) == 0:
+        return False
+    return all(itp == interp_byaxis[0] for itp in interp_byaxis)
+
+
+def _normalize_interp(interp, ndim):
+    """Turn interpolation type into a tuple with one entry per axis."""
+    interp_in = interp
+
+    if is_string(interp):
+        interp = str(interp).lower()
+        interp_byaxis = (interp,) * ndim
+    else:
+        interp_byaxis = tuple(str(itp).lower() for itp in interp)
+        if len(interp_byaxis) != ndim:
+            raise ValueError(
+                'length of `interp` ({}) does not match number of axes ({})'
+                ''.format(len(interp_byaxis, ndim))
+            )
+
+    if not all(
+        interp in SUPPORTED_INTERP for interp in interp_byaxis
+    ):
+        raise ValueError(
+            'invalid `interp` {!r}; supported are: {}'
+            ''.format(interp_in, SUPPORTED_INTERP)
+        )
+
+    return interp_byaxis
+
+
+def _check_interp_input(x, f):
+    """Return transformed ``x``, its input type and whether it's scalar.
+
+    On bad input, raise ``ValueError``.
+    """
+    errmsg_1d = (
+        'bad input: expected scalar, array-like of shape (1,), (n,) or '
+        '(1, n), or a meshgrid of length 1; got {!r}'
+        ''.format(x)
+    )
+
+    errmsg_nd = (
+        'bad input: expected scalar, array-like of shape ({0},) or '
+        '({0}, n), or a meshgrid of length {0}; got {1!r}'
+        ''.format(f.ndim, x)
+    )
+
+    if is_valid_input_meshgrid(x, f.ndim):
+        x_is_scalar = False
+        x_type = 'meshgrid'
+    else:
+        x = np.asarray(x)
+        if f.ndim == 1 and x.shape == ():
+            x_is_scalar = True
+            x = x.reshape((1, 1))
+        elif f.ndim == 1 and x.ndim == 1:
+            x_is_scalar = False
+            x = x.reshape((1, x.size))
+        elif f.ndim > 1 and x.shape == (f.ndim,):
+            x_is_scalar = True
+            x = x.reshape((f.ndim, 1))
+        else:
+            x_is_scalar = False
+
+        if not is_valid_input_array(x, f.ndim):
+            errmsg = errmsg_1d if f.ndim == 1 else errmsg_nd
+            raise ValueError(errmsg)
+
+        x_type = 'array'
+
+    return x, x_type, x_is_scalar
 
 
 def nearest_interpolator(f, coord_vecs, variant='left'):
@@ -238,7 +284,8 @@ def nearest_interpolator(f, coord_vecs, variant='left'):
     >>> interpolator([0.6, 1.3, 1.9])  # closest to [0.6, 1.4, 1.8]
     array([2, 4, 5])
 
-    In 2 dimensions, we can either use a list of points or a meshgrid:
+    In 2 dimensions, we can either use a (transposed) list of points or
+    a meshgrid:
 
     >>> part = odl.uniform_partition([0, 0], [1, 5], shape=(2, 4))
     >>> part.coord_vectors  # grid points
@@ -249,10 +296,11 @@ def nearest_interpolator(f, coord_vecs, variant='left'):
     >>> interpolator = nearest_interpolator(f, part.coord_vectors)
     >>> interpolator([1, 1])  # single point
     5.0
-    >>> interpolator([[0.5, 2.0],
+    >>> x = np.array([[0.5, 2.0],
     ...               [0.0, 4.5],
-    ...               [0.0, 3.0]])  # 3 points at once
-    array([ 4.,  5.,  3.])
+    ...               [0.0, 3.0]]).T  # 3 points at once
+    >>> interpolator(x)
+    array([ 2.,  4.,  3.])
     >>> from odl.discr.grid import sparse_meshgrid
     >>> mesh = sparse_meshgrid([0.0, 0.5, 1.0], [1.5, 3.5])
     >>> interpolator(mesh)  # 3x2 grid of points
@@ -292,31 +340,18 @@ def nearest_interpolator(f, coord_vecs, variant='left'):
     f = np.asarray(f)
 
     # TODO(kohr-h): pass reasonable options on to the interpolator
-    def nearest_interp(arg, out=None):
+    def nearest_interp(x, out=None):
         """Interpolating function with vectorization."""
-        if np.isscalar(arg):
-            arg = np.asarray([arg])
-
-        if is_valid_input_meshgrid(arg, f.ndim):
-            input_type = 'meshgrid'
-            scalar = False
-        elif is_valid_input_array(arg, f.ndim):
-            input_type = 'array'
-            arg = np.asarray(arg)
-            scalar = arg.shape == (f.ndim,)
-        else:
-            # TODO: better error message
-            raise ValueError('bad input')
-
+        x, x_type, x_is_scalar = _check_interp_input(x, f)
         interpolator = _NearestInterpolator(
             coord_vecs,
             f,
             variant=variant,
-            input_type=input_type
+            input_type=x_type
         )
 
-        res = interpolator(arg, out=out)
-        if scalar:
+        res = interpolator(x, out=out)
+        if x_is_scalar:
             res = res.item()
         return res
 
@@ -357,7 +392,8 @@ def linear_interpolator(f, coord_vecs):
     >>> interpolator([0.6, 1.3, 1.9])
     array([ 2.  ,  3.75,  3.75])
 
-    In 2 dimensions, we can either use a list of points or a meshgrid:
+    In 2 dimensions, we can either use a (transposed) list of points or
+    a meshgrid:
 
     >>> part = odl.uniform_partition([0, 0], [1, 5], shape=(2, 4))
     >>> part.coord_vectors  # grid points
@@ -368,10 +404,11 @@ def linear_interpolator(f, coord_vecs):
     >>> interpolator = linear_interpolator(f, part.coord_vectors)
     >>> interpolator([1, 1])  # single point
     2.65
-    >>> interpolator([[0.5, 2.0],
+    >>> x = np.array([[0.5, 2.0],
     ...               [0.0, 4.5],
-    ...               [0.0, 3.0]])  # 3 points at once
-    array([ 5.4 , -3.75,  1.45])
+    ...               [0.0, 3.0]]).T  # 3 points at once
+    >>> interpolator(x)
+    array([ 4.1 ,  1.8 ,  1.45])
     >>> from odl.discr.grid import sparse_meshgrid
     >>> mesh = sparse_meshgrid([0.0, 0.5, 1.0], [1.5, 3.5])
     >>> interpolator(mesh)  # 3x2 grid of points
@@ -382,37 +419,24 @@ def linear_interpolator(f, coord_vecs):
     f = np.asarray(f)
 
     # TODO(kohr-h): pass reasonable options on to the interpolator
-    def linear_interp(arg, out=None):
+    def linear_interp(x, out=None):
         """Interpolating function with vectorization."""
-        if np.isscalar(arg):
-            arg = np.asarray([arg])
-
-        if is_valid_input_meshgrid(arg, f.ndim):
-            input_type = 'meshgrid'
-            scalar = False
-        elif is_valid_input_array(arg, f.ndim):
-            input_type = 'array'
-            arg = np.asarray(arg)
-            scalar = arg.shape == (f.ndim,)
-        else:
-            # TODO: better error message
-            raise ValueError('bad input')
-
+        x, x_type, x_is_scalar = _check_interp_input(x, f)
         interpolator = _LinearInterpolator(
             coord_vecs,
             f,
-            input_type=input_type
+            input_type=x_type
         )
 
-        res = interpolator(arg, out=out)
-        if scalar:
+        res = interpolator(x, out=out)
+        if x_is_scalar:
             res = res.item()
         return res
 
     return linear_interp
 
 
-def per_axis_interpolator(f, coord_vecs, schemes, nn_variants=None):
+def per_axis_interpolator(f, coord_vecs, interp, nn_variants=None):
     """Return a per axis defined interpolator for discrete values.
 
     With this function, the interpolation scheme can be chosen for each axis
@@ -426,12 +450,12 @@ def per_axis_interpolator(f, coord_vecs, schemes, nn_variants=None):
         Coordinate vectors of the rectangular grid on which interpolation
         should be based. They must be sorted in ascending order. Usually
         they are obtained as ``grid.coord_vectors`` from a `RectGrid`.
-    schemes : string or sequence of strings
+    interp : str or sequence of str
         Indicates which interpolation scheme to use for which axis.
         A single string is interpreted as a global scheme for all
         axes.
-    nn_variants : string or sequence of strings, optional
-        Which variant ('left' or 'right') to use in nearest neighbor
+    nn_variants : str or sequence of str, optional
+        Which variant (``'left'`` or ``'right'``) to use in nearest neighbor
         interpolation for which axis. A single string is interpreted
         as a global variant for all axes.
         This option has no effect for schemes other than nearest
@@ -453,10 +477,11 @@ def per_axis_interpolator(f, coord_vecs, schemes, nn_variants=None):
     ... )
     >>> interpolator([1, 1])  # single point
     2.5
-    >>> interpolator([[0.5, 2.0],
+    >>> x = np.array([[0.5, 2.0],
     ...               [0.0, 4.5],
-    ...               [0.0, 3.0]])  # 3 points at once
-    array([ 6. , -7.5,  1.5])
+    ...               [0.0, 3.0]]).T  # 3 points at once
+    >>> interpolator(x)
+    array([ 4. ,  2. ,  1.5])
     >>> from odl.discr.grid import sparse_meshgrid
     >>> mesh = sparse_meshgrid([0.0, 0.5, 1.0], [1.5, 3.5])
     >>> interpolator(mesh)  # 3x2 grid of points
@@ -466,76 +491,46 @@ def per_axis_interpolator(f, coord_vecs, schemes, nn_variants=None):
     """
     f = np.asarray(f)
 
-    schemes_in = schemes
-    if is_string(schemes):
-        scheme = str(schemes).lower()
-        if scheme not in _SUPPORTED_INTERP_SCHEMES:
-            raise ValueError('`schemes` {!r} not understood'
-                             ''.format(schemes_in))
-        schemes = [scheme] * f.ndim
-    else:
-        schemes = [str(scm).lower() if scm is not None else None
-                   for scm in schemes]
+    interp = _normalize_interp(interp, f.ndim)
 
     nn_variants_in = nn_variants
     if nn_variants is None:
-        nn_variants = ['left' if scm == 'nearest' else None
-                       for scm in schemes]
+        nn_variants = [
+            'left' if s == 'nearest' else None for s in interp
+        ]
     else:
         if is_string(nn_variants):
-            # Make list with `nn_variants` where `schemes == 'nearest'`,
-            # else `None` (variants only applies to axes with nn
+            # Make list with `nn_variants` where `interp == 'nearest'`,
+            # else `None` (variants only applies to axes with NN
             # interpolation)
-            nn_variants = [nn_variants if scm == 'nearest' else None
-                           for scm in schemes]
-            if str(nn_variants_in).lower() not in ('left', 'right'):
-                raise ValueError('`nn_variants` {!r} not understood'
-                                 ''.format(nn_variants_in))
+            nn_variants = [
+                nn_variants if s == 'nearest' else None for s in interp
+            ]
         else:
-            nn_variants = [str(var).lower() if var is not None else None
-                           for var in nn_variants]
+            nn_variants = [
+                str(var).lower() if var is not None else None
+                for var in nn_variants
+            ]
 
-    for i in range(f.ndim):
-        # Reaching a raise condition here only happens for invalid
-        # sequences of inputs, single-input case has been checked above
-        if schemes[i] not in _SUPPORTED_INTERP_SCHEMES:
-            raise ValueError('`interp[{}]={!r}` not understood'
-                             ''.format(schemes_in[i], i))
-        if (schemes[i] == 'nearest' and
-                nn_variants[i] not in ('left', 'right')):
-            raise ValueError('`nn_variants[{}]={!r}` not understood'
-                             ''.format(nn_variants_in[i], i))
-        elif schemes[i] != 'nearest' and nn_variants[i] is not None:
-            raise ValueError('in axis {}: `nn_variants` cannot be used '
-                             'with `interp={!r}'
-                             ''.format(i, schemes_in[i]))
+    for s, var in zip(interp, nn_variants):
+        if s == 'nearest' and var not in ('left', 'right'):
+            raise ValueError(
+                'invalid `nn_variants` {!r}'.format(nn_variants_in)
+            )
 
-    def per_axis_interp(arg, out=None):
+    def per_axis_interp(x, out=None):
         """Interpolating function with vectorization."""
-        if np.isscalar(arg):
-            arg = np.asarray([arg])
-
-        if is_valid_input_meshgrid(arg, f.ndim):
-            input_type = 'meshgrid'
-            scalar = False
-        elif is_valid_input_array(arg, f.ndim):
-            input_type = 'array'
-            arg = np.asarray(arg)
-            scalar = arg.shape == (f.ndim,)
-        else:
-            # TODO: better error message
-            raise ValueError('bad input')
-
+        x, x_type, x_is_scalar = _check_interp_input(x, f)
         interpolator = _PerAxisInterpolator(
             coord_vecs,
             f,
-            schemes=schemes,
+            interp=interp,
             nn_variants=nn_variants,
-            input_type=input_type
+            input_type=x_type
         )
 
-        res = interpolator(arg, out=out)
-        if scalar:
+        res = interpolator(x, out=out)
+        if x_is_scalar:
             res = res.item()
         return res
 
@@ -772,22 +767,24 @@ def _compute_linear_weights_edge(idcs, ndist):
     return w_lo, w_hi, edge
 
 
-def _create_weight_edge_lists(indices, norm_distances, schemes, variants):
+def _create_weight_edge_lists(indices, norm_distances, interp, variants):
     # Precalculate indices and weights (per axis)
     low_weights = []
     high_weights = []
     edge_indices = []
-    for i, (idcs, yi, scm, var) in enumerate(
-            zip(indices, norm_distances, schemes, variants)):
-        if scm == 'nearest':
+    for i, (idcs, yi, s, var) in enumerate(
+        zip(indices, norm_distances, interp, variants)
+    ):
+        if s == 'nearest':
             w_lo, w_hi, edge = _compute_nearest_weights_edge(
-                idcs, yi, var)
-        elif scm == 'linear':
+                idcs, yi, var
+            )
+        elif s == 'linear':
             w_lo, w_hi, edge = _compute_linear_weights_edge(
-                idcs, yi)
+                idcs, yi
+            )
         else:
-            raise ValueError("scheme '{}' at index {} not supported"
-                             "".format(scm, i))
+            raise ValueError('invalid `interp` {}'.format(interp))
 
         low_weights.append(w_lo)
         high_weights.append(w_hi)
@@ -803,7 +800,7 @@ class _PerAxisInterpolator(_Interpolator):
     first dimension and linear in dimensions 2 and 3.
     """
 
-    def __init__(self, coord_vecs, values, input_type, schemes, nn_variants):
+    def __init__(self, coord_vecs, values, input_type, interp, nn_variants):
         """Initialize a new instance.
 
         coord_vecs : sequence of `numpy.ndarray`'s
@@ -812,9 +809,9 @@ class _PerAxisInterpolator(_Interpolator):
             Grid values to use for interpolation
         input_type : {'array', 'meshgrid'}
             Type of expected input values in ``__call__``
-        schemes : sequence of strings
+        interp : sequence of str
             Indicates which interpolation scheme to use for which axis
-        nn_variants : sequence of strings
+        nn_variants : sequence of str
             Which variant ('left' or 'right') to use in nearest neighbor
             interpolation for which axis.
             This option has no effect for schemes other than nearest
@@ -822,7 +819,7 @@ class _PerAxisInterpolator(_Interpolator):
         """
         super(_PerAxisInterpolator, self).__init__(
             coord_vecs, values, input_type)
-        self.schemes = schemes
+        self.interp = interp
         self.nn_variants = nn_variants
 
     def _evaluate(self, indices, norm_distances, out=None):
@@ -842,7 +839,7 @@ class _PerAxisInterpolator(_Interpolator):
 
         # Weights and indices (per axis)
         low_weights, high_weights, edge_indices = _create_weight_edge_lists(
-            indices, norm_distances, self.schemes, self.nn_variants)
+            indices, norm_distances, self.interp, self.nn_variants)
 
         # Iterate over all possible combinations of [i, i+1] for each
         # axis, resulting in a loop of length 2**ndim
@@ -883,7 +880,7 @@ class _LinearInterpolator(_PerAxisInterpolator):
         """
         super(_LinearInterpolator, self).__init__(
             coord_vecs, values, input_type,
-            schemes=['linear'] * len(coord_vecs),
+            interp=['linear'] * len(coord_vecs),
             nn_variants=[None] * len(coord_vecs))
 
 
