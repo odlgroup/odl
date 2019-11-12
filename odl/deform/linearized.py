@@ -82,7 +82,7 @@ def linear_deform(template, displacement, interp='linear', out=None):
     for i, vi in enumerate(displacement):
         points[:, i] += vi.asarray().ravel()
     templ_interpolator = per_axis_interpolator(
-        template, coord_vecs=template.space.grid.coord_vectors, schemes=interp
+        template, coord_vecs=template.space.grid.coord_vectors, interp=interp
     )
     values = templ_interpolator(points.T, out=out)
     return values.reshape(template.space.shape)
