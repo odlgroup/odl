@@ -501,7 +501,7 @@ def per_axis_interpolator(f, coord_vecs, interp, nn_variants=None):
     else:
         if is_string(nn_variants):
             # Make list with `nn_variants` where `interp == 'nearest'`,
-            # else `None` (variants only applies to axes with NN
+            # else `None` (variants only apply to axes with NN
             # interpolation)
             nn_variants = [
                 nn_variants if s == 'nearest' else None for s in interp
@@ -714,8 +714,10 @@ def _compute_nearest_weights_edge(idcs, ndist, variant):
     # "too high" gets 1.
     if variant == 'left':
         w_lo = np.where(ndist <= 0.5, 1.0, 0.0)
-    else:
+    elif variant == 'right':
         w_lo = np.where(ndist < 0.5, 1.0, 0.0)
+    else:
+        raise RuntimeError('bad `variant`')
 
     w_lo[lo] = 0
     w_lo[hi] = 1
@@ -724,8 +726,10 @@ def _compute_nearest_weights_edge(idcs, ndist, variant):
     # "too low" gets 1.
     if variant == 'left':
         w_hi = np.where(ndist <= 0.5, 0.0, 1.0)
-    else:
+    elif variant == 'right':
         w_hi = np.where(ndist < 0.5, 0.0, 1.0)
+    else:
+        raise RuntimeError('bad `variant`')
 
     w_hi[lo] = 1
     w_hi[hi] = 0
