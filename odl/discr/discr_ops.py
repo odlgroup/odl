@@ -498,7 +498,6 @@ def _resize_discr(discr, newshp, offset, discr_kwargs):
     dtype = discr_kwargs.pop('dtype', discr.dtype)
     impl = discr_kwargs.pop('impl', discr.impl)
     exponent = discr_kwargs.pop('exponent', discr.exponent)
-    interp = discr_kwargs.pop('interp', discr.interp)
     weighting = discr_kwargs.pop('weighting', discr.weighting)
 
     affected = np.not_equal(newshp, discr.shape)
@@ -560,7 +559,7 @@ def _resize_discr(discr, newshp, offset, discr_kwargs):
         else:
             part = part.append(discr.partition.byaxis[i])
 
-    return DiscreteLp(fspace, part, tspace, interp=interp)
+    return DiscreteLp(fspace, part, tspace)
 
 
 if __name__ == '__main__':
