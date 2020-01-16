@@ -1,4 +1,4 @@
-# Copyright 2014-2019 The ODL contributors
+# Copyright 2014-2020 The ODL contributors
 #
 # This file is part of ODL.
 #
@@ -240,7 +240,7 @@ def _check_interp_input(x, f):
     return x, x_type, x_is_scalar
 
 
-def nearest_interpolator(f, coord_vecs, variant='left'):
+def nearest_interpolator(f, coord_vecs):
     """Return the nearest neighbor interpolator for discrete values.
 
     Given points ``x[1] < x[2] < ... < x[N]``, and function values
@@ -259,8 +259,6 @@ def nearest_interpolator(f, coord_vecs, variant='left'):
         Coordinate vectors of the rectangular grid on which interpolation
         should be based. They must be sorted in ascending order. Usually
         they are obtained as ``grid.coord_vectors`` from a `RectGrid`.
-    variant : {'left', 'right'}, optional
-        Which neighbor to prefer at the midpoint between two nodes.
 
     Returns
     -------
@@ -300,9 +298,9 @@ def nearest_interpolator(f, coord_vecs, variant='left'):
     ...               [0.0, 4.5],
     ...               [0.0, 3.0]]).T  # 3 points at once
     >>> interpolator(x)
-    array([ 2.,  4.,  3.])
+    array([ 6.,  4.,  3.])
     >>> from odl.discr.grid import sparse_meshgrid
-    >>> mesh = sparse_meshgrid([0.0, 0.5, 1.0], [1.5, 3.5])
+    >>> mesh = sparse_meshgrid([0.0, 0.4, 1.0], [1.5, 3.5])
     >>> interpolator(mesh)  # 3x2 grid of points
     array([[ 2.,  3.],
            [ 2.,  3.],
@@ -316,7 +314,7 @@ def nearest_interpolator(f, coord_vecs, variant='left'):
     (array([ 0.25,  0.75,  1.25,  1.75,  2.25,  2.75]),)
     >>> f = ['s', 't', 'r', 'i', 'n', 'g']
     >>> interpolator = nearest_interpolator(f, part.coord_vectors)
-    >>> print(interpolator(1.0))
+    >>> print(interpolator(0.9))
     t
 
     See Also
@@ -333,9 +331,6 @@ def nearest_interpolator(f, coord_vecs, variant='left'):
       with data of non-numeric data type since it does not involve any
       arithmetic operations on the values, in contrast to other
       interpolation methods.
-    - The distinction between left and right variants is currently
-      made by changing ``<=`` to ``<`` at one place. This difference
-      may not be noticable in some situations due to rounding errors.
     """
     f = np.asarray(f)
 
@@ -343,12 +338,7 @@ def nearest_interpolator(f, coord_vecs, variant='left'):
     def nearest_interp(x, out=None):
         """Interpolating function with vectorization."""
         x, x_type, x_is_scalar = _check_interp_input(x, f)
-        interpolator = _NearestInterpolator(
-            coord_vecs,
-            f,
-            variant=variant,
-            input_type=x_type
-        )
+        interpolator = _NearestInterpolator(coord_vecs, f, input_type=x_type)
 
         res = interpolator(x, out=out)
         if x_is_scalar:
@@ -436,7 +426,7 @@ def linear_interpolator(f, coord_vecs):
     return linear_interp
 
 
-def per_axis_interpolator(f, coord_vecs, interp, nn_variants=None):
+def per_axis_interpolator(f, coord_vecs, interp):
     """Return a per axis defined interpolator for discrete values.
 
     With this function, the interpolation scheme can be chosen for each axis
@@ -454,12 +444,6 @@ def per_axis_interpolator(f, coord_vecs, interp, nn_variants=None):
         Indicates which interpolation scheme to use for which axis.
         A single string is interpreted as a global scheme for all
         axes.
-    nn_variants : str or sequence of str, optional
-        Which variant (``'left'`` or ``'right'``) to use in nearest neighbor
-        interpolation for which axis. A single string is interpreted
-        as a global variant for all axes.
-        This option has no effect for schemes other than nearest
-        neighbor.
 
     Examples
     --------
@@ -493,40 +477,11 @@ def per_axis_interpolator(f, coord_vecs, interp, nn_variants=None):
 
     interp = _normalize_interp(interp, f.ndim)
 
-    nn_variants_in = nn_variants
-    if nn_variants is None:
-        nn_variants = [
-            'left' if s == 'nearest' else None for s in interp
-        ]
-    else:
-        if is_string(nn_variants):
-            # Make list with `nn_variants` where `interp == 'nearest'`,
-            # else `None` (variants only apply to axes with NN
-            # interpolation)
-            nn_variants = [
-                nn_variants if s == 'nearest' else None for s in interp
-            ]
-        else:
-            nn_variants = [
-                str(var).lower() if var is not None else None
-                for var in nn_variants
-            ]
-
-    for s, var in zip(interp, nn_variants):
-        if s == 'nearest' and var not in ('left', 'right'):
-            raise ValueError(
-                'invalid `nn_variants` {!r}'.format(nn_variants_in)
-            )
-
     def per_axis_interp(x, out=None):
         """Interpolating function with vectorization."""
         x, x_type, x_is_scalar = _check_interp_input(x, f)
         interpolator = _PerAxisInterpolator(
-            coord_vecs,
-            f,
-            interp=interp,
-            nn_variants=nn_variants,
-            input_type=x_type
+            coord_vecs, f, interp=interp, input_type=x_type
         )
 
         res = interpolator(x, out=out)
@@ -538,11 +493,10 @@ def per_axis_interpolator(f, coord_vecs, interp, nn_variants=None):
 
 
 class _Interpolator(object):
-    """Abstract interpolator class.
+    r"""Abstract interpolator class.
 
     The code is adapted from SciPy's `RegularGridInterpolator
-    <http://docs.scipy.org/doc/scipy/reference/generated/\
-scipy.interpolate.RegularGridInterpolator.html>`_ class.
+    <http://docs.scipy.org/doc/scipy/reference/generated/scipy.interpolate.RegularGridInterpolator.html>`_ class.
 
     The init method does not convert to floating point to
     support arbitrary data type for nearest neighbor interpolation.
@@ -657,18 +611,16 @@ scipy.interpolate.RegularGridInterpolator.html>`_ class.
 
 
 class _NearestInterpolator(_Interpolator):
-    """Nearest neighbor interpolator.
+    r"""Nearest neighbor interpolator.
 
     The code is adapted from SciPy's `RegularGridInterpolator
-    <http://docs.scipy.org/doc/scipy/reference/generated/\
-scipy.interpolate.RegularGridInterpolator.html>`_ class.
+    <http://docs.scipy.org/doc/scipy/reference/generated/scipy.interpolate.RegularGridInterpolator.html>`_ class.
 
     This implementation is faster than the more generic one in the
-    `_PerAxisPointwiseInterpolator`. Compared to the original code,
-    support of ``'left'`` and ``'right'`` variants are added.
+    `_PerAxisPointwiseInterpolator`.
     """
 
-    def __init__(self, coord_vecs, values, input_type, variant):
+    def __init__(self, coord_vecs, values, input_type):
         """Initialize a new instance.
 
         coord_vecs : sequence of `numpy.ndarray`'s
@@ -677,24 +629,16 @@ scipy.interpolate.RegularGridInterpolator.html>`_ class.
             Grid values to use for interpolation
         input_type : {'array', 'meshgrid'}
             Type of expected input values in ``__call__``
-        variant : {'left', 'right'}
-            Indicates which neighbor to prefer in the interpolation
         """
         super(_NearestInterpolator, self).__init__(
-            coord_vecs, values, input_type)
-        variant_ = str(variant).lower()
-        if variant_ not in ('left', 'right'):
-            raise ValueError("variant '{}' not understood".format(variant_))
-        self.variant = variant_
+            coord_vecs, values, input_type
+        )
 
     def _evaluate(self, indices, norm_distances, out=None):
         """Evaluate nearest interpolation."""
         idx_res = []
         for i, yi in zip(indices, norm_distances):
-            if self.variant == 'left':
-                idx_res.append(np.where(yi <= .5, i, i + 1))
-            else:
-                idx_res.append(np.where(yi < .5, i, i + 1))
+            idx_res.append(np.where(yi < .5, i, i + 1))
         idx_res = tuple(idx_res)
         if out is not None:
             out[:] = self.values[idx_res]
@@ -703,7 +647,7 @@ scipy.interpolate.RegularGridInterpolator.html>`_ class.
             return self.values[idx_res]
 
 
-def _compute_nearest_weights_edge(idcs, ndist, variant):
+def _compute_nearest_weights_edge(idcs, ndist):
     """Helper for nearest interpolation mimicing the linear case."""
     # Get out-of-bounds indices from the norm_distances. Negative
     # means "too low", larger than or equal to 1 means "too high"
@@ -712,25 +656,13 @@ def _compute_nearest_weights_edge(idcs, ndist, variant):
 
     # For "too low" nodes, the lower neighbor gets weight zero;
     # "too high" gets 1.
-    if variant == 'left':
-        w_lo = np.where(ndist <= 0.5, 1.0, 0.0)
-    elif variant == 'right':
-        w_lo = np.where(ndist < 0.5, 1.0, 0.0)
-    else:
-        raise RuntimeError('bad `variant`')
-
+    w_lo = np.where(ndist < 0.5, 1.0, 0.0)
     w_lo[lo] = 0
     w_lo[hi] = 1
 
     # For "too high" nodes, the upper neighbor gets weight zero;
     # "too low" gets 1.
-    if variant == 'left':
-        w_hi = np.where(ndist <= 0.5, 0.0, 1.0)
-    elif variant == 'right':
-        w_hi = np.where(ndist < 0.5, 0.0, 1.0)
-    else:
-        raise RuntimeError('bad `variant`')
-
+    w_hi = np.where(ndist < 0.5, 0.0, 1.0)
     w_hi[lo] = 1
     w_hi[hi] = 0
 
@@ -771,22 +703,16 @@ def _compute_linear_weights_edge(idcs, ndist):
     return w_lo, w_hi, edge
 
 
-def _create_weight_edge_lists(indices, norm_distances, interp, variants):
+def _create_weight_edge_lists(indices, norm_distances, interp):
     # Precalculate indices and weights (per axis)
     low_weights = []
     high_weights = []
     edge_indices = []
-    for i, (idcs, yi, s, var) in enumerate(
-        zip(indices, norm_distances, interp, variants)
-    ):
+    for i, (idcs, yi, s) in enumerate(zip(indices, norm_distances, interp)):
         if s == 'nearest':
-            w_lo, w_hi, edge = _compute_nearest_weights_edge(
-                idcs, yi, var
-            )
+            w_lo, w_hi, edge = _compute_nearest_weights_edge(idcs, yi)
         elif s == 'linear':
-            w_lo, w_hi, edge = _compute_linear_weights_edge(
-                idcs, yi
-            )
+            w_lo, w_hi, edge = _compute_linear_weights_edge(idcs, yi)
         else:
             raise ValueError('invalid `interp` {}'.format(interp))
 
@@ -804,7 +730,7 @@ class _PerAxisInterpolator(_Interpolator):
     first dimension and linear in dimensions 2 and 3.
     """
 
-    def __init__(self, coord_vecs, values, input_type, interp, nn_variants):
+    def __init__(self, coord_vecs, values, input_type, interp):
         """Initialize a new instance.
 
         coord_vecs : sequence of `numpy.ndarray`'s
@@ -815,22 +741,17 @@ class _PerAxisInterpolator(_Interpolator):
             Type of expected input values in ``__call__``
         interp : sequence of str
             Indicates which interpolation scheme to use for which axis
-        nn_variants : sequence of str
-            Which variant ('left' or 'right') to use in nearest neighbor
-            interpolation for which axis.
-            This option has no effect for schemes other than nearest
-            neighbor.
         """
         super(_PerAxisInterpolator, self).__init__(
             coord_vecs, values, input_type)
         self.interp = interp
-        self.nn_variants = nn_variants
 
     def _evaluate(self, indices, norm_distances, out=None):
         """Evaluate linear interpolation.
 
         Modified for in-place evaluation and treatment of out-of-bounds
-        points by implicitly assuming 0 at the next node."""
+        points by implicitly assuming 0 at the next node.
+        """
         # slice for broadcasting over trailing dimensions in self.values
         vslice = (slice(None),) + (None,) * (self.values.ndim - len(indices))
 
@@ -843,7 +764,7 @@ class _PerAxisInterpolator(_Interpolator):
 
         # Weights and indices (per axis)
         low_weights, high_weights, edge_indices = _create_weight_edge_lists(
-            indices, norm_distances, self.interp, self.nn_variants)
+            indices, norm_distances, self.interp)
 
         # Iterate over all possible combinations of [i, i+1] for each
         # axis, resulting in a loop of length 2**ndim
@@ -883,9 +804,11 @@ class _LinearInterpolator(_PerAxisInterpolator):
             Type of expected input values in ``__call__``
         """
         super(_LinearInterpolator, self).__init__(
-            coord_vecs, values, input_type,
+            coord_vecs,
+            values,
+            input_type,
             interp=['linear'] * len(coord_vecs),
-            nn_variants=[None] * len(coord_vecs))
+        )
 
 
 if __name__ == '__main__':
