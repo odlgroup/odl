@@ -172,7 +172,7 @@ class LinDeformFixedTempl(Operator):
 
         >>> space = odl.uniform_discr(0, 1, 5)
         >>> template = space.element([0, 0, 1, 0, 0])
-        >>> op = odl.deform.LinDeformFixedTempl(template, interp='nearest')
+        >>> op = LinDeformFixedTempl(template, interp='nearest')
         >>> disp_field = [[0, 0, 0, -0.2, 0]]
         >>> print(op(disp_field))
         [ 0.,  0.,  1.,  1.,  0.]

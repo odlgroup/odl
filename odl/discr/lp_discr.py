@@ -1208,6 +1208,9 @@ class DiscreteLpElement(DiscretizedSpaceElement):
             is that ``fig`` is the return value of an earlier call to
             this function.
 
+        interp : {'linear', 'nearest'}, optional
+            Interpolation type that should be used for the plot.
+
         kwargs : {'figsize', 'saveto', 'clim', ...}, optional
             Extra keyword arguments passed on to the display method.
             See the Matplotlib functions for documentation of extra
