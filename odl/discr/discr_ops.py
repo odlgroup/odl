@@ -157,7 +157,7 @@ class Resampling(Operator):
 
         >>> y = [0, 0, 0, 1, 0, 0]
         >>> print(resampling(resampling_inv(y)))
-        [ 0.,  0.,  0.,  0.,  0.,  0.]
+        [ 0.,  0.,  1.,  1.,  0.,  0.]
         """
         return self.inverse
 

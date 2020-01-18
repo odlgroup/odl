@@ -1,10 +1,12 @@
-# Copyright 2014-2019 The ODL contributors
+# Copyright 2014-2020 The ODL contributors
 #
 # This file is part of ODL.
 #
 # This Source Code Form is subject to the terms of the Mozilla Public License,
 # v. 2.0. If a copy of the MPL was not distributed with this file, You can
 # obtain one at https://mozilla.org/MPL/2.0/.
+
+"""Unit tests for `DiscreteLp`."""
 
 from __future__ import division
 
@@ -42,19 +44,9 @@ def test_discretelp_init():
     assert discr.fspace == fspace
     assert discr.tspace == tspace
     assert discr.partition == part
-    assert discr.interp == 'nearest'
-    assert discr.interp_byaxis == ('nearest', 'nearest')
     assert discr.exponent == tspace.exponent
     assert discr.axis_labels == ('$x$', '$y$')
     assert discr.is_real
-
-    discr = DiscreteLp(fspace, part, tspace, interp='linear')
-    assert discr.interp == 'linear'
-    assert discr.interp_byaxis == ('linear', 'linear')
-
-    discr = DiscreteLp(fspace, part, tspace, interp=['nearest', 'linear'])
-    assert discr.interp == ('nearest', 'linear')
-    assert discr.interp_byaxis == ('nearest', 'linear')
 
     # Complex space
     fspace_c = odl.FunctionSpace(odl.IntervalProd([0, 0], [1, 1]),
@@ -86,7 +78,6 @@ def test_empty():
     """Check if empty spaces behave as expected and all methods work."""
     discr = odl.uniform_discr([], [], ())
 
-    assert discr.interp == 'nearest'
     assert discr.axis_labels == ()
     assert discr.tangent_bundle == odl.ProductSpace(field=odl.RealNumbers())
     assert discr.complex_space == odl.uniform_discr([], [], (), dtype=complex)
@@ -104,6 +95,7 @@ def test_empty():
 
 
 def test_factory_dtypes(odl_tspace_impl):
+    """Check dtypes of spaces from factory function."""
     impl = odl_tspace_impl
     real_float_dtypes = [np.float32, np.float64]
     nonfloat_dtypes = [np.int8, np.int16, np.int32, np.int64,
@@ -163,9 +155,6 @@ def test_uniform_discr_init_real(odl_tspace_impl):
 
     discr = odl.uniform_discr(0, 1, 10, impl=impl, exponent=1.0)
     assert discr.exponent == 1.0
-
-    discr = odl.uniform_discr(0, 1, 10, impl=impl, interp='linear')
-    assert discr.interp == 'linear'
 
     # 2D
     discr = odl.uniform_discr([0, 0], [1, 1], (5, 5))
@@ -512,27 +501,6 @@ def test_operators(odl_tspace_impl):
     _test_unary_operator(discr, lambda x: x - x)
     _test_unary_operator(discr, lambda x: x * x)
     _test_unary_operator(discr, lambda x: x / x)
-
-
-def test_interp():
-    discr = odl.uniform_discr(0, 1, 3, interp='nearest')
-    assert isinstance(discr.interpolation, odl.NearestInterpolation)
-
-    discr = odl.uniform_discr(0, 1, 3, interp='linear')
-    assert isinstance(discr.interpolation, odl.LinearInterpolation)
-
-    discr = odl.uniform_discr([0, 0], [1, 1], (3, 3),
-                              interp=['nearest', 'linear'])
-    assert isinstance(discr.interpolation, odl.PerAxisInterpolation)
-
-    with pytest.raises(ValueError):
-        # Too many entries in interp
-        discr = odl.uniform_discr(0, 1, 3, interp=['nearest', 'linear'])
-
-    with pytest.raises(ValueError):
-        # Too few entries in interp
-        discr = odl.uniform_discr([0] * 3, [1] * 3, (3,) * 3,
-                                  interp=['nearest', 'linear'])
 
 
 def test_getitem():

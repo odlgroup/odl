@@ -1,4 +1,4 @@
-# Copyright 2014-2019 The ODL contributors
+# Copyright 2014-2020 The ODL contributors
 #
 # This file is part of ODL.
 #
@@ -617,13 +617,11 @@ def test_fourier_trafo_hat_1d():
 
     # Using a single-precision implementation, should be as good
     # With linear interpolation in the discretization, should be better?
-    for interp in ['nearest', 'linear']:
-        discr = odl.uniform_discr(-2, 2, 101, impl='numpy', dtype='float32',
-                                  interp=interp)
-        dft = FourierTransform(discr)
-        func_true_ft = dft.range.element(hat_func_ft)
-        func_dft = dft(hat_func)
-        assert (func_dft - func_true_ft).norm() < 0.001
+    discr = odl.uniform_discr(-2, 2, 101, impl='numpy', dtype='float32')
+    dft = FourierTransform(discr)
+    func_true_ft = dft.range.element(hat_func_ft)
+    func_dft = dft(hat_func)
+    assert (func_dft - func_true_ft).norm() < 0.001
 
 
 def test_fourier_trafo_complex_sum():

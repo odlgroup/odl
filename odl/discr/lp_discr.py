@@ -79,6 +79,11 @@ class DiscreteLp(DiscretizedSpace):
             raise ValueError('`fspace.scalar_out_dtype` does not match '
                              '`tspace.dtype`: {} != {}'
                              ''.format(fspace.scalar_out_dtype, tspace.dtype))
+        if partition.shape != tspace.shape:
+            raise ValueError(
+                "`partition.shape` must be equal to `tspace.shape`, but "
+                "{} != {}".format(partition.shape, tspace.shape)
+            )
 
         super(DiscreteLp, self).__init__(fspace, tspace)
 

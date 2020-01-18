@@ -93,7 +93,7 @@ weight_params = [1.0, 0.5, _pos_array(odl.tensor_space((3, 4)))]
 weight_ids = [' weight=1.0 ', ' weight=0.5 ', ' weight=<array> ']
 
 
-@pytest.fixture(scope='module', params=weight_params, ids=weight_ids)
+@pytest.fixture(params=weight_params, ids=weight_ids)
 def weight(request):
     return request.param
 
