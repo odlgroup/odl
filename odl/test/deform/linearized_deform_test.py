@@ -252,7 +252,9 @@ def test_fixed_disp_call(space, interp):
         disp_field_factory(space.ndim))
 
     # Calculate result and exact result
-    deform_op = LinDeformFixedDisp(disp_field, templ_space=space, interp=interp)
+    deform_op = LinDeformFixedDisp(
+        disp_field, templ_space=space, interp=interp
+    )
     deformed_templ = deform_op(template)
     true_deformed_templ = space.element(deformed_template)
 
@@ -270,7 +272,9 @@ def test_fixed_disp_inv(space, interp):
         disp_field_factory(space.ndim))
 
     # Verify that the inverse is in fact a (left and right) inverse
-    deform_op = LinDeformFixedDisp(disp_field, templ_space=space, interp=interp)
+    deform_op = LinDeformFixedDisp(
+        disp_field, templ_space=space, interp=interp
+    )
 
     result_op_inv = deform_op(deform_op.inverse(template))
     error = (result_op_inv - template).norm()
@@ -291,7 +295,9 @@ def test_fixed_disp_adj(space, interp):
         disp_field_factory(space.ndim))
 
     # Calculate result
-    deform_op = LinDeformFixedDisp(disp_field, templ_space=space, interp=interp)
+    deform_op = LinDeformFixedDisp(
+        disp_field, templ_space=space, interp=interp
+    )
     deformed_templ_adj = deform_op.adjoint(template)
 
     # Calculate the analytic result

@@ -496,7 +496,8 @@ class _Interpolator(object):
     r"""Abstract interpolator class.
 
     The code is adapted from SciPy's `RegularGridInterpolator
-    <http://docs.scipy.org/doc/scipy/reference/generated/scipy.interpolate.RegularGridInterpolator.html>`_ class.
+    <http://docs.scipy.org/doc/scipy/reference/generated/scipy.interpolate.RegularGridInterpolator.html>`_
+    class.
 
     The init method does not convert to floating point to
     support arbitrary data type for nearest neighbor interpolation.
@@ -614,7 +615,8 @@ class _NearestInterpolator(_Interpolator):
     r"""Nearest neighbor interpolator.
 
     The code is adapted from SciPy's `RegularGridInterpolator
-    <http://docs.scipy.org/doc/scipy/reference/generated/scipy.interpolate.RegularGridInterpolator.html>`_ class.
+    <http://docs.scipy.org/doc/scipy/reference/generated/scipy.interpolate.RegularGridInterpolator.html>`_
+    class.
 
     This implementation is faster than the more generic one in the
     `_PerAxisPointwiseInterpolator`.
