@@ -14,9 +14,9 @@ import operator
 import sys
 
 import numpy as np
+import pytest
 
 import odl
-import pytest
 from odl.set.space import LinearSpaceTypeError
 from odl.space.npy_tensors import (
     NumpyTensor, NumpyTensorSpace, NumpyTensorSpaceArrayWeighting,

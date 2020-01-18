@@ -9,14 +9,14 @@
 """Tests for linearized deformation operators."""
 
 from __future__ import division
+
 import numpy as np
 import pytest
 
 import odl
-from odl.deform import LinDeformFixedTempl, LinDeformFixedDisp
+from odl.deform import LinDeformFixedDisp, LinDeformFixedTempl
 from odl.space.entry_points import tensor_space_impl
 from odl.util.testutils import simple_fixture
-
 
 # --- pytest fixtures --- #
 

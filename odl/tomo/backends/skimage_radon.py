@@ -13,7 +13,7 @@ from __future__ import division
 import numpy as np
 
 from odl.discr import uniform_discr_frompartition, uniform_partition
-from odl.discr.discr_utils import point_collocation, linear_interpolator
+from odl.discr.discr_utils import linear_interpolator, point_collocation
 from odl.util import writable_array
 
 try:

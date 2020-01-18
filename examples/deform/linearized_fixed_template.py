@@ -16,8 +16,8 @@ edge image or "edge vector field", respectively.
 """
 
 import numpy as np
-import odl
 
+import odl
 
 # --- Create template and displacement field --- #
 

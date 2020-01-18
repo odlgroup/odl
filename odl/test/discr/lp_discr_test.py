@@ -11,9 +11,9 @@
 from __future__ import division
 
 import numpy as np
+import pytest
 
 import odl
-import pytest
 from odl.discr.lp_discr import DiscreteLp, DiscreteLpElement
 from odl.space.base_tensors import TensorSpace
 from odl.space.npy_tensors import NumpyTensor
