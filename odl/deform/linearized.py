@@ -274,8 +274,10 @@ class LinDeformFixedTempl(Operator):
     def __repr__(self):
         """Return ``repr(self)``."""
         posargs = [self.template]
-        # TODO(kohr-h): interp
-        optargs = [('domain', self.domain, self.template.space)]
+        optargs = [
+            ('domain', self.domain, self.template.space.tangent_bundle),
+            ('interp', self.interp, 'linear'),
+        ]
         inner_str = signature_string(posargs, optargs, mod='!r', sep=',\n')
         return '{}(\n{}\n)'.format(self.__class__.__name__, indent(inner_str))
 
@@ -449,8 +451,10 @@ class LinDeformFixedDisp(Operator):
     def __repr__(self):
         """Return ``repr(self)``."""
         posargs = [self.displacement]
-        # TODO(kohr-h): interp
-        optargs = [('templ_space', self.domain, self.displacement.space[0])]
+        optargs = [
+            ('templ_space', self.domain, self.displacement.space[0]),
+            ('interp', self.interp, 'linear'),
+        ]
         inner_str = signature_string(posargs, optargs, mod='!r', sep=',\n')
         return '{}(\n{}\n)'.format(self.__class__.__name__, indent(inner_str))
 
