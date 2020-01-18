@@ -42,8 +42,8 @@ def clamped_interpolation(skimage_range, sinogram):
 
     Clip all points to fit within the bounds of the given space.
     """
-    min_x = skimage_proj_space.domain.min()[1]
-    max_x = skimage_proj_space.domain.max()[1]
+    min_x = skimage_range.domain.min()[1]
+    max_x = skimage_range.domain.max()[1]
 
     def interpolator(x, out=None):
         x = (x[0], np.clip(x[1], min_x, max_x))
@@ -96,7 +96,7 @@ def skimage_radon_forward_projector(volume, geometry, proj_space, out=None):
     with writable_array(out) as out_arr:
         point_collocation(
             clamped_interpolation(skimage_range, sinogram),
-            range.grid.meshgrid,
+            proj_space.grid.meshgrid,
             out=out_arr,
         )
 
