@@ -300,9 +300,11 @@ def astra_projection_geometry(geometry):
         raise ValueError('non-uniform detector sampling is not supported')
 
     # Parallel 2D
-    if (isinstance(geometry, ParallelBeamGeometry) and
-            isinstance(geometry.detector, (Flat1dDetector, Flat2dDetector)) and
-            geometry.ndim == 2):
+    if (
+        isinstance(geometry, ParallelBeamGeometry)
+        and isinstance(geometry.detector, (Flat1dDetector, Flat2dDetector))
+        and geometry.ndim == 2
+    ):
         det_count = geometry.detector.size
         if astra_supports('par2d_vec_geometry'):
             vecs = parallel_2d_geom_to_astra_vecs(geometry, coords='ASTRA')
@@ -327,9 +329,11 @@ def astra_projection_geometry(geometry):
         proj_geom = astra.create_proj_geom('parallel_vec', det_count, vecs)
 
     # Cone 2D (aka fan beam)
-    elif (isinstance(geometry, DivergentBeamGeometry) and
-          isinstance(geometry.detector, (Flat1dDetector, Flat2dDetector)) and
-          geometry.ndim == 2):
+    elif (
+        isinstance(geometry, DivergentBeamGeometry)
+        and isinstance(geometry.detector, (Flat1dDetector, Flat2dDetector))
+        and geometry.ndim == 2
+    ):
         det_count = geometry.detector.size
         vecs = cone_2d_geom_to_astra_vecs(geometry, coords='ASTRA')
         proj_geom = astra.create_proj_geom('fanflat_vec', det_count, vecs)
@@ -341,46 +345,55 @@ def astra_projection_geometry(geometry):
         proj_geom = astra.create_proj_geom('fanflat_vec', det_count, vecs)
 
     # Parallel 3D
-    elif (isinstance(geometry, ParallelBeamGeometry) and
-          isinstance(geometry.detector, (Flat1dDetector, Flat2dDetector)) and
-          geometry.ndim == 3):
+    elif (
+        isinstance(geometry, ParallelBeamGeometry)
+        and isinstance(geometry.detector, (Flat1dDetector, Flat2dDetector))
+        and geometry.ndim == 3
+    ):
         # Swap detector axes (see `parallel_3d_geom_to_astra_vecs`)
         det_row_count = geometry.det_partition.shape[0]
         det_col_count = geometry.det_partition.shape[1]
         vecs = parallel_3d_geom_to_astra_vecs(geometry, coords='ASTRA')
         proj_geom = astra.create_proj_geom(
-            'parallel3d_vec', det_row_count, det_col_count, vecs)
+            'parallel3d_vec', det_row_count, det_col_count, vecs
+        )
 
     # Parallel 3D vec
     elif isinstance(geometry, ParallelVecGeometry) and geometry.ndim == 3:
         det_row_count = geometry.det_partition.shape[1]
         det_col_count = geometry.det_partition.shape[0]
         vecs = vecs_odl_to_astra_coords(geometry.vectors)
-        proj_geom = astra.create_proj_geom('parallel3d_vec', det_row_count,
-                                           det_col_count, vecs)
+        proj_geom = astra.create_proj_geom(
+            'parallel3d_vec', det_row_count, det_col_count, vecs
+        )
 
     # Cone 3D
-    elif (isinstance(geometry, DivergentBeamGeometry) and
-          isinstance(geometry.detector, (Flat1dDetector, Flat2dDetector)) and
-          geometry.ndim == 3):
+    elif (
+        isinstance(geometry, DivergentBeamGeometry)
+        and isinstance(geometry.detector, (Flat1dDetector, Flat2dDetector))
+        and geometry.ndim == 3
+    ):
         # Swap detector axes (see `conebeam_3d_geom_to_astra_vecs`)
         det_row_count = geometry.det_partition.shape[0]
         det_col_count = geometry.det_partition.shape[1]
         vecs = cone_3d_geom_to_astra_vecs(geometry, coords='ASTRA')
         proj_geom = astra.create_proj_geom(
-            'cone_vec', det_row_count, det_col_count, vecs)
+            'cone_vec', det_row_count, det_col_count, vecs
+        )
 
     # Cone 3D vec
     elif isinstance(geometry, ConeVecGeometry) and geometry.ndim == 3:
         det_row_count = geometry.det_partition.shape[1]
         det_col_count = geometry.det_partition.shape[0]
         vecs = vecs_odl_to_astra_coords(geometry.vectors)
-        proj_geom = astra.create_proj_geom('cone_vec', det_row_count,
-                                           det_col_count, vecs)
+        proj_geom = astra.create_proj_geom(
+            'cone_vec', det_row_count, det_col_count, vecs
+        )
 
     else:
-        raise NotImplementedError('unknown ASTRA geometry type {!r}'
-                                  ''.format(geometry))
+        raise NotImplementedError(
+            'unknown ASTRA geometry type {!r}'.format(geometry)
+        )
 
     if 'astra' not in geometry.implementation_cache:
         # Save computed value for later

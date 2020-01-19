@@ -70,12 +70,13 @@ ray_trafo = odl.tomo.RayTransform(reco_space, geometry, impl=impl)
 proj_data = ray_trafo(phantom)
 
 # Axis in this image is x. This corresponds to 0 degrees or index 0.
-proj_data.show(indices=[0, None],
-               title='Projection at 0 degrees ~ Sum along y axis')
+proj_data.show(
+    indices=[0, None],
+    title='Projection at 0 degrees ~ Sum along y axis'
+)
 fig, ax = plt.subplots()
 ax.plot(sum_along_y)
-ax.set_xlabel('x')
-plt.title('Sum along y axis')
+ax.set(xlabel="x", title='Sum along y axis')
 plt.show()
 # Check axes in geometry
 axis_sum_y = geometry.det_axis(0)

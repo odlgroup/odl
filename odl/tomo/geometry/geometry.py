@@ -1,4 +1,4 @@
-# Copyright 2014-2019 The ODL contributors
+# Copyright 2014-2020 The ODL contributors
 #
 # This file is part of ODL.
 #
@@ -30,7 +30,6 @@ __all__ = (
 
 
 class Geometry(object):
-
     """Abstract geometry class.
 
     A geometry is described by
@@ -419,7 +418,6 @@ class Geometry(object):
 
 
 class DivergentBeamGeometry(Geometry):
-
     """Abstract divergent beam geometry class.
 
     A geometry characterized by the presence of a point-like ray source.
@@ -462,6 +460,8 @@ class DivergentBeamGeometry(Geometry):
             Detector parameter(s) at which to evaluate. If
             ``det_params.ndim >= 2``, a sequence of that length must be
             provided.
+        normalized : bool, optional
+            If ``True``, return a normalized (unit) vector.
 
         Returns
         -------
@@ -552,8 +552,10 @@ class DivergentBeamGeometry(Geometry):
             dparam = tuple(np.array(p, dtype=float, copy=False, ndmin=1)
                            for p in dparam)
 
-        det_to_src = (self.src_position(angle) -
-                      self.det_point_position(angle, dparam))
+        det_to_src = (
+            self.src_position(angle)
+            - self.det_point_position(angle, dparam)
+        )
 
         if normalized:
             det_to_src /= np.linalg.norm(det_to_src, axis=-1, keepdims=True)
@@ -565,8 +567,11 @@ class DivergentBeamGeometry(Geometry):
 
 
 class AxisOrientedGeometry(object):
+    """Mixin class for 3d geometries oriented along an axis.
 
-    """Mixin class for 3d geometries oriented along an axis."""
+    Makes use of `Geometry` attributes and should thus only be used for
+    `Geometry` subclasses.
+    """
 
     def __init__(self, axis):
         """Initialize a new instance.
@@ -616,8 +621,10 @@ class AxisOrientedGeometry(object):
         """
         squeeze_out = (np.shape(angle) == ())
         angle = np.array(angle, dtype=float, copy=False, ndmin=1)
-        if (self.check_bounds and
-                not is_inside_bounds(angle, self.motion_params)):
+        if (
+            self.check_bounds
+            and not is_inside_bounds(angle, self.motion_params)
+        ):
             raise ValueError('`angle` {} not in the valid range {}'
                              ''.format(angle, self.motion_params))
 
@@ -629,7 +636,6 @@ class AxisOrientedGeometry(object):
 
 
 class VecGeometry(Geometry):
-
     """Abstract 2D or 3D geometry defined by a collection of vectors.
 
     This geometry gives maximal flexibility for representing locations
@@ -670,6 +676,9 @@ class VecGeometry(Geometry):
     which corresponds to the assumption that the system moves on piecewise
     linear paths.
     """
+
+    # `rotation_matrix` not implemented; reason: missing
+    # `det_to_src` not implemented; reason: depends on subclass
 
     def __init__(self, det_shape, vectors):
         """Initialize a new instance.
@@ -733,6 +742,8 @@ class VecGeometry(Geometry):
                 max_pt=(det_cell_sides * det_shape) / 2,
                 shape=det_shape)
             detector = Flat2dDetector(det_part, axes=[det_u, det_v])
+        else:
+            raise RuntimeError('invalid `ndim`')
 
         Geometry.__init__(self, ndim, mpart, detector)
 
@@ -800,8 +811,9 @@ class VecGeometry(Geometry):
         array([ 0., 1.])
         >>> geom_2d.det_refpoint(1)
         array([-1.,  0.])
-        >>> geom_2d.det_refpoint(0.5)  # mean value
-        array([-0.5,  0.5])
+        >>> geom_2d.det_refpoint([0.4, 0.6])  # values at closest indices
+        array([[ 0.,  1.],
+               [-1.,  0.]])
 
         In 3D, columns 3 to 5 (starting at 0) determine the detector
         reference point, here ``(0, 1, 0)`` and ``(-1, 0, 0)``:
@@ -816,35 +828,33 @@ class VecGeometry(Geometry):
         array([ 0., 1., 0.])
         >>> geom_3d.det_refpoint(1)
         array([-1.,  0.,  0.])
-        >>> geom_3d.det_refpoint(0.5)  # mean value
-        array([-0.5,  0.5,  0. ])
+        >>> geom_3d.det_refpoint([0.4, 0.6])  # values at closest indices
+        array([[ 0.,  1.,  0.],
+               [-1.,  0.,  0.]])
         """
-        if (self.check_bounds and
-                not is_inside_bounds(index, self.motion_params)):
-            raise ValueError('`index` {} not in the valid range {}'
-                             ''.format(index, self.motion_params))
-
-        index = np.array(index, dtype=float, copy=False, ndmin=1)
-        int_part = index.astype(int)
-        frac_part = index - int_part
-
-        vecs = np.empty((len(index), self.ndim))
-        at_right_bdry = (int_part == self.motion_params.max_pt)
-        vecs[at_right_bdry, :] = self.vectors[int_part[at_right_bdry],
-                                              self._slice_det_center]
-
-        not_at_right_bdry = ~at_right_bdry
-        if np.any(not_at_right_bdry):
-            pt_left = self.vectors[int_part[not_at_right_bdry],
-                                   self._slice_det_center]
-            pt_right = self.vectors[int_part[not_at_right_bdry] + 1,
-                                    self._slice_det_center]
-            vecs[not_at_right_bdry, :] = (
-                pt_left +
-                frac_part[not_at_right_bdry, None] * (pt_right - pt_left)
+        if (
+            self.check_bounds
+            and not is_inside_bounds(index, self.motion_params)
+        ):
+            raise ValueError(
+                '`index` {} not in the valid range {}'
+                ''.format(index, self.motion_params)
             )
-        return vecs.squeeze()
 
+        index_int = np.round(index).astype(int)
+        if index_int.shape == ():
+            index_int = index_int[None]
+            squeeze_index = True
+        else:
+            squeeze_index = False
+
+        det_refpts = self.vectors[index_int, self._slice_det_center]
+        if squeeze_index:
+            return det_refpts[0]
+        else:
+            return det_refpts
+
+    # Overrides implementation in `Geometry`
     def det_point_position(self, index, dparam):
         """Return the detector point at ``(index, dparam)``.
 
@@ -886,9 +896,16 @@ class VecGeometry(Geometry):
         >>> # d(1) + 2 * u(1) = (-1, 0) + 2 * (0, 1)
         >>> geom_2d.det_point_position(1, 2)
         array([-1., 2.])
-        >>> # d(0.5) + 2 * u(0.5) = (-0.5, 0.5) + 2 * (0.5, 0.5)
-        >>> geom_2d.det_point_position(0.5, 2)
-        array([ 0.5,  1.5])
+        >>> # d(0.4) + 2 * u(0.4) = d(0) + 2 * u(0)
+        >>> geom_2d.det_point_position(0.4, 2)
+        array([ 2., 1.])
+
+        Broadcasting of arguments:
+
+        >>> idcs = np.array([0.4, 0.6])[:, None]
+        >>> dpar = np.array([2.0])[None, :]
+        >>> geom_2d.det_point_position(idcs, dpar)
+
 
         Do the same in 3D, with reference points ``(0, 1, 0)`` and
         ``(-1, 0, 0)``, and horizontal ``u``  axis vectors ``(1, 0, 0)`` and
@@ -911,24 +928,39 @@ class VecGeometry(Geometry):
         >>> #     (-1, 0, 0) + 2 * (0, 1, 0) + 1 * (0, 0, 1)
         >>> geom_3d.det_point_position(1, [2, 1])
         array([-1., 2., 1.])
-        >>> # d(0.5) + 2 * u(0.5) = (-0.5, 0.5) + 2 * (0.5, 0.5)
-        >>> geom_3d.det_point_position(0.5, [2, 1])
-        array([ 0.5,  1.5,  1. ])
+        >>> # d(0.4) + 2 * u(0.4) + 1 * u(0.4) = d(0) + 2 * u(0) + 1 * v(0)
+        >>> geom_3d.det_point_position(0.4, [2, 1])
+        array([ 2., 1., 1.])
+
+        Broadcasting of arguments:
+
+        >>> idcs = np.array([0.4, 0.6])[:, None]
+        >>> dpar = np.array([2.0, 1.0])[None, :]
+        >>> geom_3d.det_point_position(idcs, dpar)
+
         """
-        # TODO: vectorize!
+        if self.check_bounds:
+            if not is_inside_bounds(index, self.motion_params):
+                raise ValueError(
+                    '`index` {} not in the valid range {}'
+                    ''.format(index, self.motion_params)
+                )
 
-        if index not in self.motion_params:
-            raise ValueError('`index` must be contained in `motion_params` '
-                             '{}, got {}'.format(self.motion_params, index))
-        if dparam not in self.det_params:
-            raise ValueError('`dparam` must be contained in `det_params` '
-                             '{}, got {}'.format(self.det_params, dparam))
+            if not is_inside_bounds(dparam, self.det_params):
+                raise ValueError(
+                    '`dparam` {} not in the valid range {}'
+                    ''.format(dparam, self.det_params)
+                )
 
+        # TODO: broadcast correctly
         if self.ndim == 2:
             det_shift = dparam * self.det_axis(index)
         elif self.ndim == 3:
-            det_shift = sum(di * ax
-                            for di, ax in zip(dparam, self.det_axes(index)))
+            det_shift = sum(
+                di * ax for di, ax in zip(dparam, self.det_axes(index))
+            )
+        else:
+            raise RuntimeError('invalid `ndim`')
 
         return self.det_refpoint(index) + det_shift
 
@@ -962,31 +994,38 @@ class VecGeometry(Geometry):
         array([ 1., 0.])
         >>> geom_2d.det_axis(1)
         array([ 0., 1.])
-        >>> geom_2d.det_axis(0.5)  # mean value
-        array([ 0.5,  0.5])
+        >>> geom_2d.det_axis([0.4, 0.6])  # values at closest indices
+        array([[ 1.,  0.],
+               [ 0.,  1.]])
         """
-        # TODO: vectorize!
-
-        if index not in self.motion_params:
-            raise ValueError('`index` must be contained in `motion_params` '
-                             '{}, got {}'.format(self.motion_params, index))
+        if (
+            self.check_bounds
+            and not is_inside_bounds(index, self.motion_params)
+        ):
+            raise ValueError(
+                '`index` {} not in the valid range {}'
+                ''.format(index, self.motion_params)
+            )
 
         if self.ndim != 2:
             raise NotImplementedError(
                 '`det_axis` only valid for 2D geometries, use `det_axes` '
-                'in 3D')
+                'in 3D'
+            )
 
-        index = float(index)
-        int_part = int(index)
-        frac_part = index - int_part
-        if int_part == self.motion_params.max_pt:
-            det_u = self.vectors[int_part, self._slice_det_u]
+        index_int = np.round(index).astype(int)
+        if index_int.shape == ():
+            index_int = index_int[None]
+            squeeze_index = True
         else:
-            det_u_left = self.vectors[int_part, self._slice_det_u]
-            det_u_right = self.vectors[int_part + 1, self._slice_det_u]
-            det_u = det_u_left + frac_part * (det_u_right - det_u_left)
+            squeeze_index = False
 
-        return det_u
+        vectors = self.vectors[index_int]
+        det_us = vectors[:, self._slice_det_u]
+        if squeeze_index:
+            return det_us[0]
+        else:
+            return det_us
 
     def det_axes(self, index):
         """Return the detector axes at ``index`` (for 2D or 3D geometries).
@@ -994,13 +1033,14 @@ class VecGeometry(Geometry):
         Parameters
         ----------
         index : `motion_params` element
-            Index of the projection. Non-integer indices result in
-            interpolated vectors.
+            Index of the projection. Non-integer indices are rounded to
+            closest integer.
 
         Returns
         -------
         axes : tuple of `numpy.ndarray`, shape ``(ndim,)``
-            The detector axes at ``index``.
+            The detector axes at ``index``, 1 for ``ndim == 2`` and
+            2 for ``ndim == 3``.
 
         Examples
         --------
@@ -1019,37 +1059,45 @@ class VecGeometry(Geometry):
         (array([ 1., 0., 0.]), array([ 0., 0., 1.]))
         >>> geom_3d.det_axes(1)
         (array([ 0., 1., 0.]), array([ 0., 0., 1.]))
-        >>> geom_3d.det_axes(0.5)  # mean value
-        (array([ 0.5,  0.5,  0. ]), array([ 0.,  0.,  1.]))
+        >>> axs = geom_3d.det_axes([0.4, 0.6])  # values at closest indices
+        >>> axs[0]  # first axis
+        array([[ 1.,  0.,  0.],
+               [ 0.,  1.,  0.]])
+        >>> axs[1]  # second axis
+        array([[ 0.,  0.,  1.],
+               [ 0.,  0.,  1.]])
         """
-        # TODO: vectorize!
+        if (
+            self.check_bounds
+            and not is_inside_bounds(index, self.motion_params)
+        ):
+            raise ValueError(
+                '`index` {} not in the valid range {}'
+                ''.format(index, self.motion_params)
+            )
 
-        if index not in self.motion_params:
-            raise ValueError('`index` must be contained in `motion_params` '
-                             '{}, got {}'.format(self.motion_params, index))
-
-        index = float(index)
-        int_part = int(index)
-        frac_part = index - int_part
-        if int_part == self.motion_params.max_pt:
-            det_u = self.vectors[int_part, self._slice_det_u]
-            if self.ndim == 2:
-                return (det_u,)
-            elif self.ndim == 3:
-                det_v = self.vectors[int_part, self._slice_det_v]
-                return (det_u, det_v)
+        index_int = np.round(index).astype(int)
+        if index_int.shape == ():
+            index_int = index_int[None]
+            squeeze_index = True
         else:
-            det_u_left = self.vectors[int_part, self._slice_det_u]
-            det_u_right = self.vectors[int_part + 1, self._slice_det_u]
-            det_u = det_u_left + frac_part * (det_u_right - det_u_left)
+            squeeze_index = False
 
-            if self.ndim == 2:
-                return (det_u,)
-            elif self.ndim == 3:
-                det_v_left = self.vectors[int_part, self._slice_det_v]
-                det_v_right = self.vectors[int_part + 1, self._slice_det_v]
-                det_v = det_v_left + frac_part * (det_v_right - det_v_left)
-                return (det_u, det_v)
+        vectors = self.vectors[index_int]
+        if self.ndim == 2:
+            det_us = vectors[:, self._slice_det_u]
+            retval_lst = [det_us[0]] if squeeze_index else [det_us]
+        elif self.ndim == 3:
+            det_us = vectors[:, self._slice_det_u]
+            det_vs = vectors[:, self._slice_det_v]
+            if squeeze_index:
+                retval_lst = [det_us[0], det_vs[0]]
+            else:
+                retval_lst = [det_us, det_vs]
+        else:
+            raise RuntimeError('invalid `ndim`')
+
+        return tuple(retval_lst)
 
     def __getitem__(self, indices):
         """Return ``self[indices]``.
@@ -1124,8 +1172,9 @@ class VecGeometry(Geometry):
         posargs = [self.det_partition.shape, self.vectors]
         with npy_printoptions(precision=REPR_PRECISION):
             inner_parts = signature_string_parts(posargs, [])
-        return repr_string(self.__class__.__name__, inner_parts,
-                           allow_mixed_seps=False)
+        return repr_string(
+            self.__class__.__name__, inner_parts, allow_mixed_seps=False
+        )
 
 
 if __name__ == '__main__':

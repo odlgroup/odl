@@ -30,7 +30,6 @@ __all__ = (
 
 
 class ParallelBeamGeometry(Geometry):
-
     """Abstract parallel beam geometry in 2 or 3 dimensions.
 
     Parallel geometries are characterized by a virtual source at
@@ -331,7 +330,6 @@ class ParallelBeamGeometry(Geometry):
 
 
 class Parallel2dGeometry(ParallelBeamGeometry):
-
     """Parallel beam geometry in 2d.
 
     The motion parameter is the counter-clockwise rotation angle around
@@ -635,8 +633,10 @@ class Parallel2dGeometry(ParallelBeamGeometry):
         """
         squeeze_out = (np.shape(angle) == ())
         angle = np.array(angle, dtype=float, copy=False, ndmin=1)
-        if (self.check_bounds and
-                not is_inside_bounds(angle, self.motion_params)):
+        if (
+            self.check_bounds
+            and not is_inside_bounds(angle, self.motion_params)
+        ):
             raise ValueError('`angle` {} not in the valid range {}'
                              ''.format(angle, self.motion_params))
 
@@ -669,7 +669,7 @@ class Parallel2dGeometry(ParallelBeamGeometry):
         return '{}(\n{}\n)'.format(self.__class__.__name__, indent(sig_str))
 
     def __getitem__(self, indices):
-        """Return self[slc]
+        """Return self[slc].
 
         This is defined by::
 
@@ -705,7 +705,6 @@ class Parallel2dGeometry(ParallelBeamGeometry):
 
 
 class Parallel3dEulerGeometry(ParallelBeamGeometry):
-
     """Parallel beam geometry in 3d.
 
     The motion parameters are two or three Euler angles, and the detector
@@ -1044,8 +1043,10 @@ class Parallel3dEulerGeometry(ParallelBeamGeometry):
         angles_in = angles
         angles = tuple(np.array(angle, dtype=float, copy=False, ndmin=1)
                        for angle in angles)
-        if (self.check_bounds and
-                not is_inside_bounds(angles, self.motion_params)):
+        if (
+            self.check_bounds
+            and not is_inside_bounds(angles, self.motion_params)
+        ):
             raise ValueError('`angles` {} not in the valid range '
                              '{}'.format(angles_in, self.motion_params))
 
@@ -1079,7 +1080,6 @@ class Parallel3dEulerGeometry(ParallelBeamGeometry):
 
 
 class Parallel3dAxisGeometry(ParallelBeamGeometry, AxisOrientedGeometry):
-
     """Parallel beam geometry in 3d with single rotation axis.
 
     The motion parameter is the rotation angle around the specified
@@ -1474,7 +1474,6 @@ class Parallel3dAxisGeometry(ParallelBeamGeometry, AxisOrientedGeometry):
 
 
 class ParallelVecGeometry(VecGeometry):
-
     """Parallel beam 2D or 3D geometry defined by a collection of vectors.
 
     This geometry gives maximal flexibility for representing locations
@@ -1511,6 +1510,8 @@ class ParallelVecGeometry(VecGeometry):
     which corresponds to the assumption that the system moves on piecewise
     linear paths.
     """
+
+    # `rotation_matrix` not implemented; reason: missing
 
     @property
     def _slice_ray(self):
@@ -1614,6 +1615,25 @@ class ParallelVecGeometry(VecGeometry):
         (4, 5, 2)
         """
         squeeze_index = (np.shape(index) == ())
+
+        if self.check_bounds:
+            if not is_inside_bounds(index, self.motion_params):
+                raise ValueError(
+                    '`index` {} not in the valid range {}'
+                    ''.format(index, self.motion_params)
+                )
+
+            if not is_inside_bounds(dparam, self.det_params):
+                raise ValueError(
+                    '`dparam` {} not in the valid range {}'
+                    ''.format(dparam, self.det_params)
+                )
+
+        index_int = np.round(index).astype(int)
+        vectors = self.vectors[index_int]
+        ray_dirs = vectors[self._slice_ray]
+        det_centers = vectors[self._slice_det_center]
+
         index_in = index
         index = np.array(index, dtype=float, copy=False, ndmin=1)
 
@@ -1626,14 +1646,6 @@ class ParallelVecGeometry(VecGeometry):
             dparam = tuple(np.array(p, dtype=float, copy=False, ndmin=1)
                            for p in dparam)
 
-        if self.check_bounds:
-            if not is_inside_bounds(index, self.motion_params):
-                raise ValueError('`index` {} not in the valid range {}'
-                                 ''.format(index_in, self.motion_params))
-
-            if not is_inside_bounds(dparam, self.det_params):
-                raise ValueError('`dparam` {} not in the valid range {}'
-                                 ''.format(dparam_in, self.det_params))
 
         at_max_flat = (index == self.motion_params.max_pt).ravel()
 
@@ -1669,8 +1681,8 @@ class ParallelVecGeometry(VecGeometry):
             print('ray_right shape:', ray_right.shape)
             print('index_frac_part shape:', index_frac_part.shape)
             ray_dir[~at_max_flat, ...] = (
-                ray_left +
-                index_frac_part * (ray_right - ray_left))
+                ray_left + index_frac_part * (ray_right - ray_left)
+            )
 
         ray_dir *= -1 / np.linalg.norm(ray_dir, axis=-1, keepdims=True)
 
