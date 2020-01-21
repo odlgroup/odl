@@ -40,7 +40,7 @@ def linear_deform(template, displacement, interp='linear', out=None):
     interp : str or sequence of str
         Interpolation type that should be used to sample the template on
         the deformed grid. A single value applies to all axes, and a
-        sequence gives the iterpolation scheme per axis.
+        sequence gives the interpolation scheme per axis.
 
         Supported values: ``'nearest'``, ``'linear'``
 
@@ -151,7 +151,7 @@ class LinDeformFixedTempl(Operator):
         interp : str or sequence of str
             Interpolation type that should be used to sample the template on
             the deformed grid. A single value applies to all axes, and a
-            sequence gives the iterpolation scheme per axis.
+            sequence gives the interpolation scheme per axis.
 
             Supported values: ``'nearest'``, ``'linear'``
 
@@ -335,7 +335,7 @@ class LinDeformFixedDisp(Operator):
         interp : str or sequence of str
             Interpolation type that should be used to sample the template on
             the deformed grid. A single value applies to all axes, and a
-            sequence gives the iterpolation scheme per axis.
+            sequence gives the interpolation scheme per axis.
 
             Supported values: ``'nearest'``, ``'linear'``
 

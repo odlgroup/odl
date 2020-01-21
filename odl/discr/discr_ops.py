@@ -42,7 +42,7 @@ class Resampling(Operator):
             Set in which the resampled elements lie.
         interp : str or sequence of str
             Interpolation type that should be used to resample. A single
-            value applies to all axes, and a sequence gives the iterpolation
+            value applies to all axes, and a sequence gives the interpolation
             scheme per axis.
 
             Supported values: ``'nearest'``, ``'linear'``

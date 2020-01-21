@@ -52,7 +52,10 @@ def test_nearest_interpolation_1d_complex():
 def test_nearest_interpolation_2d():
     """Test nearest neighbor interpolation in 2d."""
     coord_vecs = [[0.125, 0.375, 0.625, 0.875], [0.25, 0.75]]
-    f = np.array([0, 1, 2, 3, 4, 5, 6, 7], dtype="float64").reshape((4, 2))
+    f = np.array([[0, 1],
+                  [2, 3],
+                  [4, 5],
+                  [6, 7]], dtype="float64")
     interpolator = nearest_interpolator(f, coord_vecs)
 
     # Evaluate at single point
@@ -80,7 +83,10 @@ def test_nearest_interpolation_2d():
 def test_nearest_interpolation_2d_string():
     """Test nearest neighbor interpolation in 2d with string values."""
     coord_vecs = [[0.125, 0.375, 0.625, 0.875], [0.25, 0.75]]
-    f = np.array(list('mystring'), dtype='U1').reshape((4, 2))
+    f = np.array([['m', 'y'],
+                  ['s', 't'],
+                  ['r', 'i'],
+                  ['n', 'g']], dtype='U1')
     interpolator = nearest_interpolator(f, coord_vecs)
 
     # Evaluate at single point
@@ -125,7 +131,10 @@ def test_linear_interpolation_1d():
 def test_linear_interpolation_2d():
     """Test linear interpolation in 2d."""
     coord_vecs = [[0.125, 0.375, 0.625, 0.875], [0.25, 0.75]]
-    f = np.arange(1, 9, dtype='float64').reshape((4, 2))
+    f = np.array([[1, 2],
+                  [3, 4],
+                  [5, 6],
+                  [7, 8]], dtype='float64')
     interpolator = linear_interpolator(f, coord_vecs)
 
     # Evaluate at single point
@@ -199,7 +208,10 @@ def test_per_axis_interpolation():
     """Test different interpolation schemes per axis."""
     coord_vecs = [[0.125, 0.375, 0.625, 0.875], [0.25, 0.75]]
     interp = ['linear', 'nearest']
-    f = np.arange(1, 9, dtype='float64').reshape((4, 2))
+    f = np.array([[1, 2],
+                  [3, 4],
+                  [5, 6],
+                  [7, 8]], dtype='float64')
     interpolator = per_axis_interpolator(f, coord_vecs, interp)
 
     # Evaluate at single point
@@ -248,7 +260,10 @@ def test_collocation_interpolation_identity():
     # Interpolation followed by collocation on the same grid should be
     # the identity
     coord_vecs = [[0.125, 0.375, 0.625, 0.875], [0.25, 0.75]]
-    f = np.arange(1, 9, dtype='float64').reshape((4, 2))
+    f = np.array([[1, 2],
+                  [3, 4],
+                  [5, 6],
+                  [7, 8]], dtype='float64')
     interpolators = [
         nearest_interpolator(f, coord_vecs),
         linear_interpolator(f, coord_vecs),

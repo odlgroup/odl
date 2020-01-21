@@ -379,6 +379,10 @@ def linear_interpolator(f, coord_vecs):
     >>> interpolator = linear_interpolator(f, part.coord_vectors)
     >>> interpolator(0.3)  # 0.75 * 1 + 0.25 * 2 = 1.25
     1.25
+    >>> # At 1.9, the value is interpolated between the last value 5.0 and
+    >>> # 0.0. The extra interpolation node is placed at the same distance
+    >>> # as the second-to-last, i.e., at 2.2. Hence, the interpolated value
+    >>> # is 0.75 * 5.0 + 0.25 * 0.0 = 3.75.
     >>> interpolator([0.6, 1.3, 1.9])
     array([ 2.  ,  3.75,  3.75])
 
@@ -749,7 +753,7 @@ class _PerAxisInterpolator(_Interpolator):
         self.interp = interp
 
     def _evaluate(self, indices, norm_distances, out=None):
-        """Evaluate linear interpolation.
+        """Evaluate per-axis interpolation.
 
         Modified for in-place evaluation and treatment of out-of-bounds
         points by implicitly assuming 0 at the next node.

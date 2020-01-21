@@ -167,7 +167,7 @@ def test_fixed_templ_init():
 
     # Invalid input
     with pytest.raises(TypeError):
-        # template not a DiscreteLpElement
+        # template_function not a DiscreteLpElement
         LinDeformFixedTempl(template_function)
 
 

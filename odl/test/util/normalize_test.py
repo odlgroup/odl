@@ -22,6 +22,10 @@ from odl.util.testutils import simple_fixture
 length = simple_fixture('length', [1, 2])
 
 
+# For this and other fixtures below:
+# scope='module' removed due to pytest issue, see
+# https://github.com/pytest-dev/pytest/issues/6497
+# TODO: re-introduce when fixed
 single_conv_params = [(-1.0, float),
                       (2, float),
                       ('10', float),

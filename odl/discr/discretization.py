@@ -90,8 +90,9 @@ class DiscretizedSpace(TensorSpace):
             contiguous memory in the respective ordering is enforced.
             The default ``None`` enforces no contiguousness.
         kwargs :
-            Additional keyword arguments passed on to the sampler when called
-            on ``inp``. This can be used e.g. for functions with parameters.
+            Additional keyword arguments passed on to the sampling function
+            `point_collocation` when called on ``inp``. This can be used for,
+            e.g., functions with parameters.
 
         Returns
         -------
