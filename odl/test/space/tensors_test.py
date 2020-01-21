@@ -1,4 +1,4 @@
-# Copyright 2014-2019 The ODL contributors
+# Copyright 2014-2020 The ODL contributors
 #
 # This file is part of ODL.
 #
@@ -14,9 +14,9 @@ import operator
 import sys
 
 import numpy as np
+import pytest
 
 import odl
-import pytest
 from odl.set.space import LinearSpaceTypeError
 from odl.space.npy_tensors import (
     NumpyTensor, NumpyTensorSpace, NumpyTensorSpaceArrayWeighting,
@@ -93,7 +93,10 @@ weight_params = [1.0, 0.5, _pos_array(odl.tensor_space((3, 4)))]
 weight_ids = [' weight=1.0 ', ' weight=0.5 ', ' weight=<array> ']
 
 
-@pytest.fixture(scope='module', params=weight_params, ids=weight_ids)
+# scope='module' removed due to pytest issue, see
+# https://github.com/pytest-dev/pytest/issues/6497
+# TODO: re-introduce when fixed
+@pytest.fixture(params=weight_params, ids=weight_ids)
 def weight(request):
     return request.param
 

@@ -1,4 +1,4 @@
-# Copyright 2014-2019 The ODL contributors
+# Copyright 2014-2020 The ODL contributors
 #
 # This file is part of ODL.
 #
@@ -8,21 +8,21 @@
 
 """Discretized Fourier transform on L^p spaces."""
 
-from __future__ import print_function, division, absolute_import
+from __future__ import absolute_import, division, print_function
+
 import numpy as np
 
 from odl.discr import DiscreteLp, discr_sequence_space
 from odl.operator import Operator
-from odl.set import RealNumbers, ComplexNumbers
+from odl.set import ComplexNumbers, RealNumbers
 from odl.trafos.backends.pyfftw_bindings import (
-    pyfftw_call, PYFFTW_AVAILABLE, _pyfftw_to_local)
+    PYFFTW_AVAILABLE, _pyfftw_to_local, pyfftw_call)
 from odl.trafos.util import (
-    reciprocal_grid, reciprocal_space,
-    dft_preprocess_data, dft_postprocess_data)
-from odl.util import (is_real_dtype, is_complex_floating_dtype,
-                      dtype_repr, conj_exponent, complex_dtype,
-                      normalized_scalar_param_list, normalized_axes_tuple)
-
+    dft_postprocess_data, dft_preprocess_data, reciprocal_grid,
+    reciprocal_space)
+from odl.util import (
+    complex_dtype, conj_exponent, dtype_repr, is_complex_floating_dtype,
+    is_real_dtype, normalized_axes_tuple, normalized_scalar_param_list)
 
 __all__ = ('DiscreteFourierTransform', 'DiscreteFourierTransformInverse',
            'FourierTransform', 'FourierTransformInverse')
@@ -1282,10 +1282,12 @@ class FourierTransform(FourierTransformBase):
                 out = self._tmp_r if self._tmp_r is not None else self._tmp_f
             else:
                 out = self._tmp_f
+        # TODO(kohr-h): Add `interp` to operator or simplify it by not
+        # performing interpolation filter
         return dft_postprocess_data(
             out, real_grid=self.domain.grid, recip_grid=self.range.grid,
             shift=self.shifts, axes=self.axes, sign=self.sign,
-            interp=self.domain.interp, op='multiply', out=out)
+            interp='nearest', op='multiply', out=out)
 
     def _call_numpy(self, x):
         """Return ``self(x)`` for numpy back-end.
@@ -1501,10 +1503,12 @@ class FourierTransformInverse(FourierTransformBase):
                 out = self._tmp_r if self._tmp_r is not None else self._tmp_f
             else:
                 out = self._tmp_f
+        # TODO(kohr-h): Add `interp` to operator or simplify it by not
+        # performing interpolation filter
         return dft_postprocess_data(
             x, real_grid=self.range.grid, recip_grid=self.domain.grid,
             shift=self.shifts, axes=self.axes, sign=self.sign,
-            interp=self.domain.interp, op='divide', out=out)
+            interp='nearest', op='divide', out=out)
 
     def _postprocess(self, x, out=None):
         """Return the post-processed version of ``x``.

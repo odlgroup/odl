@@ -9,15 +9,15 @@
 """Unit tests for `discr_ops`."""
 
 from __future__ import division
-import pytest
+
 import numpy as np
+import pytest
 
 import odl
 from odl.discr.discr_ops import _SUPPORTED_RESIZE_PAD_MODES
 from odl.space.entry_points import tensor_space_impl
 from odl.util import is_numeric_dtype, is_real_floating_dtype
-from odl.util.testutils import noise_element, dtype_tol
-
+from odl.util.testutils import dtype_tol, noise_element
 
 # --- pytest fixtures --- #
 
@@ -240,7 +240,9 @@ def test_resizing_op_adjoint(padding, odl_tspace_impl):
         res_elem = noise_element(res_space)
         inner1 = res_op(elem).inner(res_elem)
         inner2 = elem.inner(res_op.adjoint(res_elem))
-        assert inner1 == pytest.approx(inner2, rel=dtype_tol(dtype))
+        assert inner1 == pytest.approx(
+            inner2, rel=space.size * dtype_tol(dtype)
+        )
 
 
 def test_resizing_op_mixed_uni_nonuni():

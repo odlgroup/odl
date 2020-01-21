@@ -1,4 +1,4 @@
-# Copyright 2014-2019 The ODL contributors
+# Copyright 2014-2020 The ODL contributors
 #
 # This file is part of ODL.
 #
@@ -266,10 +266,9 @@ class RayTransformBase(Operator):
             else:
                 axis_labels = angle_labels + det_labels
 
-            proj_interp = kwargs.get('interp', 'nearest')
             proj_space = DiscreteLp(
                 proj_fspace, geometry.partition, proj_tspace,
-                interp=proj_interp, axis_labels=axis_labels)
+                axis_labels=axis_labels)
 
         else:
             # proj_space was given, checking some stuff

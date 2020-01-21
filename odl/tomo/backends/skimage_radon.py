@@ -1,4 +1,4 @@
-# Copyright 2014-2019 The ODL contributors
+# Copyright 2014-2020 The ODL contributors
 #
 # This file is part of ODL.
 #
@@ -13,6 +13,8 @@ from __future__ import division
 import numpy as np
 
 from odl.discr import uniform_discr_frompartition, uniform_partition
+from odl.discr.discr_utils import linear_interpolator, point_collocation
+from odl.util import writable_array
 
 try:
     import skimage
@@ -31,23 +33,24 @@ def skimage_proj_space(geometry, volume_space, proj_space):
     det_part = uniform_partition(-det_width / 2, det_width / 2, padded_size)
 
     part = geometry.motion_partition.insert(1, det_part)
-    space = uniform_discr_frompartition(
-        part, interp=proj_space.interp, dtype=proj_space.dtype
-    )
+    space = uniform_discr_frompartition(part, dtype=proj_space.dtype)
     return space
 
 
-def clamped_interpolation(skimage_proj_space, sinogram):
+def clamped_interpolation(skimage_range, sinogram):
     """Interpolate in a possibly smaller space.
 
     Clip all points to fit within the bounds of the given space.
     """
-    min_x = skimage_proj_space.domain.min()[1]
-    max_x = skimage_proj_space.domain.max()[1]
+    min_x = skimage_range.domain.min()[1]
+    max_x = skimage_range.domain.max()[1]
 
-    def interpolator(x):
+    def interpolator(x, out=None):
         x = (x[0], np.clip(x[1], min_x, max_x))
-        return sinogram.interpolation(x, bounds_check=False)
+        interpolator = linear_interpolator(
+            sinogram, skimage_range.grid.coord_vectors
+        )
+        return interpolator(x, out=out)
 
     return interpolator
 
@@ -90,9 +93,12 @@ def skimage_radon_forward_projector(volume, geometry, proj_space, out=None):
     if out is None:
         out = proj_space.element()
 
-    out.sampling(
-        clamped_interpolation(skimage_range, sinogram), bounds_check=False
-    )
+    with writable_array(out) as out_arr:
+        point_collocation(
+            clamped_interpolation(skimage_range, sinogram),
+            proj_space.grid.meshgrid,
+            out=out_arr,
+        )
 
     scale = volume.space.cell_sides[0]
     out *= scale
@@ -127,9 +133,12 @@ def skimage_radon_back_projector(sinogram, geometry, vol_space, out=None):
     skimage_range = skimage_proj_space(geometry, vol_space, sinogram.space)
 
     skimage_sinogram = skimage_range.element()
-    skimage_sinogram.sampling(
-        clamped_interpolation(skimage_range, sinogram), bounds_check=False
-    )
+    with writable_array(skimage_sinogram) as sino_arr:
+        point_collocation(
+            clamped_interpolation(sinogram.space, sinogram),
+            skimage_range.grid.meshgrid,
+            out=sino_arr,
+        )
 
     if out is None:
         out = vol_space.element()
