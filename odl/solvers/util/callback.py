@@ -237,6 +237,7 @@ class CallbackStore(Callback):
                 self.results.append(self.function(result))
             else:
                 self.results.append(copy.copy(result))
+        self.iter += 1
 
     def reset(self):
         """Clear the results list."""
