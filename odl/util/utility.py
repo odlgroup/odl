@@ -9,12 +9,13 @@
 """Utilities mainly for internal use."""
 
 from __future__ import absolute_import, division, print_function
+from future.moves.itertools import zip_longest
 
 import inspect
 import sys
 from collections import OrderedDict
 from contextlib import contextmanager
-from itertools import product, zip_longest
+from itertools import product
 
 import numpy as np
 
@@ -160,6 +161,7 @@ def dedent(string, indent_str='   ', max_levels=None):
     def num_indents(line):
         max_num = int(np.ceil(len(line) / len(indent_str)))
 
+        i = 0
         for i in range(max_num):
             if line.startswith(indent_str):
                 line = line[len(indent_str):]
@@ -312,42 +314,6 @@ def dtype_str(dtype):
         return "('{}', {})".format(dtype.base, dtype.shape)
     else:
         return '{}'.format(dtype)
-
-
-def with_metaclass(meta, *bases):
-    """
-    Function from jinja2/_compat.py. License: BSD.
-
-    Use it like this::
-
-        class BaseForm(object):
-            pass
-
-        class FormType(type):
-            pass
-
-        class Form(with_metaclass(FormType, BaseForm)):
-            pass
-
-    This requires a bit of explanation: the basic idea is to make a
-    dummy metaclass for one level of class instantiation that replaces
-    itself with the actual metaclass.  Because of internal type checks
-    we also need to make sure that we downgrade the custom metaclass
-    for one level to something closer to type (that's why __call__ and
-    __init__ comes back from type etc.).
-
-    This has the advantage over six.with_metaclass of not introducing
-    dummy classes into the final MRO.
-    """
-    class metaclass(meta):
-        __call__ = type.__call__
-        __init__ = type.__init__
-
-        def __new__(cls, name, this_bases, d):
-            if this_bases is None:
-                return type.__new__(cls, name, (), d)
-            return meta(name, bases, d)
-    return metaclass('temporary_class', None, {})
 
 
 def cache_arguments(function):
@@ -643,11 +609,13 @@ def writable_array(obj, **kwargs):
     >>> print(lst)
     [2, 4, 6]
     """
+    arr = None
     try:
         arr = np.asarray(obj, **kwargs)
         yield arr
     finally:
-        obj[:] = arr
+        if arr is not None:
+            obj[:] = arr
 
 
 def signature_string(posargs, optargs, sep=', ', mod='!r'):
@@ -1476,6 +1444,7 @@ def npy_random_seed(seed):
     True
     """
     do_seed = seed is not None
+    orig_rng_state = None
     try:
         if do_seed:
             orig_rng_state = np.random.get_state()
@@ -1483,7 +1452,7 @@ def npy_random_seed(seed):
         yield
 
     finally:
-        if do_seed:
+        if do_seed and orig_rng_state is not None:
             np.random.set_state(orig_rng_state)
 
 
@@ -1520,7 +1489,7 @@ def unique(seq):
     try:
         return list(OrderedDict.fromkeys(seq))
     except TypeError:
-        # Unhashable, resort to O(n^2)
+        # Non-hashable, resort to O(n^2)
         unique_values = []
         for i in seq:
             if i not in unique_values:

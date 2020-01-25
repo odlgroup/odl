@@ -785,7 +785,8 @@ class Laplacian(PointwiseTensorFieldOperator):
         return '{}:\n{}'.format(self.__class__.__name__, indent(dom_ran_str))
 
 
-def finite_diff(f, axis, dx=1.0, method='forward', out=None, **kwargs):
+def finite_diff(f, axis, dx=1.0, method='forward', out=None,
+                pad_mode='constant', pad_const=0):
     """Calculate the partial derivative of ``f`` along a given ``axis``.
 
     In the interior of the domain of f, the partial derivative is computed
@@ -904,12 +905,10 @@ def finite_diff(f, axis, dx=1.0, method='forward', out=None, **kwargs):
     if method not in _SUPPORTED_DIFF_METHODS:
         raise ValueError('`method` {} was not understood'.format(method_in))
 
-    pad_mode = kwargs.pop('pad_mode', 'constant')
     if pad_mode not in _SUPPORTED_PAD_MODES:
         raise ValueError('`pad_mode` {} not understood'
                          ''.format(pad_mode))
 
-    pad_const = kwargs.pop('pad_const', 0)
     pad_const = f.dtype.type(pad_const)
 
     if out is None:
@@ -925,9 +924,6 @@ def finite_diff(f, axis, dx=1.0, method='forward', out=None, **kwargs):
     if f_arr.shape[axis] < 3 and pad_mode == 'order2':
         raise ValueError("size of array to small to use 'order2', needs at "
                          "least 3 elements along axis {}.".format(axis))
-
-    if kwargs:
-        raise ValueError('unkown keyword argument(s): {}'.format(kwargs))
 
     # create slice objects: initially all are [:, :, ..., :]
 

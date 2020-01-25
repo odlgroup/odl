@@ -11,11 +11,11 @@
 from __future__ import absolute_import, division, print_function
 
 import numpy as np
-
 from odl.discr.discr_utils import (
     _all_interp_equal, _normalize_interp, per_axis_interpolator,
     point_collocation)
-from odl.discr.lp_discr import DiscreteLp, uniform_partition
+from odl.discr.lp_discr import DiscreteLp
+from odl.discr.partition import uniform_partition
 from odl.operator import Operator
 from odl.space import tensor_space
 from odl.util import (
@@ -431,8 +431,8 @@ class ResizingOperator(Operator):
                 operation is not invertible.
                 """
                 return ResizingOperatorAdjoint(
-                    domain=self.range, range=self.domain,
-                    pad_mode=self.pad_mode)
+                    domain=self.range, range=self.domain, pad_mode=op.pad_mode
+                )
 
         return ResizingOperatorAdjoint(op.range, op.domain, linear=True)
 

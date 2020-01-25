@@ -1,4 +1,4 @@
-# Copyright 2014-2019 The ODL contributors
+# Copyright 2014-2020 The ODL contributors
 #
 # This file is part of ODL.
 #
@@ -15,8 +15,14 @@ import numpy as np
 from odl.discr.lp_discr import uniform_discr_fromdiscr
 from odl.util.numerics import resize_array
 
-__all__ = ('cuboid', 'defrise', 'ellipsoid_phantom', 'indicate_proj_axis',
-           'smooth_cuboid', 'tgv_phantom')
+__all__ = (
+    'cuboid',
+    'defrise',
+    'ellipsoid_phantom',
+    'indicate_proj_axis',
+    'smooth_cuboid',
+    'tgv_phantom',
+)
 
 
 def cuboid(space, min_pt=None, max_pt=None):

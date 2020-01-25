@@ -64,7 +64,8 @@ def test_resizing_op_init(odl_tspace_impl, padding):
 
 
 def test_resizing_op_raise():
-    # domain not a uniformely discretized Lp
+    """Validate error checking in ResizingOperator."""
+    # Domain not a uniformly discretized Lp
     with pytest.raises(TypeError):
         odl.ResizingOperator(odl.rn(5), ran_shp=(10,))
 
@@ -75,30 +76,30 @@ def test_resizing_op_raise():
     with pytest.raises(ValueError):
         odl.ResizingOperator(space, ran_shp=(10,))
 
-    # different cell sides in domain and range
+    # Different cell sides in domain and range
     space = odl.uniform_discr(0, 1, 10)
     res_space = odl.uniform_discr(0, 1, 15)
     with pytest.raises(ValueError):
         odl.ResizingOperator(space, res_space)
 
-    # non-integer multiple of cell sides used as shift (grid of the
+    # Non-integer multiple of cell sides used as shift (grid of the
     # resized space shifted)
     space = odl.uniform_discr(0, 1, 5)
     res_space = odl.uniform_discr(-0.5, 1.5, 10)
     with pytest.raises(ValueError):
         odl.ResizingOperator(space, res_space)
 
-    # need either range or ran_shp
+    # Need either range or ran_shp
     with pytest.raises(ValueError):
         odl.ResizingOperator(space)
 
-    # offset cannot be combined with range
+    # Offset cannot be combined with range
     space = odl.uniform_discr([0, -1], [1, 1], (10, 5))
     res_space = odl.uniform_discr([0, -3], [2, 3], (20, 15))
     with pytest.raises(ValueError):
         odl.ResizingOperator(space, res_space, offset=(0, 0))
 
-    # bad pad_mode
+    # Bad pad_mode
     with pytest.raises(ValueError):
         odl.ResizingOperator(space, res_space, pad_mode='something')
 
@@ -152,11 +153,15 @@ def test_resizing_op_call(odl_tspace_impl):
 
     for dtype in dtypes:
         # Minimal test since this operator only wraps resize_array
-        space = odl.uniform_discr([0, -1], [1, 1], (4, 5), impl=impl)
-        res_space = odl.uniform_discr([0, -0.6], [2, 0.2], (8, 2), impl=impl)
+        space = odl.uniform_discr(
+            [0, -1], [1, 1], (4, 5), dtype=dtype, impl=impl
+        )
+        res_space = odl.uniform_discr(
+            [0, -0.6], [2, 0.2], (8, 2), dtype=dtype, impl=impl
+        )
         res_op = odl.ResizingOperator(space, res_space)
         out = res_op(space.one())
-        true_res = np.zeros((8, 2))
+        true_res = np.zeros((8, 2), dtype=dtype)
         true_res[:4, :] = 1
         assert np.array_equal(out, true_res)
 
@@ -166,11 +171,15 @@ def test_resizing_op_call(odl_tspace_impl):
 
         # Test also mapping to default impl for other 'impl'
         if impl != 'numpy':
-            space = odl.uniform_discr([0, -1], [1, 1], (4, 5), impl=impl)
-            res_space = odl.uniform_discr([0, -0.6], [2, 0.2], (8, 2))
+            space = odl.uniform_discr(
+                [0, -1], [1, 1], (4, 5), dtype=dtype, impl=impl
+            )
+            res_space = odl.uniform_discr(
+                [0, -0.6], [2, 0.2], (8, 2), dtype=dtype
+            )
             res_op = odl.ResizingOperator(space, res_space)
             out = res_op(space.one())
-            true_res = np.zeros((8, 2))
+            true_res = np.zeros((8, 2), dtype=dtype)
             true_res[:4, :] = 1
             assert np.array_equal(out, true_res)
 
@@ -210,7 +219,7 @@ def test_resizing_op_inverse(padding, odl_tspace_impl):
         res_op = odl.ResizingOperator(space, res_space, pad_mode=pad_mode,
                                       pad_const=pad_const)
 
-        # Only left inverse if the operator extentds in all axes
+        # Only left inverse if the operator extends in all axes
         x = noise_element(space)
         assert res_op.inverse(res_op(x)) == x
 

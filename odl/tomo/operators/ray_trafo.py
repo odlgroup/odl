@@ -240,7 +240,7 @@ class RayTransformBase(Operator):
 
             if geometry.motion_partition.ndim == 0:
                 angle_labels = []
-            if geometry.motion_partition.ndim == 1:
+            elif geometry.motion_partition.ndim == 1:
                 angle_labels = ['$\\varphi$']
             elif geometry.motion_partition.ndim == 2:
                 # TODO: check order

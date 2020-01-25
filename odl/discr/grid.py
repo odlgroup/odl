@@ -977,11 +977,11 @@ class RectGrid(Set):
         True
         """
         if isinstance(indices, list):
-            if indices == []:
-                new_coord_vecs = []
-            else:
+            if indices:
                 new_coord_vecs = [self.coord_vectors[0][indices]]
                 new_coord_vecs += self.coord_vectors[1:]
+            else:
+                new_coord_vecs = []
             return RectGrid(*new_coord_vecs)
 
         indices = normalized_index_expression(indices, self.shape,

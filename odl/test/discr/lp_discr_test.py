@@ -274,7 +274,7 @@ def test_element_from_function_1d():
 
     # Broadcast from constant function
     elem_lam = space.element(lambda x: 1.0)
-    true_elem = [1.0 for x in points]
+    true_elem = [1.0 for _ in points]
     assert all_equal(elem_lam, true_elem)
 
 
@@ -288,8 +288,9 @@ def test_element_from_function_2d():
         return x[0] ** 2 + np.maximum(x[1], 0)
 
     elem_f = space.element(f)
-    true_elem = np.reshape([x[0] ** 2 + max(x[1], 0) for x in points],
-                           space.shape)
+    true_elem = np.reshape(
+        [x[0] ** 2 + max(x[1], 0) for x in points], space.shape
+    )
     assert all_equal(elem_f, true_elem)
 
     # With parameter
@@ -298,36 +299,34 @@ def test_element_from_function_2d():
         return x[0] ** 2 + np.maximum(x[1], c)
 
     elem_f_default = space.element(f)
-    true_elem = np.reshape([x[0] ** 2 + max(x[1], 0) for x in points],
-                           space.shape)
+    true_elem = np.reshape(
+        [x[0] ** 2 + max(x[1], 0) for x in points], space.shape
+    )
     assert all_equal(elem_f_default, true_elem)
 
     elem_f_2 = space.element(f, c=1)
-    true_elem = np.reshape([x[0] ** 2 + max(x[1], 1) for x in points],
-                           space.shape)
+    true_elem = np.reshape(
+        [x[0] ** 2 + max(x[1], 1) for x in points], space.shape
+    )
     assert all_equal(elem_f_2, true_elem)
 
     # Using a lambda
     elem_lam = space.element(lambda x: x[0] - x[1])
-    true_elem = np.reshape([x[0] - x[1] for x in points],
-                           space.shape)
+    true_elem = np.reshape([x[0] - x[1] for x in points], space.shape)
     assert all_equal(elem_lam, true_elem)
 
     # Using broadcasting
     elem_lam = space.element(lambda x: x[0])
-    true_elem = np.reshape([x[0] for x in points],
-                           space.shape)
+    true_elem = np.reshape([x[0] for x in points], space.shape)
     assert all_equal(elem_lam, true_elem)
 
     elem_lam = space.element(lambda x: x[1])
-    true_elem = np.reshape([x[1] for x in points],
-                           space.shape)
+    true_elem = np.reshape([x[1] for x in points], space.shape)
     assert all_equal(elem_lam, true_elem)
 
     # Broadcast from constant function
     elem_lam = space.element(lambda x: 1.0)
-    true_elem = np.reshape([1.0 for x in points],
-                           space.shape)
+    true_elem = np.reshape([1.0 for _ in points], space.shape)
     assert all_equal(elem_lam, true_elem)
 
 
@@ -896,7 +895,7 @@ def test_ufunc_corner_cases(odl_tspace_impl):
     space_no_w = odl.uniform_discr([0, 0], [1, 1], (2, 3), impl=impl,
                                    weighting=1.0)
 
-    # --- Ufuncs with nin = 1, nout = 1 --- #
+    # --- UFuncs with nin = 1, nout = 1 --- #
 
     with pytest.raises(ValueError):
         # Too many arguments
@@ -927,7 +926,7 @@ def test_ufunc_corner_cases(odl_tspace_impl):
     res = y.__array_ufunc__(np.sin, '__call__', y)
     assert res.space.weighting == space_no_w.weighting
 
-    # --- Ufuncs with nin = 2, nout = 1 --- #
+    # --- UFuncs with nin = 2, nout = 1 --- #
 
     with pytest.raises(ValueError):
         # Too few arguments
@@ -986,7 +985,7 @@ def test_ufunc_corner_cases(odl_tspace_impl):
     assert all_almost_equal(out_ax1, np.add.reduce(x.asarray(), axis=1))
     assert res is out_ax1
 
-    # Addition is reorderable, so we can give multiple axes
+    # Addition is re-orderable, so we can give multiple axes
     res = x.__array_ufunc__(np.add, 'reduce', x, axis=(0, 1))
     assert res == pytest.approx(np.add.reduce(x.asarray(), axis=(0, 1)))
 

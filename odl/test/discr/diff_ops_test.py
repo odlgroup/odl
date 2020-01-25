@@ -1,4 +1,4 @@
-# Copyright 2014-2017 The ODL contributors
+# Copyright 2014-2020 The ODL contributors
 #
 # This file is part of ODL.
 #
@@ -47,10 +47,8 @@ def test_finite_diff_invalid_args():
     """Test finite difference function for invalid arguments."""
 
     # Test that old "edge order" argument fails.
-    with pytest.raises(ValueError):
+    with pytest.raises(TypeError):
         finite_diff(DATA_1D, axis=0, edge_order=0)
-    with pytest.raises(ValueError):
-        finite_diff(DATA_1D, axis=0, edge_order=3)
 
     # at least a two-element array is required
     with pytest.raises(ValueError):

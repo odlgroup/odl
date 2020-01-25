@@ -644,11 +644,10 @@ class _NearestInterpolator(_Interpolator):
 scipy.interpolate.RegularGridInterpolator.html>`_ class.
 
     This implementation is faster than the more generic one in the
-    `_PerAxisPointwiseInterpolator`. Compared to the original code,
-    support of ``'left'`` and ``'right'`` variants are added.
+    `_PerAxisPointwiseInterpolator`.
     """
 
-    def __init__(self, coord_vecs, values, input_type, variant):
+    def __init__(self, coord_vecs, values, input_type):
         """Initialize a new instance.
 
         coord_vecs : sequence of `numpy.ndarray`'s
@@ -732,7 +731,7 @@ def _compute_linear_weights_edge(idcs, ndist):
 
 
 def _create_weight_edge_lists(indices, norm_distances, interp):
-    # Precalculate indices and weights (per axis)
+    # Pre-calculate indices and weights (per axis)
     low_weights = []
     high_weights = []
     edge_indices = []
@@ -799,7 +798,7 @@ class _PerAxisInterpolator(_Interpolator):
         for lo_hi, edge in zip(product(*([['l', 'h']] * len(indices))),
                                product(*edge_indices)):
             weight = 1.0
-            # TODO: determine best summation order from array strides
+            # TODO(kohr-h): determine best summation order from array strides
             for lh, w_lo, w_hi in zip(lo_hi, low_weights, high_weights):
 
                 # We don't multiply in-place to exploit the cheap operations
@@ -877,7 +876,6 @@ def _check_func_out_arg(func):
     pos_args = spec.args
     pos_defaults = () if spec.defaults is None else spec.defaults
 
-    has_out = 'out' in pos_args or 'out' in kw_only
     if 'out' in pos_args:
         has_out = True
         out_optional = (
@@ -897,7 +895,7 @@ def _func_out_type(func):
     This function is intended to work with all types of callables
     that are used as input to `make_func_for_sampling`.
     """
-    # Numpy Ufuncs and similar objects (e.g. Numba DUfuncs)
+    # Numpy `UFuncs` and similar objects (e.g. Numba `DUFuncs`)
     if hasattr(func, 'nin') and hasattr(func, 'nout'):
         if func.nin != 1:
             raise ValueError(
@@ -1040,7 +1038,8 @@ def make_func_for_sampling(func_or_arr, domain, out_dtype='float64'):
             raise ValueError(
                 'invalid `func_or_arr` {!r}: expected `None`, a callable or '
                 'an array-like of callables whose shape matches '
-                '`out_dtype.shape` {}'.format(val_shape))
+                '`out_dtype.shape` {}'.format(func_or_arr, val_shape)
+            )
 
         arr = np.array(arr, dtype=object, ndmin=1).ravel().tolist()
 
@@ -1131,7 +1130,7 @@ def make_func_for_sampling(func_or_arr, domain, out_dtype='float64'):
                 with writable_array(out) as out_arr:
                     # Flatten tensor axes to work on one tensor
                     # component (= scalar function) at a time
-                    out_comps = out.reshape((-1,) + scalar_out_shape)
+                    out_comps = out_arr.reshape((-1,) + scalar_out_shape)
                     for f, out_comp in zip(arr, out_comps):
                         if np.isscalar(f):
                             out_comp[:] = f
@@ -1192,6 +1191,9 @@ def _make_dual_use_func(func_ip, func_oop, domain, out_dtype):
         out : `numpy.ndarray`, optional
             Output argument holding the result of the function evaluation.
             Its shape must be ``out_dtype.shape + np.broadcast(*x).shape``.
+
+        Other Parameters
+        ----------------
         bounds_check : bool, optional
             If ``True``, check if all input points lie in ``domain``. This
             requires ``domain`` to implement `Set.contains_all`.
@@ -1326,14 +1328,12 @@ def _make_dual_use_func(func_ip, func_oop, domain, out_dtype):
                             np.broadcast_to(res, scalar_out_shape))
 
                     out_arr = np.array(bcast_res, dtype=scalar_out_dtype)
-
                 elif results.dtype != scalar_out_dtype:
                     raise ValueError(
                         'result is of dtype {}, expected {}'
                         ''.format(dtype_repr(results.dtype),
                                   dtype_repr(scalar_out_dtype))
                     )
-
                 else:
                     out_arr = results
 
@@ -1344,7 +1344,6 @@ def _make_dual_use_func(func_ip, func_oop, domain, out_dtype):
                 raise RuntimeError('bad output of function call')
 
         else:
-
             # The in-place evaluation path
 
             if not isinstance(out, np.ndarray):

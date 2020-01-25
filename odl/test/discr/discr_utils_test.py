@@ -177,8 +177,11 @@ def func_1d_ip(x, out):
     out[:] = x * 2
 
 
-func_1d_params = [(func_1d_ref, func_1d_oop), (func_1d_ref, func_1d_ip)]
-func_1d_params.append((lambda x: -x[0], np.negative))
+func_1d_params = [
+    (func_1d_ref, func_1d_oop),
+    (func_1d_ref, func_1d_ip),
+    (lambda x: -x[0], np.negative),
+]
 func_1d = simple_fixture('func_1d', func_1d_params,
                          fmt=' {name} = {value[1].__name__} ')
 

@@ -42,14 +42,14 @@ def clamped_interpolation(skimage_range, sinogram):
     min_x = skimage_range.domain.min()[1]
     max_x = skimage_range.domain.max()[1]
 
-    def interpolator(x, out=None):
+    def _interpolator(x, out=None):
         x = (x[0], np.clip(x[1], min_x, max_x))
         interpolator = linear_interpolator(
             sinogram, skimage_range.grid.coord_vectors
         )
         return interpolator(x, out=out)
 
-    return interpolator
+    return _interpolator
 
 
 def skimage_radon_forward_projector(volume, geometry, proj_space, out=None):

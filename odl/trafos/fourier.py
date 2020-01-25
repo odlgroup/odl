@@ -16,7 +16,7 @@ from odl.discr import DiscreteLp, uniform_discr
 from odl.operator import Operator
 from odl.set import ComplexNumbers, RealNumbers
 from odl.trafos.backends.pyfftw_bindings import (
-    PYFFTW_AVAILABLE, _pyfftw_to_local, pyfftw_call)
+    PYFFTW_AVAILABLE, _flag_pyfftw_to_odl, pyfftw_call)
 from odl.trafos.util import (
     dft_postprocess_data, dft_preprocess_data, reciprocal_grid,
     reciprocal_space)
@@ -269,7 +269,7 @@ class DiscreteFourierTransformBase(Operator):
         kwargs.pop('normalise_idft', None)  # Using `False` here
         kwargs.pop('axes', None)
         kwargs.pop('halfcomplex', None)
-        flags = list(_pyfftw_to_local(flag) for flag in
+        flags = list(_flag_pyfftw_to_odl(flag) for flag in
                      kwargs.pop('flags', ('FFTW_MEASURE',)))
         try:
             flags.remove('unaligned')
@@ -476,7 +476,7 @@ class DiscreteFourierTransform(DiscreteFourierTransformBase):
         kwargs.pop('normalise_idft', None)  # Using `False` here
         kwargs.pop('axes', None)
         kwargs.pop('halfcomplex', None)
-        flags = list(_pyfftw_to_local(flag) for flag in
+        flags = list(_flag_pyfftw_to_odl(flag) for flag in
                      kwargs.pop('flags', ('FFTW_MEASURE',)))
         try:
             flags.remove('unaligned')
@@ -655,7 +655,7 @@ class DiscreteFourierTransformInverse(DiscreteFourierTransformBase):
         kwargs.pop('normalise_idft', None)  # Using `True` here
         kwargs.pop('axes', None)
         kwargs.pop('halfcomplex', None)
-        flags = list(_pyfftw_to_local(flag) for flag in
+        flags = list(_flag_pyfftw_to_odl(flag) for flag in
                      kwargs.pop('flags', ('FFTW_MEASURE',)))
         try:
             flags.remove('unaligned')

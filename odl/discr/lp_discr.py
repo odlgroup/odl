@@ -13,7 +13,6 @@ from __future__ import absolute_import, division, print_function
 from numbers import Integral
 
 import numpy as np
-
 from odl.discr.discr_utils import make_func_for_sampling, point_collocation
 from odl.discr.partition import (
     RectPartition, uniform_partition, uniform_partition_fromintv)
@@ -23,10 +22,9 @@ from odl.space.base_tensors import Tensor, TensorSpace
 from odl.space.entry_points import tensor_space_impl
 from odl.space.weighting import ConstWeighting
 from odl.util import (
-    apply_on_boundary, array_str, dtype_str, is_complex_floating_dtype,
-    is_floating_dtype, is_numeric_dtype, is_real_dtype,
-    normalized_nodes_on_bdry, normalized_scalar_param_list, repr_string,
-    safe_int_conv, signature_string_parts)
+    apply_on_boundary, array_str, dtype_str, is_floating_dtype,
+    is_numeric_dtype, normalized_nodes_on_bdry, normalized_scalar_param_list,
+    repr_string, safe_int_conv, signature_string_parts)
 
 __all__ = (
     'DiscreteLp',
@@ -119,18 +117,20 @@ class DiscreteLp(TensorSpace):
         """Labels for axes when displaying space elements."""
         return self.__axis_labels
 
-    # --- Pass-thru `partition` attributes
+    # --- Pass-through `partition` attributes
 
     @property
     def domain(self):
         """Set on which functions are defined before discretization."""
         return self.partition.set
 
-    # --- Pass-thru `tspace` attributes
+    # --- Pass-through `tspace` attributes
 
     @property
     def weighting(self):
         """This space's weighting scheme."""
+        # TODO(kohr-h): `weighting` is optional in `tspace`, how should we
+        # handle that?
         return self.tspace.weighting
 
     @property
@@ -146,6 +146,8 @@ class DiscreteLp(TensorSpace):
     @property
     def exponent(self):
         """Exponent of this space, the ``p`` in ``L^p``."""
+        # TODO(kohr-h): `exponent` is optional in `tspace`, how should we
+        # handle that?
         return self.tspace.exponent
 
     @property
@@ -226,6 +228,20 @@ class DiscreteLp(TensorSpace):
         This is equal to the default order of `tspace`.
         """
         return self.tspace.default_order
+
+    def default_dtype(self, field=None):
+        """Default data type for new elements in this space.
+
+        This is equal to the default data type of `tspace`.
+        """
+        return self.tspace.default_dtype(field)
+
+    def available_dtypes(self):
+        """Available data types for new elements in this space.
+
+        This is equal to the available data types of `tspace`.
+        """
+        return self.tspace.available_dtypes()
 
     # --- Derived properties
 
@@ -375,7 +391,7 @@ class DiscreteLp(TensorSpace):
 
     # --- Slicing
 
-    # TODO: add byaxis_out when discretized tensor-valued functions are
+    # TODO: add `byaxis`_out when discretized tensor-valued functions are
     # available
 
     @property
@@ -438,6 +454,8 @@ class DiscreteLp(TensorSpace):
                 else:
                     # Other weighting schemes are handled correctly by
                     # the tensor space
+                    # TODO(kohr-h): `byaxis` is not guaranteed to exist in
+                    # `tspace`, how to handle that?
                     tspace = space.tspace.byaxis[indices]
 
                 try:
@@ -542,18 +560,19 @@ class DiscreteLp(TensorSpace):
     def __repr__(self):
         """Return ``repr(self)``."""
         # Clunky check if the factory repr can be used
-        if (uniform_partition_fromintv(
-                self.partition.set, self.shape,
-                nodes_on_bdry=False) == self.partition):
+        if uniform_partition_fromintv(
+            self.partition.set, self.shape, nodes_on_bdry=False
+        ) == self.partition:
             use_uniform = True
             nodes_on_bdry = False
-        elif (uniform_partition_fromintv(
-                self.partition.set, self.shape,
-                nodes_on_bdry=True) == self.partition):
+        elif uniform_partition_fromintv(
+            self.partition.set, self.shape, nodes_on_bdry=True
+        ) == self.partition:
             use_uniform = True
             nodes_on_bdry = True
         else:
             use_uniform = False
+            nodes_on_bdry = None
 
         if use_uniform:
             ctor = 'uniform_discr'
@@ -630,7 +649,7 @@ class DiscreteLpElement(Tensor):
         """Structure for data storage."""
         return self.__tensor
 
-    # --- Pass-thru `space` properties
+    # --- Pass-through `space` properties
 
     @property
     def cell_sides(self):
@@ -642,7 +661,7 @@ class DiscreteLpElement(Tensor):
         """Cell volume of an underlying regular grid."""
         return self.space.cell_volume
 
-    # --- Pass-thru `tensor` properties
+    # --- Pass-through `tensor` properties
 
     @property
     def data(self):
@@ -695,7 +714,7 @@ class DiscreteLpElement(Tensor):
 
         Returns
         -------
-        newelem : `DiscretizedSpaceElement`
+        newelem : `DisceteLpElement`
             Version of this element with given data type.
         """
         return self.space.astype(dtype).element(self.tensor.astype(dtype))
@@ -709,8 +728,7 @@ class DiscreteLpElement(Tensor):
             ``True`` if all entries of ``other`` are equal to this
             element's entries, ``False`` otherwise.
         """
-        return (other in self.space and
-                self.tensor == other.tensor)
+        return other in self.space and other.tensor == self.tensor
 
     def __getitem__(self, indices):
         """Return ``self[indices]``.
@@ -1156,8 +1174,6 @@ class DiscreteLpElement(Tensor):
 
             reduced_axes = [i for i in range(self.ndim) if i not in axis]
 
-        weighting = self.space.weighting
-
         # --- Evaluate ufunc --- #
 
         if method == '__call__':
@@ -1375,6 +1391,8 @@ class DiscreteLpElement(Tensor):
             is that ``fig`` is the return value of an earlier call to
             this function.
 
+        Other Parameters
+        ----------------
         interp : {'linear', 'nearest'}, optional
             Interpolation type that should be used for the plot.
 
@@ -1699,6 +1717,9 @@ def uniform_discr_fromdiscr(discr, min_pt=None, max_pt=None,
         Desired number of samples per axis of the new space.
     cell_sides : float or sequence of floats, optional
         Desired cell side lenghts of the new space's partition.
+
+    Other Parameters
+    ----------------
     nodes_on_bdry : bool or sequence, optional
         If a sequence is provided, it determines per axis whether to
         place the last grid point on the boundary (``True``) or shift it
