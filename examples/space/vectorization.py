@@ -1,21 +1,20 @@
 """Example showing how to use vectorization of `FunctionSpaceElement`'s."""
 
 import numpy as np
-import odl
 import timeit
+
+import odl
+from odl.discr.discr_utils import make_func_for_sampling
 
 
 def performance_example():
-    # Create a space of functions on the interval [0, 1].
-    fspace = odl.FunctionSpace(odl.IntervalProd(0, 1))
+    # Simple function, already supports vectorization
+    f_vec = make_func_for_sampling(
+        lambda x: x ** 2, domain=odl.IntervalProd(0, 1)
+    )
 
-    # Simple function, already supports vectorization.
-    f_vec = fspace.element(lambda x: x ** 2)
-
-    # If 'vectorized=False' is used, odl automatically vectorizes with
-    # the help of numpy.vectorize. This will be very slow, though, since
-    # the implementation is basically a Python loop.
-    f_novec = fspace.element(lambda x: x ** 2, vectorized=False)
+    # Vectorized with NumPy's poor man's vectorization function
+    f_novec = np.vectorize(lambda x: x ** 2)
 
     # We test both versions with 10000 evaluation points. The natively
     # vectorized version should be much faster than the one using
@@ -51,11 +50,11 @@ def numba_example():
     # to wrap the Numba-vectorized function.
     vectorized = numba.vectorize(lambda x, y: x - y if x > y else x + y)
 
-    def myfunc_vec(x):
+    def myfunc_numba(x):
         """Return x - y if x > y, otherwise return x + y."""
         return vectorized(x[0], x[1])
 
-    def myfunc_native_vec(x):
+    def myfunc_vec(x):
         """Return x - y if x > y, otherwise return x + y."""
         # This implementation uses Numpy's fast built-in vectorization
         # directly. The function np.where checks the condition in the
@@ -68,14 +67,16 @@ def numba_example():
 
     # Create (continuous) functions in the space of function defined
     # on the rectangle [0, 1] x [0, 1].
-    fspace = odl.FunctionSpace(odl.IntervalProd([0, 0], [1, 1]))
-    f_default = fspace.element(myfunc, vectorized=False)
-    f_numba = fspace.element(myfunc_vec)
-    f_native = fspace.element(myfunc_native_vec, vectorized=True)
+    f_vec = make_func_for_sampling(
+        myfunc_vec, domain=odl.IntervalProd([0, 0], [1, 1])
+    )
+    f_numba = make_func_for_sampling(
+        myfunc_numba, domain=odl.IntervalProd([0, 0], [1, 1])
+    )
 
     # Create a unform grid in [0, 1] x [0, 1] (fspace.domain) with 2000
     # samples per dimension.
-    grid = odl.uniform_grid_fromintv(fspace.domain, [2000, 2000])
+    grid = odl.uniform_grid([0, 0], [1, 1], shape=(2000, 2000))
     # The points() method really creates all grid points (2000^2) and
     # stores them one-by-one (row-wise) in a large array with shape
     # (2000*2000, 2). Since the function expects points[i] to be the
@@ -89,18 +90,14 @@ def numba_example():
     # See the numpy.meshgrid function for more information.
     mesh = grid.meshgrid  # Returns a sparse meshgrid (2000 * 2)
 
-    print('Non-Vectorized runtime (points):      {:5f}'
-          ''.format(timeit.timeit(lambda: f_default(points), number=1)))
-    print('Non-Vectorized runtime (meshgrid):    {:5f}'
-          ''.format(timeit.timeit(lambda: f_default(mesh), number=1)))
+    print('Native vectorized runtime (points):   {:5f}'
+          ''.format(timeit.timeit(lambda: f_vec(points), number=1)))
+    print('Native vectorized runtime (meshgrid): {:5f}'
+          ''.format(timeit.timeit(lambda: f_vec(mesh), number=1)))
     print('Numba vectorized runtime (points):    {:5f}'
           ''.format(timeit.timeit(lambda: f_numba(points), number=1)))
     print('Numba vectorized runtime (meshgrid):  {:5f}'
           ''.format(timeit.timeit(lambda: f_numba(mesh), number=1)))
-    print('Native vectorized runtime (points):   {:5f}'
-          ''.format(timeit.timeit(lambda: f_native(points), number=1)))
-    print('Native vectorized runtime (meshgrid): {:5f}'
-          ''.format(timeit.timeit(lambda: f_native(mesh), number=1)))
 
 
 if __name__ == '__main__':

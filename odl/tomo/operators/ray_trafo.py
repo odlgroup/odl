@@ -16,7 +16,6 @@ import numpy as np
 
 from odl.discr import DiscreteLp
 from odl.operator import Operator
-from odl.space import FunctionSpace
 from odl.space.weighting import ConstWeighting
 from odl.tomo.backends import (
     ASTRA_AVAILABLE, ASTRA_CUDA_AVAILABLE, ASTRA_VERSION, SKIMAGE_AVAILABLE,
@@ -216,7 +215,6 @@ class RayTransformBase(Operator):
         proj_space = kwargs.pop('proj_space', None)
         if proj_space is None:
             dtype = reco_space.dtype
-            proj_fspace = FunctionSpace(geometry.params, out_dtype=dtype)
 
             if not reco_space.is_weighted:
                 weighting = None
@@ -267,8 +265,10 @@ class RayTransformBase(Operator):
                 axis_labels = angle_labels + det_labels
 
             proj_space = DiscreteLp(
-                proj_fspace, geometry.partition, proj_tspace,
-                axis_labels=axis_labels)
+                geometry.partition,
+                proj_tspace,
+                axis_labels=axis_labels
+            )
 
         else:
             # proj_space was given, checking some stuff

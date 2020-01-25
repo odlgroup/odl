@@ -14,7 +14,7 @@ import numpy as np
 
 from odl.discr import uniform_discr_frompartition, uniform_partition
 from odl.discr.discr_utils import linear_interpolator, point_collocation
-from odl.util import writable_array
+from odl.util.utility import writable_array
 
 try:
     import skimage
@@ -38,10 +38,7 @@ def skimage_proj_space(geometry, volume_space, proj_space):
 
 
 def clamped_interpolation(skimage_range, sinogram):
-    """Interpolate in a possibly smaller space.
-
-    Clip all points to fit within the bounds of the given space.
-    """
+    """Return interpolator that clamps points to min/max of the space."""
     min_x = skimage_range.domain.min()[1]
     max_x = skimage_range.domain.max()[1]
 

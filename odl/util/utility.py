@@ -1,4 +1,4 @@
-# Copyright 2014-2019 The ODL contributors
+# Copyright 2014-2020 The ODL contributors
 #
 # This file is part of ODL.
 #
@@ -9,14 +9,12 @@
 """Utilities mainly for internal use."""
 
 from __future__ import absolute_import, division, print_function
-from future.moves.itertools import zip_longest
 
 import inspect
 import sys
 from collections import OrderedDict
 from contextlib import contextmanager
-from functools import wraps
-from itertools import product
+from itertools import product, zip_longest
 
 import numpy as np
 
@@ -157,7 +155,7 @@ def dedent(string, indent_str='   ', max_levels=None):
 
     lines = string.splitlines()
 
-    # Determine common (minumum) number of indentation levels, capped at
+    # Determine common (minimum) number of indentation levels, capped at
     # `max_levels` if given
     def num_indents(line):
         max_num = int(np.ceil(len(line) / len(indent_str)))
@@ -589,84 +587,6 @@ def conj_exponent(exp):
         return exp / (exp - 1.0)
 
 
-def preload_first_arg(instance, mode):
-    """Decorator to preload the first argument of a call method.
-
-    Parameters
-    ----------
-    instance :
-        Class instance to preload the call with
-    mode : {'out-of-place', 'in-place'}
-
-        'out-of-place': call is out-of-place -- ``f(x, **kwargs)``
-
-        'in-place': call is in-place -- ``f(x, out, **kwargs)``
-
-    Notes
-    -----
-    The decorated function has the signature according to ``mode``.
-
-    Examples
-    --------
-    Define two functions which need some instance to act on and decorate
-    them manually:
-
-    >>> class A(object):
-    ...     '''My name is A.'''
-    >>> a = A()
-    ...
-    >>> def f_oop(inst, x):
-    ...     print(inst.__doc__)
-    ...
-    >>> def f_ip(inst, out, x):
-    ...     print(inst.__doc__)
-    ...
-    >>> f_oop_new = preload_first_arg(a, 'out-of-place')(f_oop)
-    >>> f_ip_new = preload_first_arg(a, 'in-place')(f_ip)
-    ...
-    >>> f_oop_new(0)
-    My name is A.
-    >>> f_ip_new(0, out=1)
-    My name is A.
-
-    Decorate upon definition:
-
-    >>> @preload_first_arg(a, 'out-of-place')
-    ... def set_x(obj, x):
-    ...     '''Function to set x in ``obj`` to a given value.'''
-    ...     obj.x = x
-    >>> set_x(0)
-    >>> a.x
-    0
-
-    The function's name and docstring are preserved:
-
-    >>> set_x.__name__
-    'set_x'
-    >>> set_x.__doc__
-    'Function to set x in ``obj`` to a given value.'
-    """
-
-    def decorator(call):
-
-        @wraps(call)
-        def oop_wrapper(x, **kwargs):
-            return call(instance, x, **kwargs)
-
-        @wraps(call)
-        def ip_wrapper(x, out, **kwargs):
-            return call(instance, x, out, **kwargs)
-
-        if mode == 'out-of-place':
-            return oop_wrapper
-        elif mode == 'in-place':
-            return ip_wrapper
-        else:
-            raise ValueError('bad mode {!r}'.format(mode))
-
-    return decorator
-
-
 @contextmanager
 def none_context(*args, **kwargs):
     """Trivial context manager, accepts arbitrary args and returns ``None``."""
@@ -1084,7 +1004,7 @@ def repr_string(outer_string, inner_strings, allow_mixed_seps=True):
 
     Parameters
     ----------
-    outer_str : str
+    outer_string : str
         Name of the class or function that should be printed outside
         the parentheses.
     inner_strings : sequence of sequence of str
@@ -1561,6 +1481,7 @@ def npy_random_seed(seed):
             orig_rng_state = np.random.get_state()
             np.random.seed(seed)
         yield
+
     finally:
         if do_seed:
             np.random.set_state(orig_rng_state)

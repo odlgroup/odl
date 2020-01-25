@@ -22,8 +22,5 @@ __all__ += npy_tensors.__all__
 from .pspace import *
 __all__ += pspace.__all__
 
-from .fspace import *
-__all__ += fspace.__all__
-
 from .space_utils import *
 __all__ += space_utils.__all__

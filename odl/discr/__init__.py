@@ -6,7 +6,7 @@
 # v. 2.0. If a copy of the MPL was not distributed with this file, You can
 # obtain one at https://mozilla.org/MPL/2.0/.
 
-"""Discretizations in ODL."""
+"""Discretization-related functionality like grids and discrete spaces."""
 
 from __future__ import absolute_import
 
@@ -17,9 +17,6 @@ __all__ += grid.__all__
 
 from .partition import *
 __all__ += partition.__all__
-
-from .discretization import *
-__all__ += discretization.__all__
 
 from .lp_discr import *
 __all__ += lp_discr.__all__
