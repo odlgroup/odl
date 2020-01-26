@@ -80,7 +80,7 @@ def point_collocation(func, points, out=None, **kwargs):
     By default, inputs are checked against ``domain`` to be in bounds. This
     can be switched off by passing ``bounds_check=False``:
 
-    >>> mesh = np.meshgrid([-1, 0, 4])
+    >>> mesh = sparse_meshgrid([-1, 0, 4])
     >>> point_collocation(func, mesh, bounds_check=False)
     array([  1.,   0.,  16.])
 
@@ -844,6 +844,10 @@ def _check_func_out_arg(func):
     Also verify that the signature of ``func`` has no ``*args`` since
     they make argument propagation a huge hassle.
 
+    Note: this function only works for objects that can be inspected
+    with the ``inspect`` module, i.e., Python functions and callables,
+    but not, e.g., NumPy UFuncs.
+
     Parameters
     ----------
     func : callable
@@ -890,7 +894,7 @@ def _check_func_out_arg(func):
 
 
 def _func_out_type(func):
-    """Check if ``func`` has (optional) output argument.
+    """Determine the output argument type (if any) of a function-like object.
 
     This function is intended to work with all types of callables
     that are used as input to `make_func_for_sampling`.
@@ -1031,7 +1035,7 @@ def make_func_for_sampling(func_or_arr, domain, out_dtype='float64'):
     else:
         # This is for the case that an array-like of callables is provided.
         # We need to convert this into a single function that returns an
-        # array, and maybe we need to vectorize member functions.
+        # array.
 
         arr = func_or_arr
         if np.shape(arr) != val_shape:
