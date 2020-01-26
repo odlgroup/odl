@@ -10,38 +10,39 @@
 
 from __future__ import absolute_import, division, print_function
 
-from builtins import object
 from multiprocessing import Lock
 
 import numpy as np
+import warnings
 from packaging.version import parse as parse_version
 
 from odl.discr import DiscretizedSpace
 from odl.tomo.backends.astra_setup import (
     ASTRA_VERSION, astra_algorithm, astra_data, astra_projection_geometry,
-    astra_projector, astra_volume_geometry)
+    astra_projector, astra_volume_geometry, astra_supports, astra_versions_supporting)
 from odl.tomo.geometry import (
     ConeBeamGeometry, FanBeamGeometry, Geometry, Parallel2dGeometry,
     Parallel3dAxisGeometry)
+from odl.tomo.backends.impl import RayTransformImplBase
 
 try:
     import astra
+
     ASTRA_CUDA_AVAILABLE = astra.astra.use_cuda()
 except ImportError:
     ASTRA_CUDA_AVAILABLE = False
 
 __all__ = (
     'ASTRA_CUDA_AVAILABLE',
-    'AstraCudaProjectorImpl',
-    'AstraCudaBackProjectorImpl',
+    'AstraCudaRayTransformImpl',
 )
 
 
-class AstraCudaProjectorImpl(object):
-
+class AstraCudaRayTransformImpl(RayTransformImplBase):
     """Thin wrapper around ASTRA."""
 
-    algo_id = None
+    algo_forward_id = None
+    algo_backward_id = None
     vol_id = None
     sino_id = None
     proj_id = None
@@ -59,20 +60,93 @@ class AstraCudaProjectorImpl(object):
         proj_space : `DiscretizedSpace`
             Projection space, the space of the result.
         """
-        assert isinstance(geometry, Geometry)
-        assert isinstance(reco_space, DiscretizedSpace)
-        assert isinstance(proj_space, DiscretizedSpace)
-
-        self.geometry = geometry
-        self.reco_space = reco_space
-        self.proj_space = proj_space
+        super().__init__(geometry, reco_space, proj_space)
 
         self.create_ids()
 
         # ASTRA projectors are not thread-safe, thus we need to lock ourselves
         self._mutex = Lock()
 
-    def call_forward(self, vol_data, out=None):
+    @classmethod
+    def supports_geometry(cls, geometry):
+        # Print a warning if the detector midpoint normal vector at any
+        # angle is perpendicular to the geometry axis in parallel 3d
+        # single-axis geometry -- this is broken in some ASTRA versions
+        if (isinstance(geometry, Parallel3dAxisGeometry) and
+                not astra_supports('par3d_det_mid_pt_perp_to_axis')):
+            req_ver = astra_versions_supporting('par3d_det_mid_pt_perp_to_axis')
+            axis = geometry.axis
+            mid_pt = geometry.det_params.mid_pt
+            for i, angle in enumerate(geometry.angles):
+                if abs(np.dot(axis,
+                              geometry.det_to_src(angle, mid_pt))) < 1e-4:
+                    warnings.warn(
+                        'angle {}: detector midpoint normal {} is '
+                        'perpendicular to the geometry axis {} in '
+                        '`Parallel3dAxisGeometry`; this is broken in '
+                        'ASTRA {}, please upgrade to ASTRA {}'
+                        ''.format(i, geometry.det_to_src(angle, mid_pt),
+                                  axis, ASTRA_VERSION, req_ver),
+                        RuntimeWarning)
+                    break
+
+        return True
+
+    def create_ids(self):
+        """Create ASTRA objects."""
+        # Create input and output arrays
+        if self.geometry.motion_partition.ndim == 1:
+            motion_shape = self.geometry.motion_partition.shape
+        else:
+            # Need to flatten 2- or 3-dimensional angles into one axis
+            motion_shape = (np.prod(self.geometry.motion_partition.shape),)
+
+        proj_shape = motion_shape + self.geometry.det_partition.shape
+        proj_ndim = len(proj_shape)
+
+        if proj_ndim == 2:
+            astra_proj_shape = proj_shape
+            astra_vol_shape = self.reco_space.shape
+        elif proj_ndim == 3:
+            # The `u` and `v` axes of the projection data are swapped,
+            # see explanation in `astra_*_3d_geom_to_vec`.
+            astra_proj_shape = (proj_shape[1], proj_shape[0], proj_shape[2])
+            astra_vol_shape = self.reco_space.shape
+
+        self.vol_array = np.empty(astra_vol_shape, dtype='float32', order='C')
+        self.proj_array = np.empty(astra_proj_shape, dtype='float32', order='C')
+
+        # Create ASTRA data structures
+        vol_geom = astra_volume_geometry(self.reco_space)
+        proj_geom = astra_projection_geometry(self.geometry)
+        self.vol_id = astra_data(vol_geom,
+                                 datatype='volume',
+                                 ndim=self.reco_space.ndim,
+                                 data=self.vol_array,
+                                 allow_copy=False)
+
+        proj_type = 'cuda' if proj_ndim == 2 else 'cuda3d'
+        self.proj_id = astra_projector(
+            proj_type, vol_geom, proj_geom, proj_ndim
+        )
+
+        self.sino_id = astra_data(proj_geom,
+                                  datatype='projection',
+                                  ndim=proj_ndim,
+                                  data=self.proj_array,
+                                  allow_copy=False)
+
+        # Create algorithm
+        self.algo_forward_id = astra_algorithm(
+            'forward', proj_ndim, self.vol_id, self.sino_id,
+            proj_id=self.proj_id, impl='cuda')
+
+        # Create algorithm
+        self.algo_backward_id = astra_algorithm(
+            'backward', proj_ndim, self.vol_id, self.sino_id,
+            proj_id=self.proj_id, impl='cuda')
+
+    def call_forward(self, vol_data, out, **kwargs):
         """Run an ASTRA forward projection on the given data using the GPU.
 
         Parameters
@@ -105,13 +179,13 @@ class AstraCudaProjectorImpl(object):
                 raise RuntimeError('unknown ndim')
 
             # Run algorithm
-            astra.algorithm.run(self.algo_id)
+            astra.algorithm.run(self.algo_forward_id)
 
             # Copy result to host
             if self.geometry.ndim == 2:
-                out[:] = self.out_array
+                out[:] = self.proj_array
             elif self.geometry.ndim == 3:
-                out[:] = np.swapaxes(self.out_array, 0, 1).reshape(
+                out[:] = np.swapaxes(self.proj_array, 0, 1).reshape(
                     self.proj_space.shape)
 
             # Fix scaling to weight by pixel size
@@ -122,113 +196,7 @@ class AstraCudaProjectorImpl(object):
 
             return out
 
-    def create_ids(self):
-        """Create ASTRA objects."""
-        # Create input and output arrays
-        if self.geometry.motion_partition.ndim == 1:
-            motion_shape = self.geometry.motion_partition.shape
-        else:
-            # Need to flatten 2- or 3-dimensional angles into one axis
-            motion_shape = (np.prod(self.geometry.motion_partition.shape),)
-
-        proj_shape = motion_shape + self.geometry.det_partition.shape
-        proj_ndim = len(proj_shape)
-
-        if proj_ndim == 2:
-            astra_proj_shape = proj_shape
-            astra_vol_shape = self.reco_space.shape
-        elif proj_ndim == 3:
-            # The `u` and `v` axes of the projection data are swapped,
-            # see explanation in `astra_*_3d_geom_to_vec`.
-            astra_proj_shape = (proj_shape[1], proj_shape[0], proj_shape[2])
-            astra_vol_shape = self.reco_space.shape
-
-        self.in_array = np.empty(astra_vol_shape,
-                                 dtype='float32', order='C')
-        self.out_array = np.empty(astra_proj_shape,
-                                  dtype='float32', order='C')
-
-        # Create ASTRA data structures
-        vol_geom = astra_volume_geometry(self.reco_space)
-        proj_geom = astra_projection_geometry(self.geometry)
-        self.vol_id = astra_data(vol_geom,
-                                 datatype='volume',
-                                 ndim=self.reco_space.ndim,
-                                 data=self.in_array,
-                                 allow_copy=False)
-
-        proj_type = 'cuda' if proj_ndim == 2 else 'cuda3d'
-        self.proj_id = astra_projector(
-            proj_type, vol_geom, proj_geom, proj_ndim
-        )
-
-        self.sino_id = astra_data(proj_geom,
-                                  datatype='projection',
-                                  ndim=proj_ndim,
-                                  data=self.out_array,
-                                  allow_copy=False)
-
-        # Create algorithm
-        self.algo_id = astra_algorithm(
-            'forward', proj_ndim, self.vol_id, self.sino_id,
-            proj_id=self.proj_id, impl='cuda')
-
-    def __del__(self):
-        """Delete ASTRA objects."""
-        if self.geometry.ndim == 2:
-            adata, aproj = astra.data2d, astra.projector
-        else:
-            adata, aproj = astra.data3d, astra.projector3d
-
-        if self.algo_id is not None:
-            astra.algorithm.delete(self.algo_id)
-            self.algo_id = None
-        if self.vol_id is not None:
-            adata.delete(self.vol_id)
-            self.vol_id = None
-        if self.sino_id is not None:
-            adata.delete(self.sino_id)
-            self.sino_id = None
-        if self.proj_id is not None:
-            aproj.delete(self.proj_id)
-            self.proj_id = None
-
-
-class AstraCudaBackProjectorImpl(object):
-
-    """Thin wrapper around ASTRA."""
-
-    algo_id = None
-    vol_id = None
-    sino_id = None
-    proj_id = None
-
-    def __init__(self, geometry, reco_space, proj_space):
-        """Initialize a new instance.
-
-        Parameters
-        ----------
-        geometry : `Geometry`
-            Geometry defining the tomographic setup.
-        reco_space : `DiscretizedSpace`
-            Reconstruction space, the space to which the backprojection maps.
-        proj_space : `DiscretizedSpace`
-            Projection space, the space from which the backprojection maps.
-        """
-        assert isinstance(geometry, Geometry)
-        assert isinstance(reco_space, DiscretizedSpace)
-        assert isinstance(proj_space, DiscretizedSpace)
-
-        self.geometry = geometry
-        self.reco_space = reco_space
-        self.proj_space = proj_space
-        self.create_ids()
-
-        # Create a mutually exclusive lock so that two callers cant use the
-        # same shared resource at the same time.
-        self._mutex = Lock()
-
-    def call_backward(self, proj_data, out=None):
+    def call_backward(self, proj_data, out, **kwargs):
         """Run an ASTRA back-projection on the given data using the GPU.
 
         Parameters
@@ -248,6 +216,7 @@ class AstraCudaBackProjectorImpl(object):
         """
         with self._mutex:
             assert proj_data in self.proj_space
+
             if out is not None:
                 assert out in self.reco_space
             else:
@@ -264,66 +233,16 @@ class AstraCudaBackProjectorImpl(object):
                 astra.data3d.store(self.sino_id, swapped_proj_data)
 
             # Run algorithm
-            astra.algorithm.run(self.algo_id)
+            astra.algorithm.run(self.algo_backward_id)
 
             # Copy result to CPU memory
-            out[:] = self.out_array
+            out[:] = self.vol_array
 
             # Fix scaling to weight by pixel/voxel size
             out *= astra_cuda_bp_scaling_factor(
                 self.proj_space, self.reco_space, self.geometry)
 
             return out
-
-    def create_ids(self):
-        """Create ASTRA objects."""
-        if self.geometry.motion_partition.ndim == 1:
-            motion_shape = self.geometry.motion_partition.shape
-        else:
-            # Need to flatten 2- or 3-dimensional angles into one axis
-            motion_shape = (np.prod(self.geometry.motion_partition.shape),)
-
-        proj_shape = motion_shape + self.geometry.det_partition.shape
-        proj_ndim = len(proj_shape)
-
-        if proj_ndim == 2:
-            astra_proj_shape = proj_shape
-            astra_vol_shape = self.reco_space.shape
-        elif proj_ndim == 3:
-            # The `u` and `v` axes of the projection data are swapped,
-            # see explanation in `astra_*_3d_geom_to_vec`.
-            astra_proj_shape = (proj_shape[1], proj_shape[0], proj_shape[2])
-            astra_vol_shape = self.reco_space.shape
-
-        self.in_array = np.empty(astra_proj_shape,
-                                 dtype='float32', order='C')
-        self.out_array = np.empty(astra_vol_shape,
-                                  dtype='float32', order='C')
-
-        # Create ASTRA data structures
-        vol_geom = astra_volume_geometry(self.reco_space)
-        proj_geom = astra_projection_geometry(self.geometry)
-        self.sino_id = astra_data(proj_geom,
-                                  datatype='projection',
-                                  data=self.in_array,
-                                  ndim=proj_ndim,
-                                  allow_copy=False)
-
-        proj_type = 'cuda' if proj_ndim == 2 else 'cuda3d'
-        self.proj_id = astra_projector(
-            proj_type, vol_geom, proj_geom, proj_ndim
-        )
-
-        self.vol_id = astra_data(vol_geom,
-                                 datatype='volume',
-                                 data=self.out_array,
-                                 ndim=self.reco_space.ndim,
-                                 allow_copy=False)
-
-        # Create algorithm
-        self.algo_id = astra_algorithm(
-            'backward', proj_ndim, self.vol_id, self.sino_id,
-            proj_id=self.proj_id, impl='cuda')
 
     def __del__(self):
         """Delete ASTRA objects."""
@@ -332,9 +251,12 @@ class AstraCudaBackProjectorImpl(object):
         else:
             adata, aproj = astra.data3d, astra.projector3d
 
-        if self.algo_id is not None:
-            astra.algorithm.delete(self.algo_id)
-            self.algo_id = None
+        if self.algo_forward_id is not None:
+            astra.algorithm.delete(self.algo_forward_id)
+            self.algo_forward_id = None
+        if self.algo_backward_id is not None:
+            astra.algorithm.delete(self.algo_backward_id)
+            self.algo_backward_id = None
         if self.vol_id is not None:
             adata.delete(self.vol_id)
             self.vol_id = None
@@ -478,4 +400,5 @@ def astra_cuda_bp_scaling_factor(proj_space, reco_space, geometry):
 
 if __name__ == '__main__':
     from odl.util.testutils import run_doctests
+
     run_doctests()

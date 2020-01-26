@@ -11,19 +11,26 @@
 from __future__ import division
 
 import numpy as np
+from odl.tomo import Parallel2dGeometry
 
 from odl.discr import uniform_discr_frompartition, uniform_partition
 from odl.discr.discr_utils import linear_interpolator, point_collocation
+from odl.tomo.backends import RayTransformImplBase
 from odl.util.utility import writable_array
 
 try:
     import skimage
+
     SKIMAGE_AVAILABLE = True
 except ImportError:
     SKIMAGE_AVAILABLE = False
 
-__all__ = ('skimage_radon_forward_projector', 'skimage_radon_back_projector',
-           'SKIMAGE_AVAILABLE')
+__all__ = (
+    'SKIMAGE_AVAILABLE',
+    'skimage_radon_forward_projector',
+    'skimage_radon_back_projector',
+    'SkimageRayTransformImpl',
+)
 
 
 def skimage_proj_space(geometry, volume_space, proj_space):
@@ -168,3 +175,47 @@ def skimage_radon_back_projector(sinogram, geometry, vol_space, out=None):
     out *= scaling_factor
 
     return out
+
+
+class SkimageRayTransformImpl(RayTransformImplBase):
+    def __init__(self, geometry, reco_space, proj_space):
+        super().__init__(geometry, reco_space, proj_space)
+
+    @staticmethod
+    def can_handle_size(size):
+        return not size >= 256 ** 2
+
+    @classmethod
+    def supports_geometry(cls, geometry):
+        if not isinstance(geometry, Parallel2dGeometry):
+            return TypeError("{!r} backend only supports 2d parallel "
+                             'geometries'.format(cls.__name__))
+
+        return True
+
+    @classmethod
+    def supports_reco_space(cls, reco_name, reco_space):
+        mid_pt = reco_space.domain.mid_pt
+        if not np.allclose(mid_pt, [0, 0]):
+            return ValueError('`{}` must be centered at (0, 0), got '
+                              'midpoint {}'.format(reco_name, mid_pt))
+
+        shape = reco_space.shape
+        if shape[0] != shape[1]:
+            return ValueError('`{}.shape` must have equal entries, '
+                              'got {}'.format(reco_name, shape))
+
+        extent = reco_space.domain.extent
+        if extent[0] != extent[1]:
+            return ValueError('`{}.extent` must have equal entries, '
+                              'got {}'.format(reco_name, extent))
+
+        return True
+
+    def call_forward(self, x_real, out_real, **kwargs):
+        return skimage_radon_forward_projector(
+            x_real, self.geometry, self.proj_space.real_space, out_real)
+
+    def call_backward(self, x_real, out_real, **kwargs):
+        return skimage_radon_back_projector(
+            x_real, self.geometry, self.reco_space.real_space, out_real)

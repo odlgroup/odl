@@ -16,6 +16,7 @@ from odl.discr import DiscretizedSpace, DiscretizedSpaceElement
 from odl.tomo.backends.astra_setup import (
     astra_algorithm, astra_data, astra_projection_geometry, astra_projector,
     astra_volume_geometry)
+from odl.tomo.backends.impl import RayTransformImplBase
 from odl.tomo.geometry import (
     DivergentBeamGeometry, Geometry, ParallelBeamGeometry)
 from odl.util import writable_array
@@ -29,6 +30,7 @@ __all__ = (
     'astra_cpu_forward_projector',
     'astra_cpu_back_projector',
     'default_astra_proj_type',
+    'AstraCpuRayTransformImpl',
 )
 
 
@@ -201,9 +203,11 @@ def astra_cpu_back_projector(proj_data, geometry, vol_space, out=None,
         raise TypeError("`vol_space.impl` must be 'numpy', got {!r}"
                         "".format(vol_space.impl))
     if vol_space.ndim != geometry.ndim:
-        raise ValueError('dimensions {} of reconstruction space and {} of '
-                         'geometry do not match'.format(
-                             vol_space.ndim, geometry.ndim))
+        raise ValueError(
+            'dimensions {} of reconstruction space and {} of '
+            'geometry do not match'
+            ''.format(vol_space.ndim, geometry.ndim)
+        )
     if out is None:
         out = vol_space.element()
     else:
@@ -251,6 +255,32 @@ def astra_cpu_back_projector(proj_data, geometry, vol_space, out=None,
     return out
 
 
+class AstraCpuRayTransformImpl(RayTransformImplBase):
+    def __init__(self, geometry, reco_space, proj_space):
+        super().__init__(geometry, reco_space, proj_space)
+
+    @staticmethod
+    def can_handle_size(size):
+        return not size >= 512 ** 2
+
+    @classmethod
+    def supports_geometry(cls, geometry):
+        if geometry.ndim > 2:
+            return ValueError('`impl` {!r} only works for 2d'
+                              ''.format(cls.__name__))
+
+        return True
+
+    def call_forward(self, x_real, out_real, **kwargs):
+        return astra_cpu_forward_projector(
+            x_real, self.geometry, self.proj_space.real_space, out_real, **kwargs)
+
+    def call_backward(self, x_real, out_real, **kwargs):
+        return astra_cpu_back_projector(
+            x_real, self.geometry, self.reco_space.real_space, out_real, **kwargs)
+
+
 if __name__ == '__main__':
     from odl.util.testutils import run_doctests
+
     run_doctests()

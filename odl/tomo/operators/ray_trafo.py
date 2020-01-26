@@ -18,30 +18,30 @@ from odl.discr import DiscretizedSpace
 from odl.operator import Operator
 from odl.space.weighting import ConstWeighting
 from odl.tomo.backends import (
-    ASTRA_AVAILABLE, ASTRA_CUDA_AVAILABLE, ASTRA_VERSION, SKIMAGE_AVAILABLE,
-    AstraCudaBackProjectorImpl, AstraCudaProjectorImpl,
-    astra_cpu_back_projector, astra_cpu_forward_projector, astra_supports,
-    astra_versions_supporting, skimage_radon_back_projector,
-    skimage_radon_forward_projector)
-from odl.tomo.geometry import (
-    Geometry, Parallel2dGeometry, Parallel3dAxisGeometry)
+    ASTRA_AVAILABLE, ASTRA_CUDA_AVAILABLE, SKIMAGE_AVAILABLE,
+    RayTransformImplBase,
+    SkimageRayTransformImpl, AstraCudaRayTransformImpl, AstraCpuRayTransformImpl)
+from odl.tomo.geometry import Geometry
 
-ASTRA_CPU_AVAILABLE = ASTRA_AVAILABLE
-_SUPPORTED_IMPL = ('astra_cpu', 'astra_cuda', 'skimage')
+# Backends that are implemented in ODL and can be specified via `impl`
+_SUPPORTED_IMPL = {
+    'astra_cpu': AstraCpuRayTransformImpl,
+    'astra_cuda': AstraCudaRayTransformImpl,
+    'skimage': SkimageRayTransformImpl}
+
+# Backends that are installed, ordered by preference
 _AVAILABLE_IMPLS = []
-if ASTRA_CPU_AVAILABLE:
-    _AVAILABLE_IMPLS.append('astra_cpu')
 if ASTRA_CUDA_AVAILABLE:
     _AVAILABLE_IMPLS.append('astra_cuda')
+if ASTRA_AVAILABLE:
+    _AVAILABLE_IMPLS.append('astra_cpu')
 if SKIMAGE_AVAILABLE:
     _AVAILABLE_IMPLS.append('skimage')
-
 
 __all__ = ('RayTransform', 'RayBackProjection')
 
 
 class RayTransformBase(Operator):
-
     """Base class for ray transforms containing common attributes."""
 
     def __init__(self, reco_space, geometry, variant, **kwargs):
@@ -110,106 +110,6 @@ class RayTransformBase(Operator):
         if not isinstance(geometry, Geometry):
             raise TypeError('`geometry` must be a `Geometry` instance, got '
                             '{!r}'.format(geometry))
-
-        # Handle backend choice
-        if not _AVAILABLE_IMPLS:
-            raise RuntimeError('no ray transform back-end available; '
-                               'this requires 3rd party packages, please '
-                               'check the install docs')
-        impl = kwargs.pop('impl', None)
-        if impl is None:
-            # Select fastest available
-            if ASTRA_CUDA_AVAILABLE:
-                impl = 'astra_cuda'
-            elif ASTRA_AVAILABLE:
-                impl = 'astra_cpu'
-                if reco_space.size >= 512 ** 2:
-                    warnings.warn(
-                        "The best available backend ('astra_cpu') may be too "
-                        "slow for volumes of this size. Consider using "
-                        "'astra_cuda' if your machine has an Nvidia GPU. "
-                        "This warning can be disabled by explicitly setting "
-                        "`impl='astra_cpu'`.",
-                        RuntimeWarning)
-            elif SKIMAGE_AVAILABLE:
-                impl = 'skimage'
-                if reco_space.size >= 256 ** 2:
-                    warnings.warn(
-                        "The best available backend ('skimage') may be too "
-                        "slow for volumes of this size. Consider using ASTRA. "
-                        "This warning can be disabled by explicitly setting "
-                        "`impl='skimage'`.",
-                        RuntimeWarning)
-            else:
-                raise RuntimeError('no backend')
-
-        impl, impl_in = str(impl).lower(), impl
-        if impl not in _SUPPORTED_IMPL:
-            raise ValueError('`impl` {!r} not understood'.format(impl_in))
-        if impl not in _AVAILABLE_IMPLS:
-            raise ValueError('{!r} back-end not available'.format(impl))
-
-        # Cache for input/output arrays of transforms
-        self.use_cache = kwargs.pop('use_cache', True)
-
-        # Sanity checks
-        if impl.startswith('astra'):
-            if geometry.ndim > 2 and impl.endswith('cpu'):
-                raise ValueError('`impl` {!r} only works for 2d'
-                                 ''.format(impl_in))
-
-            # Print a warning if the detector midpoint normal vector at any
-            # angle is perpendicular to the geometry axis in parallel 3d
-            # single-axis geometry -- this is broken in some ASTRA versions
-            if (
-                isinstance(geometry, Parallel3dAxisGeometry) and
-                not astra_supports('par3d_det_mid_pt_perp_to_axis')
-            ):
-                req_ver = astra_versions_supporting(
-                    'par3d_det_mid_pt_perp_to_axis'
-                )
-                axis = geometry.axis
-                mid_pt = geometry.det_params.mid_pt
-                for i, angle in enumerate(geometry.angles):
-                    if abs(np.dot(axis,
-                                  geometry.det_to_src(angle, mid_pt))) < 1e-4:
-                        warnings.warn(
-                            'angle {}: detector midpoint normal {} is '
-                            'perpendicular to the geometry axis {} in '
-                            '`Parallel3dAxisGeometry`; this is broken in '
-                            'ASTRA {}, please upgrade to ASTRA {}'
-                            ''.format(i, geometry.det_to_src(angle, mid_pt),
-                                      axis, ASTRA_VERSION, req_ver),
-                            RuntimeWarning)
-                        break
-
-        elif impl == 'skimage':
-            if not isinstance(geometry, Parallel2dGeometry):
-                raise TypeError("{!r} backend only supports 2d parallel "
-                                'geometries'.format(impl))
-
-            mid_pt = reco_space.domain.mid_pt
-            if not np.allclose(mid_pt, [0, 0]):
-                raise ValueError('`{}` must be centered at (0, 0), got '
-                                 'midpoint {}'.format(reco_name, mid_pt))
-
-            shape = reco_space.shape
-            if shape[0] != shape[1]:
-                raise ValueError('`{}.shape` must have equal entries, '
-                                 'got {}'.format(reco_name, shape))
-
-            extent = reco_space.domain.extent
-            if extent[0] != extent[1]:
-                raise ValueError('`{}.extent` must have equal entries, '
-                                 'got {}'.format(reco_name, extent))
-
-        if reco_space.ndim != geometry.ndim:
-            raise ValueError('`{}.ndim` not equal to `geometry.ndim`: '
-                             '{} != {}'.format(reco_name, reco_space.ndim,
-                                               geometry.ndim))
-
-        self.__geometry = geometry
-        self.__impl = impl
 
         # Generate or check projection space
         proj_space = kwargs.pop('proj_space', None)
@@ -285,9 +185,91 @@ class RayTransformBase(Operator):
                                                    proj_space.dtype,
                                                    reco_space.dtype))
 
+        if reco_space.ndim != geometry.ndim:
+            raise ValueError('`{}.ndim` not equal to `geometry.ndim`: '
+                             '{} != {}'.format(reco_name, reco_space.ndim,
+                                               geometry.ndim))
+
+        # Cache for input/output arrays of transforms
+        self.use_cache = kwargs.pop('use_cache', True)
+
+        impl = kwargs.pop('impl', None)
+        if impl is None:  # User didn't specify a backend
+            if not _AVAILABLE_IMPLS:
+                raise RuntimeError('no ray transform back-end available; '
+                                   'this requires 3rd party packages, please '
+                                   'check the install docs')
+
+            # Select fastest available, _AVAILABLE_IMPLS is sorted by speed
+            impl_type = _SUPPORTED_IMPL[_AVAILABLE_IMPLS[0]]
+
+            # Warn if implementation is not fast enough
+            if not impl_type.can_handle_size(reco_space.size):
+                if impl == 'astra_cpu':
+                    warnings.warn(
+                        "The best available backend ('astra_cpu') may be too "
+                        "slow for volumes of this size. Consider using "
+                        "'astra_cuda' if your machine has an Nvidia GPU. "
+                        "This warning can be disabled by explicitly setting "
+                        "`impl='astra_cpu'`.",
+                        RuntimeWarning)
+                elif impl == 'skimage':
+                    warnings.warn(
+                        "The best available backend ('skimage') may be too "
+                        "slow for volumes of this size. Consider using ASTRA. "
+                        "This warning can be disabled by explicitly setting "
+                        "`impl='skimage'`.",
+                        RuntimeWarning)
+        else:
+            # User did specify `impl`
+            if isinstance(impl, str):
+                impl, impl_in = str(impl).lower(), impl
+
+                if impl not in _SUPPORTED_IMPL:
+                    raise ValueError('`impl` {!r} not understood'.format(impl_in))
+
+                if impl not in _AVAILABLE_IMPLS:
+                    raise ValueError('{!r} back-end not available'.format(impl))
+
+                impl_type = _SUPPORTED_IMPL[impl]
+            elif isinstance(impl, type):
+                # User gave the type and leaves instantiation to us
+                if not issubclass(impl, RayTransformImplBase):
+                    raise ValueError('Type {!r} must be a subclass of '
+                                     '`RayTransformImplBase`.'.format(impl))
+
+                impl_type = impl
+            elif isinstance(impl, RayTransformImplBase):
+                # User gave an object for `impl`
+                # This is a possible use case, but would clutter this class
+                raise NotImplementedError(
+                    'Given for `impl` is an already initialized object of subclass'
+                    ' `RayTransformImplBase`. This is not supported, because'
+                    ' the object cannot be regenerated when `use_cache` is `False`.'
+                    'Instead give for `impl` the type of your implementation.')
+            else:
+                raise ValueError(
+                    'Given `impl` should be a `str` or the type of a subclass of '
+                    '`RayTransformImplBase`, now it is a {!r}.'.format(type(impl)))
+
+        # Sanity checks
+        geometry_support = impl_type.supports_geometry(geometry)
+        if not geometry_support:
+            raise geometry_support
+
+        reco_space_support = impl_type.supports_reco_space(reco_space, reco_name)
+        if not reco_space_support:
+            raise reco_space_support
+
+        self.__geometry = geometry
+
+        self.impl_type = impl_type
+        self.__cached_impl = None
+        self.__reco_space = reco_space
+        self.__proj_space = proj_space
+
         # Reserve name for cached properties (used for efficiency reasons)
         self._adjoint = None
-        self._astra_wrapper = None
 
         # Extra kwargs that can be reused for adjoint etc. These must
         # be retrieved with `get` instead of `pop` above.
@@ -304,7 +286,16 @@ class RayTransformBase(Operator):
     @property
     def impl(self):
         """Implementation back-end for the evaluation of this operator."""
-        return self.__impl
+
+        # Only skip impl creation (__cached_impl) when `use_cache` is True
+        if not self.use_cache or self.__cached_impl is None:
+            # Lazily (re)instantiate the backend
+            self.__cached_impl = self.impl_type(
+                self.geometry,
+                reco_space=self.__reco_space.real_space,
+                proj_space=self.__proj_space.real_space)
+
+        return self.__cached_impl
 
     @property
     def geometry(self):
@@ -338,7 +329,6 @@ class RayTransformBase(Operator):
 
 
 class RayTransform(RayTransformBase):
-
     """Discrete Ray transform between L^p spaces."""
 
     def __init__(self, domain, geometry, **kwargs):
@@ -396,41 +386,9 @@ class RayTransform(RayTransformBase):
             variant='forward', **kwargs)
 
     def _call_real(self, x_real, out_real, **kwargs):
-        """Real-space forward projection for the current set-up.
+        """Real-space forward projection for the current set-up."""
 
-        This method also sets ``self._astra_projector`` for
-        ``impl='astra_cuda'`` and enabled cache.
-        """
-        if self.impl.startswith('astra'):
-            backend, data_impl = self.impl.split('_')
-
-            if data_impl == 'cpu':
-                return astra_cpu_forward_projector(
-                    x_real, self.geometry, self.range.real_space, out_real,
-                    **kwargs)
-
-            elif data_impl == 'cuda':
-                if self._astra_wrapper is None:
-                    astra_wrapper = AstraCudaProjectorImpl(
-                        self.geometry, self.domain.real_space,
-                        self.range.real_space)
-                    if self.use_cache:
-                        self._astra_wrapper = astra_wrapper
-                else:
-                    astra_wrapper = self._astra_wrapper
-
-                return astra_wrapper.call_forward(x_real, out_real, **kwargs)
-            else:
-                # Should never happen
-                raise RuntimeError('bad `impl` {!r}'.format(self.impl))
-
-        elif self.impl == 'skimage':
-            return skimage_radon_forward_projector(
-                x_real, self.geometry, self.range.real_space, out_real,
-                **kwargs)
-        else:
-            # Should never happen
-            raise RuntimeError('bad `impl` {!r}'.format(self.impl))
+        return self.impl.call_forward(x_real, out_real, **kwargs)
 
     @property
     def adjoint(self):
@@ -444,7 +402,7 @@ class RayTransform(RayTransformBase):
             kwargs = self._extra_kwargs.copy()
             kwargs['domain'] = self.range
             self._adjoint = RayBackProjection(self.domain, self.geometry,
-                                              impl=self.impl,
+                                              impl=self.impl_type,
                                               use_cache=self.use_cache,
                                               **kwargs)
 
@@ -452,7 +410,6 @@ class RayTransform(RayTransformBase):
 
 
 class RayBackProjection(RayTransformBase):
-
     """Adjoint of the discrete Ray transform between L^p spaces."""
 
     def __init__(self, range, geometry, **kwargs):
@@ -511,39 +468,9 @@ class RayBackProjection(RayTransformBase):
             variant='backward', **kwargs)
 
     def _call_real(self, x_real, out_real, **kwargs):
-        """Real-space back-projection for the current set-up.
+        """Real-space back-projection for the current set-up."""
 
-        This method also sets ``self._astra_backprojector`` for
-        ``impl='astra_cuda'`` and enabled cache.
-        """
-        if self.impl.startswith('astra'):
-            backend, data_impl = self.impl.split('_')
-            if data_impl == 'cpu':
-                return astra_cpu_back_projector(
-                    x_real, self.geometry, self.range.real_space, out_real,
-                    **kwargs)
-            elif data_impl == 'cuda':
-                if self._astra_wrapper is None:
-                    astra_wrapper = AstraCudaBackProjectorImpl(
-                        self.geometry, self.range.real_space,
-                        self.domain.real_space)
-                    if self.use_cache:
-                        self._astra_wrapper = astra_wrapper
-                else:
-                    astra_wrapper = self._astra_wrapper
-
-                return astra_wrapper.call_backward(x_real, out_real, **kwargs)
-            else:
-                # Should never happen
-                raise RuntimeError('bad `impl` {!r}'.format(self.impl))
-
-        elif self.impl == 'skimage':
-            return skimage_radon_back_projector(
-                x_real, self.geometry, self.range.real_space, out_real,
-                **kwargs)
-        else:
-            # Should never happen
-            raise RuntimeError('bad `impl` {!r}'.format(self.impl))
+        return self.impl.call_backward(x_real, out_real, **kwargs)
 
     @property
     def adjoint(self):
@@ -566,4 +493,5 @@ class RayBackProjection(RayTransformBase):
 
 if __name__ == '__main__':
     from odl.util.testutils import run_doctests
+
     run_doctests()
