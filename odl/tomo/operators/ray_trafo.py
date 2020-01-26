@@ -440,15 +440,14 @@ class RayTransform(RayTransformBase):
         -------
         adjoint : `RayBackProjection`
         """
-        if self._adjoint is not None:
-            return self._adjoint
+        if self._adjoint is None:
+            kwargs = self._extra_kwargs.copy()
+            kwargs['domain'] = self.range
+            self._adjoint = RayBackProjection(self.domain, self.geometry,
+                                              impl=self.impl,
+                                              use_cache=self.use_cache,
+                                              **kwargs)
 
-        kwargs = self._extra_kwargs.copy()
-        kwargs['domain'] = self.range
-        self._adjoint = RayBackProjection(self.domain, self.geometry,
-                                          impl=self.impl,
-                                          use_cache=self.use_cache,
-                                          **kwargs)
         return self._adjoint
 
 
@@ -554,15 +553,14 @@ class RayBackProjection(RayTransformBase):
         -------
         adjoint : `RayTransform`
         """
-        if self._adjoint is not None:
-            return self._adjoint
+        if self._adjoint is None:
+            kwargs = self._extra_kwargs.copy()
+            kwargs['range'] = self.domain
+            self._adjoint = RayTransform(self.range, self.geometry,
+                                         impl=self.impl,
+                                         use_cache=self.use_cache,
+                                         **kwargs)
 
-        kwargs = self._extra_kwargs.copy()
-        kwargs['range'] = self.domain
-        self._adjoint = RayTransform(self.range, self.geometry,
-                                     impl=self.impl,
-                                     use_cache=self.use_cache,
-                                     **kwargs)
         return self._adjoint
 
 
