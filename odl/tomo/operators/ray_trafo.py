@@ -194,6 +194,7 @@ class RayTransformBase(Operator):
         self.use_cache = kwargs.pop('use_cache', True)
 
         impl = kwargs.pop('impl', None)
+
         if impl is None:  # User didn't specify a backend
             if not _AVAILABLE_IMPLS:
                 raise RuntimeError('no ray transform back-end available; '
@@ -205,7 +206,7 @@ class RayTransformBase(Operator):
 
             # Warn if implementation is not fast enough
             if not impl_type.can_handle_size(reco_space.size):
-                if impl == 'astra_cpu':
+                if impl_type == AstraCpuRayTransformImpl:
                     warnings.warn(
                         "The best available backend ('astra_cpu') may be too "
                         "slow for volumes of this size. Consider using "
@@ -213,25 +214,29 @@ class RayTransformBase(Operator):
                         "This warning can be disabled by explicitly setting "
                         "`impl='astra_cpu'`.",
                         RuntimeWarning)
-                elif impl == 'skimage':
+                elif impl_type == SkimageRayTransformImpl:
                     warnings.warn(
                         "The best available backend ('skimage') may be too "
                         "slow for volumes of this size. Consider using ASTRA. "
                         "This warning can be disabled by explicitly setting "
                         "`impl='skimage'`.",
                         RuntimeWarning)
+                else:
+                    warnings.warn(
+                        "The `impl` backend indicates that it might be too slow "
+                        " for volumes of the input size.",
+                        RuntimeWarning)
+
         else:
             # User did specify `impl`
             if isinstance(impl, str):
-                impl, impl_in = str(impl).lower(), impl
+                if impl.lower() not in _SUPPORTED_IMPL:
+                    raise ValueError('`impl` {!r} not understood'.format(impl))
 
-                if impl not in _SUPPORTED_IMPL:
-                    raise ValueError('`impl` {!r} not understood'.format(impl_in))
-
-                if impl not in _AVAILABLE_IMPLS:
+                if impl.lower() not in _AVAILABLE_IMPLS:
                     raise ValueError('{!r} back-end not available'.format(impl))
 
-                impl_type = _SUPPORTED_IMPL[impl]
+                impl_type = _SUPPORTED_IMPL[impl.lower()]
             elif isinstance(impl, type):
                 # User gave the type and leaves instantiation to us
                 if not issubclass(impl, RayTransformImplBase):
@@ -263,7 +268,8 @@ class RayTransformBase(Operator):
 
         self.__geometry = geometry
 
-        self.impl_type = impl_type
+        self._impl_type = impl_type
+        self.__impl = impl.lower() if isinstance(impl, str) else impl
         self.__cached_impl = None
         self.__reco_space = reco_space
         self.__proj_space = proj_space
@@ -285,12 +291,17 @@ class RayTransformBase(Operator):
 
     @property
     def impl(self):
-        """Implementation back-end for the evaluation of this operator."""
+        """Implementation name string or type."""
 
-        # Only skip impl creation (__cached_impl) when `use_cache` is True
-        if not self.use_cache or self.__cached_impl is None:
+        return self.__impl
+
+    def create_impl(self, from_cache=True):
+        """Fetches or instantiates implementation backend for evaluation."""
+
+        # Skip impl creation (__cached_impl) when `clear_cache` is True
+        if not from_cache or self.__cached_impl is None:
             # Lazily (re)instantiate the backend
-            self.__cached_impl = self.impl_type(
+            self.__cached_impl = self._impl_type(
                 self.geometry,
                 reco_space=self.__reco_space.real_space,
                 proj_space=self.__proj_space.real_space)
@@ -388,7 +399,8 @@ class RayTransform(RayTransformBase):
     def _call_real(self, x_real, out_real, **kwargs):
         """Real-space forward projection for the current set-up."""
 
-        return self.impl.call_forward(x_real, out_real, **kwargs)
+        return self.create_impl(self.use_cache) \
+            .call_forward(x_real, out_real, **kwargs)
 
     @property
     def adjoint(self):
@@ -402,7 +414,7 @@ class RayTransform(RayTransformBase):
             kwargs = self._extra_kwargs.copy()
             kwargs['domain'] = self.range
             self._adjoint = RayBackProjection(self.domain, self.geometry,
-                                              impl=self.impl_type,
+                                              impl=self.impl,
                                               use_cache=self.use_cache,
                                               **kwargs)
 
@@ -470,7 +482,8 @@ class RayBackProjection(RayTransformBase):
     def _call_real(self, x_real, out_real, **kwargs):
         """Real-space back-projection for the current set-up."""
 
-        return self.impl.call_backward(x_real, out_real, **kwargs)
+        return self.create_impl(self.use_cache) \
+            .call_backward(x_real, out_real, **kwargs)
 
     @property
     def adjoint(self):
