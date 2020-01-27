@@ -194,6 +194,7 @@ class RayTransformBase(Operator):
         self.use_cache = kwargs.pop('use_cache', True)
 
         impl = kwargs.pop('impl', None)
+        self.__cached_impl = None
 
         if impl is None:  # User didn't specify a backend
             if not _AVAILABLE_IMPLS:
@@ -245,16 +246,13 @@ class RayTransformBase(Operator):
 
                 impl_type = impl
             elif isinstance(impl, RayTransformImplBase):
-                # User gave an object for `impl`
-                # This is a possible use case, but would clutter this class
-                raise NotImplementedError(
-                    'Given for `impl` is an already initialized object of subclass'
-                    ' `RayTransformImplBase`. This is not supported, because'
-                    ' the object cannot be regenerated when `use_cache` is `False`.'
-                    'Instead give for `impl` the type of your implementation.')
+                # User gave an object for `impl`, meaning to set the
+                # backend cache to an already initiated object
+                impl_type = type(impl)
+                self.__cached_impl = impl
             else:
-                raise ValueError(
-                    'Given `impl` should be a `str` or the type of a subclass of '
+                raise TypeError(
+                    'Given `impl` should be a `str`, or the type or subclass of '
                     '`RayTransformImplBase`, now it is a {!r}.'.format(type(impl)))
 
         # Sanity checks
@@ -267,10 +265,8 @@ class RayTransformBase(Operator):
             raise reco_space_support
 
         self.__geometry = geometry
-
         self._impl_type = impl_type
         self.__impl = impl.lower() if isinstance(impl, str) else impl
-        self.__cached_impl = None
         self.__reco_space = reco_space
         self.__proj_space = proj_space
 
@@ -413,10 +409,13 @@ class RayTransform(RayTransformBase):
         if self._adjoint is None:
             kwargs = self._extra_kwargs.copy()
             kwargs['domain'] = self.range
-            self._adjoint = RayBackProjection(self.domain, self.geometry,
-                                              impl=self.impl,
-                                              use_cache=self.use_cache,
-                                              **kwargs)
+
+            # initiate adjoint with cached implementation if `use_cache`
+            self._adjoint = RayBackProjection(
+                self.domain, self.geometry,
+                impl=self.impl if not self.use_cache else self.create_impl(self.use_cache),
+                use_cache=self.use_cache,
+                **kwargs)
 
         return self._adjoint
 
@@ -496,10 +495,13 @@ class RayBackProjection(RayTransformBase):
         if self._adjoint is None:
             kwargs = self._extra_kwargs.copy()
             kwargs['range'] = self.domain
-            self._adjoint = RayTransform(self.range, self.geometry,
-                                         impl=self.impl,
-                                         use_cache=self.use_cache,
-                                         **kwargs)
+
+            # initiate adjoint with cached implementation if `use_cache`
+            self._adjoint = RayTransform(
+                self.range, self.geometry,
+                impl=self.impl if not self.use_cache else self.create_impl(self.use_cache),
+                use_cache=self.use_cache,
+                **kwargs)
 
         return self._adjoint
 
