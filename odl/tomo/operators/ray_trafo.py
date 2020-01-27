@@ -266,7 +266,7 @@ class RayTransformBase(Operator):
 
         self.__geometry = geometry
         self._impl_type = impl_type
-        self.__impl = impl.lower() if isinstance(impl, str) else impl
+        self.__impl = impl.lower() if isinstance(impl, str) else impl_type
         self.__reco_space = reco_space
         self.__proj_space = proj_space
 
