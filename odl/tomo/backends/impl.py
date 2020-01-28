@@ -37,12 +37,12 @@ class RayTransformImplBase(ABC):
                             '{!r}'.format(geometry))
 
         if not isinstance(reco_space, DiscreteLp):
-            raise TypeError('`reco_space` must be a `DiscreteLP` instance, got '
-                            '{!r}'.format(reco_space))
+            raise TypeError('`reco_space` must be a `DiscreteLP` instance, got'
+                            ' {!r}'.format(reco_space))
 
         if not isinstance(proj_space, DiscreteLp):
-            raise TypeError('`proj_space` must be a `DiscreteLP` instance, got '
-                            '{!r}'.format(proj_space))
+            raise TypeError('`proj_space` must be a `DiscreteLP` instance, got'
+                            ' {!r}'.format(proj_space))
 
         self.geometry = geometry
         self.reco_space = reco_space

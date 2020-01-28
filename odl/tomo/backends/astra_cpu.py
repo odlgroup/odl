@@ -273,11 +273,13 @@ class AstraCpuRayTransformImpl(RayTransformImplBase):
 
     def call_forward(self, x_real, out_real, **kwargs):
         return astra_cpu_forward_projector(
-            x_real, self.geometry, self.proj_space.real_space, out_real, **kwargs)
+            x_real, self.geometry, self.proj_space.real_space,
+            out_real, **kwargs)
 
     def call_backward(self, x_real, out_real, **kwargs):
         return astra_cpu_back_projector(
-            x_real, self.geometry, self.reco_space.real_space, out_real, **kwargs)
+            x_real, self.geometry, self.reco_space.real_space,
+            out_real, **kwargs)
 
 
 if __name__ == '__main__':

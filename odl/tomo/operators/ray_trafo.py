@@ -20,7 +20,8 @@ from odl.space.weighting import ConstWeighting
 from odl.tomo.backends import (
     ASTRA_AVAILABLE, ASTRA_CUDA_AVAILABLE, SKIMAGE_AVAILABLE,
     RayTransformImplBase,
-    SkimageRayTransformImpl, AstraCudaRayTransformImpl, AstraCpuRayTransformImpl)
+    SkimageRayTransformImpl, AstraCudaRayTransformImpl,
+    AstraCpuRayTransformImpl)
 from odl.tomo.geometry import Geometry
 
 # Backends that are implemented in ODL and can be specified via `impl`
@@ -118,9 +119,9 @@ class RayTransformBase(Operator):
 
             if not reco_space.is_weighted:
                 weighting = None
-            elif (isinstance(reco_space.weighting, ConstWeighting) and
-                  np.isclose(reco_space.weighting.const,
-                             reco_space.cell_volume)):
+            elif (isinstance(reco_space.weighting, ConstWeighting)
+                  and np.isclose(reco_space.weighting.const,
+                                 reco_space.cell_volume)):
                 # Approximate cell volume
                 # TODO: find a way to treat angles and detector differently
                 # regarding weighting. While the detector should be uniformly
@@ -224,8 +225,8 @@ class RayTransformBase(Operator):
                         RuntimeWarning)
                 else:
                     warnings.warn(
-                        "The `impl` backend indicates that it might be too slow "
-                        " for volumes of the input size.",
+                        "The `impl` backend indicates that it might be too "
+                        "slow for volumes of the input size.",
                         RuntimeWarning)
 
         else:
@@ -235,14 +236,15 @@ class RayTransformBase(Operator):
                     raise ValueError('`impl` {!r} not understood'.format(impl))
 
                 if impl.lower() not in _AVAILABLE_IMPLS:
-                    raise ValueError('{!r} back-end not available'.format(impl))
+                    raise ValueError(
+                        '{!r} back-end not available'.format(impl))
 
                 impl_type = _SUPPORTED_IMPL[impl.lower()]
             elif isinstance(impl, type):
                 # User gave the type and leaves instantiation to us
                 if not issubclass(impl, RayTransformImplBase):
-                    raise ValueError('Type {!r} must be a subclass of '
-                                     '`RayTransformImplBase`.'.format(impl))
+                    raise TypeError('Type {!r} must be a subclass of '
+                                    '`RayTransformImplBase`.'.format(impl))
 
                 impl_type = impl
             elif isinstance(impl, RayTransformImplBase):
@@ -252,15 +254,17 @@ class RayTransformBase(Operator):
                 self.__cached_impl = impl
             else:
                 raise TypeError(
-                    'Given `impl` should be a `str`, or the type or subclass of '
-                    '`RayTransformImplBase`, now it is a {!r}.'.format(type(impl)))
+                    'Given `impl` should be a `str`, or the type or subclass '
+                    'of `RayTransformImplBase`, '
+                    'now it is a {!r}.'.format(type(impl)))
 
         # Sanity checks
         geometry_support = impl_type.supports_geometry(geometry)
         if not geometry_support:
             raise geometry_support
 
-        reco_space_support = impl_type.supports_reco_space(reco_space, reco_name)
+        reco_space_support = impl_type.supports_reco_space(reco_space,
+                                                           reco_name)
         if not reco_space_support:
             raise reco_space_support
 
@@ -413,7 +417,9 @@ class RayTransform(RayTransformBase):
             # initiate adjoint with cached implementation if `use_cache`
             self._adjoint = RayBackProjection(
                 self.domain, self.geometry,
-                impl=self.impl if not self.use_cache else self.create_impl(self.use_cache),
+                impl=(self.impl
+                      if not self.use_cache
+                      else self.create_impl(self.use_cache)),
                 use_cache=self.use_cache,
                 **kwargs)
 
@@ -499,11 +505,13 @@ class RayBackProjection(RayTransformBase):
             # initiate adjoint with cached implementation if `use_cache`
             self._adjoint = RayTransform(
                 self.range, self.geometry,
-                impl=self.impl if not self.use_cache else self.create_impl(self.use_cache),
+                impl=(self.impl
+                      if not self.use_cache
+                      else self.create_impl(self.use_cache)),
                 use_cache=self.use_cache,
                 **kwargs)
 
-        return self._adjoint
+            return self._adjoint
 
 
 if __name__ == '__main__':

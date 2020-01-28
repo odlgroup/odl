@@ -19,7 +19,8 @@ from packaging.version import parse as parse_version
 from odl.discr import DiscretizedSpace
 from odl.tomo.backends.astra_setup import (
     ASTRA_VERSION, astra_algorithm, astra_data, astra_projection_geometry,
-    astra_projector, astra_volume_geometry, astra_supports, astra_versions_supporting)
+    astra_projector, astra_volume_geometry, astra_supports,
+    astra_versions_supporting)
 from odl.tomo.geometry import (
     ConeBeamGeometry, FanBeamGeometry, Geometry, Parallel2dGeometry,
     Parallel3dAxisGeometry)
@@ -74,7 +75,8 @@ class AstraCudaRayTransformImpl(RayTransformImplBase):
         # single-axis geometry -- this is broken in some ASTRA versions
         if (isinstance(geometry, Parallel3dAxisGeometry) and
                 not astra_supports('par3d_det_mid_pt_perp_to_axis')):
-            req_ver = astra_versions_supporting('par3d_det_mid_pt_perp_to_axis')
+            req_ver = astra_versions_supporting(
+                'par3d_det_mid_pt_perp_to_axis')
             axis = geometry.axis
             mid_pt = geometry.det_params.mid_pt
             for i, angle in enumerate(geometry.angles):
@@ -114,7 +116,8 @@ class AstraCudaRayTransformImpl(RayTransformImplBase):
             astra_vol_shape = self.reco_space.shape
 
         self.vol_array = np.empty(astra_vol_shape, dtype='float32', order='C')
-        self.proj_array = np.empty(astra_proj_shape, dtype='float32', order='C')
+        self.proj_array = np.empty(astra_proj_shape, dtype='float32',
+                                   order='C')
 
         # Create ASTRA data structures
         vol_geom = astra_volume_geometry(self.reco_space)
