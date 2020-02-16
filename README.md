@@ -12,7 +12,6 @@ For more details and an introduction into the inner workings of ODL, please refe
 
 Highlights
 ==========
-- Well-tested data containers based on NumPy or CUDA allow high performance computing with minimal effort.
 - A versatile and efficient library of optimization routines for smooth and non-smooth problems, such as CGLS, BFGS, PDHG and Douglas-Rachford splitting.
 - Support for tomographic imaging with a unified geometry representation and bindings to external libraries for efficient computation of projections and back-projections.
 - And much more, including support for deep learning libraries, figures of merits, phantom generation, data handling, etc.
