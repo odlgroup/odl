@@ -18,7 +18,7 @@ from odl.tomo import Parallel2dGeometry, Geometry
 from odl.discr import uniform_discr_frompartition, uniform_partition, \
     DiscretizedSpace
 from odl.discr.discr_utils import linear_interpolator, point_collocation
-from odl.tomo.backends import complexify
+from odl.tomo.backends.util import complexify
 from odl.util.utility import writable_array
 
 try:
@@ -32,7 +32,6 @@ __all__ = (
     'SKIMAGE_AVAILABLE',
     'skimage_radon_forward_projector',
     'skimage_radon_back_projector',
-    'Skimage',
 )
 
 

@@ -17,7 +17,7 @@ import warnings
 from packaging.version import parse as parse_version
 
 from odl.discr import DiscretizedSpace
-from odl.tomo.backends import complexify
+from odl.tomo.backends.util import complexify
 from odl.tomo.backends.astra_setup import (
     ASTRA_VERSION, astra_algorithm, astra_data, astra_projection_geometry,
     astra_projector, astra_volume_geometry, astra_supports,
@@ -35,7 +35,6 @@ except ImportError:
 
 __all__ = (
     'ASTRA_CUDA_AVAILABLE',
-    'AstraCuda',
 )
 
 

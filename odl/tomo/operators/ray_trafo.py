@@ -18,8 +18,10 @@ from odl.discr import DiscretizedSpace
 from odl.operator import Operator
 from odl.space.weighting import ConstWeighting
 from odl.tomo.backends import (
-    ASTRA_AVAILABLE, ASTRA_CUDA_AVAILABLE, SKIMAGE_AVAILABLE,
-    Skimage, AstraCuda, AstraCpu)
+    ASTRA_AVAILABLE, ASTRA_CUDA_AVAILABLE, SKIMAGE_AVAILABLE)
+from odl.tomo.backends.astra_cpu import AstraCpu
+from odl.tomo.backends.astra_cuda import AstraCuda
+from odl.tomo.backends.skimage_radon import Skimage
 from odl.tomo.geometry import Geometry
 
 # Backends that are implemented in ODL and can be specified via `impl`

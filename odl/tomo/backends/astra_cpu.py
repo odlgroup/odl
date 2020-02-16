@@ -16,7 +16,8 @@ import warnings
 from odl.discr import DiscretizedSpace, DiscretizedSpaceElement
 from odl.tomo.backends.astra_setup import (
     astra_algorithm, astra_data, astra_projection_geometry, astra_projector,
-    astra_volume_geometry, complexify)
+    astra_volume_geometry)
+from odl.tomo.backends.util import complexify
 from odl.tomo.geometry import (
     DivergentBeamGeometry, Geometry, ParallelBeamGeometry)
 from odl.util import writable_array
@@ -30,7 +31,6 @@ __all__ = (
     'astra_cpu_forward_projector',
     'astra_cpu_back_projector',
     'default_astra_proj_type',
-    'AstraCpu',
 )
 
 
