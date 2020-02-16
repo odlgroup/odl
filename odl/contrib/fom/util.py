@@ -1,4 +1,4 @@
-# Copyright 2014-2019 The ODL contributors
+# Copyright 2014-2020 The ODL contributors
 #
 # This file is part of ODL.
 #
@@ -405,7 +405,7 @@ def spherical_sum(image, binning_factor=1.0):
 
     Parameters
     ----------
-    image : `DiscreteLp` element
+    image : `DiscretizedSpace` element
         Input data whose radial sum should be computed.
     binning_factor : positive float, optional
         Reduce the number of output bins by this factor. Increasing this
@@ -420,7 +420,7 @@ def spherical_sum(image, binning_factor=1.0):
 
     Returns
     -------
-    spherical_sum : 1D `DiscreteLp` element
+    spherical_sum : 1D `DiscretizedSpace` element
         The spherical sum of ``image``. Its space is one-dimensional with
         domain ``[0, rmax]``, where ``rmax`` is the radius of the smallest
         ball containing ``image.space.domain``. Its shape is ``(N,)`` with ::

@@ -30,7 +30,7 @@ def cuboid(space, min_pt=None, max_pt=None):
 
     Parameters
     ----------
-    space : `DiscreteLp`
+    space : `DiscretizedSpace`
         Space in which the phantom should be created.
     min_pt : array-like of shape ``(space.ndim,)``, optional
         Lower left corner of the cuboid. If ``None`` is given, a quarter
@@ -105,7 +105,7 @@ def defrise(space, nellipses=8, alternating=False, min_pt=None, max_pt=None):
 
     Parameters
     ----------
-    space : `DiscreteLp`
+    space : `DiscretizedSpace`
         Space in which the phantom should be created, must be 2- or
         3-dimensional.
     nellipses : int, optional
@@ -207,7 +207,7 @@ def indicate_proj_axis(space, scale_structures=0.5):
 
     Parameters
     ----------
-    space : `DiscreteLp`
+    space : `DiscretizedSpace`
         Space in which the phantom should be created, must be 2- or
         3-dimensional.
     scale_structures : positive float in (0, 1], optional
@@ -333,7 +333,7 @@ def _ellipse_phantom_2d(space, ellipses):
 
     Parameters
     ----------
-    space : `DiscreteLp`
+    space : `DiscretizedSpace`
         Uniformly discretized space in which the phantom should be generated.
         If ``space.shape`` is 1 in an axis, a corresponding slice of the
         phantom is created (instead of squashing the whole phantom into the
@@ -458,7 +458,7 @@ def _ellipsoid_phantom_3d(space, ellipsoids):
 
     Parameters
     ----------
-    space : `DiscreteLp`
+    space : `DiscretizedSpace`
         Space in which the phantom should be generated. If ``space.shape`` is
         1 in an axis, a corresponding slice of the phantom is created
         (instead of squashing the whole phantom into the slice).
@@ -582,7 +582,7 @@ def ellipsoid_phantom(space, ellipsoids, min_pt=None, max_pt=None):
 
     Parameters
     ----------
-    space : `DiscreteLp`
+    space : `DiscretizedSpace`
         Space in which the phantom should be created, must be 2- or
         3-dimensional. If ``space.shape`` is 1 in an axis, a corresponding
         slice of the phantom is created (instead of squashing the whole
@@ -715,7 +715,7 @@ def smooth_cuboid(space, min_pt=None, max_pt=None, axis=0):
 
     Parameters
     ----------
-    space : `DiscreteLp`
+    space : `DiscretizedSpace`
         Discretized space in which the phantom is supposed to be created.
     min_pt : array-like of shape ``(space.ndim,)``, optional
         Lower left corner of the cuboid. If ``None`` is given, a quarter
@@ -780,7 +780,7 @@ def tgv_phantom(space, edge_smoothing=0.2):
 
     Parameters
     ----------
-    space : `DiscreteLp`, 2 dimensional
+    space : `DiscretizedSpace`, 2 dimensional
         Discretized space in which the phantom is supposed to be created.
         Needs to be two-dimensional.
     edge_smoothing : nonnegative float, optional

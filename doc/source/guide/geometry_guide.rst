@@ -77,7 +77,7 @@ is a parametrization of the data manifold.
 
 Geometries in ODL
 =================
-The `RayTransform` in ODL is an `Operator` between `DiscreteLp` type discretized function spaces defined on rectangular domains.
+The `RayTransform` in ODL is an `Operator` between `DiscretizedSpace` type discretized function spaces defined on rectangular domains.
 The **reconstruction space** ("volume"), i.e., the :term:`domain` of the ray transform, is naturally described as functions on a Euclidean space, and as derived above, the **data space**, i.e., the :term:`range` of the ray transform, can also be defined in terms of Euclidean coordinates.
 The missing component, which is the mapping from coordinates to points on the data manifold, is encoded in the `Geometry` class and its subclasses as described in the following.
 

@@ -51,7 +51,7 @@ General errors
 
 #. **Q:** When adding two space elements, the following error is shown::
 
-      TypeError: unsupported operand type(s) for +: 'DiscreteLpElement' and 'DiscreteLpElement'
+      TypeError: unsupported operand type(s) for +: 'DiscretizedSpaceElement' and 'DiscretizedSpaceElement'
 
    This seems completely illogical since it works in other situations and clearly must be supported.
    Why is this error shown?
@@ -83,7 +83,7 @@ General errors
      for example a "we identify X with Y" step has been omitted.
 
    * If the ``dtype`` or ``impl`` do not match, they need to be cast to each one of the others.
-     The most simple way to do this is by using the `DiscreteLpElement.astype` method.
+     The most simple way to do this is by using the `DiscretizedSpaceElement.astype` method.
 
 #. **Q:** I have installed ODL with the ``pip install --editable`` option, but I still get an
    ``AttributeError`` when I try to use a function/class I just implemented. The use-without-reinstall

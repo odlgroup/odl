@@ -8,15 +8,16 @@
 
 """Callback objects for per-iterate actions in iterative methods."""
 
-from __future__ import print_function, division, absolute_import
-from builtins import object
+from __future__ import absolute_import, division, print_function
+
+import contextlib
 import copy
-import numpy as np
 import os
 import time
 import warnings
-import contextlib
+from builtins import object
 
+import numpy as np
 from odl.util import signature_string
 
 __all__ = ('Callback', 'CallbackStore', 'CallbackApply', 'CallbackPrintTiming',
@@ -569,7 +570,7 @@ class CallbackShow(Callback):
 
     See Also
     --------
-    odl.discr.lp_discr.DiscreteLpElement.show
+    odl.discr.lp_discr.DiscretizedSpaceElement.show
     odl.space.base_tensors.Tensor.show
     """
 

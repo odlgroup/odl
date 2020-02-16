@@ -11,8 +11,7 @@
 from __future__ import absolute_import, division, print_function
 from future.moves.itertools import zip_longest
 
-import inspect
-import sys
+import contextlib
 from collections import OrderedDict
 from contextlib import contextmanager
 from itertools import product
@@ -39,7 +38,7 @@ __all__ = (
     'is_string',
     'nd_iterator',
     'conj_exponent',
-    'none_context',
+    'nullcontext',
     'writable_array',
     'signature_string',
     'signature_string_parts',
@@ -59,11 +58,6 @@ TYPE_MAP_R2C = {np.dtype(dtype): np.result_type(dtype, 1j)
 TYPE_MAP_C2R = {cdt: np.empty(0, dtype=cdt).real.dtype
                 for rdt, cdt in TYPE_MAP_R2C.items()}
 TYPE_MAP_C2R.update({k: k for k in TYPE_MAP_R2C.keys()})
-
-if sys.version_info.major < 3:
-    getargspec = inspect.getargspec
-else:
-    getargspec = inspect.getfullargspec
 
 
 def indent(string, indent_str='    '):
@@ -554,9 +548,23 @@ def conj_exponent(exp):
 
 
 @contextmanager
-def none_context(*args, **kwargs):
-    """Trivial context manager, accepts arbitrary args and returns ``None``."""
-    yield
+def nullcontext(enter_result=None):
+    """Backport of the Python >=3.7 trivial context manager.
+
+    See `the Python documentation
+    <https://docs.python.org/3/library/contextlib.html#contextlib.nullcontext>`_
+    for details.
+    """
+    try:
+        yield enter_result
+    finally:
+        pass
+
+
+try:
+    nullcontext = contextlib.nullcontext
+except AttributeError:
+    pass
 
 
 @contextmanager

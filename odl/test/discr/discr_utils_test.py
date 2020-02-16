@@ -17,11 +17,10 @@ import pytest
 
 import odl
 from odl.discr.discr_utils import (
-    linear_interpolator, make_func_for_sampling, nearest_interpolator,
-    per_axis_interpolator, point_collocation)
+    linear_interpolator, nearest_interpolator, per_axis_interpolator,
+    point_collocation, sampling_function)
 from odl.discr.grid import sparse_meshgrid
 from odl.util.testutils import all_almost_equal, all_equal, simple_fixture
-
 
 # --- Helper functions --- #
 
@@ -389,7 +388,7 @@ def test_point_collocation_scalar_valued(domain_ndim, out_dtype, func_nd):
     true_values_mesh = func_ref(mesh)
     true_value_point = func_ref(point)
 
-    sampl_func = make_func_for_sampling(func, domain, out_dtype)
+    sampl_func = sampling_function(func, domain, out_dtype)
     collocator = partial(point_collocation, sampl_func)
 
     # Out of place
@@ -427,7 +426,7 @@ def test_point_collocation_scalar_valued_with_param(func_param_nd):
     true_values_points = func_ref(points, c=2.5)
     true_values_mesh = func_ref(mesh, c=2.5)
 
-    sampl_func = make_func_for_sampling(func, domain, out_dtype='float64')
+    sampl_func = sampling_function(func, domain, out_dtype='float64')
     collocator = partial(point_collocation, sampl_func)
 
     # Out of place
@@ -448,7 +447,7 @@ def test_point_collocation_scalar_valued_with_param(func_param_nd):
     true_values_points = func_ref(points, c=2j)
     true_values_mesh = func_ref(mesh, c=2j)
 
-    sampl_func = make_func_for_sampling(func, domain, out_dtype='complex128')
+    sampl_func = sampling_function(func, domain, out_dtype='complex128')
     collocator = partial(point_collocation, sampl_func)
 
     result_points = collocator(points, c=2j)
@@ -473,7 +472,7 @@ def test_point_collocation_vector_valued(func_vec_nd):
     true_values_mesh = func_ref(mesh)
     true_value_point = func_ref(point)
 
-    sampl_func = make_func_for_sampling(
+    sampl_func = sampling_function(
         func, domain, out_dtype=('float64', (2,))
     )
     collocator = partial(point_collocation, sampl_func)
@@ -521,7 +520,7 @@ def test_point_collocation_tensor_valued(func_tens):
     true_result_mesh = np.array(func_ref(mesh))
     true_result_point = np.array(func_ref(np.array(point)[:, None])).squeeze()
 
-    sampl_func = make_func_for_sampling(
+    sampl_func = sampling_function(
         func, domain, out_dtype=('float64', (2, 3))
     )
     collocator = partial(point_collocation, sampl_func)
@@ -554,7 +553,7 @@ def test_fspace_elem_eval_unusual_dtypes():
     out_vec = np.empty((4,), dtype='int64')
 
     # Can be vectorized for arrays only
-    sampl_func = make_func_for_sampling(
+    sampl_func = sampling_function(
         lambda s: np.array([str(si).count('a') for si in s]),
         domain,
         out_dtype='int64'
@@ -587,7 +586,7 @@ def test_fspace_elem_eval_vec_1d(func_vec_1d):
     true_result_mesh = np.array(func_ref(mesh))
     true_result_point = np.array(func_ref(np.array([point1]))).squeeze()
 
-    sampl_func = make_func_for_sampling(
+    sampl_func = sampling_function(
         func, domain, out_dtype=('float64', (2,))
     )
     collocator = partial(point_collocation, sampl_func)

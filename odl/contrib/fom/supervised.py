@@ -1,4 +1,4 @@
-# Copyright 2014-2019 The ODL contributors
+# Copyright 2014-2020 The ODL contributors
 #
 # This file is part of ODL.
 #
@@ -13,8 +13,8 @@ from __future__ import division
 import numpy as np
 
 import odl
-from odl.discr.grid import sparse_meshgrid
 from odl.contrib.fom.util import spherical_sum
+from odl.discr.grid import sparse_meshgrid
 
 __all__ = ('mean_squared_error', 'mean_absolute_error',
            'mean_value_difference', 'standard_deviation_difference',
@@ -828,9 +828,9 @@ def noise_power_spectrum(data, ground_truth, radial=False,
 
     Parameters
     ----------
-    data : `DiscreteLpElement` or `array-like`
+    data : `DiscretizedSpaceElement` or `array-like`
         Input data to compare to the ground truth. If not a
-        `DiscreteLpElement`, a default space with cell size 1 will be assumed.
+        `DiscretizedSpaceElement`, a default space with cell size 1 will be assumed.
     ground_truth : `array-like`
         Reference to which ``data`` should be compared.
     radial : bool
@@ -848,7 +848,7 @@ def noise_power_spectrum(data, ground_truth, radial=False,
 
     Returns
     -------
-    noise_power_spectrum : `DiscreteLp`-element
+    noise_power_spectrum : `DiscretizedSpace`-element
         The space is the Fourier space corresponding to ``space``, and
         hence the axes indicate frequency.
         If ``radial`` is ``True``, an average over concentric annuli is
@@ -860,7 +860,7 @@ def noise_power_spectrum(data, ground_truth, radial=False,
     """
     try:
         space = data.space
-        assert isinstance(space, odl.DiscreteLp)
+        assert isinstance(space, odl.DiscretizedSpace)
     except (AttributeError, AssertionError):
         data = np.asarray(data)
         space = odl.uniform_discr(

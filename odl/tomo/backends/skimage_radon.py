@@ -57,11 +57,11 @@ def skimage_radon_forward_projector(volume, geometry, proj_space, out=None):
 
     Parameters
     ----------
-    volume : `DiscreteLpElement`
+    volume : `DiscretizedSpaceElement`
         The volume to project.
     geometry : `Geometry`
         The projection geometry to use.
-    proj_space : `DiscreteLp`
+    proj_space : `DiscretizedSpace`
         Space in which the projections (sinograms) live.
     out : ``proj_space`` element, optional
         Element to which the result should be written.
@@ -108,11 +108,11 @@ def skimage_radon_back_projector(sinogram, geometry, vol_space, out=None):
 
     Parameters
     ----------
-    sinogram : `DiscreteLpElement`
+    sinogram : `DiscretizedSpaceElement`
         Sinogram (projections) to backproject.
     geometry : `Geometry`
         The projection geometry to use.
-    vol_space : `DiscreteLp`
+    vol_space : `DiscretizedSpace`
         Space in which reconstructed volumes live.
     out : ``vol_space`` element, optional
         An element to which the result should be written.

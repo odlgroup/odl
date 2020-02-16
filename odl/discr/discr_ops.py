@@ -6,22 +6,22 @@
 # v. 2.0. If a copy of the MPL was not distributed with this file, You can
 # obtain one at https://mozilla.org/MPL/2.0/.
 
-"""Operators defined on `DiscreteLp`."""
+"""Operators defined on `DiscretizedSpace`."""
 
 from __future__ import absolute_import, division, print_function
 
 import numpy as np
+
 from odl.discr.discr_utils import (
-    _all_interp_equal, _normalize_interp, per_axis_interpolator,
-    point_collocation)
-from odl.discr.lp_discr import DiscreteLp
+    _normalize_interp, per_axis_interpolator, point_collocation)
+from odl.discr.lp_discr import DiscretizedSpace
 from odl.discr.partition import uniform_partition
 from odl.operator import Operator
 from odl.space import tensor_space
 from odl.util import (
     normalized_scalar_param_list, resize_array, safe_int_conv, writable_array)
 from odl.util.numerics import _SUPPORTED_RESIZE_PAD_MODES
-from odl.util.utility import none_context
+from odl.util.utility import nullcontext
 
 __all__ = ('Resampling', 'ResizingOperator')
 
@@ -35,11 +35,11 @@ class Resampling(Operator):
 
         Parameters
         ----------
-        domain : `DiscreteLp`
+        domain : `DiscretizedSpace`
             Set of elements that are to be resampled.
-        range : `DiscreteLp`
+        range : `DiscretizedSpace`
             Set in which the resampled elements lie. Must have the same
-            `DiscreteLp.domain` as ``domain``.
+            `DiscretizedSpace.domain` as ``domain``.
         interp : str or sequence of str
             Interpolation type that should be used to resample. A single
             value applies to all axes, and a sequence gives the interpolation
@@ -92,7 +92,9 @@ class Resampling(Operator):
     @property
     def interp(self):
         """Interpolation scheme or tuple of per-axis interpolation schemes."""
-        if _all_interp_equal(self.interp_byaxis):
+        if len(self.interp_byaxis) == 0:
+            return ()
+        elif all(s == self.interp_byaxis[0] for s in self.interp_byaxis[1:]):
             return self.interp_byaxis[0]
         else:
             return self.interp_byaxis
@@ -107,8 +109,8 @@ class Resampling(Operator):
             x, self.domain.grid.coord_vectors, self.interp
         )
 
-        context = none_context if out is None else writable_array
-        with context(out) as out_arr:
+        out_ctx = nullcontext() if out is None else writable_array(out)
+        with out_ctx as out_arr:
             return point_collocation(
                 interpolator, self.range.meshgrid, out=out_arr
             )
@@ -168,8 +170,8 @@ class ResizingOperator(Operator):
     """Operator mapping a discretized function to a new domain.
 
     This operator is a mapping between uniformly discretized
-    `DiscreteLp` spaces with the same `DiscreteLp.cell_sides`,
-    but different `DiscreteLp.shape`. The underlying operation is array
+    `DiscretizedSpace` spaces with the same `DiscretizedSpace.cell_sides`,
+    but different `DiscretizedSpace.shape`. The underlying operation is array
     resizing, i.e. no resampling is performed.
     In axes where the domain is enlarged, the new entries are filled
     ("padded") according to a provided parameter ``pad_mode``.
@@ -187,10 +189,10 @@ class ResizingOperator(Operator):
 
         Parameters
         ----------
-        domain : uniform `DiscreteLp`
+        domain : uniform `DiscretizedSpace`
             Uniformly discretized space, the operator can be applied
             to its elements.
-        range : uniform `DiscreteLp`, optional
+        range : uniform `DiscretizedSpace`, optional
             Uniformly discretized space in which the result of the
             application of this operator lies.
             For the default ``None``, a space with the same attributes
@@ -293,8 +295,8 @@ class ResizingOperator(Operator):
         import builtins
         ran, range = range, builtins.range
 
-        if not isinstance(domain, DiscreteLp):
-            raise TypeError('`domain` must be a `DiscreteLp` instance, '
+        if not isinstance(domain, DiscretizedSpace):
+            raise TypeError('`domain` must be a `DiscretizedSpace` instance, '
                             'got {!r}'.format(domain))
 
         offset = kwargs.pop('offset', None)
@@ -547,7 +549,7 @@ def _resize_discr(discr, newshp, offset, discr_kwargs):
         else:
             part = part.append(discr.partition.byaxis[i])
 
-    return DiscreteLp(part, tspace)
+    return DiscretizedSpace(part, tspace)
 
 
 if __name__ == '__main__':

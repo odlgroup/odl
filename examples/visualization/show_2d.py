@@ -1,4 +1,4 @@
-"""Example for `DiscreteLpElement.show` in 2D.
+"""Example for `DiscretizedSpaceElement.show` in 2D.
 
 Notes
 -----

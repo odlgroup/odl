@@ -12,20 +12,20 @@ Then, the same file is read again using a file specification and the
 sequence of dictionaries with a certain structure.
 """
 
+import tempfile
 from collections import OrderedDict
+
 import matplotlib.pyplot as plt
 import numpy as np
 import scipy.misc
-import tempfile
 
 from odl.contrib.mrc import (
     FileReaderRawBinaryWithHeader, FileWriterRawBinaryWithHeader)
 
-
 # --- Writing --- #
 
 # Create some test data. We arbitrarily define origin and pixel size.
-# In practice, these could come from a `DiscreteLp` space as `mid_pt`
+# In practice, these could come from a `DiscretizedSpace` space as `mid_pt`
 # and `cell_sides` properties.
 image = scipy.misc.ascent()
 shape = np.array(image.shape, dtype='int32')

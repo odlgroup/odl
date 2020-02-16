@@ -1,15 +1,16 @@
-"""Example showing how to use vectorization of `FunctionSpaceElement`'s."""
+"""Example showing how to use vectorization."""
 
-import numpy as np
 import timeit
 
+import numpy as np
+
 import odl
-from odl.discr.discr_utils import make_func_for_sampling
+from odl.discr.discr_utils import sampling_function
 
 
 def performance_example():
     # Simple function, already supports vectorization
-    f_vec = make_func_for_sampling(
+    f_vec = sampling_function(
         lambda x: x ** 2, domain=odl.IntervalProd(0, 1)
     )
 
@@ -67,10 +68,10 @@ def numba_example():
 
     # Create (continuous) functions in the space of function defined
     # on the rectangle [0, 1] x [0, 1].
-    f_vec = make_func_for_sampling(
+    f_vec = sampling_function(
         myfunc_vec, domain=odl.IntervalProd([0, 0], [1, 1])
     )
-    f_numba = make_func_for_sampling(
+    f_numba = sampling_function(
         myfunc_numba, domain=odl.IntervalProd([0, 0], [1, 1])
     )
 

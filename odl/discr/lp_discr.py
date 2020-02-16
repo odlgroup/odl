@@ -13,7 +13,8 @@ from __future__ import absolute_import, division, print_function
 from numbers import Integral
 
 import numpy as np
-from odl.discr.discr_utils import make_func_for_sampling, point_collocation
+
+from odl.discr.discr_utils import point_collocation, sampling_function
 from odl.discr.partition import (
     RectPartition, uniform_partition, uniform_partition_fromintv)
 from odl.set import IntervalProd, RealNumbers
@@ -27,8 +28,8 @@ from odl.util import (
     repr_string, safe_int_conv, signature_string_parts)
 
 __all__ = (
-    'DiscreteLp',
-    'DiscreteLpElement',
+    'DiscretizedSpace',
+    'DiscretizedSpaceElement',
     'uniform_discr_frompartition',
     'uniform_discr_fromintv',
     'uniform_discr',
@@ -36,7 +37,7 @@ __all__ = (
 )
 
 
-class DiscreteLp(TensorSpace):
+class DiscretizedSpace(TensorSpace):
 
     """Discretization of a Lebesgue :math:`L^p` space."""
 
@@ -76,7 +77,7 @@ class DiscreteLp(TensorSpace):
         self.__tspace = tspace
         self.__partition = partition
 
-        super(DiscreteLp, self).__init__(tspace.shape, tspace.dtype)
+        super(DiscretizedSpace, self).__init__(tspace.shape, tspace.dtype)
 
         # Set axis labels
         axis_labels = kwargs.pop('axis_labels', None)
@@ -97,8 +98,8 @@ class DiscreteLp(TensorSpace):
 
     @property
     def element_type(self):
-        """`DiscreteLpElement`"""
-        return DiscreteLpElement
+        """`DiscretizedSpaceElement`"""
+        return DiscretizedSpaceElement
 
     # --- Constructor args
 
@@ -320,7 +321,7 @@ class DiscreteLp(TensorSpace):
 
         Returns
         -------
-        element : `DiscreteLpElement`
+        element : `DiscretizedSpaceElement`
             The discretized element, calculated as ``point_collocation(inp)``
             or ``tspace.element(inp)``, tried in this order.
 
@@ -360,7 +361,7 @@ class DiscreteLp(TensorSpace):
         elif inp in self.tspace and order is None:
             return self.element_type(self, inp)
         elif callable(inp):
-            func = make_func_for_sampling(
+            func = sampling_function(
                 inp, self.domain, out_dtype=self.dtype,
             )
             sampled = point_collocation(func, self.meshgrid, **kwargs)
@@ -417,7 +418,7 @@ class DiscreteLp(TensorSpace):
         """
         space = self
 
-        class DiscreteLpByaxisIn(object):
+        class DiscretizedSpaceByaxisIn(object):
 
             """Helper class for indexing by domain axes."""
 
@@ -431,7 +432,7 @@ class DiscreteLp(TensorSpace):
 
                 Returns
                 -------
-                space : `DiscreteLp`
+                space : `DiscretizedSpace`
                     The resulting space with indexed domain and otherwise
                     same properties (except possibly weighting).
                 """
@@ -466,13 +467,13 @@ class DiscreteLp(TensorSpace):
                     labels = tuple(space.axis_labels[int(i)]
                                    for i in indices)
 
-                return DiscreteLp(part, tspace, axis_labels=labels)
+                return DiscretizedSpace(part, tspace, axis_labels=labels)
 
             def __repr__(self):
                 """Return ``repr(self)``."""
                 return repr(space) + '.byaxis_in'
 
-        return DiscreteLpByaxisIn()
+        return DiscretizedSpaceByaxisIn()
 
     # --- Identity
 
@@ -492,14 +493,16 @@ class DiscreteLp(TensorSpace):
             return False
         else:
             return (
-                super(DiscreteLp, self).__eq__(other)
+                super(DiscretizedSpace, self).__eq__(other)
                 and other.tspace == self.tspace
                 and other.partition == self.partition
             )
 
     def __hash__(self):
         """Return ``hash(self)``."""
-        return hash((super(DiscreteLp, self).__hash__(), self.tspace))
+        return hash(
+            (super(DiscretizedSpace, self).__hash__(), self.tspace, self.partition)
+        )
 
     # --- Space functions
 
@@ -633,13 +636,13 @@ class DiscreteLp(TensorSpace):
         return repr(self)
 
 
-class DiscreteLpElement(Tensor):
+class DiscretizedSpaceElement(Tensor):
 
-    """Representation of a `DiscreteLp` element."""
+    """Representation of a `DiscretizedSpace` element."""
 
     def __init__(self, space, tensor):
         """Initialize a new instance."""
-        super(DiscreteLpElement, self).__init__(space)
+        super(DiscretizedSpaceElement, self).__init__(space)
         self.__tensor = tensor
 
     # --- Constructor args
@@ -761,7 +764,7 @@ class DiscreteLpElement(Tensor):
 
         Returns
         -------
-        real : `DiscreteLpElement`
+        real : `DiscretizedSpaceElement`
 
         Examples
         --------
@@ -810,7 +813,7 @@ class DiscreteLpElement(Tensor):
 
         Returns
         -------
-        imag : `DiscreteLpElement`
+        imag : `DiscretizedSpaceElement`
 
         Examples
         --------
@@ -865,13 +868,13 @@ class DiscreteLpElement(Tensor):
 
         Parameters
         ----------
-        out : `DiscreteLpElement`, optional
+        out : `DiscretizedSpaceElement`, optional
             Element to which the complex conjugate is written.
             Must be an element of this element's space.
 
         Returns
         -------
-        out : `DiscreteLpElement`
+        out : `DiscretizedSpaceElement`
             The complex conjugate element. If ``out`` is provided,
             the returned object is a reference to it.
 
@@ -979,9 +982,9 @@ class DiscreteLpElement(Tensor):
 
         Returns
         -------
-        ufunc_result : `DiscreteLpElement`, `numpy.ndarray` or tuple
+        ufunc_result : `DiscretizedSpaceElement`, `numpy.ndarray` or tuple
             Result of the ufunc evaluation. If no ``out`` keyword argument
-            was given, the result is a `DiscreteLpElement` or a tuple
+            was given, the result is a `DiscretizedSpaceElement` or a tuple
             of such, depending on the number of outputs of ``ufunc``.
             If ``out`` was provided, the returned object or sequence members
             refer(s) to ``out``.
@@ -998,7 +1001,7 @@ class DiscreteLpElement(Tensor):
         >>> np.add(x, y)  # same mechanism for Numpy >= 1.13
         uniform_discr(0.0, 1.0, 3).element([ 0.,  0.,  0.])
 
-        As ``out``, a `DiscreteLpElement` can be provided as well as a
+        As ``out``, a `DiscretizedSpaceElement` can be provided as well as a
         `Tensor` of appropriate type, or its underlying data container
         type (wrapped in a sequence):
 
@@ -1150,7 +1153,7 @@ class DiscreteLpElement(Tensor):
 
         # --- Process `inputs` --- #
 
-        # Pull out the `tensor` attributes from DiscreteLpElement instances
+        # Pull out the `tensor` attributes from DiscretizedSpaceElement instances
         # since we want to pass them to `self.tensor.__array_ufunc__`
         input_tensors = tuple(
             elem.tensor if isinstance(elem, type(self)) else elem
@@ -1183,8 +1186,8 @@ class DiscreteLpElement(Tensor):
                     ufunc, '__call__', *input_tensors, **kwargs)
 
                 if out is None:
-                    # Wrap result tensor in appropriate DiscreteLp space.
-                    res_space = DiscreteLp(
+                    # Wrap result tensor in appropriate DiscretizedSpace space.
+                    res_space = DiscretizedSpace(
                         self.space.partition,
                         res_tens.space,
                         axis_labels=self.space.axis_labels
@@ -1202,7 +1205,7 @@ class DiscreteLpElement(Tensor):
 
                 if out1 is None:
                     # Wrap as for nout = 1
-                    res_space = DiscreteLp(
+                    res_space = DiscretizedSpace(
                         self.space.partition,
                         res1_tens.space,
                         axis_labels=self.space.axis_labels
@@ -1213,7 +1216,7 @@ class DiscreteLpElement(Tensor):
 
                 if out2 is None:
                     # Wrap as for nout = 1
-                    res_space = DiscreteLp(
+                    res_space = DiscretizedSpace(
                         self.space.partition,
                         res2_tens.space,
                         axis_labels=self.space.axis_labels
@@ -1266,9 +1269,9 @@ class DiscreteLpElement(Tensor):
                 return res_tens
 
             if out is None:
-                # Wrap in appropriate DiscreteLp space depending on `method`
+                # Wrap in appropriate DiscretizedSpace space depending on `method`
                 if method == 'accumulate':
-                    res_space = DiscreteLp(
+                    res_space = DiscretizedSpace(
                         self.space.partition,
                         res_tens.space,
                         axis_labels=self.space.axis_labels
@@ -1300,7 +1303,7 @@ class DiscreteLpElement(Tensor):
                         # Otherwise `TensorSpace` knows how to handle this
                         tspace = res_tens.space
 
-                    res_space = DiscreteLp(part, tspace, axis_labels=labels)
+                    res_space = DiscretizedSpace(part, tspace, axis_labels=labels)
                     result = res_space.element(res_tens)
 
                 elif method == 'reduce':
@@ -1528,7 +1531,7 @@ def uniform_discr_frompartition(partition, dtype=None, impl='numpy', **kwargs):
 
     Returns
     -------
-    discr : `DiscreteLp`
+    discr : `DiscretizedSpace`
         The uniformly discretized function space.
 
     Examples
@@ -1568,7 +1571,7 @@ def uniform_discr_frompartition(partition, dtype=None, impl='numpy', **kwargs):
 
     tspace = tspace_type(partition.shape, dtype, exponent=exponent,
                          weighting=weighting)
-    return DiscreteLp(partition, tspace, **kwargs)
+    return DiscretizedSpace(partition, tspace, **kwargs)
 
 
 def uniform_discr_fromintv(intv_prod, shape, dtype=None, impl='numpy',
@@ -1592,7 +1595,7 @@ def uniform_discr_fromintv(intv_prod, shape, dtype=None, impl='numpy',
 
     Returns
     -------
-    discr : `DiscreteLp`
+    discr : `DiscretizedSpace`
         The uniformly discretized function space
 
     Examples
@@ -1659,7 +1662,7 @@ def uniform_discr(min_pt, max_pt, shape, dtype=None, impl='numpy', **kwargs):
 
     Returns
     -------
-    discr : `DiscreteLp`
+    discr : `DiscretizedSpace`
         The uniformly discretized function space
 
     Examples
@@ -1709,7 +1712,7 @@ def uniform_discr_fromdiscr(discr, min_pt=None, max_pt=None,
 
     Parameters
     ----------
-    discr : `DiscreteLp`
+    discr : `DiscretizedSpace`
         Uniformly discretized space used as a template.
     min_pt, max_pt: float or sequence of floats, optional
         Desired minimum/maximum corners of the new space domain.
@@ -1735,7 +1738,7 @@ def uniform_discr_fromdiscr(discr, min_pt=None, max_pt=None,
         Default: ``False``.
 
     kwargs :
-        Additional keyword parameters passed to the `DiscreteLp`
+        Additional keyword parameters passed to the `DiscretizedSpace`
         initializer.
 
     Notes
@@ -1828,8 +1831,8 @@ def uniform_discr_fromdiscr(discr, min_pt=None, max_pt=None,
     >>> new_discr.cell_sides
     array([ 0.1 ,  0.25])
     """
-    if not isinstance(discr, DiscreteLp):
-        raise TypeError('`discr` {!r} is not a DiscreteLp instance'
+    if not isinstance(discr, DiscretizedSpace):
+        raise TypeError('`discr` {!r} is not a DiscretizedSpace instance'
                         ''.format(discr))
     if not discr.is_uniform:
         raise ValueError('`discr` {} is not uniformly discretized'

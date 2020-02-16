@@ -1,4 +1,4 @@
-# Copyright 2014-2018 The ODL contributors
+# Copyright 2014-2020 The ODL contributors
 #
 # This file is part of ODL.
 #
@@ -8,14 +8,14 @@
 
 """Discrete wavelet transformation on L2 spaces."""
 
-from __future__ import print_function, division, absolute_import
+from __future__ import absolute_import, division, print_function
 
 import numpy as np
-from odl.discr import DiscreteLp
+
+from odl.discr import DiscretizedSpace
 from odl.operator import Operator
 from odl.trafos.backends.pywt_bindings import (
-    PYWT_AVAILABLE,
-    pywt_pad_mode, pywt_wavelet, precompute_raveled_slices)
+    PYWT_AVAILABLE, precompute_raveled_slices, pywt_pad_mode, pywt_wavelet)
 
 __all__ = ('WaveletTransform', 'WaveletTransformInverse')
 
@@ -40,7 +40,7 @@ class WaveletTransformBase(Operator):
 
         Parameters
         ----------
-        space : `DiscreteLp`
+        space : `DiscretizedSpace`
             Domain of the forward wavelet transform (the "image domain").
             In the case of ``variant in ('inverse', 'adjoint')``, this
             space is the range of the operator.
@@ -139,8 +139,8 @@ class WaveletTransformBase(Operator):
         .. _signal extension modes:
            https://pywavelets.readthedocs.io/en/latest/ref/signal-extension-modes.html
         """
-        if not isinstance(space, DiscreteLp):
-            raise TypeError('`space` {!r} is not a `DiscreteLp` instance.'
+        if not isinstance(space, DiscretizedSpace):
+            raise TypeError('`space` {!r} is not a `DiscretizedSpace` instance.'
                             ''.format(space))
 
         self.__impl, impl_in = str(impl).lower(), impl
@@ -272,7 +272,7 @@ class WaveletTransform(WaveletTransformBase):
 
         Parameters
         ----------
-        domain : `DiscreteLp`
+        domain : `DiscretizedSpace`
             Domain of the wavelet transform (the "image domain").
         wavelet : string or `pywt.Wavelet`
             Specification of the wavelet to be used in the transform.
@@ -485,7 +485,7 @@ class WaveletTransformInverse(WaveletTransformBase):
 
          Parameters
         ----------
-        range : `DiscreteLp`
+        range : `DiscretizedSpace`
             Domain of the forward wavelet transform (the "image domain"),
             which is the range of this inverse transform.
         wavelet : string or `pywt.Wavelet`

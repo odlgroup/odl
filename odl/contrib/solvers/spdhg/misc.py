@@ -1,4 +1,4 @@
-# Copyright 2014-2019 The ODL contributors
+# Copyright 2014-2020 The ODL contributors
 #
 # This file is part of ODL.
 #
@@ -9,13 +9,16 @@
 """Functions for folders and files."""
 
 from __future__ import print_function
+
 from builtins import super
-import numpy as np
-import odl
-import scipy.signal
+
 import matplotlib
 import matplotlib.pyplot as plt
+import numpy as np
+import scipy.signal
 from skimage.io import imsave
+
+import odl
 
 __all__ = ('total_variation', 'TotalVariationNonNegative', 'bregman',
            'save_image', 'save_signal', 'divide_1Darray_equally', 'Blur2D',
@@ -472,7 +475,7 @@ class KullbackLeiblerSmooth(odl.solvers.Functional):
 
         Parameters
         ----------
-        space : `DiscreteLp` or `TensorSpace`
+        space : `DiscretizedSpace` or `TensorSpace`
             Domain of the functional.
         data : ``space`` `element-like`
             Data vector which has to be non-negative.
@@ -597,7 +600,7 @@ class KullbackLeiblerSmoothConvexConj(odl.solvers.Functional):
 
         Parameters
         ----------
-        space : `DiscreteLp` or `TensorSpace`
+        space : `DiscretizedSpace` or `TensorSpace`
             Domain of the functional.
         data : ``space`` `element-like`
             Data vector which has to be non-negative.

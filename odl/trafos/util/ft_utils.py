@@ -1,4 +1,4 @@
-# Copyright 2014-2019 The ODL contributors
+# Copyright 2014-2020 The ODL contributors
 #
 # This file is part of ODL.
 #
@@ -8,20 +8,19 @@
 
 """Utility functions for Fourier transforms on regularly sampled data."""
 
-from __future__ import print_function, division, absolute_import
+from __future__ import absolute_import, division, print_function
+
 import numpy as np
 
 from odl.discr import (
-    uniform_grid, DiscreteLp, uniform_partition_fromgrid,
-    uniform_discr_frompartition)
+    DiscretizedSpace, uniform_discr_frompartition, uniform_grid,
+    uniform_partition_fromgrid)
 from odl.set import RealNumbers
 from odl.util import (
-    fast_1d_tensor_mult, conj_exponent,
-    is_real_dtype, is_numeric_dtype, is_real_floating_dtype,
-    is_complex_floating_dtype, complex_dtype, dtype_repr,
-    is_string,
-    normalized_scalar_param_list, normalized_axes_tuple)
-
+    complex_dtype, conj_exponent, dtype_repr, fast_1d_tensor_mult,
+    is_complex_floating_dtype, is_numeric_dtype, is_real_dtype,
+    is_real_floating_dtype, is_string, normalized_axes_tuple,
+    normalized_scalar_param_list)
 
 __all__ = ('reciprocal_grid', 'realspace_grid',
            'reciprocal_space',
@@ -553,7 +552,7 @@ def reciprocal_space(space, axes=None, halfcomplex=False, shift=True,
 
     Parameters
     ----------
-    space : `DiscreteLp`
+    space : `DiscretizedSpace`
         Real space whose reciprocal is calculated. It must be
         uniformly discretized.
     axes : sequence of ints, optional
@@ -585,13 +584,13 @@ def reciprocal_space(space, axes=None, halfcomplex=False, shift=True,
 
     Returns
     -------
-    rspace : `DiscreteLp`
+    rspace : `DiscretizedSpace`
         Reciprocal of the input ``space``. If ``halfcomplex=True``, the
         upper end of the domain (where the half space ends) is chosen to
         coincide with the grid node.
     """
-    if not isinstance(space, DiscreteLp):
-        raise TypeError('`space` {!r} is not a `DiscreteLp` instance'
+    if not isinstance(space, DiscretizedSpace):
+        raise TypeError('`space` {!r} is not a `DiscretizedSpace` instance'
                         ''.format(space))
     if axes is None:
         axes = tuple(range(space.ndim))

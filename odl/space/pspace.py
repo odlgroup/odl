@@ -1,4 +1,4 @@
-# Copyright 2014-2019 The ODL contributors
+# Copyright 2014-2020 The ODL contributors
 #
 # This file is part of ODL.
 #
@@ -8,19 +8,20 @@
 
 """Cartesian products of `LinearSpace` instances."""
 
-from __future__ import print_function, division, absolute_import
+from __future__ import absolute_import, division, print_function
+
 from itertools import product
 from numbers import Integral
+
 import numpy as np
 
 from odl.set import LinearSpace
 from odl.set.space import LinearSpaceElement
 from odl.space.weighting import (
-    Weighting, ArrayWeighting, ConstWeighting,
-    CustomInner, CustomNorm, CustomDist)
-from odl.util import is_real_dtype, signature_string, indent
+    ArrayWeighting, ConstWeighting, CustomDist, CustomInner, CustomNorm,
+    Weighting)
+from odl.util import indent, is_real_dtype, signature_string
 from odl.util.ufuncs import ProductSpaceUfuncs
-
 
 __all__ = ('ProductSpace',)
 
@@ -1428,7 +1429,7 @@ class ProductSpaceElement(LinearSpaceElement):
 
         See Also
         --------
-        odl.discr.lp_discr.DiscreteLpElement.show :
+        odl.discr.lp_discr.DiscretizedSpaceElement.show :
             Display of a discretized function
         odl.space.base_tensors.Tensor.show :
             Display of sequence type data

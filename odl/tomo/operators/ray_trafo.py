@@ -14,7 +14,7 @@ import warnings
 
 import numpy as np
 
-from odl.discr import DiscreteLp
+from odl.discr import DiscretizedSpace
 from odl.operator import Operator
 from odl.space.weighting import ConstWeighting
 from odl.tomo.backends import (
@@ -49,7 +49,7 @@ class RayTransformBase(Operator):
 
         Parameters
         ----------
-        reco_space : `DiscreteLp`
+        reco_space : `DiscretizedSpace`
             Discretized reconstruction space, the domain of the forward
             operator or the range of the adjoint (back-projection).
         geometry : `Geometry`
@@ -72,7 +72,7 @@ class RayTransformBase(Operator):
             For the default ``None``, the fastest available back-end is
             used.
 
-        proj_space : `DiscreteLp`, optional
+        proj_space : `DiscretizedSpace`, optional
             Discretized projection (sinogram) space, the range of the forward
             operator or the domain of the adjoint (back-projection).
             Default: Inferred from parameters.
@@ -103,8 +103,8 @@ class RayTransformBase(Operator):
             reco_name = 'range'
             proj_name = 'domain'
 
-        if not isinstance(reco_space, DiscreteLp):
-            raise TypeError('`{}` must be a `DiscreteLp` instance, got '
+        if not isinstance(reco_space, DiscretizedSpace):
+            raise TypeError('`{}` must be a `DiscretizedSpace` instance, got '
                             '{!r}'.format(reco_name, reco_space))
 
         if not isinstance(geometry, Geometry):
@@ -264,7 +264,7 @@ class RayTransformBase(Operator):
             else:
                 axis_labels = angle_labels + det_labels
 
-            proj_space = DiscreteLp(
+            proj_space = DiscretizedSpace(
                 geometry.partition,
                 proj_tspace,
                 axis_labels=axis_labels
@@ -272,8 +272,8 @@ class RayTransformBase(Operator):
 
         else:
             # proj_space was given, checking some stuff
-            if not isinstance(proj_space, DiscreteLp):
-                raise TypeError('`{}` must be a `DiscreteLp` instance, '
+            if not isinstance(proj_space, DiscretizedSpace):
+                raise TypeError('`{}` must be a `DiscretizedSpace` instance, '
                                 'got {!r}'.format(proj_name, proj_space))
             if proj_space.shape != geometry.partition.shape:
                 raise ValueError('`{}.shape` not equal to `geometry.shape`: '
@@ -346,7 +346,7 @@ class RayTransform(RayTransformBase):
 
         Parameters
         ----------
-        domain : `DiscreteLp`
+        domain : `DiscretizedSpace`
             Discretized reconstruction space, the domain of the forward
             projector.
         geometry : `Geometry`
@@ -365,7 +365,7 @@ class RayTransform(RayTransformBase):
 
             For the default ``None``, the fastest available back-end is
             used, tried in the above order.
-        range : `DiscreteLp`, optional
+        range : `DiscretizedSpace`, optional
             Discretized projection (sinogram) space, the range of the
             forward projector.
             Default: Inferred from parameters.
@@ -461,7 +461,7 @@ class RayBackProjection(RayTransformBase):
 
         Parameters
         ----------
-        range : `DiscreteLp`
+        range : `DiscretizedSpace`
             Discretized reconstruction space, the range of the
             backprojection operator.
         geometry : `Geometry`
@@ -481,7 +481,7 @@ class RayBackProjection(RayTransformBase):
             For the default ``None``, the fastest available back-end is
             used, tried in the above order.
 
-        domain : `DiscreteLp`, optional
+        domain : `DiscretizedSpace`, optional
             Discretized projection (sinogram) space, the domain of the
             backprojection operator.
             Default: Inferred from parameters.

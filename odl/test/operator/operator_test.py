@@ -1,4 +1,4 @@
-# Copyright 2014-2019 The ODL contributors
+# Copyright 2014-2020 The ODL contributors
 #
 # This file is part of ODL.
 #
@@ -7,20 +7,27 @@
 # obtain one at https://mozilla.org/MPL/2.0/.
 
 from __future__ import division
-import pytest
-import numpy as np
+
+import inspect
 import sys
 
+import numpy as np
+import pytest
+
 import odl
-from odl import (Operator, OperatorSum, OperatorComp,
-                 OperatorLeftScalarMult, OperatorRightScalarMult,
-                 FunctionalLeftVectorMult, OperatorRightVectorMult,
-                 MatrixOperator, OperatorLeftVectorMult,
-                 OpTypeError, OpDomainError, OpRangeError)
-from odl.operator.operator import _function_signature, _dispatch_call_args
+from odl import (
+    FunctionalLeftVectorMult, MatrixOperator, OpDomainError, Operator,
+    OperatorComp, OperatorLeftScalarMult, OperatorLeftVectorMult,
+    OperatorRightScalarMult, OperatorRightVectorMult, OperatorSum,
+    OpRangeError, OpTypeError)
+from odl.operator.operator import _dispatch_call_args, _function_signature
 from odl.util.testutils import (
     all_almost_equal, noise_element, noise_elements, simple_fixture)
-from odl.util.utility import getargspec
+
+try:
+    getargspec = inspect.getfullargspec
+except AttributeError:
+    getargspec = inspect.getargspec
 
 
 # --- Fixtures --- #
@@ -31,7 +38,7 @@ from odl.util.utility import getargspec
 dom_eq_ran = simple_fixture('dom_eq_ran', [True, False])
 
 
-# --- Auxilliary --- #
+# --- Auxiliary --- #
 
 
 class MultiplyAndSquareOp(Operator):

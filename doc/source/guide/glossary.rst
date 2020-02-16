@@ -32,7 +32,7 @@ Glossary
     element
         Saying that ``x`` is an element of a given `Set` ``my_set`` means that ``x in my_set`` evaluates to ``True``.
         The term is typically used as "element of <set>" or "<set> element".
-        When referring to a `LinearSpace` like, e.g., `DiscreteLp`, an element is of the corresponding type `LinearSpaceElement`, i.e. `DiscreteLpElement` in the above example.
+        When referring to a `LinearSpace` like, e.g., `DiscretizedSpace`, an element is of the corresponding type `LinearSpaceElement`, i.e. `DiscretizedSpaceElement` in the above example.
         Elements of a set can be created by the `Set.element` method.
 
     element-like

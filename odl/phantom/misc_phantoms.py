@@ -1,4 +1,4 @@
-# Copyright 2014-2019 The ODL contributors
+# Copyright 2014-2020 The ODL contributors
 #
 # This file is part of ODL.
 #
@@ -8,10 +8,11 @@
 
 """Miscellaneous phantoms that do not fit in other categories."""
 
-from __future__ import print_function, division, absolute_import
-import numpy as np
+from __future__ import absolute_import, division, print_function
+
 import sys
 
+import numpy as np
 
 __all__ = ('submarine', 'text')
 
@@ -21,7 +22,7 @@ def submarine(space, smooth=True, taper=20.0):
 
     Parameters
     ----------
-    space : `DiscreteLp`
+    space : `DiscretizedSpace`
         Discretized space in which the phantom is supposed to be created.
     smooth : bool, optional
         If ``True``, the boundaries are smoothed out. Otherwise, the
@@ -155,7 +156,7 @@ def text(space, text, font=None, border=0.2, inverted=True):
 
     Parameters
     ----------
-    space : `DiscreteLp`
+    space : `DiscretizedSpace`
         Discretized space in which the phantom is supposed to be created.
         Must be two-dimensional.
     text : str

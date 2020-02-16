@@ -1,4 +1,4 @@
-# Copyright 2014-2019 The ODL contributors
+# Copyright 2014-2020 The ODL contributors
 #
 # This file is part of ODL.
 #
@@ -8,12 +8,12 @@
 
 """Phantoms typically used in transmission tomography."""
 
-from __future__ import print_function, division, absolute_import
+from __future__ import absolute_import, division, print_function
+
 import numpy as np
 
-from odl.discr import DiscreteLp
+from odl.discr import DiscretizedSpace
 from odl.phantom.geometric import ellipsoid_phantom
-
 
 __all__ = ('shepp_logan_ellipsoids', 'shepp_logan', 'forbild')
 
@@ -116,7 +116,7 @@ def shepp_logan(space, modified=False, min_pt=None, max_pt=None):
 
     Parameters
     ----------
-    space : `DiscreteLp`
+    space : `DiscretizedSpace`
         Space in which the phantom is created, must be 2- or 3-dimensional.
         If ``space.shape`` is 1 in an axis, a corresponding slice of the
         phantom is created.
@@ -279,7 +279,7 @@ def forbild(space, resolution=False, ear=True, value_type='density',
 
     Parameters
     ----------
-    space : `DiscreteLp`
+    space : `DiscretizedSpace`
         The space in which the phantom should be corrected. Needs to be two-
         dimensional.
     resolution : bool, optional
@@ -319,8 +319,8 @@ def forbild(space, resolution=False, ear=True, value_type='density',
         """Implement MATLAB's ``transpose(arr(:))``."""
         return arr.T.ravel()
 
-    if not isinstance(space, DiscreteLp):
-        raise TypeError('`space` must be a `DiscreteLp`')
+    if not isinstance(space, DiscretizedSpace):
+        raise TypeError('`space` must be a `DiscretizedSpace`')
     if space.ndim != 2:
         raise TypeError('`space` must be two-dimensional')
 

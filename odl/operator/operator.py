@@ -1,4 +1,4 @@
-# Copyright 2014-2019 The ODL contributors
+# Copyright 2014-2020 The ODL contributors
 #
 # This file is part of ODL.
 #
@@ -8,24 +8,33 @@
 
 """Abstract mathematical operators."""
 
-from __future__ import print_function, division, absolute_import
-from builtins import object
-import inspect
-from numbers import Number, Integral
-import sys
+from __future__ import absolute_import, division, print_function
 
-from odl.set import LinearSpace, Set, Field
+import inspect
+import sys
+from builtins import object
+from numbers import Integral, Number
+
+from odl.set import Field, LinearSpace, Set
 from odl.set.space import LinearSpaceElement
 from odl.util import cache_arguments
 
-
-__all__ = ('Operator', 'OperatorComp', 'OperatorSum', 'OperatorVectorSum',
-           'OperatorLeftScalarMult', 'OperatorRightScalarMult',
-           'FunctionalLeftVectorMult',
-           'OperatorLeftVectorMult', 'OperatorRightVectorMult',
-           'OperatorPointwiseProduct',
-           'OpTypeError', 'OpDomainError', 'OpRangeError',
-           'OpNotImplementedError')
+__all__ = (
+    'Operator',
+    'OperatorComp',
+    'OperatorSum',
+    'OperatorVectorSum',
+    'OperatorLeftScalarMult',
+    'OperatorRightScalarMult',
+    'FunctionalLeftVectorMult',
+    'OperatorLeftVectorMult',
+    'OperatorRightVectorMult',
+    'OperatorPointwiseProduct',
+    'OpTypeError',
+    'OpDomainError',
+    'OpRangeError',
+    'OpNotImplementedError',
+)
 
 
 def _default_call_out_of_place(op, x, **kwargs):

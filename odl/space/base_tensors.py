@@ -1,4 +1,4 @@
-# Copyright 2014-2019 The ODL contributors
+# Copyright 2014-2020 The ODL contributors
 #
 # This file is part of ODL.
 #
@@ -21,7 +21,7 @@ from odl.util import (
     is_numeric_dtype, is_real_dtype, is_real_floating_dtype, safe_int_conv,
     signature_string, writable_array)
 from odl.util.ufuncs import TensorSpaceUfuncs
-from odl.util.utility import TYPE_MAP_C2R, TYPE_MAP_R2C, none_context
+from odl.util.utility import TYPE_MAP_C2R, TYPE_MAP_R2C, nullcontext
 
 __all__ = ('TensorSpace',)
 
@@ -819,7 +819,7 @@ numpy.ufunc.reduceat.html
             if ufunc.nout == 1:
                 # Make context for output (trivial one returns `None`)
                 if out is None:
-                    out_ctx = none_context()
+                    out_ctx = nullcontext()
                 else:
                     out_ctx = writable_array(out, **array_kwargs)
 
@@ -836,11 +836,11 @@ numpy.ufunc.reduceat.html
                 if out1 is not None:
                     out1_ctx = writable_array(out1, **array_kwargs)
                 else:
-                    out1_ctx = none_context()
+                    out1_ctx = nullcontext()
                 if out2 is not None:
                     out2_ctx = writable_array(out2, **array_kwargs)
                 else:
-                    out2_ctx = none_context()
+                    out2_ctx = nullcontext()
 
                 # Evaluate ufunc
                 with out1_ctx as out1_arr, out2_ctx as out2_arr:
@@ -857,7 +857,7 @@ numpy.ufunc.reduceat.html
         else:  # method != '__call__'
             # Make context for output (trivial one returns `None`)
             if out is None:
-                out_ctx = none_context()
+                out_ctx = nullcontext()
             else:
                 out_ctx = writable_array(out, **array_kwargs)
 

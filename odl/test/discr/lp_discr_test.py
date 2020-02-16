@@ -6,7 +6,7 @@
 # v. 2.0. If a copy of the MPL was not distributed with this file, You can
 # obtain one at https://mozilla.org/MPL/2.0/.
 
-"""Unit tests for `DiscreteLp`."""
+"""Unit tests for `DiscretizedSpace`."""
 
 from __future__ import division
 
@@ -14,7 +14,7 @@ import numpy as np
 import pytest
 
 import odl
-from odl.discr.lp_discr import DiscreteLp, DiscreteLpElement
+from odl.discr.lp_discr import DiscretizedSpace, DiscretizedSpaceElement
 from odl.space.base_tensors import TensorSpace
 from odl.space.npy_tensors import NumpyTensor
 from odl.space.weighting import ConstWeighting
@@ -30,16 +30,16 @@ shape = simple_fixture('shape', [(2, 3, 4), (3, 4), (2,), (1,), (1, 1, 1)])
 power = simple_fixture('power', [1.0, 2.0, 0.5, -0.5, -1.0, -2.0])
 
 
-# --- DiscreteLp --- #
+# --- DiscretizedSpace --- #
 
 
-def test_discretelp_init():
-    """Test initialization and basic properties of DiscreteLp."""
+def test_discretizedspace_init():
+    """Test initialization and basic properties of DiscretizedSpace."""
     # Real space
     part = odl.uniform_partition([0, 0], [1, 1], (2, 4))
     tspace = odl.rn(part.shape)
 
-    discr = DiscreteLp(part, tspace)
+    discr = DiscretizedSpace(part, tspace)
     assert discr.tspace == tspace
     assert discr.partition == part
     assert discr.exponent == tspace.exponent
@@ -48,7 +48,7 @@ def test_discretelp_init():
 
     # Complex space
     tspace_c = odl.cn(part.shape)
-    discr = DiscreteLp(part, tspace_c)
+    discr = DiscretizedSpace(part, tspace_c)
     assert discr.is_complex
 
     # Make sure repr shows something
@@ -57,11 +57,11 @@ def test_discretelp_init():
     # Error scenarios
     part_1d = odl.uniform_partition(0, 1, 2)
     with pytest.raises(ValueError):
-        DiscreteLp(part_1d, tspace)  # wrong dimensionality
+        DiscretizedSpace(part_1d, tspace)  # wrong dimensionality
 
     part_diffshp = odl.uniform_partition([0, 0], [1, 1], (3, 4))
     with pytest.raises(ValueError):
-        DiscreteLp(part_diffshp, tspace)  # shape mismatch
+        DiscretizedSpace(part_diffshp, tspace)  # shape mismatch
 
 
 def test_empty():
@@ -130,7 +130,7 @@ def test_uniform_discr_init_real(odl_tspace_impl):
 
     # 1D
     discr = odl.uniform_discr(0, 1, 10, impl=impl)
-    assert isinstance(discr, DiscreteLp)
+    assert isinstance(discr, DiscretizedSpace)
     assert isinstance(discr.tspace, TensorSpace)
     assert discr.impl == impl
     assert discr.is_real
@@ -170,11 +170,11 @@ def test_uniform_discr_init_complex(odl_tspace_impl):
     assert discr.dtype == discr.tspace.default_dtype(odl.ComplexNumbers())
 
 
-# --- DiscreteLp methods --- #
+# --- DiscretizedSpace methods --- #
 
 
-def test_discretelp_element():
-    """Test creation and membership of DiscreteLp elements."""
+def test_discretizedspace_element():
+    """Test creation and membership of DiscretizedSpace elements."""
     # Creation from scratch
     # 1D
     discr = odl.uniform_discr(0, 1, 3)
@@ -193,14 +193,14 @@ def test_discretelp_element():
     assert elem.tensor in tspace
 
 
-def test_discretelp_element_from_array():
-    """Test creation of DiscreteLp elements from arrays."""
+def test_discretizedspace_element_from_array():
+    """Test creation of DiscretizedSpace elements from arrays."""
     # 1D
     discr = odl.uniform_discr(0, 1, 3)
     elem = discr.element([1, 2, 3])
     assert np.array_equal(elem.tensor, [1, 2, 3])
 
-    assert isinstance(elem, DiscreteLpElement)
+    assert isinstance(elem, DiscretizedSpaceElement)
     assert isinstance(elem.tensor, NumpyTensor)
     assert all_equal(elem.tensor, [1, 2, 3])
 
@@ -212,7 +212,7 @@ def test_element_from_array_2d(odl_elem_order):
     elem = discr.element([[1, 2],
                           [3, 4]], order=order)
 
-    assert isinstance(elem, DiscreteLpElement)
+    assert isinstance(elem, DiscretizedSpaceElement)
     assert isinstance(elem.tensor, NumpyTensor)
     assert all_equal(elem, [[1, 2],
                             [3, 4]])
@@ -234,7 +234,7 @@ def test_element_from_array_2d(odl_elem_order):
 
 
 def test_element_from_function_1d():
-    """Test creation of DiscreteLp elements from functions in 1 dimension."""
+    """Test creation of DiscretizedSpace elements from functions in 1 dimension."""
     space = odl.uniform_discr(-1, 1, 4)
     points = space.points().squeeze()
 
@@ -279,7 +279,7 @@ def test_element_from_function_1d():
 
 
 def test_element_from_function_2d():
-    """Test creation of DiscreteLp elements from functions in 2 dimensions."""
+    """Test creation of DiscretizedSpace elements from functions in 2 dimensions."""
     space = odl.uniform_discr([-1, -1], [1, 1], (2, 3))
     points = space.points()
 
@@ -330,8 +330,8 @@ def test_element_from_function_2d():
     assert all_equal(elem_lam, true_elem)
 
 
-def test_discretelp_zero_one():
-    """Test the zero and one element creators of DiscreteLp."""
+def test_discretizedspace_zero_one():
+    """Test the zero and one element creators of DiscretizedSpace."""
     discr = odl.uniform_discr(0, 1, 3)
 
     zero = discr.zero()
@@ -1142,7 +1142,7 @@ def test_inner_nonuniform():
     part = odl.nonuniform_partition([0, 2, 3, 5], min_pt=0, max_pt=5)
     weights = part.cell_sizes_vecs[0]
     tspace = odl.rn(part.size, weighting=weights)
-    discr = odl.DiscreteLp(part, tspace)
+    discr = odl.DiscretizedSpace(part, tspace)
 
     one = discr.one()
     linear = discr.element(lambda x: x)
@@ -1158,7 +1158,7 @@ def test_norm_nonuniform():
     part = odl.nonuniform_partition([0, 2, 3, 5], min_pt=0, max_pt=5)
     weights = part.cell_sizes_vecs[0]
     tspace = odl.rn(part.size, weighting=weights)
-    discr = odl.DiscreteLp(part, tspace)
+    discr = odl.DiscretizedSpace(part, tspace)
 
     sqrt = discr.element(lambda x: np.sqrt(x))
 
@@ -1263,7 +1263,7 @@ def test_norm_rectangle_boundary(odl_tspace_impl, exponent):
     weight = 1.0 if exponent == float('inf') else part.cell_volume
     tspace = odl.rn(part.shape, dtype=dtype, impl=impl,
                     exponent=exponent, weighting=weight)
-    discr = DiscreteLp(part, tspace)
+    discr = DiscretizedSpace(part, tspace)
 
     if exponent == float('inf'):
         assert discr.one().norm() == 1

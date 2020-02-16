@@ -1,4 +1,4 @@
-# Copyright 2014-2019 The ODL contributors
+# Copyright 2014-2020 The ODL contributors
 #
 # This file is part of ODL.
 #
@@ -16,7 +16,7 @@ from multiprocessing import Lock
 import numpy as np
 from packaging.version import parse as parse_version
 
-from odl.discr import DiscreteLp
+from odl.discr import DiscretizedSpace
 from odl.tomo.backends.astra_setup import (
     ASTRA_VERSION, astra_algorithm, astra_data, astra_projection_geometry,
     astra_projector, astra_volume_geometry)
@@ -53,15 +53,15 @@ class AstraCudaProjectorImpl(object):
         ----------
         geometry : `Geometry`
             Geometry defining the tomographic setup.
-        reco_space : `DiscreteLp`
+        reco_space : `DiscretizedSpace`
             Reconstruction space, the space of the images to be forward
             projected.
-        proj_space : `DiscreteLp`
+        proj_space : `DiscretizedSpace`
             Projection space, the space of the result.
         """
         assert isinstance(geometry, Geometry)
-        assert isinstance(reco_space, DiscreteLp)
-        assert isinstance(proj_space, DiscreteLp)
+        assert isinstance(reco_space, DiscretizedSpace)
+        assert isinstance(proj_space, DiscretizedSpace)
 
         self.geometry = geometry
         self.reco_space = reco_space
@@ -210,14 +210,14 @@ class AstraCudaBackProjectorImpl(object):
         ----------
         geometry : `Geometry`
             Geometry defining the tomographic setup.
-        reco_space : `DiscreteLp`
+        reco_space : `DiscretizedSpace`
             Reconstruction space, the space to which the backprojection maps.
-        proj_space : `DiscreteLp`
+        proj_space : `DiscretizedSpace`
             Projection space, the space from which the backprojection maps.
         """
         assert isinstance(geometry, Geometry)
-        assert isinstance(reco_space, DiscreteLp)
-        assert isinstance(proj_space, DiscreteLp)
+        assert isinstance(reco_space, DiscretizedSpace)
+        assert isinstance(proj_space, DiscretizedSpace)
 
         self.geometry = geometry
         self.reco_space = reco_space

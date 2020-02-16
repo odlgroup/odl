@@ -12,7 +12,7 @@ from __future__ import absolute_import, division, print_function
 
 import numpy as np
 
-from odl.discr import DiscreteLp, uniform_discr
+from odl.discr import DiscretizedSpace, uniform_discr
 from odl.operator import Operator
 from odl.set import ComplexNumbers, RealNumbers
 from odl.trafos.backends.pyfftw_bindings import (
@@ -52,11 +52,11 @@ class DiscreteFourierTransformBase(Operator):
         inverse : bool
             If ``True``, the inverse transform is created, otherwise the
             forward transform.
-        domain : `DiscreteLp`
+        domain : `DiscretizedSpace`
             Domain of the Fourier transform. If its
-            `DiscreteLp.exponent` is equal to 2.0, this operator has
+            `DiscretizedSpace.exponent` is equal to 2.0, this operator has
             an adjoint which is equal to the inverse.
-        range : `DiscreteLp`, optional
+        range : `DiscretizedSpace`, optional
             Range of the Fourier transform. If not given, the range
             is determined from ``domain`` and the other parameters as
             a `uniform_discr` with exponent unit cell size and exponent
@@ -79,11 +79,11 @@ class DiscreteFourierTransformBase(Operator):
             is faster but requires the ``pyfftw`` package.
             ``None`` selects the fastest available backend.
         """
-        if not isinstance(domain, DiscreteLp):
-            raise TypeError('`domain` {!r} is not a `DiscreteLp` instance'
+        if not isinstance(domain, DiscretizedSpace):
+            raise TypeError('`domain` {!r} is not a `DiscretizedSpace` instance'
                             ''.format(domain))
-        if range is not None and not isinstance(range, DiscreteLp):
-            raise TypeError('`range` {!r} is not a `DiscreteLp` instance'
+        if range is not None and not isinstance(range, DiscretizedSpace):
+            raise TypeError('`range` {!r} is not a `DiscretizedSpace` instance'
                             ''.format(range))
 
         # Implementation
@@ -387,11 +387,11 @@ class DiscreteFourierTransform(DiscreteFourierTransformBase):
 
         Parameters
         ----------
-        domain : `DiscreteLp`
+        domain : `DiscretizedSpace`
             Domain of the Fourier transform. If its
-            `DiscreteLp.exponent` is equal to 2.0, this operator has
+            `DiscretizedSpace.exponent` is equal to 2.0, this operator has
             an adjoint which is equal to the inverse.
-        range : `DiscreteLp`, optional
+        range : `DiscretizedSpace`, optional
             Range of the Fourier transform. If not given, the range
             is determined from ``domain`` and the other parameters as
             a `uniform_discr` with exponent unit cell size and exponent
@@ -540,11 +540,11 @@ class DiscreteFourierTransformInverse(DiscreteFourierTransformBase):
 
         Parameters
         ----------
-        range : `DiscreteLp`
+        range : `DiscretizedSpace`
             Range of the inverse Fourier transform. If its
-            `DiscreteLp.exponent` is equal to 2.0, this operator has
+            `DiscretizedSpace.exponent` is equal to 2.0, this operator has
             an adjoint which is equal to the inverse.
-        domain : `DiscreteLp`, optional
+        domain : `DiscretizedSpace`, optional
             Domain of the inverse Fourier transform. If not given, the
             domain is determined from ``range`` and the other parameters as
             a `uniform_discr` with exponent unit cell size and exponent
@@ -724,12 +724,12 @@ class FourierTransformBase(Operator):
         inverse : bool
             If ``True``, create the inverse transform, otherwise the forward
             transform.
-        domain : `DiscreteLp`
+        domain : `DiscretizedSpace`
             Domain of the Fourier transform. If the
-            `DiscreteLp.exponent` of ``domain`` and ``range`` are equal
+            `DiscretizedSpace.exponent` of ``domain`` and ``range`` are equal
             to 2.0, this operator has an adjoint which is equal to its
             inverse.
-        range : `DiscreteLp`, optional
+        range : `DiscretizedSpace`, optional
             Range of the Fourier transform. If not given, the range
             is determined from ``domain`` and the other parameters. The
             exponent is chosen to be the conjugate ``p / (p - 1)``,
@@ -760,13 +760,13 @@ class FourierTransformBase(Operator):
 
         Other Parameters
         ----------------
-        tmp_r : `DiscreteLpElement` or `numpy.ndarray`, optional
+        tmp_r : `DiscretizedSpaceElement` or `numpy.ndarray`, optional
             Temporary for calculations in the real space (domain of
             this transform). It is shared with the inverse.
 
             Variants using this: R2C, R2HC, C2R (inverse)
 
-        tmp_f : `DiscreteLpElement` or `numpy.ndarray`, optional
+        tmp_f : `DiscretizedSpaceElement` or `numpy.ndarray`, optional
             Temporary for calculations in the frequency (reciprocal)
             space. It is shared with the inverse.
 
@@ -796,8 +796,8 @@ class FourierTransformBase(Operator):
           <odlgroup.github.io/odl/math/trafos/fourier_transform.html#adjoint>`_
           for details.
         """
-        if not isinstance(domain, DiscreteLp):
-            raise TypeError('domain {!r} is not a `DiscreteLp` instance'
+        if not isinstance(domain, DiscretizedSpace):
+            raise TypeError('domain {!r} is not a `DiscretizedSpace` instance'
                             ''.format(domain))
         if domain.impl != 'numpy':
             raise NotImplementedError(
@@ -1177,12 +1177,12 @@ class FourierTransform(FourierTransformBase):
 
         Parameters
         ----------
-        domain : `DiscreteLp`
+        domain : `DiscretizedSpace`
             Domain of the Fourier transform. If the
-            `DiscreteLp.exponent` of ``domain`` and ``range`` are equal
+            `DiscretizedSpace.exponent` of ``domain`` and ``range`` are equal
             to 2.0, this operator has an adjoint which is equal to its
             inverse.
-        range : `DiscreteLp`, optional
+        range : `DiscretizedSpace`, optional
             Range of the Fourier transform. If not given, the range
             is determined from ``domain`` and the other parameters. The
             exponent is chosen to be the conjugate ``p / (p - 1)``,
@@ -1213,13 +1213,13 @@ class FourierTransform(FourierTransformBase):
 
         Other Parameters
         ----------------
-        tmp_r : `DiscreteLpElement` or `numpy.ndarray`, optional
+        tmp_r : `DiscretizedSpaceElement` or `numpy.ndarray`, optional
             Temporary for calculations in the real space (domain of
             this transform). It is shared with the inverse.
 
             Variants using this: R2C, R2HC, C2R (inverse)
 
-        tmp_f : `DiscreteLpElement` or `numpy.ndarray`, optional
+        tmp_f : `DiscretizedSpaceElement` or `numpy.ndarray`, optional
             Temporary for calculations in the frequency (reciprocal)
             space. It is shared with the inverse.
 
@@ -1415,12 +1415,12 @@ class FourierTransformInverse(FourierTransformBase):
         """
         Parameters
         ----------
-        range : `DiscreteLp`
+        range : `DiscretizedSpace`
             Range of the inverse Fourier transform. If the
-            `DiscreteLp.exponent` of ``domain`` and ``range`` are equal
+            `DiscretizedSpace.exponent` of ``domain`` and ``range`` are equal
             to 2.0, this operator has an adjoint which is equal to its
             inverse.
-        domain : `DiscreteLp`, optional
+        domain : `DiscretizedSpace`, optional
             Domain of the inverse Fourier transform. If not given, the
             domain is determined from ``range`` and the other parameters.
             The exponent is chosen to be the conjugate ``p / (p - 1)``,
@@ -1451,13 +1451,13 @@ class FourierTransformInverse(FourierTransformBase):
 
         Other Parameters
         ----------------
-        tmp_r : `DiscreteLpElement` or `numpy.ndarray`, optional
+        tmp_r : `DiscretizedSpaceElement` or `numpy.ndarray`, optional
             Temporary for calculations in the real space (range of
             this transform). It is shared with the inverse.
 
             Variants using this: C2R, R2C (forward), R2HC (forward)
 
-        tmp_f : `DiscreteLpElement` or `numpy.ndarray`, optional
+        tmp_f : `DiscretizedSpaceElement` or `numpy.ndarray`, optional
             Temporary for calculations in the frequency (reciprocal)
             space. It is shared with the inverse.
 

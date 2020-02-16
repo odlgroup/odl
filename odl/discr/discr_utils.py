@@ -33,7 +33,7 @@ __all__ = (
     'nearest_interpolator',
     'linear_interpolator',
     'per_axis_interpolator',
-    'make_func_for_sampling',
+    'sampling_function',
 )
 
 SUPPORTED_INTERP = ['nearest', 'linear']
@@ -72,7 +72,7 @@ def point_collocation(func, points, out=None, **kwargs):
 
     >>> from odl.discr.grid import sparse_meshgrid
     >>> domain = odl.IntervalProd(0, 5)
-    >>> func = make_func_for_sampling(lambda x: x ** 2, domain)
+    >>> func = sampling_function(lambda x: x ** 2, domain)
     >>> mesh = sparse_meshgrid([1, 2, 3])
     >>> point_collocation(func, mesh)
     array([ 1.,  4.,  9.])
@@ -92,7 +92,7 @@ def point_collocation(func, points, out=None, **kwargs):
     >>> xs = [1, 2]
     >>> ys = [3, 4, 5]
     >>> mesh = sparse_meshgrid(xs, ys)
-    >>> func = make_func_for_sampling(lambda x: x[0] - x[1], domain)
+    >>> func = sampling_function(lambda x: x[0] - x[1], domain)
     >>> point_collocation(func, mesh)
     array([[-2., -3., -4.],
            [-1., -2., -3.]])
@@ -102,7 +102,7 @@ def point_collocation(func, points, out=None, **kwargs):
 
     >>> def f(x, c=0):
     ...     return x[0] + c
-    >>> func = make_func_for_sampling(f, domain)
+    >>> func = sampling_function(f, domain)
     >>> point_collocation(func, mesh)  # uses default c=0
     array([[ 1.,  1.,  1.],
            [ 2.,  2.,  2.]])
@@ -120,9 +120,11 @@ def point_collocation(func, points, out=None, **kwargs):
     >>> mesh = sparse_meshgrid(xs, ys)
     >>> def vec_valued(x):
     ...     return (x[0] - 1, 0, x[0] + x[1])  # broadcasting
-    >>> # We must tell the wrapper that we want a 3-component function
-    >>> func1 = make_func_for_sampling(
-    ...     vec_valued, domain, out_dtype=(float, (3,)))
+    >>> # For a function with several output components, we must specify the
+    >>> # shape explicitly in the `out_dtype` parameter
+    >>> func1 = sampling_function(
+    ...     vec_valued, domain, out_dtype=(float, (3,))
+    ... )
     >>> point_collocation(func1, mesh)
     array([[[ 0.,  0.],
             [ 1.,  1.]],
@@ -132,13 +134,13 @@ def point_collocation(func, points, out=None, **kwargs):
     <BLANKLINE>
            [[ 4.,  5.],
             [ 5.,  6.]]])
-    >>> array_of_funcs = [  # equivalent to `vec_valued`
+    >>> list_of_funcs = [  # equivalent to `vec_valued`
     ...     lambda x: x[0] - 1,
     ...     0,                   # constants are allowed
     ...     lambda x: x[0] + x[1]
     ... ]
-    >>> func2 = make_func_for_sampling(
-    ...     array_of_funcs, domain, out_dtype=(float, (3,)))
+    >>> # For an array of functions, the output shape can be inferred
+    >>> func2 = sampling_function(list_of_funcs, domain)
     >>> point_collocation(func2, mesh)
     array([[[ 0.,  0.],
             [ 1.,  1.]],
@@ -171,13 +173,6 @@ def point_collocation(func, points, out=None, **kwargs):
     else:
         func(points, out=out, **kwargs)
     return out
-
-
-def _all_interp_equal(interp_byaxis):
-    """Whether all entries are equal, with ``False`` for length 0."""
-    if len(interp_byaxis) == 0:
-        return False
-    return all(itp == interp_byaxis[0] for itp in interp_byaxis)
 
 
 def _normalize_interp(interp, ndim):
@@ -358,7 +353,7 @@ def nearest_interpolator(f, coord_vecs):
 
 
 def linear_interpolator(f, coord_vecs):
-    """Return the linear interpolator for discrete values.
+    """Return the linear interpolator for discrete function values.
 
     Parameters
     ----------
@@ -535,10 +530,11 @@ class _Interpolator(object):
             raise ValueError('`input_type` ({}) not understood'
                              ''.format(input_type))
 
-        if len(coord_vecs) > values.ndim:
-            raise ValueError('there are {} point arrays, but `values` has {} '
-                             'dimensions'.format(len(coord_vecs),
-                                                 values.ndim))
+        if len(coord_vecs) != values.ndim:
+            raise ValueError(
+                'there are {} point arrays, but `values` has {} dimensions'
+                ''.format(len(coord_vecs), values.ndim)
+            )
         for i, p in enumerate(coord_vecs):
             if not np.asarray(p).ndim == 1:
                 raise ValueError('the points in dimension {} must be '
@@ -897,7 +893,7 @@ def _func_out_type(func):
     """Determine the output argument type (if any) of a function-like object.
 
     This function is intended to work with all types of callables
-    that are used as input to `make_func_for_sampling`.
+    that are used as input to `sampling_function`.
     """
     # Numpy `UFuncs` and similar objects (e.g. Numba `DUFuncs`)
     if hasattr(func, 'nin') and hasattr(func, 'nout'):
@@ -922,7 +918,7 @@ def _func_out_type(func):
     return has_out, out_optional
 
 
-def make_func_for_sampling(func_or_arr, domain, out_dtype='float64'):
+def sampling_function(func_or_arr, domain, out_dtype=None):
     """Return a function that can be used for sampling.
 
     For examples on this function's usage, see `point_collocation`.
@@ -930,7 +926,8 @@ def make_func_for_sampling(func_or_arr, domain, out_dtype='float64'):
     Parameters
     ----------
     func_or_arr : callable or array-like
-        Either a callable object or an array or callables and constants.
+        Either a single callable object (possibly with multiple output
+        components), or an array or callables and constants.
     domain : IntervalProd
         Set in which inputs to the function are assumed to lie. It is used
         to determine the type of input (point/meshgrid/array) based on
@@ -946,7 +943,9 @@ def make_func_for_sampling(func_or_arr, domain, out_dtype='float64'):
           ``out_dtype`` should be a shaped data type, e.g., ``(float, (3,))``
           for a vector-valued function with 3 components.
         - If ``func_or_arr`` is an array-like, ``out_dtype`` should be a
-          shaped dtype whose shape matches that of ``func_or_arr``.
+          shaped dtype whose shape matches that of ``func_or_arr``. It can
+          also be ``None``, in which case the shape is inferred, and the
+          scalar data type is set to ``float``.
 
     Returns
     -------
@@ -954,12 +953,12 @@ def make_func_for_sampling(func_or_arr, domain, out_dtype='float64'):
         Wrapper function that has an optional ``out`` argument.
     """
     if out_dtype is None:
-        # Don't let `np.dtype` convert `None` to `float64`
-        raise TypeError('`out_dtype` cannot be `None`')
-
-    out_dtype = np.dtype(out_dtype)
-    val_shape = out_dtype.shape
-    scalar_out_dtype = out_dtype.base
+        val_shape = None
+        scalar_out_dtype = np.dtype('float64')
+    else:
+        out_dtype = np.dtype(out_dtype)
+        val_shape = out_dtype.shape
+        scalar_out_dtype = out_dtype.base
 
     # Provide default implementations of missing function signature types
 
@@ -1015,6 +1014,10 @@ def make_func_for_sampling(func_or_arr, domain, out_dtype='float64'):
     # wrapping. If needed, vectorize.
 
     if callable(func_or_arr):
+        # Assume scalar float out dtype for single function
+        if out_dtype is None:
+            out_dtype = np.dtype('float64')
+
         # Got a (single) function, possibly need to vectorize
         func = func_or_arr
 
@@ -1037,15 +1040,22 @@ def make_func_for_sampling(func_or_arr, domain, out_dtype='float64'):
         # We need to convert this into a single function that returns an
         # array.
 
-        arr = func_or_arr
-        if np.shape(arr) != val_shape:
+        arr = np.array(func_or_arr, dtype=object)
+
+        if val_shape is None:
+            # Infer value shape if `out_dtype is None`
+            val_shape = arr.shape
+        elif arr.shape != val_shape:
+            # Otherwise, check that the value shape matches the dtype shape
             raise ValueError(
                 'invalid `func_or_arr` {!r}: expected `None`, a callable or '
                 'an array-like of callables whose shape matches '
                 '`out_dtype.shape` {}'.format(func_or_arr, val_shape)
             )
 
-        arr = np.array(arr, dtype=object, ndmin=1).ravel().tolist()
+        out_dtype = np.dtype((scalar_out_dtype, val_shape))
+
+        arr = arr.ravel().tolist()
 
         def array_wrapper_func(x, out=None, **kwargs):
             """Function wrapping an array of callables and constants.

@@ -1,6 +1,6 @@
 # coding=utf-8
 
-# Copyright 2014-2019 The ODL contributors
+# Copyright 2014-2020 The ODL contributors
 #
 # This file is part of ODL.
 #
@@ -10,15 +10,16 @@
 
 """Default operators defined on any (reasonable) space."""
 
-from __future__ import print_function, division, absolute_import
+from __future__ import absolute_import, division, print_function
+
 from copy import copy
+
 import numpy as np
 
 from odl.operator.operator import Operator
-from odl.set import LinearSpace, Field, RealNumbers, ComplexNumbers
+from odl.set import ComplexNumbers, Field, LinearSpace, RealNumbers
 from odl.set.space import LinearSpaceElement
 from odl.space import ProductSpace
-
 
 __all__ = ('ScalingOperator', 'ZeroOperator', 'IdentityOperator',
            'LinCombOperator', 'MultiplyOperator', 'PowerOperator',
@@ -984,7 +985,7 @@ class RealPart(Operator):
         rn(3).element([ 1.,  2.,  3.])
 
         The operator also works on other `TensorSpace` spaces such as
-        `DiscreteLp` spaces:
+        `DiscretizedSpace` spaces:
 
         >>> r3 = odl.uniform_discr(0, 1, 3, dtype=complex)
         >>> op = RealPart(r3)
@@ -1387,7 +1388,7 @@ class ComplexModulus(Operator):
         rn(2).element([ 1.,  2.])
 
         The operator also works on other `TensorSpace`'s such as
-        `DiscreteLp`:
+        `DiscretizedSpace`:
 
         >>> space = odl.uniform_discr(0, 1, 2, dtype=complex)
         >>> op = odl.ComplexModulus(space)
@@ -1587,7 +1588,7 @@ class ComplexModulusSquared(Operator):
         rn(2).element([ 1.,  4.])
 
         The operator also works on other `TensorSpace`'s such as
-        `DiscreteLp`:
+        `DiscretizedSpace`:
 
         >>> space = odl.uniform_discr(0, 1, 2, dtype=complex)
         >>> op = odl.ComplexModulusSquared(space)
