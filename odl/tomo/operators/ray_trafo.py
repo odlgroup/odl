@@ -19,16 +19,14 @@ from odl.operator import Operator
 from odl.space.weighting import ConstWeighting
 from odl.tomo.backends import (
     ASTRA_AVAILABLE, ASTRA_CUDA_AVAILABLE, SKIMAGE_AVAILABLE,
-    RayTransformImplBase,
-    SkimageRayTransformImpl, AstraCudaRayTransformImpl,
-    AstraCpuRayTransformImpl)
+    Skimage, AstraCuda, AstraCpu)
 from odl.tomo.geometry import Geometry
 
 # Backends that are implemented in ODL and can be specified via `impl`
 _SUPPORTED_IMPL = {
-    'astra_cpu': AstraCpuRayTransformImpl,
-    'astra_cuda': AstraCudaRayTransformImpl,
-    'skimage': SkimageRayTransformImpl}
+    'astra_cpu': AstraCpu,
+    'astra_cuda': AstraCuda,
+    'skimage': Skimage}
 
 # Backends that are installed, ordered by preference
 _AVAILABLE_IMPLS = []
@@ -206,29 +204,6 @@ class RayTransformBase(Operator):
             # Select fastest available, _AVAILABLE_IMPLS is sorted by speed
             impl_type = _SUPPORTED_IMPL[_AVAILABLE_IMPLS[0]]
 
-            # Warn if implementation is not fast enough
-            if not impl_type.can_handle_size(reco_space.size):
-                if impl_type == AstraCpuRayTransformImpl:
-                    warnings.warn(
-                        "The best available backend ('astra_cpu') may be too "
-                        "slow for volumes of this size. Consider using "
-                        "'astra_cuda' if your machine has an Nvidia GPU. "
-                        "This warning can be disabled by explicitly setting "
-                        "`impl='astra_cpu'`.",
-                        RuntimeWarning)
-                elif impl_type == SkimageRayTransformImpl:
-                    warnings.warn(
-                        "The best available backend ('skimage') may be too "
-                        "slow for volumes of this size. Consider using ASTRA. "
-                        "This warning can be disabled by explicitly setting "
-                        "`impl='skimage'`.",
-                        RuntimeWarning)
-                else:
-                    warnings.warn(
-                        "The `impl` backend indicates that it might be too "
-                        "slow for volumes of the input size.",
-                        RuntimeWarning)
-
         else:
             # User did specify `impl`
             if isinstance(impl, str):
@@ -240,33 +215,27 @@ class RayTransformBase(Operator):
                         '{!r} back-end not available'.format(impl))
 
                 impl_type = _SUPPORTED_IMPL[impl.lower()]
-            elif isinstance(impl, type):
+            elif isinstance(impl, type) or isinstance(impl, object):
                 # User gave the type and leaves instantiation to us
-                if not issubclass(impl, RayTransformImplBase):
-                    raise TypeError('Type {!r} must be a subclass of '
-                                    '`RayTransformImplBase`.'.format(impl))
+                forward = getattr(impl, "call_forward", None)
+                backward = getattr(impl, "call_backward", None)
 
-                impl_type = impl
-            elif isinstance(impl, RayTransformImplBase):
-                # User gave an object for `impl`, meaning to set the
-                # backend cache to an already initiated object
-                impl_type = type(impl)
-                self.__cached_impl = impl
+                if not callable(forward) and not callable(backward):
+                    raise TypeError('Type {!r} must be have a `call_forward` '
+                                    'or `call_backward`.'.format(impl))
+
+                if isinstance(impl, type):
+                    impl_type = impl
+                else:
+                    # User gave an object for `impl`, meaning to set the
+                    # backend cache to an already initiated object
+                    impl_type = type(impl)
+                    self.__cached_impl = impl
             else:
                 raise TypeError(
-                    'Given `impl` should be a `str`, or the type or subclass '
-                    'of `RayTransformImplBase`, '
-                    'now it is a {!r}.'.format(type(impl)))
-
-        # Sanity checks
-        geometry_support = impl_type.supports_geometry(geometry)
-        if not geometry_support:
-            raise geometry_support
-
-        reco_space_support = impl_type.supports_reco_space(reco_space,
-                                                           reco_name)
-        if not reco_space_support:
-            raise reco_space_support
+                    '`impl` {!r} should be a `str`, or an object or type '
+                    'having a `call_forward()` and/or `call_backward()`. '
+                    .format(type(impl)))
 
         self.__geometry = geometry
         self._impl_type = impl_type
@@ -298,7 +267,7 @@ class RayTransformBase(Operator):
     def create_impl(self, from_cache=True):
         """Fetches or instantiates implementation backend for evaluation."""
 
-        # Skip impl creation (__cached_impl) when `clear_cache` is True
+        # Use impl creation (__cached_impl) when `from_cache` is True
         if not from_cache or self.__cached_impl is None:
             # Lazily (re)instantiate the backend
             self.__cached_impl = self._impl_type(

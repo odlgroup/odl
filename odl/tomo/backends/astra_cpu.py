@@ -11,12 +11,12 @@
 from __future__ import absolute_import, division, print_function
 
 import numpy as np
+import warnings
 
 from odl.discr import DiscretizedSpace, DiscretizedSpaceElement
 from odl.tomo.backends.astra_setup import (
     astra_algorithm, astra_data, astra_projection_geometry, astra_projector,
     astra_volume_geometry)
-from odl.tomo.backends.impl import RayTransformImplBase
 from odl.tomo.geometry import (
     DivergentBeamGeometry, Geometry, ParallelBeamGeometry)
 from odl.util import writable_array
@@ -30,7 +30,7 @@ __all__ = (
     'astra_cpu_forward_projector',
     'astra_cpu_back_projector',
     'default_astra_proj_type',
-    'AstraCpuRayTransformImpl',
+    'AstraCpu',
 )
 
 
@@ -255,21 +255,47 @@ def astra_cpu_back_projector(proj_data, geometry, vol_space, out=None,
     return out
 
 
-class AstraCpuRayTransformImpl(RayTransformImplBase):
+class AstraCpu:
     def __init__(self, geometry, reco_space, proj_space):
-        super().__init__(geometry, reco_space, proj_space)
+        """Initialize a new instance.
 
-    @staticmethod
-    def can_handle_size(size):
-        return not size >= 512 ** 2
+        Parameters
+        ----------
+        geometry : `Geometry`
+            Geometry defining the tomographic setup.
+        reco_space : `DiscreteLp`
+            Reconstruction space, the space of the images to be forward
+            projected.
+        proj_space : `DiscreteLp`
+            Projection space, the space of the result.
+        """
+        if not isinstance(geometry, Geometry):
+            raise TypeError('`geometry` must be a `Geometry` instance, got '
+                            '{!r}'.format(geometry))
 
-    @classmethod
-    def supports_geometry(cls, geometry):
+        if not isinstance(reco_space, DiscreteLp):
+            raise TypeError('`reco_space` must be a `DiscreteLP` instance, got'
+                            ' {!r}'.format(reco_space))
+
+        if not isinstance(proj_space, DiscreteLp):
+            raise TypeError('`proj_space` must be a `DiscreteLP` instance, got'
+                            ' {!r}'.format(proj_space))
+
+        if reco_space.size >= 512 ** 2:
+            warnings.warn(
+                "The 'astra_cpu' backend may be too slow for volumes of this "
+                "size. Consider using 'astra_cuda' if your machine has an "
+                "Nvidia GPU. This warning can be disabled by explicitly "
+                "setting `impl='astra_cpu'`.",
+                RuntimeWarning)
+
         if geometry.ndim > 2:
-            return ValueError('`impl` {!r} only works for 2d'
-                              ''.format(cls.__name__))
+            raise ValueError('`impl` {!r} only works for 2d'
+                             ''.format(self.__name__))
 
-        return True
+        self.geometry = geometry
+        self.reco_space = reco_space
+        self.proj_space = proj_space
 
     def call_forward(self, x_real, out_real, **kwargs):
         return astra_cpu_forward_projector(

@@ -24,7 +24,6 @@ from odl.tomo.backends.astra_setup import (
 from odl.tomo.geometry import (
     ConeBeamGeometry, FanBeamGeometry, Geometry, Parallel2dGeometry,
     Parallel3dAxisGeometry)
-from odl.tomo.backends.impl import RayTransformImplBase
 
 try:
     import astra
@@ -35,11 +34,11 @@ except ImportError:
 
 __all__ = (
     'ASTRA_CUDA_AVAILABLE',
-    'AstraCudaRayTransformImpl',
+    'AstraCuda',
 )
 
 
-class AstraCudaRayTransformImpl(RayTransformImplBase):
+class AstraCuda:
     """Thin wrapper around ASTRA."""
 
     algo_forward_id = None
@@ -61,15 +60,18 @@ class AstraCudaRayTransformImpl(RayTransformImplBase):
         proj_space : `DiscretizedSpace`
             Projection space, the space of the result.
         """
-        super().__init__(geometry, reco_space, proj_space)
+        if not isinstance(geometry, Geometry):
+            raise TypeError('`geometry` must be a `Geometry` instance, got '
+                            '{!r}'.format(geometry))
 
-        self.create_ids()
+        if not isinstance(reco_space, DiscreteLp):
+            raise TypeError('`reco_space` must be a `DiscreteLP` instance, got'
+                            ' {!r}'.format(reco_space))
 
-        # ASTRA projectors are not thread-safe, thus we need to lock ourselves
-        self._mutex = Lock()
+        if not isinstance(proj_space, DiscreteLp):
+            raise TypeError('`proj_space` must be a `DiscreteLP` instance, got'
+                            ' {!r}'.format(proj_space))
 
-    @classmethod
-    def supports_geometry(cls, geometry):
         # Print a warning if the detector midpoint normal vector at any
         # angle is perpendicular to the geometry axis in parallel 3d
         # single-axis geometry -- this is broken in some ASTRA versions
@@ -92,7 +94,14 @@ class AstraCudaRayTransformImpl(RayTransformImplBase):
                         RuntimeWarning)
                     break
 
-        return True
+        self.geometry = geometry
+        self.reco_space = reco_space
+        self.proj_space = proj_space
+
+        self.create_ids()
+
+        # ASTRA projectors are not thread-safe, thus we need to lock ourselves
+        self._mutex = Lock()
 
     def create_ids(self):
         """Create ASTRA objects."""

@@ -11,11 +11,13 @@
 from __future__ import division
 
 import numpy as np
-from odl.tomo import Parallel2dGeometry
+import warnings
 
-from odl.discr import uniform_discr_frompartition, uniform_partition
+from odl.tomo import Parallel2dGeometry, Geometry
+
+from odl.discr import uniform_discr_frompartition, uniform_partition, \
+    DiscretizedSpace
 from odl.discr.discr_utils import linear_interpolator, point_collocation
-from odl.tomo.backends import RayTransformImplBase
 from odl.util.utility import writable_array
 
 try:
@@ -29,7 +31,7 @@ __all__ = (
     'SKIMAGE_AVAILABLE',
     'skimage_radon_forward_projector',
     'skimage_radon_back_projector',
-    'SkimageRayTransformImpl',
+    'Skimage',
 )
 
 
@@ -177,40 +179,66 @@ def skimage_radon_back_projector(sinogram, geometry, vol_space, out=None):
     return out
 
 
-class SkimageRayTransformImpl(RayTransformImplBase):
+class Skimage:
     def __init__(self, geometry, reco_space, proj_space):
-        super().__init__(geometry, reco_space, proj_space)
+        """Initialize a new instance.
 
-    @staticmethod
-    def can_handle_size(size):
-        return not size >= 256 ** 2
+        Parameters
+        ----------
+        geometry : `Geometry`
+            Geometry defining the tomographic setup.
+        reco_space : `DiscreteLp`
+            Reconstruction space, the space of the images to be forward
+            projected.
+        proj_space : `DiscreteLp`
+            Projection space, the space of the result.
+        """
+        if not isinstance(geometry, Geometry):
+            raise TypeError('`geometry` must be a `Geometry` instance, got '
+                            '{!r}'.format(geometry))
 
-    @classmethod
-    def supports_geometry(cls, geometry):
+        if not isinstance(reco_space, DiscretizedSpace):
+            raise TypeError(
+                '`reco_space` must be a `DiscretizedSpace` instance, got {!r}'
+                ''.format(reco_space)
+            )
+
+        if not isinstance(proj_space, DiscretizedSpace):
+            raise TypeError(
+                '`proj_space` must be a `DiscretizedSpace` instance, got {!r}'
+                ''.format(proj_space)
+            )
+
+        if reco_space.size >= 256 ** 2:
+            warnings.warn(
+                "The 'skimage' backend may be too slow for volumes of this "
+                "size. Consider using 'astra_cpu', or 'astra_cuda' if your "
+                "machine has an Nvidia GPU. This warning can be disabled by "
+                "explicitly setting `impl='astra_cpu'`.",
+                RuntimeWarning)
+
         if not isinstance(geometry, Parallel2dGeometry):
-            return TypeError("{!r} backend only supports 2d parallel "
-                             'geometries'.format(cls.__name__))
+            raise TypeError("{!r} backend only supports 2d parallel "
+                             'geometries'.format(self.__name__))
 
-        return True
-
-    @classmethod
-    def supports_reco_space(cls, reco_name, reco_space):
         mid_pt = reco_space.domain.mid_pt
         if not np.allclose(mid_pt, [0, 0]):
-            return ValueError('`{}` must be centered at (0, 0), got '
-                              'midpoint {}'.format(reco_name, mid_pt))
+            raise ValueError('Reconstruction space must be centered at (0, 0),'
+                             'got midpoint {}'.format(mid_pt))
 
         shape = reco_space.shape
         if shape[0] != shape[1]:
-            return ValueError('`{}.shape` must have equal entries, '
-                              'got {}'.format(reco_name, shape))
+            raise ValueError('`reco_space.shape` must have equal entries, '
+                              'got {}'.format(shape))
 
         extent = reco_space.domain.extent
         if extent[0] != extent[1]:
-            return ValueError('`{}.extent` must have equal entries, '
-                              'got {}'.format(reco_name, extent))
+            raise ValueError('`reco_space.extent` must have equal entries, '
+                              'got {}'.format(extent))
 
-        return True
+        self.geometry = geometry
+        self.reco_space = reco_space
+        self.proj_space = proj_space
 
     def call_forward(self, x_real, out_real, **kwargs):
         return skimage_radon_forward_projector(
