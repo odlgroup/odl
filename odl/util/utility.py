@@ -47,6 +47,7 @@ __all__ = (
     'repr_string',
     'attribute_repr_string',
     'method_repr_string',
+    'nextpow2',
     'run_from_ipython',
     'npy_random_seed',
     'unique',
@@ -1605,6 +1606,28 @@ def unique(seq):
             if i not in unique_values:
                 unique_values.append(i)
         return unique_values
+
+
+def nextpow2(n):
+    """
+    Compute the integer which is a power of two.
+
+    Parameters
+    ----------
+    n : int
+
+    Examples
+    ========
+    >>> odl.util.nextpow2(0)
+    1
+    >>> odl.util.nextpow2(7)
+    8
+    >>> odl.util.nextpow2(513)
+    1024
+    """
+    if n == 0:
+        return 0
+    return int(np.ceil(np.log2(n)))
 
 
 if __name__ == '__main__':

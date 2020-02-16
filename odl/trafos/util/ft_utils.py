@@ -20,12 +20,13 @@ from odl.util import (
     is_real_dtype, is_numeric_dtype, is_real_floating_dtype,
     is_complex_floating_dtype, complex_dtype, dtype_repr,
     is_string,
-    normalized_scalar_param_list, normalized_axes_tuple)
+    normalized_scalar_param_list, normalized_axes_tuple, nextpow2)
 
 
 __all__ = ('reciprocal_grid', 'realspace_grid',
            'reciprocal_space',
-           'dft_preprocess_data', 'dft_postprocess_data')
+           'dft_preprocess_data', 'dft_postprocess_data',
+           'next_fast_len')
 
 
 def reciprocal_grid(grid, shift=True, axes=None, halfcomplex=False):
@@ -647,6 +648,19 @@ def reciprocal_space(space, axes=None, halfcomplex=False, shift=True,
                                             axis_labels=axis_labels)
 
     return recip_spc
+
+
+def next_fast_len(n, impl, rfft=False):
+    """The smallest size for which a fast fft implementation is available."""
+    n = int(n)
+    if impl == 'pyfftw':
+        if rfft:
+            return 2 ** nextpow2(n)
+        else:
+            import pyfftw
+            return pyfftw.next_fast_len(n)
+    elif impl == 'numpy':
+        return 2 ** nextpow2(n)
 
 
 if __name__ == '__main__':
