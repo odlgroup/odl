@@ -17,6 +17,7 @@ import warnings
 from packaging.version import parse as parse_version
 
 from odl.discr import DiscretizedSpace
+from odl.tomo.backends import complexify
 from odl.tomo.backends.astra_setup import (
     ASTRA_VERSION, astra_algorithm, astra_data, astra_projection_geometry,
     astra_projector, astra_volume_geometry, astra_supports,
@@ -158,7 +159,11 @@ class AstraCuda:
             'backward', proj_ndim, self.vol_id, self.sino_id,
             proj_id=self.proj_id, impl='cuda')
 
-    def call_forward(self, vol_data, out, **kwargs):
+    def call_forward(self, x, out, **kwargs):
+        return complexify(self._call_forward_real, self.reco_space) \
+            (x, out, **kwargs)
+
+    def _call_forward_real(self, vol_data, out, **kwargs):
         """Run an ASTRA forward projection on the given data using the GPU.
 
         Parameters
@@ -208,7 +213,11 @@ class AstraCuda:
 
             return out
 
-    def call_backward(self, proj_data, out, **kwargs):
+    def call_backward(self, x, out, **kwargs):
+        return complexify(self._call_backward_real, self.proj_space) \
+            (x, out, **kwargs)
+
+    def _call_backward_real(self, proj_data, out, **kwargs):
         """Run an ASTRA back-projection on the given data using the GPU.
 
         Parameters

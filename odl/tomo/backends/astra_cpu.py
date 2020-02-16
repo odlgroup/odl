@@ -16,7 +16,7 @@ import warnings
 from odl.discr import DiscretizedSpace, DiscretizedSpaceElement
 from odl.tomo.backends.astra_setup import (
     astra_algorithm, astra_data, astra_projection_geometry, astra_projector,
-    astra_volume_geometry)
+    astra_volume_geometry, complexify)
 from odl.tomo.geometry import (
     DivergentBeamGeometry, Geometry, ParallelBeamGeometry)
 from odl.util import writable_array
@@ -297,15 +297,20 @@ class AstraCpu:
         self.reco_space = reco_space
         self.proj_space = proj_space
 
-    def call_forward(self, x_real, out_real, **kwargs):
-        return astra_cpu_forward_projector(
-            x_real, self.geometry, self.proj_space.real_space,
-            out_real, **kwargs)
+    def call_backward(self, x, out, **kwargs):
+        def wrapper(x, out, **kwargs):
+            return astra_cpu_forward_projector(
+                x, self.geometry, self.proj_space.real_space, out, **kwargs)
 
-    def call_backward(self, x_real, out_real, **kwargs):
-        return astra_cpu_back_projector(
-            x_real, self.geometry, self.reco_space.real_space,
-            out_real, **kwargs)
+        return complexify(wrapper, self.reco_space)(x, out, **kwargs)
+
+    def call_forward(self, x, out, **kwargs):
+        def wrapper(x_real, out_real, **kwargs):
+            return astra_cpu_back_projector(
+                x_real, self.geometry, self.reco_space.real_space,
+                out_real, **kwargs)
+
+        return complexify(wrapper, self.proj_space)(x, out, **kwargs)
 
 
 if __name__ == '__main__':

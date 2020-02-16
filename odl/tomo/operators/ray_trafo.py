@@ -272,35 +272,11 @@ class RayTransform(Operator):
 
         return self.__cached_impl
 
-    def _call(self, x, out=None):
-        """Return ``self(x[, out])``."""
-        if self.domain.is_real:
-            return self._call_real(x, out, **self._extra_kwargs)
-
-        elif self.domain.is_complex:
-            result_parts = [
-                self._call_real(
-                    x.real, getattr(out, 'real', None), **self._extra_kwargs
-                ),
-                self._call_real(
-                    x.imag, getattr(out, 'imag', None), **self._extra_kwargs
-                ),
-            ]
-
-            if out is None:
-                out = self.range.element()
-                out.real = result_parts[0]
-                out.imag = result_parts[1]
-
-            return out
-        else:
-            raise RuntimeError('bad domain {!r}'.format(self.domain))
-
-    def _call_real(self, x_real, out_real, **kwargs):
+    def _call(self, x, out, **kwargs):
         """Real-space forward projection for the current set-up."""
 
         return self.create_impl(self.use_cache) \
-            .call_forward(x_real, out_real, **kwargs)
+            .call_forward(x, out, **kwargs)
 
     @property
     def adjoint(self):
@@ -397,36 +373,11 @@ class RayBackProjection(Operator):
     def use_cache(self):
         return self._ray_trafo.use_cache
 
-    def _call(self, x, out=None):
-        """Return ``self(x[, out])``."""
-        if self.domain.is_real:
-            return self._call_real(x, out, **self._extra_kwargs)
-
-        elif self.domain.is_complex:
-            result_parts = [
-                self._call_real(
-                    x.real, getattr(out, 'real', None), **self._extra_kwargs
-                ),
-                self._call_real(
-                    x.imag, getattr(out, 'imag', None), **self._extra_kwargs
-                ),
-            ]
-
-            if out is None:
-                out = self.range.element()
-                out.real = result_parts[0]
-                out.imag = result_parts[1]
-
-            return out
-
-        else:
-            raise RuntimeError('bad domain {!r}'.format(self.domain))
-
-    def _call_real(self, x_real, out_real, **kwargs):
-        """Real-space back-projection for the current set-up."""
+    def _call(self, x, out, **kwargs):
+        """Back-projection for the current set-up."""
 
         return self._ray_trafo.create_impl(self._ray_trafo.use_cache) \
-            .call_backward(x_real, out_real, **kwargs)
+            .call_backward(x, out, **kwargs)
 
     @property
     def adjoint(self):

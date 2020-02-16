@@ -18,6 +18,7 @@ from odl.tomo import Parallel2dGeometry, Geometry
 from odl.discr import uniform_discr_frompartition, uniform_partition, \
     DiscretizedSpace
 from odl.discr.discr_utils import linear_interpolator, point_collocation
+from odl.tomo.backends import complexify
 from odl.util.utility import writable_array
 
 try:
@@ -240,10 +241,16 @@ class Skimage:
         self.reco_space = reco_space
         self.proj_space = proj_space
 
-    def call_forward(self, x_real, out_real, **kwargs):
-        return skimage_radon_forward_projector(
-            x_real, self.geometry, self.proj_space.real_space, out_real)
+    def call_forward(self, x, out, **kwargs):
+        def wrapper(x_real, out_real, **kwargs):
+            return skimage_radon_forward_projector(
+                x_real, self.geometry, self.proj_space.real_space, out_real)
 
-    def call_backward(self, x_real, out_real, **kwargs):
-        return skimage_radon_back_projector(
-            x_real, self.geometry, self.reco_space.real_space, out_real)
+        return complexify(wrapper, self.proj_space)(x, out, **kwargs)
+
+    def call_backward(self, x, out, **kwargs):
+        def wrapper(x, out, **kwargs):
+            return skimage_radon_back_projector(
+                x, self.geometry, self.reco_space.real_space, out)
+
+        return complexify(wrapper, self.reco_space)(x, out, **kwargs)
