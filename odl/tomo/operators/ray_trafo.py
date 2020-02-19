@@ -308,7 +308,8 @@ class RayTransform(Operator):
 
             kwargs = self._extra_kwargs.copy()
             kwargs['domain'] = self.range
-            self._adjoint = RayBackProjection(range=self.domain, **kwargs)
+            self._adjoint = RayBackProjection(range=self.domain, linear=True,
+                                              **kwargs)
 
         return self._adjoint
 
