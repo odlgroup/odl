@@ -10,8 +10,6 @@
 
 from __future__ import absolute_import, division, print_function
 
-import copy
-
 import numpy as np
 
 from odl.discr import DiscretizedSpace
@@ -39,11 +37,11 @@ if ASTRA_AVAILABLE:
 if SKIMAGE_AVAILABLE:
     _AVAILABLE_IMPLS.append('skimage')
 
-__all__ = ('RayTransform', 'RayBackProjection')
+__all__ = ('RayTransform',)
 
 
 class RayTransform(Operator):
-    """Base class for ray transforms containing common attributes."""
+    """Linear X-Ray (Radon) transform operator between L^p spaces."""
 
     def __init__(self, reco_space, geometry, **kwargs):
         """Initialize a new instance.
@@ -289,110 +287,30 @@ class RayTransform(Operator):
         adjoint : `RayBackProjection`
         """
         if self._adjoint is None:
+            # bring `self` into scope to prevent shadowing in inline class
+            ray_trafo = self
+
+            class RayBackProjection(Operator):
+                """Adjoint of the discrete Ray transform between L^p spaces."""
+
+                def _call(self, x, out, **kwargs):
+                    """Back-projection for the current set-up."""
+                    return ray_trafo.create_impl(ray_trafo.use_cache) \
+                        .call_backward(x, out, **kwargs)
+
+                @property
+                def geometry(self):
+                    return ray_trafo.geometry
+
+                @property
+                def adjoint(self):
+                    return ray_trafo
+
             kwargs = self._extra_kwargs.copy()
             kwargs['domain'] = self.range
-
-            # initiate adjoint with cached implementation if `use_cache`
-            self._adjoint = RayBackProjection(
-                self.domain, self.geometry,
-                impl=(self.impl
-                      if not self.use_cache
-                      else self.create_impl(self.use_cache)),
-                use_cache=self.use_cache,
-                **kwargs)
+            self._adjoint = RayBackProjection(range=self.domain, **kwargs)
 
         return self._adjoint
-
-
-class RayBackProjection(Operator):
-    """Adjoint of the discrete Ray transform between L^p spaces."""
-
-    def __init__(self, range, geometry, **kwargs):
-        """Initialize a new instance.
-
-        Parameters
-        ----------
-        range : `DiscretizedSpace`
-            Discretized reconstruction space, the range of the
-            backprojection operator.
-        geometry : `Geometry`
-            Geometry of the transform, containing information about
-            the operator domain (projection/sinogram space).
-
-        Other Parameters
-        ----------------
-        impl : {`None`, 'astra_cuda', 'astra_cpu', 'skimage'}, optional
-            Implementation back-end for the transform. Supported back-ends:
-
-            - ``'astra_cuda'``: ASTRA toolbox, using CUDA, 2D or 3D
-            - ``'astra_cpu'``: ASTRA toolbox using CPU, only 2D
-            - ``'skimage'``: scikit-image, only 2D parallel with square
-              reconstruction space.
-
-            For the default ``None``, the fastest available back-end is
-            used, tried in the above order.
-
-        domain : `DiscretizedSpace`, optional
-            Discretized projection (sinogram) space, the domain of the
-            backprojection operator.
-            Default: Inferred from parameters.
-        use_cache : bool, optional
-            If ``True``, data is cached. This gives a significant speed-up
-            at the expense of a notable memory overhead, both on the GPU
-            and on the CPU, since a full volume and a projection dataset
-            are stored. That may be prohibitive in 3D.
-            Default: True
-        kwargs
-            Further keyword arguments passed to the projector backend.
-
-        Notes
-        -----
-        The ASTRA backend is faster if data are given with
-        ``dtype='float32'`` and storage order 'C'. Otherwise copies will be
-        needed.
-        """
-        domain = kwargs.pop('domain', None)
-
-        super(RayBackProjection, self).__init__(
-            domain=domain, range=range, linear=True
-        )
-
-        # This implementation simply uses a RayTransform to do the job
-        self._ray_trafo = RayTransform(reco_space=range,
-                                       proj_space=domain,
-                                       geometry=geometry,
-                                       **kwargs)
-
-        # Extra kwargs that can be reused for adjoint etc. These must
-        # be retrieved with `get` instead of `pop` above.
-        self._extra_kwargs = kwargs
-
-    @property
-    def geometry(self):
-        return self._ray_trafo.geometry
-
-    @property
-    def use_cache(self):
-        return self._ray_trafo.use_cache
-
-    def _call(self, x, out, **kwargs):
-        """Back-projection for the current set-up."""
-
-        return self._ray_trafo.create_impl(self._ray_trafo.use_cache) \
-            .call_backward(x, out, **kwargs)
-
-    @property
-    def adjoint(self):
-        """Adjoint of this operator.
-
-        Returns a copy of the internally used `RayTransform`, thus
-        reusing the cached backend (if `use_cache`).
-
-        Returns
-        -------
-        adjoint : `RayTransform`
-        """
-        return copy.copy(self._ray_trafo)
 
 
 if __name__ == '__main__':
