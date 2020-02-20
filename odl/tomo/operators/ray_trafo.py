@@ -280,6 +280,10 @@ class RayTransform(Operator):
             .call_forward(x, out, **kwargs)
 
     @property
+    def geometry(self):
+        return self._geometry
+
+    @property
     def adjoint(self):
         """Adjoint of this operator.
 
