@@ -206,6 +206,7 @@ class RayTransform(Operator):
             domain=reco_space, range=proj_space, linear=True
         )
 
+    @staticmethod
     def _check_impl(self, impl):
         cached_impl = None
 
