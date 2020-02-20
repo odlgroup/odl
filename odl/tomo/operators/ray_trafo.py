@@ -187,10 +187,11 @@ class RayTransform(Operator):
         impl = kwargs.pop('impl', None)
         impl_type, self.__cached_impl = self._check_impl(impl)
         self._impl_type = impl_type
-        self.__impl = impl.lower() if isinstance(impl, str) else impl_type
+        self.__impl = impl.lower() \
+            if isinstance(impl, str) else impl_type.__name__
 
-        self.geometry = geometry
-        self.__reco_space = reco_space
+        self._geometry = geometry
+        self.__vol_space = vol_space
         self.__proj_space = proj_space
 
         # Reserve name for cached properties (used for efficiency reasons)
