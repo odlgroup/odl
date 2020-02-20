@@ -15,8 +15,8 @@ import warnings
 
 from odl.tomo import Parallel2dGeometry, Geometry
 
-from odl.discr import uniform_discr_frompartition, uniform_partition, \
-    DiscretizedSpace
+from odl.discr import (
+    uniform_discr_frompartition, uniform_partition, DiscretizedSpace)
 from odl.discr.discr_utils import linear_interpolator, point_collocation
 from odl.tomo.backends.util import _add_default_complex_impl
 from odl.util.utility import writable_array
@@ -179,15 +179,15 @@ def skimage_radon_back_projector(sinogram, geometry, vol_space, out=None):
     return out
 
 
-class Skimage:
-    def __init__(self, geometry, reco_space, proj_space):
+class SkimageImpl:
+    def __init__(self, geometry, vol_space, proj_space):
         """Initialize a new instance.
 
         Parameters
         ----------
         geometry : `Geometry`
             Geometry defining the tomographic setup.
-        reco_space : `DiscreteLp`
+        vol_space : `DiscreteLp`
             Reconstruction space, the space of the images to be forward
             projected.
         proj_space : `DiscreteLp`
@@ -197,10 +197,10 @@ class Skimage:
             raise TypeError('`geometry` must be a `Geometry` instance, got '
                             '{!r}'.format(geometry))
 
-        if not isinstance(reco_space, DiscretizedSpace):
+        if not isinstance(vol_space, DiscretizedSpace):
             raise TypeError(
-                '`reco_space` must be a `DiscretizedSpace` instance, got {!r}'
-                ''.format(reco_space)
+                '`vol_space` must be a `DiscretizedSpace` instance, got {!r}'
+                ''.format(vol_space)
             )
 
         if not isinstance(proj_space, DiscretizedSpace):
@@ -209,35 +209,33 @@ class Skimage:
                 ''.format(proj_space)
             )
 
-        if reco_space.size >= 256 ** 2:
+        if vol_space.size >= 256 ** 2:
             warnings.warn(
                 "The 'skimage' backend may be too slow for volumes of this "
                 "size. Consider using 'astra_cpu', or 'astra_cuda' if your "
-                "machine has an Nvidia GPU. This warning can be disabled by "
-                "explicitly setting `impl='astra_cpu'`.",
-                RuntimeWarning)
+                "machine has an Nvidia GPU.", RuntimeWarning)
 
         if not isinstance(geometry, Parallel2dGeometry):
             raise TypeError("{!r} backend only supports 2d parallel "
-                             'geometries'.format(self.__name__))
+                            'geometries'.format(self.__name__))
 
-        mid_pt = reco_space.domain.mid_pt
+        mid_pt = vol_space.domain.mid_pt
         if not np.allclose(mid_pt, [0, 0]):
             raise ValueError('Reconstruction space must be centered at (0, 0),'
                              'got midpoint {}'.format(mid_pt))
 
-        shape = reco_space.shape
+        shape = vol_space.shape
         if shape[0] != shape[1]:
-            raise ValueError('`reco_space.shape` must have equal entries, '
-                              'got {}'.format(shape))
+            raise ValueError('`vol_space.shape` must have equal entries, '
+                             'got {}'.format(shape))
 
-        extent = reco_space.domain.extent
+        extent = vol_space.domain.extent
         if extent[0] != extent[1]:
-            raise ValueError('`reco_space.extent` must have equal entries, '
-                              'got {}'.format(extent))
+            raise ValueError('`vol_space.extent` must have equal entries, '
+                             'got {}'.format(extent))
 
         self.geometry = geometry
-        self.reco_space = reco_space
+        self.vol_space = vol_space
         self.proj_space = proj_space
 
     @_add_default_complex_impl
@@ -248,4 +246,4 @@ class Skimage:
     @_add_default_complex_impl
     def call_backward(self, x, out, **kwargs):
         return skimage_radon_back_projector(
-            x, self.geometry, self.reco_space.real_space, out)
+            x, self.geometry, self.vol_space.real_space, out)

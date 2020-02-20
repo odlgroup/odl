@@ -43,12 +43,12 @@ __all__ = ('RayTransform',)
 class RayTransform(Operator):
     """Linear X-Ray (Radon) transform operator between L^p spaces."""
 
-    def __init__(self, reco_space, geometry, **kwargs):
+    def __init__(self, vol_space, geometry, **kwargs):
         """Initialize a new instance.
 
         Parameters
         ----------
-        reco_space : `DiscretizedSpace`
+        vol_space : `DiscretizedSpace`
             Discretized reconstruction space, the domain of the forward
             operator or the range of the adjoint (back-projection).
         geometry : `Geometry`
@@ -87,10 +87,10 @@ class RayTransform(Operator):
         ``dtype='float32'`` and storage order 'C'. Otherwise copies will be
         needed.
         """
-        if not isinstance(reco_space, DiscretizedSpace):
+        if not isinstance(vol_space, DiscretizedSpace):
             raise TypeError(
-                '`reco_space` must be a `DiscretizedSpace` instance, got '
-                '{!r}'.format(reco_space))
+                '`vol_space` must be a `DiscretizedSpace` instance, got '
+                '{!r}'.format(vol_space))
 
         if not isinstance(geometry, Geometry):
             raise TypeError('`geometry` must be a `Geometry` instance, got '
@@ -99,13 +99,14 @@ class RayTransform(Operator):
         # Generate or check projection space
         proj_space = kwargs.pop('proj_space', None)
         if proj_space is None:
-            dtype = reco_space.dtype
+            dtype = vol_space.dtype
 
-            if not reco_space.is_weighted:
+            if not vol_space.is_weighted:
                 weighting = None
-            elif (isinstance(reco_space.weighting, ConstWeighting)
-                  and np.isclose(reco_space.weighting.const,
-                                 reco_space.cell_volume)):
+            elif (
+                isinstance(vol_space.weighting, ConstWeighting)
+                and np.isclose(vol_space.weighting.const, vol_space.cell_volume)
+            ):
                 # Approximate cell volume
                 # TODO: find a way to treat angles and detector differently
                 # regarding weighting. While the detector should be uniformly
@@ -119,9 +120,9 @@ class RayTransform(Operator):
             else:
                 raise NotImplementedError('unknown weighting of domain')
 
-            proj_tspace = reco_space.tspace_type(geometry.partition.shape,
-                                                 weighting=weighting,
-                                                 dtype=dtype)
+            proj_tspace = vol_space.tspace_type(geometry.partition.shape,
+                                                weighting=weighting,
+                                                dtype=dtype)
 
             if geometry.motion_partition.ndim == 0:
                 angle_labels = []
@@ -168,16 +169,16 @@ class RayTransform(Operator):
                     '{} != {}'
                     ''.format(proj_space.shape, geometry.partition.shape)
                 )
-            if proj_space.dtype != reco_space.dtype:
+            if proj_space.dtype != vol_space.dtype:
                 raise ValueError(
-                    '`proj_space.dtype` not equal to `reco_space.dtype`: '
-                    '{} != {}'.format(proj_space.dtype, reco_space.dtype)
+                    '`proj_space.dtype` not equal to `vol_space.dtype`: '
+                    '{} != {}'.format(proj_space.dtype, vol_space.dtype)
                 )
 
-        if reco_space.ndim != geometry.ndim:
+        if vol_space.ndim != geometry.ndim:
             raise ValueError(
-                '`reco_space.ndim` not equal to `geometry.ndim`: '
-                '{} != {}'.format(reco_space.ndim, geometry.ndim)
+                '`vol_space.ndim` not equal to `geometry.ndim`: '
+                '{} != {}'.format(vol_space.ndim, geometry.ndim)
             )
 
         # Cache for input/output arrays of transforms
@@ -203,12 +204,12 @@ class RayTransform(Operator):
 
         # Finally, initialize the Operator structure
         super(RayTransform, self).__init__(
-            domain=reco_space, range=proj_space, linear=True
+            domain=vol_space, range=proj_space, linear=True
         )
 
     @staticmethod
-    def _check_impl(self, impl):
-        cached_impl = None
+    def _check_impl(impl):
+        impl_instance = None
 
         if impl is None:  # User didn't specify a backend
             if not _AVAILABLE_IMPLS:
@@ -245,7 +246,7 @@ class RayTransform(Operator):
                     # User gave an object for `impl`, meaning to set the
                     # backend cache to an already initiated object
                     impl_type = type(impl)
-                    cached_impl = impl
+                    impl_instance = impl
             else:
                 raise TypeError(
                     '`impl` {!r} should be a `str`, or an object or type '
@@ -253,7 +254,7 @@ class RayTransform(Operator):
                     ''.format(type(impl))
                 )
 
-        return impl_type, cached_impl
+        return impl_type, impl_instance
 
     @property
     def impl(self):
@@ -269,7 +270,7 @@ class RayTransform(Operator):
             # Lazily (re)instantiate the backend
             self.__cached_impl = self._impl_type(
                 self.geometry,
-                reco_space=self.__reco_space.real_space,
+                vol_space=self.__vol_space.real_space,
                 proj_space=self.__proj_space.real_space)
 
         return self.__cached_impl

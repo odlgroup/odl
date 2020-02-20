@@ -47,14 +47,14 @@ class AstraCudaImpl:
     sino_id = None
     proj_id = None
 
-    def __init__(self, geometry, reco_space, proj_space):
+    def __init__(self, geometry, vol_space, proj_space):
         """Initialize a new instance.
 
         Parameters
         ----------
         geometry : `Geometry`
             Geometry defining the tomographic setup.
-        reco_space : `DiscretizedSpace`
+        vol_space : `DiscretizedSpace`
             Reconstruction space, the space of the images to be forward
             projected.
         proj_space : `DiscretizedSpace`
@@ -64,13 +64,17 @@ class AstraCudaImpl:
             raise TypeError('`geometry` must be a `Geometry` instance, got '
                             '{!r}'.format(geometry))
 
-        if not isinstance(reco_space, DiscretizedSpace):
-            raise TypeError('`reco_space` must be a `DiscreteLP` instance, got'
-                            ' {!r}'.format(reco_space))
+        if not isinstance(vol_space, DiscretizedSpace):
+            raise TypeError(
+                '`vol_space` must be a `DiscreteLP` instance, got {!r}'
+                ''.format(vol_space)
+            )
 
         if not isinstance(proj_space, DiscretizedSpace):
-            raise TypeError('`proj_space` must be a `DiscreteLP` instance, got'
-                            ' {!r}'.format(proj_space))
+            raise TypeError(
+                '`proj_space` must be a `DiscreteLP` instance, got {!r}'
+                ''.format(proj_space)
+            )
 
         # Print a warning if the detector midpoint normal vector at any
         # angle is perpendicular to the geometry axis in parallel 3d
@@ -82,8 +86,9 @@ class AstraCudaImpl:
             axis = geometry.axis
             mid_pt = geometry.det_params.mid_pt
             for i, angle in enumerate(geometry.angles):
-                if abs(np.dot(axis,
-                              geometry.det_to_src(angle, mid_pt))) < 1e-4:
+                if abs(
+                    np.dot(axis, geometry.det_to_src(angle, mid_pt))
+                ) < 1e-4:
                     warnings.warn(
                         'angle {}: detector midpoint normal {} is '
                         'perpendicular to the geometry axis {} in '
@@ -95,7 +100,7 @@ class AstraCudaImpl:
                     break
 
         self.geometry = geometry
-        self.reco_space = reco_space
+        self.vol_space = vol_space
         self.proj_space = proj_space
 
         self.create_ids()
@@ -117,23 +122,23 @@ class AstraCudaImpl:
 
         if proj_ndim == 2:
             astra_proj_shape = proj_shape
-            astra_vol_shape = self.reco_space.shape
+            astra_vol_shape = self.vol_space.shape
         elif proj_ndim == 3:
             # The `u` and `v` axes of the projection data are swapped,
             # see explanation in `astra_*_3d_geom_to_vec`.
             astra_proj_shape = (proj_shape[1], proj_shape[0], proj_shape[2])
-            astra_vol_shape = self.reco_space.shape
+            astra_vol_shape = self.vol_space.shape
 
         self.vol_array = np.empty(astra_vol_shape, dtype='float32', order='C')
         self.proj_array = np.empty(astra_proj_shape, dtype='float32',
                                    order='C')
 
         # Create ASTRA data structures
-        vol_geom = astra_volume_geometry(self.reco_space)
+        vol_geom = astra_volume_geometry(self.vol_space)
         proj_geom = astra_projection_geometry(self.geometry)
         self.vol_id = astra_data(vol_geom,
                                  datatype='volume',
-                                 ndim=self.reco_space.ndim,
+                                 ndim=self.vol_space.ndim,
                                  data=self.vol_array,
                                  allow_copy=False)
 
@@ -167,7 +172,7 @@ class AstraCudaImpl:
 
         Parameters
         ----------
-        vol_data : ``reco_space`` element
+        vol_data : ``vol_space`` element
             Volume data to which the projector is applied.
         out : ``proj_space`` element, optional
             Element of the projection space to which the result is written. If
@@ -180,7 +185,7 @@ class AstraCudaImpl:
             If ``out`` was provided, the returned object is a reference to it.
         """
         with self._mutex:
-            assert vol_data in self.reco_space
+            assert vol_data in self.vol_space
             if out is not None:
                 assert out in self.proj_space
             else:
@@ -223,13 +228,13 @@ class AstraCudaImpl:
         ----------
         proj_data : ``proj_space`` element
             Projection data to which the back-projector is applied.
-        out : ``reco_space`` element, optional
+        out : ``vol_space`` element, optional
             Element of the reconstruction space to which the result is written.
-            If ``None``, an element in ``reco_space`` is created.
+            If ``None``, an element in ``vol_space`` is created.
 
         Returns
         -------
-        out : ``reco_space`` element
+        out : ``vol_space`` element
             Reconstruction data resulting from the application of the
             back-projector. If ``out`` was provided, the returned object is a
             reference to it.
@@ -238,9 +243,9 @@ class AstraCudaImpl:
             assert proj_data in self.proj_space
 
             if out is not None:
-                assert out in self.reco_space
+                assert out in self.vol_space
             else:
-                out = self.reco_space.element()
+                out = self.vol_space.element()
 
             # Copy data to GPU memory
             if self.geometry.ndim == 2:
@@ -260,7 +265,7 @@ class AstraCudaImpl:
 
             # Fix scaling to weight by pixel/voxel size
             out *= astra_cuda_bp_scaling_factor(
-                self.proj_space, self.reco_space, self.geometry)
+                self.proj_space, self.vol_space, self.geometry)
 
             return out
 
@@ -288,7 +293,7 @@ class AstraCudaImpl:
             self.proj_id = None
 
 
-def astra_cuda_bp_scaling_factor(proj_space, reco_space, geometry):
+def astra_cuda_bp_scaling_factor(proj_space, vol_space, geometry):
     """Volume scaling accounting for differing adjoint definitions.
 
     ASTRA defines the adjoint operator in terms of a fully discrete
@@ -314,18 +319,18 @@ def astra_cuda_bp_scaling_factor(proj_space, reco_space, geometry):
 
     scaling_factor *= (proj_space.weighting.const /
                        proj_weighting)
-    scaling_factor /= (reco_space.weighting.const /
-                       reco_space.cell_volume)
+    scaling_factor /= (vol_space.weighting.const /
+                       vol_space.cell_volume)
 
     if parse_version(ASTRA_VERSION) < parse_version('1.8rc1'):
         # Scaling for the old, pre-1.8 behaviour
         if isinstance(geometry, Parallel2dGeometry):
             # Scales with 1 / cell_volume
-            scaling_factor *= float(reco_space.cell_volume)
+            scaling_factor *= float(vol_space.cell_volume)
         elif (isinstance(geometry, FanBeamGeometry)
               and geometry.det_curvature_radius is None):
             # Scales with 1 / cell_volume
-            scaling_factor *= float(reco_space.cell_volume)
+            scaling_factor *= float(vol_space.cell_volume)
             # Additional magnification correction
             src_radius = geometry.src_radius
             det_radius = geometry.det_radius
@@ -333,13 +338,13 @@ def astra_cuda_bp_scaling_factor(proj_space, reco_space, geometry):
         elif isinstance(geometry, Parallel3dAxisGeometry):
             # Scales with voxel stride
             # In 1.7, only cubic voxels are supported
-            voxel_stride = reco_space.cell_sides[0]
+            voxel_stride = vol_space.cell_sides[0]
             scaling_factor /= float(voxel_stride)
         elif (isinstance(geometry, ConeBeamGeometry)
               and geometry.det_curvature_radius is None):
             # Scales with 1 / cell_volume
             # In 1.7, only cubic voxels are supported
-            voxel_stride = reco_space.cell_sides[0]
+            voxel_stride = vol_space.cell_sides[0]
             scaling_factor /= float(voxel_stride)
             # Magnification correction
             src_radius = geometry.src_radius
@@ -349,11 +354,11 @@ def astra_cuda_bp_scaling_factor(proj_space, reco_space, geometry):
         # Scaling for the 1.8.x releases
         if isinstance(geometry, Parallel2dGeometry):
             # Scales with 1 / cell_volume
-            scaling_factor *= float(reco_space.cell_volume)
+            scaling_factor *= float(vol_space.cell_volume)
         elif (isinstance(geometry, FanBeamGeometry)
               and geometry.det_curvature_radius is None):
             # Scales with 1 / cell_volume
-            scaling_factor *= float(reco_space.cell_volume)
+            scaling_factor *= float(vol_space.cell_volume)
             # Magnification correction
             src_radius = geometry.src_radius
             det_radius = geometry.det_radius
@@ -361,11 +366,11 @@ def astra_cuda_bp_scaling_factor(proj_space, reco_space, geometry):
         elif isinstance(geometry, Parallel3dAxisGeometry):
             # Scales with cell volume
             # currently only square voxels are supported
-            scaling_factor /= reco_space.cell_volume
+            scaling_factor /= vol_space.cell_volume
         elif (isinstance(geometry, ConeBeamGeometry)
               and geometry.det_curvature_radius is None):
             # Scales with cell volume
-            scaling_factor /= reco_space.cell_volume
+            scaling_factor /= vol_space.cell_volume
             # Magnification correction (scaling = 1 / magnification ** 2)
             src_radius = geometry.src_radius
             det_radius = geometry.det_radius
@@ -377,16 +382,16 @@ def astra_cuda_bp_scaling_factor(proj_space, reco_space, geometry):
             # density weighting.
             det_px_area = geometry.det_partition.cell_volume
             scaling_factor *= (src_radius ** 2 * det_px_area ** 2 /
-                               reco_space.cell_volume ** 2)
+                               vol_space.cell_volume ** 2)
     elif parse_version(ASTRA_VERSION) < parse_version('1.9.9.dev'):
         # Scaling for intermediate dev releases between 1.8.3 and 1.9.9.dev
         if isinstance(geometry, Parallel2dGeometry):
             # Scales with 1 / cell_volume
-            scaling_factor *= float(reco_space.cell_volume)
+            scaling_factor *= float(vol_space.cell_volume)
         elif (isinstance(geometry, FanBeamGeometry)
               and geometry.det_curvature_radius is None):
             # Scales with 1 / cell_volume
-            scaling_factor *= float(reco_space.cell_volume)
+            scaling_factor *= float(vol_space.cell_volume)
             # Magnification correction
             src_radius = geometry.src_radius
             det_radius = geometry.det_radius
@@ -394,11 +399,11 @@ def astra_cuda_bp_scaling_factor(proj_space, reco_space, geometry):
         elif isinstance(geometry, Parallel3dAxisGeometry):
             # Scales with cell volume
             # currently only square voxels are supported
-            scaling_factor /= reco_space.cell_volume
+            scaling_factor /= vol_space.cell_volume
         elif (isinstance(geometry, ConeBeamGeometry)
               and geometry.det_curvature_radius is None):
             # Scales with cell volume
-            scaling_factor /= reco_space.cell_volume
+            scaling_factor /= vol_space.cell_volume
             # Magnification correction (scaling = 1 / magnification ** 2)
             src_radius = geometry.src_radius
             det_radius = geometry.det_radius
@@ -412,7 +417,7 @@ def astra_cuda_bp_scaling_factor(proj_space, reco_space, geometry):
             scaling_factor *= (src_radius ** 2 * det_px_area ** 2)
     else:
         # Scaling for versions since 1.9.9.dev
-        scaling_factor /= float(reco_space.cell_volume)
+        scaling_factor /= float(vol_space.cell_volume)
         scaling_factor *= float(geometry.det_partition.cell_volume)
 
     return scaling_factor

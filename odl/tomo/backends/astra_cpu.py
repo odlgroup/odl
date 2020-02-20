@@ -118,8 +118,10 @@ def astra_cpu_forward_projector(vol_data, geometry, proj_space, out=None,
         out = proj_space.element()
     else:
         if out not in proj_space:
-            raise TypeError('`out` {} is neither None nor a '
-                            'DiscretizedSpaceElement instance'.format(out))
+            raise TypeError(
+                '`out` {} is neither None nor a `DiscretizedSpaceElement` '
+                'instance'.format(out)
+            )
 
     ndim = vol_data.ndim
 
@@ -204,16 +206,18 @@ def astra_cpu_back_projector(proj_data, geometry, vol_space, out=None,
                         "".format(vol_space.impl))
     if vol_space.ndim != geometry.ndim:
         raise ValueError(
-            'dimensions {} of reconstruction space and {} of '
-            'geometry do not match'
+            'dimensions {} of reconstruction space and {} of geometry '
+            'do not match'
             ''.format(vol_space.ndim, geometry.ndim)
         )
     if out is None:
         out = vol_space.element()
     else:
         if out not in vol_space:
-            raise TypeError('`out` {} is neither None nor a '
-                            'DiscretizedSpaceElement instance'.format(out))
+            raise TypeError(
+                '`out` {} is neither None nor a `DiscretizedSpaceElement` '
+                'instance'.format(out)
+            )
 
     ndim = proj_data.ndim
 
@@ -258,14 +262,14 @@ def astra_cpu_back_projector(proj_data, geometry, vol_space, out=None,
 class AstraCpuImpl:
     """Thin wrapper around the ASTRA CPU implementations."""
 
-    def __init__(self, geometry, reco_space, proj_space):
+    def __init__(self, geometry, vol_space, proj_space):
         """Initialize a new instance.
 
         Parameters
         ----------
         geometry : `Geometry`
             Geometry defining the tomographic setup.
-        reco_space : `DiscreteLp`
+        vol_space : `DiscreteLp`
             Reconstruction space, the space of the images to be forward
             projected.
         proj_space : `DiscreteLp`
@@ -275,10 +279,10 @@ class AstraCpuImpl:
             raise TypeError('`geometry` must be a `Geometry` instance, got '
                             '{!r}'.format(geometry))
 
-        if not isinstance(reco_space, DiscretizedSpace):
+        if not isinstance(vol_space, DiscretizedSpace):
             raise TypeError(
-                '`reco_space` must be a `DiscretizedSpace` instance, got {!r}'
-                ''.format(reco_space)
+                '`vol_space` must be a `DiscretizedSpace` instance, got {!r}'
+                ''.format(vol_space)
             )
 
         if not isinstance(proj_space, DiscretizedSpace):
@@ -287,26 +291,24 @@ class AstraCpuImpl:
                 ''.format(proj_space)
             )
 
-        if reco_space.size >= 512 ** 2:
+        if vol_space.size >= 512 ** 2:
             warnings.warn(
                 "The 'astra_cpu' backend may be too slow for volumes of this "
                 "size. Consider using 'astra_cuda' if your machine has an "
-                "Nvidia GPU. This warning can be disabled by explicitly "
-                "setting `impl='astra_cpu'`.",
-                RuntimeWarning)
+                "Nvidia GPU.", RuntimeWarning)
 
         if geometry.ndim > 2:
             raise ValueError('`impl` {!r} only works for 2d'
                              ''.format(self.__name__))
 
         self.geometry = geometry
-        self.reco_space = reco_space
+        self.vol_space = vol_space
         self.proj_space = proj_space
 
     @_add_default_complex_impl
     def call_backward(self, x, out, **kwargs):
         return astra_cpu_back_projector(
-            x, self.geometry, self.reco_space.real_space, out, **kwargs)
+            x, self.geometry, self.vol_space.real_space, out, **kwargs)
 
     @_add_default_complex_impl
     def call_forward(self, x, out, **kwargs):
