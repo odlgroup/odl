@@ -273,13 +273,17 @@ class AstraCpu:
             raise TypeError('`geometry` must be a `Geometry` instance, got '
                             '{!r}'.format(geometry))
 
-        if not isinstance(reco_space, DiscreteLp):
-            raise TypeError('`reco_space` must be a `DiscreteLP` instance, got'
-                            ' {!r}'.format(reco_space))
+        if not isinstance(reco_space, DiscretizedSpace):
+            raise TypeError(
+                '`reco_space` must be a `DiscretizedSpace` instance, got {!r}'
+                ''.format(reco_space)
+            )
 
-        if not isinstance(proj_space, DiscreteLp):
-            raise TypeError('`proj_space` must be a `DiscreteLP` instance, got'
-                            ' {!r}'.format(proj_space))
+        if not isinstance(proj_space, DiscretizedSpace):
+            raise TypeError(
+                '`proj_space` must be a `DiscretizedSpace` instance, got {!r}'
+                ''.format(proj_space)
+            )
 
         if reco_space.size >= 512 ** 2:
             warnings.warn(
