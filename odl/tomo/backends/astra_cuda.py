@@ -38,7 +38,7 @@ __all__ = (
 )
 
 
-class AstraCuda:
+class AstraCudaImpl:
     """Thin wrapper around ASTRA."""
 
     algo_forward_id = None

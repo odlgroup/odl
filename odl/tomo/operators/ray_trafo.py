@@ -17,16 +17,16 @@ from odl.operator import Operator
 from odl.space.weighting import ConstWeighting
 from odl.tomo.backends import (
     ASTRA_AVAILABLE, ASTRA_CUDA_AVAILABLE, SKIMAGE_AVAILABLE)
-from odl.tomo.backends.astra_cpu import AstraCpu
-from odl.tomo.backends.astra_cuda import AstraCuda
-from odl.tomo.backends.skimage_radon import Skimage
+from odl.tomo.backends.astra_cpu import AstraCpuImpl
+from odl.tomo.backends.astra_cuda import AstraCudaImpl
+from odl.tomo.backends.skimage_radon import SkimageImpl
 from odl.tomo.geometry import Geometry
 
 # Backends that are implemented in ODL and can be specified via `impl`
-_SUPPORTED_IMPL = {
-    'astra_cpu': AstraCpu,
-    'astra_cuda': AstraCuda,
-    'skimage': Skimage}
+_IMPL_STR2TYPE = {
+    'astra_cpu': AstraCpuImpl,
+    'astra_cuda': AstraCudaImpl,
+    'skimage': SkimageImpl}
 
 # Backends that are installed, ordered by preference
 _AVAILABLE_IMPLS = []
@@ -217,19 +217,19 @@ class RayTransform(Operator):
                                    'check the install docs')
 
             # Select fastest available, _AVAILABLE_IMPLS is sorted by speed
-            impl_type = _SUPPORTED_IMPL[_AVAILABLE_IMPLS[0]]
+            impl_type = _IMPL_STR2TYPE[_AVAILABLE_IMPLS[0]]
 
         else:
             # User did specify `impl`
             if isinstance(impl, str):
-                if impl.lower() not in _SUPPORTED_IMPL:
+                if impl.lower() not in _IMPL_STR2TYPE:
                     raise ValueError('`impl` {!r} not understood'.format(impl))
 
                 if impl.lower() not in _AVAILABLE_IMPLS:
                     raise ValueError(
                         '{!r} back-end not available'.format(impl))
 
-                impl_type = _SUPPORTED_IMPL[impl.lower()]
+                impl_type = _IMPL_STR2TYPE[impl.lower()]
             elif isinstance(impl, type) or isinstance(impl, object):
                 # User gave the type and leaves instantiation to us
                 forward = getattr(impl, "call_forward", None)

@@ -255,7 +255,9 @@ def astra_cpu_back_projector(proj_data, geometry, vol_space, out=None,
     return out
 
 
-class AstraCpu:
+class AstraCpuImpl:
+    """Thin wrapper around the ASTRA CPU implementations."""
+
     def __init__(self, geometry, reco_space, proj_space):
         """Initialize a new instance.
 
