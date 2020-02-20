@@ -10,8 +10,8 @@ def _add_default_complex_impl(fn):
             return out
         elif self.vol_space.is_complex and self.proj_space.is_complex:
             result_parts = [
-                fn(x.real, getattr(out, 'real', None), **kwargs),
-                fn(x.imag, getattr(out, 'imag', None), **kwargs)
+                fn(self, x.real, getattr(out, 'real', None), **kwargs),
+                fn(self, x.imag, getattr(out, 'imag', None), **kwargs)
             ]
 
             if out is None:
