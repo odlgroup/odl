@@ -17,7 +17,7 @@ import warnings
 from packaging.version import parse as parse_version
 
 from odl.discr import DiscretizedSpace
-from odl.tomo.backends.util import complexify
+from odl.tomo.backends.util import _add_default_complex_impl
 from odl.tomo.backends.astra_setup import (
     ASTRA_VERSION, astra_algorithm, astra_data, astra_projection_geometry,
     astra_projector, astra_volume_geometry, astra_supports,
@@ -64,11 +64,11 @@ class AstraCuda:
             raise TypeError('`geometry` must be a `Geometry` instance, got '
                             '{!r}'.format(geometry))
 
-        if not isinstance(reco_space, DiscreteLp):
+        if not isinstance(reco_space, DiscretizedSpace):
             raise TypeError('`reco_space` must be a `DiscreteLP` instance, got'
                             ' {!r}'.format(reco_space))
 
-        if not isinstance(proj_space, DiscreteLp):
+        if not isinstance(proj_space, DiscretizedSpace):
             raise TypeError('`proj_space` must be a `DiscreteLP` instance, got'
                             ' {!r}'.format(proj_space))
 
@@ -158,9 +158,9 @@ class AstraCuda:
             'backward', proj_ndim, self.vol_id, self.sino_id,
             proj_id=self.proj_id, impl='cuda')
 
+    @_add_default_complex_impl
     def call_forward(self, x, out, **kwargs):
-        return complexify(self._call_forward_real, self.reco_space) \
-            (x, out, **kwargs)
+        return self._call_forward_real(x, out, **kwargs)
 
     def _call_forward_real(self, vol_data, out, **kwargs):
         """Run an ASTRA forward projection on the given data using the GPU.
@@ -212,9 +212,9 @@ class AstraCuda:
 
             return out
 
+    @_add_default_complex_impl
     def call_backward(self, x, out, **kwargs):
-        return complexify(self._call_backward_real, self.proj_space) \
-            (x, out, **kwargs)
+        return self._call_backward_real(x, out, **kwargs)
 
     def _call_backward_real(self, proj_data, out, **kwargs):
         """Run an ASTRA back-projection on the given data using the GPU.
