@@ -180,6 +180,8 @@ def skimage_radon_back_projector(sinogram, geometry, vol_space, out=None):
 
 
 class SkimageImpl:
+    """Scikit-image backend of the `RayTransform` operator."""
+
     def __init__(self, geometry, vol_space, proj_space):
         """Initialize a new instance.
 

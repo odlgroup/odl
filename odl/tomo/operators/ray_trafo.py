@@ -207,6 +207,7 @@ class RayTransform(Operator):
 
     @staticmethod
     def _check_impl(impl):
+        """Internal method to verify the validity of the `impl` kwarg."""
         impl_instance = None
 
         if impl is None:  # User didn't specify a backend
@@ -256,12 +257,24 @@ class RayTransform(Operator):
 
     @property
     def impl(self):
-        """Implementation name string or type."""
+        """Implementation name string.
+
+        If a custom ``impl`` was provided this method returns a ``str``
+        of the type."""
 
         return self.__impl
 
     def create_impl(self, use_cache=True):
-        """Fetches or instantiates implementation backend for evaluation."""
+        """Fetches or instantiates implementation backend for evaluation.
+
+        Parameters
+        ----------
+        bool : use_cache
+            If ``True`` returns the cached implementation backend, if it
+            was generated in a previous call (or given with ``__init__``).
+            If ``False`` a new instance of the backend will be generated,
+            freeing up GPU memory and RAM used by the backend.
+        """
 
         # Use impl creation (__cached_impl) when `use_cache` is True
         if not use_cache or self.__cached_impl is None:
@@ -274,7 +287,24 @@ class RayTransform(Operator):
         return self.__cached_impl
 
     def _call(self, x, out=None, **kwargs):
-        """Real-space forward projection for the current set-up."""
+        """Forward projection
+
+        Parameters
+        ----------
+        x : DiscreteLpElement
+            A volume. Must be an element from `RayTransform.domain`.
+        out : `RayTransform.range` element, optional
+            A DiscreteLpElement from `RayTransform.range`, to which the result
+            of the operator evaluation is written.
+        **kwargs
+            Arbitrary keyword arguments, passed on to the implementation
+            backend.
+
+        Returns
+        -------
+        DiscreteLpElement
+            A sinogram, from the projection space `RayTransform.range`.
+        """
 
         return self.create_impl(self.use_cache) \
             .call_forward(x, out, **kwargs)
@@ -286,6 +316,10 @@ class RayTransform(Operator):
     @property
     def adjoint(self):
         """Adjoint of this operator.
+
+        The adjoint of the `RayTransform` is the linear `RayBackProjection`
+        operator. It uses the same geometry and shares the implementation
+        backend whenever `RayTransform.use_cache` is `True`.
 
         Returns
         -------
@@ -299,7 +333,29 @@ class RayTransform(Operator):
                 """Adjoint of the discrete Ray transform between L^p spaces."""
 
                 def _call(self, x, out=None, **kwargs):
-                    """Back-projection for the current set-up."""
+                    """Backprojection
+
+                    Parameters
+                    ----------
+                    x : DiscreteLpElement
+                        A sinogram. Must be an element from
+                        `RayTransform.range` (domain of `RayBackProjection`).
+                    out : `RayBackProjection.domain` element, optional
+                        A volume (an element from the volume space
+                        `RayTransform.domain` or, equivalently,
+                        `RayBackprojection.range`). The result of this
+                        evaluation is written into this variable.
+                    **kwargs
+                        Arbitrary keyword arguments, passed on to the
+                        implementation backend.
+
+                    Returns
+                    -------
+                    DiscreteLpElement
+                        The reconstructed volume, an element in
+                        `RayBackProjection.range`.
+                    """
+
                     return ray_trafo.create_impl(ray_trafo.use_cache) \
                         .call_backward(x, out, **kwargs)
 

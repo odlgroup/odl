@@ -39,7 +39,7 @@ __all__ = (
 
 
 class AstraCudaImpl:
-    """Thin wrapper around ASTRA."""
+    """`RayTransform` implementation for CUDA algorithms in ASTRA."""
 
     algo_forward_id = None
     algo_backward_id = None

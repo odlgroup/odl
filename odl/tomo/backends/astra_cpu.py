@@ -260,7 +260,7 @@ def astra_cpu_back_projector(proj_data, geometry, vol_space, out=None,
 
 
 class AstraCpuImpl:
-    """Thin wrapper around the ASTRA CPU implementations."""
+    """Thin wrapper implementing ASTRA CPU for `RayTransform`."""
 
     def __init__(self, geometry, vol_space, proj_space):
         """Initialize a new instance.
