@@ -302,8 +302,16 @@ class AstraCpuImpl:
                              ''.format(self.__name__))
 
         self.geometry = geometry
-        self.vol_space = vol_space
-        self.proj_space = proj_space
+        self._vol_space = vol_space
+        self._proj_space = proj_space
+
+    @property
+    def vol_space(self):
+        return self._vol_space
+
+    @property
+    def proj_space(self):
+        return self._proj_space
 
     @_add_default_complex_impl
     def call_backward(self, x, out, **kwargs):

@@ -100,13 +100,21 @@ class AstraCudaImpl:
                     break
 
         self.geometry = geometry
-        self.vol_space = vol_space
-        self.proj_space = proj_space
+        self._vol_space = vol_space
+        self._proj_space = proj_space
 
         self.create_ids()
 
         # ASTRA projectors are not thread-safe, thus we need to lock ourselves
         self._mutex = Lock()
+
+    @property
+    def vol_space(self):
+        return self._vol_space
+
+    @property
+    def proj_space(self):
+        return self._proj_space
 
     def create_ids(self):
         """Create ASTRA objects."""
