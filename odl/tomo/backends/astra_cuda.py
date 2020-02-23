@@ -164,16 +164,17 @@ class AstraCudaImpl:
             proj_id=self.proj_id, impl='cuda')
 
     @_add_default_complex_impl
-    def call_forward(self, x, out, **kwargs):
+    def call_forward(self, x, out=None, **kwargs):
         return self._call_forward_real(x, out, **kwargs)
 
-    def _call_forward_real(self, vol_data, out, **kwargs):
+    def _call_forward_real(self, vol_data, out=None, **kwargs):
         """Run an ASTRA forward projection on the given data using the GPU.
 
         Parameters
         ----------
-        vol_data : ``vol_space`` element
-            Volume data to which the projector is applied.
+        vol_data : ``vol_space.real_space`` element
+            Volume data to which the projector is applied. Although
+            ``vol_space`` may be complex, this element needs to be real.
         out : ``proj_space`` element, optional
             Element of the projection space to which the result is written. If
             ``None``, an element in `proj_space` is created.
@@ -185,7 +186,8 @@ class AstraCudaImpl:
             If ``out`` was provided, the returned object is a reference to it.
         """
         with self._mutex:
-            assert vol_data in self.vol_space
+            assert vol_data in self.vol_space.real_space
+
             if out is not None:
                 assert out in self.proj_space
             else:
@@ -218,16 +220,17 @@ class AstraCudaImpl:
             return out
 
     @_add_default_complex_impl
-    def call_backward(self, x, out, **kwargs):
+    def call_backward(self, x, out=None, **kwargs):
         return self._call_backward_real(x, out, **kwargs)
 
-    def _call_backward_real(self, proj_data, out, **kwargs):
+    def _call_backward_real(self, proj_data, out=None, **kwargs):
         """Run an ASTRA back-projection on the given data using the GPU.
 
         Parameters
         ----------
-        proj_data : ``proj_space`` element
-            Projection data to which the back-projector is applied.
+        proj_data : ``proj_space.real_space`` element
+            Projection data to which the back-projector is applied. Although
+            ``proj_space`` may be complex, this element needs to be real.
         out : ``vol_space`` element, optional
             Element of the reconstruction space to which the result is written.
             If ``None``, an element in ``vol_space`` is created.
@@ -240,7 +243,7 @@ class AstraCudaImpl:
             reference to it.
         """
         with self._mutex:
-            assert proj_data in self.proj_space
+            assert proj_data in self.proj_space.real_space
 
             if out is not None:
                 assert out in self.vol_space

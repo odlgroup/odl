@@ -4,10 +4,9 @@ __all__ = tuple()
 def _add_default_complex_impl(fn):
     """Wrapper to call a class method twice when it is complex."""
 
-    def wrapper(self, x, out, **kwargs):
+    def wrapper(self, x, out=None, **kwargs):
         if self.vol_space.is_real and self.proj_space.is_real:
-            fn(self, x, out, **kwargs)
-            return out
+            return fn(self, x, out, **kwargs)
         elif self.vol_space.is_complex and self.proj_space.is_complex:
             result_parts = [
                 fn(self, x.real, getattr(out, 'real', None), **kwargs),
@@ -15,7 +14,7 @@ def _add_default_complex_impl(fn):
             ]
 
             if out is None:
-                out = range.element()
+                out = self.proj_space.element()
                 out.real = result_parts[0]
                 out.imag = result_parts[1]
             return out

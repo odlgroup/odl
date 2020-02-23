@@ -192,8 +192,6 @@ class RayTransform(Operator):
             if isinstance(impl, str) else impl_type.__name__
 
         self._geometry = geometry
-        self.__vol_space = vol_space
-        self.__proj_space = proj_space
 
         # Reserve name for cached properties (used for efficiency reasons)
         self._adjoint = None
@@ -270,12 +268,12 @@ class RayTransform(Operator):
             # Lazily (re)instantiate the backend
             self.__cached_impl = self._impl_type(
                 self.geometry,
-                vol_space=self.__vol_space.real_space,
-                proj_space=self.__proj_space.real_space)
+                vol_space=self.domain,
+                proj_space=self.range)
 
         return self.__cached_impl
 
-    def _call(self, x, out, **kwargs):
+    def _call(self, x, out=None, **kwargs):
         """Real-space forward projection for the current set-up."""
 
         return self.create_impl(self.use_cache) \
@@ -300,7 +298,7 @@ class RayTransform(Operator):
             class RayBackProjection(Operator):
                 """Adjoint of the discrete Ray transform between L^p spaces."""
 
-                def _call(self, x, out, **kwargs):
+                def _call(self, x, out=None, **kwargs):
                     """Back-projection for the current set-up."""
                     return ray_trafo.create_impl(ray_trafo.use_cache) \
                         .call_backward(x, out, **kwargs)
