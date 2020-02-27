@@ -339,6 +339,15 @@ def test_complex(impl):
     assert all_almost_equal(data.real, true_data_re)
     assert all_almost_equal(data.imag, true_data_im)
 
+    # test adjoint for complex data
+    backproj_r = ray_trafo_r.adjoint
+    backproj_c = ray_trafo_c.adjoint
+    true_vol_re = backproj_r(data.real)
+    true_vol_im = backproj_r(data.imag)
+    backproj_vol = backproj_c(data)
+
+    assert all_almost_equal(backproj_vol.real, true_vol_re)
+    assert all_almost_equal(backproj_vol.imag, true_vol_im)
 
 def test_anisotropic_voxels(geometry):
     """Test projection and backprojection with anisotropic voxels."""
