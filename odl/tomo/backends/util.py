@@ -33,9 +33,9 @@ def _add_default_complex_impl(fn):
                 range = self.proj_space if x in self.vol_space \
                     else self.vol_space
                 out = range.element()
+                out.real = result_parts[0]
+                out.imag = result_parts[1]
 
-            out.real = result_parts[0]
-            out.imag = result_parts[1]
             return out
         else:
             raise RuntimeError('Domain and range need to be both real '
