@@ -10,6 +10,8 @@
 
 from __future__ import absolute_import, division, print_function
 
+from collections import OrderedDict
+
 import numpy as np
 
 from odl.discr import DiscretizedSpace
@@ -19,23 +21,21 @@ from odl.tomo.backends import (
     ASTRA_AVAILABLE, ASTRA_CUDA_AVAILABLE, SKIMAGE_AVAILABLE)
 from odl.tomo.backends.astra_cpu import AstraCpuImpl
 from odl.tomo.backends.astra_cuda import AstraCudaImpl
-from odl.tomo.backends.skimage_radon import SkimageImpl
+from odl.tomo.backends.skimage_radon import SkImageImpl
 from odl.tomo.geometry import Geometry
 
-# Backends that are implemented in ODL and can be specified via `impl`
-_IMPL_STR2TYPE = {
-    'astra_cpu': AstraCpuImpl,
-    'astra_cuda': AstraCudaImpl,
-    'skimage': SkimageImpl}
-
-# Backends that are installed, ordered by preference
-_AVAILABLE_IMPLS = []
-if ASTRA_CUDA_AVAILABLE:
-    _AVAILABLE_IMPLS.append('astra_cuda')
-if ASTRA_AVAILABLE:
-    _AVAILABLE_IMPLS.append('astra_cpu')
+# RAY_TRAFO_IMPLS are used by `RayTransform` when no `impl` is given.
+# The last inserted implementation has highest priority.
+RAY_TRAFO_IMPLS = OrderedDict()
 if SKIMAGE_AVAILABLE:
-    _AVAILABLE_IMPLS.append('skimage')
+    RAY_TRAFO_IMPLS['skimage'] = SkImageImpl
+if ASTRA_AVAILABLE:
+    RAY_TRAFO_IMPLS['astra_cpu'] = AstraCpuImpl
+if ASTRA_CUDA_AVAILABLE:
+    RAY_TRAFO_IMPLS['astra_cuda'] = AstraCudaImpl
+
+# Used to warn the user when a backend is not available/installed.
+_ALL_IMPLS = ('astra_cuda', 'astra_cpu', 'skimage')
 
 __all__ = ('RayTransform',)
 
@@ -211,25 +211,25 @@ class RayTransform(Operator):
         impl_instance = None
 
         if impl is None:  # User didn't specify a backend
-            if not _AVAILABLE_IMPLS:
+            if not RAY_TRAFO_IMPLS:
                 raise RuntimeError('no ray transform back-end available; '
                                    'this requires 3rd party packages, please '
                                    'check the install docs')
 
-            # Select fastest available, _AVAILABLE_IMPLS is sorted by speed
-            impl_type = _IMPL_STR2TYPE[_AVAILABLE_IMPLS[0]]
+            # Select fastest available
+            impl_type = next(reversed(RAY_TRAFO_IMPLS.values()))
 
         else:
             # User did specify `impl`
             if isinstance(impl, str):
-                if impl.lower() not in _IMPL_STR2TYPE:
+                if impl.lower() not in _ALL_IMPLS:
                     raise ValueError('`impl` {!r} not understood'.format(impl))
 
-                if impl.lower() not in _AVAILABLE_IMPLS:
+                if impl.lower() not in RAY_TRAFO_IMPLS.keys():
                     raise ValueError(
                         '{!r} back-end not available'.format(impl))
 
-                impl_type = _IMPL_STR2TYPE[impl.lower()]
+                impl_type = RAY_TRAFO_IMPLS[impl.lower()]
             elif isinstance(impl, type) or isinstance(impl, object):
                 # User gave the type and leaves instantiation to us
                 forward = getattr(impl, "call_forward", None)
