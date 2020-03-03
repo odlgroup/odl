@@ -200,8 +200,9 @@ class CallbackStore(Callback):
             Deprecated, use composition instead. See examples.
             Function to be called on all incoming results before storage.
             Default: copy
-        step : int, optional
-            Number of iterates between storing iterates.
+        step : positive int, list, optional
+            Number of iterates between storing or
+            list of steps when to store iterates.
 
         Examples
         --------
@@ -227,12 +228,17 @@ class CallbackStore(Callback):
                           'instead. '
                           'See Examples in the documentation.',
                           DeprecationWarning)
-        self.step = int(step)
+        try:
+            self.step = frozenset(int(i) for i in step)
+            self.should_evaluate_at_step = lambda i: i in self.step
+        except TypeError:
+            self.step = int(step)
+            self.should_evaluate_at_step = lambda i: i % self.step == 0
         self.iter = 0
 
     def __call__(self, result):
         """Append result to results list."""
-        if self.iter % self.step == 0:
+        if self.should_evaluate_at_step(self.iter):
             if self.function:
                 self.results.append(self.function(result))
             else:
@@ -279,8 +285,9 @@ class CallbackApply(Callback):
         ----------
         function : callable
             Function to call on the current iterate.
-        step : int, optional
-            Number of iterates between applications of ``function``.
+        step : positive int, list, optional
+            Number of iterates between applying ``function``
+            or list of steps when to apply ``function``.
 
         Examples
         --------
@@ -306,12 +313,17 @@ class CallbackApply(Callback):
         """
         assert callable(function)
         self.function = function
-        self.step = int(step)
+        try:
+            self.step = frozenset(int(i) for i in step)
+            self.should_evaluate_at_step = lambda i: i in self.step
+        except TypeError:
+            self.step = int(step)
+            self.should_evaluate_at_step = lambda i: i % self.step == 0
         self.iter = 0
 
     def __call__(self, result):
         """Apply function to result."""
-        if self.iter % self.step == 0:
+        if self.should_evaluate_at_step(self.iter):
             self.function(result)
         self.iter += 1
 
@@ -346,8 +358,9 @@ class CallbackPrintIteration(Callback):
                 print(fmt.format(cur_iter_num))
 
             where ``cur_iter_num`` is the current iteration number.
-        step : positive int, optional
-            Number of iterations between output.
+        step : positive int, list, optional
+            Number of iterations between output or
+            list of steps when to output.
 
         Other Parameters
         ----------------
@@ -376,13 +389,18 @@ class CallbackPrintIteration(Callback):
         Current iter is 2.
         """
         self.fmt = str(fmt)
-        self.step = int(step)
+        try:
+            self.step = frozenset(int(i) for i in step)
+            self.should_evaluate_at_step = lambda i: i in self.step
+        except TypeError:
+            self.step = int(step)
+            self.should_evaluate_at_step = lambda i: i % self.step == 0
         self.iter = 0
         self.kwargs = kwargs
 
     def __call__(self, _):
         """Print the current iteration."""
-        if self.iter % self.step == 0:
+        if self.should_evaluate_at_step(self.iter):
             print(self.fmt.format(self.iter), **self.kwargs)
 
         self.iter += 1
@@ -421,8 +439,9 @@ class CallbackPrintTiming(Callback):
                 print(fmt.format(runtime))
 
             where ``runtime`` is the runtime since the last iterate.
-        step : positive int, optional
-            Number of iterations between prints.
+        step : positive int, list, optional
+            Number of iterations between prints or
+            list of iterations when to print.
         cumulative : boolean, optional
             Print the time since the initialization instead of the last call.
 
@@ -432,7 +451,12 @@ class CallbackPrintTiming(Callback):
             Key word arguments passed to the print function.
         """
         self.fmt = str(fmt)
-        self.step = int(step)
+        try:
+            self.step = frozenset(int(i) for i in step)
+            self.should_evaluate_at_step = lambda i: i in self.step
+        except TypeError:
+            self.step = int(step)
+            self.should_evaluate_at_step = lambda i: i % self.step == 0
         self.iter = 0
         self.cumulative = cumulative
         self.start_time = time.time()
@@ -440,7 +464,7 @@ class CallbackPrintTiming(Callback):
 
     def __call__(self, _):
         """Print time elapsed from the previous iteration."""
-        if self.iter % self.step == 0:
+        if self.should_evaluate_at_step(self.iter):
             current_time = time.time()
 
             print(self.fmt.format(current_time - self.start_time),
@@ -484,8 +508,9 @@ class CallbackPrint(Callback):
                 print(fmt.format(x))
 
             where ``x`` is the input to the callback.
-        step : positive int, optional
-            Number of iterations between prints.
+        step : positive int, list, optional
+            Number of iterations between prints or
+            list of iterations when to print.
 
         Other Parameters
         ----------------
@@ -522,13 +547,18 @@ class CallbackPrint(Callback):
             raise TypeError('`func` must be `callable` or `None`')
 
         self.fmt = str(fmt)
-        self.step = int(step)
+        try:
+            self.step = frozenset(int(i) for i in step)
+            self.should_evaluate_at_step = lambda i: i in self.step
+        except TypeError:
+            self.step = int(step)
+            self.should_evaluate_at_step = lambda i: i % self.step == 0
         self.iter = 0
         self.kwargs = kwargs
 
     def __call__(self, result):
         """Print the current value."""
-        if self.iter % self.step == 0:
+        if self.should_evaluate_at_step(self.iter):
             if self.func is not None:
                 result = self.func(result)
 
@@ -588,8 +618,9 @@ class CallbackShow(Callback):
             where ``cur_iter_num`` is the current iteration number.
             For the default ``None``, the title format ``'Iterate {}'``
             is used.
-        step : positive int, optional
-            Number of iterations between plots.
+        step : positive int, list, optional
+            Number of iterations between plots or
+            list of iterations when to plot.
         saveto : str or callable, optional
             Format string for the name of the file(s) where
             iterates are saved.
@@ -643,7 +674,12 @@ class CallbackShow(Callback):
         self.saveto = saveto
         self.saveto_formatter = getattr(self.saveto, 'format', self.saveto)
 
-        self.step = step
+        try:
+            self.step = list(map(int, step))
+            self.should_evaluate_at_step = lambda i: i in self.step
+        except TypeError:
+            self.step = int(step)
+            self.should_evaluate_at_step = lambda i: i % self.step == 0
         self.fig = kwargs.pop('fig', None)
         self.iter = 0
         self.space_of_last_x = None
@@ -656,7 +692,7 @@ class CallbackShow(Callback):
         update_in_place = (self.space_of_last_x == x_space)
         self.space_of_last_x = x_space
 
-        if self.iter % self.step == 0:
+        if self.should_evaluate_at_step(self.iter):
             title = self.title_formatter(self.iter)
 
             if self.saveto is None:
@@ -707,8 +743,9 @@ class CallbackSaveToDisk(Callback):
                 filename = saveto.format(cur_iter_num)
 
             where ``cur_iter_num`` is the current iteration number.
-        step : positive int, optional
-            Number of iterations between saves.
+        step : positive int, list, optional
+            Number of iterations between saves or
+            list of iterations when to save.
         impl : {'pickle', 'numpy', 'numpy_txt'}, optional
             The format to store the iterates in. Numpy formats are only usable
             if the data can be converted to an array via `numpy.asarray`.
@@ -741,14 +778,19 @@ class CallbackSaveToDisk(Callback):
         except AttributeError:
             self.saveto_formatter = self.saveto
 
-        self.step = int(step)
+        try:
+            self.step = list(map(int, step))
+            self.should_evaluate_at_step = lambda i: i in self.step
+        except TypeError:
+            self.step = int(step)
+            self.should_evaluate_at_step = lambda i: i % self.step == 0
         self.impl = str(impl).lower()
         self.kwargs = kwargs
         self.iter = 0
 
     def __call__(self, x):
         """Save the current iterate."""
-        if self.iter % self.step == 0:
+        if self.should_evaluate_at_step(self.iter):
             file_path = self.saveto_formatter(self.iter)
             folder_path = os.path.dirname(os.path.realpath(file_path))
 
@@ -897,8 +939,9 @@ class CallbackPrintHardwareUsage(Callback):
 
         Parameters
         ----------
-        step : positive int, optional
-            Number of iterations between output.
+        step : positive int, list, optional
+            Number of iterations between output or
+            list of iterations when to output.
         fmt_cpu : string, optional
             Formating that should be applied. The CPU usage is printed as ::
 
@@ -944,7 +987,12 @@ class CallbackPrintHardwareUsage(Callback):
         ...                                       fmt_mem='RAM {}',
         ...                                       fmt_swap='')
         """
-        self.step = int(step)
+        try:
+            self.step = list(map(int, step))
+            self.should_evaluate_at_step = lambda i: i in self.step
+        except TypeError:
+            self.step = int(step)
+            self.should_evaluate_at_step = lambda i: i % self.step == 0
         self.fmt_cpu = str(fmt_cpu)
         self.fmt_mem = str(fmt_mem)
         self.fmt_swap = str(fmt_swap)
@@ -955,7 +1003,7 @@ class CallbackPrintHardwareUsage(Callback):
 
         import psutil
 
-        if self.iter % self.step == 0:
+        if self.should_evaluate_at_step(self.iter):
             if self.fmt_cpu:
                 print(self.fmt_cpu.format(psutil.cpu_percent(percpu=True)),
                       **self.kwargs)
@@ -996,8 +1044,9 @@ class CallbackProgressBar(Callback):
         ----------
         niter : positive int, optional
             Total number of iterations.
-        step : positive int, optional
-            Number of iterations between output.
+        step : positive int, list, optional
+            Number of iterations between output or
+            list of iterations when to output.
 
         Other Parameters
         ----------------
@@ -1005,13 +1054,18 @@ class CallbackProgressBar(Callback):
             Further parameters passed to ``tqdm.tqdm``.
         """
         self.niter = int(niter)
-        self.step = int(step)
+        try:
+            self.step = list(map(int, step))
+            self.should_evaluate_at_step = lambda i: i in self.step
+        except TypeError:
+            self.step = int(step)
+            self.should_evaluate_at_step = lambda i: i % self.step == 0
         self.kwargs = kwargs
         self.reset()
 
     def __call__(self, _):
         """Update the progressbar."""
-        if self.iter % self.step == 0:
+        if self.should_evaluate_at_step(self.iter):
             self.pbar.update(self.step)
 
         self.iter += 1
