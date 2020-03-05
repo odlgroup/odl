@@ -15,6 +15,7 @@ import numpy as np
 import os
 import time
 import warnings
+import contextlib
 
 from odl.util import signature_string
 
@@ -22,7 +23,7 @@ __all__ = ('Callback', 'CallbackStore', 'CallbackApply', 'CallbackPrintTiming',
            'CallbackPrintIteration', 'CallbackPrint', 'CallbackPrintNorm',
            'CallbackShow', 'CallbackSaveToDisk', 'CallbackSleep',
            'CallbackShowConvergence', 'CallbackPrintHardwareUsage',
-           'CallbackProgressBar')
+           'CallbackProgressBar', 'CallbackMovie')
 
 
 class Callback(object):
@@ -1033,6 +1034,79 @@ class CallbackProgressBar(Callback):
         else:
             return '{}({})'.format(self.__class__.__name__,
                                    inner_str)
+
+
+class CallbackMovie(Callback):
+
+    """Callback for generating movies with matplotlib.
+    Must be used as context manager with the ``saving`` method
+    
+    
+    Examples
+    --------
+    >>> import matplotlib.pyplot as plt
+    >>> fig = plt.figure()
+    >>> plt.imshow([[0,1],[2,3]])
+    >>> with CallbackMovie().saving(fig, "test.mp4") as callback:
+    >>>     # use callback
+
+    """
+    def __init__(self, codec='ffmpeg',
+            animation_kwargs=dict(fps=20, metadata={}),
+            step=1):
+        """Initialize a new instance.
+
+        Parameters
+        ----------
+        codec : string
+            See documentation of matplotlib.animation.writers
+        animation_kwargs : dict
+            Containing e.g. `fps` and `metadata` like
+            `title`, `author`, ...
+            See documentation of matplotlib.animation
+        step : positive int, list, optional
+            Number of iterations between frames, or
+            list of iterations where frames should be aquired.
+        """
+        import matplotlib.animation
+        writer = matplotlib.animation.writers[codec]
+        self.moviewriter = writer(**animation_kwargs)
+
+        try:
+             self.step = frozenset(int(i) for i in step)
+             self.should_evaluate_at_step = lambda i: i in self.step
+        except TypeError:
+             self.step = int(step)
+             self.should_evaluate_at_step = lambda i: i % self.step == 0
+        self.iter = 0
+
+
+    def __call__(self, x):
+        """Add frame to movie"""
+        if self.should_evaluate_at_step(self.iter):
+            self.im.set_array(x)
+            self.moviewriter.grab_frame()
+        self.iter += 1
+
+    @contextlib.contextmanager
+    def saving(self, fig, outfile, dpi=200, *args, **kwargs):
+        """
+        Context manager to facilitate writing the movie file.
+        
+        Parameters
+        ----------
+        fig : matplotlib.pyplot.figure
+            figure to plot (using the last axis' last image)
+        outfile : string
+            filename for the movie
+        ``*args, **kwargs`` are any parameters that should be passed to `setup`.
+        """
+        ax = fig.axes[-1]
+        im = ax.get_images()[-1]
+        self.im = im
+        with self.moviewriter.saving(fig, outfile, dpi, *args, **kwargs):
+            yield self
+
 
 
 if __name__ == '__main__':
