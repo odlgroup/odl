@@ -1040,20 +1040,19 @@ class CallbackMovie(Callback):
 
     """Callback for generating movies with matplotlib.
     Must be used as context manager with the ``saving`` method
-    
-    
+
     Examples
     --------
     >>> import matplotlib.pyplot as plt
     >>> fig = plt.figure()
-    >>> plt.imshow([[0,1],[2,3]])
+    >>> _ = plt.imshow([[0,1],[2,3]])
     >>> with CallbackMovie().saving(fig, "test.mp4") as callback:
     >>>     # use callback
 
     """
     def __init__(self, codec='ffmpeg',
-            animation_kwargs=dict(fps=20, metadata={}),
-            step=1):
+                 animation_kwargs=dict(fps=20, metadata={}),
+                 step=1):
         """Initialize a new instance.
 
         Parameters
@@ -1073,13 +1072,12 @@ class CallbackMovie(Callback):
         self.moviewriter = writer(**animation_kwargs)
 
         try:
-             self.step = frozenset(int(i) for i in step)
-             self.should_evaluate_at_step = lambda i: i in self.step
+            self.step = frozenset(int(i) for i in step)
+            self.should_evaluate_at_step = lambda i: i in self.step
         except TypeError:
-             self.step = int(step)
-             self.should_evaluate_at_step = lambda i: i % self.step == 0
+            self.step = int(step)
+            self.should_evaluate_at_step = lambda i: i % self.step == 0
         self.iter = 0
-
 
     def __call__(self, x):
         """Add frame to movie"""
@@ -1092,21 +1090,20 @@ class CallbackMovie(Callback):
     def saving(self, fig, outfile, dpi=200, *args, **kwargs):
         """
         Context manager to facilitate writing the movie file.
-        
+
         Parameters
         ----------
         fig : matplotlib.pyplot.figure
             figure to plot (using the last axis' last image)
         outfile : string
             filename for the movie
-        ``*args, **kwargs`` are any parameters that should be passed to `setup`.
+        ``*args, **kwargs`` are any parameters that should be passed to `setup`
         """
         ax = fig.axes[-1]
         im = ax.get_images()[-1]
         self.im = im
         with self.moviewriter.saving(fig, outfile, dpi, *args, **kwargs):
             yield self
-
 
 
 if __name__ == '__main__':
