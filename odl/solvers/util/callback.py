@@ -228,12 +228,7 @@ class CallbackStore(Callback):
                           'instead. '
                           'See Examples in the documentation.',
                           DeprecationWarning)
-        try:
-            self.step = frozenset(int(i) for i in step)
-            self.should_evaluate_at_step = lambda i: i in self.step
-        except TypeError:
-            self.step = int(step)
-            self.should_evaluate_at_step = lambda i: i % self.step == 0
+        _setupShouldEvaluateAtStep(self, step)
         self.iter = 0
 
     def __call__(self, result):
@@ -313,12 +308,7 @@ class CallbackApply(Callback):
         """
         assert callable(function)
         self.function = function
-        try:
-            self.step = frozenset(int(i) for i in step)
-            self.should_evaluate_at_step = lambda i: i in self.step
-        except TypeError:
-            self.step = int(step)
-            self.should_evaluate_at_step = lambda i: i % self.step == 0
+        _setupShouldEvaluateAtStep(self, step)
         self.iter = 0
 
     def __call__(self, result):
@@ -389,12 +379,7 @@ class CallbackPrintIteration(Callback):
         Current iter is 2.
         """
         self.fmt = str(fmt)
-        try:
-            self.step = frozenset(int(i) for i in step)
-            self.should_evaluate_at_step = lambda i: i in self.step
-        except TypeError:
-            self.step = int(step)
-            self.should_evaluate_at_step = lambda i: i % self.step == 0
+        _setupShouldEvaluateAtStep(self, step)
         self.iter = 0
         self.kwargs = kwargs
 
@@ -451,12 +436,7 @@ class CallbackPrintTiming(Callback):
             Key word arguments passed to the print function.
         """
         self.fmt = str(fmt)
-        try:
-            self.step = frozenset(int(i) for i in step)
-            self.should_evaluate_at_step = lambda i: i in self.step
-        except TypeError:
-            self.step = int(step)
-            self.should_evaluate_at_step = lambda i: i % self.step == 0
+        _setupShouldEvaluateAtStep(self, step)
         self.iter = 0
         self.cumulative = cumulative
         self.start_time = time.time()
@@ -547,12 +527,7 @@ class CallbackPrint(Callback):
             raise TypeError('`func` must be `callable` or `None`')
 
         self.fmt = str(fmt)
-        try:
-            self.step = frozenset(int(i) for i in step)
-            self.should_evaluate_at_step = lambda i: i in self.step
-        except TypeError:
-            self.step = int(step)
-            self.should_evaluate_at_step = lambda i: i % self.step == 0
+        _setupShouldEvaluateAtStep(self, step)
         self.iter = 0
         self.kwargs = kwargs
 
@@ -674,12 +649,7 @@ class CallbackShow(Callback):
         self.saveto = saveto
         self.saveto_formatter = getattr(self.saveto, 'format', self.saveto)
 
-        try:
-            self.step = list(map(int, step))
-            self.should_evaluate_at_step = lambda i: i in self.step
-        except TypeError:
-            self.step = int(step)
-            self.should_evaluate_at_step = lambda i: i % self.step == 0
+        _setupShouldEvaluateAtStep(self, step)
         self.fig = kwargs.pop('fig', None)
         self.iter = 0
         self.space_of_last_x = None
@@ -778,12 +748,7 @@ class CallbackSaveToDisk(Callback):
         except AttributeError:
             self.saveto_formatter = self.saveto
 
-        try:
-            self.step = list(map(int, step))
-            self.should_evaluate_at_step = lambda i: i in self.step
-        except TypeError:
-            self.step = int(step)
-            self.should_evaluate_at_step = lambda i: i % self.step == 0
+        _setupShouldEvaluateAtStep(self, step)
         self.impl = str(impl).lower()
         self.kwargs = kwargs
         self.iter = 0
@@ -865,7 +830,7 @@ class CallbackShowConvergence(Callback):
     """Displays a convergence plot."""
 
     def __init__(self, functional, title='convergence', logx=False, logy=False,
-                 **kwargs):
+                 step=1, **kwargs):
         """Initialize a new instance.
 
         Parameters
@@ -890,6 +855,7 @@ class CallbackShowConvergence(Callback):
         self.logx = logx
         self.logy = logy
         self.kwargs = kwargs
+        _setupShouldEvaluateAtStep(self, step)
         self.iter = 0
 
         import matplotlib.pyplot as plt
@@ -905,11 +871,12 @@ class CallbackShowConvergence(Callback):
 
     def __call__(self, x):
         """Implement ``self(x)``."""
-        if self.logx:
-            it = self.iter + 1
-        else:
-            it = self.iter
-        self.ax.scatter(it, self.functional(x), **self.kwargs)
+        if self.should_evaluate_at_step(self.iter):
+            if self.logx:
+                it = self.iter + 1
+            else:
+                it = self.iter
+            self.ax.scatter(it, self.functional(x), **self.kwargs)
         self.iter += 1
 
     def reset(self):
@@ -987,12 +954,7 @@ class CallbackPrintHardwareUsage(Callback):
         ...                                       fmt_mem='RAM {}',
         ...                                       fmt_swap='')
         """
-        try:
-            self.step = list(map(int, step))
-            self.should_evaluate_at_step = lambda i: i in self.step
-        except TypeError:
-            self.step = int(step)
-            self.should_evaluate_at_step = lambda i: i % self.step == 0
+        _setupShouldEvaluateAtStep(self, step)
         self.fmt_cpu = str(fmt_cpu)
         self.fmt_mem = str(fmt_mem)
         self.fmt_swap = str(fmt_swap)
@@ -1054,12 +1016,7 @@ class CallbackProgressBar(Callback):
             Further parameters passed to ``tqdm.tqdm``.
         """
         self.niter = int(niter)
-        try:
-            self.step = list(map(int, step))
-            self.should_evaluate_at_step = lambda i: i in self.step
-        except TypeError:
-            self.step = int(step)
-            self.should_evaluate_at_step = lambda i: i % self.step == 0
+        _setupShouldEvaluateAtStep(self, step)
         self.kwargs = kwargs
         self.reset()
 
@@ -1087,6 +1044,14 @@ class CallbackProgressBar(Callback):
         else:
             return '{}({})'.format(self.__class__.__name__,
                                    inner_str)
+
+def _setupShouldEvaluateAtStep(self, step):
+    try:
+        self.step = frozenset(int(i) for i in step)
+        self.should_evaluate_at_step = lambda i: i in self.step
+    except TypeError:
+        self.step = int(step)
+        self.should_evaluate_at_step = lambda i: i % self.step == 0
 
 
 if __name__ == '__main__':
