@@ -1046,7 +1046,7 @@ class CallbackMovie(Callback):
     >>> import matplotlib.pyplot as plt
     >>> fig = plt.figure()
     >>> _ = plt.imshow([[0,1],[2,3]])
-    >>> with CallbackMovie().saving(fig, "test.mp4") as callback:
+    >>> with CallbackMovie('pillow').saving(fig, "test.gif") as callback:
     ...     callback([[0,1],[2,3]])
     ...     callback([[3,2],[1,0]])
 
@@ -1059,7 +1059,8 @@ class CallbackMovie(Callback):
         Parameters
         ----------
         codec : string
-            See documentation of matplotlib.animation.writers
+            See documentation of matplotlib.animation.writers, examples:
+            'ffmpeg' -> .mp4 file, 'pillow' -> .gif file
         animation_kwargs : dict
             Containing e.g. `fps` and `metadata` like
             `title`, `author`, ...
@@ -1083,7 +1084,11 @@ class CallbackMovie(Callback):
     def __call__(self, x):
         """Add frame to movie"""
         if self.should_evaluate_at_step(self.iter):
-            self.im.set_array(x)
+            try:
+                self.im.set_array(x)
+            except AttributeError:
+                raise RuntimeError('{r}.saving() must be used as a '
+                                   'contextmanager'.format(self))
             self.moviewriter.grab_frame()
         self.iter += 1
 
@@ -1100,11 +1105,25 @@ class CallbackMovie(Callback):
             filename for the movie
         ``*args, **kwargs`` are any parameters that should be passed to `setup`
         """
-        ax = fig.axes[-1]
-        im = ax.get_images()[-1]
+        try:
+            ax = fig.axes[-1]
+            im = ax.get_images()[-1]
+        except IndexError:
+            raise ValueError('Matplotlib figure fig={} must contain '
+                             'imshow plot'.format(fig))
         self.im = im
         with self.moviewriter.saving(fig, outfile, dpi, *args, **kwargs):
             yield self
+     
+    def __repr__(self):
+        """Return ``repr(self)``."""
+        # NOTE: How to format the output in a nice way,
+        #       when the parameters are not stored?
+        optargs = [('step', self.step, 1)]
+        inner_str = signature_string([], optargs)
+
+        return '{}({}, {})'.format(self.__class__.__name__,
+                                   self.moviewriter, inner_str)
 
 
 if __name__ == '__main__':
