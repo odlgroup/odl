@@ -1047,8 +1047,8 @@ class CallbackMovie(Callback):
     >>> fig = plt.figure()
     >>> _ = plt.imshow([[0,1],[2,3]])
     >>> with CallbackMovie().saving(fig, "test.mp4") as callback:
-    >>>     callback([[0,1],[2,3]])
-    >>>     callback([[3,2],[1,0]])
+    ...     callback([[0,1],[2,3]])
+    ...     callback([[3,2],[1,0]])
 
     """
     def __init__(self, codec='ffmpeg',
