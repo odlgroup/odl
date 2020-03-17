@@ -23,7 +23,7 @@ __all__ = ('Callback', 'CallbackStore', 'CallbackApply', 'CallbackPrintTiming',
            'CallbackPrintIteration', 'CallbackPrint', 'CallbackPrintNorm',
            'CallbackShow', 'CallbackSaveToDisk', 'CallbackSleep',
            'CallbackShowConvergence', 'CallbackPrintHardwareUsage',
-           'CallbackProgressBar', 'CallbackMovie')
+           'CallbackProgressBar', 'save_animation')
 
 
 class Callback(object):
@@ -1036,8 +1036,75 @@ class CallbackProgressBar(Callback):
                                    inner_str)
 
 
-class CallbackMovie(Callback):
+@contextlib.contextmanager
+def save_animation(filename,
+                   writer="ffmpeg",
+                   writer_kwargs=None,
+                   dpi=200,
+                   saving_kwargs=None,
+                   fig=None,
+                   step=1):
+    """Context manager for creating animations using `matplotlib.animation` [1]
+    [1] https://matplotlib.org/3.2.0/api/animation_api.html
 
+    Parameters
+    ----------
+    filename : str
+    writer : string
+        Available writers: `matplotlib.animation.writers.list()`, examples:
+        'ffmpeg' -> .mp4 file, 'pillow' -> .gif file
+    writer_kwargs : dict
+        Containing e.g. `fps` and a dict of `metadata` like
+        `title`, `author`, ...
+    saving_kwargs : dict
+        Containing e.g. `fps` and a dict of `metadata` like
+    fig : matplotlib figure, optional
+        Use the provided figures last imshow, otherwise create a new figure
+    step : positive int, list, optional
+        Number of iterations between frames, or
+        list of iterations where frames should be aquired.
+    """
+    if writer_kwargs is None:
+        writer_kwargs = {}
+    if saving_kwargs is None:
+        saving_kwargs = {}
+    import matplotlib.animation
+    writer = matplotlib.animation.writers[writer]
+    moviewriter = writer(**writer_kwargs)
+    iter = 0
+    if fig is None:
+        import matplotlib.pyplot
+        fig, ax = matplotlib.pyplot.subplots()
+        im = None
+    else:
+        try:
+            ax = fig.axes[-1]
+            im = ax.get_images()[-1]
+        except IndexError:
+            raise ValueError('Matplotlib figure fig={} must contain '
+                             'imshow plot'.format(fig))
+
+    class CallbackAppendMovieFrame(Callback):
+        def __call__(self, x):
+            # Now I remember why I wanted to create the figure outside of
+            # the contextManager, where I know about the dimensions of the axes
+            nonlocal im
+            if iter % step == 0:
+                if im is None:
+                    im = matplotlib.pyplot.imshow(x)
+                else:
+                    im.set_array(x)
+                moviewriter.grab_frame()
+
+    try:
+        with moviewriter.saving(fig, filename, dpi=dpi, **saving_kwargs):
+            yield CallbackAppendMovieFrame()
+    finally:
+        # Whatever needs to be finalized, closed, ...
+        pass
+
+
+class CallbackMovie(Callback):
     """Callback for generating movies with matplotlib.
     Must be used as context manager with the ``saving`` method
 
@@ -1051,14 +1118,14 @@ class CallbackMovie(Callback):
     ...     callback([[3,2],[1,0]])
 
     """
-    def __init__(self, codec='ffmpeg',
+    def __init__(self, writer='ffmpeg',
                  animation_kwargs=dict(fps=20, metadata={}),
                  step=1):
         """Initialize a new instance.
 
         Parameters
         ----------
-        codec : string
+        writer : string
             See documentation of matplotlib.animation.writers, examples:
             'ffmpeg' -> .mp4 file, 'pillow' -> .gif file
         animation_kwargs : dict
@@ -1070,7 +1137,7 @@ class CallbackMovie(Callback):
             list of iterations where frames should be aquired.
         """
         import matplotlib.animation
-        writer = matplotlib.animation.writers[codec]
+        writer = matplotlib.animation.writers[writer]
         self.moviewriter = writer(**animation_kwargs)
 
         try:
@@ -1093,17 +1160,18 @@ class CallbackMovie(Callback):
         self.iter += 1
 
     @contextlib.contextmanager
-    def saving(self, fig, outfile, dpi=200, *args, **kwargs):
-        """
-        Context manager to facilitate writing the movie file.
+    def saving(self, filename, fig=None, dpi=200, **kwargs):
+        """Context manager to facilitate writing the movie file.
 
         Parameters
         ----------
         fig : matplotlib.pyplot.figure
             figure to plot (using the last axis' last image)
-        outfile : string
+        filename : string
             filename for the movie
-        ``*args, **kwargs`` are any parameters that should be passed to `setup`
+        kwargs : dict
+            Any additional parameters that should be passed to
+            `moviewriter.saving`
         """
         try:
             ax = fig.axes[-1]
@@ -1112,7 +1180,7 @@ class CallbackMovie(Callback):
             raise ValueError('Matplotlib figure fig={} must contain '
                              'imshow plot'.format(fig))
         self.im = im
-        with self.moviewriter.saving(fig, outfile, dpi, *args, **kwargs):
+        with self.moviewriter.saving(fig, filename, dpi=dpi, **kwargs):
             yield self
      
     def __repr__(self):
