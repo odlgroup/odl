@@ -1075,11 +1075,9 @@ def save_animation(filename,
     if fig is None:
         import matplotlib.pyplot
         fig, ax = matplotlib.pyplot.subplots()
-        im = None
     else:
         try:
             ax = fig.axes[-1]
-            im = ax.get_images()[-1]
         except IndexError:
             raise ValueError('Matplotlib figure fig={} must contain '
                              'imshow plot'.format(fig))
@@ -1088,12 +1086,14 @@ def save_animation(filename,
         def __call__(self, x):
             # Now I remember why I wanted to create the figure outside of
             # the contextManager, where I know about the dimensions of the axes
-            nonlocal im
+            if not hasattr(x, 'ndim') or x.ndim != 2:
+                    raise NotImplementedError("Only 2D-plots supported")
             if iter % step == 0:
-                if im is None:
-                    im = matplotlib.pyplot.imshow(x)
-                else:
-                    im.set_array(x)
+                try:
+                    im = ax.get_images()[-1]
+                except IndexError:
+                    im = ax.imshow(x)
+                im.set_array(x)
                 moviewriter.grab_frame()
 
     try:
@@ -1102,96 +1102,6 @@ def save_animation(filename,
     finally:
         # Whatever needs to be finalized, closed, ...
         pass
-
-
-class CallbackMovie(Callback):
-    """Callback for generating movies with matplotlib.
-    Must be used as context manager with the ``saving`` method
-
-    Examples
-    --------
-    >>> import matplotlib.pyplot as plt
-    >>> fig = plt.figure()
-    >>> _ = plt.imshow([[0,1],[2,3]])
-    >>> with CallbackMovie('pillow').saving(fig, "test.gif") as callback:
-    ...     callback([[0,1],[2,3]])
-    ...     callback([[3,2],[1,0]])
-
-    """
-    def __init__(self, writer='ffmpeg',
-                 animation_kwargs=dict(fps=20, metadata={}),
-                 step=1):
-        """Initialize a new instance.
-
-        Parameters
-        ----------
-        writer : string
-            See documentation of matplotlib.animation.writers, examples:
-            'ffmpeg' -> .mp4 file, 'pillow' -> .gif file
-        animation_kwargs : dict
-            Containing e.g. `fps` and `metadata` like
-            `title`, `author`, ...
-            See documentation of matplotlib.animation
-        step : positive int, list, optional
-            Number of iterations between frames, or
-            list of iterations where frames should be aquired.
-        """
-        import matplotlib.animation
-        writer = matplotlib.animation.writers[writer]
-        self.moviewriter = writer(**animation_kwargs)
-
-        try:
-            self.step = frozenset(int(i) for i in step)
-            self.should_evaluate_at_step = lambda i: i in self.step
-        except TypeError:
-            self.step = int(step)
-            self.should_evaluate_at_step = lambda i: i % self.step == 0
-        self.iter = 0
-
-    def __call__(self, x):
-        """Add frame to movie"""
-        if self.should_evaluate_at_step(self.iter):
-            try:
-                self.im.set_array(x)
-            except AttributeError:
-                raise RuntimeError('{r}.saving() must be used as a '
-                                   'contextmanager'.format(self))
-            self.moviewriter.grab_frame()
-        self.iter += 1
-
-    @contextlib.contextmanager
-    def saving(self, filename, fig=None, dpi=200, **kwargs):
-        """Context manager to facilitate writing the movie file.
-
-        Parameters
-        ----------
-        fig : matplotlib.pyplot.figure
-            figure to plot (using the last axis' last image)
-        filename : string
-            filename for the movie
-        kwargs : dict
-            Any additional parameters that should be passed to
-            `moviewriter.saving`
-        """
-        try:
-            ax = fig.axes[-1]
-            im = ax.get_images()[-1]
-        except IndexError:
-            raise ValueError('Matplotlib figure fig={} must contain '
-                             'imshow plot'.format(fig))
-        self.im = im
-        with self.moviewriter.saving(fig, filename, dpi=dpi, **kwargs):
-            yield self
-     
-    def __repr__(self):
-        """Return ``repr(self)``."""
-        # NOTE: How to format the output in a nice way,
-        #       when the parameters are not stored?
-        optargs = [('step', self.step, 1)]
-        inner_str = signature_string([], optargs)
-
-        return '{}({}, {})'.format(self.__class__.__name__,
-                                   self.moviewriter, inner_str)
 
 
 if __name__ == '__main__':
