@@ -1056,14 +1056,18 @@ def save_animation(filename,
     writer_kwargs : dict
         Containing e.g. `fps` and a dict of `metadata` like
         `title`, `author`, ...
+        Passed to `matplotlib.animation.writer`.
     saving_kwargs : dict
-        Containing e.g. `fps` and a dict of `metadata` like
+        Containing e.g. `fps` and a dict of `metadata` that may contain
+        title, artist, genre, subject, copyright, srcform, comment.
+        Passed to `matplotlib.animation.writer.saving`.
     fig : matplotlib figure, optional
-        Use the provided figures last imshow, otherwise create a new figure
-    step : positive int, list, optional
-        Number of iterations between frames, or
-        list of iterations where frames should be aquired.
+        Matplitlib figure containing at least one imshow-object,
+        otherwise create a new figure
+    step : positive int, optional
+        Number of iterations between frames
     """
+
     if writer_kwargs is None:
         writer_kwargs = {}
     if saving_kwargs is None:
@@ -1076,32 +1080,36 @@ def save_animation(filename,
         import matplotlib.pyplot
         fig, ax = matplotlib.pyplot.subplots()
     else:
-        try:
-            ax = fig.axes[-1]
-        except IndexError:
-            raise ValueError('Matplotlib figure fig={} must contain '
-                             'imshow plot'.format(fig))
+        ax = fig.axes[-1]
 
     class CallbackAppendMovieFrame(Callback):
-        def __call__(self, x):
-            # Now I remember why I wanted to create the figure outside of
-            # the contextManager, where I know about the dimensions of the axes
+        """Callback-helper for appending frames to an animation
+
+        If data that is not 2 dimensional should be visualized
+        `plot_in_figure` must be overwritten.
+        """
+
+        def plot_in_figure(self, x):
+            """Plots 2D data in an `plt.imshow` instance.
+            Must be overwritten, if other data is to be displayed."""
+
             if not hasattr(x, 'ndim') or x.ndim != 2:
-                    raise NotImplementedError("Only 2D-plots supported")
+                raise NotImplementedError("Only 2D-plots supported by default."
+                                          " For further options overwrite "
+                                          "`plot_in_figure`")
+            try:
+                im = ax.get_images()[-1]
+            except IndexError:
+                im = ax.imshow(x)
+            im.set_array(x)
+
+        def __call__(self, x):
             if iter % step == 0:
-                try:
-                    im = ax.get_images()[-1]
-                except IndexError:
-                    im = ax.imshow(x)
-                im.set_array(x)
+                self.plot_in_figure(x)
                 moviewriter.grab_frame()
 
-    try:
-        with moviewriter.saving(fig, filename, dpi=dpi, **saving_kwargs):
-            yield CallbackAppendMovieFrame()
-    finally:
-        # Whatever needs to be finalized, closed, ...
-        pass
+    with moviewriter.saving(fig, filename, dpi=dpi, **saving_kwargs):
+        yield CallbackAppendMovieFrame()
 
 
 if __name__ == '__main__':
