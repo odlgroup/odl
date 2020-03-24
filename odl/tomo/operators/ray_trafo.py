@@ -83,6 +83,9 @@ class RayTransformBase(Operator):
             and on the CPU, since a full volume and a projection dataset
             are stored. That may be prohibitive in 3D.
             Default: True
+        gpu_index : int, optional
+            Index of GPU to use for ``impl='astra_cuda'``.
+            Default: ``0``
         kwargs
             Further keyword arguments passed to the projector backend.
 
@@ -211,6 +214,7 @@ class RayTransformBase(Operator):
 
         self.__geometry = geometry
         self.__impl = impl
+        self.__gpu_index = kwargs.pop('gpu_index', 0)
 
         # Generate or check projection space
         proj_space = kwargs.pop('proj_space', None)
@@ -311,6 +315,23 @@ class RayTransformBase(Operator):
         """Geometry of this operator."""
         return self.__geometry
 
+    @property
+    def gpu_index(self):
+        """Index of GPU for ``'astra_cuda'`` implementation."""
+        return self.__gpu_index
+
+    @gpu_index.setter
+    def gpu_index(self, gpu_index):
+        """Set index of GPU for ``'astra_cuda'`` implementation."""
+        if not isinstance(gpu_index, int):
+            raise TypeError('`gpu_index` must be an integer')
+        assert gpu_index >= 0
+        if gpu_index != self.__gpu_index:
+            # Clear cached properties
+            self._adjoint = None
+            self._astra_wrapper = None
+        self.__gpu_index = gpu_index
+
     def _call(self, x, out=None):
         """Return ``self(x[, out])``."""
         if self.domain.is_real:
@@ -375,6 +396,9 @@ class RayTransform(RayTransformBase):
             and on the CPU, since a full volume and a projection dataset
             are stored. That may be prohibitive in 3D.
             Default: True
+        gpu_index : int, optional
+            Index of GPU to use for ``impl='astra_cuda'``.
+            Default: ``0``
         kwargs
             Further keyword arguments passed to the projector backend.
 
@@ -413,7 +437,7 @@ class RayTransform(RayTransformBase):
                 if self._astra_wrapper is None:
                     astra_wrapper = AstraCudaProjectorImpl(
                         self.geometry, self.domain.real_space,
-                        self.range.real_space)
+                        self.range.real_space, gpu_index=self.gpu_index)
                     if self.use_cache:
                         self._astra_wrapper = astra_wrapper
                 else:
@@ -445,6 +469,7 @@ class RayTransform(RayTransformBase):
 
         kwargs = self._extra_kwargs.copy()
         kwargs['domain'] = self.range
+        kwargs['gpu_index'] = self.gpu_index
         self._adjoint = RayBackProjection(self.domain, self.geometry,
                                           impl=self.impl,
                                           use_cache=self.use_cache,
@@ -491,6 +516,9 @@ class RayBackProjection(RayTransformBase):
             and on the CPU, since a full volume and a projection dataset
             are stored. That may be prohibitive in 3D.
             Default: True
+        gpu_index : int, optional
+            Index of GPU to use for ``impl='astra_cuda'``.
+            Default: ``0``
         kwargs
             Further keyword arguments passed to the projector backend.
 
@@ -527,7 +555,7 @@ class RayBackProjection(RayTransformBase):
                 if self._astra_wrapper is None:
                     astra_wrapper = AstraCudaBackProjectorImpl(
                         self.geometry, self.range.real_space,
-                        self.domain.real_space)
+                        self.domain.real_space, gpu_index=self.gpu_index)
                     if self.use_cache:
                         self._astra_wrapper = astra_wrapper
                 else:
@@ -559,6 +587,7 @@ class RayBackProjection(RayTransformBase):
 
         kwargs = self._extra_kwargs.copy()
         kwargs['range'] = self.domain
+        kwargs['gpu_index'] = self.gpu_index
         self._adjoint = RayTransform(self.range, self.geometry,
                                      impl=self.impl,
                                      use_cache=self.use_cache,

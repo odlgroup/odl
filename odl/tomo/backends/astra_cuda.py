@@ -46,7 +46,7 @@ class AstraCudaProjectorImpl(object):
     sino_id = None
     proj_id = None
 
-    def __init__(self, geometry, reco_space, proj_space):
+    def __init__(self, geometry, reco_space, proj_space, gpu_index=0):
         """Initialize a new instance.
 
         Parameters
@@ -58,6 +58,9 @@ class AstraCudaProjectorImpl(object):
             projected.
         proj_space : `DiscreteLp`
             Projection space, the space of the result.
+        gpu_index : int, optional
+            Index of GPU to use.
+            Default: ``0``
         """
         assert isinstance(geometry, Geometry)
         assert isinstance(reco_space, DiscreteLp)
@@ -66,6 +69,7 @@ class AstraCudaProjectorImpl(object):
         self.geometry = geometry
         self.reco_space = reco_space
         self.proj_space = proj_space
+        self.gpu_index = gpu_index
 
         self.create_ids()
 
@@ -159,7 +163,8 @@ class AstraCudaProjectorImpl(object):
 
         proj_type = 'cuda' if proj_ndim == 2 else 'cuda3d'
         self.proj_id = astra_projector(
-            proj_type, vol_geom, proj_geom, proj_ndim
+            proj_type, vol_geom, proj_geom, proj_ndim,
+            gpu_index=self.gpu_index
         )
 
         self.sino_id = astra_data(proj_geom,
@@ -171,7 +176,7 @@ class AstraCudaProjectorImpl(object):
         # Create algorithm
         self.algo_id = astra_algorithm(
             'forward', proj_ndim, self.vol_id, self.sino_id,
-            proj_id=self.proj_id, impl='cuda')
+            proj_id=self.proj_id, impl='cuda', gpu_index=self.gpu_index)
 
     def __del__(self):
         """Delete ASTRA objects."""
@@ -203,7 +208,7 @@ class AstraCudaBackProjectorImpl(object):
     sino_id = None
     proj_id = None
 
-    def __init__(self, geometry, reco_space, proj_space):
+    def __init__(self, geometry, reco_space, proj_space, gpu_index=0):
         """Initialize a new instance.
 
         Parameters
@@ -214,6 +219,9 @@ class AstraCudaBackProjectorImpl(object):
             Reconstruction space, the space to which the backprojection maps.
         proj_space : `DiscreteLp`
             Projection space, the space from which the backprojection maps.
+        gpu_index : int, optional
+            Index of GPU to use.
+            Default: ``0``
         """
         assert isinstance(geometry, Geometry)
         assert isinstance(reco_space, DiscreteLp)
@@ -222,6 +230,8 @@ class AstraCudaBackProjectorImpl(object):
         self.geometry = geometry
         self.reco_space = reco_space
         self.proj_space = proj_space
+        self.gpu_index = gpu_index
+
         self.create_ids()
 
         # Create a mutually exclusive lock so that two callers cant use the
@@ -311,7 +321,8 @@ class AstraCudaBackProjectorImpl(object):
 
         proj_type = 'cuda' if proj_ndim == 2 else 'cuda3d'
         self.proj_id = astra_projector(
-            proj_type, vol_geom, proj_geom, proj_ndim
+            proj_type, vol_geom, proj_geom, proj_ndim,
+            gpu_index=self.gpu_index
         )
 
         self.vol_id = astra_data(vol_geom,
@@ -323,7 +334,7 @@ class AstraCudaBackProjectorImpl(object):
         # Create algorithm
         self.algo_id = astra_algorithm(
             'backward', proj_ndim, self.vol_id, self.sino_id,
-            proj_id=self.proj_id, impl='cuda')
+            proj_id=self.proj_id, impl='cuda', gpu_index=self.gpu_index)
 
     def __del__(self):
         """Delete ASTRA objects."""

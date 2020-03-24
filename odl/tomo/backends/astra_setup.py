@@ -615,7 +615,8 @@ def astra_data(astra_geom, datatype, data=None, ndim=2, allow_copy=False):
         return create(astra_dtype_str, astra_geom)
 
 
-def astra_projector(astra_proj_type, astra_vol_geom, astra_proj_geom, ndim):
+def astra_projector(astra_proj_type, astra_vol_geom, astra_proj_geom, ndim,
+                    gpu_index=0):
     """Create an ASTRA projector configuration dictionary.
 
     Parameters
@@ -630,6 +631,9 @@ def astra_projector(astra_proj_type, astra_vol_geom, astra_proj_geom, ndim):
         ASTRA projection geometry.
     ndim : {2, 3}
         Number of dimensions of the projector.
+    gpu_index : int, optional
+        Index of GPU to use.
+        Default: ``0``
 
     Returns
     -------
@@ -691,7 +695,7 @@ def astra_projector(astra_proj_type, astra_vol_geom, astra_proj_geom, ndim):
     proj_cfg['type'] = astra_proj_type
     proj_cfg['VolumeGeometry'] = astra_vol_geom
     proj_cfg['ProjectionGeometry'] = astra_proj_geom
-    proj_cfg['options'] = {}
+    proj_cfg['options'] = {'GPUindex': gpu_index}
 
     # Add the approximate 1/r^2 weighting exposed in intermediate versions of
     # ASTRA
@@ -707,7 +711,8 @@ def astra_projector(astra_proj_type, astra_vol_geom, astra_proj_geom, ndim):
         return astra.projector3d.create(proj_cfg)
 
 
-def astra_algorithm(direction, ndim, vol_id, sino_id, proj_id, impl):
+def astra_algorithm(direction, ndim, vol_id, sino_id, proj_id, impl,
+                    gpu_index=0):
     """Create an ASTRA algorithm object to run the projector.
 
     Parameters
@@ -725,6 +730,9 @@ def astra_algorithm(direction, ndim, vol_id, sino_id, proj_id, impl):
         Handle for the ASTRA projector object.
     impl : {'cpu', 'cuda'}
         Implementation of the projector.
+    gpu_index : int, optional
+        Index of GPU to use for ``impl=='cuda'``.
+        Default: ``0``
 
     Returns
     -------
@@ -757,6 +765,8 @@ def astra_algorithm(direction, ndim, vol_id, sino_id, proj_id, impl):
         algo_cfg['VolumeDataId'] = vol_id
     else:
         algo_cfg['ReconstructionDataId'] = vol_id
+    if impl == 'cuda':
+        algo_cfg['option'] = {'GPUindex': gpu_index}
 
     # Create ASTRA algorithm object
     return astra.algorithm.create(algo_cfg)
