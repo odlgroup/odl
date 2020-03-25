@@ -230,7 +230,7 @@ class OperatorFunction(torch.autograd.Function):
         ctx.op_in_dtype = operator.domain.dtype
         ctx.op_out_dtype = op_out_dtype
 
-        if hasattr(operator, 'gpu_index'):
+        if hasattr(operator, 'gpu_index') and torch.cuda.is_available():
             try:
                 operator.gpu_index = torch.cuda.current_device()
             except AttributeError:
@@ -352,7 +352,7 @@ class OperatorFunction(torch.autograd.Function):
                 ''.format(extra_shape + op_out_shape, grad_output_arr.shape)
             )
 
-        if hasattr(operator, 'gpu_index'):
+        if hasattr(operator, 'gpu_index') and torch.cuda.is_available():
             try:
                 operator.gpu_index = torch.cuda.current_device()
             except AttributeError:
