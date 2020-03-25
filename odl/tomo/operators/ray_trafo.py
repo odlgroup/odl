@@ -11,6 +11,7 @@
 from __future__ import absolute_import, division, print_function
 
 import warnings
+from copy import copy
 
 import numpy as np
 
@@ -356,6 +357,16 @@ class RayTransformBase(Operator):
 
         else:
             raise RuntimeError('bad domain {!r}'.format(self.domain))
+
+    def _replicate(self):
+        """Return replica that can be configured independently.
+
+        Useful to create multiple instances on different GPUs."""
+        replica = copy(self)
+        # Clear cached properties
+        replica._adjoint = None
+        replica._astra_wrapper = None
+        return replica
 
 
 class RayTransform(RayTransformBase):

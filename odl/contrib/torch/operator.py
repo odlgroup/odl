@@ -230,6 +230,12 @@ class OperatorFunction(torch.autograd.Function):
         ctx.op_in_dtype = operator.domain.dtype
         ctx.op_out_dtype = op_out_dtype
 
+        if hasattr(operator, 'gpu_index'):
+            try:
+                operator.gpu_index = torch.cuda.current_device()
+            except AttributeError:
+                pass
+
         # Evaluate the operator on all inputs in a loop
         if extra_shape:
             # Multiple inputs: flatten extra axes, then do one entry at a time
@@ -345,6 +351,12 @@ class OperatorFunction(torch.autograd.Function):
                 'expected tensor of shape {}, got shape {}'
                 ''.format(extra_shape + op_out_shape, grad_output_arr.shape)
             )
+
+        if hasattr(operator, 'gpu_index'):
+            try:
+                operator.gpu_index = torch.cuda.current_device()
+            except AttributeError:
+                pass
 
         # Evaluate the (derivative) adjoint on all inputs in a loop
         if extra_shape:
@@ -508,6 +520,13 @@ class OperatorModule(torch.nn.Module):
         return '{}({}) ({} -> {})'.format(
             self.__class__.__name__, op_name, op_in_shape, op_out_shape
         )
+
+    def _replicate_for_data_parallel(self):
+        replica = super()._replicate_for_data_parallel()
+        op_replicate = getattr(self.operator, '_replicate', None)
+        if callable(op_replicate):
+            replica.operator = op_replicate()
+        return replica
 
 
 def copy_if_zero_strides(arr):
