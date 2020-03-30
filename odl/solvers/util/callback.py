@@ -1,4 +1,4 @@
-# Copyright 2014-2018 The ODL contributors
+# Copyright 2014-2020 The ODL contributors
 #
 # This file is part of ODL.
 #
@@ -15,6 +15,7 @@ import numpy as np
 import os
 import time
 import warnings
+import contextlib
 
 from odl.util import signature_string
 
@@ -22,7 +23,7 @@ __all__ = ('Callback', 'CallbackStore', 'CallbackApply', 'CallbackPrintTiming',
            'CallbackPrintIteration', 'CallbackPrint', 'CallbackPrintNorm',
            'CallbackShow', 'CallbackSaveToDisk', 'CallbackSleep',
            'CallbackShowConvergence', 'CallbackPrintHardwareUsage',
-           'CallbackProgressBar')
+           'CallbackProgressBar', 'save_animation')
 
 
 class Callback(object):
@@ -1033,6 +1034,110 @@ class CallbackProgressBar(Callback):
         else:
             return '{}({})'.format(self.__class__.__name__,
                                    inner_str)
+
+
+@contextlib.contextmanager
+def save_animation(filename,
+                   writer=None,
+                   writer_kwargs=None,
+                   dpi=None,
+                   saving_kwargs=None,
+                   fig=None,
+                   step=1):
+    """Context manager for creating animations from a series of plots.
+    
+    The context manager uses `matplotlib.animation` to generate the
+    animation.
+
+    Parameters
+    ----------
+    filename : str
+        Name of the generated output file.
+    writer : str
+        Back-end for generating the movie file. Available writers can be
+        checked with the command ``matplotlib.animation.writers.list()``.
+        See the `matplotlib animation writers doc
+        <animation writers>`_ for details.
+        For the default ``None``, the first writer from the list of available
+        ones is chosen.
+    writer_kwargs : dict
+        Keyword arguments passed to the writer class constructor.
+        See the `matplotlib animation writers doc
+        <animation writers>`_ for details.
+    dpi : float, optional
+        Resolution of the saved frames in DPI. For ``None``, the figure
+        resolution ``fig.dpi`` is used, which is the default resolution if
+        ``fig is None``.
+    saving_kwargs : dict
+        Keyword arguments passed to the ``saving`` method of the writer
+        instance. See the `matplotlib animation writers doc
+        <animation writers>`_ for details.
+    fig : matplotlib.figure.Figure, optional
+        Matplotlib figure used for plotting. For the default ``None``, a new
+        figure is created.
+    step : positive int, optional
+        Number of iterations between frames.
+
+    .. _animation writers:: https://matplotlib.org/api/animation_api.html#writer-classes
+    """
+    import matplotlib.animation
+    import matplotlib.pyplot as plt
+
+    if writer_kwargs is None:
+        writer_kwargs = {}
+    if saving_kwargs is None:
+        saving_kwargs = {}
+
+    if writer is None:
+        try:
+            writer = matplotlib.animation.writers.list()[0]
+        except IndexError:
+            raise RuntimeError('no animation writer available')
+
+    writer_cls = matplotlib.animation.writers[writer]
+    moviewriter = writer_cls(**writer_kwargs)
+
+    if fig is None:
+        fig, ax = plt.subplots(dpi=dpi)
+    else:
+        ax = fig.axes[-1]
+
+    dpi = fig.dpi if dpi is None else float(dpi)
+    it = 0
+
+    class CallbackAppendMovieFrame(Callback):
+        """Callback for appending frames to an animation."""
+
+        @staticmethod
+        def _update_plot_2d(x):
+            """Helper for updating a 2D plot (``imshow``)."""
+            try:
+                im = ax.get_images()[-1]
+            except IndexError:
+                im = ax.imshow(x)
+            im.set_array(x)
+
+        def __call__(self, x):
+            """Implement ``self(x)``."""
+            if not hasattr(x, 'ndim') or x.ndim != 2:
+                raise TypeError(
+                    'input must be `ndim` and `shape` attributes, but got '
+                    'input of type {}'.format(type(x).__name__)
+                )
+
+            if x.ndim == 2:
+                update_plot = self._update_plot_2d
+            else:
+                raise NotImplementedError(
+                    'currently only 2D plots (`imshow`) are supported'
+                )
+
+            if it % step == 0:
+                update_plot(x)
+                moviewriter.grab_frame()
+
+    with moviewriter.saving(fig, filename, dpi=dpi, **saving_kwargs):
+        yield CallbackAppendMovieFrame()
 
 
 if __name__ == '__main__':
