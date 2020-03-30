@@ -1038,37 +1038,38 @@ class CallbackProgressBar(Callback):
 
 @contextlib.contextmanager
 def save_animation(filename,
-                   writer="ffmpeg",
+                   writer='ffmpeg',
                    writer_kwargs=None,
                    dpi=200,
                    saving_kwargs=None,
                    fig=None,
                    step=1):
-    """Context manager for creating animations using `matplotlib.animation` [1]
-    [1] https://matplotlib.org/3.2.0/api/animation_api.html
+    """Context manager for creating animations from a series of plots.
+    
+    The context manager uses `matplotlib.animation` to generate the
+    animation.
 
     Parameters
     ----------
     filename : str
         Name of the generated output file.
-    writer : string
-        Available writers: `matplotlib.animation.writers.list()`, examples:
-        'ffmpeg' -> .mp4 file, 'pillow' -> .gif file
+    writer : str
+        Back-end for generating the movie file. Available writers can be
+        checked with the command ``matplotlib.animation.writers.list()``.
+        Examples: ``'ffmpeg'`` -> .mp4 file; ``'pillow'`` -> .gif file
     writer_kwargs : dict
-        Containing e.g. `fps` and a dict of `metadata` like
-        `title`, `author`, ...
-        Passed to `matplotlib.animation.writer`.
+        Keyword arguments passed to `matplotlib.animation.writer`, e.g.,
+        ``fps``, ``title``, ``author``, ...
     saving_kwargs : dict
         Containing e.g. `fps` and a dict of `metadata` that may contain
         title, artist, genre, subject, copyright, srcform, comment.
         Passed to `matplotlib.animation.writer.saving`.
-    fig : matplotlib figure, optional
+    fig : matplotlib.figure.Figure, optional
         Matplitlib figure containing at least one imshow-object,
-        otherwise create a new figure
+        For the default ``None``, a new figure is created.
     step : positive int, optional
         Number of iterations between frames
     """
-
     if writer_kwargs is None:
         writer_kwargs = {}
     if saving_kwargs is None:
@@ -1084,7 +1085,7 @@ def save_animation(filename,
         ax = fig.axes[-1]
 
     class CallbackAppendMovieFrame(Callback):
-        """Callback-helper for appending frames to an animation
+        """Callback for appending frames to an animation.
 
         If data that is not 2 dimensional should be visualized
         `plot_in_figure` must be overwritten.
