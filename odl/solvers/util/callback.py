@@ -1050,6 +1050,7 @@ def save_animation(filename,
     Parameters
     ----------
     filename : str
+        Name of the generated output file.
     writer : string
         Available writers: `matplotlib.animation.writers.list()`, examples:
         'ffmpeg' -> .mp4 file, 'pillow' -> .gif file
