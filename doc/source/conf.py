@@ -1,4 +1,4 @@
-# Copyright 2014-2018 The ODL contributors
+# Copyright 2014-2020 The ODL contributors
 #
 # This file is part of ODL.
 #
@@ -7,11 +7,13 @@
 # obtain one at https://mozilla.org/MPL/2.0/.
 
 from __future__ import print_function
-import sphinx
+
 import glob
 import os
-import sphinx_rtd_theme
 import sys
+
+import sphinx
+import sphinx_rtd_theme
 from packaging.version import parse as parse_version
 
 # --- General configuration --- #
@@ -27,9 +29,8 @@ except Exception as e:
     print(e, file=sys.stderr)
     sys.exit(1)
 
-
-# Add numpydoc folder
-sys.path.insert(0, os.path.abspath('../numpydoc'))
+# Add numpydoc path
+sys.path.insert(0, "../numpydoc")
 
 # Add any Sphinx extension module names here, as strings. They can be
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
@@ -114,7 +115,7 @@ master_doc = 'index'
 
 # General information about the project.
 project = u'odl'
-copyright = u'2015-2017, ODL development group'
+copyright = u'2014-2020 The ODL Contributors'
 author = u'Jonas Adler, Holger Kohr, Ozan Öktem'
 
 # The version info for the project you're documenting, acts as replacement for
@@ -233,8 +234,7 @@ latex_documents = [
 # One entry per manual page. List of tuples
 # (source start file, name, description, authors, manual section).
 man_pages = [
-    (master_doc, 'odl', u'ODL Documentation',
-     [author], 1)
+    (master_doc, 'odl', u'ODL Documentation', [author], 1)
 ]
 
 # If true, show URL addresses after external links.
