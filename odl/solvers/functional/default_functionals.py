@@ -1,4 +1,4 @@
-# Copyright 2014-2019 The ODL contributors
+# Copyright 2014-2020 The ODL contributors
 #
 # This file is part of ODL.
 #
@@ -67,7 +67,7 @@ class LpNorm(Functional):
 
         Parameters
         ----------
-        space : `DiscreteLp` or `TensorSpace`
+        space : `DiscretizedSpace` or `TensorSpace`
             Domain of the functional.
         exponent : float
             Exponent for the norm (``p``).
@@ -464,7 +464,7 @@ class IndicatorLpUnitBall(Functional):
 
         Parameters
         ----------
-        space : `DiscreteLp` or `TensorSpace`
+        space : `DiscretizedSpace` or `TensorSpace`
             Domain of the functional.
         exponent : int or infinity
             Specifies wich norm to use.
@@ -576,7 +576,7 @@ class L1Norm(LpNorm):
 
         Parameters
         ----------
-        space : `DiscreteLp` or `TensorSpace`
+        space : `DiscretizedSpace` or `TensorSpace`
             Domain of the functional.
         """
         super(L1Norm, self).__init__(space=space, exponent=1)
@@ -614,7 +614,7 @@ class L2Norm(LpNorm):
 
         Parameters
         ----------
-        space : `DiscreteLp` or `TensorSpace`
+        space : `DiscretizedSpace` or `TensorSpace`
             Domain of the functional.
         """
         super(L2Norm, self).__init__(space=space, exponent=2)
@@ -660,7 +660,7 @@ class L2NormSquared(Functional):
 
         Parameters
         ----------
-        space : `DiscreteLp` or `TensorSpace`
+        space : `DiscretizedSpace` or `TensorSpace`
             Domain of the functional.
         """
         super(L2NormSquared, self).__init__(
@@ -1073,7 +1073,7 @@ class KullbackLeibler(Functional):
 
         Parameters
         ----------
-        space : `DiscreteLp` or `TensorSpace`
+        space : `DiscretizedSpace` or `TensorSpace`
             Domain of the functional.
         prior : ``space`` `element-like`, optional
             Depending on the context, the prior, target or data
@@ -1227,7 +1227,7 @@ class KullbackLeiblerConvexConj(Functional):
 
         Parameters
         ----------
-        space : `DiscreteLp` or `TensorSpace`
+        space : `DiscretizedSpace` or `TensorSpace`
             Domain of the functional.
         prior : ``space`` `element-like`, optional
             Depending on the context, the prior, target or data
@@ -1374,7 +1374,7 @@ class KullbackLeiblerCrossEntropy(Functional):
 
         Parameters
         ----------
-        space : `DiscreteLp` or `TensorSpace`
+        space : `DiscretizedSpace` or `TensorSpace`
             Domain of the functional.
         prior : ``space`` `element-like`, optional
             Depending on the context, the prior, target or data
@@ -1505,7 +1505,7 @@ class KullbackLeiblerCrossEntropyConvexConj(Functional):
 
         Parameters
         ----------
-        space : `DiscreteLp` or `TensorSpace`
+        space : `DiscretizedSpace` or `TensorSpace`
             Domain of the functional.
         prior : ``space`` `element-like`, optional
             Depending on the context, the prior, target or data
@@ -2239,7 +2239,7 @@ class IndicatorSimplex(Functional):
 
         Parameters
         ----------
-        space : `DiscreteLp` or `TensorSpace`
+        space : `DiscretizedSpace` or `TensorSpace`
             Domain of the functional.
         diameter : positive float, optional
             Diameter of the simplex.
@@ -2358,7 +2358,7 @@ class IndicatorSumConstraint(Functional):
 
         Parameters
         ----------
-        space : `DiscreteLp` or `TensorSpace`
+        space : `DiscretizedSpace` or `TensorSpace`
             Domain of the functional.
         sum_value : float
             Desired value of the sum constraint.

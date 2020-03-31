@@ -1,4 +1,4 @@
-"""Example for `DiscreteLpElement.show` in 1D.
+"""Example for `DiscretizedSpaceElement.show` in 1D.
 
 Notes
 -----
@@ -7,8 +7,9 @@ issues with this example.
 """
 
 import matplotlib.pyplot as plt
-import odl
 import numpy as np
+
+import odl
 
 space = odl.uniform_discr(0, 5, 100)
 elem = space.element(np.sin)

@@ -12,10 +12,9 @@ from __future__ import absolute_import, division, print_function
 
 import numpy as np
 
-from odl.discr import DiscreteLp, Divergence, Gradient
-from odl.discr.discr_utils import (
-    _all_interp_equal, _normalize_interp, per_axis_interpolator)
-from odl.discr.lp_discr import DiscreteLpElement
+from odl.discr import DiscretizedSpace, Divergence, Gradient
+from odl.discr.discr_space import DiscretizedSpaceElement
+from odl.discr.discr_utils import _normalize_interp, per_axis_interpolator
 from odl.operator import Operator, PointwiseInner
 from odl.space import ProductSpace
 from odl.space.pspace import ProductSpaceElement
@@ -32,7 +31,7 @@ def linear_deform(template, displacement, interp='linear', out=None):
 
     Parameters
     ----------
-    template : `DiscreteLpElement`
+    template : `DiscretizedSpaceElement`
         Template to be deformed by a displacement field.
     displacement : element of power space of ``template.space``
         Vector field (displacement field) used to deform the
@@ -136,9 +135,9 @@ class LinDeformFixedTempl(Operator):
 
         Parameters
         ----------
-        template : `DiscreteLpElement`
+        template : `DiscretizedSpaceElement`
             Fixed template that is to be deformed.
-        domain : power space of `DiscreteLp`, optional
+        domain : power space of `DiscretizedSpace`, optional
             The space of all allowed coordinates in the deformation.
             A `ProductSpace` of ``template.ndim`` copies of a function-space.
             It must fulfill
@@ -155,7 +154,7 @@ class LinDeformFixedTempl(Operator):
 
             Supported values: ``'nearest'``, ``'linear'``
 
-            .. note::
+            .. warning::
                 Choosing ``'nearest'`` interpolation results in a formally
                 non-differentiable operator since the gradient of the
                 template is not well-defined. If the operator derivative
@@ -186,9 +185,9 @@ class LinDeformFixedTempl(Operator):
         >>> print(op(disp_field))
         [ 0. ,  0. ,  1. ,  0.5,  0. ]
         """
-        if not isinstance(template, DiscreteLpElement):
+        if not isinstance(template, DiscretizedSpaceElement):
             raise TypeError(
-                '`template` must be a `DiscreteLpElement, got {!r}`'
+                '`template` must be a `DiscretizedSpaceElement, got {!r}`'
                 ''.format(template)
             )
         self.__template = template
@@ -203,8 +202,8 @@ class LinDeformFixedTempl(Operator):
             if not domain.is_power_space:
                 raise TypeError('`domain` must be a power space, '
                                 'got {!r}'.format(domain))
-            if not isinstance(domain[0], DiscreteLp):
-                raise TypeError('`domain[0]` must be a `DiscreteLp` '
+            if not isinstance(domain[0], DiscretizedSpace):
+                raise TypeError('`domain[0]` must be a `DiscretizedSpace` '
                                 'instance, got {!r}'.format(domain[0]))
 
             if template.space.partition != domain[0].partition:
@@ -231,7 +230,10 @@ class LinDeformFixedTempl(Operator):
     @property
     def interp(self):
         """Interpolation scheme or tuple of per-axis interpolation schemes."""
-        if _all_interp_equal(self.interp_byaxis):
+        if (
+            len(self.interp_byaxis) != 0
+            and all(s == self.interp_byaxis[0] for s in self.interp_byaxis[1:])
+        ):
             return self.interp_byaxis[0]
         else:
             return self.interp_byaxis
@@ -320,9 +322,9 @@ class LinDeformFixedDisp(Operator):
 
         Parameters
         ----------
-        displacement : element of a power space of `DiscreteLp`
+        displacement : element of a power space of `DiscretizedSpace`
             Fixed displacement field used in the deformation.
-        templ_space : `DiscreteLp`, optional
+        templ_space : `DiscretizedSpace`, optional
             Template space on which this operator is applied, i.e. the
             operator domain and range. It must fulfill
             ``templ_space[0].partition == displacement.space.partition``, so
@@ -375,18 +377,18 @@ class LinDeformFixedDisp(Operator):
                 '`displacement.space` must be a power space, got {!r}'
                 ''.format(displacement.space)
             )
-        if not isinstance(displacement.space[0], DiscreteLp):
+        if not isinstance(displacement.space[0], DiscretizedSpace):
             raise ValueError(
-                '`displacement.space[0]` must be a `DiscreteLp`, got {!r}'
-                ''.format(displacement.space[0]))
+                '`displacement.space[0]` must be a `DiscretizedSpace`, '
+                'got {!r}'.format(displacement.space[0]))
 
         self.__displacement = displacement
 
         if templ_space is None:
             templ_space = displacement.space[0]
         else:
-            if not isinstance(templ_space, DiscreteLp):
-                raise TypeError('`templ_space` must be a `DiscreteLp` '
+            if not isinstance(templ_space, DiscretizedSpace):
+                raise TypeError('`templ_space` must be a `DiscretizedSpace` '
                                 'instance, got {!r}'.format(templ_space))
             if templ_space.partition != displacement.space[0].partition:
                 raise ValueError(
@@ -409,7 +411,10 @@ class LinDeformFixedDisp(Operator):
     @property
     def interp(self):
         """Interpolation scheme or tuple of per-axis interpolation schemes."""
-        if _all_interp_equal(self.interp_byaxis):
+        if (
+            len(self.interp_byaxis) != 0
+            and all(s == self.interp_byaxis[0] for s in self.interp_byaxis[1:])
+        ):
             return self.interp_byaxis[0]
         else:
             return self.interp_byaxis

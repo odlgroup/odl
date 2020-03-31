@@ -1,4 +1,4 @@
-# Copyright 2014-2018 The ODL contributors
+# Copyright 2014-2020 The ODL contributors
 #
 # This file is part of ODL.
 #
@@ -8,16 +8,15 @@
 
 """ODL integration with shearlab."""
 
-import odl
-import numpy as np
 from threading import Lock
 
-# Library for the shearlab library
+import matplotlib.pyplot as plt
+import numpy as np
+from numpy import ceil
+from numpy.fft import fft2, fftshift, ifft2, ifftshift
 
 import julia
-import matplotlib.pyplot as plt
-from numpy import ceil
-from numpy.fft import fft2, ifft2, fftshift, ifftshift
+import odl
 
 __all__ = ('ShearlabOperator',)
 
@@ -34,7 +33,7 @@ class ShearlabOperator(odl.Operator):
 
         Parameters
         ----------
-        space : `DiscreteLp`
+        space : `DiscretizedSpace`
             The space on which the shearlet transform should act. Must be
             two-dimensional.
         num_scales : nonnegative `int`

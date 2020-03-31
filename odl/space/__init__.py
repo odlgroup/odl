@@ -1,4 +1,4 @@
-# Copyright 2014-2018 The ODL contributors
+# Copyright 2014-2020 The ODL contributors
 #
 # This file is part of ODL.
 #
@@ -21,9 +21,6 @@ __all__ += npy_tensors.__all__
 
 from .pspace import *
 __all__ += pspace.__all__
-
-from .fspace import *
-__all__ += fspace.__all__
 
 from .space_utils import *
 __all__ += space_utils.__all__

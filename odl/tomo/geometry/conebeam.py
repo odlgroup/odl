@@ -1,4 +1,4 @@
-# Copyright 2014-2019 The ODL contributors
+# Copyright 2014-2020 The ODL contributors
 #
 # This file is part of ODL.
 #
@@ -8,19 +8,19 @@
 
 """Cone beam geometries in 2 and 3 dimensions."""
 
-from __future__ import print_function, division, absolute_import
+from __future__ import absolute_import, division, print_function
+
 import numpy as np
 
 from odl.discr import uniform_partition
 from odl.tomo.geometry.detector import (
-    Flat1dDetector, Flat2dDetector,
-    CircularDetector, CylindricalDetector, SphericalDetector)
+    CircularDetector, CylindricalDetector, Flat1dDetector, Flat2dDetector,
+    SphericalDetector)
 from odl.tomo.geometry.geometry import (
-    DivergentBeamGeometry, AxisOrientedGeometry)
+    AxisOrientedGeometry, DivergentBeamGeometry)
 from odl.tomo.util.utility import (
-    euler_matrix, transform_system, is_inside_bounds)
-from odl.util import signature_string, indent, array_str
-
+    euler_matrix, is_inside_bounds, transform_system)
+from odl.util import array_str, indent, signature_string
 
 __all__ = ('FanBeamGeometry', 'ConeBeamGeometry',
            'cone_beam_geometry', 'helical_geometry')
@@ -1329,7 +1329,7 @@ def cone_beam_geometry(space, src_radius, det_radius, num_angles=None,
 
     Parameters
     ----------
-    space : `DiscreteLp`
+    space : `DiscretizedSpace`
         Reconstruction space, the space of the volumetric data to be
         projected. Must be 2- or 3-dimensional.
     src_radius : nonnegative float
@@ -1549,7 +1549,7 @@ def helical_geometry(space, src_radius, det_radius, num_turns,
 
     Parameters
     ----------
-    space : `DiscreteLp`
+    space : `DiscretizedSpace`
         Reconstruction space, the space of the volumetric data to be
         projected. Must be 3-dimensional.
     src_radius : nonnegative float

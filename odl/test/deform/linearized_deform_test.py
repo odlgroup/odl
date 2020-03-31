@@ -167,7 +167,7 @@ def test_fixed_templ_init():
 
     # Invalid input
     with pytest.raises(TypeError):
-        # template_function not a DiscreteLpElement
+        # template_function not a DiscretizedSpaceElement
         LinDeformFixedTempl(template_function)
 
 
@@ -229,12 +229,12 @@ def test_fixed_disp_init():
     # Non-valid input
     with pytest.raises(TypeError):  # displacement not ProductSpaceElement
         LinDeformFixedDisp(space.one())
-    with pytest.raises(TypeError):  # templ_space not DiscreteLp
+    with pytest.raises(TypeError):  # templ_space not DiscretizedSpace
         LinDeformFixedDisp(disp_field, space.tangent_bundle)
     with pytest.raises(TypeError):  # templ_space not a power space
         bad_pspace = odl.ProductSpace(space, odl.rn(3))
         LinDeformFixedDisp(disp_field, bad_pspace)
-    with pytest.raises(TypeError):  # templ_space not based on DiscreteLp
+    with pytest.raises(TypeError):  # templ_space not based on DiscretizedSpace
         bad_pspace = odl.ProductSpace(odl.rn(2), 1)
         LinDeformFixedDisp(disp_field, bad_pspace)
     with pytest.raises(TypeError):  # wrong dtype on templ_space

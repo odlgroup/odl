@@ -1,4 +1,4 @@
-# Copyright 2014-2019 The ODL contributors
+# Copyright 2014-2020 The ODL contributors
 #
 # This file is part of ODL.
 #
@@ -8,14 +8,14 @@
 
 """Operators defined for tensor fields."""
 
-from __future__ import print_function, division, absolute_import
+from __future__ import absolute_import, division, print_function
+
 import numpy as np
 
-from odl.discr.lp_discr import DiscreteLp
+from odl.discr.discr_space import DiscretizedSpace
 from odl.operator.tensor_ops import PointwiseTensorFieldOperator
 from odl.space import ProductSpace
-from odl.util import writable_array, signature_string, indent
-
+from odl.util import indent, signature_string, writable_array
 
 __all__ = ('PartialDerivative', 'Gradient', 'Divergence', 'Laplacian')
 
@@ -57,11 +57,11 @@ class PartialDerivative(PointwiseTensorFieldOperator):
 
         Parameters
         ----------
-        domain : `DiscreteLp`
+        domain : `DiscretizedSpace`
             Space of elements on which the operator can act.
         axis : int
             Axis along which the partial derivative is evaluated.
-        range : `DiscreteLp`, optional
+        range : `DiscretizedSpace`, optional
             Space of elements to which the operator maps, must have the
             same shape as ``domain``.
             For the default ``None``, the range is the same as ``domain``.
@@ -106,8 +106,8 @@ class PartialDerivative(PointwiseTensorFieldOperator):
              [ 0.,  1.,  2.,  3.,  4.]]
         )
         """
-        if not isinstance(domain, DiscreteLp):
-            raise TypeError('`domain` {!r} is not a DiscreteLp instance'
+        if not isinstance(domain, DiscretizedSpace):
+            raise TypeError('`domain` {!r} is not a DiscretizedSpace instance'
                             ''.format(domain))
 
         if range is None:
@@ -196,7 +196,7 @@ class PartialDerivative(PointwiseTensorFieldOperator):
 
 class Gradient(PointwiseTensorFieldOperator):
 
-    """Spatial gradient operator for `DiscreteLp` spaces.
+    """Spatial gradient operator for `DiscretizedSpace` spaces.
 
     Calls helper function `finite_diff` to calculate each component of the
     resulting product space element. For the adjoint of the `Gradient`
@@ -213,10 +213,10 @@ class Gradient(PointwiseTensorFieldOperator):
 
         Parameters
         ----------
-        domain : `DiscreteLp`, optional
+        domain : `DiscretizedSpace`, optional
             Space of elements which the operator acts on.
             This is required if ``range`` is not given.
-        range : power space of `DiscreteLp`, optional
+        range : power space of `DiscretizedSpace`, optional
             Space of elements to which the operator maps.
             This is required if ``domain`` is not given.
         method : {'forward', 'backward', 'central'}, optional
@@ -317,8 +317,8 @@ class Gradient(PointwiseTensorFieldOperator):
             raise ValueError('`range` {!r} is not a power space'
                              ''.format(range))
 
-        if not isinstance(domain, DiscreteLp):
-            raise TypeError('`domain` {!r} is not a `DiscreteLp` '
+        if not isinstance(domain, DiscretizedSpace):
+            raise TypeError('`domain` {!r} is not a `DiscretizedSpace` '
                             'instance'.format(domain))
 
         if len(range) != domain.ndim:
@@ -420,7 +420,7 @@ class Gradient(PointwiseTensorFieldOperator):
 
 class Divergence(PointwiseTensorFieldOperator):
 
-    """Divergence operator for `DiscreteLp` spaces.
+    """Divergence operator for `DiscretizedSpace` spaces.
 
     Calls helper function `finite_diff` for each component of the input
     product space vector. For the adjoint of the `Divergence` operator to
@@ -436,10 +436,10 @@ class Divergence(PointwiseTensorFieldOperator):
 
         Parameters
         ----------
-        domain : power space of `DiscreteLp`, optional
+        domain : power space of `DiscretizedSpace`, optional
             Space of elements which the operator acts on.
             This is required if ``range`` is not given.
-        range : `DiscreteLp`, optional
+        range : `DiscretizedSpace`, optional
             Space of elements to which the operator maps.
             This is required if ``domain`` is not given.
         method : {'forward', 'backward', 'central'}, optional
@@ -527,8 +527,8 @@ class Divergence(PointwiseTensorFieldOperator):
             raise ValueError('`domain` {!r} is not a power space'
                              ''.format(domain))
 
-        if not isinstance(range, DiscreteLp):
-            raise TypeError('`range` {!r} is not a `DiscreteLp` '
+        if not isinstance(range, DiscretizedSpace):
+            raise TypeError('`range` {!r} is not a `DiscretizedSpace` '
                             'instance'.format(range))
 
         if len(domain) != range.ndim:
@@ -629,7 +629,7 @@ class Divergence(PointwiseTensorFieldOperator):
 
 class Laplacian(PointwiseTensorFieldOperator):
 
-    """Spatial Laplacian operator for `DiscreteLp` spaces.
+    """Spatial Laplacian operator for `DiscretizedSpace` spaces.
 
     Calls helper function `finite_diff` to calculate each component of the
     resulting product space vector.
@@ -642,7 +642,7 @@ class Laplacian(PointwiseTensorFieldOperator):
 
         Parameters
         ----------
-        domain : `DiscreteLp`
+        domain : `DiscretizedSpace`
             Space of elements which the operator is acting on.
         pad_mode : string, optional
             The padding mode to use outside the domain.
@@ -685,8 +685,8 @@ class Laplacian(PointwiseTensorFieldOperator):
              [ 0.,  1.,  0.]]
         )
         """
-        if not isinstance(domain, DiscreteLp):
-            raise TypeError('`domain` {!r} is not a DiscreteLp instance'
+        if not isinstance(domain, DiscretizedSpace):
+            raise TypeError('`domain` {!r} is not a DiscretizedSpace instance'
                             ''.format(domain))
 
         if range is None:
@@ -785,7 +785,8 @@ class Laplacian(PointwiseTensorFieldOperator):
         return '{}:\n{}'.format(self.__class__.__name__, indent(dom_ran_str))
 
 
-def finite_diff(f, axis, dx=1.0, method='forward', out=None, **kwargs):
+def finite_diff(f, axis, dx=1.0, method='forward', out=None,
+                pad_mode='constant', pad_const=0):
     """Calculate the partial derivative of ``f`` along a given ``axis``.
 
     In the interior of the domain of f, the partial derivative is computed
@@ -904,12 +905,10 @@ def finite_diff(f, axis, dx=1.0, method='forward', out=None, **kwargs):
     if method not in _SUPPORTED_DIFF_METHODS:
         raise ValueError('`method` {} was not understood'.format(method_in))
 
-    pad_mode = kwargs.pop('pad_mode', 'constant')
     if pad_mode not in _SUPPORTED_PAD_MODES:
         raise ValueError('`pad_mode` {} not understood'
                          ''.format(pad_mode))
 
-    pad_const = kwargs.pop('pad_const', 0)
     pad_const = f.dtype.type(pad_const)
 
     if out is None:
@@ -925,9 +924,6 @@ def finite_diff(f, axis, dx=1.0, method='forward', out=None, **kwargs):
     if f_arr.shape[axis] < 3 and pad_mode == 'order2':
         raise ValueError("size of array to small to use 'order2', needs at "
                          "least 3 elements along axis {}.".format(axis))
-
-    if kwargs:
-        raise ValueError('unkown keyword argument(s): {}'.format(kwargs))
 
     # create slice objects: initially all are [:, :, ..., :]
 

@@ -1,4 +1,4 @@
-# Copyright 2014-2017 The ODL contributors
+# Copyright 2014-2020 The ODL contributors
 #
 # This file is part of ODL.
 #
@@ -7,8 +7,9 @@
 # obtain one at https://mozilla.org/MPL/2.0/.
 
 from __future__ import division
-import pytest
+
 import numpy as np
+import pytest
 
 import odl
 from odl.discr.grid import sparse_meshgrid
@@ -239,12 +240,13 @@ def test_contains_set():
                     IntervalProd(1.2, 1.2)]:
         assert set_.contains_set(sub_set)
 
-    for non_sub_set in [np.array([0, 1, 1.1, 1.2, 1.3, 1.4]),
-                        np.array([np.nan, 1.1, 1.3]),
-                        IntervalProd(1.2, 3),
-                        IntervalProd(0, 1.5),
-                        IntervalProd(3, 4)]:
-        assert not set_.contains_set(non_sub_set)
+    with np.errstate(invalid="ignore"):
+        for non_sub_set in [np.array([0, 1, 1.1, 1.2, 1.3, 1.4]),
+                            np.array([np.nan, 1.1, 1.3]),
+                            IntervalProd(1.2, 3),
+                            IntervalProd(0, 1.5),
+                            IntervalProd(3, 4)]:
+            assert not set_.contains_set(non_sub_set)
 
     for non_set in [1,
                     [1, 2],

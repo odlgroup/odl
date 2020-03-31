@@ -14,43 +14,42 @@ from numbers import Integral
 
 import numpy as np
 
-from odl.discr.discr_utils import point_collocation
-from odl.discr.discretization import (
-    DiscretizedSpace, DiscretizedSpaceElement, tspace_type)
+from odl.discr.discr_utils import point_collocation, sampling_function
 from odl.discr.partition import (
     RectPartition, uniform_partition, uniform_partition_fromintv)
-from odl.set import ComplexNumbers, IntervalProd, RealNumbers
-from odl.space import FunctionSpace, ProductSpace
+from odl.set import IntervalProd, RealNumbers
+from odl.space import ProductSpace
+from odl.space.base_tensors import Tensor, TensorSpace
 from odl.space.entry_points import tensor_space_impl
 from odl.space.weighting import ConstWeighting
 from odl.util import (
-    apply_on_boundary, array_str, dtype_str, is_complex_floating_dtype,
-    is_floating_dtype, is_numeric_dtype, is_real_dtype,
-    normalized_nodes_on_bdry, normalized_scalar_param_list, repr_string,
-    safe_int_conv, signature_string_parts)
+    apply_on_boundary, array_str, dtype_str, is_floating_dtype,
+    is_numeric_dtype, normalized_nodes_on_bdry, normalized_scalar_param_list,
+    repr_string, safe_int_conv, signature_string_parts)
 
-__all__ = ('DiscreteLp', 'DiscreteLpElement',
-           'uniform_discr_frompartition', 'uniform_discr_fromspace',
-           'uniform_discr_fromintv', 'uniform_discr',
-           'uniform_discr_fromdiscr', 'discr_sequence_space')
+__all__ = (
+    'DiscretizedSpace',
+    'DiscretizedSpaceElement',
+    'uniform_discr_frompartition',
+    'uniform_discr_fromintv',
+    'uniform_discr',
+    'uniform_discr_fromdiscr',
+)
 
 
-class DiscreteLp(DiscretizedSpace):
+class DiscretizedSpace(TensorSpace):
 
     """Discretization of a Lebesgue :math:`L^p` space."""
 
-    def __init__(self, fspace, partition, tspace, **kwargs):
+    def __init__(self, partition, tspace, **kwargs):
         """Initialize a new instance.
 
         Parameters
         ----------
-        fspace : `FunctionSpace`
-            The continuous space to be discretized.
         partition : `RectPartition`
-            Partition of (a subset of) ``fspace.domain``.
+            Partition of a rectangular spatial domain.
         tspace : `TensorSpace`
-            Space of elements used for data storage. It must have the
-            same `TensorSpace.field` as ``fspace`` and the same
+            Space of elements used for data storage. It must have the same
             `TensorSpace.shape` as ``partition``.
         axis_labels : sequence of str, optional
             Names of the axes to use for plotting etc.
@@ -63,31 +62,22 @@ class DiscreteLp(DiscretizedSpace):
 
             Note: The ``$`` signs ensure rendering as LaTeX.
         """
-        if not isinstance(fspace, FunctionSpace):
-            raise TypeError('{!r} is not a FunctionSpace instance'
-                            ''.format(fspace))
-        if not isinstance(fspace.domain, IntervalProd):
-            raise TypeError('function space domain {!r} is not an '
-                            'IntervalProd instance'.format(fspace.domain))
         if not isinstance(partition, RectPartition):
-            raise TypeError('`partition` {!r} is not a RectPartition '
-                            'instance'.format(partition))
-        if not fspace.domain.contains_set(partition.set):
-            raise ValueError('`partition` {} is not a subset of the function '
-                             'domain {}'.format(partition, fspace.domain))
-        if fspace.scalar_out_dtype != tspace.dtype:
-            raise ValueError('`fspace.scalar_out_dtype` does not match '
-                             '`tspace.dtype`: {} != {}'
-                             ''.format(fspace.scalar_out_dtype, tspace.dtype))
+            raise TypeError('`partition` must be a `RectPartition`, got {!r}'
+                            ''.format(partition))
+        if not isinstance(tspace, TensorSpace):
+            raise TypeError('`tspace` must be a `TensorSpace`, got {!r}'
+                            ''.format(tspace))
         if partition.shape != tspace.shape:
             raise ValueError(
-                "`partition.shape` must be equal to `tspace.shape`, but "
-                "{} != {}".format(partition.shape, tspace.shape)
+                '`partition.shape` must be equal to `tspace.shape`, but '
+                '{} != {}'.format(partition.shape, tspace.shape)
             )
 
-        super(DiscreteLp, self).__init__(fspace, tspace)
-
+        self.__tspace = tspace
         self.__partition = partition
+
+        super(DiscretizedSpace, self).__init__(tspace.shape, tspace.dtype)
 
         # Set axis labels
         axis_labels = kwargs.pop('axis_labels', None)
@@ -104,10 +94,14 @@ class DiscreteLp(DiscretizedSpace):
             raise ValueError('got unexpected keyword arguments {}'
                              ''.format(kwargs))
 
+    # --- Meta-info
+
     @property
-    def axis_labels(self):
-        """Labels for axes when displaying space elements."""
-        return self.__axis_labels
+    def element_type(self):
+        """`DiscretizedSpaceElement`"""
+        return DiscretizedSpaceElement
+
+    # --- Constructor args
 
     @property
     def partition(self):
@@ -115,8 +109,46 @@ class DiscreteLp(DiscretizedSpace):
         return self.__partition
 
     @property
+    def tspace(self):
+        """Space for the coefficients of the elements of this space."""
+        return self.__tspace
+
+    @property
+    def axis_labels(self):
+        """Labels for axes when displaying space elements."""
+        return self.__axis_labels
+
+    # --- Pass-through `partition` attributes
+
+    @property
+    def domain(self):
+        """Set on which functions are defined before discretization."""
+        return self.partition.set
+
+    # --- Pass-through `tspace` attributes
+
+    @property
+    def weighting(self):
+        """This space's weighting scheme."""
+        # TODO(kohr-h): `weighting` is optional in `tspace`, how should we
+        # handle that?
+        return self.tspace.weighting
+
+    @property
+    def is_weighted(self):
+        """``True`` if the ``tspace`` is weighted."""
+        return getattr(self.tspace, 'is_weighted', False)
+
+    @property
+    def impl(self):
+        """Name of the implementation back-end."""
+        return self.tspace.impl
+
+    @property
     def exponent(self):
         """Exponent of this space, the ``p`` in ``L^p``."""
+        # TODO(kohr-h): `exponent` is optional in `tspace`, how should we
+        # handle that?
         return self.tspace.exponent
 
     @property
@@ -198,6 +230,27 @@ class DiscreteLp(DiscretizedSpace):
         """
         return self.tspace.default_order
 
+    def default_dtype(self, field=None):
+        """Default data type for new elements in this space.
+
+        This is equal to the default data type of `tspace`.
+        """
+        return self.tspace.default_dtype(field)
+
+    def available_dtypes(self):
+        """Available data types for new elements in this space.
+
+        This is equal to the available data types of `tspace`.
+        """
+        return self.tspace.available_dtypes()
+
+    # --- Derived properties
+
+    @property
+    def tspace_type(self):
+        """Tensor space type of this space."""
+        return type(self.tspace)
+
     @property
     def tangent_bundle(self):
         """The tangent bundle associated with `domain` using `partition`.
@@ -227,6 +280,8 @@ class DiscreteLp(DiscretizedSpace):
             self.__is_uniformly_weighted = is_uniformly_weighted
 
         return is_uniformly_weighted
+
+    # --- Element creation
 
     def element(self, inp=None, order=None, **kwargs):
         """Create an element from ``inp`` or from scratch.
@@ -258,10 +313,6 @@ class DiscreteLp(DiscretizedSpace):
             Storage order of the returned element. For ``'C'`` and ``'F'``,
             contiguous memory in the respective ordering is enforced.
             The default ``None`` enforces no contiguousness.
-        vectorized : bool, optional
-            If ``True``, assume that a provided callable ``inp`` supports
-            vectorized evaluation. Otherwise, wrap it in a vectorizer.
-            Default: ``True``.
         kwargs :
             Additional arguments passed on to `point_collocation` when
             called on ``inp``, in the form
@@ -270,7 +321,7 @@ class DiscreteLp(DiscretizedSpace):
 
         Returns
         -------
-        element : `DiscreteLpElement`
+        element : `DiscretizedSpaceElement`
             The discretized element, calculated as ``point_collocation(inp)``
             or ``tspace.element(inp)``, tried in this order.
 
@@ -310,68 +361,38 @@ class DiscreteLp(DiscretizedSpace):
         elif inp in self.tspace and order is None:
             return self.element_type(self, inp)
         elif callable(inp):
-            vectorized = kwargs.pop('vectorized', True)
-            # fspace element -> discretize
-            inp_elem = self.fspace.element(inp, vectorized=vectorized)
-            sampled = point_collocation(inp_elem, self.meshgrid, **kwargs)
+            func = sampling_function(
+                inp, self.domain, out_dtype=self.dtype,
+            )
+            sampled = point_collocation(func, self.meshgrid, **kwargs)
             return self.element_type(
-                self, self.tspace.element(sampled, order=order))
+                self, self.tspace.element(sampled, order=order)
+            )
         else:
             # Sequence-type input
             return self.element_type(
-                self, self.tspace.element(inp, order=order))
+                self, self.tspace.element(inp, order=order)
+            )
+
+    def zero(self):
+        """Return the element of all zeros."""
+        return self.element_type(self, self.tspace.zero())
+
+    def one(self):
+        """Return the element of all ones."""
+        return self.element_type(self, self.tspace.one())
+
+    # --- Casting
 
     def _astype(self, dtype):
         """Internal helper for ``astype``."""
-        fspace = self.fspace.astype(dtype)
         tspace = self.tspace.astype(dtype)
         return type(self)(
-            fspace, self.partition, tspace, axis_labels=self.axis_labels
-        )
+            self.partition, tspace, axis_labels=self.axis_labels)
 
-    # Overrides for space functions depending on partition
-    #
-    # The inherited methods by default use a weighting by a constant
-    # (the grid cell size). In dimensions where the partitioned set contains
-    # only a fraction of the outermost cells (e.g. if the outermost grid
-    # points lie at the boundary), the corresponding contribuitons to
-    # discretized integrals need to be scaled by that fraction.
-    def _inner(self, x, y):
-        """Return ``self.inner(x, y)``."""
-        if self.is_uniform and not self.is_uniformly_weighted:
-            # TODO: implement without copying x
-            bdry_fracs = self.partition.boundary_cell_fractions
-            func_list = _scaling_func_list(bdry_fracs, exponent=1.0)
-            x_arr = apply_on_boundary(x, func=func_list, only_once=False)
-            return super(DiscreteLp, self)._inner(self.element(x_arr), y)
-        else:
-            return super(DiscreteLp, self)._inner(x, y)
+    # --- Slicing
 
-    def _norm(self, x):
-        """Return ``self.norm(x)``."""
-        if self.is_uniform and not self.is_uniformly_weighted:
-            # TODO: implement without copying x
-            bdry_fracs = self.partition.boundary_cell_fractions
-            func_list = _scaling_func_list(bdry_fracs, exponent=self.exponent)
-            x_arr = apply_on_boundary(x, func=func_list, only_once=False)
-            return super(DiscreteLp, self)._norm(self.element(x_arr))
-        else:
-            return super(DiscreteLp, self)._norm(x)
-
-    def _dist(self, x, y):
-        """Return ``self.dist(x, y)``."""
-        if self.is_uniform and not self.is_uniformly_weighted:
-            bdry_fracs = self.partition.boundary_cell_fractions
-            func_list = _scaling_func_list(bdry_fracs, exponent=self.exponent)
-            arrs = [apply_on_boundary(vec, func=func_list, only_once=False)
-                    for vec in (x, y)]
-
-            return super(DiscreteLp, self)._dist(
-                self.element(arrs[0]), self.element(arrs[1]))
-        else:
-            return super(DiscreteLp, self)._dist(x, y)
-
-    # TODO: add byaxis_out when discretized tensor-valued functions are
+    # TODO: add `byaxis`_out when discretized tensor-valued functions are
     # available
 
     @property
@@ -397,7 +418,7 @@ class DiscreteLp(DiscretizedSpace):
         """
         space = self
 
-        class DiscreteLpByaxisIn(object):
+        class DiscretizedSpaceByaxisIn(object):
 
             """Helper class for indexing by domain axes."""
 
@@ -411,11 +432,10 @@ class DiscreteLp(DiscretizedSpace):
 
                 Returns
                 -------
-                space : `DiscreteLp`
+                space : `DiscretizedSpace`
                     The resulting space with indexed domain and otherwise
                     same properties (except possibly weighting).
                 """
-                fspace = space.fspace.byaxis_in[indices]
                 part = space.partition.byaxis[indices]
 
                 if isinstance(space.weighting, ConstWeighting):
@@ -435,6 +455,8 @@ class DiscreteLp(DiscretizedSpace):
                 else:
                     # Other weighting schemes are handled correctly by
                     # the tensor space
+                    # TODO(kohr-h): `byaxis` is not guaranteed to exist in
+                    # `tspace`, how to handle that?
                     tspace = space.tspace.byaxis[indices]
 
                 try:
@@ -445,29 +467,117 @@ class DiscreteLp(DiscretizedSpace):
                     labels = tuple(space.axis_labels[int(i)]
                                    for i in indices)
 
-                return DiscreteLp(fspace, part, tspace, axis_labels=labels)
+                return DiscretizedSpace(part, tspace, axis_labels=labels)
 
             def __repr__(self):
                 """Return ``repr(self)``."""
                 return repr(space) + '.byaxis_in'
 
-        return DiscreteLpByaxisIn()
+        return DiscretizedSpaceByaxisIn()
+
+    # --- Identity
+
+    def __eq__(self, other):
+        """Return ``self == other``.
+
+        Returns
+        -------
+        equals : bool
+            ``True`` if ``other`` is a `DiscretizedSpace` with equal
+            `tspace`, ``False`` otherwise.
+        """
+        # Optimizations for simple cases
+        if other is self:
+            return True
+        elif other is None:
+            return False
+        else:
+            return (
+                super(DiscretizedSpace, self).__eq__(other)
+                and other.tspace == self.tspace
+                and other.partition == self.partition
+            )
+
+    def __hash__(self):
+        """Return ``hash(self)``."""
+        return hash(
+            (super(DiscretizedSpace, self).__hash__(),
+             self.tspace,
+             self.partition)
+        )
+
+    # --- Space functions
+
+    def _lincomb(self, a, x1, b, x2, out):
+        """Raw linear combination."""
+        self.tspace._lincomb(a, x1.tensor, b, x2.tensor, out.tensor)
+
+    def _multiply(self, x1, x2, out):
+        """Raw pointwise multiplication of two elements."""
+        self.tspace._multiply(x1.tensor, x2.tensor, out.tensor)
+
+    def _divide(self, x1, x2, out):
+        """Raw pointwise multiplication of two elements."""
+        self.tspace._divide(x1.tensor, x2.tensor, out.tensor)
+
+    # The inherited methods by default use a weighting by a constant
+    # (the grid cell size). In dimensions where the partitioned set contains
+    # only a fraction of the outermost cells (e.g. if the outermost grid
+    # points lie at the boundary), the corresponding contributions to
+    # discretized integrals need to be scaled by that fraction.
+    def _inner(self, x, y):
+        """Return ``self.inner(x, y)``."""
+        if self.is_uniform and not self.is_uniformly_weighted:
+            # TODO: implement without copying x
+            bdry_fracs = self.partition.boundary_cell_fractions
+            func_list = _scaling_func_list(bdry_fracs, exponent=1.0)
+            x_arr = apply_on_boundary(x, func=func_list, only_once=False)
+            return self.tspace.inner(self.tspace.element(x_arr), y.tensor)
+        else:
+            return self.tspace.inner(x.tensor, y.tensor)
+
+    def _norm(self, x):
+        """Return ``self.norm(x)``."""
+        if self.is_uniform and not self.is_uniformly_weighted:
+            # TODO: implement without copying x
+            bdry_fracs = self.partition.boundary_cell_fractions
+            func_list = _scaling_func_list(bdry_fracs, exponent=self.exponent)
+            x_arr = apply_on_boundary(x, func=func_list, only_once=False)
+            return self.tspace.norm(self.tspace.element(x_arr))
+        else:
+            return self.tspace.norm(x.tensor)
+
+    def _dist(self, x, y):
+        """Return ``self.dist(x, y)``."""
+        if self.is_uniform and not self.is_uniformly_weighted:
+            bdry_fracs = self.partition.boundary_cell_fractions
+            func_list = _scaling_func_list(bdry_fracs, exponent=self.exponent)
+            arrs = [apply_on_boundary(vec, func=func_list, only_once=False)
+                    for vec in (x, y)]
+
+            return self.tspace.dist(
+                self.tspace.element(arrs[0]),
+                self.tspace.element(arrs[1]),
+            )
+        else:
+            return self.tspace.dist(x.tensor, y.tensor)
 
     def __repr__(self):
         """Return ``repr(self)``."""
         # Clunky check if the factory repr can be used
         if uniform_partition_fromintv(
-            self.fspace.domain, self.shape, nodes_on_bdry=False
+            self.partition.set, self.shape, nodes_on_bdry=False
         ) == self.partition:
             use_uniform = True
             nodes_on_bdry = False
         elif uniform_partition_fromintv(
-            self.fspace.domain, self.shape, nodes_on_bdry=True
+            self.partition.set, self.shape, nodes_on_bdry=True
         ) == self.partition:
             use_uniform = True
             nodes_on_bdry = True
         else:
             use_uniform = False
+            nodes_on_bdry = None
 
         if use_uniform:
             ctor = 'uniform_discr'
@@ -519,7 +629,7 @@ class DiscreteLp(DiscretizedSpace):
 
         else:
             ctor = self.__class__.__name__
-            posargs = [self.fspace, self.partition, self.tspace]
+            posargs = [self.partition, self.tspace]
             inner_parts = signature_string_parts(posargs, [])
             return repr_string(ctor, inner_parts, allow_mixed_seps=False)
 
@@ -527,15 +637,24 @@ class DiscreteLp(DiscretizedSpace):
         """Return ``str(self)``."""
         return repr(self)
 
+
+class DiscretizedSpaceElement(Tensor):
+
+    """Representation of a `DiscretizedSpace` element."""
+
+    def __init__(self, space, tensor):
+        """Initialize a new instance."""
+        super(DiscretizedSpaceElement, self).__init__(space)
+        self.__tensor = tensor
+
+    # --- Constructor args
+
     @property
-    def element_type(self):
-        """`DiscreteLpElement`"""
-        return DiscreteLpElement
+    def tensor(self):
+        """Structure for data storage."""
+        return self.__tensor
 
-
-class DiscreteLpElement(DiscretizedSpaceElement):
-
-    """Representation of a `DiscreteLp` element."""
+    # --- Pass-through `space` properties
 
     @property
     def cell_sides(self):
@@ -547,10 +666,99 @@ class DiscreteLpElement(DiscretizedSpaceElement):
         """Cell volume of an underlying regular grid."""
         return self.space.cell_volume
 
+    # --- Pass-through `tensor` properties
+
     @property
     def data(self):
         """Data container of ``self``, depends on ``space.impl``."""
         return self.tensor.data
+
+    @property
+    def dtype(self):
+        """Type of data storage."""
+        return self.tensor.dtype
+
+    @property
+    def size(self):
+        """Size of data storage."""
+        return self.tensor.size
+
+    def __len__(self):
+        """Return ``len(self)``.
+
+        Equivalent to ``self.shape[0]`` if possible. Zero-dimensional
+        tensors have no length and produce a `TypeError`.
+        """
+        return len(self.tensor)
+
+    def copy(self):
+        """Create an identical (deep) copy of this element."""
+        return self.space.element(self.tensor.copy())
+
+    def asarray(self, out=None):
+        """Extract the data of this array as a numpy array.
+
+        Parameters
+        ----------
+        out : `numpy.ndarray`, optional
+            Array in which the result should be written in-place.
+            Has to be contiguous and of the correct dtype.
+        """
+        return self.tensor.asarray(out=out)
+
+    def astype(self, dtype):
+        """Return a copy of this element with new ``dtype``.
+
+        Parameters
+        ----------
+        dtype :
+            Scalar data type of the returned space. Can be provided
+            in any way the `numpy.dtype` constructor understands, e.g.
+            as built-in type or as a string. Data types with non-trivial
+            shapes are not allowed.
+
+        Returns
+        -------
+        newelem : `DisceteLpElement`
+            Version of this element with given data type.
+        """
+        return self.space.astype(dtype).element(self.tensor.astype(dtype))
+
+    def __eq__(self, other):
+        """Return ``self == other``.
+
+        Returns
+        -------
+        equals : bool
+            ``True`` if all entries of ``other`` are equal to this
+            element's entries, ``False`` otherwise.
+        """
+        return other in self.space and other.tensor == self.tensor
+
+    def __getitem__(self, indices):
+        """Return ``self[indices]``.
+
+        Parameters
+        ----------
+        indices : int or `slice`
+            The position(s) that should be accessed.
+
+        Returns
+        -------
+        values : `Tensor`
+            The value(s) at the index (indices).
+        """
+        if isinstance(indices, type(self)):
+            indices = indices.tensor
+        return self.tensor[indices]
+
+    def __ipow__(self, p):
+        """Implement ``self **= p``."""
+        # The concrete `tensor` can specialize `__ipow__` for non-integer
+        # `p` so we want to use it here. Otherwise we get the default
+        # `LinearSpaceElement.__ipow__` which only works for integer `p`.
+        self.tensor.__ipow__(p)
+        return self
 
     @property
     def real(self):
@@ -558,13 +766,13 @@ class DiscreteLpElement(DiscretizedSpaceElement):
 
         Returns
         -------
-        real : `DiscreteLpElement`
+        real : `DiscretizedSpaceElement`
 
         Examples
         --------
         Get the real part:
 
-        >>> discr = uniform_discr(0, 1, 3, dtype=complex)
+        >>> discr = odl.uniform_discr(0, 1, 3, dtype=complex)
         >>> x = discr.element([5+1j, 3, 2-2j])
         >>> x.real
         uniform_discr(0.0, 1.0, 3).element([ 5.,  3.,  2.])
@@ -607,7 +815,7 @@ class DiscreteLpElement(DiscretizedSpaceElement):
 
         Returns
         -------
-        imag : `DiscreteLpElement`
+        imag : `DiscretizedSpaceElement`
 
         Examples
         --------
@@ -662,13 +870,13 @@ class DiscreteLpElement(DiscretizedSpaceElement):
 
         Parameters
         ----------
-        out : `DiscreteLpElement`, optional
+        out : `DiscretizedSpaceElement`, optional
             Element to which the complex conjugate is written.
             Must be an element of this element's space.
 
         Returns
         -------
-        out : `DiscreteLpElement`
+        out : `DiscretizedSpaceElement`
             The complex conjugate element. If ``out`` is provided,
             the returned object is a reference to it.
 
@@ -724,7 +932,11 @@ class DiscreteLpElement(DiscretizedSpaceElement):
         if values in self.space:
             self.tensor[indices] = values.tensor
         else:
-            super(DiscreteLpElement, self).__setitem__(indices, values)
+            if isinstance(indices, type(self)):
+                indices = indices.tensor
+            if isinstance(values, type(self)):
+                values = values.tensor
+            self.tensor.__setitem__(indices, values)
 
     def __array_ufunc__(self, ufunc, method, *inputs, **kwargs):
         """Interface to Numpy's ufunc machinery.
@@ -772,9 +984,9 @@ class DiscreteLpElement(DiscretizedSpaceElement):
 
         Returns
         -------
-        ufunc_result : `DiscreteLpElement`, `numpy.ndarray` or tuple
+        ufunc_result : `DiscretizedSpaceElement`, `numpy.ndarray` or tuple
             Result of the ufunc evaluation. If no ``out`` keyword argument
-            was given, the result is a `DiscreteLpElement` or a tuple
+            was given, the result is a `DiscretizedSpaceElement` or a tuple
             of such, depending on the number of outputs of ``ufunc``.
             If ``out`` was provided, the returned object or sequence members
             refer(s) to ``out``.
@@ -791,7 +1003,7 @@ class DiscreteLpElement(DiscretizedSpaceElement):
         >>> np.add(x, y)  # same mechanism for Numpy >= 1.13
         uniform_discr(0.0, 1.0, 3).element([ 0.,  0.,  0.])
 
-        As ``out``, a `DiscreteLpElement` can be provided as well as a
+        As ``out``, a `DiscretizedSpaceElement` can be provided as well as a
         `Tensor` of appropriate type, or its underlying data container
         type (wrapped in a sequence):
 
@@ -943,7 +1155,8 @@ class DiscreteLpElement(DiscretizedSpaceElement):
 
         # --- Process `inputs` --- #
 
-        # Pull out the `tensor` attributes from DiscreteLpElement instances
+        # Pull out the `tensor` attributes from `DiscretizedSpaceElement`
+        # instances
         # since we want to pass them to `self.tensor.__array_ufunc__`
         input_tensors = tuple(
             elem.tensor if isinstance(elem, type(self)) else elem
@@ -967,8 +1180,6 @@ class DiscreteLpElement(DiscretizedSpaceElement):
 
             reduced_axes = [i for i in range(self.ndim) if i not in axis]
 
-        weighting = self.space.weighting
-
         # --- Evaluate ufunc --- #
 
         if method == '__call__':
@@ -978,15 +1189,8 @@ class DiscreteLpElement(DiscretizedSpaceElement):
                     ufunc, '__call__', *input_tensors, **kwargs)
 
                 if out is None:
-                    # Wrap result tensor in appropriate DiscreteLp space.
-                    # Make new function space based on result dtype,
-                    # keep everything else, and get `tspace` from the result
-                    # tensor.
-                    out_dtype = (res_tens.dtype, self.space.fspace.out_shape)
-                    fspace = FunctionSpace(self.space.fspace.domain,
-                                           out_dtype)
-                    res_space = DiscreteLp(
-                        fspace,
+                    # Wrap result tensor in appropriate DiscretizedSpace space.
+                    res_space = DiscretizedSpace(
                         self.space.partition,
                         res_tens.space,
                         axis_labels=self.space.axis_labels
@@ -1004,11 +1208,7 @@ class DiscreteLpElement(DiscretizedSpaceElement):
 
                 if out1 is None:
                     # Wrap as for nout = 1
-                    out_dtype = (res1_tens.dtype, self.space.fspace.out_shape)
-                    fspace = FunctionSpace(self.space.fspace.domain,
-                                           out_dtype)
-                    res_space = DiscreteLp(
-                        fspace,
+                    res_space = DiscretizedSpace(
                         self.space.partition,
                         res1_tens.space,
                         axis_labels=self.space.axis_labels
@@ -1019,11 +1219,7 @@ class DiscreteLpElement(DiscretizedSpaceElement):
 
                 if out2 is None:
                     # Wrap as for nout = 1
-                    out_dtype = (res2_tens.dtype, self.space.fspace.out_shape)
-                    fspace = FunctionSpace(self.space.fspace.domain,
-                                           out_dtype)
-                    res_space = DiscreteLp(
-                        fspace,
+                    res_space = DiscretizedSpace(
                         self.space.partition,
                         res2_tens.space,
                         axis_labels=self.space.axis_labels
@@ -1076,15 +1272,10 @@ class DiscreteLpElement(DiscretizedSpaceElement):
                 return res_tens
 
             if out is None:
-                # Wrap in appropriate DiscreteLp space depending on `method`
+                # Wrap in appropriate DiscretizedSpace space depending
+                # on `method`
                 if method == 'accumulate':
-                    # Make `fspace` with appropriate dtype, get `tspace`
-                    # from the result tensor and keep the rest
-                    fspace = FunctionSpace(self.space.domain,
-                                           out_dtype=res_tens.dtype)
-
-                    res_space = DiscreteLp(
-                        fspace,
+                    res_space = DiscretizedSpace(
                         self.space.partition,
                         res_tens.space,
                         axis_labels=self.space.axis_labels
@@ -1092,11 +1283,9 @@ class DiscreteLpElement(DiscretizedSpaceElement):
                     result = res_space.element(res_tens)
 
                 elif method == 'outer':
-                    # Concatenate domains, partitions, axis_labels,
+                    # Concatenate partitions and axis_labels,
                     # and determine `tspace` from the result tensor
                     inp1, inp2 = inputs
-                    domain = inp1.space.domain.append(inp2.space.domain)
-                    fspace = FunctionSpace(domain, out_dtype=res_tens.dtype)
                     part = inp1.space.partition.append(inp2.space.partition)
                     labels1 = [lbl + ' (1)' for lbl in inp1.space.axis_labels]
                     labels2 = [lbl + ' (2)' for lbl in inp2.space.axis_labels]
@@ -1118,8 +1307,8 @@ class DiscreteLpElement(DiscretizedSpaceElement):
                         # Otherwise `TensorSpace` knows how to handle this
                         tspace = res_tens.space
 
-                    res_space = DiscreteLp(
-                        fspace, part, tspace, axis_labels=labels
+                    res_space = DiscretizedSpace(
+                        part, tspace, axis_labels=labels
                     )
                     result = res_space.element(res_tens)
 
@@ -1211,6 +1400,8 @@ class DiscreteLpElement(DiscretizedSpaceElement):
             is that ``fig`` is the return value of an earlier call to
             this function.
 
+        Other Parameters
+        ----------------
         interp : {'linear', 'nearest'}, optional
             Interpolation type that should be used for the plot.
 
@@ -1346,7 +1537,7 @@ def uniform_discr_frompartition(partition, dtype=None, impl='numpy', **kwargs):
 
     Returns
     -------
-    discr : `DiscreteLp`
+    discr : `DiscretizedSpace`
         The uniformly discretized function space.
 
     Examples
@@ -1372,11 +1563,9 @@ def uniform_discr_frompartition(partition, dtype=None, impl='numpy', **kwargs):
     if dtype is not None:
         dtype = np.dtype(dtype)
 
-    fspace = FunctionSpace(partition.set, out_dtype=dtype)
-    ds_type = tspace_type(fspace, impl, dtype)
-
+    tspace_type = tensor_space_impl(impl)
     if dtype is None:
-        dtype = ds_type.default_dtype()
+        dtype = tspace_type.default_dtype()
 
     weighting = kwargs.pop('weighting', None)
     exponent = kwargs.pop('exponent', 2.0)
@@ -1386,84 +1575,9 @@ def uniform_discr_frompartition(partition, dtype=None, impl='numpy', **kwargs):
         else:
             weighting = partition.cell_volume
 
-    tspace = ds_type(partition.shape, dtype, exponent=exponent,
-                     weighting=weighting)
-    return DiscreteLp(fspace, partition, tspace, **kwargs)
-
-
-def uniform_discr_fromspace(fspace, shape, dtype=None, impl='numpy', **kwargs):
-    """Return a uniformly discretized L^p function space.
-
-    Parameters
-    ----------
-    fspace : `FunctionSpace`
-        Continuous function space. Its domain must be an `IntervalProd`.
-    shape : int or sequence of ints
-        Number of samples per axis.
-    dtype : optional
-        Data type for the discretized space, must be understood by the
-        `numpy.dtype` constructor. The default for ``None`` depends on the
-        ``impl`` backend, usually it is ``'float64'`` or ``'float32'``.
-    impl : string, optional
-        Implementation of the data storage arrays
-    kwargs :
-        Additional keyword parameters, see `uniform_discr` for details.
-
-    Returns
-    -------
-    discr : `DiscreteLp`
-        The uniformly discretized function space
-
-    Examples
-    --------
-    >>> intv = odl.IntervalProd(0, 1)
-    >>> space = odl.FunctionSpace(intv)
-    >>> uniform_discr_fromspace(space, 10)
-    uniform_discr(0.0, 1.0, 10)
-
-    See Also
-    --------
-    uniform_discr : implicit uniform Lp discretization
-    uniform_discr_frompartition : uniform Lp discretization using a given
-        uniform partition of a function domain
-    uniform_discr_fromintv : uniform discretization from an existing
-        interval product
-    odl.discr.partition.uniform_partition :
-        partition of the function domain
-    """
-    if not isinstance(fspace, FunctionSpace):
-        raise TypeError('`fspace` {!r} is not a `FunctionSpace` instance'
-                        ''.format(fspace))
-    if not isinstance(fspace.domain, IntervalProd):
-        raise TypeError('domain {!r} of the function space is not an '
-                        '`IntervalProd` instance'.format(fspace.domain))
-
-    # Set data type. If given, check consistency with fspace's field and
-    # out_dtype. If not given, take the latter.
-    if dtype is None:
-        dtype = fspace.out_dtype
-    else:
-        dtype, dtype_in = np.dtype(dtype), dtype
-        if not np.can_cast(fspace.scalar_out_dtype, dtype, casting='safe'):
-            raise ValueError('cannot safely cast from output data {} type of '
-                             'the function space to given data type {}'
-                             ''.format(fspace.out, dtype_in))
-
-    if fspace.field == RealNumbers() and not is_real_dtype(dtype):
-        raise ValueError('cannot discretize real space {} with '
-                         'non-real data type {}'
-                         ''.format(fspace, dtype))
-    elif (fspace.field == ComplexNumbers() and
-          not is_complex_floating_dtype(dtype)):
-        raise ValueError('cannot discretize complex space {} with '
-                         'non-complex-floating data type {}'
-                         ''.format(fspace, dtype))
-
-    nodes_on_bdry = kwargs.pop('nodes_on_bdry', False)
-    partition = uniform_partition_fromintv(fspace.domain, shape,
-                                           nodes_on_bdry)
-
-    return uniform_discr_frompartition(partition, dtype, impl, **kwargs)
+    tspace = tspace_type(partition.shape, dtype, exponent=exponent,
+                         weighting=weighting)
+    return DiscretizedSpace(partition, tspace, **kwargs)
 
 
 def uniform_discr_fromintv(intv_prod, shape, dtype=None, impl='numpy',
@@ -1487,7 +1601,7 @@ def uniform_discr_fromintv(intv_prod, shape, dtype=None, impl='numpy',
 
     Returns
     -------
-    discr : `DiscreteLp`
+    discr : `DiscretizedSpace`
         The uniformly discretized function space
 
     Examples
@@ -1501,14 +1615,13 @@ def uniform_discr_fromintv(intv_prod, shape, dtype=None, impl='numpy',
     uniform_discr : implicit uniform Lp discretization
     uniform_discr_frompartition : uniform Lp discretization using a given
         uniform partition of a function domain
-    uniform_discr_fromspace : uniform discretization from an existing
-        function space
     """
     if dtype is None:
         dtype = tensor_space_impl(str(impl).lower()).default_dtype()
 
-    fspace = FunctionSpace(intv_prod, out_dtype=dtype)
-    return uniform_discr_fromspace(fspace, shape, dtype, impl, **kwargs)
+    nodes_on_bdry = kwargs.pop('nodes_on_bdry', False)
+    partition = uniform_partition_fromintv(intv_prod, shape, nodes_on_bdry)
+    return uniform_discr_frompartition(partition, dtype, impl, **kwargs)
 
 
 def uniform_discr(min_pt, max_pt, shape, dtype=None, impl='numpy', **kwargs):
@@ -1555,7 +1668,7 @@ def uniform_discr(min_pt, max_pt, shape, dtype=None, impl='numpy', **kwargs):
 
     Returns
     -------
-    discr : `DiscreteLp`
+    discr : `DiscretizedSpace`
         The uniformly discretized function space
 
     Examples
@@ -1595,45 +1708,6 @@ def uniform_discr(min_pt, max_pt, shape, dtype=None, impl='numpy', **kwargs):
     return uniform_discr_fromintv(intv_prod, shape, dtype, impl, **kwargs)
 
 
-def discr_sequence_space(shape, dtype=None, impl='numpy', **kwargs):
-    """Return an object mimicing the sequence space ``l^p(R^d)``.
-
-    The returned object is a `DiscreteLp` on the domain ``[0, shape - 1]``,
-    using a uniform grid with stride 1.
-
-    Parameters
-    ----------
-    shape : int or sequence of ints
-        Number of element entries per axis.
-    dtype : optional
-        Data type for the discretized space, must be understood by the
-        `numpy.dtype` constructor. The default for ``None`` depends on the
-        ``impl`` backend, usually it is ``'float64'`` or ``'float32'``.
-    impl : string, optional
-        Implementation of the data storage arrays.
-    kwargs :
-        Additional keyword parameters, see `uniform_discr` for details.
-        Note that ``nodes_on_bdry`` cannot be given.
-
-    Returns
-    -------
-    seqspc : `DiscreteLp`
-        Sequence-space-like discrete Lp.
-
-    Examples
-    --------
-    >>> seq_spc = discr_sequence_space((3, 3))
-    >>> seq_spc.one().norm() == 3.0
-    True
-    >>> seq_spc = discr_sequence_space((3, 3), exponent=1)
-    >>> seq_spc.one().norm() == 9.0
-    True
-    """
-    shape = np.atleast_1d(shape)
-    return uniform_discr([0] * len(shape), shape - 1, shape, dtype, impl,
-                         nodes_on_bdry=True, **kwargs)
-
-
 def uniform_discr_fromdiscr(discr, min_pt=None, max_pt=None,
                             shape=None, cell_sides=None, **kwargs):
     """Return a discretization based on an existing one.
@@ -1644,7 +1718,7 @@ def uniform_discr_fromdiscr(discr, min_pt=None, max_pt=None,
 
     Parameters
     ----------
-    discr : `DiscreteLp`
+    discr : `DiscretizedSpace`
         Uniformly discretized space used as a template.
     min_pt, max_pt: float or sequence of floats, optional
         Desired minimum/maximum corners of the new space domain.
@@ -1652,6 +1726,9 @@ def uniform_discr_fromdiscr(discr, min_pt=None, max_pt=None,
         Desired number of samples per axis of the new space.
     cell_sides : float or sequence of floats, optional
         Desired cell side lenghts of the new space's partition.
+
+    Other Parameters
+    ----------------
     nodes_on_bdry : bool or sequence, optional
         If a sequence is provided, it determines per axis whether to
         place the last grid point on the boundary (``True``) or shift it
@@ -1667,7 +1744,7 @@ def uniform_discr_fromdiscr(discr, min_pt=None, max_pt=None,
         Default: ``False``.
 
     kwargs :
-        Additional keyword parameters passed to the `DiscreteLp`
+        Additional keyword parameters passed to the `DiscretizedSpace`
         initializer.
 
     Notes
@@ -1760,8 +1837,8 @@ def uniform_discr_fromdiscr(discr, min_pt=None, max_pt=None,
     >>> new_discr.cell_sides
     array([ 0.1 ,  0.25])
     """
-    if not isinstance(discr, DiscreteLp):
-        raise TypeError('`discr` {!r} is not a DiscreteLp instance'
+    if not isinstance(discr, DiscretizedSpace):
+        raise TypeError('`discr` {!r} is not a DiscretizedSpace instance'
                         ''.format(discr))
     if not discr.is_uniform:
         raise ValueError('`discr` {} is not uniformly discretized'

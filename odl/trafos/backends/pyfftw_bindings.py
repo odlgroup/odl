@@ -1,4 +1,4 @@
-# Copyright 2014-2018 The ODL contributors
+# Copyright 2014-2020 The ODL contributors
 #
 # This file is part of ODL.
 #
@@ -142,10 +142,11 @@ def pyfftw_call(array_in, array_out, direction='forward', axes=None,
 
     axes = normalized_axes_tuple(axes, array_in.ndim)
 
-    direction = _pyfftw_to_local(direction)
+    direction = _flag_pyfftw_to_odl(direction)
     fftw_plan_in = kwargs.pop('fftw_plan', None)
-    planning_effort = _pyfftw_to_local(kwargs.pop('planning_effort',
-                                                  'estimate'))
+    planning_effort = _flag_pyfftw_to_odl(
+        kwargs.pop('planning_effort', 'estimate')
+    )
     planning_timelimit = kwargs.pop('planning_timelimit', None)
     threads = kwargs.pop('threads', None)
     normalise_idft = kwargs.pop('normalise_idft', False)
@@ -183,10 +184,10 @@ def pyfftw_call(array_in, array_out, direction='forward', axes=None,
 
     if must_copy_array_in and not array_in_copied:
         plan_arr_in = np.empty_like(array_in)
-        flags = [_local_to_pyfftw(planning_effort), 'FFTW_DESTROY_INPUT']
+        flags = [_flag_odl_to_pyfftw(planning_effort), 'FFTW_DESTROY_INPUT']
     else:
         plan_arr_in = array_in
-        flags = [_local_to_pyfftw(planning_effort)]
+        flags = [_flag_odl_to_pyfftw(planning_effort)]
 
     if fftw_plan_in is None:
         if threads is None:
@@ -196,7 +197,7 @@ def pyfftw_call(array_in, array_out, direction='forward', axes=None,
                 threads = cpu_count()
 
         fftw_plan = pyfftw.FFTW(
-            plan_arr_in, array_out, direction=_local_to_pyfftw(direction),
+            plan_arr_in, array_out, direction=_flag_odl_to_pyfftw(direction),
             flags=flags, planning_timelimit=planning_timelimit,
             threads=threads, axes=axes)
     else:
@@ -214,17 +215,17 @@ def pyfftw_call(array_in, array_out, direction='forward', axes=None,
     return fftw_plan
 
 
-def _pyfftw_to_local(flag):
+def _flag_pyfftw_to_odl(flag):
     return flag.lstrip('FFTW_').lower()
 
 
-def _local_to_pyfftw(flag):
+def _flag_odl_to_pyfftw(flag):
     return 'FFTW_' + flag.upper()
 
 
 def _pyfftw_destroys_input(flags, direction, halfcomplex, ndim):
     """Return ``True`` if FFTW destroys an input array, ``False`` otherwise."""
-    if any(flag in flags or _pyfftw_to_local(flag) in flags
+    if any(flag in flags or _flag_pyfftw_to_odl(flag) in flags
            for flag in ('FFTW_MEASURE', 'FFTW_PATIENT', 'FFTW_EXHAUSTIVE',
                         'FFTW_DESTROY_INPUT')):
         return True

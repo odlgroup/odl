@@ -1,4 +1,4 @@
-# Copyright 2014-2019 The ODL contributors
+# Copyright 2014-2020 The ODL contributors
 #
 # This file is part of ODL.
 #
@@ -29,7 +29,7 @@ import warnings
 
 import numpy as np
 
-from odl.discr import DiscreteLp, DiscreteLpElement
+from odl.discr import DiscretizedSpace, DiscretizedSpaceElement
 from odl.tomo.geometry import (
     DivergentBeamGeometry, Flat1dDetector, Flat2dDetector, Geometry,
     ParallelBeamGeometry)
@@ -181,7 +181,7 @@ def astra_volume_geometry(vol_space):
 
     Parameters
     ----------
-    vol_space : `DiscreteLp`
+    vol_space : `DiscretizedSpace`
         Discretized space where the reconstruction (volume) lives.
         It must be 2- or 3-dimensional and uniformly discretized.
 
@@ -194,8 +194,8 @@ def astra_volume_geometry(vol_space):
     NotImplementedError
         If the cell sizes are not the same in each dimension.
     """
-    if not isinstance(vol_space, DiscreteLp):
-        raise TypeError('`vol_space` {!r} is not a DiscreteLp instance'
+    if not isinstance(vol_space, DiscretizedSpace):
+        raise TypeError('`vol_space` {!r} is not a DiscretizedSpace instance'
                         ''.format(vol_space))
 
     if not vol_space.is_uniform:
@@ -553,7 +553,7 @@ def astra_data(astra_geom, datatype, data=None, ndim=2, allow_copy=False):
         given ``datatype``.
     datatype : {'volume', 'projection'}
         Type of the data container.
-    data : `DiscreteLpElement` or `numpy.ndarray`, optional
+    data : `DiscretizedSpaceElement` or `numpy.ndarray`, optional
         Data for the initialization of the data object. If ``None``,
         an ASTRA data object filled with zeros is created.
     ndim : {2, 3}, optional
@@ -570,10 +570,10 @@ def astra_data(astra_geom, datatype, data=None, ndim=2, allow_copy=False):
         Handle for the new ASTRA internal data object.
     """
     if data is not None:
-        if isinstance(data, (DiscreteLpElement, np.ndarray)):
+        if isinstance(data, (DiscretizedSpaceElement, np.ndarray)):
             ndim = data.ndim
         else:
-            raise TypeError('`data` {!r} is neither DiscreteLpElement '
+            raise TypeError('`data` {!r} is neither DiscretizedSpaceElement '
                             'instance nor a `numpy.ndarray`'.format(data))
     else:
         ndim = int(ndim)

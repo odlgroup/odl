@@ -1,4 +1,4 @@
-# Copyright 2014-2017 The ODL contributors
+# Copyright 2014-2020 The ODL contributors
 #
 # This file is part of ODL.
 #
@@ -9,8 +9,6 @@
 """Tomography helpers for Elekta systems."""
 
 import numpy as np
-import odl
-
 
 __all__ = ('elekta_icon_geometry',
            'elekta_icon_space',
@@ -129,7 +127,7 @@ def elekta_icon_space(shape=(448, 448, 448), **kwargs):
 
     Returns
     -------
-    elekta_icon_space : `DiscreteLp`
+    elekta_icon_space : `DiscretizedSpace`
 
     Examples
     --------
@@ -182,7 +180,7 @@ def elekta_icon_fbp(ray_transform,
 
     Returns
     -------
-    elekta_icon_fbp : `DiscreteLp`
+    elekta_icon_fbp : `DiscretizedSpace`
 
     Examples
     --------
@@ -305,7 +303,7 @@ def elekta_xvi_space(shape=(512, 512, 512), **kwargs):
 
     Returns
     -------
-    elekta_xvi_space : `DiscreteLp`
+    elekta_xvi_space : `DiscretizedSpace`
 
     Examples
     --------
@@ -349,7 +347,7 @@ def elekta_xvi_fbp(ray_transform,
 
     Returns
     -------
-    elekta_xvi_fbp : `DiscreteLp`
+    elekta_xvi_fbp : `DiscretizedSpace`
 
     Examples
     --------

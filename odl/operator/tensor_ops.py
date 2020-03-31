@@ -1,4 +1,4 @@
-# Copyright 2014-2019 The ODL contributors
+# Copyright 2014-2020 The ODL contributors
 #
 # This file is part of ODL.
 #
@@ -38,7 +38,7 @@ class PointwiseTensorFieldOperator(Operator):
     number ``k`` of components. For ``k == 1``, the base space
     ``X`` can be used instead.
 
-    For example, if ``X`` is a `DiscreteLp` space, then
+    For example, if ``X`` is a `DiscretizedSpace` space, then
     ``ProductSpace(X, d)`` is a valid domain for any positive integer
     ``d``. It is also possible to have tensor fields over tensor fields, i.e.
     ``ProductSpace(ProductSpace(X, n), m)``.
@@ -104,7 +104,7 @@ class PointwiseNorm(PointwiseTensorFieldOperator):
 
     for ``p = inf``, where ``F`` is a vector field. This implies that
     the `Operator.domain` is a power space of a discretized function
-    space. For example, if ``X`` is a `DiscreteLp` space, then
+    space. For example, if ``X`` is a `DiscretizedSpace` space, then
     ``ProductSpace(X, d)`` is a valid domain for any positive integer
     ``d``.
     """
@@ -462,7 +462,7 @@ class PointwiseInner(PointwiseInnerBase):
     acting as a variable to this operator.
 
     This implies that the `Operator.domain` is a power space of a
-    discretized function space. For example, if ``X`` is a `DiscreteLp`
+    discretized function space. For example, if ``X`` is a `DiscretizedSpace`
     space, then ``ProductSpace(X, d)`` is a valid domain for any
     positive integer ``d``.
     """
@@ -655,7 +655,7 @@ class PointwiseSum(PointwiseInner):
 
     where ``F`` is a vector field. This implies that
     the `Operator.domain` is a power space of a discretized function
-    space. For example, if ``X`` is a `DiscreteLp` space, then
+    space. For example, if ``X`` is a `DiscretizedSpace` space, then
     ``ProductSpace(X, d)`` is a valid domain for any positive integer
     ``d``.
     """

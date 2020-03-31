@@ -1,4 +1,4 @@
-# Copyright 2014-2019 The ODL contributors
+# Copyright 2014-2020 The ODL contributors
 #
 # This file is part of ODL.
 #
@@ -8,11 +8,10 @@
 
 """Phantoms used in emission tomography."""
 
-from __future__ import print_function, division, absolute_import
+from __future__ import absolute_import, division, print_function
 
 from odl.phantom.geometric import ellipsoid_phantom
 from odl.phantom.phantom_utils import cylinders_from_ellipses
-
 
 __all__ = ('derenzo_sources',)
 
@@ -114,7 +113,7 @@ def derenzo_sources(space, min_pt=None, max_pt=None):
 
     Parameters
     ----------
-    space : `DiscreteLp`
+    space : `DiscretizedSpace`
         Space in which the phantom should be created, must be 2- or
         3-dimensional. If ``space.shape`` is 1 in an axis, a corresponding
         slice of the phantom is created (instead of squashing the whole

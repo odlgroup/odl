@@ -28,7 +28,7 @@ pytestmark = pytest.mark.skipif("not odl.tomo.ASTRA_AVAILABLE")
 
 
 def _discrete_domain(ndim):
-    """Create `DiscreteLp` space with isotropic grid stride.
+    """Create `DiscretizedSpace` space with isotropic grid stride.
 
     Parameters
     ----------
@@ -37,8 +37,8 @@ def _discrete_domain(ndim):
 
     Returns
     -------
-    space : `DiscreteLp`
-        Returns a `DiscreteLp` instance
+    space : `DiscretizedSpace`
+        Returns a `DiscretizedSpace` instance
     """
     max_pt = np.arange(1, ndim + 1)
     min_pt = -max_pt
@@ -48,7 +48,7 @@ def _discrete_domain(ndim):
 
 
 def _discrete_domain_anisotropic(ndim):
-    """Create `DiscreteLp` space with anisotropic grid stride.
+    """Create `DiscretizedSpace` space with anisotropic grid stride.
 
     Parameters
     ----------
@@ -57,8 +57,8 @@ def _discrete_domain_anisotropic(ndim):
 
     Returns
     -------
-    space : `DiscreteLp`
-        Returns a `DiscreteLp` instance
+    space : `DiscretizedSpace`
+        Returns a `DiscretizedSpace` instance
     """
     min_pt = [-1] * ndim
     max_pt = [1] * ndim

@@ -1,4 +1,4 @@
-# Copyright 2014-2019 The ODL contributors
+# Copyright 2014-2020 The ODL contributors
 #
 # This file is part of ODL.
 #
@@ -12,7 +12,7 @@ from __future__ import absolute_import, division, print_function
 
 import numpy as np
 
-from odl.discr import DiscreteLp, DiscreteLpElement
+from odl.discr import DiscretizedSpace, DiscretizedSpaceElement
 from odl.tomo.backends.astra_setup import (
     astra_algorithm, astra_data, astra_projection_geometry, astra_projector,
     astra_volume_geometry)
@@ -61,8 +61,8 @@ def default_astra_proj_type(geom):
         return 'line_fanflat' if geom.ndim == 2 else 'linearcone'
     else:
         raise TypeError(
-            'no default exists for {}, `astra_proj_type` must be given explicitly'
-            ''.format(type(geom))
+            'no default exists for {}, `astra_proj_type` must be given '
+            'explicitly'.format(type(geom))
         )
 
 
@@ -72,11 +72,11 @@ def astra_cpu_forward_projector(vol_data, geometry, proj_space, out=None,
 
     Parameters
     ----------
-    vol_data : `DiscreteLpElement`
+    vol_data : `DiscretizedSpaceElement`
         Volume data to which the forward projector is applied.
     geometry : `Geometry`
         Geometry defining the tomographic setup.
-    proj_space : `DiscreteLp`
+    proj_space : `DiscretizedSpace`
         Space to which the calling operator maps.
     out : ``proj_space`` element, optional
         Element of the projection space to which the result is written. If
@@ -93,8 +93,8 @@ def astra_cpu_forward_projector(vol_data, geometry, proj_space, out=None,
         Projection data resulting from the application of the projector.
         If ``out`` was provided, the returned object is a reference to it.
     """
-    if not isinstance(vol_data, DiscreteLpElement):
-        raise TypeError('volume data {!r} is not a `DiscreteLpElement` '
+    if not isinstance(vol_data, DiscretizedSpaceElement):
+        raise TypeError('volume data {!r} is not a `DiscretizedSpaceElement` '
                         'instance.'.format(vol_data))
     if vol_data.space.impl != 'numpy':
         raise TypeError("`vol_data.space.impl` must be 'numpy', got {!r}"
@@ -102,8 +102,8 @@ def astra_cpu_forward_projector(vol_data, geometry, proj_space, out=None,
     if not isinstance(geometry, Geometry):
         raise TypeError('geometry  {!r} is not a Geometry instance'
                         ''.format(geometry))
-    if not isinstance(proj_space, DiscreteLp):
-        raise TypeError('`proj_space` {!r} is not a DiscreteLp '
+    if not isinstance(proj_space, DiscretizedSpace):
+        raise TypeError('`proj_space` {!r} is not a DiscretizedSpace '
                         'instance.'.format(proj_space))
     if proj_space.impl != 'numpy':
         raise TypeError("`proj_space.impl` must be 'numpy', got {!r}"
@@ -117,7 +117,7 @@ def astra_cpu_forward_projector(vol_data, geometry, proj_space, out=None,
     else:
         if out not in proj_space:
             raise TypeError('`out` {} is neither None nor a '
-                            'DiscreteLpElement instance'.format(out))
+                            'DiscretizedSpaceElement instance'.format(out))
 
     ndim = vol_data.ndim
 
@@ -160,11 +160,11 @@ def astra_cpu_back_projector(proj_data, geometry, vol_space, out=None,
 
     Parameters
     ----------
-    proj_data : `DiscreteLpElement`
+    proj_data : `DiscretizedSpaceElement`
         Projection data to which the back-projector is applied.
     geometry : `Geometry`
         Geometry defining the tomographic setup.
-    vol_space : `DiscreteLp`
+    vol_space : `DiscretizedSpace`
         Space to which the calling operator maps.
     out : ``vol_space`` element, optional
         Element of the reconstruction space to which the result is written.
@@ -182,9 +182,11 @@ def astra_cpu_back_projector(proj_data, geometry, vol_space, out=None,
         projector. If ``out`` was provided, the returned object is a
         reference to it.
     """
-    if not isinstance(proj_data, DiscreteLpElement):
-        raise TypeError('projection data {!r} is not a DiscreteLpElement '
-                        'instance'.format(proj_data))
+    if not isinstance(proj_data, DiscretizedSpaceElement):
+        raise TypeError(
+            'projection data {!r} is not a `DiscretizedSpaceElement` '
+            'instance'.format(proj_data)
+        )
     if proj_data.space.impl != 'numpy':
         raise TypeError('`proj_data` must be a `numpy.ndarray` based, '
                         "container got `impl` {!r}"
@@ -192,8 +194,8 @@ def astra_cpu_back_projector(proj_data, geometry, vol_space, out=None,
     if not isinstance(geometry, Geometry):
         raise TypeError('geometry  {!r} is not a Geometry instance'
                         ''.format(geometry))
-    if not isinstance(vol_space, DiscreteLp):
-        raise TypeError('volume space {!r} is not a DiscreteLp '
+    if not isinstance(vol_space, DiscretizedSpace):
+        raise TypeError('volume space {!r} is not a DiscretizedSpace '
                         'instance'.format(vol_space))
     if vol_space.impl != 'numpy':
         raise TypeError("`vol_space.impl` must be 'numpy', got {!r}"
@@ -207,7 +209,7 @@ def astra_cpu_back_projector(proj_data, geometry, vol_space, out=None,
     else:
         if out not in vol_space:
             raise TypeError('`out` {} is neither None nor a '
-                            'DiscreteLpElement instance'.format(out))
+                            'DiscretizedSpaceElement instance'.format(out))
 
     ndim = proj_data.ndim
 

@@ -1,4 +1,4 @@
-# Copyright 2014-2017 The ODL contributors
+# Copyright 2014-2020 The ODL contributors
 #
 # This file is part of ODL.
 #
@@ -9,15 +9,15 @@
 """Unit tests for `diff_ops`."""
 
 from __future__ import division
-import pytest
+
 import numpy as np
+import pytest
 
 import odl
 from odl.discr.diff_ops import (
-    finite_diff, PartialDerivative, Gradient, Divergence, Laplacian)
+    Divergence, Gradient, Laplacian, PartialDerivative, finite_diff)
 from odl.util.testutils import (
-    all_equal, all_almost_equal, dtype_tol, noise_element, simple_fixture)
-
+    all_almost_equal, all_equal, dtype_tol, noise_element, simple_fixture)
 
 # --- pytest fixtures --- #
 
@@ -47,10 +47,8 @@ def test_finite_diff_invalid_args():
     """Test finite difference function for invalid arguments."""
 
     # Test that old "edge order" argument fails.
-    with pytest.raises(ValueError):
+    with pytest.raises(TypeError):
         finite_diff(DATA_1D, axis=0, edge_order=0)
-    with pytest.raises(ValueError):
-        finite_diff(DATA_1D, axis=0, edge_order=3)
 
     # at least a two-element array is required
     with pytest.raises(ValueError):
@@ -314,7 +312,7 @@ def test_gradient(space, method, padding):
     else:
         pad_mode, pad_const = padding, 0
 
-    # DiscreteLp Vector
+    # DiscretizedSpaceElement
     dom_vec = noise_element(space)
     dom_vec_arr = dom_vec.asarray()
 

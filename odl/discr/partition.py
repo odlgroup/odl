@@ -553,14 +553,14 @@ class RectPartition(object):
         """
         # Special case of index list: slice along first axis
         if isinstance(indices, list):
-            if indices == []:
-                new_min_pt = new_max_pt = []
-            else:
+            if indices:
                 new_min_pt = [self.cell_boundary_vecs[0][:-1][indices][0]]
                 new_max_pt = [self.cell_boundary_vecs[0][1:][indices][-1]]
                 for cvec in self.cell_boundary_vecs[1:]:
                     new_min_pt.append(cvec[0])
                     new_max_pt.append(cvec[-1])
+            else:
+                new_min_pt = new_max_pt = []
 
             new_intvp = IntervalProd(new_min_pt, new_max_pt)
             new_grid = self.grid[indices]
@@ -1375,10 +1375,11 @@ def nonuniform_partition(*coord_vecs, **kwargs):
         min_pt=-2.0, max_pt=3.0
     )
     """
-    # Get parameters from kwargs
     min_pt = kwargs.pop('min_pt', None)
     max_pt = kwargs.pop('max_pt', None)
     nodes_on_bdry = kwargs.pop('nodes_on_bdry', False)
+    if kwargs:
+        raise TypeError('unexpected keyword arguments: {}'.format(kwargs))
 
     # np.size(None) == 1
     sizes = [len(coord_vecs)] + [np.size(p) for p in (min_pt, max_pt)]

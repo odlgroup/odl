@@ -6,15 +6,15 @@
 # v. 2.0. If a copy of the MPL was not distributed with this file, You can
 # obtain one at https://mozilla.org/MPL/2.0/.
 
-"""Unit tests for `DiscreteLp`."""
+"""Unit tests for `DiscretizedSpace`."""
 
 from __future__ import division
 
 import numpy as np
-import pytest
 
 import odl
-from odl.discr.lp_discr import DiscreteLp, DiscreteLpElement
+import pytest
+from odl.discr.discr_space import DiscretizedSpace, DiscretizedSpaceElement
 from odl.space.base_tensors import TensorSpace
 from odl.space.npy_tensors import NumpyTensor
 from odl.space.weighting import ConstWeighting
@@ -30,18 +30,16 @@ shape = simple_fixture('shape', [(2, 3, 4), (3, 4), (2,), (1,), (1, 1, 1)])
 power = simple_fixture('power', [1.0, 2.0, 0.5, -0.5, -1.0, -2.0])
 
 
-# --- DiscreteLp --- #
+# --- DiscretizedSpace --- #
 
 
-def test_discretelp_init():
-    """Test initialization and basic properties of DiscreteLp."""
+def test_discretizedspace_init():
+    """Test initialization and basic properties of DiscretizedSpace."""
     # Real space
-    fspace = odl.FunctionSpace(odl.IntervalProd([0, 0], [1, 1]))
-    part = odl.uniform_partition_fromintv(fspace.domain, (2, 4))
+    part = odl.uniform_partition([0, 0], [1, 1], (2, 4))
     tspace = odl.rn(part.shape)
 
-    discr = DiscreteLp(fspace, part, tspace)
-    assert discr.fspace == fspace
+    discr = DiscretizedSpace(part, tspace)
     assert discr.tspace == tspace
     assert discr.partition == part
     assert discr.exponent == tspace.exponent
@@ -49,29 +47,21 @@ def test_discretelp_init():
     assert discr.is_real
 
     # Complex space
-    fspace_c = odl.FunctionSpace(odl.IntervalProd([0, 0], [1, 1]),
-                                 out_dtype=complex)
     tspace_c = odl.cn(part.shape)
-    discr = DiscreteLp(fspace_c, part, tspace_c)
+    discr = DiscretizedSpace(part, tspace_c)
     assert discr.is_complex
 
     # Make sure repr shows something
-    assert repr(discr)
+    assert repr(discr) != ''
 
     # Error scenarios
-    with pytest.raises(ValueError):
-        DiscreteLp(fspace, part, tspace_c)  # mixes real & complex
-
-    with pytest.raises(ValueError):
-        DiscreteLp(fspace_c, part, tspace)  # mixes complex & real
-
     part_1d = odl.uniform_partition(0, 1, 2)
     with pytest.raises(ValueError):
-        DiscreteLp(fspace, part_1d, tspace)  # wrong dimensionality
+        DiscretizedSpace(part_1d, tspace)  # wrong dimensionality
 
-    part_diffshp = odl.uniform_partition_fromintv(fspace.domain, (3, 4))
+    part_diffshp = odl.uniform_partition([0, 0], [1, 1], (3, 4))
     with pytest.raises(ValueError):
-        DiscreteLp(fspace, part_diffshp, tspace)  # shape mismatch
+        DiscretizedSpace(part_diffshp, tspace)  # shape mismatch
 
 
 def test_empty():
@@ -140,7 +130,7 @@ def test_uniform_discr_init_real(odl_tspace_impl):
 
     # 1D
     discr = odl.uniform_discr(0, 1, 10, impl=impl)
-    assert isinstance(discr, DiscreteLp)
+    assert isinstance(discr, DiscretizedSpace)
     assert isinstance(discr.tspace, TensorSpace)
     assert discr.impl == impl
     assert discr.is_real
@@ -180,11 +170,11 @@ def test_uniform_discr_init_complex(odl_tspace_impl):
     assert discr.dtype == discr.tspace.default_dtype(odl.ComplexNumbers())
 
 
-# --- DiscreteLp methods --- #
+# --- DiscretizedSpace methods --- #
 
 
-def test_discretelp_element():
-    """Test creation and membership of DiscreteLp elements."""
+def test_discretizedspace_element():
+    """Test creation and membership of DiscretizedSpace elements."""
     # Creation from scratch
     # 1D
     discr = odl.uniform_discr(0, 1, 3)
@@ -203,14 +193,14 @@ def test_discretelp_element():
     assert elem.tensor in tspace
 
 
-def test_discretelp_element_from_array():
-    """Test creation of DiscreteLp elements from arrays."""
+def test_discretizedspace_element_from_array():
+    """Test creation of DiscretizedSpace elements from arrays."""
     # 1D
     discr = odl.uniform_discr(0, 1, 3)
     elem = discr.element([1, 2, 3])
     assert np.array_equal(elem.tensor, [1, 2, 3])
 
-    assert isinstance(elem, DiscreteLpElement)
+    assert isinstance(elem, DiscretizedSpaceElement)
     assert isinstance(elem.tensor, NumpyTensor)
     assert all_equal(elem.tensor, [1, 2, 3])
 
@@ -222,7 +212,7 @@ def test_element_from_array_2d(odl_elem_order):
     elem = discr.element([[1, 2],
                           [3, 4]], order=order)
 
-    assert isinstance(elem, DiscreteLpElement)
+    assert isinstance(elem, DiscretizedSpaceElement)
     assert isinstance(elem.tensor, NumpyTensor)
     assert all_equal(elem, [[1, 2],
                             [3, 4]])
@@ -244,7 +234,7 @@ def test_element_from_array_2d(odl_elem_order):
 
 
 def test_element_from_function_1d():
-    """Test creation of DiscreteLp elements from functions in 1 dimension."""
+    """Test creation of DiscretizedSpace elements from functions in 1D."""
     space = odl.uniform_discr(-1, 1, 4)
     points = space.points().squeeze()
 
@@ -284,16 +274,12 @@ def test_element_from_function_1d():
 
     # Broadcast from constant function
     elem_lam = space.element(lambda x: 1.0)
-    true_elem = [1.0 for x in points]
+    true_elem = [1.0 for _ in points]
     assert all_equal(elem_lam, true_elem)
-
-    # Non vectorized
-    elem_lam = space.element(lambda x: x[0], vectorized=False)
-    assert all_equal(elem_lam, points)
 
 
 def test_element_from_function_2d():
-    """Test creation of DiscreteLp elements from functions in 2 dimensions."""
+    """Test creation of DiscretizedSpace elements from functions in 2D."""
     space = odl.uniform_discr([-1, -1], [1, 1], (2, 3))
     points = space.points()
 
@@ -302,8 +288,9 @@ def test_element_from_function_2d():
         return x[0] ** 2 + np.maximum(x[1], 0)
 
     elem_f = space.element(f)
-    true_elem = np.reshape([x[0] ** 2 + max(x[1], 0) for x in points],
-                           space.shape)
+    true_elem = np.reshape(
+        [x[0] ** 2 + max(x[1], 0) for x in points], space.shape
+    )
     assert all_equal(elem_f, true_elem)
 
     # With parameter
@@ -312,47 +299,39 @@ def test_element_from_function_2d():
         return x[0] ** 2 + np.maximum(x[1], c)
 
     elem_f_default = space.element(f)
-    true_elem = np.reshape([x[0] ** 2 + max(x[1], 0) for x in points],
-                           space.shape)
+    true_elem = np.reshape(
+        [x[0] ** 2 + max(x[1], 0) for x in points], space.shape
+    )
     assert all_equal(elem_f_default, true_elem)
 
     elem_f_2 = space.element(f, c=1)
-    true_elem = np.reshape([x[0] ** 2 + max(x[1], 1) for x in points],
-                           space.shape)
+    true_elem = np.reshape(
+        [x[0] ** 2 + max(x[1], 1) for x in points], space.shape
+    )
     assert all_equal(elem_f_2, true_elem)
 
     # Using a lambda
     elem_lam = space.element(lambda x: x[0] - x[1])
-    true_elem = np.reshape([x[0] - x[1] for x in points],
-                           space.shape)
+    true_elem = np.reshape([x[0] - x[1] for x in points], space.shape)
     assert all_equal(elem_lam, true_elem)
 
     # Using broadcasting
     elem_lam = space.element(lambda x: x[0])
-    true_elem = np.reshape([x[0] for x in points],
-                           space.shape)
+    true_elem = np.reshape([x[0] for x in points], space.shape)
     assert all_equal(elem_lam, true_elem)
 
     elem_lam = space.element(lambda x: x[1])
-    true_elem = np.reshape([x[1] for x in points],
-                           space.shape)
+    true_elem = np.reshape([x[1] for x in points], space.shape)
     assert all_equal(elem_lam, true_elem)
 
     # Broadcast from constant function
     elem_lam = space.element(lambda x: 1.0)
-    true_elem = np.reshape([1.0 for x in points],
-                           space.shape)
-    assert all_equal(elem_lam, true_elem)
-
-    # Non vectorized
-    elem_lam = space.element(lambda x: x[0] + x[1], vectorized=False)
-    true_elem = np.reshape([x[0] + x[1] for x in points],
-                           space.shape)
+    true_elem = np.reshape([1.0 for _ in points], space.shape)
     assert all_equal(elem_lam, true_elem)
 
 
-def test_discretelp_zero_one():
-    """Test the zero and one element creators of DiscreteLp."""
+def test_discretizedspace_zero_one():
+    """Test the zero and one element creators of DiscretizedSpace."""
     discr = odl.uniform_discr(0, 1, 3)
 
     zero = discr.zero()
@@ -916,7 +895,7 @@ def test_ufunc_corner_cases(odl_tspace_impl):
     space_no_w = odl.uniform_discr([0, 0], [1, 1], (2, 3), impl=impl,
                                    weighting=1.0)
 
-    # --- Ufuncs with nin = 1, nout = 1 --- #
+    # --- UFuncs with nin = 1, nout = 1 --- #
 
     with pytest.raises(ValueError):
         # Too many arguments
@@ -947,7 +926,7 @@ def test_ufunc_corner_cases(odl_tspace_impl):
     res = y.__array_ufunc__(np.sin, '__call__', y)
     assert res.space.weighting == space_no_w.weighting
 
-    # --- Ufuncs with nin = 2, nout = 1 --- #
+    # --- UFuncs with nin = 2, nout = 1 --- #
 
     with pytest.raises(ValueError):
         # Too few arguments
@@ -1006,7 +985,7 @@ def test_ufunc_corner_cases(odl_tspace_impl):
     assert all_almost_equal(out_ax1, np.add.reduce(x.asarray(), axis=1))
     assert res is out_ax1
 
-    # Addition is reorderable, so we can give multiple axes
+    # Addition is re-orderable, so we can give multiple axes
     res = x.__array_ufunc__(np.add, 'reduce', x, axis=(0, 1))
     assert res == pytest.approx(np.add.reduce(x.asarray(), axis=(0, 1)))
 
@@ -1160,11 +1139,10 @@ def test_power(odl_tspace_impl, power):
 
 def test_inner_nonuniform():
     """Check if inner products are correct in non-uniform discretizations."""
-    fspace = odl.FunctionSpace(odl.IntervalProd(0, 5))
     part = odl.nonuniform_partition([0, 2, 3, 5], min_pt=0, max_pt=5)
     weights = part.cell_sizes_vecs[0]
     tspace = odl.rn(part.size, weighting=weights)
-    discr = odl.DiscreteLp(fspace, part, tspace)
+    discr = odl.DiscretizedSpace(part, tspace)
 
     one = discr.one()
     linear = discr.element(lambda x: x)
@@ -1177,11 +1155,10 @@ def test_inner_nonuniform():
 
 def test_norm_nonuniform():
     """Check if norms are correct in non-uniform discretizations."""
-    fspace = odl.FunctionSpace(odl.IntervalProd(0, 5))
     part = odl.nonuniform_partition([0, 2, 3, 5], min_pt=0, max_pt=5)
     weights = part.cell_sizes_vecs[0]
     tspace = odl.rn(part.size, weighting=weights)
-    discr = odl.DiscreteLp(fspace, part, tspace)
+    discr = odl.DiscretizedSpace(part, tspace)
 
     sqrt = discr.element(lambda x: np.sqrt(x))
 
@@ -1196,17 +1173,14 @@ def test_norm_interval(exponent):
     # Test the function f(x) = x^2 on the interval (0, 1). Its
     # L^p-norm is (1 + 2*p)^(-1/p) for finite p and 1 for p=inf
     p = exponent
-    fspace = odl.FunctionSpace(odl.IntervalProd(0, 1))
-    lpdiscr = odl.uniform_discr_fromspace(fspace, 10, exponent=p)
+    discr = odl.uniform_discr(0, 1, 10, exponent=p)
 
-    testfunc = fspace.element(lambda x: x ** 2)
-    discr_testfunc = lpdiscr.element(testfunc)
-
+    func = discr.element(lambda x: x ** 2)
     if p == float('inf'):
-        assert discr_testfunc.norm() <= 1  # Max at boundary not hit
+        assert func.norm() <= 1  # Max at boundary not hit
     else:
         true_norm = (1 + 2 * p) ** (-1 / p)
-        assert discr_testfunc.norm() == pytest.approx(true_norm, rel=1e-2)
+        assert func.norm() == pytest.approx(true_norm, rel=1e-2)
 
 
 def test_norm_rectangle(exponent):
@@ -1214,17 +1188,14 @@ def test_norm_rectangle(exponent):
     # L^p-norm is ((1 + 2*p) * (1 + 3 * p) / 2)^(-1/p) for finite p
     # and 1 for p=inf
     p = exponent
-    fspace = odl.FunctionSpace(odl.IntervalProd([0, -1], [1, 1]))
-    lpdiscr = odl.uniform_discr_fromspace(fspace, (20, 30), exponent=p)
+    discr = odl.uniform_discr([0, -1], [1, 1], (20, 30), exponent=p)
 
-    testfunc = fspace.element(lambda x: x[0] ** 2 * x[1] ** 3)
-    discr_testfunc = lpdiscr.element(testfunc)
-
+    func = discr.element(lambda x: x[0] ** 2 * x[1] ** 3)
     if p == float('inf'):
-        assert discr_testfunc.norm() <= 1  # Max at boundary not hit
+        assert func.norm() <= 1  # Max at boundary not hit
     else:
         true_norm = ((1 + 2 * p) * (1 + 3 * p) / 2) ** (-1 / p)
-        assert discr_testfunc.norm() == pytest.approx(true_norm, rel=1e-2)
+        assert func.norm() == pytest.approx(true_norm, rel=1e-2)
 
 
 def test_norm_rectangle_boundary(odl_tspace_impl, exponent):
@@ -1233,62 +1204,74 @@ def test_norm_rectangle_boundary(odl_tspace_impl, exponent):
     impl = odl_tspace_impl
 
     dtype = 'float32'
-    rect = odl.IntervalProd([-1, -2], [1, 2])
-    fspace = odl.FunctionSpace(rect, out_dtype=dtype)
 
     # Standard case
-    discr = odl.uniform_discr_fromspace(fspace, (4, 8), impl=impl,
-                                        exponent=exponent)
+    discr = odl.uniform_discr(
+        [-1, -2], [1, 2], (4, 8), dtype=dtype, impl=impl, exponent=exponent
+    )
     if exponent == float('inf'):
         assert discr.one().norm() == 1
     else:
-        assert (discr.one().norm() ==
-                pytest.approx(rect.volume ** (1 / exponent)))
+        assert (
+            discr.one().norm()
+            == pytest.approx(discr.domain.volume ** (1 / exponent))
+        )
 
     # Nodes on the boundary (everywhere)
-    discr = odl.uniform_discr_fromspace(
-        fspace, (4, 8), exponent=exponent, impl=impl, nodes_on_bdry=True)
-
+    discr = odl.uniform_discr(
+        [-1, -2], [1, 2], (4, 8), dtype=dtype, impl=impl, exponent=exponent,
+        nodes_on_bdry=True
+    )
     if exponent == float('inf'):
         assert discr.one().norm() == 1
     else:
-        assert (discr.one().norm() ==
-                pytest.approx(rect.volume ** (1 / exponent)))
+        assert (
+            discr.one().norm()
+            == pytest.approx(discr.domain.volume ** (1 / exponent))
+        )
 
     # Nodes on the boundary (selective)
-    discr = odl.uniform_discr_fromspace(
-        fspace, (4, 8), exponent=exponent,
-        impl=impl, nodes_on_bdry=((False, True), False))
-
+    discr = odl.uniform_discr(
+        [-1, -2], [1, 2], (4, 8), dtype=dtype, impl=impl, exponent=exponent,
+        nodes_on_bdry=((False, True), False)
+    )
     if exponent == float('inf'):
         assert discr.one().norm() == 1
     else:
-        assert (discr.one().norm() ==
-                pytest.approx(rect.volume ** (1 / exponent)))
+        assert (
+            discr.one().norm()
+            == pytest.approx(discr.domain.volume ** (1 / exponent))
+        )
 
-    discr = odl.uniform_discr_fromspace(
-        fspace, (4, 8), exponent=exponent,
-        impl=impl, nodes_on_bdry=(False, (True, False)))
-
+    discr = odl.uniform_discr(
+        [-1, -2], [1, 2], (4, 8), dtype=dtype, impl=impl, exponent=exponent,
+        nodes_on_bdry=(False, (True, False))
+    )
     if exponent == float('inf'):
         assert discr.one().norm() == 1
     else:
-        assert (discr.one().norm() ==
-                pytest.approx(rect.volume ** (1 / exponent)))
+        assert (
+            discr.one().norm()
+            == pytest.approx(discr.domain.volume ** (1 / exponent))
+        )
 
     # Completely arbitrary boundary
-    grid = odl.uniform_grid([0, 0], [1, 1], (4, 4))
-    part = odl.RectPartition(rect, grid)
+    part = odl.RectPartition(
+        odl.IntervalProd([-1, -2], [1, 2]),
+        odl.uniform_grid([0, 0], [1, 1], (4, 4))
+    )
     weight = 1.0 if exponent == float('inf') else part.cell_volume
     tspace = odl.rn(part.shape, dtype=dtype, impl=impl,
                     exponent=exponent, weighting=weight)
-    discr = DiscreteLp(fspace, part, tspace)
+    discr = DiscretizedSpace(part, tspace)
 
     if exponent == float('inf'):
         assert discr.one().norm() == 1
     else:
-        assert (discr.one().norm() ==
-                pytest.approx(rect.volume ** (1 / exponent)))
+        assert (
+            discr.one().norm()
+            == pytest.approx(discr.domain.volume ** (1 / exponent))
+        )
 
 
 def test_uniform_discr_fromdiscr_one_attr():

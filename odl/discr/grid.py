@@ -1,4 +1,4 @@
-# Copyright 2014-2019 The ODL contributors
+# Copyright 2014-2020 The ODL contributors
 #
 # This file is part of ODL.
 #
@@ -21,7 +21,12 @@ from odl.util import (
     array_str, signature_string, indent, npy_printoptions)
 
 
-__all__ = ('RectGrid', 'uniform_grid', 'uniform_grid_fromintv')
+__all__ = (
+    'sparse_meshgrid',
+    'RectGrid',
+    'uniform_grid',
+    'uniform_grid_fromintv',
+)
 
 
 def sparse_meshgrid(*x):
@@ -972,11 +977,11 @@ class RectGrid(Set):
         True
         """
         if isinstance(indices, list):
-            if indices == []:
-                new_coord_vecs = []
-            else:
+            if indices:
                 new_coord_vecs = [self.coord_vectors[0][indices]]
                 new_coord_vecs += self.coord_vectors[1:]
+            else:
+                new_coord_vecs = []
             return RectGrid(*new_coord_vecs)
 
         indices = normalized_index_expression(indices, self.shape,

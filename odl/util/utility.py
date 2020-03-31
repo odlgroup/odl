@@ -1,4 +1,4 @@
-# Copyright 2014-2019 The ODL contributors
+# Copyright 2014-2020 The ODL contributors
 #
 # This file is part of ODL.
 #
@@ -11,11 +11,9 @@
 from __future__ import absolute_import, division, print_function
 from future.moves.itertools import zip_longest
 
-import inspect
-import sys
+import contextlib
 from collections import OrderedDict
 from contextlib import contextmanager
-from functools import wraps
 from itertools import product
 
 import numpy as np
@@ -40,7 +38,7 @@ __all__ = (
     'is_string',
     'nd_iterator',
     'conj_exponent',
-    'none_context',
+    'nullcontext',
     'writable_array',
     'signature_string',
     'signature_string_parts',
@@ -60,11 +58,6 @@ TYPE_MAP_R2C = {np.dtype(dtype): np.result_type(dtype, 1j)
 TYPE_MAP_C2R = {cdt: np.empty(0, dtype=cdt).real.dtype
                 for rdt, cdt in TYPE_MAP_R2C.items()}
 TYPE_MAP_C2R.update({k: k for k in TYPE_MAP_R2C.keys()})
-
-if sys.version_info.major < 3:
-    getargspec = inspect.getargspec
-else:
-    getargspec = inspect.getfullargspec
 
 
 def indent(string, indent_str='    '):
@@ -157,11 +150,12 @@ def dedent(string, indent_str='   ', max_levels=None):
 
     lines = string.splitlines()
 
-    # Determine common (minumum) number of indentation levels, capped at
+    # Determine common (minimum) number of indentation levels, capped at
     # `max_levels` if given
     def num_indents(line):
         max_num = int(np.ceil(len(line) / len(indent_str)))
 
+        i = 0  # set for the case the loop is not run (`max_num == 0`)
         for i in range(max_num):
             if line.startswith(indent_str):
                 line = line[len(indent_str):]
@@ -314,42 +308,6 @@ def dtype_str(dtype):
         return "('{}', {})".format(dtype.base, dtype.shape)
     else:
         return '{}'.format(dtype)
-
-
-def with_metaclass(meta, *bases):
-    """
-    Function from jinja2/_compat.py. License: BSD.
-
-    Use it like this::
-
-        class BaseForm(object):
-            pass
-
-        class FormType(type):
-            pass
-
-        class Form(with_metaclass(FormType, BaseForm)):
-            pass
-
-    This requires a bit of explanation: the basic idea is to make a
-    dummy metaclass for one level of class instantiation that replaces
-    itself with the actual metaclass.  Because of internal type checks
-    we also need to make sure that we downgrade the custom metaclass
-    for one level to something closer to type (that's why __call__ and
-    __init__ comes back from type etc.).
-
-    This has the advantage over six.with_metaclass of not introducing
-    dummy classes into the final MRO.
-    """
-    class metaclass(meta):
-        __call__ = type.__call__
-        __init__ = type.__init__
-
-        def __new__(cls, name, this_bases, d):
-            if this_bases is None:
-                return type.__new__(cls, name, (), d)
-            return meta(name, bases, d)
-    return metaclass('temporary_class', None, {})
 
 
 def cache_arguments(function):
@@ -589,88 +547,24 @@ def conj_exponent(exp):
         return exp / (exp - 1.0)
 
 
-def preload_first_arg(instance, mode):
-    """Decorator to preload the first argument of a call method.
-
-    Parameters
-    ----------
-    instance :
-        Class instance to preload the call with
-    mode : {'out-of-place', 'in-place'}
-
-        'out-of-place': call is out-of-place -- ``f(x, **kwargs)``
-
-        'in-place': call is in-place -- ``f(x, out, **kwargs)``
-
-    Notes
-    -----
-    The decorated function has the signature according to ``mode``.
-
-    Examples
-    --------
-    Define two functions which need some instance to act on and decorate
-    them manually:
-
-    >>> class A(object):
-    ...     '''My name is A.'''
-    >>> a = A()
-    ...
-    >>> def f_oop(inst, x):
-    ...     print(inst.__doc__)
-    ...
-    >>> def f_ip(inst, out, x):
-    ...     print(inst.__doc__)
-    ...
-    >>> f_oop_new = preload_first_arg(a, 'out-of-place')(f_oop)
-    >>> f_ip_new = preload_first_arg(a, 'in-place')(f_ip)
-    ...
-    >>> f_oop_new(0)
-    My name is A.
-    >>> f_ip_new(0, out=1)
-    My name is A.
-
-    Decorate upon definition:
-
-    >>> @preload_first_arg(a, 'out-of-place')
-    ... def set_x(obj, x):
-    ...     '''Function to set x in ``obj`` to a given value.'''
-    ...     obj.x = x
-    >>> set_x(0)
-    >>> a.x
-    0
-
-    The function's name and docstring are preserved:
-
-    >>> set_x.__name__
-    'set_x'
-    >>> set_x.__doc__
-    'Function to set x in ``obj`` to a given value.'
-    """
-
-    def decorator(call):
-
-        @wraps(call)
-        def oop_wrapper(x, **kwargs):
-            return call(instance, x, **kwargs)
-
-        @wraps(call)
-        def ip_wrapper(x, out, **kwargs):
-            return call(instance, x, out, **kwargs)
-
-        if mode == 'out-of-place':
-            return oop_wrapper
-        elif mode == 'in-place':
-            return ip_wrapper
-        else:
-            raise ValueError('bad mode {!r}'.format(mode))
-
-    return decorator
-
-
 @contextmanager
-def none_context(*args, **kwargs):
-    """Trivial context manager, accepts arbitrary args and returns ``None``."""
-    yield
+def nullcontext(enter_result=None):
+    """Backport of the Python >=3.7 trivial context manager.
+
+    See `the Python documentation
+    <https://docs.python.org/3/library/contextlib.html#contextlib.nullcontext>`_
+    for details.
+    """
+    try:
+        yield enter_result
+    finally:
+        pass
+
+
+try:
+    nullcontext = contextlib.nullcontext
+except AttributeError:
+    pass
 
 
 @contextmanager
@@ -723,11 +617,13 @@ def writable_array(obj, **kwargs):
     >>> print(lst)
     [2, 4, 6]
     """
+    arr = None
     try:
         arr = np.asarray(obj, **kwargs)
         yield arr
     finally:
-        obj[:] = arr
+        if arr is not None:
+            obj[:] = arr
 
 
 def signature_string(posargs, optargs, sep=', ', mod='!r'):
@@ -1084,7 +980,7 @@ def repr_string(outer_string, inner_strings, allow_mixed_seps=True):
 
     Parameters
     ----------
-    outer_str : str
+    outer_string : str
         Name of the class or function that should be printed outside
         the parentheses.
     inner_strings : sequence of sequence of str
@@ -1556,13 +1452,15 @@ def npy_random_seed(seed):
     True
     """
     do_seed = seed is not None
+    orig_rng_state = None
     try:
         if do_seed:
             orig_rng_state = np.random.get_state()
             np.random.seed(seed)
         yield
+
     finally:
-        if do_seed:
+        if do_seed and orig_rng_state is not None:
             np.random.set_state(orig_rng_state)
 
 
@@ -1599,7 +1497,7 @@ def unique(seq):
     try:
         return list(OrderedDict.fromkeys(seq))
     except TypeError:
-        # Unhashable, resort to O(n^2)
+        # Non-hashable, resort to O(n^2)
         unique_values = []
         for i in seq:
             if i not in unique_values:
