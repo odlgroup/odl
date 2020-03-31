@@ -140,8 +140,10 @@ class WaveletTransformBase(Operator):
            https://pywavelets.readthedocs.io/en/latest/ref/signal-extension-modes.html
         """
         if not isinstance(space, DiscretizedSpace):
-            raise TypeError('`space` {!r} is not a `DiscretizedSpace` instance.'
-                            ''.format(space))
+            raise TypeError(
+                '`space` {!r} is not a `DiscretizedSpace` instance.'
+                ''.format(space)
+            )
 
         self.__impl, impl_in = str(impl).lower(), impl
         if self.impl not in _SUPPORTED_WAVELET_IMPLS:

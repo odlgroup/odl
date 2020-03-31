@@ -501,7 +501,9 @@ class DiscretizedSpace(TensorSpace):
     def __hash__(self):
         """Return ``hash(self)``."""
         return hash(
-            (super(DiscretizedSpace, self).__hash__(), self.tspace, self.partition)
+            (super(DiscretizedSpace, self).__hash__(),
+             self.tspace,
+             self.partition)
         )
 
     # --- Space functions
@@ -1153,7 +1155,8 @@ class DiscretizedSpaceElement(Tensor):
 
         # --- Process `inputs` --- #
 
-        # Pull out the `tensor` attributes from DiscretizedSpaceElement instances
+        # Pull out the `tensor` attributes from `DiscretizedSpaceElement`
+        # instances
         # since we want to pass them to `self.tensor.__array_ufunc__`
         input_tensors = tuple(
             elem.tensor if isinstance(elem, type(self)) else elem
@@ -1269,7 +1272,8 @@ class DiscretizedSpaceElement(Tensor):
                 return res_tens
 
             if out is None:
-                # Wrap in appropriate DiscretizedSpace space depending on `method`
+                # Wrap in appropriate DiscretizedSpace space depending
+                # on `method`
                 if method == 'accumulate':
                     res_space = DiscretizedSpace(
                         self.space.partition,
@@ -1303,7 +1307,9 @@ class DiscretizedSpaceElement(Tensor):
                         # Otherwise `TensorSpace` knows how to handle this
                         tspace = res_tens.space
 
-                    res_space = DiscretizedSpace(part, tspace, axis_labels=labels)
+                    res_space = DiscretizedSpace(
+                        part, tspace, axis_labels=labels
+                    )
                     result = res_space.element(res_tens)
 
                 elif method == 'reduce':

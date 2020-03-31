@@ -379,8 +379,8 @@ class LinDeformFixedDisp(Operator):
             )
         if not isinstance(displacement.space[0], DiscretizedSpace):
             raise ValueError(
-                '`displacement.space[0]` must be a `DiscretizedSpace`, got {!r}'
-                ''.format(displacement.space[0]))
+                '`displacement.space[0]` must be a `DiscretizedSpace`, '
+                'got {!r}'.format(displacement.space[0]))
 
         self.__displacement = displacement
 

@@ -234,7 +234,7 @@ def test_element_from_array_2d(odl_elem_order):
 
 
 def test_element_from_function_1d():
-    """Test creation of DiscretizedSpace elements from functions in 1 dimension."""
+    """Test creation of DiscretizedSpace elements from functions in 1D."""
     space = odl.uniform_discr(-1, 1, 4)
     points = space.points().squeeze()
 
@@ -279,7 +279,7 @@ def test_element_from_function_1d():
 
 
 def test_element_from_function_2d():
-    """Test creation of DiscretizedSpace elements from functions in 2 dimensions."""
+    """Test creation of DiscretizedSpace elements from functions in 2D."""
     space = odl.uniform_discr([-1, -1], [1, 1], (2, 3))
     points = space.points()
 

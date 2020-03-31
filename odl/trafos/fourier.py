@@ -80,8 +80,10 @@ class DiscreteFourierTransformBase(Operator):
             ``None`` selects the fastest available backend.
         """
         if not isinstance(domain, DiscretizedSpace):
-            raise TypeError('`domain` {!r} is not a `DiscretizedSpace` instance'
-                            ''.format(domain))
+            raise TypeError(
+                '`domain` {!r} is not a `DiscretizedSpace` instance'
+                ''.format(domain)
+            )
         if range is not None and not isinstance(range, DiscretizedSpace):
             raise TypeError('`range` {!r} is not a `DiscretizedSpace` instance'
                             ''.format(range))

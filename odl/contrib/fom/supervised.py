@@ -830,7 +830,8 @@ def noise_power_spectrum(data, ground_truth, radial=False,
     ----------
     data : `DiscretizedSpaceElement` or `array-like`
         Input data to compare to the ground truth. If not a
-        `DiscretizedSpaceElement`, a default space with cell size 1 will be assumed.
+        `DiscretizedSpaceElement`, a default space with cell size 1 will be
+        assumed.
     ground_truth : `array-like`
         Reference to which ``data`` should be compared.
     radial : bool
