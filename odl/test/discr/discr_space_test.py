@@ -11,10 +11,10 @@
 from __future__ import division
 
 import numpy as np
-import pytest
 
 import odl
-from odl.discr.lp_discr import DiscretizedSpace, DiscretizedSpaceElement
+import pytest
+from odl.discr.discr_space import DiscretizedSpace, DiscretizedSpaceElement
 from odl.space.base_tensors import TensorSpace
 from odl.space.npy_tensors import NumpyTensor
 from odl.space.weighting import ConstWeighting

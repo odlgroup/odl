@@ -1,4 +1,4 @@
-# Copyright 2014-2018 The ODL contributors
+# Copyright 2014-2020 The ODL contributors
 #
 # This file is part of ODL.
 #
@@ -47,23 +47,17 @@ try:
 except TypeError:
     pass
 
-# Set printing linewidth to 71 to allow method docstrings to not extend
+# Set printing line width to 71 to allow method docstrings to not extend
 # beyond 79 characters (2 times indent of 4)
 np.set_printoptions(linewidth=71)
 
-# Propagate names defined in` __all__` of all "core" subpackages into
-# the top-level namespace
+# Import all names from "core" subpackages into the top-level namespace;
+# the `__all__` collection is extended later to make import errors more
+# visible (otherwise one gets errors like "... has no attribute __all__")
 from .set import *
-__all__ += set.__all__
-
 from .space import *
-__all__ += space.__all__
-
 from .operator import *
-__all__ += operator.__all__
-
 from .discr import *
-__all__ += discr.__all__
 
 # More "advanced" subpackages keep their namespaces separate from top-level,
 # we only import the modules themselves
@@ -79,4 +73,10 @@ from . import util
 
 # Add `test` function to global namespace so users can run `odl.test()`
 from .util import test
+
+# Amend `__all__`
+__all__ += set.__all__
+__all__ += space.__all__
+__all__ += operator.__all__
+__all__ += discr.__all__
 __all__ += ('test',)

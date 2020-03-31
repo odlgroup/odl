@@ -18,6 +18,7 @@ import warnings
 from builtins import object
 
 import numpy as np
+
 from odl.util import signature_string
 
 __all__ = ('Callback', 'CallbackStore', 'CallbackApply', 'CallbackPrintTiming',
@@ -570,7 +571,7 @@ class CallbackShow(Callback):
 
     See Also
     --------
-    odl.discr.lp_discr.DiscretizedSpaceElement.show
+    odl.discr.discr_space.DiscretizedSpaceElement.show
     odl.space.base_tensors.Tensor.show
     """
 

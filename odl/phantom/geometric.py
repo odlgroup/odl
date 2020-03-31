@@ -12,7 +12,7 @@ from __future__ import absolute_import, division, print_function
 
 import numpy as np
 
-from odl.discr.lp_discr import uniform_discr_fromdiscr
+from odl.discr.discr_space import uniform_discr_fromdiscr
 from odl.util.numerics import resize_array
 
 __all__ = (
