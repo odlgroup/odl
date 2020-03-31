@@ -50,7 +50,8 @@ Glossary
     meshgrid
         Tuple of arrays defining a tensor grid by all possible combinations of entries, one from each array.
         In 2 dimensions, for example, the arrays ``[[1], [2]]`` and ``[[-1, 0, 1]]`` define the grid points ``(1, -1), (1, 0), (1, 1), (2, -1), (2, 0), (2, 1)``.
-        Note that the resulting grid has the broadcast shape, here ``(2, 3)``, broadcast from ``(2, 1)`` and ``(1, 3``.)
+        Note that the resulting grid has the broadcast shape, here ``(2, 3)``, broadcast from ``(2, 1)`` and ``(1, 3)``
+        (expressed in code: ``result_shape = np.broadcast(shape1, shape2).shape``).
 
     operator
         Mathematical notion for a mapping between vector spaces.

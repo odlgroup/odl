@@ -92,9 +92,10 @@ class Resampling(Operator):
     @property
     def interp(self):
         """Interpolation scheme or tuple of per-axis interpolation schemes."""
-        if len(self.interp_byaxis) == 0:
-            return ()
-        elif all(s == self.interp_byaxis[0] for s in self.interp_byaxis[1:]):
+        if (
+            len(self.interp_byaxis) != 0
+            and all(s == self.interp_byaxis[0] for s in self.interp_byaxis[1:])
+        ):
             return self.interp_byaxis[0]
         else:
             return self.interp_byaxis

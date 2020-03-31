@@ -155,7 +155,7 @@ def dedent(string, indent_str='   ', max_levels=None):
     def num_indents(line):
         max_num = int(np.ceil(len(line) / len(indent_str)))
 
-        i = 0
+        i = 0  # set for the case the loop is not run (`max_num == 0`)
         for i in range(max_num):
             if line.startswith(indent_str):
                 line = line[len(indent_str):]

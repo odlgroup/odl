@@ -394,7 +394,7 @@ class DiscreteFourierTransform(DiscreteFourierTransformBase):
         range : `DiscretizedSpace`, optional
             Range of the Fourier transform. If not given, the range
             is determined from ``domain`` and the other parameters as
-            a `uniform_discr` with exponent unit cell size and exponent
+            a `uniform_discr` with unit cell size and exponent
             ``p / (p - 1)`` (read as 'inf' for p=1 and 1 for p='inf').
         axes : int or sequence of ints, optional
             Dimensions in which a transform is to be calculated. ``None``
@@ -547,7 +547,7 @@ class DiscreteFourierTransformInverse(DiscreteFourierTransformBase):
         domain : `DiscretizedSpace`, optional
             Domain of the inverse Fourier transform. If not given, the
             domain is determined from ``range`` and the other parameters as
-            a `uniform_discr` with exponent unit cell size and exponent
+            a `uniform_discr` with unit cell size and exponent
             ``p / (p - 1)`` (read as 'inf' for p=1 and 1 for p='inf').
         axes : sequence of ints, optional
             Dimensions in which a transform is to be calculated. `None`

@@ -928,6 +928,9 @@ def sampling_function(func_or_arr, domain, out_dtype=None):
     func_or_arr : callable or array-like
         Either a single callable object (possibly with multiple output
         components), or an array or callables and constants.
+        A callable (or each callable) must take a single input and may
+        accept one output parameter called ``out``, and should return
+        its result.
     domain : IntervalProd
         Set in which inputs to the function are assumed to lie. It is used
         to determine the type of input (point/meshgrid/array) based on
@@ -1011,7 +1014,7 @@ def sampling_function(func_or_arr, domain, out_dtype=None):
         return out
 
     # Now prepare the in-place and out-of-place functions for the final
-    # wrapping. If needed, vectorize.
+    # wrapping.
 
     if callable(func_or_arr):
         # Assume scalar float out dtype for single function
