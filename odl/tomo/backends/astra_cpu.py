@@ -61,8 +61,8 @@ def default_astra_proj_type(geom):
         return 'line_fanflat' if geom.ndim == 2 else 'linearcone'
     else:
         raise TypeError(
-            'no default exists for {}, `astra_proj_type` must be given explicitly'
-            ''.format(type(geom))
+            'no default exists for {}, `astra_proj_type` must be given '
+            'explicitly'.format(type(geom))
         )
 
 
@@ -183,8 +183,10 @@ def astra_cpu_back_projector(proj_data, geometry, vol_space, out=None,
         reference to it.
     """
     if not isinstance(proj_data, DiscretizedSpaceElement):
-        raise TypeError('projection data {!r} is not a DiscretizedSpaceElement '
-                        'instance'.format(proj_data))
+        raise TypeError(
+            'projection data {!r} is not a `DiscretizedSpaceElement` '
+            'instance'.format(proj_data)
+        )
     if proj_data.space.impl != 'numpy':
         raise TypeError('`proj_data` must be a `numpy.ndarray` based, '
                         "container got `impl` {!r}"

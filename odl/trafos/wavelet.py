@@ -141,7 +141,7 @@ class WaveletTransformBase(Operator):
         """
         if not isinstance(space, DiscretizedSpace):
             raise TypeError(
-                '`space` {!r} is not a `DiscretizedSpace` instance.'
+                '`space` {!r} is not a `DiscretizedSpace` instance'
                 ''.format(space)
             )
 
@@ -154,7 +154,7 @@ class WaveletTransformBase(Operator):
         elif np.isscalar(axes):
             axes = (axes,)
         elif len(axes) > space.ndim:
-                raise ValueError("Too many axes.")
+            raise ValueError("too many axes")
         self.axes = tuple(axes)
 
         if nlevels is None:
