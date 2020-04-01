@@ -92,6 +92,7 @@ def setup(app):
     # https://github.com/readthedocs/sphinx_rtd_theme/issues/746
     app.add_stylesheet('custom.css')
 
+
 # Autosummary
 autosummary_generate = glob.glob("./*.rst")
 
