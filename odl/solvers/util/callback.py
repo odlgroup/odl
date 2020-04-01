@@ -1045,7 +1045,7 @@ def save_animation(filename,
                    fig=None,
                    step=1):
     """Context manager for creating animations from a series of plots.
-    
+
     The context manager uses `matplotlib.animation` to generate the
     animation.
 
