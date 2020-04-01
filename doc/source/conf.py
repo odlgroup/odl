@@ -88,6 +88,9 @@ def skip(app, what, name, obj, skip, options):
 
 def setup(app):
     app.connect("autodoc-skip-member", skip)
+    # TODO(kohr-h): Remove when upstream issue in sphinx-rtd-theme is solved
+    # https://github.com/readthedocs/sphinx_rtd_theme/issues/746
+    app.add_stylesheet('custom.css')
 
 
 # Autosummary
@@ -172,6 +175,11 @@ html_short_title = 'ODL'
 # docs.  This file should be a Windows icon file (.ico) being 16x16 or 32x32
 # pixels large.
 # html_favicon = None
+
+# Add any paths that contain custom static files (such as style sheets) here,
+# relative to this directory. They are copied after the builtin static files,
+# so a file named "default.css" will overwrite the builtin "default.css".
+html_static_path = ['_static']
 
 # Output file base name for HTML help builder.
 htmlhelp_basename = 'odldoc'
