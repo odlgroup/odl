@@ -1,3 +1,4 @@
 [submodule "doc/sphinxext"]
 	path = doc/numpydoc
 	url = https://github.com/odlgroup/numpydoc
+	branch = v0.9.2-odl
