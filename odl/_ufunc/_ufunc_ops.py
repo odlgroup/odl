@@ -1,4 +1,4 @@
-# Copyright 2014-2019 The ODL contributors
+# Copyright 2014-2020 The ODL contributors
 #
 # This file is part of ODL.
 #
@@ -15,6 +15,7 @@ import numpy as np
 LINEAR_UFUNCS = {
     'negative', 'degrees', 'rad2deg', 'radians', 'deg2rad', 'add', 'subtract'
 }
+
 
 def _ufunc_op_range(domain, nin, nout, types_dict):
     """Infer the range of a ufunc operator."""
@@ -551,3 +552,5 @@ def ufunc_func_cls(name):
 ufunc_funcs = type(
     'ufunc_funcs', (object,), {'__getattr__': staticmethod(ufunc_func_cls)}
 )()
+
+# TODO(kohr-h): doctest

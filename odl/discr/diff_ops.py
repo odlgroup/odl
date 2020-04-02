@@ -135,7 +135,6 @@ class PartialDerivative(PointwiseTensorFieldOperator):
         if out is None:
             out = self.range.element()
 
-        # TODO: this pipes CUDA arrays through NumPy. Write native operator.
         finite_diff(x, axis=self.axis, dx=self.dx,
                     method=self.method, pad_mode=self.pad_mode,
                     pad_const=self.pad_const, out=out)
@@ -688,7 +687,7 @@ class Laplacian(PointwiseTensorFieldOperator):
                              ''.format(pad_mode_in))
         if pad_mode in ('order1', 'order1_adjoint',
                         'order2', 'order2_adjoint'):
-            # TODO: Add these pad modes
+            # TODO: add these pad modes
             raise ValueError('`pad_mode` {} not implemented for Laplacian.'
                              ''.format(pad_mode_in))
 

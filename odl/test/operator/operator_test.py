@@ -23,10 +23,7 @@ from odl.operator.operator import _dispatch_call_args, _function_signature
 from odl.util.testutils import (
     all_almost_equal, noise_element, noise_elements, simple_fixture)
 
-try:
-    getargspec = inspect.getfullargspec
-except AttributeError:
-    getargspec = inspect.getargspec
+getargspec = getattr(inspect, "getfullargspec", inspect.getargspec)
 
 
 # --- Fixtures --- #

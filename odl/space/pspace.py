@@ -21,11 +21,7 @@ from odl.util import indent, signature_string
 
 __all__ = ('ProductSpace',)
 
-
-try:
-    getargspec = inspect.getfullargspec
-except AttributeError:
-    getargspec = inspect.getargspec
+getargspec = getattr(inspect, "getfullargspec", inspect.getargspec)
 
 
 class ProductSpace(LinearSpace):

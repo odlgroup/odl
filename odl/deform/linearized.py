@@ -367,11 +367,11 @@ class LinDeformFixedDisp(Operator):
         )
 
         try:
-            self.__displacement = (self.domain.tangent_bundle).element(
+            self.__displacement = self.domain.tangent_bundle.element(
                 displacement
             )
         except (ValueError, TypeError):
-            self.__displacement = (self.domain.tangent_bundle).element(
+            self.__displacement = self.domain.tangent_bundle.element(
                 [displacement]
             )
         self.__interp_byaxis = _normalize_interp(interp, domain.ndim)

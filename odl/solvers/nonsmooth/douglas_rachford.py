@@ -192,9 +192,6 @@ def douglas_rachford_pd(x, f, g, L, niter, tau=None, sigma=None,
             dom.assign(z1, x)
 
         f.proximal(tau)(z1, out=p1)
-        # End of z1 as temporary
-
-        f.proximal(tau)(z1, out=p1)
         # Now p1 = prox[tau*f](x - tau/2 * sum(Li^* vi))
         # Temporary z1 is no longer needed
 

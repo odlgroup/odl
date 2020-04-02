@@ -18,8 +18,7 @@ from odl.discr.discr_utils import (
 from odl.discr.partition import uniform_partition
 from odl.operator import Operator
 from odl.space import tensor_space
-from odl.util import (
-    normalized_scalar_param_list, resize_array, safe_int_conv)
+from odl.util import normalized_scalar_param_list, resize_array, safe_int_conv
 from odl.util.numerics import _SUPPORTED_RESIZE_PAD_MODES
 
 __all__ = ('Resampling', 'ResizingOperator')

@@ -1104,15 +1104,13 @@ class KullbackLeibler(Functional):
 
         Examples
         --------
-
-        Test that KullbackLeibler(x,x) = 0
+        Test that KullbackLeibler(x, x) = 0
 
         >>> space = odl.rn(3)
         >>> prior = 3 * space.one()
         >>> func = odl.solvers.KullbackLeibler(space, prior=prior)
         >>> func(prior)
         0.0
-
 
         Test that zeros in the prior are handled correctly
 
@@ -1152,7 +1150,10 @@ class KullbackLeibler(Functional):
                 tmp = self.domain.ufuncs.log(x)
                 tmp += 1
                 tmp -= x
-                res = -self.domain.inner(tmp, self.domain.one())
+                res = self.domain.inner(tmp, self.domain.one())
+                if res != 0:
+                    # Avoid -0.0
+                    res = -res
             else:
                 # < x - g + xlogy(g, g/x), one >
                 g = self.prior
@@ -1164,7 +1165,7 @@ class KullbackLeibler(Functional):
                     tmp = scipy.special.xlogy(g, g / x)
                 tmp -= g
                 tmp += x
-                res = -self.domain.inner(tmp, self.domain.one())
+                res = self.domain.inner(tmp, self.domain.one())
 
         if not np.isfinite(res):
             # In this case, some element was less than or equal to zero

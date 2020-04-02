@@ -12,6 +12,7 @@ from __future__ import absolute_import, division, print_function
 from future.utils import native
 
 import ctypes
+import inspect
 from builtins import object
 from functools import partial
 
@@ -20,10 +21,11 @@ import numpy as np
 from odl.set.sets import ComplexNumbers, RealNumbers
 from odl.space.base_tensors import TensorSpace
 from odl.util import (
-    dtype_str, getargspec, is_numeric_dtype, is_real_dtype, signature_string)
+    dtype_str, is_numeric_dtype, is_real_dtype, signature_string)
 
 __all__ = ('NumpyTensorSpace',)
 
+getargspec = getattr(inspect, "getfullargspec", inspect.getargspec)
 _BLAS_DTYPES = (np.dtype('float32'), np.dtype('float64'),
                 np.dtype('complex64'), np.dtype('complex128'))
 
@@ -639,6 +641,7 @@ class NumpyTensorSpace(TensorSpace):
             def __getattr__(self, name):
                 """Return ``self.name``."""
                 attr = getattr(np, name, None)
+                attr = getattr(attr, "_implementation", attr)  # for numpy >= 1.16
                 try:
                     spec = getargspec(attr)
                 except (ValueError, TypeError):
