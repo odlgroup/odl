@@ -1,4 +1,4 @@
-# Copyright 2014-2018 The ODL contributors
+# Copyright 2014-2020 The ODL contributors
 #
 # This file is part of ODL.
 #
@@ -6,11 +6,12 @@
 # v. 2.0. If a copy of the MPL was not distributed with this file, You can
 # obtain one at https://mozilla.org/MPL/2.0/.
 
+"""Utilities for tomography."""
+
 from __future__ import absolute_import
 
-__all__ = ()
-
-from .utility import *
-__all__ += utility.__all__
-
 from . import testutils
+from .utility import *
+
+__all__ = ()
+__all__ += utility.__all__

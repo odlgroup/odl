@@ -18,9 +18,8 @@ from .grid import *
 from .partition import *
 
 __all__ = ()
-
+__all__ += diff_ops.__all__
+__all__ += discr_ops.__all__
+__all__ += discr_space.__all__
 __all__ += grid.__all__
 __all__ += partition.__all__
-__all__ += discr_space.__all__
-__all__ += discr_ops.__all__
-__all__ += diff_ops.__all__

@@ -10,22 +10,19 @@
 
 from __future__ import absolute_import
 
-__all__ = ()
-
-from .utility import *
-from .npy_compat import *
-from .normalize import *
 from .graphics import *
+from .normalize import *
+from .npy_compat import *
 from .numerics import *
-from .vectorization import *
 from .testutils import *
+from .utility import *
+from .vectorization import *
 
-from . import ufuncs
-
-__all__ += utility.__all__
-__all__ += npy_compat.__all__
-__all__ += normalize.__all__
+__all__ = ()
 __all__ += graphics.__all__
+__all__ += normalize.__all__
+__all__ += npy_compat.__all__
 __all__ += numerics.__all__
-__all__ += vectorization.__all__
 __all__ += testutils.__all__
+__all__ += utility.__all__
+__all__ += vectorization.__all__

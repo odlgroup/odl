@@ -1,4 +1,4 @@
-# Copyright 2014-2019 The ODL contributors
+# Copyright 2014-2020 The ODL contributors
 #
 # This file is part of ODL.
 #
@@ -6,23 +6,19 @@
 # v. 2.0. If a copy of the MPL was not distributed with this file, You can
 # obtain one at https://mozilla.org/MPL/2.0/.
 
-"""Representation of mathematical operators."""
+"""Implementations of mathematical operators."""
 
 from __future__ import absolute_import
 
-__all__ = ()
-
-from .operator import *
-__all__ += operator.__all__
-
 from .default_ops import *
-__all__ += default_ops.__all__
-
-from .pspace_ops import *
-__all__ += pspace_ops.__all__
-
-from .tensor_ops import *
-__all__ += tensor_ops.__all__
-
+from .operator import *
 from .oputils import *
+from .pspace_ops import *
+from .tensor_ops import *
+
+__all__ = ()
+__all__ += default_ops.__all__
+__all__ += operator.__all__
 __all__ += oputils.__all__
+__all__ += pspace_ops.__all__
+__all__ += tensor_ops.__all__

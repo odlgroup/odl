@@ -1,4 +1,4 @@
-# Copyright 2014-2019 The ODL contributors
+# Copyright 2014-2020 The ODL contributors
 #
 # This file is part of ODL.
 #
@@ -10,13 +10,11 @@
 
 from __future__ import absolute_import
 
-__all__ = ()
-
-from .sets import *
-__all__ += sets.__all__
-
 from .domain import *
-__all__ += domain.__all__
-
+from .sets import *
 from .space import *
+
+__all__ = ()
+__all__ += sets.__all__
+__all__ += domain.__all__
 __all__ += space.__all__
