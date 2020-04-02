@@ -10,12 +10,12 @@
 
 from __future__ import absolute_import
 
-from . import discr_utils
 from .diff_ops import *
 from .discr_ops import *
 from .discr_space import *
 from .grid import *
 from .partition import *
+from . import discr_utils
 
 __all__ = ()
 __all__ += diff_ops.__all__
