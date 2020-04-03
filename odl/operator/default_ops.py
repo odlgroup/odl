@@ -1626,8 +1626,8 @@ class ComplexModulusSquared(Operator):
         cn(2)
         >>> deriv.range
         rn(2)
-        >>> deriv([2 + 1j, 4j])  # [(3*2 + 4*1) / 5, (2*0 + 0*4) / 2]
-        rn(2).element([ 10.,   0.])
+        >>> deriv([2 + 1j, 4j])  # [(3*2 + 4*1) * 2, (2*0 + 0*4) * 2]
+        rn(2).element([ 20.,   0.])
 
         Notes
         -----
@@ -1635,14 +1635,14 @@ class ComplexModulusSquared(Operator):
 
         .. math::
             &S: X(\mathbb{C}) \to X(\mathbb{R}), \\
-            &S(x) = \Re(x)^2 + \Im(x)^2,
+            &S(x) = 2\Re(x)^2 + \Im(x)^2,
 
         with :math:`X(\mathbb{F}) = \mathbb{F}^n` or
         :math:`L^2(\Omega, \mathbb{F})`, is given as
 
         .. math::
             &S'(x): X(\mathbb{C}) \to X(\mathbb{R}), \\
-            &S'(x)(y) = \Re(x)\,\Re(y) + \Im(x)\,\Im(y).
+            &S'(x)(y) = 2(\Re(x)\,\Re(y) + \Im(x)\,\Im(y)).
 
         It is linear when identifying :math:`\mathbb{C}` with
         :math:`\mathbb{R}^2`, but not complex-linear.
@@ -1658,6 +1658,7 @@ class ComplexModulusSquared(Operator):
                 """Return ``self(y)``."""
                 x.real.multiply(y.real, out=out)
                 out += x.imag * y.imag
+                out *= 2
                 return out
 
             @property
@@ -1676,8 +1677,8 @@ class ComplexModulusSquared(Operator):
                 rn(2)
                 >>> adj.range
                 cn(2)
-                >>> adj([2, 1])  # [2*(3 + 4j), 1*2]
-                cn(2).element([ 6.+8.j,  2.+0.j])
+                >>> adj([2, 1])  # 2 * [2*(3 + 4j), 1*2]
+                cn(2).element([ 12.+16.j,   4. +0.j])
 
                 Adjointness only holds in the weaker sense that inner products
                 are the same when testing with vectors from the real space, but
@@ -1686,15 +1687,15 @@ class ComplexModulusSquared(Operator):
                 >>> y1 = deriv.range.element([1, 1])
                 >>> y2 = deriv.range.element([1, -1])
                 >>> adj(y1).inner(adj(y2))  # <M^* y1, M^* y2>
-                (21+0j)
+                (84+0j)
                 >>> deriv(adj(y1)).inner(y2)  # <M M^* y1, y2>
-                21.0
+                84.0
                 >>> x1 = deriv.domain.element([1j, 1j])
                 >>> x2 = deriv.domain.element([1 + 1j, 1j])
                 >>> deriv(x1).inner(deriv(x2))  # <M x1, M x2>
-                28.0
+                112.0
                 >>> adj(deriv(x1)).inner(x2)  # <M^* M x1, x2>
-                (28+4j)
+                (112+16j)
 
                 Notes
                 -----
@@ -1702,13 +1703,13 @@ class ComplexModulusSquared(Operator):
 
                 .. math::
                     &S'(x): X(\mathbb{C}) \to X(\mathbb{R}), \\
-                    &S'(x)(y) = \Re(x)\,\Re(y) + \Im(x)\,\Im(y).
+                    &S'(x)(y) = 2(\Re(x)\,\Re(y) + \Im(x)\,\Im(y)).
 
                 Thus, its adjoint can (formally) be identified as
 
                 .. math::
                     &S'(x)^*: X(\mathbb{R}) \to X(\mathbb{C}), \\
-                    &S'(x)^*(u) = (\Re(x)\,u,\ \Im(x)\,u).
+                    &S'(x)^*(u) = 2(\Re(x)\,u,\ \Im(x)\,u).
 
                 The operator :math:`A = S'(x)` has the weak adjointness
                 property
@@ -1738,6 +1739,7 @@ class ComplexModulusSquared(Operator):
                         out.assign(x)
                         out.real *= u
                         out.imag *= u
+                        out *= 2
                         return out
 
                     @property
