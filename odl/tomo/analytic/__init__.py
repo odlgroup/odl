@@ -1,4 +1,4 @@
-# Copyright 2014-2017 The ODL contributors
+# Copyright 2014-2020 The ODL contributors
 #
 # This file is part of ODL.
 #
@@ -8,10 +8,9 @@
 
 """Analytic (i.e. one-step) reconstruction methods."""
 
-
 from __future__ import absolute_import
 
-__all__ = ()
-
 from .filtered_back_projection import *
+
+__all__ = ()
 __all__ += filtered_back_projection.__all__

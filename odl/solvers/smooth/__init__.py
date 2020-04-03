@@ -1,4 +1,4 @@
-# Copyright 2014-2017 The ODL contributors
+# Copyright 2014-2020 The ODL contributors
 #
 # This file is part of ODL.
 #
@@ -10,13 +10,11 @@
 
 from __future__ import absolute_import
 
-__all__ = ()
-
 from .gradient import *
-__all__ += gradient.__all__
-
 from .newton import *
-__all__ += newton.__all__
-
 from .nonlinear_cg import *
+
+__all__ = ()
+__all__ += gradient.__all__
+__all__ += newton.__all__
 __all__ += nonlinear_cg.__all__

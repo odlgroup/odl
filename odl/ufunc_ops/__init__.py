@@ -1,4 +1,4 @@
-# Copyright 2014-2019 The ODL contributors
+# Copyright 2014-2020 The ODL contributors
 #
 # This file is part of ODL.
 #
@@ -10,7 +10,7 @@
 
 from __future__ import absolute_import
 
-__all__ = ()
-
 from .ufunc_ops import *
+
+__all__ = ()
 __all__ = ufunc_ops.__all__

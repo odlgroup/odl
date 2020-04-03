@@ -54,10 +54,10 @@ np.set_printoptions(linewidth=71)
 # Import all names from "core" subpackages into the top-level namespace;
 # the `__all__` collection is extended later to make import errors more
 # visible (otherwise one gets errors like "... has no attribute __all__")
+from .discr import *
+from .operator import *
 from .set import *
 from .space import *
-from .operator import *
-from .discr import *
 
 # More "advanced" subpackages keep their namespaces separate from top-level,
 # we only import the modules themselves
@@ -75,8 +75,8 @@ from . import util
 from .util import test
 
 # Amend `__all__`
+__all__ += discr.__all__
+__all__ += operator.__all__
 __all__ += set.__all__
 __all__ += space.__all__
-__all__ += operator.__all__
-__all__ += discr.__all__
 __all__ += ('test',)

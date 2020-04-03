@@ -1,4 +1,4 @@
-# Copyright 2014-2017 The ODL contributors
+# Copyright 2014-2020 The ODL contributors
 #
 # This file is part of ODL.
 #
@@ -6,18 +6,17 @@
 # v. 2.0. If a copy of the MPL was not distributed with this file, You can
 # obtain one at https://mozilla.org/MPL/2.0/.
 
+"""Implementations of mathematical functionals."""
+
 from __future__ import absolute_import
 
-__all__ = ()
-
-from .functional import *
-__all__ += functional.__all__
-
 from .default_functionals import *
-__all__ += default_functionals.__all__
-
-from .example_funcs import *
-__all__ += example_funcs.__all__
-
 from .derivatives import *
+from .example_funcs import *
+from .functional import *
+
+__all__ = ()
+__all__ += functional.__all__
+__all__ += default_functionals.__all__
+__all__ += example_funcs.__all__
 __all__ += derivatives.__all__
