@@ -88,11 +88,6 @@ def pytest_addoption(parser):
     parser.addoption(
         '-S', '--suite', action='store', metavar='NAME', help=suite_help
     )
-    parser.addoption('--examples', action='store_true', help='Run examples')
-    doctest_help = 'Run doctests in the documentation'
-    parser.addoption(
-        '--doctest-doc', action='store_true', help=doctest_help
-    )
 
 
 def pytest_configure(config):
