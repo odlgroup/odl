@@ -1,4 +1,4 @@
-# Copyright 2014-2017 The ODL contributors
+# Copyright 2014-2019 The ODL contributors
 #
 # This file is part of ODL.
 #
@@ -9,11 +9,12 @@
 """Test skimage back-end."""
 
 from __future__ import division
+
 import numpy as np
 
 import odl
 from odl.tomo.backends.skimage_radon import (
-    skimage_radon_forward_projector, skimage_radon_back_projector)
+    skimage_radon_back_projector, skimage_radon_forward_projector)
 from odl.tomo.util.testutils import skip_if_no_skimage
 
 
@@ -34,14 +35,18 @@ def test_skimage_radon_projector_parallel2d():
     proj_space = odl.uniform_discr_frompartition(geom.partition)
 
     # Forward evaluation
-    proj_data = skimage_radon_forward_projector(phantom, geom, proj_space)
+    proj_data = skimage_radon_forward_projector(
+        phantom, geom, reco_space, proj_space
+    )
     assert proj_data.shape == proj_space.shape
-    assert proj_data.norm() > 0
+    assert proj_space.norm(proj_data) > 0
 
     # Backward evaluation
-    backproj = skimage_radon_back_projector(proj_data, geom, reco_space)
+    backproj = skimage_radon_back_projector(
+        proj_data, geom, reco_space, proj_space
+    )
     assert backproj.shape == reco_space.shape
-    assert backproj.norm() > 0
+    assert reco_space.norm(backproj) > 0
 
 
 if __name__ == '__main__':

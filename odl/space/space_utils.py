@@ -9,83 +9,12 @@
 """Utility functions for space implementations."""
 
 from __future__ import print_function, division, absolute_import
-import numpy as np
 
 from odl.set import RealNumbers, ComplexNumbers
 from odl.space.entry_points import tensor_space_impl
 
 
-__all__ = ('vector', 'tensor_space', 'cn', 'rn')
-
-
-def vector(array, dtype=None, order=None, impl='numpy'):
-    """Create a vector from an array-like object.
-
-    Parameters
-    ----------
-    array : `array-like`
-        Array from which to create the vector. Scalars become
-        one-dimensional vectors.
-    dtype : optional
-        Set the data type of the vector manually with this option.
-        By default, the space type is inferred from the input data.
-    order : {None, 'C', 'F'}, optional
-        Axis ordering of the data storage. For the default ``None``,
-        no contiguousness is enforced, avoiding a copy if possible.
-    impl : str, optional
-        Impmlementation back-end for the space. See
-        `odl.space.entry_points.tensor_space_impl_names` for available
-        options.
-
-    Returns
-    -------
-    vector : `Tensor`
-        Vector created from the input array. Its concrete type depends
-        on the provided arguments.
-
-    Notes
-    -----
-    This is a convenience function and not intended for use in
-    speed-critical algorithms.
-
-    Examples
-    --------
-    Create one-dimensional vectors:
-
-    >>> odl.vector([1, 2, 3])  # No automatic cast to float
-    tensor_space(3, dtype=int).element([1, 2, 3])
-    >>> odl.vector([1, 2, 3], dtype=float)
-    rn(3).element([ 1.,  2.,  3.])
-    >>> odl.vector([1, 2 - 1j, 3])
-    cn(3).element([ 1.+0.j,  2.-1.j,  3.+0.j])
-
-    Non-scalar types are also supported:
-
-    >>> odl.vector([True, True, False])
-    tensor_space(3, dtype=bool).element([ True,  True, False])
-
-    The function also supports multi-dimensional input:
-
-    >>> odl.vector([[1, 2, 3],
-    ...             [4, 5, 6]])
-    tensor_space((2, 3), dtype=int).element(
-        [[1, 2, 3],
-         [4, 5, 6]]
-    )
-    """
-    # Sanitize input
-    arr = np.array(array, copy=False, order=order, ndmin=1)
-    if arr.dtype is object:
-        raise ValueError('invalid input data resulting in `dtype==object`')
-
-    # Set dtype
-    if dtype is not None:
-        space_dtype = dtype
-    else:
-        space_dtype = arr.dtype
-
-    space = tensor_space(arr.shape, dtype=space_dtype, impl=impl)
-    return space.element(arr)
+__all__ = ('tensor_space', 'cn', 'rn')
 
 
 def tensor_space(shape, dtype=None, impl='numpy', **kwargs):

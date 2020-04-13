@@ -54,8 +54,9 @@ ray_trafo = odl.tomo.RayTransform(reco_space, geometry)
 # Create phantom, forward project to create sinograms, and add 10% noise
 discr_phantom = odl.phantom.shepp_logan(reco_space, modified=True)
 noise_free_data = ray_trafo(discr_phantom)
+noise_free_data_norm = ray_trafo.range.norm(noise_free_data)
 noise = odl.phantom.white_noise(ray_trafo.range)
-noise *= 0.10 / noise.norm() * noise_free_data.norm()
+noise *= 0.10 / ray_trafo.range.norm(noise) * noise_free_data_norm
 data = noise_free_data + noise
 
 # Components for variational problem: l2-squared data matching and isotropic

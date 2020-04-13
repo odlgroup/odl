@@ -11,6 +11,7 @@
 from __future__ import division
 
 import numpy as np
+import pytest
 import scipy.sparse
 
 import odl
@@ -211,7 +212,7 @@ def test_pointwise_norm_gradient_real(exponent):
     direction = noise_element(vfspace)
 
     # Computing expected result
-    tmp = pwnorm(point).ufuncs.power(1 - exponent)
+    tmp = np.power(pwnorm(point), 1 - exponent)
     v_field = vfspace.element()
     for i in range(len(v_field)):
         v_field[i] = tmp * point[i] * np.abs(point[i]) ** (exponent - 2)
@@ -231,7 +232,7 @@ def test_pointwise_norm_gradient_real(exponent):
     direction = noise_element(vfspace)
 
     # Computing expected result
-    tmp = pwnorm(point).ufuncs.power(1 - exponent)
+    tmp = np.power(pwnorm(point), 1 - exponent)
     v_field = vfspace.element()
     for i in range(len(v_field)):
         v_field[i] = tmp * point[i] * np.abs(point[i]) ** (exponent - 2)
@@ -440,7 +441,7 @@ def test_pointwise_inner_adjoint():
     testarr = np.array([[1 + 1j, 2],
                         [3, 4 - 2j]])
 
-    true_inner_adj = testarr[None, :, :] * array
+    true_inner_adj = list(testarr[None, :, :] * array)
 
     testfunc = fspace.element(testarr)
     testfunc_pwinner_adj = pwinner.adjoint(testfunc)
@@ -464,7 +465,7 @@ def test_pointwise_inner_adjoint():
     testarr = np.array([[1 + 1j, 2],
                         [3, 4 - 2j]])
 
-    true_inner_adj = testarr[None, :, :] * array
+    true_inner_adj = list(testarr[None, :, :] * array)
 
     testfunc = fspace.element(testarr)
     testfunc_pwinner_adj = pwinner.adjoint(testfunc)
@@ -490,7 +491,8 @@ def test_pointwise_inner_adjoint_weighted():
     testarr = np.array([[1 + 1j, 2],
                         [3, 4 - 2j]])
 
-    true_inner_adj = testarr[None, :, :] * array  # same as unweighted case
+    # same as unweighted case
+    true_inner_adj = list(testarr[None, :, :] * array)
 
     testfunc = fspace.element(testarr)
     testfunc_pwinner_adj = pwinner.adjoint(testfunc)
@@ -506,7 +508,7 @@ def test_pointwise_inner_adjoint_weighted():
     testarr = np.array([[1 + 1j, 2],
                         [3, 4 - 2j]])
 
-    true_inner_adj = 2 * testarr[None, :, :] * array  # w / v = (2, 2, 2)
+    true_inner_adj = list(2 * testarr[None, :, :] * array)  # w / v = (2, 2, 2)
 
     testfunc = fspace.element(testarr)
     testfunc_pwinner_adj = pwinner.adjoint(testfunc)
@@ -691,11 +693,11 @@ def test_matrix_op_adjoint(matrix):
     x = noise_element(dmat_op.domain)
     y = noise_element(dmat_op.range)
 
-    inner_ran = dmat_op(x).inner(y)
-    inner_dom = x.inner(dmat_op.adjoint(y))
+    inner_ran = dmat_op.range.inner(dmat_op(x), y)
+    inner_dom = dmat_op.domain.inner(x, dmat_op.adjoint(y))
     assert inner_ran == pytest.approx(inner_dom, rel=tol, abs=tol)
-    inner_ran = smat_op(x).inner(y)
-    inner_dom = x.inner(smat_op.adjoint(y))
+    inner_ran = smat_op.range.inner(smat_op(x), y)
+    inner_dom = smat_op.domain.inner(x, smat_op.adjoint(y))
     assert inner_ran == pytest.approx(inner_dom, rel=tol, abs=tol)
 
     # Multi-dimensional case
@@ -703,8 +705,8 @@ def test_matrix_op_adjoint(matrix):
     mat_op = MatrixOperator(dense_matrix, domain, axis=2)
     x = noise_element(mat_op.domain)
     y = noise_element(mat_op.range)
-    inner_ran = mat_op(x).inner(y)
-    inner_dom = x.inner(mat_op.adjoint(y))
+    inner_ran = mat_op.range.inner(mat_op(x), y)
+    inner_dom = mat_op.domain.inner(x, mat_op.adjoint(y))
     assert inner_ran == pytest.approx(inner_dom, rel=tol, abs=tol)
 
 
@@ -740,10 +742,14 @@ def test_sampling_operator_adjoint():
     sampling_points = [[0, 1, 1, 0]]
     x = space.element([1, 2, 3])
     op = odl.SamplingOperator(space, sampling_points)
-    assert op.adjoint(op(x)).inner(x) == pytest.approx(op(x).inner(op(x)))
+    inner_dom = op.domain.inner(x, op.adjoint(op(x)))
+    inner_ran = op.range.inner(op(x), op(x))
+    assert inner_dom == pytest.approx(inner_ran)
 
     op = odl.SamplingOperator(space, sampling_points, variant='integrate')
-    assert op.adjoint(op(x)).inner(x) == pytest.approx(op(x).inner(op(x)))
+    inner_dom = op.domain.inner(x, op.adjoint(op(x)))
+    inner_ran = op.range.inner(op(x), op(x))
+    assert inner_dom == pytest.approx(inner_ran)
 
     # 2d space
     space = odl.uniform_discr([-1, -1], [1, 1], shape=(2, 3))
@@ -752,12 +758,16 @@ def test_sampling_operator_adjoint():
     sampling_points = [[0, 1, 1, 0],
                        [0, 1, 2, 0]]
     op = odl.SamplingOperator(space, sampling_points)
-    assert op.adjoint(op(x)).inner(x) == pytest.approx(op(x).inner(op(x)))
+    inner_dom = op.domain.inner(x, op.adjoint(op(x)))
+    inner_ran = op.range.inner(op(x), op(x))
+    assert inner_dom == pytest.approx(inner_ran)
 
     # The ``'integrate'`` variant adjoint puts ones at the indices in
     # `sampling_points``, multiplied by their multiplicity:
     op = odl.SamplingOperator(space, sampling_points, variant='integrate')
-    assert op.adjoint(op(x)).inner(x) == pytest.approx(op(x).inner(op(x)))
+    inner_dom = op.domain.inner(x, op.adjoint(op(x)))
+    inner_ran = op.range.inner(op(x), op(x))
+    assert inner_dom == pytest.approx(inner_ran)
 
 
 if __name__ == '__main__':

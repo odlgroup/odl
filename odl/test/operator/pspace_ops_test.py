@@ -1,4 +1,4 @@
-# Copyright 2014-2017 The ODL contributors
+# Copyright 2014-2019 The ODL contributors
 #
 # This file is part of ODL.
 #
@@ -7,11 +7,11 @@
 # obtain one at https://mozilla.org/MPL/2.0/.
 
 from __future__ import division
+
 import pytest
 
 import odl
 from odl.util.testutils import all_almost_equal, simple_fixture
-
 
 base_op = simple_fixture(
     'base_op',
@@ -127,10 +127,10 @@ def test_pspace_op_project_call():
     x = r3.element([1, 2, 3])
     z = op.domain.element([x])
 
-    assert x == op(z)[0]
-    assert x == op(z, out=op.range.element())[0]
-    assert x == op(z)[1]
-    assert x == op(z, out=op.range.element())[1]
+    assert all_almost_equal(op(z)[0], x)
+    assert all_almost_equal(op(z, out=op.range.element())[0], x)
+    assert all_almost_equal(op(z)[1], x)
+    assert all_almost_equal(op(z, out=op.range.element())[1], x)
 
 
 def test_pspace_op_diagonal_call():
@@ -143,8 +143,8 @@ def test_pspace_op_diagonal_call():
     y = r3.element([7, 8, 9])
     z = op.domain.element([x, y])
 
-    assert z == op(z)
-    assert z == op(z, out=op.range.element())
+    assert all_almost_equal(op(z), z)
+    assert all_almost_equal(op(z, out=op.range.element()), z)
 
 
 def test_pspace_op_swap_call():
@@ -156,10 +156,10 @@ def test_pspace_op_swap_call():
     x = r3.element([1, 2, 3])
     y = r3.element([7, 8, 9])
     z = op.domain.element([x, y])
-    result = op.domain.element([y, x])
+    true_result = op.domain.element([y, x])
 
-    assert result == op(z)
-    assert result == op(z, out=op.range.element())
+    assert all_almost_equal(op(z), true_result)
+    assert all_almost_equal(op(z, out=op.range.element()), true_result)
 
 
 def test_comp_proj():
@@ -169,12 +169,12 @@ def test_comp_proj():
     x = r3xr3.element([[1, 2, 3],
                        [4, 5, 6]])
     proj_0 = odl.ComponentProjection(r3xr3, 0)
-    assert x[0] == proj_0(x)
-    assert x[0] == proj_0(x, out=proj_0.range.element())
+    assert all_almost_equal(proj_0(x), x[0])
+    assert all_almost_equal(proj_0(x, out=proj_0.range.element()), x[0])
 
     proj_1 = odl.ComponentProjection(r3xr3, 1)
-    assert x[1] == proj_1(x)
-    assert x[1] == proj_1(x, out=proj_1.range.element())
+    assert all_almost_equal(proj_1(x), x[1])
+    assert all_almost_equal(proj_1(x, out=proj_1.range.element()), x[1])
 
 
 def test_comp_proj_slice():
@@ -186,8 +186,8 @@ def test_comp_proj_slice():
                      [7, 8, 9]])
 
     proj = odl.ComponentProjection(r33, slice(0, 2))
-    assert x[0:2] == proj(x)
-    assert x[0:2] == proj(x, out=proj.range.element())
+    assert all_almost_equal(proj(x), x[0:2])
+    assert all_almost_equal(proj(x, out=proj.range.element()), x[0:2])
 
 
 def test_comp_proj_indices():
@@ -199,8 +199,8 @@ def test_comp_proj_indices():
                      [7, 8, 9]])
 
     proj = odl.ComponentProjection(r33, [0, 2])
-    assert x[[0, 2]] == proj(x)
-    assert x[[0, 2]] == proj(x, out=proj.range.element())
+    assert all_almost_equal(proj(x), x[[0, 2]])
+    assert all_almost_equal(proj(x, out=proj.range.element()), x[[0, 2]])
 
 
 def test_comp_proj_adjoint():
@@ -213,15 +213,19 @@ def test_comp_proj_adjoint():
                               [0, 0, 0]])
     proj_0 = odl.ComponentProjection(r3xr3, 0)
 
-    assert result_0 == proj_0.adjoint(x)
-    assert result_0 == proj_0.adjoint(x, out=proj_0.domain.element())
+    assert all_almost_equal(proj_0.adjoint(x), result_0)
+    assert all_almost_equal(
+        proj_0.adjoint(x, out=proj_0.domain.element()), result_0
+    )
 
     result_1 = r3xr3.element([[0, 0, 0],
                               [1, 2, 3]])
     proj_1 = odl.ComponentProjection(r3xr3, 1)
 
-    assert result_1 == proj_1.adjoint(x)
-    assert result_1 == proj_1.adjoint(x, out=proj_1.domain.element())
+    assert all_almost_equal(proj_1.adjoint(x), result_1)
+    assert all_almost_equal(
+        proj_1.adjoint(x, out=proj_1.domain.element()), result_1
+    )
 
 
 def test_comp_proj_adjoint_slice():
@@ -236,8 +240,8 @@ def test_comp_proj_adjoint_slice():
                           [0, 0, 0]])
     proj = odl.ComponentProjection(r33, slice(0, 2))
 
-    assert result == proj.adjoint(x)
-    assert result == proj.adjoint(x, out=proj.domain.element())
+    assert all_almost_equal(proj.adjoint(x), result)
+    assert all_almost_equal(proj.adjoint(x, out=proj.domain.element()), result)
 
 
 if __name__ == '__main__':

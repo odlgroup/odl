@@ -119,21 +119,23 @@ def uniform_noise(space, low=0, high=1, seed=None):
     return space.element(values)
 
 
-def poisson_noise(intensity, seed=None):
+def poisson_noise(space, intensity, seed=None):
     r"""Poisson distributed noise with given intensity.
 
     Parameters
     ----------
+    space : `TensorSpace` or `ProductSpace`
+        The space in which the noise is created.
     intensity : `TensorSpace` or `ProductSpace` element
         The intensity (usually called lambda) parameter of the noise.
+    seed : int, optional
+        Random seed to use for generating the noise.
+        For ``None``, use the current seed.
 
     Returns
     -------
     poisson_noise : ``intensity.space`` element
         Poisson distributed random variable.
-    seed : int, optional
-        Random seed to use for generating the noise.
-        For ``None``, use the current seed.
 
     Notes
     -----
@@ -144,7 +146,7 @@ def poisson_noise(intensity, seed=None):
     .. math::
         \frac{\lambda^k e^{-\lambda}}{k!}
 
-    Note that the function only takes integer values.
+    Note that the function only takes on integer values.
 
     See Also
     --------
@@ -156,16 +158,18 @@ def poisson_noise(intensity, seed=None):
     from odl.space import ProductSpace
 
     with npy_random_seed(seed):
-        if isinstance(intensity.space, ProductSpace):
-            values = [poisson_noise(subintensity)
-                      for subintensity in intensity]
+        if isinstance(space, ProductSpace):
+            values = [
+                poisson_noise(spc, xi)
+                for spc, xi in zip(space.spaces, intensity)
+            ]
         else:
-            values = np.random.poisson(intensity.asarray())
+            values = np.random.poisson(intensity)
 
-    return intensity.space.element(values)
+    return space.element(values)
 
 
-def salt_pepper_noise(vector, fraction=0.05, salt_vs_pepper=0.5,
+def salt_pepper_noise(space, vector, fraction=0.05, salt_vs_pepper=0.5,
                       low_val=None, high_val=None, seed=None):
     """Add salt and pepper noise to vector.
 
@@ -174,6 +178,8 @@ def salt_pepper_noise(vector, fraction=0.05, salt_vs_pepper=0.5,
 
     Parameters
     ----------
+    space : `TensorSpace` or `ProductSpace`
+        The space in which the noise is created.
     vector : element of `TensorSpace` or `ProductSpace`
         The vector that noise should be added to.
     fraction : float, optional
@@ -196,7 +202,7 @@ def salt_pepper_noise(vector, fraction=0.05, salt_vs_pepper=0.5,
 
     Returns
     -------
-    salt_pepper_noise : ``vector.space`` element
+    salt_pepper_noise : ``space`` element
         ``vector`` with salt and pepper noise.
 
     See Also
@@ -219,13 +225,15 @@ def salt_pepper_noise(vector, fraction=0.05, salt_vs_pepper=0.5,
                          'interval [0, 1]'.format(salt_vs_pepper_in))
 
     with npy_random_seed(seed):
-        if isinstance(vector.space, ProductSpace):
-            values = [salt_pepper_noise(subintensity, fraction, salt_vs_pepper,
-                                        low_val, high_val)
-                      for subintensity in vector]
+        if isinstance(space, ProductSpace):
+            values = [
+                salt_pepper_noise(vi, fraction, salt_vs_pepper, low_val,
+                                  high_val)
+                for vi in vector
+            ]
         else:
-            # Extract vector of values
-            values = vector.asarray().flatten()
+            # Make flat copy
+            values = vector.flatten()
 
             # Determine fill-in values if not given
             if low_val is None:
@@ -233,18 +241,18 @@ def salt_pepper_noise(vector, fraction=0.05, salt_vs_pepper=0.5,
             if high_val is None:
                 high_val = np.max(values)
 
-            # Create randomly selected points as a subset of image.
-            a = np.arange(vector.size)
+            # Create randomly selected points as a subset of image
+            a = np.arange(values.size)
             np.random.shuffle(a)
-            salt_indices = a[:int(fraction * vector.size * salt_vs_pepper)]
-            pepper_indices = a[int(fraction * vector.size * salt_vs_pepper):
-                               int(fraction * vector.size)]
+            salt_indices = a[:int(fraction * values.size * salt_vs_pepper)]
+            pepper_indices = a[int(fraction * values.size * salt_vs_pepper):
+                               int(fraction * values.size)]
 
             values[salt_indices] = high_val
             values[pepper_indices] = -low_val
-            values = values.reshape(vector.space.shape)
+            values = values.reshape(space.shape)
 
-    return vector.space.element(values)
+    return space.element(values)
 
 
 if __name__ == '__main__':
@@ -252,22 +260,22 @@ if __name__ == '__main__':
     import odl
     from odl.util.testutils import run_doctests
 
-    r100 = odl.rn(100)
-    white_noise(r100).show('white_noise')
-    uniform_noise(r100).show('uniform_noise')
-    white_noise(r100, mean=5).show('white_noise with mean')
+    space = odl.rn(100)
+    space.show(white_noise(space), 'white_noise')
+    space.show(uniform_noise(space), 'uniform_noise')
+    space.show(white_noise(space, mean=5), 'white_noise with mean')
 
-    c100 = odl.cn(100)
-    white_noise(c100).show('complex white_noise')
-    uniform_noise(c100).show('complex uniform_noise')
+    space = odl.cn(100)
+    space.show(white_noise(space), 'complex white_noise')
+    space.show(uniform_noise(space), 'complex uniform_noise')
 
-    discr = odl.uniform_discr([-1, -1], [1, 1], [300, 300])
-    white_noise(discr).show('white_noise 2d')
-    uniform_noise(discr).show('uniform_noise 2d')
+    space = odl.uniform_discr([-1, -1], [1, 1], [300, 300])
+    space.show(white_noise(space), 'white_noise 2d')
+    space.show(uniform_noise(space), 'uniform_noise 2d')
 
-    vector = odl.phantom.shepp_logan(discr, modified=True)
-    poisson_noise(vector * 100).show('poisson_noise 2d')
-    salt_pepper_noise(vector).show('salt_pepper_noise 2d')
+    phantom = odl.phantom.shepp_logan(space, modified=True)
+    space.show(poisson_noise(space, phantom * 100), 'poisson_noise 2d')
+    space.show(salt_pepper_noise(space, phantom), 'salt_pepper_noise 2d')
 
     # Run also the doctests
     run_doctests()

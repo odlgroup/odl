@@ -96,15 +96,15 @@ def test_astra_cuda_projector(space_and_geometry):
     projector = AstraCudaProjectorImpl(geom, reco_space, proj_space)
     proj_data = projector.call_forward(phantom)
     assert proj_data in proj_space
-    assert proj_data.norm() > 0
-    assert np.all(proj_data.asarray() >= 0)
+    assert proj_space.norm(proj_data) > 0
+    assert np.all(proj_data >= 0)
 
     # Backward evaluation
     back_projector = AstraCudaBackProjectorImpl(geom, reco_space, proj_space)
     backproj = back_projector.call_backward(proj_data)
     assert backproj in reco_space
-    assert backproj.norm() > 0
-    assert np.all(proj_data.asarray() >= 0)
+    assert reco_space.norm(backproj) > 0
+    assert np.all(proj_data >= 0)
 
 
 if __name__ == '__main__':

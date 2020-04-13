@@ -18,7 +18,6 @@ from odl.operator.operator import Operator
 from odl.set import ComplexNumbers, RealNumbers
 from odl.space import ProductSpace, tensor_space
 from odl.space.base_tensors import TensorSpace
-from odl.space.weighting import ArrayWeighting
 from odl.util import dtype_repr, indent, signature_string, writable_array
 
 __all__ = ('PointwiseNorm', 'PointwiseInner', 'PointwiseSum', 'MatrixOperator',
@@ -147,20 +146,20 @@ class PointwiseNorm(PointwiseTensorFieldOperator):
 
         >>> x = vfspace.element([[[1, -4]],
         ...                      [[0, 3]]])
-        >>> print(pw_norm(x))
-        [[ 1.,  5.]]
+        >>> pw_norm(x)
+        array([[ 1.,  5.]])
 
         We can change the exponent either in the vector field space
         or in the operator directly:
 
         >>> vfspace = odl.ProductSpace(spc, 2, exponent=1)
         >>> pw_norm = PointwiseNorm(vfspace)
-        >>> print(pw_norm(x))
-        [[ 1.,  7.]]
+        >>> pw_norm(x)
+        array([[ 1.,  7.]])
         >>> vfspace = odl.ProductSpace(spc, 2)
         >>> pw_norm = PointwiseNorm(vfspace, exponent=1)
-        >>> print(pw_norm(x))
-        [[ 1.,  7.]]
+        >>> pw_norm(x)
+        array([[ 1.,  7.]])
         """
         if not isinstance(vfspace, ProductSpace):
             raise TypeError('`vfspace` {!r} is not a ProductSpace '
@@ -184,27 +183,33 @@ class PointwiseNorm(PointwiseTensorFieldOperator):
 
         # Handle weighting, including sanity checks
         if weighting is None:
-            # TODO: find a more robust way of getting the weights as an array
-            if hasattr(self.domain.weighting, 'array'):
-                self.__weights = self.domain.weighting.array
-            elif hasattr(self.domain.weighting, 'const'):
-                self.__weights = (self.domain.weighting.const *
-                                  np.ones(len(self.domain)))
+            if vfspace.weighting_type == 'array':
+                self.__weights = vfspace.weighting
+            elif vfspace.weighting_type == 'const':
+                self.__weights = vfspace.weighting * np.ones(len(vfspace))
             else:
-                raise ValueError('weighting scheme {!r} of the domain does '
-                                 'not define a weighting array or constant'
-                                 ''.format(self.domain.weighting))
+                raise RuntimeError(
+                    'invalid weighting scheme {} of `vfspace`'
+                    ''.format(vfspace.weighting_type)
+                )
         elif np.isscalar(weighting):
             if weighting <= 0:
-                raise ValueError('weighting constant must be positive, got '
-                                 '{}'.format(weighting))
-            self.__weights = float(weighting) * np.ones(len(self.domain))
+                raise ValueError(
+                    'weighting constant must be positive, got {}'
+                    ''.format(weighting)
+                )
+            self.__weights = float(weighting) * np.ones(len(vfspace))
         else:
             self.__weights = np.asarray(weighting, dtype='float64')
-            if (not np.all(self.weights > 0) or
-                    not np.all(np.isfinite(self.weights))):
-                raise ValueError('weighting array {} contains invalid '
-                                 'entries'.format(weighting))
+            if not (
+                np.all(self.__weights > 0)
+                and np.all(np.isfinite(self.weights))
+            ):
+                raise ValueError(
+                    'weighting array {} contains invalid entries'
+                    ''.format(weighting)
+                )
+
         self.__is_weighted = not np.array_equiv(self.weights, 1.0)
 
     @property
@@ -233,7 +238,7 @@ class PointwiseNorm(PointwiseTensorFieldOperator):
 
     def _call_vecfield_1(self, vf, out):
         """Implement ``self(vf, out)`` for exponent 1."""
-        vf[0].ufuncs.absolute(out=out)
+        np.absolute(vf[0], out=out)
         if self.is_weighted:
             out *= self.weights[0]
 
@@ -242,14 +247,14 @@ class PointwiseNorm(PointwiseTensorFieldOperator):
 
         tmp = self.range.element()
         for fi, wi in zip(vf[1:], self.weights[1:]):
-            fi.ufuncs.absolute(out=tmp)
+            np.absolute(fi, out=tmp)
             if self.is_weighted:
                 tmp *= wi
             out += tmp
 
     def _call_vecfield_inf(self, vf, out):
         """Implement ``self(vf, out)`` for exponent ``inf``."""
-        vf[0].ufuncs.absolute(out=out)
+        np.absolute(vf[0], out=out)
         if self.is_weighted:
             out *= self.weights[0]
 
@@ -258,16 +263,16 @@ class PointwiseNorm(PointwiseTensorFieldOperator):
 
         tmp = self.range.element()
         for vfi, wi in zip(vf[1:], self.weights[1:]):
-            vfi.ufuncs.absolute(out=tmp)
+            np.absolute(vfi, out=tmp)
             if self.is_weighted:
                 tmp *= wi
-            out.ufuncs.maximum(tmp, out=out)
+            np.maximum(out, tmp, out=out)
 
     def _call_vecfield_p(self, vf, out):
         """Implement ``self(vf, out)`` for exponent 1 < p < ``inf``."""
         # Optimization for 1 component - just absolute value (maybe weighted)
         if len(self.domain) == 1:
-            vf[0].ufuncs.absolute(out=out)
+            np.absolute(vf[0], out=out)
             if self.is_weighted:
                 out *= self.weights[0] ** (1 / self.exponent)
             return
@@ -290,13 +295,16 @@ class PointwiseNorm(PointwiseTensorFieldOperator):
         """Compute |F_i(x)|^p point-wise and write to ``out``."""
         # Optimization for very common cases
         if p == 0.5:
-            fi.ufuncs.absolute(out=out)
-            out.ufuncs.sqrt(out=out)
+            np.absolute(fi, out=out)
+            np.sqrt(out, out=out)
         elif p == 2.0 and self.base_space.field == RealNumbers():
-            fi.multiply(fi, out=out)
+            np.multiply(fi, fi, out=out)
+        elif p == 2.0 and self.base_space.field == ComplexNumbers():
+            np.absolute(fi, out=out)
+            np.square(out, out=out)
         else:
-            fi.ufuncs.absolute(out=out)
-            out.ufuncs.power(p, out=out)
+            np.absolute(fi, out=out)
+            np.power(out, p, out=out)
 
     def derivative(self, vf):
         """Derivative of the point-wise norm operator at ``vf``.
@@ -323,36 +331,55 @@ class PointwiseNorm(PointwiseTensorFieldOperator):
         Raises
         ------
         NotImplementedError
-            * if the vector field space is complex, since the derivative
-              is not linear in that case
+            * if the vector field space is complex
             * if the exponent is ``inf``
         """
+        # TODO(kohr-h): Derivative not linear in this case, but could be
+        # supported anyway, similar to `ComplexModulus`
         if self.domain.field == ComplexNumbers():
-            raise NotImplementedError('operator not Frechet-differentiable '
-                                      'on a complex space')
+            raise NotImplementedError(
+                'derivative on complex spaces not supported'
+            )
 
+        # TODO(kohr-h): Not strictly differentiable, but a poor man's
+        # derivative could still be supported, like with `LpNorm`
         if self.exponent == float('inf'):
-            raise NotImplementedError('operator not Frechet-differentiable '
-                                      'for exponent = inf')
+            raise NotImplementedError(
+                'derivative not implemented for `exponent=inf`'
+            )
 
+        Fb = self.domain.base_space().ufuncs
         vf = self.domain.element(vf)
+
+        # Compute `pw_norm(vf)^(p-1)`
         vf_pwnorm_fac = self(vf)
-        if self.exponent != 2:  # optimize away most common case.
-            vf_pwnorm_fac **= (self.exponent - 1)
+        if self.exponent != 2:  # Optimize away most common case
+            vf_pwnorm_fac **= self.exponent - 1
 
-        inner_vf = vf.copy()
+        # Compute `vf * abs(vf)^(p-2)`
+        # NB: singularity for zeros unavoidable if `p < 2`
+        inner_vf = self.domain.copy(vf)
 
-        for gi in inner_vf:
-            gi *= gi.ufuncs.absolute().ufuncs.power(self.exponent - 2)
-            if self.exponent >= 2:
-                # Any component that is zero is not divided with
-                nz = (vf_pwnorm_fac.asarray() != 0)
-                gi[nz] /= vf_pwnorm_fac[nz]
-            else:
-                # For exponents < 2 there will be a singularity if any
-                # component is zero. This results in inf or nan. See the
-                # documentation for further details.
-                gi /= vf_pwnorm_fac
+        def times_abs_pow_pm2(v):
+            if self.exponent != 2:
+                v *= Fb.power(Fb.abs(v), self.exponent - 2)
+
+        self.domain.apply(times_abs_pow_pm2, inner_vf)
+
+        # Divide `vf * abs(vf)^(p-2)` by `pw_norm(vf)^(p-1)`,
+        # avoiding 0/0 if `p >= 2`
+        if self.exponent >= 2:
+            nz = (vf_pwnorm_fac != 0)
+
+            def div_pwnorm_fac(v):
+                v[nz] /= vf_pwnorm_fac[nz]
+
+        else:
+
+            def div_pwnorm_fac(v):
+                v /= vf_pwnorm_fac
+
+        self.domain.apply(div_pwnorm_fac, inner_vf)
 
         return PointwiseInner(self.domain, inner_vf, weighting=self.weights)
 
@@ -401,32 +428,47 @@ class PointwiseInnerBase(PointwiseTensorFieldOperator):
                 domain=vfspace, range=vfspace[0], base_space=vfspace[0],
                 linear=True)
 
+        self._vecfield = vfspace.element(vecfield)
         # Bail out if the space is complex but we cannot take the complex
         # conjugate.
-        if (vfspace.field == ComplexNumbers() and
-                not hasattr(self.base_space.element_type, 'conj')):
+        if (
+            vfspace.field == ComplexNumbers()
+            and not hasattr(self._vecfield, 'conj')
+        ):
             raise NotImplementedError(
                 'base space element type {!r} does not implement conj() '
                 'method required for complex inner products'
                 ''.format(self.base_space.element_type))
 
-        self._vecfield = vfspace.element(vecfield)
-
         # Handle weighting, including sanity checks
         if weighting is None:
-            if hasattr(vfspace.weighting, 'array'):
-                self.__weights = vfspace.weighting.array
-            elif hasattr(vfspace.weighting, 'const'):
-                self.__weights = (vfspace.weighting.const *
-                                  np.ones(len(vfspace)))
+            if vfspace.weighting_type == 'array':
+                self.__weights = vfspace.weighting
+            elif vfspace.weighting_type == 'const':
+                self.__weights = vfspace.weighting * np.ones(len(vfspace))
             else:
-                raise ValueError('weighting scheme {!r} of the domain does '
-                                 'not define a weighting array or constant'
-                                 ''.format(vfspace.weighting))
+                raise RuntimeError(
+                    'invalid weighting scheme {} of `vfspace`'
+                    ''.format(vfspace.weighting_type)
+                )
         elif np.isscalar(weighting):
+            if weighting <= 0:
+                raise ValueError(
+                    'weighting constant must be positive, got {}'
+                    ''.format(weighting)
+                )
             self.__weights = float(weighting) * np.ones(len(vfspace))
         else:
             self.__weights = np.asarray(weighting, dtype='float64')
+            if not (
+                np.all(self.__weights > 0)
+                and np.all(np.isfinite(self.weights))
+            ):
+                raise ValueError(
+                    'weighting array {} contains invalid entries'
+                    ''.format(weighting)
+                )
+
         self.__is_weighted = not np.array_equiv(self.weights, 1.0)
 
     @property
@@ -505,8 +547,8 @@ class PointwiseInner(PointwiseInnerBase):
 
         >>> x = vfspace.element([[[1, -4]],
         ...                      [[0, 3]]])
-        >>> print(pw_inner(x))
-        [[ 0., -7.]]
+        >>> pw_inner(x)
+        array([[ 0., -7.]])
         """
         super(PointwiseInner, self).__init__(
             adjoint=False, vfspace=vfspace, vecfield=vecfield,
@@ -520,9 +562,9 @@ class PointwiseInner(PointwiseInnerBase):
     def _call(self, vf, out):
         """Implement ``self(vf, out)``."""
         if self.domain.field == ComplexNumbers():
-            vf[0].multiply(self._vecfield[0].conj(), out=out)
+            np.multiply(vf[0], self._vecfield[0].conj(), out=out)
         else:
-            vf[0].multiply(self._vecfield[0], out=out)
+            np.multiply(vf[0], self._vecfield[0], out=out)
 
         if self.is_weighted:
             out *= self.weights[0]
@@ -531,13 +573,12 @@ class PointwiseInner(PointwiseInnerBase):
             return
 
         tmp = self.range.element()
-        for vfi, gi, wi in zip(vf[1:], self.vecfield[1:],
-                               self.weights[1:]):
+        for vfi, gi, wi in zip(vf[1:], self.vecfield[1:], self.weights[1:]):
 
             if self.domain.field == ComplexNumbers():
-                vfi.multiply(gi.conj(), out=tmp)
+                np.multiply(vfi, gi.conj(), out=tmp)
             else:
-                vfi.multiply(gi, out=tmp)
+                np.multiply(vfi, gi, out=tmp)
 
             if self.is_weighted:
                 tmp *= wi
@@ -614,21 +655,18 @@ class PointwiseInnerAdjoint(PointwiseInnerBase):
             weighting=weighting)
 
         # Get weighting from range
-        if hasattr(self.range.weighting, 'array'):
-            self.__ran_weights = self.range.weighting.array
-        elif hasattr(self.range.weighting, 'const'):
-            self.__ran_weights = (self.range.weighting.const *
-                                  np.ones(len(self.range)))
-        else:
-            raise ValueError('weighting scheme {!r} of the range does '
-                             'not define a weighting array or constant'
-                             ''.format(self.range.weighting))
+        if self.range.weighting_type == 'array':
+            self.__ran_weights = self.range.weighting
+        elif self.range.weighting_type == 'const':
+            self.__ran_weights = (
+                self.range.weighting * np.ones(len(self.range))
+            )
 
     def _call(self, f, out):
         """Implement ``self(vf, out)``."""
         for vfi, oi, ran_wi, dom_wi in zip(self.vecfield, out,
                                            self.__ran_weights, self.weights):
-            vfi.multiply(f, out=oi)
+            np.multiply(vfi, f, out=oi)
             if not np.isclose(ran_wi, dom_wi):
                 oi *= dom_wi / ran_wi
 
@@ -692,8 +730,8 @@ class PointwiseSum(PointwiseInner):
 
         >>> x = vfspace.element([[[1, -4]],
         ...                      [[0, 3]]])
-        >>> print(pw_sum(x))
-        [[ 1., -1.]]
+        >>> pw_sum(x)
+        array([[ 1., -1.]])
         """
         if not isinstance(vfspace, ProductSpace):
             raise TypeError('`vfspace` {!r} is not a ProductSpace '
@@ -750,7 +788,7 @@ class MatrixOperator(Operator):
         >>> op.range
         rn(3)
         >>> op([1, 2, 3, 4])
-        rn(3).element([ 10.,  10.,  10.])
+        array([ 10.,  10.,  10.])
 
         For multi-dimensional arrays (tensors), the summation
         (contraction) can be performed along a specific axis. In
@@ -773,7 +811,7 @@ class MatrixOperator(Operator):
         >>> space = odl.uniform_discr(0, 1, 4)
         >>> op = MatrixOperator(m, domain=space)
         >>> op(space.one())
-        rn(3, weighting=0.25).element([ 4.,  4.,  4.])
+        array([ 4.,  4.,  4.])
         >>> np.array_equal(op.adjoint.matrix, m.T)
         True
 
@@ -831,8 +869,10 @@ class MatrixOperator(Operator):
         if range is None:
             # Infer range
             range_dtype = np.promote_types(self.matrix.dtype, domain.dtype)
-            if (range_shape != domain.shape and
-                    isinstance(domain.weighting, ArrayWeighting)):
+            if (
+                range_shape != domain.shape
+                and domain.weighting_type == 'array'
+            ):
                 # Cannot propagate weighting due to size mismatch.
                 weighting = None
             else:
@@ -1070,10 +1110,10 @@ class SamplingOperator(Operator):
         >>> op = odl.SamplingOperator(space, sampling_points=1)
         >>> x = space.element([1, 2, 3, 4])
         >>> op(x)
-        rn(1).element([ 2.])
+        array([ 2.])
         >>> op = odl.SamplingOperator(space, sampling_points=[1, 2, 1])
         >>> op(x)
-        rn(3).element([ 2.,  3.,  2.])
+        array([ 2.,  3.,  2.])
 
         There are two variants ``'point_eval'`` (default) and
         ``'integrate'``, where the latter scales values by the cell
@@ -1084,7 +1124,7 @@ class SamplingOperator(Operator):
         >>> space.cell_volume  # the scaling constant
         0.25
         >>> op(x)
-        rn(3).element([ 0.5 ,  0.75,  0.5 ])
+        array([ 0.5 ,  0.75,  0.5 ])
 
         In higher dimensions, a sequence of index array-likes must be
         given, or a single sequence for a single point:
@@ -1095,12 +1135,12 @@ class SamplingOperator(Operator):
         >>> x = space.element([[1, 2, 3],
         ...                    [4, 5, 6]])
         >>> op(x)
-        rn(1).element([ 3.])
+        array([ 3.])
         >>> sampling_points = [[0, 1, 1],  # indices (0, 2), (1, 1), (1, 0)
         ...                    [2, 1, 0]]
         >>> op = odl.SamplingOperator(space, sampling_points)
         >>> op(x)
-        rn(3).element([ 3.,  5.,  4.])
+        array([ 3.,  5.,  4.])
         """
         if not isinstance(domain, TensorSpace):
             raise TypeError('`domain` must be a `TensorSpace` instance, got '
@@ -1134,7 +1174,7 @@ class SamplingOperator(Operator):
 
     def _call(self, x):
         """Return values at indices, possibly weighted."""
-        out = x.asarray().ravel()[self._indices_flat]
+        out = x.ravel()[self._indices_flat]
 
         if self.variant == 'point_eval':
             weights = 1.0
@@ -1165,7 +1205,9 @@ class SamplingOperator(Operator):
         >>> op = odl.SamplingOperator(space, sampling_points)
         >>> x = space.element([[1, 2, 3],
         ...                    [4, 5, 6]])
-        >>> abs(op.adjoint(op(x)).inner(x) - op(x).inner(op(x))) < 1e-10
+        >>> AtAxx = op.domain.inner(op.adjoint(op(x)), x)
+        >>> AxAx = op.range.inner(op(x), op(x))
+        >>> abs(AtAxx - AxAx) < 1e-10
         True
 
         The ``'integrate'`` variant adjoint puts ones at the indices in
@@ -1174,11 +1216,11 @@ class SamplingOperator(Operator):
         >>> op = odl.SamplingOperator(space, sampling_points,
         ...                           variant='integrate')
         >>> op.adjoint(op.range.one())  # (0, 0) occurs twice
-        uniform_discr([-1., -1.], [ 1.,  1.], (2, 3)).element(
-            [[ 2.,  0.,  0.],
-             [ 0.,  1.,  1.]]
-        )
-        >>> abs(op.adjoint(op(x)).inner(x) - op(x).inner(op(x))) < 1e-10
+        array([[ 2.,  0.,  0.],
+               [ 0.,  1.,  1.]])
+        >>> AtAxx = op.domain.inner(op.adjoint(op(x)), x)
+        >>> AxAx = op.range.inner(op(x), op(x))
+        >>> abs(AtAxx - AxAx) < 1e-10
         True
         """
         if self.variant == 'point_eval':
@@ -1255,15 +1297,16 @@ class WeightedSumSamplingOperator(Operator):
         >>> x = op.domain.element([1])
         >>> # Put value 1 at index 1
         >>> op(x)
-        uniform_discr(0.0, 1.0, 4).element([ 0.,  1.,  0.,  0.])
-        >>> op = odl.WeightedSumSamplingOperator(space,
-        ...                                      sampling_points=[1, 2, 1])
+        array([ 0.,  1.,  0.,  0.])
+        >>> op = odl.WeightedSumSamplingOperator(
+        ...     space, sampling_points=[1, 2, 1]
+        ... )
         >>> op.domain
         rn(3)
         >>> x = op.domain.element([1, 0.5, 0.25])
         >>> # Index 1 occurs twice and gets two contributions (1 and 0.25)
         >>> op(x)
-        uniform_discr(0.0, 1.0, 4).element([ 0.  ,  1.25,  0.5 ,  0.  ])
+        array([ 0.  ,  1.25,  0.5 ,  0.  ])
 
         The ``'dirac'`` variant scales the values by the reciprocal
         cell volume of the operator range:
@@ -1274,7 +1317,7 @@ class WeightedSumSamplingOperator(Operator):
         >>> 1 / op.range.cell_volume  # the scaling constant
         4.0
         >>> op(x)
-        uniform_discr(0.0, 1.0, 4).element([ 0.,  5.,  2.,  0.])
+        array([ 0.,  5.,  2.,  0.])
 
         In higher dimensions, a sequence of index array-likes must be
         given, or a single sequence for a single point:
@@ -1286,19 +1329,15 @@ class WeightedSumSamplingOperator(Operator):
         >>> x = op.domain.element([1])
         >>> # Insert the value 1 at index (0, 2)
         >>> op(x)
-        uniform_discr([ 0.,  0.], [ 1.,  1.], (2, 3)).element(
-            [[ 0.,  0.,  1.],
-             [ 0.,  0.,  0.]]
-        )
+        array([[ 0.,  0.,  1.],
+               [ 0.,  0.,  0.]])
         >>> sampling_points = [[0, 1],  # indices (0, 2) and (1, 1)
         ...                    [2, 1]]
         >>> op = odl.WeightedSumSamplingOperator(space, sampling_points)
         >>> x = op.domain.element([1, 2])
         >>> op(x)
-        uniform_discr([ 0.,  0.], [ 1.,  1.], (2, 3)).element(
-            [[ 0.,  0.,  1.],
-             [ 0.,  2.,  0.]]
-        )
+        array([[ 0.,  0.,  1.],
+               [ 0.,  2.,  0.]])
         """
         if not isinstance(range, TensorSpace):
             raise TypeError('`range` must be a `TensorSpace` instance, got '
@@ -1370,13 +1409,17 @@ class WeightedSumSamplingOperator(Operator):
         >>> y = op.range.element([[1, 2, 3],
         ...                       [4, 5, 6]])
         >>> op.adjoint(y)
-        rn(4).element([ 1.,  5.,  6.,  1.])
+        array([ 1.,  5.,  6.,  1.])
         >>> x = op.domain.element([1, 2, 3, 4])
-        >>> abs(op.adjoint(op(x)).inner(x) - op(x).inner(op(x))) < 1e-10
+        >>> AtAxx = op.domain.inner(op.adjoint(op(x)), x)
+        >>> AxAx = op.range.inner(op(x), op(x))
+        >>> abs(AtAxx - AxAx) < 1e-10
         True
         >>> op = odl.WeightedSumSamplingOperator(space, sampling_points,
         ...                                      variant='char_fun')
-        >>> abs(op.adjoint(op(x)).inner(x) - op(x).inner(op(x))) < 1e-10
+        >>> AtAxx = op.domain.inner(op.adjoint(op(x)), x)
+        >>> AxAx = op.range.inner(op(x), op(x))
+        >>> abs(AtAxx - AxAx) < 1e-10
         True
         """
         if self.variant == 'dirac':
@@ -1435,10 +1478,10 @@ class FlatteningOperator(Operator):
         >>> x = space.element([[1, 2, 3],
         ...                    [4, 5, 6]])
         >>> op(x)
-        rn(6).element([ 1.,  2.,  3.,  4.,  5.,  6.])
+        array([ 1.,  2.,  3.,  4.,  5.,  6.])
         >>> op = odl.FlatteningOperator(space, order='F')
         >>> op(x)
-        rn(6).element([ 1.,  4.,  2.,  5.,  3.,  6.])
+        array([ 1.,  4.,  2.,  5.,  3.,  6.])
         """
         if not isinstance(domain, TensorSpace):
             raise TypeError('`domain` must be a `TensorSpace` instance, got '
@@ -1472,13 +1515,13 @@ class FlatteningOperator(Operator):
         >>> 1 / space.cell_volume  # the scaling factor
         2.0
         >>> op.adjoint(y)
-        uniform_discr([-1., -1.], [ 1.,  1.], (2, 4)).element(
-            [[  2.,   4.,   6.,   8.],
-             [ 10.,  12.,  14.,  16.]]
-        )
+        array([[  2.,   4.,   6.,   8.],
+               [ 10.,  12.,  14.,  16.]])
         >>> x = space.element([[1, 2, 3, 4],
         ...                    [5, 6, 7, 8]])
-        >>> abs(op.adjoint(op(x)).inner(x) - op(x).inner(op(x))) < 1e-10
+        >>> AtAxx = op.domain.inner(op.adjoint(op(x)), x)
+        >>> AxAx = op.range.inner(op(x), op(x))
+        >>> abs(AtAxx - AxAx) < 1e-10
         True
         """
         scaling = getattr(self.domain, 'cell_volume', 1.0)
@@ -1494,17 +1537,13 @@ class FlatteningOperator(Operator):
         >>> op = odl.FlatteningOperator(space)
         >>> y = op.range.element([1, 2, 3, 4, 5, 6, 7, 8])
         >>> op.inverse(y)
-        uniform_discr([-1., -1.], [ 1.,  1.], (2, 4)).element(
-            [[ 1.,  2.,  3.,  4.],
-             [ 5.,  6.,  7.,  8.]]
-        )
+        array([[ 1.,  2.,  3.,  4.],
+               [ 5.,  6.,  7.,  8.]])
         >>> op = odl.FlatteningOperator(space, order='F')
         >>> op.inverse(y)
-        uniform_discr([-1., -1.], [ 1.,  1.], (2, 4)).element(
-            [[ 1.,  3.,  5.,  7.],
-             [ 2.,  4.,  6.,  8.]]
-        )
-        >>> op(op.inverse(y)) == y
+        array([[ 1.,  3.,  5.,  7.],
+               [ 2.,  4.,  6.,  8.]])
+        >>> all(op(op.inverse(y)) == y)
         True
         """
         op = self
@@ -1526,8 +1565,7 @@ class FlatteningOperator(Operator):
 
             def _call(self, x):
                 """Reshape ``x`` back to n-dim. shape."""
-                return np.reshape(x.asarray(), self.range.shape,
-                                  order=op.order)
+                return np.reshape(x, self.range.shape, order=op.order)
 
             @property
             def adjoint(self):

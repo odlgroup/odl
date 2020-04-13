@@ -57,15 +57,15 @@ def test_dca():
 
     # Set up some space elements for the solvers to use
     x = space.element(-0.5)
-    x_dca = x.copy()
-    x_prox_dca = x.copy()
-    x_doubleprox = x.copy()
-    x_simpl = x.copy()
+    x_dca = space.copy(x)
+    x_prox_dca = space.copy(x)
+    x_doubleprox = space.copy(x)
+    x_simpl = space.copy(x)
 
     # Some additional parameters for some of the solvers
     phi = odl.solvers.ZeroFunctional(space)
     y = space.element(3)
-    y_simpl = y.copy()
+    y_simpl = space.copy(y)
     gamma = 1
     mu = 1
     K = odl.IdentityOperator(space)

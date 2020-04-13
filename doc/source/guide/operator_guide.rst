@@ -50,7 +50,7 @@ example::
   class MatrixOperator(odl.Operator):
       ...
       def _call(self, x, out):
-          self.matrix.dot(x, out=out.asarray())
+          self.matrix.dot(x, out=out)
 
 In-place evaluation is usually more efficient and should be used
 *whenever possible*.
@@ -86,8 +86,7 @@ avoided*.
     # In-place evaluation
     operator(x, out=y)
 
-This public calling interface is (duck-)type-checked, so the private methods
-can safely assume that their input data is of the operator domain element type.
+This public calling interface is (duck-)type-checked, so the private methods can safely assume that their input data is of the operator domain element type.
 
 Operator arithmetic
 -------------------
@@ -108,9 +107,7 @@ Another example is matrix multiplication, which corresponds to operator composit
 
 .. _functional: https://en.wikipedia.org/wiki/Functional_(mathematics)
 
-All available operator arithmetic is shown below. ``A``, ``B`` represent arbitrary `Operator`'s,
-``f`` is an `Operator` whose `Operator.range` is a `Field` (sometimes called a functional_), and
-``a`` is a scalar.
+All available operator arithmetic is shown below. ``A``, ``B`` represent arbitrary `Operator`'s, ``f`` is an `Operator` whose `Operator.range` is a `Field` (sometimes called a functional_), and ``a`` is a scalar.
 
 +------------------+-----------------+----------------------------+
 | Code             | Meaning         | Class                      |
@@ -123,7 +120,7 @@ All available operator arithmetic is shown below. ``A``, ``B`` represent arbitra
 +------------------+-----------------+----------------------------+
 | ``(A * a)(x)``   | ``A(a * x)``    | `OperatorRightScalarMult`  |
 +------------------+-----------------+----------------------------+
-| ``(v * f)(x)``   | ``v * f(x)``    | `FunctionalLeftVectorMult` |
+| ``(v * f)(x)``   | ``v * f(x)``    | Not supported (*)          |
 +------------------+-----------------+----------------------------+
 | ``(v * A)(x)``   | ``v * A(x)``    | `OperatorLeftVectorMult`   |
 +------------------+-----------------+----------------------------+
@@ -132,23 +129,24 @@ All available operator arithmetic is shown below. ``A``, ``B`` represent arbitra
 | not available    | ``A(x) * B(x)`` | `OperatorPointwiseProduct` |
 +------------------+-----------------+----------------------------+
 
+(*) The range of such an expression, if interpreted as operator, cannot be inferred.
+
 There are also a few derived expressions using the above:
 
-+------------------+--------------------------------------+
-| Code             | Meaning                              |
-+==================+======================================+
-| ``(+A)(x)``      | ``A(x)``                             |
-+------------------+--------------------------------------+
-| ``(-A)(x)``      | ``(-1) * A(x)``                      |
-+------------------+--------------------------------------+
-| ``(A - B)(x)``   | ``A(x) + (-1) * B(x)``               |
-+------------------+--------------------------------------+
-| ``A**n(x)``      | ``A(A**(n-1)(x))``, ``A^1(x) = A(x)``|
-+------------------+--------------------------------------+
-| ``(A / a)(x)``   | ``A((1/a) * x)``                     |
-+------------------+--------------------------------------+
-| ``(A @ B)(x)``   | ``(A * B)(x)``                       |
-+------------------+--------------------------------------+
++------------------+-------------------------------------------+
+| Code             | Meaning                                   |
++==================+===========================================+
+| ``(+A)(x)``      | ``A(x)``                                  |
++------------------+-------------------------------------------+
+| ``(-A)(x)``      | ``(-1) * A(x)``                           |
++------------------+-------------------------------------------+
+| ``(A - B)(x)``   | ``A(x) + (-1) * B(x)``                    |
++------------------+-------------------------------------------+
+| ``(A **n)(x)``   | ``A((A ** (n-1))(x))``, ``A^1(x) = A(x)`` |
++------------------+-------------------------------------------+
+| ``(A / a)(x)``   | ``A((1/a) * x)``                          |
++------------------+-------------------------------------------+
+| ``(A @ B)(x)``   | ``(A * B)(x)``                            |
++------------------+-------------------------------------------+
 
-Except for composition, operator arithmetic is generally only defined when `Operator.domain` and
-`Operator.range` are either instances of `LinearSpace` or `Field`.
+Except for composition, operator arithmetic is generally only defined when `Operator.domain` and `Operator.range` are either instances of `LinearSpace` or `Field`.

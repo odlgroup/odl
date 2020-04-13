@@ -1,4 +1,4 @@
-# Copyright 2014-2019 The ODL contributors
+# Copyright 2014-2020 The ODL contributors
 #
 # This file is part of ODL.
 #
@@ -18,9 +18,19 @@ from past.types.basestring import basestring
 
 from odl.util import is_int_dtype, is_numeric_dtype, is_real_dtype, unique
 
-__all__ = ('Set', 'EmptySet', 'UniversalSet', 'Field', 'Integers',
-           'RealNumbers', 'ComplexNumbers', 'Strings', 'CartesianProduct',
-           'SetUnion', 'SetIntersection', 'FiniteSet')
+__all__ = (
+    'Set',
+    'EmptySet',
+    'Strings',
+    'Field',
+    'ComplexNumbers',
+    'RealNumbers',
+    'Integers',
+    'CartesianProduct',
+    'SetUnion',
+    'SetIntersection',
+    'FiniteSet',
+)
 
 
 class Set(object):
@@ -186,34 +196,6 @@ class EmptySet(Set):
         return None
 
 
-class UniversalSet(Set):
-
-    """Set of all objects.
-
-    Forget about set theory for a moment :-).
-    """
-
-    def __contains__(self, other):
-        """Return ``other in self``, always ``True``."""
-        return True
-
-    def contains_set(self, other):
-        """Return ``True`` for any set."""
-        return isinstance(other, Set)
-
-    def __eq__(self, other):
-        """Return ``self == other``."""
-        return isinstance(other, UniversalSet)
-
-    def __hash__(self):
-        """Return ``hash(self)``."""
-        return hash(type(self))
-
-    def element(self, inp=None):
-        """Return ``inp`` in any case."""
-        return inp
-
-
 class Strings(Set):
 
     """Set of fixed-length (unicode) strings."""
@@ -306,15 +288,36 @@ class Field(Set):
 
         Notes
         -----
-        This is a hack to make fields to work via duck-typing with
-        `LinearSpace`'s.
+        This is a hack to make fields work similarly to `LinearSpace`'s.
         """
         return self
+
+    def astype(self, dtype):
+        """Return field corresponding to given dtype.
+
+        Notes
+        -----
+        This is a hack to make fields work similarly to `LinearSpace`'s.
+        """
+        dtype = np.dtype(dtype)
+        if dtype == int:
+            return Integers()
+        elif dtype == float:
+            return RealNumbers()
+        elif dtype == complex:
+            return ComplexNumbers()
+        else:
+            raise ValueError(
+                '`dtype` {} not supported'.format(dtype_repr(dtype))
+            )
+
 
 
 class ComplexNumbers(Field):
 
     """Set of complex numbers."""
+
+    dtype = np.dtype(complex)
 
     def __contains__(self, other):
         """Return ``other in self``."""
@@ -378,6 +381,8 @@ class RealNumbers(Field):
 
     """Set of real numbers."""
 
+    dtype = np.dtype(float)
+
     def __contains__(self, other):
         """Return ``other in self``."""
         return isinstance(other, Real)
@@ -438,6 +443,8 @@ class RealNumbers(Field):
 class Integers(Set):
 
     """Set of integers."""
+
+    dtype = np.dtype(int)
 
     def __contains__(self, other):
         """Return ``other in self``."""

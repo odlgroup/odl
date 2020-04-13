@@ -189,8 +189,8 @@ def test_fbp_reconstruction(projector):
     fbp_result = fbp_operator(projections)
 
     # Allow 30 % error
-    maxerr = vol.norm() * 0.3
-    error = vol.dist(fbp_result)
+    maxerr = projector.domain.norm(vol) * 0.3
+    error = projector.domain.dist(vol, fbp_result)
     assert error < maxerr
 
 
@@ -224,8 +224,8 @@ def test_fbp_reconstruction_filters(filter_type, frequency_scaling, weighting):
 
     fbp_result = fbp_operator(projections)
 
-    maxerr = vol.norm() / 5.0
-    error = vol.dist(fbp_result)
+    maxerr = projector.domain.norm(vol) / 5.0
+    error = projector.domain.dist(vol, fbp_result)
     assert error < maxerr
 
 

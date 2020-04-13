@@ -95,10 +95,12 @@ def landweber(op, x, rhs, niter, omega=None, projection=None, callback=None):
     <https://en.wikipedia.org/wiki/Landweber_iteration>`_.
     """
     # TODO: add a book reference
+    dom = op.domain
 
-    if x not in op.domain:
-        raise TypeError('`x` {!r} is not in the domain of `op` {!r}'
-                        ''.format(x, op.domain))
+    if x not in dom:
+        raise TypeError(
+            '`x` {!r} is not in the domain of `op` {!r}'.format(x, dom)
+        )
 
     if omega is None:
         omega = 1 / op.norm(estimate=True) ** 2
@@ -111,7 +113,7 @@ def landweber(op, x, rhs, niter, omega=None, projection=None, callback=None):
         op(x, out=tmp_ran)
         tmp_ran -= rhs
         op.derivative(x).adjoint(tmp_ran, out=tmp_dom)
-        x.lincomb(1, x, -omega, tmp_dom)
+        dom.lincomb(1, x, -omega, tmp_dom, out=x)
 
         if projection is not None:
             projection(x)
@@ -159,20 +161,25 @@ def conjugate_gradient(op, x, rhs, niter, callback=None):
     """
     # TODO: add a book reference
     # TODO: update doc
+    dom = op.domain
+    ran = op.range
 
-    if op.domain != op.range:
-        raise ValueError('operator needs to be self-adjoint')
+    if dom != ran:
+        raise ValueError(
+            '`op.domain` and `op.range` must coincide, but {!r} != {!r}'
+            ''.format(dom, ran)
+        )
 
-    if x not in op.domain:
+    if x not in dom:
         raise TypeError('`x` {!r} is not in the domain of `op` {!r}'
-                        ''.format(x, op.domain))
+                        ''.format(x, dom))
 
     r = op(x)
-    r.lincomb(1, rhs, -1, r)       # r = rhs - A x
-    p = r.copy()
-    d = op.domain.element()  # Extra storage for storing A x
+    dom.lincomb(1, rhs, -1, r, out=r)  # r = rhs - A x
+    p = ran.copy(r)
+    d = dom.element()  # Extra storage for storing A x
 
-    sqnorm_r_old = r.norm() ** 2  # Only recalculate norm after update
+    sqnorm_r_old = dom.norm(r) ** 2  # Only recalculate norm after update
 
     if sqnorm_r_old == 0:  # Return if no step forward
         return
@@ -180,22 +187,21 @@ def conjugate_gradient(op, x, rhs, niter, callback=None):
     for _ in range(niter):
         op(p, out=d)  # d = A p
 
-        inner_p_d = p.inner(d)
-
+        inner_p_d = dom.inner(p, d)
         if inner_p_d == 0.0:  # Return if step is 0
             return
 
         alpha = sqnorm_r_old / inner_p_d
 
-        x.lincomb(1, x, alpha, p)            # x = x + alpha*p
-        r.lincomb(1, r, -alpha, d)           # r = r - alpha*d
+        dom.lincomb(1, x, alpha, p, out=x)   # x = x + alpha * p
+        dom.lincomb(1, r, -alpha, d, out=r)  # r = r - alpha * d
 
-        sqnorm_r_new = r.norm() ** 2
+        sqnorm_r_new = dom.norm(r) ** 2
 
         beta = sqnorm_r_new / sqnorm_r_old
         sqnorm_r_old = sqnorm_r_new
 
-        p.lincomb(1, r, beta, p)                       # p = s + b * p
+        dom.lincomb(1, r, beta, p, out=p)    # p = s + b * p
 
         if callback is not None:
             callback(x)
@@ -246,34 +252,36 @@ Conjugate_gradient_on_the_normal_equations>`_.
     """
     # TODO: add a book reference
     # TODO: update doc
+    dom = op.domain
+    ran = op.range
 
-    if x not in op.domain:
+    if x not in dom:
         raise TypeError('`x` {!r} is not in the domain of `op` {!r}'
-                        ''.format(x, op.domain))
+                        ''.format(x, dom))
 
     d = op(x)
-    d.lincomb(1, rhs, -1, d)               # d = rhs - A x
+    ran.lincomb(1, rhs, -1, d, out=d)      # d <- rhs - A(x)
     p = op.derivative(x).adjoint(d)
-    s = p.copy()
+    s = dom.copy(p)
     q = op.range.element()
-    sqnorm_s_old = s.norm() ** 2  # Only recalculate norm after update
+    sqnorm_s_old = dom.norm(s) ** 2  # Only recalculate norm after update
 
     for _ in range(niter):
         op(p, out=q)                       # q = A p
-        sqnorm_q = q.norm() ** 2
+        sqnorm_q = ran.norm(q) ** 2
         if sqnorm_q == 0.0:  # Return if residual is 0
             return
 
         a = sqnorm_s_old / sqnorm_q
-        x.lincomb(1, x, a, p)               # x = x + a*p
-        d.lincomb(1, d, -a, q)              # d = d - a*Ap
+        dom.lincomb(1, x, a, p, out=x)      # x <- x + a * p
+        ran.lincomb(1, d, -a, q, out=d)     # d <- d - a * A(p)
         op.derivative(p).adjoint(d, out=s)  # s = A^T d
 
-        sqnorm_s_new = s.norm() ** 2
+        sqnorm_s_new = dom.norm(s) ** 2
         b = sqnorm_s_new / sqnorm_s_old
         sqnorm_s_old = sqnorm_s_new
 
-        p.lincomb(1, s, b, p)               # p = s + b * p
+        dom.lincomb(1, s, b, p, out=p)      # p = s + b * p
 
         if callback is not None:
             callback(x)
@@ -347,18 +355,20 @@ def gauss_newton(op, x, rhs, niter, zero_seq=exp_zero_seq(2.0),
     callback : callable, optional
         Object executing code per iteration, e.g. plotting each iterate.
     """
-    if x not in op.domain:
+    dom = op.domain
+    ran = op.range
+    if x not in dom:
         raise TypeError('`x` {!r} is not in the domain of `op` {!r}'
-                        ''.format(x, op.domain))
+                        ''.format(x, dom))
 
-    x0 = x.copy()
-    id_op = IdentityOperator(op.domain)
-    dx = op.domain.zero()
+    x0 = dom.copy(x)
+    id_op = IdentityOperator(dom)
+    dx = dom.zero()
 
-    tmp_dom = op.domain.element()
-    u = op.domain.element()
-    tmp_ran = op.range.element()
-    v = op.range.element()
+    tmp_dom = dom.element()
+    u = dom.element()
+    tmp_ran = ran.element()
+    v = ran.element()
 
     for _ in range(niter):
         tm = next(zero_seq)
@@ -366,13 +376,13 @@ def gauss_newton(op, x, rhs, niter, zero_seq=exp_zero_seq(2.0),
         deriv_adjoint = deriv.adjoint
 
         # v = rhs - op(x) - deriv(x0-x)
-        # u = deriv.T(v)
-        op(x, out=tmp_ran)              # eval  op(x)
-        v.lincomb(1, rhs, -1, tmp_ran)  # assign  v = rhs - op(x)
-        tmp_dom.lincomb(1, x0, -1, x)   # assign temp  tmp_dom = x0 - x
-        deriv(tmp_dom, out=tmp_ran)     # eval  deriv(x0-x)
-        v -= tmp_ran                    # assign  v = rhs-op(x)-deriv(x0-x)
-        deriv_adjoint(v, out=u)         # eval/assign  u = deriv.T(v)
+        # u = deriv.adjoint(v)
+        op(x, out=tmp_ran)
+        ran.lincomb(1, rhs, -1, tmp_ran, out=v)  # v <- rhs - op(x)
+        dom.lincomb(1, x0, -1, x, out=tmp_dom)   # tmp_dom <- x0 - x
+        deriv(tmp_dom, out=tmp_ran)
+        v -= tmp_ran
+        deriv_adjoint(v, out=u)
 
         # Solve equation Tikhonov regularized system
         # (deriv.T o deriv + tm * id_op)^-1 u = dx
@@ -383,7 +393,7 @@ def gauss_newton(op, x, rhs, niter, zero_seq=exp_zero_seq(2.0),
         conjugate_gradient(tikh_op, dx, u, 3)
 
         # Update x
-        x.lincomb(1, x0, 1, dx)  # x = x0 + dx
+        dom.lincomb(1, x0, 1, dx, out=x)  # x = x0 + dx
 
         if callback is not None:
             callback(x)
@@ -474,13 +484,13 @@ def kaczmarz(ops, x, rhs, niter, omega=1, projection=None, random=False,
     --------
     landweber
     """
-    domain = ops[0].domain
-    if any(domain != opi.domain for opi in ops):
+    dom = ops[0].domain
+    if any(opi.domain != dom for opi in ops):
         raise ValueError('domains of `ops` are not all equal')
 
-    if x not in domain:
+    if x not in dom:
         raise TypeError('`x` {!r} is not in the domain of `ops` {!r}'
-                        ''.format(x, domain))
+                        ''.format(x, dom))
 
     if len(ops) != len(rhs):
         raise ValueError('`number of `ops` {} does not match number of '
@@ -494,7 +504,7 @@ def kaczmarz(ops, x, rhs, niter, omega=1, projection=None, random=False,
     tmp_rans = {ran: ran.element() for ran in unique_ranges}
 
     # Single reusable element in the domain
-    tmp_dom = domain.element()
+    tmp_dom = dom.element()
 
     # Iteratively find solution
     for _ in range(niter):
@@ -511,7 +521,7 @@ def kaczmarz(ops, x, rhs, niter, omega=1, projection=None, random=False,
 
             # Update x
             ops[i].derivative(x).adjoint(tmp_ran, out=tmp_dom)
-            x.lincomb(1, x, -omega[i], tmp_dom)
+            dom.lincomb(1, x, -omega[i], tmp_dom, out=x)
 
             if projection is not None:
                 projection(x)

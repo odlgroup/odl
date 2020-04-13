@@ -23,11 +23,8 @@ rhs = space.element(lambda x: np.exp(-(x[0]**2 + x[1]**2) / 0.1**2))
 # Convert laplacian to scipy operator
 scipy_laplacian = odl.operator.oputils.as_scipy_operator(laplacian)
 
-# Convert to array and flatten
-rhs_arr = rhs.asarray().ravel()
-
 # Solve using scipy
-result, info = scipy_solvers.cg(scipy_laplacian, rhs_arr)
+result, info = scipy_solvers.cg(scipy_laplacian, rhs.ravel())
 
 # Other options include
 # result, info = scipy_solvers.cgs(scipy_laplacian, rhs_arr)
@@ -38,5 +35,5 @@ result, info = scipy_solvers.cg(scipy_laplacian, rhs_arr)
 
 # Convert back to odl and display result
 result_odl = space.element(result.reshape(space.shape))  # result is flat
-result_odl.show('Result')
-(rhs - laplacian(result_odl)).show('Residual', force_show=True)
+space.show(result_odl, 'Result')
+space.show(rhs - laplacian(result_odl), 'Residual', force_show=True)

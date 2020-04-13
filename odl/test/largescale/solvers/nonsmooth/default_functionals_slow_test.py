@@ -114,7 +114,7 @@ EPS = 1e-6
 
 def proximal_objective(functional, x, y):
     """Objective function of the proximal optimization problem."""
-    return functional(y) + (1.0 / 2.0) * (x - y).norm() ** 2
+    return functional(y) + (1.0 / 2.0) * functional.domain.norm(x - y) ** 2
 
 
 def test_proximal_defintion(functional, stepsize):
@@ -185,7 +185,7 @@ def test_proximal_defintion(functional, stepsize):
 
 def convex_conj_objective(functional, x, y):
     """Objective function of the convex conjugate problem."""
-    return x.inner(y) - functional(x)
+    return functional.domain.inner(x, y) - functional(x)
 
 
 def func_convex_conj_has_call(functional):
@@ -226,7 +226,7 @@ def test_convex_conj_defintion(functional):
         f_convex_conj_y = f_convex_conj(y)
 
         x = noise_element(functional.domain)
-        lhs = x.inner(y) - functional(x)
+        lhs = functional.domain.inner(x, y) - functional(x)
 
         if not lhs <= f_convex_conj_y + EPS:
             print(repr(functional), repr(f_convex_conj), x, y, lhs,

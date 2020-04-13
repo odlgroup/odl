@@ -15,7 +15,7 @@ plt.ylim(-m, m)
 
 # Reuse the figure indefinitely
 for i in range(m):
-    fig = (elem * i).show(fig=fig)
+    fig = space.show(elem * i, fig=fig)
     plt.pause(0.1)
 
 plt.show()

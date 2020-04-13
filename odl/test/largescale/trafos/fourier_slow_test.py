@@ -79,8 +79,8 @@ def test_fourier_trafo_forward_complex(domain, impl):
     ball_dom_ft = ft(ball_dom)
     ball_ran_ift = ft.adjoint(ball_ran)
     assert (
-        ball_dom.inner(ball_ran_ift)
-        == pytest.approx(ball_ran.inner(ball_dom_ft), rel=0.1)
+        ft.domain.inner(ball_dom, ball_ran_ift)
+        == pytest.approx(ft.range.inner(ball_ran, ball_dom_ft), rel=0.1)
     )
 
 

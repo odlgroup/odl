@@ -31,37 +31,50 @@ def iterative_solver(request):
 
     if solver_name == 'steepest_descent':
         def solver(op, x, rhs):
-            norm2 = op.adjoint(op(x)).norm() / x.norm()
+            space = op.domain
+            norm2 = space.norm(op.adjoint(op(x))) / space.norm(x)
             func = odl.solvers.L2NormSquared(op.domain) * (op - rhs)
 
             odl.solvers.steepest_descent(func, x, line_search=0.5 / norm2)
+
     elif solver_name == 'adam':
         def solver(op, x, rhs):
-            norm2 = op.adjoint(op(x)).norm() / x.norm()
+            space = op.domain
+            norm2 = space.norm(op.adjoint(op(x))) / space.norm(x)
             func = odl.solvers.L2NormSquared(op.domain) * (op - rhs)
 
             odl.solvers.adam(func, x, learning_rate=4.0 / norm2, maxiter=150)
+
     elif solver_name == 'landweber':
         def solver(op, x, rhs):
-            norm2 = op.adjoint(op(x)).norm() / x.norm()
+            space = op.domain
+            norm2 = space.norm(op.adjoint(op(x))) / space.norm(x)
             odl.solvers.landweber(op, x, rhs, niter=50, omega=0.5 / norm2)
+
     elif solver_name == 'conjugate_gradient':
         def solver(op, x, rhs):
             odl.solvers.conjugate_gradient(op, x, rhs, niter=10)
+
     elif solver_name == 'conjugate_gradient_normal':
         def solver(op, x, rhs):
             odl.solvers.conjugate_gradient_normal(op, x, rhs, niter=10)
+
     elif solver_name == 'mlem':
         def solver(op, x, rhs):
             odl.solvers.mlem(op, x, rhs, niter=10)
+
     elif solver_name == 'osmlem':
         def solver(op, x, rhs):
             odl.solvers.osmlem([op, op], x, [rhs, rhs], niter=10)
+
     elif solver_name == 'kaczmarz':
         def solver(op, x, rhs):
-            norm2 = op.adjoint(op(x)).norm() / x.norm()
-            odl.solvers.kaczmarz([op, op], x, [rhs, rhs], niter=20,
-                                 omega=0.5 / norm2)
+            space = op.domain
+            norm2 = space.norm(op.adjoint(op(x))) / space.norm(x)
+            odl.solvers.kaczmarz(
+                [op, op], x, [rhs, rhs], niter=20, omega=0.5 / norm2
+            )
+
     else:
         raise ValueError('solver not valid')
 
@@ -118,10 +131,12 @@ def test_steepst_descent():
     rosenbrock = odl.solvers.RosenbrockFunctional(space, scale)
 
     line_search = odl.solvers.BacktrackingLineSearch(
-        rosenbrock, 0.1, 0.01)
+        rosenbrock, tau=0.1, discount=0.01
+    )
     x = rosenbrock.domain.zero()
-    odl.solvers.steepest_descent(rosenbrock, x, maxiter=40,
-                                 line_search=line_search)
+    odl.solvers.steepest_descent(
+        rosenbrock, x, maxiter=40, line_search=line_search
+    )
 
     assert all_almost_equal(x, [1, 1, 1], ndigits=2)
 

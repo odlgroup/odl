@@ -19,10 +19,11 @@ from builtins import object
 
 import numpy as np
 
+from odl.set import LinearSpace
 from odl.util import signature_string
 
 __all__ = ('Callback', 'CallbackStore', 'CallbackApply', 'CallbackPrintTiming',
-           'CallbackPrintIteration', 'CallbackPrint', 'CallbackPrintNorm',
+           'CallbackPrintIteration', 'CallbackPrint',
            'CallbackShow', 'CallbackSaveToDisk', 'CallbackSleep',
            'CallbackShowConvergence', 'CallbackPrintHardwareUsage',
            'CallbackProgressBar', 'save_animation')
@@ -94,7 +95,7 @@ class Callback(object):
         >>> operator = odl.ScalingOperator(r3, 2.0)
         >>> composed_callback = callback * operator
         >>> composed_callback([1, 2, 3])
-        rn(3).element([ 2.,  4.,  6.])
+        array([ 2.,  4.,  6.])
         """
         return _CallbackCompose(self, other)
 
@@ -219,7 +220,7 @@ class CallbackStore(Callback):
 
         Store the norm of the results:
 
-        >>> norm_function = lambda x: x.norm()
+        >>> norm_function = lambda x: odl.rn(3).norm(x)
         >>> callback = CallbackStore() * norm_function
         """
         self.results = [] if results is None else results
@@ -552,19 +553,6 @@ class CallbackPrint(Callback):
         return '{}({})'.format(self.__class__.__name__, inner_str)
 
 
-class CallbackPrintNorm(Callback):
-
-    """Callback for printing the current norm."""
-
-    def __call__(self, result):
-        """Print the current norm."""
-        print("norm = {}".format(result.norm()))
-
-    def __repr__(self):
-        """Return ``repr(self)``."""
-        return '{}()'.format(self.__class__.__name__)
-
-
 class CallbackShow(Callback):
 
     """Callback for showing iterates.
@@ -575,13 +563,15 @@ class CallbackShow(Callback):
     odl.space.base_tensors.Tensor.show
     """
 
-    def __init__(self, title=None, step=1, saveto=None, **kwargs):
+    def __init__(self, space, title=None, step=1, saveto=None, **kwargs):
         """Initialize a new instance.
 
         Additional parameters are passed through to the ``show`` method.
 
         Parameters
         ----------
+        space : `LinearSpace`
+            Space that implements the ``show`` method for displaying elements.
         title : str, optional
             Format string for the title of the displayed figure.
             The title name is generated as ::
@@ -619,24 +609,36 @@ class CallbackShow(Callback):
         --------
         Show the result of each iterate:
 
-        >>> callback = CallbackShow()
+        >>> space = odl.uniform_discr([-1, -1], [1, 1], (100, 100))
+        >>> callback = CallbackShow(space)
 
         Show and save every fifth iterate in ``png`` format, overwriting the
         previous one:
 
-        >>> callback = CallbackShow(step=5,
-        ...                         saveto='my_path/my_iterate.png')
+        >>> callback = CallbackShow(
+        ...     space, step=5, saveto='my_path/my_iterate.png'
+        ... )
 
         Show and save each fifth iterate in ``png`` format, indexing the files
         with the iteration number:
 
-        >>> callback = CallbackShow(step=5,
-        ...                         saveto='my_path/my_iterate_{}.png')
+        >>> callback = CallbackShow(
+        ...     space, step=5, saveto='my_path/my_iterate_{}.png'
+        ... )
 
         Pass additional arguments to ``show``:
 
-        >>> callback = CallbackShow(step=5, clim=[0, 1])
+        >>> callback = CallbackShow(space, step=5, clim=[0, 1])
         """
+        if not isinstance(space, LinearSpace):
+            raise TypeError(
+                '`space` must be a `LinearSpace`, got {!r}'.format(space)
+            )
+        if not hasattr(space, 'show'):
+            raise ValueError('`space` must have a `show` method')
+
+        self.space = space
+
         if title is None:
             self.title = 'Iterate {}'
         else:
@@ -649,29 +651,24 @@ class CallbackShow(Callback):
         self.step = step
         self.fig = kwargs.pop('fig', None)
         self.iter = 0
-        self.space_of_last_x = None
         self.kwargs = kwargs
 
     def __call__(self, x):
         """Show the current iterate."""
         # Check if we should update the figure in-place
-        x_space = x.space
-        update_in_place = (self.space_of_last_x == x_space)
-        self.space_of_last_x = x_space
-
         if self.iter % self.step == 0:
             title = self.title_formatter(self.iter)
 
             if self.saveto is None:
-                self.fig = x.show(title, fig=self.fig,
-                                  update_in_place=update_in_place,
-                                  **self.kwargs)
-
+                self.fig = self.space.show(
+                    x, title, fig=self.fig, update_in_place=True, **self.kwargs
+                )
             else:
                 saveto = self.saveto_formatter(self.iter)
-                self.fig = x.show(title, fig=self.fig,
-                                  update_in_place=update_in_place,
-                                  saveto=saveto, **self.kwargs)
+                self.fig = self.space.show(
+                    x, title, fig=self.fig, update_in_place=True,
+                    saveto=saveto, **self.kwargs
+                )
 
         self.iter += 1
 
@@ -679,7 +676,6 @@ class CallbackShow(Callback):
         """Set `iter` to 0 and create a new figure."""
         self.iter = 0
         self.fig = None
-        self.space_of_last_x = None
 
     def __repr__(self):
         """Return ``repr(self)``."""
@@ -825,7 +821,7 @@ class CallbackShowConvergence(Callback):
 
     """Displays a convergence plot."""
 
-    def __init__(self, functional, title='convergence', logx=False, logy=False,
+    def __init__(self, functional, title='Convergence', logx=False, logy=False,
                  **kwargs):
         """Initialize a new instance.
 

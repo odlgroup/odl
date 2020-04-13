@@ -16,7 +16,6 @@ import numpy as np
 
 from odl.discr import DiscretizedSpace
 from odl.operator import Operator
-from odl.space.weighting import ConstWeighting
 from odl.tomo.backends import (
     ASTRA_AVAILABLE, ASTRA_CUDA_AVAILABLE, ASTRA_VERSION, SKIMAGE_AVAILABLE,
     AstraCudaBackProjectorImpl, AstraCudaProjectorImpl,
@@ -218,9 +217,10 @@ class RayTransformBase(Operator):
 
             if not reco_space.is_weighted:
                 weighting = None
-            elif (isinstance(reco_space.weighting, ConstWeighting) and
-                  np.isclose(reco_space.weighting.const,
-                             reco_space.cell_volume)):
+            elif (
+                reco_space.weighting_type == 'const'
+                and np.isclose(reco_space.weighting, reco_space.cell_volume)
+            ):
                 # Approximate cell volume
                 # TODO: find a way to treat angles and detector differently
                 # regarding weighting. While the detector should be uniformly
@@ -406,8 +406,13 @@ class RayTransform(RayTransformBase):
 
             if data_impl == 'cpu':
                 return astra_cpu_forward_projector(
-                    x_real, self.geometry, self.range.real_space, out_real,
-                    **kwargs)
+                    x_real,
+                    self.geometry,
+                    self.domain.real_space,
+                    self.range.real_space,
+                    out_real,
+                    **kwargs,
+                )
 
             elif data_impl == 'cuda':
                 if self._astra_wrapper is None:
@@ -426,8 +431,13 @@ class RayTransform(RayTransformBase):
 
         elif self.impl == 'skimage':
             return skimage_radon_forward_projector(
-                x_real, self.geometry, self.range.real_space, out_real,
-                **kwargs)
+                x_real,
+                self.geometry,
+                self.domain.real_space,
+                self.range.real_space,
+                out_real,
+                **kwargs,
+            )
         else:
             # Should never happen
             raise RuntimeError('bad `impl` {!r}'.format(self.impl))
@@ -443,7 +453,7 @@ class RayTransform(RayTransformBase):
         if self._adjoint is not None:
             return self._adjoint
 
-        kwargs = self._extra_kwargs.copy()
+        kwargs = dict(self._extra_kwargs)
         kwargs['domain'] = self.range
         self._adjoint = RayBackProjection(self.domain, self.geometry,
                                           impl=self.impl,
@@ -521,8 +531,13 @@ class RayBackProjection(RayTransformBase):
             backend, data_impl = self.impl.split('_')
             if data_impl == 'cpu':
                 return astra_cpu_back_projector(
-                    x_real, self.geometry, self.range.real_space, out_real,
-                    **kwargs)
+                    x_real,
+                    self.geometry,
+                    self.range.real_space,
+                    self.domain.real_space,
+                    out_real,
+                    **kwargs,
+                )
             elif data_impl == 'cuda':
                 if self._astra_wrapper is None:
                     astra_wrapper = AstraCudaBackProjectorImpl(
@@ -540,8 +555,13 @@ class RayBackProjection(RayTransformBase):
 
         elif self.impl == 'skimage':
             return skimage_radon_back_projector(
-                x_real, self.geometry, self.range.real_space, out_real,
-                **kwargs)
+                x_real,
+                self.geometry,
+                self.range.real_space,
+                self.domain.real_space,
+                out_real,
+                **kwargs,
+            )
         else:
             # Should never happen
             raise RuntimeError('bad `impl` {!r}'.format(self.impl))
@@ -557,7 +577,7 @@ class RayBackProjection(RayTransformBase):
         if self._adjoint is not None:
             return self._adjoint
 
-        kwargs = self._extra_kwargs.copy()
+        kwargs = dict(self._extra_kwargs)
         kwargs['range'] = self.domain
         self._adjoint = RayTransform(self.range, self.geometry,
                                      impl=self.impl,

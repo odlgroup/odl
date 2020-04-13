@@ -434,7 +434,7 @@ class RectGrid(Set):
                     strd.append(0.0)
             self.__stride = np.array(strd)
 
-        return self.__stride.copy()
+        return np.copy(self.__stride)
 
     @property
     def extent(self):

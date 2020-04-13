@@ -17,8 +17,8 @@ from packaging.version import parse as parse_version
 import odl
 from odl.tomo.util.testutils import (
     skip_if_no_astra, skip_if_no_astra_cuda, skip_if_no_skimage)
-from odl.util.testutils import simple_fixture, skip_if_no_largescale
-
+from odl.util.testutils import (
+    all_almost_equal, simple_fixture, skip_if_no_largescale)
 
 # --- pytest fixtures --- #
 
@@ -189,8 +189,8 @@ def test_adjoint(projector):
     backproj = projector.adjoint(proj)
 
     # Verify the identity <Ax, Ax> = <A^* A x, x>
-    result_AxAx = proj.inner(proj)
-    result_xAtAx = backproj.inner(vol)
+    result_AxAx = projector.range.inner(proj, proj)
+    result_xAtAx = projector.domain.inner(backproj, vol)
     assert result_AxAx == pytest.approx(result_xAtAx, rel=rtol)
 
 
@@ -212,7 +212,7 @@ def test_adjoint_of_adjoint(projector):
     proj_adj_adj_adj = projector.adjoint.adjoint.adjoint(proj)
 
     # Verify A^*(y) == ((A^*)^*)^*(x)
-    assert proj_adj == proj_adj_adj_adj
+    assert all_almost_equal(proj_adj, proj_adj_adj_adj)
 
 
 def test_reconstruction(projector):
@@ -235,11 +235,11 @@ def test_reconstruction(projector):
                                           niter=20)
 
     # Make sure the result is somewhat close to the actual result
-    maxerr = vol.norm() * 0.5
+    maxerr = projector.domain.norm(vol) * 0.5
     if np.issubsctype(projector.domain.dtype, np.complexfloating):
         # Error has double the amount of components practically
         maxerr *= np.sqrt(2)
-    assert recon.dist(vol) < maxerr
+    assert projector.domain.dist(recon, vol) < maxerr
 
 
 if __name__ == '__main__':

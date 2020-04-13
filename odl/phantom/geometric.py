@@ -51,23 +51,19 @@ def cuboid(space, min_pt=None, max_pt=None):
 
     >>> space = odl.uniform_discr([0, 0], [1, 1], [4, 6])
     >>> odl.phantom.cuboid(space)
-    uniform_discr([ 0.,  0.], [ 1.,  1.], (4, 6)).element(
-        [[ 0.,  0.,  0.,  0.,  0.,  0.],
-         [ 0.,  1.,  1.,  1.,  1.,  0.],
-         [ 0.,  1.,  1.,  1.,  1.,  0.],
-         [ 0.,  0.,  0.,  0.,  0.,  0.]]
-    )
+    array([[ 0.,  0.,  0.,  0.,  0.,  0.],
+           [ 0.,  1.,  1.,  1.,  1.,  0.],
+           [ 0.,  1.,  1.,  1.,  1.,  0.],
+           [ 0.,  0.,  0.,  0.,  0.,  0.]])
 
     By specifying the corners, the cuboid can be arbitrarily placed and
     scaled:
 
     >>> odl.phantom.cuboid(space, [0.25, 0], [0.75, 0.5])
-    uniform_discr([ 0.,  0.], [ 1.,  1.], (4, 6)).element(
-        [[ 0.,  0.,  0.,  0.,  0.,  0.],
-         [ 1.,  1.,  1.,  0.,  0.,  0.],
-         [ 1.,  1.,  1.,  0.,  0.,  0.],
-         [ 0.,  0.,  0.,  0.,  0.,  0.]]
-    )
+    array([[ 0.,  0.,  0.,  0.,  0.,  0.],
+           [ 1.,  1.,  1.,  0.,  0.,  0.],
+           [ 1.,  1.,  1.,  0.,  0.,  0.],
+           [ 0.,  0.,  0.,  0.,  0.,  0.]])
     """
     dom_min_pt = np.asarray(space.domain.min())
     dom_max_pt = np.asarray(space.domain.max())
@@ -223,49 +219,45 @@ def indicate_proj_axis(space, scale_structures=0.5):
     Phantom in 2D space:
 
     >>> space = odl.uniform_discr([0, 0], [1, 1], shape=(8, 8))
-    >>> phantom = indicate_proj_axis(space).asarray()
-    >>> print(odl.util.array_str(phantom, nprint=10))
-    [[ 0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.],
-     [ 0.,  0.,  0.,  1.,  1.,  0.,  0.,  0.],
-     [ 0.,  0.,  0.,  1.,  1.,  0.,  0.,  0.],
-     [ 0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.],
-     [ 0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.],
-     [ 0.,  0.,  0.,  0.,  1.,  0.,  0.,  0.],
-     [ 0.,  0.,  0.,  1.,  0.,  0.,  0.,  0.],
-     [ 0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.]]
+    >>> indicate_proj_axis(space)
+    array([[ 0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.],
+           [ 0.,  0.,  0.,  1.,  1.,  0.,  0.,  0.],
+           [ 0.,  0.,  0.,  1.,  1.,  0.,  0.,  0.],
+           [ 0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.],
+           [ 0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.],
+           [ 0.,  0.,  0.,  0.,  1.,  0.,  0.,  0.],
+           [ 0.,  0.,  0.,  1.,  0.,  0.,  0.,  0.],
+           [ 0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.]])
 
     >>> space = odl.uniform_discr([0] * 3, [1] * 3, [8, 8, 8])
-    >>> phantom = odl.phantom.indicate_proj_axis(space).asarray()
-    >>> axis_sum_0 = np.sum(phantom, axis=0)
-    >>> print(odl.util.array_str(axis_sum_0, nprint=10))
-    [[ 0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.],
-     [ 0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.],
-     [ 0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.],
-     [ 0.,  0.,  0.,  3.,  3.,  0.,  0.,  0.],
-     [ 0.,  0.,  0.,  3.,  3.,  0.,  0.,  0.],
-     [ 0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.],
-     [ 0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.],
-     [ 0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.]]
-    >>> axis_sum_1 = np.sum(phantom, axis=1)
-    >>> print(odl.util.array_str(axis_sum_1, nprint=10))
-    [[ 0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.],
-     [ 0.,  0.,  0.,  2.,  2.,  0.,  0.,  0.],
-     [ 0.,  0.,  0.,  2.,  2.,  0.,  0.,  0.],
-     [ 0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.],
-     [ 0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.],
-     [ 0.,  0.,  0.,  1.,  1.,  0.,  0.,  0.],
-     [ 0.,  0.,  0.,  1.,  1.,  0.,  0.,  0.],
-     [ 0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.]]
-    >>> axis_sum_2 = np.sum(phantom, axis=2)
-    >>> print(odl.util.array_str(axis_sum_2, nprint=10))
-    [[ 0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.],
-     [ 0.,  0.,  0.,  2.,  2.,  0.,  0.,  0.],
-     [ 0.,  0.,  0.,  2.,  2.,  0.,  0.,  0.],
-     [ 0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.],
-     [ 0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.],
-     [ 0.,  0.,  0.,  0.,  2.,  0.,  0.,  0.],
-     [ 0.,  0.,  0.,  2.,  0.,  0.,  0.,  0.],
-     [ 0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.]]
+    >>> phantom = odl.phantom.indicate_proj_axis(space)
+    >>> np.sum(phantom, axis=0)
+    array([[ 0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.],
+           [ 0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.],
+           [ 0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.],
+           [ 0.,  0.,  0.,  3.,  3.,  0.,  0.,  0.],
+           [ 0.,  0.,  0.,  3.,  3.,  0.,  0.,  0.],
+           [ 0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.],
+           [ 0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.],
+           [ 0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.]])
+    >>> np.sum(phantom, axis=1)
+    array([[ 0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.],
+           [ 0.,  0.,  0.,  2.,  2.,  0.,  0.,  0.],
+           [ 0.,  0.,  0.,  2.,  2.,  0.,  0.,  0.],
+           [ 0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.],
+           [ 0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.],
+           [ 0.,  0.,  0.,  1.,  1.,  0.,  0.,  0.],
+           [ 0.,  0.,  0.,  1.,  1.,  0.,  0.,  0.],
+           [ 0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.]])
+    >>> np.sum(phantom, axis=2)
+    array([[ 0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.],
+           [ 0.,  0.,  0.,  2.,  2.,  0.,  0.,  0.],
+           [ 0.,  0.,  0.,  2.,  2.,  0.,  0.,  0.],
+           [ 0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.],
+           [ 0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.],
+           [ 0.,  0.,  0.,  0.,  2.,  0.,  0.,  0.],
+           [ 0.,  0.,  0.,  2.,  0.,  0.,  0.,  0.],
+           [ 0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.]])
     """
     if not 0 < scale_structures <= 1:
         raise ValueError('`scale_structures` ({}) is not in (0, 1]'
@@ -649,12 +641,12 @@ def ellipsoid_phantom(space, ellipsoids, min_pt=None, max_pt=None):
     >>> space = odl.uniform_discr([-1, -1], [1, 1], [5, 5])
     >>> ellipses = [[1.0, 1.0, 1.0, 0.0, 0.0, 0.0],
     ...             [1.0, 0.6, 0.6, 0.0, 0.0, 0.0]]
-    >>> print(ellipsoid_phantom(space, ellipses))
-    [[ 0.,  0.,  1.,  0.,  0.],
-     [ 0.,  1.,  2.,  1.,  0.],
-     [ 1.,  2.,  2.,  2.,  1.],
-     [ 0.,  1.,  2.,  1.,  0.],
-     [ 0.,  0.,  1.,  0.,  0.]]
+    >>> ellipsoid_phantom(space, ellipses)
+    array([[ 0.,  0.,  1.,  0.,  0.],
+           [ 0.,  1.,  2.,  1.,  0.],
+           [ 1.,  2.,  2.,  2.,  1.],
+           [ 0.,  1.,  2.,  1.,  0.],
+           [ 0.,  0.,  1.,  0.,  0.]])
 
     See Also
     --------
@@ -864,45 +856,45 @@ if __name__ == '__main__':
 
     # cuboid 1D
     space = odl.uniform_discr(-1, 1, 300)
-    cuboid(space).show('cuboid 1d')
+    space.show(cuboid(space), 'cuboid 1d')
 
     # cuboid 2D
     space = odl.uniform_discr([-1, -1], [1, 1], [300, 300])
-    cuboid(space).show('cuboid 2d')
+    space.show(cuboid(space), 'cuboid 2d')
 
     # smooth cuboid
-    smooth_cuboid(space).show('smooth_cuboid x 2d')
-    smooth_cuboid(space, axis=[0, 1]).show('smooth_cuboid x-y 2d')
+    space.show(smooth_cuboid(space), 'smooth_cuboid x 2d')
+    space.show(smooth_cuboid(space, axis=[0, 1]), 'smooth_cuboid x-y 2d')
 
     # TGV phantom
-    tgv_phantom(space).show('tgv_phantom')
+    space.show(tgv_phantom(space), 'tgv_phantom')
 
     # cuboid 3D
     space = odl.uniform_discr([-1, -1, -1], [1, 1, 1], [300, 300, 300])
-    cuboid(space).show('cuboid 3d')
+    space.show(cuboid(space), 'cuboid 3d')
 
     # Indicate proj axis 3D
-    indicate_proj_axis(space).show('indicate_proj_axis 3d')
+    space.show(indicate_proj_axis(space), 'indicate_proj_axis 3d')
 
     # ellipsoid phantom 2D
     space = odl.uniform_discr([-1, -1], [1, 1], [300, 300])
     ellipses = [[1.0, 1.0, 1.0, 0.0, 0.0, 0.0],
                 [1.0, 0.6, 0.6, 0.0, 0.0, 0.0]]
-    ellipsoid_phantom(space, ellipses).show('ellipse phantom 2d')
+    space.show(ellipsoid_phantom(space, ellipses), 'ellipse phantom 2d')
 
     # ellipsoid phantom 3D
     space = odl.uniform_discr([-1, -1, -1], [1, 1, 1], [300, 300, 300])
     ellipsoids = [[1.0, 1.0, 1.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
                   [1.0, 0.6, 0.6, 0.6, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]]
-    ellipsoid_phantom(space, ellipsoids).show('ellipsoid phantom 3d')
+    space.show(ellipsoid_phantom(space, ellipsoids), 'ellipsoid phantom 3d')
 
     # Defrise phantom 2D
     space = odl.uniform_discr([-1, -1], [1, 1], [300, 300])
-    defrise(space).show('defrise 2D')
+    space.show(defrise(space), 'defrise 2D')
 
     # Defrise phantom 2D
     space = odl.uniform_discr([-1, -1, -1], [1, 1, 1], [300, 300, 300])
-    defrise(space).show('defrise 3D', coords=[0, None, None])
+    space.show(defrise(space), 'defrise 3D', coords=[0, None, None])
 
     # Run also the doctests
     from odl.util.testutils import run_doctests

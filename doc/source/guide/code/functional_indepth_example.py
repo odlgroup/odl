@@ -27,7 +27,7 @@ class MyFunctional(odl.solvers.Functional):
     # the functional and always needs to be implemented.
     def _call(self, x):
         """Evaluate the functional."""
-        return x.norm() ** 2 + x.inner(self.y)
+        return self.domain.norm(x) ** + self.domain.inner(x, self.y)
 
     # Next we define the gradient. Note that this is a property.
     @property
@@ -89,7 +89,7 @@ class MyFunctionalConjugate(odl.solvers.Functional):
 
     def _call(self, x):
         """Evaluate the functional."""
-        return (x - self.y).norm()**2 / 4.0
+        return self.domain.norm(x - self.y) ** 2 / 4
 
 
 # Create a functional

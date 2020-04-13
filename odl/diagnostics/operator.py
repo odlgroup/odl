@@ -1,4 +1,4 @@
-# Copyright 2014-2019 The ODL contributors
+# Copyright 2014-2020 The ODL contributors
 #
 # This file is part of ODL.
 #
@@ -49,6 +49,8 @@ class OperatorTest(object):
             tolerance used in a test can be a factor times this number.
         """
         self.operator = operator
+        self.opdomain = operator.domain
+        self.oprange = operator.range
         self.verbose = False
         if operator_norm is None:
             self.operator_norm = self.norm()
@@ -64,30 +66,13 @@ class OperatorTest(object):
             print(message)
 
     def norm(self):
-        """Estimate the operator norm of the operator.
-
-        The norm is estimated by calculating
-
-        ``A(x).norm() / x.norm()``
-
-        for some nonzero ``x``
-
-        Returns
-        -------
-        norm : float
-            Estimate of operator norm
-
-        References
-        ----------
-        Wikipedia article on `Operator norm
-        <https://en.wikipedia.org/wiki/Operator_norm>`_.
-        """
+        """Estimate the operator norm of the operator."""
         self.log('\n== Calculating operator norm ==\n')
 
-        operator_norm = max(power_method_opnorm(self.operator, maxiter=2,
-                                                xstart=x)
-                            for name, x in samples(self.operator.domain)
-                            if name != 'Zero')
+        operator_norm = max(
+            power_method_opnorm(self.operator, maxiter=2, xstart=x)
+            for name, x in samples(self.opdomain) if name != 'Zero'
+        )
 
         self.log('Norm is at least: {}'.format(operator_norm))
         self.operator_norm = operator_norm
@@ -104,13 +89,14 @@ class OperatorTest(object):
             logger=self.log
         ) as counter:
 
-            for [name_x, x], [name_y, y] in samples(self.operator.domain,
-                                                    self.operator.range):
-                x_norm = x.norm()
-                y_norm = y.norm()
+            for [name_x, x], [name_y, y] in samples(
+                self.opdomain, self.oprange
+            ):
+                x_norm = self.opdomain.norm(x)
+                y_norm = self.oprange.norm(y)
 
-                l_inner = self.operator(x).inner(y)
-                r_inner = x.inner(self.operator(y))
+                l_inner = self.oprange.inner(self.operator(x), y)
+                r_inner = self.opdomain.inner(x, self.operator(y))
 
                 denom = self.operator_norm * x_norm * y_norm
                 error = 0 if denom == 0 else abs(l_inner - r_inner) / denom
@@ -137,13 +123,14 @@ class OperatorTest(object):
             logger=self.log
         ) as counter:
 
-            for [name_x, x], [name_y, y] in samples(self.operator.domain,
-                                                    self.operator.range):
-                x_norm = x.norm()
-                y_norm = y.norm()
+            for [name_x, x], [name_y, y] in samples(
+                self.opdomain, self.oprange
+            ):
+                x_norm = self.opdomain.norm(x)
+                y_norm = self.oprange.norm(y)
 
-                l_inner = self.operator(x).inner(y)
-                r_inner = x.inner(self.operator.adjoint(y))
+                l_inner = self.oprange.inner(self.operator(x), y)
+                r_inner = self.opdomain.inner(x, self.operator.adjoint(y))
 
                 denom = self.operator_norm * x_norm * y_norm
                 error = 0 if denom == 0 else abs(l_inner - r_inner) / denom
@@ -176,15 +163,15 @@ class OperatorTest(object):
             err_msg='error = ||Ax - (A^*)^* x|| / ||A|| ||x||',
             logger=self.log
         ) as counter:
-            for [name_x, x] in self.operator.domain.examples:
+            for [name_x, x] in self.opdomain.examples:
                 opx = self.operator(x)
                 op_adj_adj_x = self.operator.adjoint.adjoint(x)
 
-                denom = self.operator_norm * x.norm()
+                denom = self.operator_norm * self.opdomain.norm(x)
                 if denom == 0:
                     error = 0
                 else:
-                    error = (opx - op_adj_adj_x).norm() / denom
+                    error = self.oprange.norm(opx - op_adj_adj_x) / denom
 
                 if error > self.tol:
                     counter.fail('x={:25s} : error={:6.5f}'
@@ -207,11 +194,11 @@ class OperatorTest(object):
         self.log('\n== Verifying operator adjoint ==\n')
 
         domain_range_ok = True
-        if self.operator.domain != self.operator.adjoint.range:
+        if self.opdomain != self.operator.adjoint.range:
             print('*** ERROR: A.domain != A.adjoint.range ***')
             domain_range_ok = False
 
-        if self.operator.range != self.operator.adjoint.domain:
+        if self.oprange != self.operator.adjoint.domain:
             print('*** ERROR: A.range != A.adjoint.domain ***')
             domain_range_ok = False
 
@@ -239,8 +226,9 @@ class OperatorTest(object):
             err_msg="error = inf_c ||A(x+c*p)-A(x)-A'(x)(c*p)|| / c",
             logger=self.log
         ) as counter:
-            for [name_x, x], [name_dx, dx] in samples(self.operator.domain,
-                                                      self.operator.domain):
+            for [name_x, x], [name_dx, dx] in samples(
+                    self.opdomain, self.opdomain
+            ):
                 # Precompute some values
                 deriv = self.operator.derivative(x)
                 derivdx = deriv(dx)
@@ -253,7 +241,7 @@ class OperatorTest(object):
                 while c > 1e-14:
                     exact_step = self.operator(x + dx * c) - opx
                     expected_step = c * derivdx
-                    err = (exact_step - expected_step).norm() / c
+                    err = self.oprange.norm(exact_step - expected_step) / c
 
                     # Need to be slightly more generous here due to possible
                     # numerical instabilities.
@@ -289,7 +277,7 @@ class OperatorTest(object):
         self.log('\n== Verifying operator derivative  ==')
 
         try:
-            deriv = self.operator.derivative(self.operator.domain.zero())
+            deriv = self.operator.derivative(self.opdomain.zero())
 
             if not deriv.is_linear:
                 print('Derivative is not a linear operator')
@@ -311,14 +299,17 @@ class OperatorTest(object):
             err_msg='error = ||A(c*x)-c*A(x)|| / |c| ||A|| ||x||',
             logger=self.log
         ) as counter:
-            for [name_x, x], [_, scale] in samples(self.operator.domain,
-                                                   self.operator.domain.field):
+            for [name_x, x], [_, scale] in samples(
+                    self.opdomain, self.opdomain.field
+            ):
                 opx = self.operator(x)
                 scaled_opx = self.operator(scale * x)
 
-                denom = self.operator_norm * scale * x.norm()
-                error = (0 if denom == 0
-                         else (scaled_opx - opx * scale).norm() / denom)
+                denom = self.operator_norm * scale * self.opdomain.norm(x)
+                error = (
+                    0 if denom == 0
+                    else self.oprange.norm(scaled_opx - opx * scale) / denom
+                )
 
                 if error > self.tol:
                     counter.fail('x={:25s} scale={:7.2f} error={:6.5f}'
@@ -332,15 +323,20 @@ class OperatorTest(object):
                     '||A||(||x|| + ||y||)',
             logger=self.log
         ) as counter:
-            for [name_x, x], [name_y, y] in samples(self.operator.domain,
-                                                    self.operator.domain):
+            for [name_x, x], [name_y, y] in samples(
+                    self.opdomain, self.opdomain
+            ):
                 opx = self.operator(x)
                 opy = self.operator(y)
                 opxy = self.operator(x + y)
 
-                denom = self.operator_norm * (x.norm() + y.norm())
-                error = (0 if denom == 0
-                         else (opxy - opx - opy).norm() / denom)
+                denom = self.operator_norm * (
+                    self.opdomain.norm(x) + self.opdomain.norm(y)
+                )
+                error = (
+                    0 if denom == 0
+                    else self.oprange.norm(opxy - opx - opy) / denom
+                )
 
                 if error > self.tol:
                     counter.fail('x={:25s} y={:25s} error={:6.5f}'
@@ -355,8 +351,8 @@ class OperatorTest(object):
         self.log('\n== Verifying operator linearity ==\n')
 
         # Test if zero gives zero
-        result = self.operator(self.operator.domain.zero())
-        result_norm = result.norm()
+        result = self.operator(self.opdomain.zero())
+        result_norm = self.oprange.norm(result)
         if result_norm != 0.0:
             print("||A(0)||={:6.5f}. Should be 0.0000".format(result_norm))
 

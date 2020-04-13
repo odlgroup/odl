@@ -93,10 +93,12 @@ def admm_linearized(x, f, g, L, tau, sigma, niter, **kwargs):
     if not isinstance(L, Operator):
         raise TypeError('`op` {!r} is not an `Operator` instance'
                         ''.format(L))
+    primal_space = L.domain
+    dual_space = L.range
 
-    if x not in L.domain:
+    if x not in primal_space:
         raise OpDomainError('`x` {!r} is not in the domain of `op` {!r}'
-                            ''.format(x, L.domain))
+                            ''.format(x, primal_space))
 
     tau, tau_in = float(tau), tau
     if tau <= 0:
@@ -117,13 +119,13 @@ def admm_linearized(x, f, g, L, tau, sigma, niter, **kwargs):
         raise TypeError('`callback` {} is not callable'.format(callback))
 
     # Initialize range variables
-    z = L.range.zero()
-    u = L.range.zero()
+    z = dual_space.zero()
+    u = dual_space.zero()
 
     # Temporary for Lx + u [- z]
     tmp_ran = L(x)
     # Temporary for L^*(Lx + u - z)
-    tmp_dom = L.domain.element()
+    tmp_dom = primal_space.element()
 
     # Store proximals since their initialization may involve computation
     prox_tau_f = f.proximal(tau)
@@ -137,7 +139,7 @@ def admm_linearized(x, f, g, L, tau, sigma, niter, **kwargs):
         L.adjoint(tmp_ran, out=tmp_dom)
 
         # x <- x^k - (tau/sigma) L^*(Lx^k + u^k - z^k)
-        x.lincomb(1, x, -tau / sigma, tmp_dom)
+        primal_space.lincomb(1, x, -tau / sigma, tmp_dom, out=x)
         # x^(k+1) <- prox[tau*f](x)
         prox_tau_f(x, out=x)
 

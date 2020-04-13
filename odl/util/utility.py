@@ -196,7 +196,7 @@ def npy_printoptions(**extra_opts):
     orig_opts = np.get_printoptions()
 
     try:
-        new_opts = orig_opts.copy()
+        new_opts = dict(orig_opts)
         new_opts.update(extra_opts)
         np.set_printoptions(**new_opts)
         yield
@@ -597,7 +597,7 @@ def writable_array(obj, **kwargs):
     >>> with writable_array(x) as arr:
     ...     arr += [1, 1, 1]
     >>> x
-    uniform_discr(0.0, 1.0, 3).element([ 2.,  3.,  4.])
+    array([ 2.,  3.,  4.])
 
     Additional keyword arguments are passed to `numpy.asarray`:
 

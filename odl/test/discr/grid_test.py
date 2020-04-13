@@ -44,7 +44,7 @@ def test_RectGrid_init_raise():
     unsorted[2] = -1
     with_dups = np.arange(4)
     with_dups[3] = 2
-    unsorted_with_dups = unsorted.copy()
+    unsorted_with_dups = np.copy(unsorted)
     unsorted_with_dups[3] = 0
     with_nan = np.arange(4, dtype=float)
     with_nan[3] = np.nan

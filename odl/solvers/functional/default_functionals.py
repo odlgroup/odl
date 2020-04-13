@@ -15,8 +15,9 @@ from numbers import Integral
 import numpy as np
 
 from odl.operator import (
-    ConstantOperator, DiagonalOperator, Operator, PointwiseNorm,
-    ScalingOperator, ZeroOperator)
+    ConstantOperator, DiagonalOperator, IdentityOperator, Operator,
+    PointwiseNorm, ScalingOperator, ZeroOperator)
+from odl.set import LinearSpace
 from odl.solvers.functional.functional import (
     Functional, FunctionalQuadraticPerturb)
 from odl.solvers.nonsmooth.proximal_operators import (
@@ -79,20 +80,26 @@ class LpNorm(Functional):
     # TODO: update when integration operator is in place: issue #440
     def _call(self, x):
         """Return the Lp-norm of ``x``."""
+        F = self.domain.ufuncs
+        R = self.domain.reduce
+
         if self.exponent == 0:
-            return self.domain.one().inner(np.not_equal(x, 0))
+            return self.domain.inner(self.domain.one(), F.not_equal(x, 0))
         elif self.exponent == 1:
-            return x.ufuncs.absolute().inner(self.domain.one())
+            return self.domain.inner(self.domain.one(), F.absolute(x))
         elif self.exponent == 2:
-            return np.sqrt(x.inner(x))
+            return np.sqrt(self.domain.inner(x, x))
         elif np.isfinite(self.exponent):
-            tmp = x.ufuncs.absolute()
-            tmp.ufuncs.power(self.exponent, out=tmp)
-            return np.power(tmp.inner(self.domain.one()), 1 / self.exponent)
+            integrand = F.absolute(x)
+            F.power(integrand, self.exponent, out=integrand)
+            return np.power(
+                self.domain.inner(self.domain.one(), integrand),
+                1 / self.exponent,
+            )
         elif self.exponent == np.inf:
-            return x.ufuncs.absolute().ufuncs.max()
+            return R.max(F.absolute(x))
         elif self.exponent == -np.inf:
-            return x.ufuncs.absolute().ufuncs.min()
+            return R.min(F.absolute(x))
         else:
             raise RuntimeError('unknown exponent')
 
@@ -144,7 +151,7 @@ class LpNorm(Functional):
 
                 def _call(self, x):
                     """Apply the gradient operator to the given point."""
-                    return x.ufuncs.sign()
+                    return self.domain.ufuncs.sign(x)
 
                 def derivative(self, x):
                     """Derivative is a.e. zero."""
@@ -167,11 +174,11 @@ class LpNorm(Functional):
 
                     The gradient is not defined in 0.
                     """
-                    norm_of_x = x.norm()
-                    if norm_of_x == 0:
+                    x_norm = self.domain.norm(x)
+                    if x_norm == 0:
                         return self.domain.zero()
                     else:
-                        return x / norm_of_x
+                        return x / x_norm
 
             return L2Gradient()
 
@@ -233,14 +240,14 @@ class GroupL1Norm(Functional):
         --------
         >>> space = odl.rn(2)
         >>> pspace = odl.ProductSpace(space, 2)
-        >>> op = GroupL1Norm(pspace)
-        >>> op([[3, 3], [4, 4]])
+        >>> func = GroupL1Norm(pspace)
+        >>> func([[3, 3], [4, 4]])
         10.0
 
         Set exponent of inner (p) norm:
 
-        >>> op2 = GroupL1Norm(pspace, exponent=1)
-        >>> op2([[3, 3], [4, 4]])
+        >>> func_1 = GroupL1Norm(pspace, exponent=1)
+        >>> func_1([[3, 3], [4, 4]])
         14.0
         """
         if not isinstance(vfspace, ProductSpace):
@@ -255,8 +262,10 @@ class GroupL1Norm(Functional):
     def _call(self, x):
         """Return the group L1-norm of ``x``."""
         # TODO: update when integration operator is in place: issue #440
-        pointwise_norm = self.pointwise_norm(x)
-        return pointwise_norm.inner(pointwise_norm.space.one())
+        pw_norm = self.pointwise_norm(x)
+        return self.pointwise_norm.range.inner(
+            self.pointwise_norm.range.one(), pw_norm
+        )
 
     @property
     def gradient(self):
@@ -265,7 +274,7 @@ class GroupL1Norm(Functional):
         The functional is not differentiable in ``x=0``. However, when
         evaluating the gradient operator in this point it will return 0.
 
-         Notes
+        Notes
         -----
         The gradient is given by
 
@@ -283,27 +292,40 @@ class GroupL1Norm(Functional):
             \left[ \nabla || ||f||_p ||_1 \right]_i =
             \frac{| f_i |^{p-2} f_i}{||f||_p^{p-1}}
         """
-        functional = self
+        func = self
 
         class GroupL1Gradient(Operator):
 
-            """The gradient operator of the `GroupL1Norm` functional."""
+            r"""The gradient operator of the `GroupL1Norm` functional.
 
-            def __init__(self):
-                """Initialize a new instance."""
-                super(GroupL1Gradient, self).__init__(
-                    functional.domain, functional.domain, linear=False)
+             Notes
+            -----
+            The gradient is given by
+
+            .. math::
+                \left[ \nabla \| \|f\|_1 \|_1 \right]_i =
+                \frac{f_i}{|f_i|}
+
+            .. math::
+                \left[ \nabla \| \|f\|_2 \|_1 \right]_i =
+                \frac{f_i}{\|f\|_2}
+
+            else:
+
+            .. math::
+                \left[ \nabla || ||f||_p ||_1 \right]_i =
+                \frac{| f_i |^{p-2} f_i}{||f||_p^{p-1}}
+            """
 
             def _call(self, x, out):
                 """Return ``self(x)``."""
-                pwnorm_x = functional.pointwise_norm(x)
-                pwnorm_x.ufuncs.sign(out=pwnorm_x)
-                functional.pointwise_norm.derivative(x).adjoint(pwnorm_x,
-                                                                out=out)
-
+                pw_norm = func.pointwise_norm
+                pw_norm_x = pw_norm(x)
+                pw_norm.range.ufuncs.sign(pw_norm_x, out=pw_norm_x)
+                pw_norm.derivative(x).adjoint(pw_norm_x, out=out)
                 return out
 
-        return GroupL1Gradient()
+        return GroupL1Gradient(func.domain, func.domain, linear=False)
 
     @property
     def proximal(self):
@@ -384,7 +406,7 @@ class IndicatorGroupL1UnitBall(Functional):
 
     def _call(self, x):
         """Return ``self(x)``."""
-        x_norm = self.pointwise_norm(x).ufuncs.max()
+        x_norm = self.pointwise_norm.range.reduce.max(self.pointwise_norm(x))
 
         if x_norm > 1:
             return np.inf
@@ -533,8 +555,9 @@ class IndicatorLpUnitBall(Functional):
         elif self.exponent == 1:
             return proximal_convex_conj_linfty(space=self.domain)
         else:
-            raise NotImplementedError('`proximal` only implemented for p=1, '
-                                      'p=2 or p=inf')
+            raise NotImplementedError(
+                '`proximal` only implemented for p=2 and p=inf'
+            )
 
     def __repr__(self):
         """Return ``repr(self)``."""
@@ -568,7 +591,7 @@ class L1Norm(LpNorm):
     >>> f = odl.solvers.L1Norm(space)
     >>> x = space.one()
     >>> f.proximal([0.5, 1.0, 1.5])(x)
-    rn(3).element([ 0.5,  0. ,  0. ])
+    array([ 0.5,  0. ,  0. ])
     """
 
     def __init__(self, space):
@@ -652,7 +675,7 @@ class L2NormSquared(Functional):
     >>> f = odl.solvers.L2NormSquared(space)
     >>> x = space.one()
     >>> f.proximal([0.5, 1.5, 2.0])(x)
-    rn(3).element([ 0.5 ,  0.25,  0.2 ])
+    array([ 0.5 ,  0.25,  0.2 ])
     """
 
     def __init__(self, space):
@@ -669,7 +692,7 @@ class L2NormSquared(Functional):
     # TODO: update when integration operator is in place: issue #440
     def _call(self, x):
         """Return the squared L2-norm of ``x``."""
-        return x.inner(x)
+        return self.domain.inner(x, x)
 
     @property
     def gradient(self):
@@ -886,7 +909,7 @@ class IndicatorBox(Functional):
         # Since the proximal projects onto our feasible set we can simply
         # check if it changes anything
         proj = self.proximal(1)(x)
-        return np.inf if x.dist(proj) > 0 else 0
+        return np.inf if self.domain.dist(x, proj) > 0 else 0
 
     @property
     def proximal(self):
@@ -980,8 +1003,7 @@ class IndicatorZero(Functional):
 
     def _call(self, x):
         """Apply the functional to the given point."""
-        if x.norm() == 0:
-            # In this case x is the zero-element.
+        if self.domain.norm(x) == 0:
             return self.constant
         else:
             return np.inf
@@ -1082,15 +1104,13 @@ class KullbackLeibler(Functional):
 
         Examples
         --------
-
-        Test that KullbackLeibler(x,x) = 0
+        Test that KullbackLeibler(x, x) = 0
 
         >>> space = odl.rn(3)
         >>> prior = 3 * space.one()
         >>> func = odl.solvers.KullbackLeibler(space, prior=prior)
         >>> func(prior)
         0.0
-
 
         Test that zeros in the prior are handled correctly
 
@@ -1126,10 +1146,26 @@ class KullbackLeibler(Functional):
 
         with np.errstate(invalid='ignore', divide='ignore'):
             if self.prior is None:
-                res = (x - 1 - np.log(x)).inner(self.domain.one())
+                # < x - 1 - log(x), one >
+                tmp = self.domain.ufuncs.log(x)
+                tmp += 1
+                tmp -= x
+                res = self.domain.inner(tmp, self.domain.one())
+                if res != 0:
+                    # Avoid -0.0
+                    res = -res
             else:
-                xlogy = scipy.special.xlogy(self.prior, self.prior / x)
-                res = (x - self.prior + xlogy).inner(self.domain.one())
+                # < x - g + xlogy(g, g/x), one >
+                g = self.prior
+                if isinstance(self.domain, ProductSpace):
+                    tmp = self.domain.apply2(
+                        lambda xi, i: scipy.special.xlogy(g[i], g[i] / xi), x
+                    )
+                else:
+                    tmp = scipy.special.xlogy(g, g / x)
+                tmp -= g
+                tmp += x
+                res = self.domain.inner(tmp, self.domain.one())
 
         if not np.isfinite(res):
             # In this case, some element was less than or equal to zero
@@ -1260,10 +1296,20 @@ class KullbackLeiblerConvexConj(Functional):
 
         with np.errstate(invalid='ignore'):
             if self.prior is None:
-                res = -(np.log(1 - x)).inner(self.domain.one())
+                # - < log(1 - x), one >
+                tmp = 1 - x
+                self.domain.ufuncs.log(tmp, out=tmp)
+                res = -self.domain.inner(tmp, self.domain.one())
             else:
-                xlogy = scipy.special.xlogy(self.prior, 1 - x)
-                res = -self.domain.element(xlogy).inner(self.domain.one())
+                # - < xlogy(g, 1 - x), one >
+                g = self.prior
+                if isinstance(self.domain, ProductSpace):
+                    tmp = self.domain.apply2(
+                        lambda xi, i: scipy.special.xlogy(g[i], 1 - xi), x
+                    )
+                else:
+                    tmp = scipy.special.xlogy(g, 1 - x)
+                res = -self.domain.inner(tmp, self.domain.one())
 
         if not np.isfinite(res):
             # In this case, some element was larger than or equal to one
@@ -1407,11 +1453,28 @@ class KullbackLeiblerCrossEntropy(Functional):
 
         with np.errstate(invalid='ignore', divide='ignore'):
             if self.prior is None:
-                xlogx = scipy.special.xlogy(x, x)
-                res = (1 - x + xlogx).inner(self.domain.one())
+                # < 1 - x + xlogy(x, x), one >
+                if isinstance(self.domain, ProductSpace):
+                    tmp = self.domain.apply(
+                        lambda xi: scipy.special.xlogy(xi, xi), x
+                    )
+                else:
+                    tmp = scipy.special.xlogy(x, x)
+                tmp -= x
+                tmp += 1
+                res = self.domain.inner(tmp, self.domain.one())
             else:
-                xlogy = scipy.special.xlogy(x, x / self.prior)
-                res = (self.prior - x + xlogy).inner(self.domain.one())
+                # < g - x + xlogy(x, x/g), one >
+                g = self.prior
+                if isinstance(self.domain, ProductSpace):
+                    tmp = self.domain.apply2(
+                        lambda xi, i: scipy.special.xlogy(xi, xi / g[i]), x
+                    )
+                else:
+                    tmp = scipy.special.xlogy(x, x / g)
+                tmp -= x
+                tmp += self.prior
+                res = self.domain.inner(tmp, self.domain.one())
 
         if not np.isfinite(res):
             # In this case, some element was less than or equal to zero
@@ -1426,16 +1489,11 @@ class KullbackLeiblerCrossEntropy(Functional):
         The gradient is not defined in points where one or more components
         are less than or equal to 0.
         """
-        functional = self
+        func = self
 
         class KLCrossEntropyGradient(Operator):
 
             """The gradient operator of this functional."""
-
-            def __init__(self):
-                """Initialize a new instance."""
-                super(KLCrossEntropyGradient, self).__init__(
-                    functional.domain, functional.domain, linear=False)
 
             def _call(self, x):
                 """Apply the gradient operator to the given point.
@@ -1443,21 +1501,15 @@ class KullbackLeiblerCrossEntropy(Functional):
                 The gradient is not defined in for points with components less
                 than or equal to zero.
                 """
-                if functional.prior is None:
-                    tmp = np.log(x)
-                else:
-                    tmp = np.log(x / functional.prior)
+                F = func.domain.ufuncs
 
-                if np.all(np.isfinite(tmp)):
-                    return tmp
+                if func.prior is None:
+                    return F.log(x)
                 else:
-                    # The derivative is not defined.
-                    raise ValueError('The gradient of the Kullback-Leibler '
-                                     'Cross Entropy functional is not defined '
-                                     'for `x` with one or more components '
-                                     'less than or equal to zero.'.format(x))
+                    g = func.prior
+                    return g - 1 + F.log(x / g)
 
-        return KLCrossEntropyGradient()
+        return KLCrossEntropyGradient(func.domain, func.domain, linear=False)
 
     @property
     def proximal(self):
@@ -1529,35 +1581,24 @@ class KullbackLeiblerCrossEntropyConvexConj(Functional):
     # TODO: update when integration operator is in place: issue #440
     def _call(self, x):
         """Return the value in the point ``x``."""
-        if self.prior is None:
-            tmp = self.domain.element((np.exp(x) - 1)).inner(self.domain.one())
-        else:
-            tmp = (self.prior * (np.exp(x) - 1)).inner(self.domain.one())
-        return tmp
+        F = self.domain.ufuncs
 
-    # TODO: replace this when UFuncOperators is in place: PL #576
+        if self.prior is None:
+            return self.domain.inner(self.domain.one(), F.expm1(x))
+        else:
+            return self.domain.inner(
+                self.domain.one(), self.prior * F.expm1(x)
+            )
+
     @property
     def gradient(self):
         """Gradient operator of the functional."""
-        functional = self
+        from odl import ufunc_ops
 
-        class KLCrossEntCCGradient(Operator):
-
-            """The gradient operator of this functional."""
-
-            def __init__(self):
-                """Initialize a new instance."""
-                super(KLCrossEntCCGradient, self).__init__(
-                    functional.domain, functional.domain, linear=False)
-
-            def _call(self, x):
-                """Apply the gradient operator to the given point."""
-                if functional.prior is None:
-                    return self.domain.element(np.exp(x))
-                else:
-                    return functional.prior * np.exp(x)
-
-        return KLCrossEntCCGradient()
+        if self.prior is None:
+            return ufunc_ops.exp(self.domain)
+        else:
+            return self.prior * ufunc_ops.exp(self.domain)
 
     @property
     def proximal(self):
@@ -1656,10 +1697,7 @@ class SeparableSum(Functional):
 
         >>> x = f_sum.domain.one()
         >>> f_sum.proximal([0.5, 2.0])(x)
-        ProductSpace(rn(3), 2).element([
-            [ 0.5,  0.5,  0.5],
-            [ 0.,  0.,  0.]
-        ])
+        array([array([ 0.5,  0.5,  0.5]), array([ 0.,  0.,  0.])], dtype=object)
 
         Create functional ``f([x1, ... ,xn]) = \sum_i ||xi||_1``:
 
@@ -1762,52 +1800,86 @@ class SeparableSum(Functional):
 
 class QuadraticForm(Functional):
 
-    """Functional for a general quadratic form ``x^T A x + b^T x + c``."""
+    """The quadratic form functional ``<x, Ax + b> + c``.
 
-    def __init__(self, operator=None, vector=None, constant=0):
+    It is important to note that this functional is only (provably) convex if
+    the operator ``A`` is linear and positive semi-definite. The `convex_conj`
+    property relies on this to be true, and its computation requires the
+    inverse of the symmetric part ``(A^* + A) / 2``.
+    The `gradient` of the functional is also defined for operators ``A`` that
+    lack these properties.
+    """
+
+    def __init__(self, space, operator=None, vector=None, constant=0,
+                 **kwargs):
         """Initialize a new instance.
-
-        All parameters are optional, but at least one of ``op`` and ``vector``
-        have to be provided in order to infer the space.
-
-        The computed value is::
-
-            x.inner(operator(x)) + vector.inner(x) + constant
 
         Parameters
         ----------
+        space : `LinearSpace`
+            Space on which the functional is defined.
         operator : `Operator`, optional
             Operator for the quadratic part of the functional.
             ``None`` means that this part is ignored.
         vector : `LinearSpaceElement`, optional
             Vector for the linear part of the functional.
             ``None`` means that this part is ignored.
-        constant : `Operator`, optional
+        constant : float, optional
             Constant offset of the functional.
+        operator_sym_inv : `Operator`, optional
+            Inverse of the symmetric part ``(A + A^*) / 2`` of ``operator``,
+            assuming the latter is linear. This operator is used in the
+            computation of the convex conjugate. If not given, ``operator``
+            is assumed to be symmetric.
+        operator_prox_inv_fact : callable, optional
+            Function that takes the proximal ``sigma`` parameter and returns
+            the operator ``(I + sigma * (A + A^*) / 2).inverse``. It is
+            required for `proximal` if ``operator`` is not ``None``.
         """
-        if operator is None and vector is None:
-            raise ValueError('need to provide at least one of `operator` and '
-                             '`vector`')
-        if operator is not None:
-            domain = operator.domain
-        elif vector is not None:
-            domain = vector.space
-
-        if (operator is not None and vector is not None and
-                vector not in operator.domain):
-            raise ValueError('domain of `operator` and space of `vector` need '
-                             'to match')
+        if not isinstance(space, LinearSpace):
+            raise TypeError(
+                '`space` must be a `LinearSpace`, got {!r}'.format(space)
+            )
+        if (
+            operator is not None
+            and (operator.domain != space or operator.range != space)
+        ):
+            raise ValueError(
+                '`domain` and `range` of `operator` must be equal to '
+                '`space`, but {!r}, {!r}, {!r} are not all equal'
+                ''.format(operator.domain, operator.range, space))
 
         super(QuadraticForm, self).__init__(
-            space=domain, linear=(operator is None and constant == 0))
+            space=space, linear=(operator is None and constant == 0))
+
+        operator_sym_inv = kwargs.pop('operator_sym_inv', None)
+        if (
+            operator_sym_inv is not None
+            and (operator_sym_inv.domain != space
+                 or operator_sym_inv.range != space)
+        ):
+            raise ValueError(
+                '`domain` and `range` of `operator_sym_inv` must be equal to '
+                '`space`, but {!r}, {!r}, {!r} are not all equal'
+                ''.format(operator.domain, operator.range, space))
+
+        operator_prox_inv_fact = kwargs.pop('operator_prox_inv_fact', None)
+        if (
+            operator_prox_inv_fact is not None
+            and not callable(operator_prox_inv_fact)
+        ):
+            raise TypeError('`operator_prox_inv_fact` must be callable')
 
         self.__operator = operator
-        self.__vector = vector
-        self.__constant = constant
+        self.__vector = None if vector is None else space.element(vector)
+        self.__constant = space.field.element(constant)
+        self.__operator_sym_inv = operator_sym_inv
+        self.__operator_prox_inv_fact = operator_prox_inv_fact
 
-        if self.constant not in self.range:
-            raise ValueError('`constant` must be an element in the range of '
-                             'the functional')
+        if kwargs:
+            raise TypeError(
+                'got unexpected keyword arguments {}'.format(kwargs)
+            )
 
     @property
     def operator(self):
@@ -1824,66 +1896,141 @@ class QuadraticForm(Functional):
         """Constant offset of the functional."""
         return self.__constant
 
+    @property
+    def operator_sym_inv(self):
+        """Inverse of the symmetric part of `operator`."""
+        return self.__operator_sym_inv
+
+    @property
+    def operator_prox_inv_fact(self):
+        """Factory for ``sigma --> (I + sigma * (A + A^*)/2).inverse``."""
+        return self.__operator_prox_inv_fact
+
     def _call(self, x):
         """Return ``self(x)``."""
         if self.operator is None:
-            return self.vector.inner(x) + self.constant
+            return self.domain.inner(x, self.vector) + self.constant
         elif self.vector is None:
-            return x.inner(self.operator(x)) + self.constant
+            return self.domain.inner(x, self.operator(x)) + self.constant
         else:
             tmp = self.operator(x)
             tmp += self.vector
-            return x.inner(tmp) + self.constant
+            return self.domain.inner(x, tmp) + self.constant
 
     @property
     def gradient(self):
-        """Gradient operator of the functional."""
+        r"""Gradient operator of the quadratic form functional.
+
+        The gradient of :math:`Q(x) = \langle x, A(x) + b \rangle + c` is
+        given by
+
+        .. math::
+            \nabla Q(x) = A(x) + A'(x)^* x + b.
+
+        If :math:`A` is linear, this expression simplifies to
+
+        .. math::
+            \nabla Q(x) = (A + A^*) x + b.
+        """
         if self.operator is None:
-            return ConstantOperator(self.vector, self.domain)
+            return ConstantOperator(self.domain, self.vector)
+
+        if not self.operator.is_linear:
+            # TODO(kohr-h): add this
+            raise NotImplementedError(
+                '`gradient` not implemented for nonlinear `operator`'
+            )
+
+        # Figure out whether operator is symmetric
+        # NB: this check is equivalent to `op is op.adjoint` since
+        # there are no semantics for operator comparison
+        op = self.operator
+        adj = self.operator.adjoint
+        grad = 2 * op if op == adj else op + adj
+
+        if self.vector is None:
+            return grad
         else:
+            return grad + self.vector
+
+    @property
+    def proximal(self):
+        r"""Factory function for the proximal operator.
+
+        The proximal operator of :math:`Q(x) = \langle x, Ax + b \rangle + c`
+        is given by
+
+        .. math::
+            \text{prox}_{\sigma Q}(x) = (I + 2\sigma \bar A)^{-1}
+            (x - \sigma b),
+
+        with the symmetric part :math:`\bar A = (A + A^*) / 2`.
+        """
+        if self.operator is not None:
             if not self.operator.is_linear:
-                # TODO: Acutally works otherwise, but needs more work
-                raise NotImplementedError('`operator` must be linear')
+                # TODO(kohr-h): add this
+                raise NotImplementedError(
+                    '`proximal` not available for nonlinear `operator`'
+                )
+            if self.operator_prox_inv_fact is None:
+                raise TypeError(
+                    '`operator_prox_inv_fact` is required for proximal with '
+                    'operator'
+                )
 
-            # Figure out if operator is symmetric
-            opadjoint = self.operator.adjoint
-            if opadjoint == self.operator:
-                gradient = 2 * self.operator
-            else:
-                gradient = self.operator + opadjoint
+        def prox_fact(sigma):
+            """Proximal factory function."""
+            rhs_op = IdentityOperator(self.domain)
+            if self.vector is not None:
+                rhs_op = rhs_op - sigma * self.vector
 
-            # Return gradient
-            if self.vector is None:
-                return gradient
+            if self.operator_prox_inv_fact is None:
+                return rhs_op
             else:
-                return gradient + self.vector
+                return self.operator_prox_inv_fact(2 * sigma) * rhs_op
+
+        return prox_fact
 
     @property
     def convex_conj(self):
         r"""The convex conjugate functional of the quadratic form.
 
-        Notes
-        -----
-        The convex conjugate of the quadratic form :math:`<x, Ax> + <b, x> + c`
-        is given by
+        The convex conjugate of the quadratic form
+        :math:`Q(x) = \langle x, Ax + b \rangle + c` with linear operator
+        :math:`A` and its symmetric part :math:`\bar A = (A + A^*)/2` is
+        given by
 
         .. math::
-            (<x, Ax> + <b, x> + c)^* (x) =
-            <(x - b), A^-1 (x - b)> - c =
-            <x , A^-1 x> - <x, A^-* b> - <x, A^-1 b> + <b, A^-1 b> - c.
+            Q^*(x)
+            &= \frac{1}{4} \langle A \bar A^{-1}(x - b), \bar A^{-1}(x - b)
+            \rangle - c \\
+            &= \frac{1}{4}\langle x, \bar A^{-1} x \rangle
+            - \frac{1}{2} \langle x, \bar A^{-1} b \rangle
+            + \frac{1}{4} \langle b,  \bar A^{-1} b \rangle - c.
 
-        If the quadratic part of the functional is zero it is instead given
-        by a translated indicator function on zero, i.e., if
+        Thus, :math:`Q^*` is a quadratic form with operator
+        :math:`\bar A^{-1} / 4`,
+        vector :math:`-\bar A^{-1} b / 2` and constant
+        :math:`\frac{1}{4} \langle b,  \bar A^{-1} b \rangle - c`.
+
+        For the proximal, the required inverse operator is
 
         .. math::
-            f(x) = <b, x> + c,
+            (I + 2 \sigma \bar A^{-1} / 4)^{-1} =
+            \frac{2}{\sigma} \bar A (I + 2/\sigma \bar A)^{-1}.
 
-        then
+        If the quadratic part of the functional is zero, i.e.,
 
         .. math::
-            f^*(x^*) =
+            Q(x) = \langle x, b \rangle + c,
+
+        then :math:`Q^*` is an indicator function of the point set
+        :math:`\{b\}` with constant :math:`-c`:
+
+        .. math::
+            Q^*(x) =
             \begin{cases}
-                -c & \text{if } x^* = b \\
+                -c & \text{if } x = b \\
                 \infty & \text{else.}
             \end{cases}
 
@@ -1892,26 +2039,46 @@ class QuadraticForm(Functional):
         IndicatorZero
         """
         if self.operator is None:
-            tmp = IndicatorZero(space=self.domain, constant=-self.constant)
-            if self.vector is None:
-                return tmp
-            else:
-                return tmp.translated(self.vector)
+            fn = IndicatorZero(self.domain, constant=-self.constant)
+            return fn if self.vector is None else fn.translated(self.vector)
 
-        if self.vector is None:
-            # Handle trivial case separately
-            return QuadraticForm(operator=self.operator.inverse,
-                                 constant=-self.constant)
+        if not self.operator.is_linear:
+            raise NotImplementedError(
+                '`convex_conj` not available for nonlinear `operator`'
+            )
+
+        if self.operator_sym_inv is None:
+            op_inv = self.operator.inverse
         else:
-            # Compute the needed variables
-            opinv = self.operator.inverse
-            vector = -opinv.adjoint(self.vector) - opinv(self.vector)
-            constant = self.vector.inner(opinv(self.vector)) - self.constant
+            op_inv = self.operator_sym_inv
 
-            # Create new quadratic form
-            return QuadraticForm(operator=opinv,
-                                 vector=vector,
-                                 constant=constant)
+        constant = -self.constant
+        if self.vector is None:
+            vector = None
+        else:
+            vector = -op_inv(self.vector) / 2
+            constant -= self.domain.inner(self.vector, vector) / 2
+
+        op = self.operator
+        adj = self.operator.adjoint
+
+        kwargs = {}
+        # Inverse of 1/4 * [(A + A^*) / 2]^(-1) --> 2 * (A + A^*)
+        sym_op = 4 * op if op == adj else 2 * (op + adj)
+        kwargs['operator_sym_inv'] = sym_op
+
+        if self.operator_prox_inv_fact is not None:
+
+            def prox_inv_fact(sigma):
+                tmp_op = (4 / sigma) * op if op == adj else (op + adj) / sigma
+                return tmp_op * self.operator_prox_inv_fact(4 / sigma)
+
+            kwargs['operator_prox_inv_fact'] = prox_inv_fact
+
+        return QuadraticForm(
+            self.domain, operator=op_inv / 4, vector=vector, constant=constant,
+            **kwargs
+        )
 
 
 class NuclearNorm(Functional):
@@ -1989,10 +2156,10 @@ class NuclearNorm(Functional):
         This is the inverse of `_asvector`.
         """
         shape = self.domain[0, 0].shape + self.pshape
-        arr = np.empty(shape, dtype=self.domain.dtype)
+        arr = np.empty(shape, dtype=self.domain[0, 0].dtype)
         for i, xi in enumerate(vec):
             for j, xij in enumerate(xi):
-                arr[..., i, j] = xij.asarray()
+                arr[..., i, j] = xij
 
         return arr
 
@@ -2075,7 +2242,7 @@ class NuclearNorm(Functional):
                     sprox = np.sign(s) * np.maximum(abss, 0)
                 elif func.pwisenorm.exponent == 2:
                     s_reordered = np.moveaxis(s, -1, 0)
-                    snorm = func.pwisenorm(s_reordered).asarray()
+                    snorm = func.pwisenorm(s_reordered)
                     snorm = np.maximum(self.sigma, snorm, out=snorm)
                     sprox = ((1 - eps) - self.sigma / snorm)[..., None] * s
                 elif func.pwisenorm.exponent == np.inf:
@@ -2261,7 +2428,7 @@ class IndicatorSimplex(Functional):
 
         ... and one where it lies inside the unit simplex.
 
-        >>> x /= x.ufuncs.sum()
+        >>> x /= np.sum(x)
         >>> ind_simplex(x)
         0
         """
@@ -2278,12 +2445,10 @@ class IndicatorSimplex(Functional):
 
     def _call(self, x):
         """Return ``self(x)``."""
+        sum_constr = abs(np.sum(x) / self.diameter - 1) <= self.sum_rtol
+        nonneg_constr = np.all(np.greater_equal(x, 0))
 
-        sum_constr = abs(x.ufuncs.sum() / self.diameter - 1) <= self.sum_rtol
-
-        nonneq_constr = x.ufuncs.greater_equal(0).asarray().all()
-
-        if sum_constr and nonneq_constr:
+        if sum_constr and nonneg_constr:
             return 0
         else:
             return np.inf
@@ -2379,7 +2544,7 @@ class IndicatorSumConstraint(Functional):
 
         ... and one where it does.
 
-        >>> x /= x.ufuncs.sum()
+        >>> x /= np.sum(x)
         >>> ind_sum(x)
         0
         """
@@ -2396,8 +2561,7 @@ class IndicatorSumConstraint(Functional):
 
     def _call(self, x):
         """Return ``self(x)``."""
-
-        if abs(x.ufuncs.sum() / self.sum_value - 1) <= self.sum_rtol:
+        if abs(np.sum(x) / self.sum_value - 1) <= self.sum_rtol:
             return 0
         else:
             return np.inf
@@ -2408,7 +2572,6 @@ class IndicatorSumConstraint(Functional):
 
         The indicator functional is not differentiable over the entire domain.
         """
-
         raise NotImplementedError('Not implemented')
 
     @property
@@ -2426,9 +2589,8 @@ class IndicatorSumConstraint(Functional):
                     domain=domain, range=domain, linear=False)
 
             def _call(self, x, out):
-
-                offset = 1 / x.size * (self.sum_value - x.ufuncs.sum())
-                out.assign(x)
+                offset = 1 / x.size * (self.sum_value - np.sum(x))
+                out[:] = x
                 out += offset
 
         return ProximalSum
@@ -2489,8 +2651,8 @@ class MoreauEnvelope(Functional):
 
     References
     ----------
-    .. _Proximal Algorithms: \
-https://web.stanford.edu/~boyd/papers/pdf/prox_algs.pdf
+    .. _Proximal Algorithms:
+       https://web.stanford.edu/~boyd/papers/pdf/prox_algs.pdf
     """
 
     def __init__(self, functional, sigma=1.0):
@@ -2585,7 +2747,7 @@ class Huber(Functional):
 
         >>> x = 2 * gamma * space.one()
         >>> tol = 1e-5
-        >>> constant = gamma / 2 * space.one().inner(space.one())
+        >>> constant = gamma / 2 * space.norm(space.one()) ** 2
         >>> f = odl.solvers.L1Norm(space) - constant
         >>> abs(huber_norm(x) - f(x)) < tol
         True
@@ -2634,20 +2796,25 @@ class Huber(Functional):
     def _call(self, x):
         """Return ``self(x)``."""
         if isinstance(self.domain, ProductSpace):
-            norm = PointwiseNorm(self.domain, 2)(x)
+            norm_op = PointwiseNorm(self.domain, 2)
+            norm = norm_op(x)
+            base_space = norm_op.range
         else:
-            norm = x.ufuncs.absolute()
+            norm = self.domain.ufuncs.absolute(x)
+            base_space = self.domain
+
+        Fb = base_space.ufuncs
 
         if self.gamma > 0:
-            tmp = norm.ufuncs.square()
-            tmp *= 1 / (2 * self.gamma)
+            integrand = Fb.square(norm)
+            integrand *= 1 / (2 * self.gamma)
 
-            index = norm.ufuncs.greater_equal(self.gamma)
-            tmp[index] = norm[index] - self.gamma / 2
+            linear_part = Fb.greater_equal(norm, self.gamma)
+            integrand[linear_part] = norm[linear_part] - self.gamma / 2
         else:
-            tmp = norm
+            integrand = norm
 
-        return tmp.inner(tmp.space.one())
+        return base_space.inner(base_space.one(), integrand)
 
     @property
     def convex_conj(self):
@@ -2689,57 +2856,56 @@ class Huber(Functional):
         Check that the gradient norm is less than the norm of the one element:
 
         >>> space = odl.uniform_discr(0, 1, 14)
-        >>> norm_one = space.one().norm()
+        >>> norm_one = space.norm(space.one())
         >>> x = odl.phantom.white_noise(space)
         >>> huber_norm = odl.solvers.Huber(space, gamma=0.1)
         >>> grad = huber_norm.gradient(x)
         >>> tol = 1e-5
-        >>> grad.norm() <=  norm_one + tol
+        >>> space.norm(grad) <= norm_one + tol
         True
 
         Redo previous example for a product space in two dimensions:
 
-        >>> domain = odl.uniform_discr([0, 0], [1, 1], [5, 5])
-        >>> space = odl.ProductSpace(domain, 2)
-        >>> norm_one = space.one().norm()
+        >>> space = odl.uniform_discr([0, 0], [1, 1], [5, 5]) ** 2
+        >>> norm_one = space.norm(space.one())
         >>> x = odl.phantom.white_noise(space)
         >>> huber_norm = odl.solvers.Huber(space, gamma=0.2)
         >>> grad = huber_norm.gradient(x)
         >>> tol = 1e-5
-        >>> grad.norm() <=  norm_one + tol
+        >>> space.norm(grad) <= norm_one + tol
         True
         """
 
-        functional = self
+        func = self
 
         class HuberGradient(Operator):
 
             """The gradient operator of this functional."""
 
-            def __init__(self):
-                """Initialize a new instance."""
-                super(HuberGradient, self).__init__(
-                    functional.domain, functional.domain, linear=False)
-
             def _call(self, x):
                 """Apply the gradient operator to the given point."""
                 if isinstance(self.domain, ProductSpace):
-                    norm = PointwiseNorm(self.domain, 2)(x)
+                    pw_norm = PointwiseNorm(self.domain, 2)
+                    norm = pw_norm(x)
+                    base_space = pw_norm.range
                 else:
-                    norm = x.ufuncs.absolute()
+                    norm = self.domain.ufuncs.absolute(x)
+                    base_space = self.domain
 
-                grad = x / functional.gamma
+                Fb = base_space.ufuncs
 
-                index = norm.ufuncs.greater_equal(functional.gamma)
+                grad = x / func.gamma
+                linear_part = Fb.greater_equal(norm, func.gamma)
+
                 if isinstance(self.domain, ProductSpace):
                     for xi, gi in zip(x, grad):
-                        gi[index] = xi[index] / norm[index]
+                        gi[linear_part] = xi[linear_part] / norm[linear_part]
                 else:
-                    grad[index] = x[index] / norm[index]
+                    grad[linear_part] = x[linear_part] / norm[linear_part]
 
                 return grad
 
-        return HuberGradient()
+        return HuberGradient(func.domain, func.domain, linear=False)
 
     def __repr__(self):
         '''Return ``repr(self)``.'''

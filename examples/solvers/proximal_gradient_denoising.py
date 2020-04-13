@@ -1,4 +1,4 @@
-"""L1-regularized denoising using the proximal gradient solvers.
+"""Removal of salt-and-pepper noise using the proximal gradient solvers.
 
 Solves the optimization problem
 
@@ -6,35 +6,32 @@ Solves the optimization problem
 
 Where ``grad`` is the spatial gradient operator and ``g`` is given noisy data.
 
-The proximal gradient solvers are also known as ISTA and FISTA.
+The proximal gradient solvers are also known as ISTA and FISTA, respectively.
 """
 
 import odl
 
-
 # --- Set up problem definition --- #
 
-
-# Define function space: discretized functions on the rectangle
-# [-20, 20]^2 with 300 samples per dimension.
+# Reconstruction space: discretized functions on the rectangle [-20, 20]^2
+# with 300 samples per dimension
 space = odl.uniform_discr(
-    min_pt=[-20, -20], max_pt=[20, 20], shape=[300, 300])
+    min_pt=[-20, -20], max_pt=[20, 20], shape=[300, 300]
+)
 
-# Create phantom
-data = odl.phantom.shepp_logan(space, modified=True)
-data = odl.phantom.salt_pepper_noise(data)
-
-# Create gradient operator
-grad = odl.Gradient(space)
-
+# Create noisy phantom
+data = odl.phantom.salt_pepper_noise(
+    space, odl.phantom.shepp_logan(space, modified=True)
+)
 
 # --- Set up the inverse problem --- #
 
-# Create data discrepancy by translating the l1 norm
+# Create data fit term by translating the L1 norm
 l1_norm = odl.solvers.L1Norm(space)
-data_discrepancy = l1_norm.translated(data)
+data_fit = l1_norm.translated(data)
 
-# l2-squared norm of gradient
+# Use squared L2 norm of the gradient for regularization
+grad = odl.Gradient(space)
 regularizer = 0.05 * odl.solvers.L2NormSquared(grad.range) * grad
 
 # --- Select solver parameters and solve using proximal gradient --- #
@@ -43,24 +40,23 @@ regularizer = 0.05 * odl.solvers.L2NormSquared(grad.range) * grad
 gamma = 0.01
 
 # Optionally pass callback to the solver to display intermediate results
-callback = (odl.solvers.CallbackPrintIteration() &
-            odl.solvers.CallbackShow())
+callback = (odl.solvers.CallbackPrintIteration(step=5) &
+            odl.solvers.CallbackShow(space, step=5))
 
 # Run the algorithm (ISTA)
 x = space.zero()
 odl.solvers.proximal_gradient(
-    x, f=data_discrepancy, g=regularizer, niter=200, gamma=gamma,
-    callback=callback)
+    x, f=data_fit, g=regularizer, niter=200, gamma=gamma, callback=callback
+)
 
-# Compare to accelerated version (FISTA) which is much faster
+# Compare to accelerated version (FISTA) which converges much faster
 callback.reset()
 x_acc = space.zero()
 odl.solvers.accelerated_proximal_gradient(
-    x_acc, f=data_discrepancy, g=regularizer, niter=50, gamma=gamma,
-    callback=callback)
+    x_acc, f=data_fit, g=regularizer, niter=50, gamma=gamma, callback=callback
+)
 
 # Display images
-data.show(title='Data')
-x.show(title='L1 Regularized Reconstruction')
-x_acc.show(title='L1 Regularized Reconstruction (Accelerated)',
-           force_show=True)
+space.show(data, title='Noisy Image')
+space.show(x, title='L1-denoised Image (ISTA)')
+space.show(x_acc, title='L1-denoised Image (FISTA)', force_show=True)

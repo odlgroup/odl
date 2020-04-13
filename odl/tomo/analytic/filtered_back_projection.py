@@ -77,7 +77,9 @@ def _fbp_filter(norm_freq, filter_type, frequency_scaling):
     ...                    filter_type='Hann',
     ...                    frequency_scaling=0.8)
     """
-    filter_type, filter_type_in = str(filter_type).lower(), filter_type
+    if not callable(filter_type):
+        filter_type, filter_type_in = str(filter_type).lower(), filter_type
+
     if callable(filter_type):
         filt = filter_type(norm_freq)
     elif filter_type == 'ram-lak':
@@ -93,8 +95,7 @@ def _fbp_filter(norm_freq, filter_type, frequency_scaling):
         filt = norm_freq * (
             np.cos(norm_freq * np.pi / (2 * frequency_scaling)) ** 2)
     else:
-        raise ValueError('unknown `filter_type` ({})'
-                         ''.format(filter_type_in))
+        raise ValueError('unknown `filter_type` ({})'.format(filter_type_in))
 
     indicator = (norm_freq <= frequency_scaling)
     filt *= indicator
@@ -566,7 +567,9 @@ if __name__ == '__main__':
 
     # Crete and show TD window
     td_window = tam_danielson_window(ray_trafo, smoothing_width=0)
-    td_window.show('Tam-Danielson window', coords=[0, None, None])
+    ray_trafo.range.show(
+        td_window, 'Tam-Danielson window', coords=[0, None, None]
+    )
 
     # Show the Parker weighting
 
@@ -577,7 +580,7 @@ if __name__ == '__main__':
 
     # Crete and show parker weighting
     parker_weighting = parker_weighting(ray_trafo)
-    parker_weighting.show('Parker weighting')
+    ray_trafo.range.show(parker_weighting, 'Parker weighting')
 
     # Also run the doctests
     run_doctests()

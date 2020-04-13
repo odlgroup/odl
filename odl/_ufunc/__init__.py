@@ -10,7 +10,7 @@
 
 from __future__ import absolute_import
 
-from .ufunc_ops import *
+from ._ufunc_ops import ufunc_ops, ufunc_funcs
 
 __all__ = ()
-__all__ = ufunc_ops.__all__
+__all__ += ('ufunc_ops', 'ufunc_funcs')

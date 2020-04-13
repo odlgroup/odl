@@ -16,18 +16,14 @@ import pytest
 
 import odl
 from odl import (
-    FunctionalLeftVectorMult, MatrixOperator, OpDomainError, Operator,
-    OperatorComp, OperatorLeftScalarMult, OperatorLeftVectorMult,
-    OperatorRightScalarMult, OperatorRightVectorMult, OperatorSum,
-    OpRangeError, OpTypeError)
+    MatrixOperator, OpDomainError, Operator, OperatorComp,
+    OperatorLeftScalarMult, OperatorLeftVectorMult, OperatorRightScalarMult,
+    OperatorRightVectorMult, OperatorSum, OpRangeError, OpTypeError)
 from odl.operator.operator import _dispatch_call_args, _function_signature
 from odl.util.testutils import (
     all_almost_equal, noise_element, noise_elements, simple_fixture)
 
-try:
-    getargspec = inspect.getfullargspec
-except AttributeError:
-    getargspec = inspect.getargspec
+getargspec = getattr(inspect, "getfullargspec", inspect.getargspec)
 
 
 # --- Fixtures --- #
@@ -83,7 +79,7 @@ def check_call(operator, x, expected):
 
     # In-place check, aliased
     if operator.domain == operator.range:
-        y = x.copy()
+        y = operator.domain.copy(x)
         operator(y, out=y)
         assert all_almost_equal(y, expected)
 
@@ -185,19 +181,34 @@ def test_operator_scaling(dom_eq_ran):
         check_call(op * scalar, x, mult_sq_np(mat, scalar * xarr))
 
     # Fail when scaling by wrong scalar type (complex number)
-    wrongscalars = [1j, [1, 2], (1, 2)]
-    for wrongscalar in wrongscalars:
+    for bad_scalar in [1j, 'a']:
         with pytest.raises(TypeError):
-            OperatorLeftScalarMult(op, wrongscalar)
+            OperatorLeftScalarMult(op, bad_scalar)
 
         with pytest.raises(TypeError):
-            OperatorRightScalarMult(op, wrongscalar)
+            OperatorRightScalarMult(op, bad_scalar)
 
         with pytest.raises(TypeError):
-            op * wrongscalar
+            op * bad_scalar
 
         with pytest.raises(TypeError):
-            wrongscalar * op
+            bad_scalar * op
+
+    for wrong_shape in [[1, 2], [[1, 2, 3]]]:
+        with pytest.raises(TypeError):
+            OperatorLeftScalarMult(op, wrong_shape)
+
+        with pytest.raises(TypeError):
+            OperatorRightScalarMult(op, wrong_shape)
+
+        with pytest.raises(TypeError):
+            op * wrong_shape
+
+    # Multiplication from with non-scalar of wrong shape should result in
+    # `NotImplemented`
+    for non_scalar in [[1, 2], np.ones(5)]:
+        assert op.__mul__(non_scalar) is NotImplemented
+        assert op.__rmul__(non_scalar) is NotImplemented
 
 
 def test_operator_vector_mult(dom_eq_ran):
@@ -583,10 +594,10 @@ def test_functional_adjoint():
 
     op = SumFunctional(r3)
 
-    assert op.adjoint(3) == r3.element([3, 3, 3])
+    assert all_almost_equal(op.adjoint(3), r3.element([3, 3, 3]))
 
     x = r3.element([1, 2, 3])
-    assert op.adjoint.adjoint(x) == op(x)
+    assert all_almost_equal(op.adjoint.adjoint(x), op(x))
 
 
 def test_functional_addition():
@@ -641,32 +652,6 @@ def test_functional_scale():
                                 scalar * y * np.ones(3))
         assert all_almost_equal((op * scalar).adjoint(y),
                                 scalar * y * np.ones(3))
-
-
-def test_functional_left_vector_mult():
-    r3 = odl.rn(3)
-    r4 = odl.rn(4)
-
-    op = SumFunctional(r3)
-    x = r3.element([1, 2, 3])
-    y = r4.element([3, 2, 1, 5])
-
-    # Test a range of scalars (scalar multiplication could implement
-    # optimizations for (-1, 0, 1).
-    C = FunctionalLeftVectorMult(op, y)
-
-    assert C.is_linear
-    assert C.adjoint.is_linear
-
-    assert all_almost_equal(C(x), y * np.sum(x))
-    assert all_almost_equal(C.adjoint(y), y.inner(y) * np.ones(3))
-    assert all_almost_equal(C.adjoint.adjoint(x), C(x))
-
-    # Using operator overloading
-    assert all_almost_equal((y * op)(x),
-                            y * np.sum(x))
-    assert all_almost_equal((y * op).adjoint(y),
-                            y.inner(y) * np.ones(3))
 
 
 def test_functional_right_vector_mult():
@@ -791,7 +776,10 @@ def test_nonlinear_functional_operators():
     assert C(x) == pytest.approx(mat(x / 2.0))
 
 
-# test functions to dispatch
+# Test functions to dispatch
+# First doc line is the true signature
+# Second doc line contains `has_out` and `out_optional` booleans
+# Third doc line indicates whether the signature is OK for Operator._call
 def f1(x):
     """f1(x)
     False, False
@@ -910,7 +898,6 @@ def func(request):
 
 
 def test_function_signature(func):
-
     true_sig = func.__doc__.splitlines()[0].strip()
     sig = _function_signature(func)
     assert true_sig == sig
@@ -918,17 +905,17 @@ def test_function_signature(func):
 
 def test_dispatch_call_args(func):
     # Unbound functions
-    true_has, true_opt = eval(func.__doc__.splitlines()[1].strip())
+    true_has_out, true_out_opt = eval(func.__doc__.splitlines()[1].strip())
     good = func.__doc__.splitlines()[2].strip() == 'good'
 
     if good:
         truespec = getargspec(func)
         truespec.args.insert(0, 'self')
 
-        has, opt, spec = _dispatch_call_args(unbound_call=func)
+        has_out, out_opt, spec = _dispatch_call_args(unbound_call=func)
 
-        assert has == true_has
-        assert opt == true_opt
+        assert has_out == true_has_out
+        assert out_opt == true_out_opt
         assert spec == truespec
     else:
         with pytest.raises(ValueError):
@@ -938,6 +925,7 @@ def test_dispatch_call_args(func):
 def test_dispatch_call_args_class():
 
     # Two sneaky classes whose _call method would pass the signature check
+    # because it looks okay from the second argument on
     class WithStaticMethod(object):
         @staticmethod
         def _call(x, y, out):

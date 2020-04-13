@@ -1,4 +1,4 @@
-# Copyright 2014-2017 The ODL contributors
+# Copyright 2014-2019 The ODL contributors
 #
 # This file is part of ODL.
 #
@@ -9,13 +9,15 @@
 """Test ASTRA backend using CPU."""
 
 from __future__ import division
+
+import sys
+
 import numpy as np
 import pytest
-import sys
 
 import odl
 from odl.tomo.backends.astra_cpu import (
-    astra_cpu_forward_projector, astra_cpu_back_projector)
+    astra_cpu_back_projector, astra_cpu_forward_projector)
 from odl.tomo.util.testutils import skip_if_no_astra
 
 # TODO: clean up and improve tests
@@ -41,14 +43,18 @@ def test_astra_cpu_projector_parallel2d():
                                                  dtype='float32')
 
     # Forward evaluation
-    proj_data = astra_cpu_forward_projector(phantom, geom, proj_space)
+    proj_data = astra_cpu_forward_projector(
+        phantom, geom, reco_space, proj_space
+    )
     assert proj_data.shape == proj_space.shape
-    assert proj_data.norm() > 0
+    assert proj_space.norm(proj_data) > 0
 
     # Backward evaluation
-    backproj = astra_cpu_back_projector(proj_data, geom, reco_space)
+    backproj = astra_cpu_back_projector(
+        proj_data, geom, reco_space, proj_space
+    )
     assert backproj.shape == reco_space.shape
-    assert backproj.norm() > 0
+    assert reco_space.norm(backproj) > 0
 
 
 @skip_if_no_astra
@@ -71,14 +77,18 @@ def test_astra_cpu_projector_fanflat():
                                                  dtype='float32')
 
     # Forward evaluation
-    proj_data = astra_cpu_forward_projector(phantom, geom, proj_space)
+    proj_data = astra_cpu_forward_projector(
+        phantom, geom, reco_space, proj_space
+    )
     assert proj_data.shape == proj_space.shape
-    assert proj_data.norm() > 0
+    assert proj_space.norm(proj_data) > 0
 
     # Backward evaluation
-    backproj = astra_cpu_back_projector(proj_data, geom, reco_space)
+    backproj = astra_cpu_back_projector(
+        proj_data, geom, reco_space, proj_space
+    )
     assert backproj.shape == reco_space.shape
-    assert backproj.norm() > 0
+    assert reco_space.norm(backproj) > 0
 
 
 if __name__ == '__main__':

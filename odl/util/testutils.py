@@ -111,8 +111,10 @@ def all_equal(iter1, iter2):
     """Return ``True`` if all elements in ``a`` and ``b`` are equal."""
     # Direct comparison for scalars, tuples or lists
     try:
-        if iter1 == iter2:
-            return True
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore", DeprecationWarning)
+            if iter1 is iter2 or iter1 == iter2:
+                return True
     except ValueError:  # Raised by NumPy when comparing arrays
         pass
 
@@ -148,16 +150,27 @@ def all_equal(iter1, iter2):
 
 
 def all_almost_equal_array(v1, v2, ndigits):
-    return np.allclose(v1, v2,
-                       rtol=10 ** -ndigits, atol=10 ** -ndigits,
-                       equal_nan=True)
+    if v1.dtype == object and v2.dtype == object:
+        return all(
+            all_almost_equal_array(v1_i, v2_i, ndigits)
+            for v1_i, v2_i in zip(v1, v2)
+        )
+
+    try:
+        return np.allclose(
+            v1, v2, rtol=10 ** -ndigits, atol=10 ** -ndigits, equal_nan=True
+        )
+    except TypeError:
+        return False
 
 
 def all_almost_equal(iter1, iter2, ndigits=None):
     """Return ``True`` if all elements in ``a`` and ``b`` are almost equal."""
     try:
-        if iter1 is iter2 or iter1 == iter2:
-            return True
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore", DeprecationWarning)
+            if iter1 is iter2 or iter1 == iter2:
+                return True
     except ValueError:
         pass
 
@@ -166,7 +179,7 @@ def all_almost_equal(iter1, iter2, ndigits=None):
 
     if hasattr(iter1, '__array__') and hasattr(iter2, '__array__'):
         # Only get default ndigits if comparing arrays, need to keep `None`
-        # otherwise for recursive calls.
+        # otherwise for recursive calls
         if ndigits is None:
             ndigits = _ndigits(iter1, iter2, None)
         return all_almost_equal_array(iter1, iter2, ndigits)
@@ -295,8 +308,10 @@ def simple_fixture(name, params, fmt=None):
 
 
 # Helpers to generate data
+
+# TODO(kohr-h): rename to noise_np_array
 def noise_array(space):
-    """Generate a white noise array that is compatible with ``space``.
+    """Generate a white noise array for ``space``.
 
     The array contains white noise with standard deviation 1 in the case of
     floating point dtypes and uniformly spaced values between -10 and 10 in
@@ -316,9 +331,8 @@ def noise_array(space):
 
     Returns
     -------
-    noise_array : `numpy.ndarray` element
-        Array with white noise such that ``space.element``'s can be created
-        from it.
+    noise_array : numpy.ndarray
+        Array containing white noise.
 
     Examples
     --------
@@ -335,26 +349,27 @@ def noise_array(space):
         typical to the space.
     """
     from odl.space import ProductSpace
-    if isinstance(space, ProductSpace):
-        return np.array([noise_array(si) for si in space])
-    else:
-        if space.dtype == bool:
-            arr = np.random.randint(0, 2, size=space.shape, dtype=bool)
-        elif np.issubdtype(space.dtype, np.unsignedinteger):
-            arr = np.random.randint(0, 10, space.shape)
-        elif np.issubdtype(space.dtype, np.signedinteger):
-            arr = np.random.randint(-10, 10, space.shape)
-        elif np.issubdtype(space.dtype, np.floating):
-            arr = np.random.randn(*space.shape)
-        elif np.issubdtype(space.dtype, np.complexfloating):
-            arr = (
-                np.random.randn(*space.shape)
-                + 1j * np.random.randn(*space.shape)
-            ) / np.sqrt(2.0)
-        else:
-            raise ValueError('bad dtype {}'.format(space.dtype))
 
-        return arr.astype(space.dtype, copy=False)
+    if isinstance(space, ProductSpace):
+        return np.array([noise_element(spc_i) for spc_i in space])
+
+    if space.dtype == bool:
+        arr = np.random.randint(0, 2, size=space.shape, dtype=bool)
+    elif np.issubdtype(space.dtype, np.unsignedinteger):
+        arr = np.random.randint(0, 10, space.shape)
+    elif np.issubdtype(space.dtype, np.signedinteger):
+        arr = np.random.randint(-10, 10, space.shape)
+    elif np.issubdtype(space.dtype, np.floating):
+        arr = np.random.randn(*space.shape)
+    elif np.issubdtype(space.dtype, np.complexfloating):
+        arr = (
+            np.random.randn(*space.shape)
+            + 1j * np.random.randn(*space.shape)
+        ) / np.sqrt(2.0)
+    else:
+        raise ValueError('bad dtype {}'.format(space.dtype))
+
+    return arr.astype(space.dtype, copy=False)
 
 
 def noise_element(space):
@@ -448,9 +463,7 @@ def noise_elements(space, n=1):
     noise_element
     """
     arrs = tuple(noise_array(space) for _ in range(n))
-
-    # Make space elements from arrays
-    elems = tuple(space.element(arr.copy()) for arr in arrs)
+    elems = tuple(space.copy(arr) for arr in arrs)
 
     if n == 1:
         return tuple(arrs + elems)

@@ -98,9 +98,9 @@ class AstraCudaProjectorImpl(object):
 
             # Copy data to GPU memory
             if self.geometry.ndim == 2:
-                astra.data2d.store(self.vol_id, vol_data.asarray())
+                astra.data2d.store(self.vol_id, np.asarray(vol_data))
             elif self.geometry.ndim == 3:
-                astra.data3d.store(self.vol_id, vol_data.asarray())
+                astra.data3d.store(self.vol_id, np.asarray(vol_data))
             else:
                 raise RuntimeError('unknown ndim')
 
@@ -255,10 +255,10 @@ class AstraCudaBackProjectorImpl(object):
 
             # Copy data to GPU memory
             if self.geometry.ndim == 2:
-                astra.data2d.store(self.sino_id, proj_data.asarray())
+                astra.data2d.store(self.sino_id, np.asarray(proj_data))
             elif self.geometry.ndim == 3:
                 shape = (-1,) + self.geometry.det_partition.shape
-                reshaped_proj_data = proj_data.asarray().reshape(shape)
+                reshaped_proj_data = np.asarray(proj_data).reshape(shape)
                 swapped_proj_data = np.ascontiguousarray(
                     np.swapaxes(reshaped_proj_data, 0, 1))
                 astra.data3d.store(self.sino_id, swapped_proj_data)

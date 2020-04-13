@@ -43,15 +43,15 @@ disp_func = [
 disp_field = disp_field_space.element(disp_func)
 
 # Show template and displacement field
-template.show('Template')
-disp_field.show('Displacement field')
+templ_space.show(template, 'Template')
+disp_field_space.show(disp_field, 'Displacement field')
 
 
 # --- Apply LinDeformFixedTempl, derivative and its adjoint --- #
 
 
 # Initialize the deformation operator with fixed template
-deform_op = odl.deform.LinDeformFixedTempl(template)
+deform_op = odl.deform.LinDeformFixedTempl(templ_space, template)
 
 # Apply the deformation operator to get the deformed template.
 deformed_template = deform_op(disp_field)
@@ -68,7 +68,10 @@ deriv_result = deform_op_deriv(disp_field_space.one())
 deriv_adj_result = deform_op_deriv.adjoint(templ_space.one())
 
 # Show results
-deformed_template.show('Deformed template')
-deriv_result.show('Operator derivative applied to one()')
-deriv_adj_result.show('Adjoint of the derivative applied to one()',
-                      force_show=True)
+templ_space.show(deformed_template, 'Deformed template')
+templ_space.show(deriv_result, 'Operator derivative applied to one()')
+disp_field_space.show(
+    deriv_adj_result,
+    'Adjoint of the derivative applied to one()',
+    force_show=True,
+)

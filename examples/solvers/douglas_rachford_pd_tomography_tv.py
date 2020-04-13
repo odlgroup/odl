@@ -85,7 +85,7 @@ elif data_matching == 'inexact':
 
     # Add noise to data
     raw_noise = odl.phantom.white_noise(ray_trafo.range)
-    data += raw_noise * eps / raw_noise.norm()
+    data += raw_noise * eps / ray_trafo.range.norm(raw_noise)
 
     # Create indicator
     indicator_l2_ball = odl.solvers.IndicatorLpUnitBall(ray_trafo.range, 2)

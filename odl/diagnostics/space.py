@@ -1,4 +1,4 @@
-# Copyright 2014-2019 The ODL contributors
+# Copyright 2014-2020 The ODL contributors
 #
 # This file is part of ODL.
 #
@@ -20,23 +20,20 @@ from odl.util.testutils import fail_counter
 __all__ = ('SpaceTest',)
 
 
-def _approx_equal(x, y, eps):
+def _approx_equal(space, x, y, eps):
     """Test if elements ``x`` and ``y`` are approximately equal.
 
     ``eps`` is a given absolute tolerance.
     """
-    if x.space != y.space:
-        return False
-
     if x is y:
         return True
 
     try:
-        return x.dist(y) <= eps
+        return space.dist(x, y) <= eps
     except NotImplementedError:
         try:
-            return x == y
-        except NotImplementedError:
+            return all(x == y)
+        except (NotImplementedError, ValueError):
             return False
 
 
@@ -71,7 +68,7 @@ class SpaceTest(object):
         if self.verbose:
             print(message)
 
-    def element_method(self):
+    def element(self):
         """Verify `LinearSpace.element`."""
         with fail_counter(
             test_name='Verifying element method', logger=self.log
@@ -144,10 +141,12 @@ class SpaceTest(object):
             logger=self.log
         ) as counter:
 
-            for [n_x, x], [n_y, y], [n_z, z] in samples(self.space,
-                                                        self.space,
-                                                        self.space):
-                correct = _approx_equal(x + (y + z), (x + y) + z, self.tol)
+            for [n_x, x], [n_y, y], [n_z, z] in samples(
+                self.space, self.space, self.space
+            ):
+                correct = _approx_equal(
+                    self.space, x + (y + z), (x + y) + z, self.tol
+                )
                 if not correct:
                     counter.fail('failed with x={:25s} y={:25s} z={:25s}'
                                  ''.format(n_x, n_y, n_z))
@@ -161,7 +160,7 @@ class SpaceTest(object):
         ) as counter:
 
             for [n_x, x], [n_y, y] in samples(self.space, self.space):
-                correct = _approx_equal(x + y, y + x, self.tol)
+                correct = _approx_equal(self.space, x + y, y + x, self.tol)
                 if not correct:
                     counter.fail('failed with x={:25s} y={:25s}'
                                  ''.format(n_x, n_y))
@@ -181,7 +180,7 @@ class SpaceTest(object):
         ) as counter:
 
             for [n_x, x] in samples(self.space):
-                correct = _approx_equal(x + zero, x, self.tol)
+                correct = _approx_equal(self.space, x + zero, x, self.tol)
                 if not correct:
                     counter.fail('failed with x={:25s}'.format(n_x))
 
@@ -200,7 +199,7 @@ class SpaceTest(object):
         ) as counter:
 
             for [n_x, x] in samples(self.space):
-                correct = _approx_equal(x + (-x), zero, self.tol)
+                correct = _approx_equal(self.space, x + (-x), zero, self.tol)
                 if not correct:
                     counter.fail('failed with x={:25s}'.format(n_x))
 
@@ -212,10 +211,12 @@ class SpaceTest(object):
             logger=self.log
         ) as counter:
 
-            for [n_x, x], [_, a], [_, b] in samples(self.space,
-                                                    self.space.field,
-                                                    self.space.field):
-                correct = _approx_equal(a * (b * x), (a * b) * x, self.tol)
+            for [n_x, x], [_, a], [_, b] in samples(
+                self.space, self.space.field, self.space.field
+            ):
+                correct = _approx_equal(
+                    self.space, a * (b * x), (a * b) * x, self.tol
+                )
                 if not correct:
                     counter.fail('failed with x={:25s}, a={}, b={}'
                                  ''.format(n_x, a, b))
@@ -229,7 +230,7 @@ class SpaceTest(object):
         ) as counter:
 
             for [n_x, x] in samples(self.space):
-                correct = _approx_equal(1 * x, x, self.tol)
+                correct = _approx_equal(self.space, 1 * x, x, self.tol)
                 if not correct:
                     counter.fail('failed with x={:25s}'.format(n_x))
 
@@ -242,10 +243,12 @@ class SpaceTest(object):
             logger=self.log
         ) as counter:
 
-            for [n_x, x], [n_y, y], [_, a] in samples(self.space,
-                                                      self.space,
-                                                      self.space.field):
-                correct = _approx_equal(a * (x + y), a * x + a * y, self.tol)
+            for [n_x, x], [n_y, y], [_, a] in samples(
+                self.space, self.space, self.space.field
+            ):
+                correct = _approx_equal(
+                    self.space, a * (x + y), a * x + a * y, self.tol
+                )
                 if not correct:
                     counter.fail('failed with x={:25s}, y={:25s}, a={}'
                                  ''.format(n_x, n_y, a))
@@ -259,10 +262,12 @@ class SpaceTest(object):
             logger=self.log
         ) as counter:
 
-            for [n_x, x], [_, a], [_, b] in samples(self.space,
-                                                    self.space.field,
-                                                    self.space.field):
-                correct = _approx_equal((a + b) * x, a * x + b * x, self.tol)
+            for [n_x, x], [_, a], [_, b] in samples(
+                self.space, self.space.field, self.space.field
+            ):
+                correct = _approx_equal(
+                    self.space, (a + b) * x, a * x + b * x, self.tol
+                )
                 if not correct:
                     counter.fail('failed with x={:25s}, a={}, b={}'
                                  ''.format(n_x, a, b))
@@ -276,8 +281,10 @@ class SpaceTest(object):
         ) as counter:
 
             for [n_x, x], [n_y, y] in samples(self.space, self.space):
-                correct = (_approx_equal(x - y, x + (-1 * y), self.tol) and
-                           _approx_equal(x - y, x + (-y), self.tol))
+                correct = (
+                    _approx_equal(self.space, x - y, x + (-1 * y), self.tol)
+                    and _approx_equal(self.space, x - y, x + (-y), self.tol)
+                )
                 if not correct:
                     counter.fail('failed with x={:25s}, y={:25s}'
                                  ''.format(n_x, n_y))
@@ -292,7 +299,9 @@ class SpaceTest(object):
 
             for [n_x, x], [_, a] in samples(self.space, self.space.field):
                 if a != 0:
-                    correct = _approx_equal(x / a, x * (1.0 / a), self.tol)
+                    correct = _approx_equal(
+                        self.space, x / a, x * (1.0 / a), self.tol
+                    )
                     if not correct:
                         counter.fail('failed with x={:25s}, a={}'
                                      ''.format(n_x, a))
@@ -306,19 +315,19 @@ class SpaceTest(object):
         ) as counter:
 
             for [n_x, x_in], [n_y, y] in samples(self.space, self.space):
-                x = x_in.copy()
-                x.lincomb(1, x, 1, y)
-                correct = _approx_equal(x, x_in + y, self.tol)
+                x = self.space.copy(x_in)
+                self.space.lincomb(1, x, 1, y, x)
+                correct = _approx_equal(self.space, x, x_in + y, self.tol)
                 if not correct:
-                    counter.fail('failed with x.lincomb(1, x, 1, y),'
+                    counter.fail('failed with lincomb(1, x, 1, y, x),'
                                  'x={:25s} y={:25s} '
                                  ''.format(n_x, n_y))
 
-                x = x_in.copy()
-                x.lincomb(1, x, 1, x)
-                correct = _approx_equal(x, x_in + x_in, self.tol)
+                x = self.space.copy(x_in)
+                self.space.lincomb(1, x, 1, x, x)
+                correct = _approx_equal(self.space, x, x_in + x_in, self.tol)
                 if not correct:
-                    counter.fail('failed with x.lincomb(1, x, 1, x),'
+                    counter.fail('failed with lincomb(1, x, 1, x, x),'
                                  'x={:25s} '
                                  ''.format(n_x))
 
@@ -369,7 +378,9 @@ class SpaceTest(object):
             for [n_x, x], [n_y, y], [_, a] in samples(self.space,
                                                       self.space,
                                                       self.space.field):
-                error = abs((a * x).inner(y) - a * x.inner(y))
+                error = abs(
+                    self.space.inner(a * x, y) - a * self.space.inner(x, y)
+                )
                 if error > self.tol:
                     counter.fail('x={:25s}, y={:25s}, a={}: error={}'
                                  ''.format(n_x, n_y, a, error))
@@ -383,7 +394,9 @@ class SpaceTest(object):
         ) as counter:
 
             for [n_x, x], [n_y, y] in samples(self.space, self.space):
-                error = abs((x).inner(y) - y.inner(x).conjugate())
+                error = abs(
+                    self.space.inner(x, y) - self.space.inner(y, x).conjugate()
+                )
                 if error > self.tol:
                     counter.fail('x={:25s}, y={:25s}: error={}'
                                  ''.format(n_x, n_y, error))
@@ -400,7 +413,10 @@ class SpaceTest(object):
             for [n_x, x], [n_y, y], [n_z, z] in samples(self.space,
                                                         self.space,
                                                         self.space):
-                error = abs((x + y).inner(z) - (x.inner(z) + y.inner(z)))
+                error = abs(
+                    self.space.inner(x + y, z)
+                    - (self.space.inner(x, z) + self.space.inner(y, z))
+                )
                 if error > self.tol:
                     counter.fail('x={:25s}, y={:25s}, z={:25s}: error={}'
                                  ''.format(n_x, n_y, n_z, error))
@@ -414,7 +430,7 @@ class SpaceTest(object):
         ) as counter:
 
             for [n_x, x] in samples(self.space):
-                inner = x.inner(x)
+                inner = self.space.inner(x, x)
 
                 if abs(inner.imag) > self.tol:
                     counter.fail('<x, x>.imag != 0, x={:25s}, <x, x>.imag = {}'
@@ -457,7 +473,7 @@ class SpaceTest(object):
 
         try:
             zero = self.space.zero()
-            zero.inner(zero)
+            self.space.inner(zero, zero)
         except NotImplementedError:
             self.log('Space has no inner product')
             return
@@ -475,7 +491,7 @@ class SpaceTest(object):
         ) as counter:
 
             for [n_x, x] in samples(self.space):
-                norm = x.norm()
+                norm = self.space.norm(x)
 
                 if n_x == 'Zero' and norm != 0:
                     counter.fail('||0|| != 0.0, x={:25s}: ||x||={}'
@@ -494,9 +510,9 @@ class SpaceTest(object):
         ) as counter:
 
             for [n_x, x], [n_y, y] in samples(self.space, self.space):
-                norm_x = x.norm()
-                norm_y = y.norm()
-                norm_xy = (x + y).norm()
+                norm_x = self.space.norm(x)
+                norm_y = self.space.norm(y)
+                norm_xy = self.space.norm(x + y)
 
                 error = norm_xy - norm_x - norm_y
 
@@ -513,7 +529,9 @@ class SpaceTest(object):
         ) as counter:
 
             for [n_x, x], [_, a] in samples(self.space, self.space.field):
-                error = abs((a * x).norm() - abs(a) * x.norm())
+                error = abs(
+                    self.space.norm(a * x) - abs(a) * self.space.norm(x)
+                )
                 if error > self.tol:
                     counter.fail('x={:25s} a={}: error={}'
                                  ''.format(n_x, a, error))
@@ -521,10 +539,10 @@ class SpaceTest(object):
     def _norm_inner_compatible(self):
         """Verify compatibility of norm and inner product."""
         try:
-            zero = self.space.zero()
-            zero.inner(zero)
+            self.space.norm(self.space.zero())
+            self.space.inner(self.space.zero(), self.space.zero())
         except NotImplementedError:
-            self.log('Space has no inner product')
+            self.log('Space does not have norm and inner product')
             return
 
         with fail_counter(
@@ -534,7 +552,9 @@ class SpaceTest(object):
         ) as counter:
 
             for [n_x, x] in samples(self.space):
-                error = abs(x.norm() ** 2 - x.inner(x))
+                error = abs(
+                    self.space.norm(x) ** 2 - self.space.inner(x, x)
+                )
 
                 if error > self.tol:
                     counter.fail('x={:25s}: error={}'
@@ -576,7 +596,7 @@ class SpaceTest(object):
         self.log('\n== Verifying norm ==\n')
 
         try:
-            self.space.zero().norm()
+            self.space.norm(self.space.zero())
         except NotImplementedError:
             self.log('Space has no norm')
             return
@@ -595,7 +615,7 @@ class SpaceTest(object):
         ) as counter:
 
             for [n_x, x], [n_y, y] in samples(self.space, self.space):
-                dist = x.dist(y)
+                dist = self.space.dist(x, y)
 
                 if n_x == n_y and dist != 0:
                     counter.fail('d(x, x) != 0.0, x={:25s}: dist={}'
@@ -613,8 +633,8 @@ class SpaceTest(object):
         ) as counter:
 
             for [n_x, x], [n_y, y] in samples(self.space, self.space):
-                dist_1 = x.dist(y)
-                dist_2 = y.dist(x)
+                dist_1 = self.space.dist(x, y)
+                dist_2 = self.space.dist(y, x)
                 error = abs(dist_1 - dist_2)
 
                 if error > self.tol:
@@ -629,12 +649,12 @@ class SpaceTest(object):
             logger=self.log
         ) as counter:
 
-            for [n_x, x], [n_y, y], [n_z, z] in samples(self.space,
-                                                        self.space,
-                                                        self.space):
-                dxz = x.dist(z)
-                dxy = x.dist(y)
-                dyz = y.dist(z)
+            for [n_x, x], [n_y, y], [n_z, z] in samples(
+                self.space, self.space, self.space
+            ):
+                dxz = self.space.dist(x, z)
+                dxy = self.space.dist(x, y)
+                dyz = self.space.dist(y, z)
                 error = dxz - (dxy + dyz)
 
                 if error > self.tol:
@@ -644,9 +664,10 @@ class SpaceTest(object):
     def _dist_norm_compatible(self):
         """Verify compatibility of distance and norm."""
         try:
-            self.space.zero().norm()
+            self.space.norm(self.space.zero())
+            self.space.dist(self.space.zero(), self.space.zero())
         except NotImplementedError:
-            self.log('Space has no norm')
+            self.log('Space does not have norm and dist')
             return
 
         with fail_counter(
@@ -655,9 +676,10 @@ class SpaceTest(object):
             logger=self.log
         ) as counter:
 
-            for [n_x, x], [n_y, y] in samples(self.space,
-                                              self.space):
-                error = abs(x.dist(y) - (x - y).norm())
+            for [n_x, x], [n_y, y] in samples(self.space, self.space):
+                error = abs(
+                    self.space.dist(x, y) - self.space.norm(x - y)
+                )
 
                 if error > self.tol:
                     counter.fail('x={:25s}, y={:25s}: error={}'
@@ -720,7 +742,7 @@ class SpaceTest(object):
             logger=self.log
         ) as counter:
             for [n_x, x] in samples(self.space):
-                error = (zero * x).norm()
+                error = self.space.norm(zero * x)
 
                 if error > self.tol:
                     counter.fail('x={:25s},: error={}'
@@ -734,10 +756,10 @@ class SpaceTest(object):
             logger=self.log
         ) as counter:
 
-            for [n_x, x], [n_y, y], _ in samples(self.space,
-                                                 self.space,
-                                                 self.space):
-                correct = _approx_equal(x * y, y * x, self.tol)
+            for [n_x, x], [n_y, y], _ in samples(
+                self.space, self.space, self.space
+            ):
+                correct = _approx_equal(self.space, x * y, y * x, self.tol)
                 if not correct:
                     counter.fail('failed with x={:25s} y={:25s}'
                                  ''.format(n_x, n_y))
@@ -750,10 +772,12 @@ class SpaceTest(object):
             logger=self.log
         ) as counter:
 
-            for [n_x, x], [n_y, y], [n_z, z] in samples(self.space,
-                                                        self.space,
-                                                        self.space):
-                correct = _approx_equal(x * (y * z), (x * y) * z, self.tol)
+            for [n_x, x], [n_y, y], [n_z, z] in samples(
+                self.space, self.space, self.space
+            ):
+                correct = _approx_equal(
+                    self.space, x * (y * z), (x * y) * z, self.tol
+                )
                 if not correct:
                     counter.fail('failed with x={:25s} y={:25s} z={:25s}'
                                  ''.format(n_x, n_y, n_z))
@@ -767,10 +791,12 @@ class SpaceTest(object):
             logger=self.log
         ) as counter:
 
-            for [n_x, x], [n_y, y], [_, a] in samples(self.space,
-                                                      self.space,
-                                                      self.space.field):
-                correct = _approx_equal(a * (x + y), a * x + a * y, self.tol)
+            for [n_x, x], [n_y, y], [_, a] in samples(
+                self.space, self.space, self.space.field
+            ):
+                correct = _approx_equal(
+                    self.space, a * (x + y), a * x + a * y, self.tol
+                )
                 if not correct:
                     counter.fail('failed with x={:25s} y={:25s} a={}'
                                  ''.format(n_x, n_y, a))
@@ -784,10 +810,12 @@ class SpaceTest(object):
             logger=self.log
         ) as counter:
 
-            for [n_x, x], [n_y, y], [n_z, z] in samples(self.space,
-                                                        self.space,
-                                                        self.space):
-                correct = _approx_equal(x * (y + z), x * y + x * z, self.tol)
+            for [n_x, x], [n_y, y], [n_z, z] in samples(
+                self.space, self.space, self.space
+            ):
+                correct = _approx_equal(
+                    self.space, x * (y + z), x * y + x * z, self.tol
+                )
                 if not correct:
                     counter.fail('failed with x={:25s} y={:25s} z={:25s}'
                                  ''.format(n_x, n_y, n_z))
@@ -892,128 +920,12 @@ class SpaceTest(object):
                     counter.fail('not obj not in space,  with obj={}'
                                  ''.format(obj))
 
-    def element_assign(self):
-        """Verify `LinearSpaceElement.assign`."""
-        with fail_counter(
-            test_name='Verify behavior of `LinearSpaceElement.assign`',
-            logger=self.log
-        ) as counter:
-
-            for [n_x, x], [n_y, y] in samples(self.space,
-                                              self.space):
-                x.assign(y)
-                correct = _approx_equal(x, y, self.tol)
-                if not correct:
-                    counter.fail('failed with x={:25s} y={:25s}'
-                                 ''.format(n_x, n_y))
-
-    def element_copy(self):
-        """Verify `LinearSpaceElement.copy`."""
-        with fail_counter(
-            test_name='Verify behavior of `LinearSpaceElement.copy`',
-            logger=self.log
-        ) as counter:
-
-            for [n_x, x] in samples(self.space):
-                # equal after copy
-                y = x.copy()
-                correct = _approx_equal(x, y, self.tol)
-                if not correct:
-                    counter.fail('failed with x={:s5s}'
-                                 ''.format(n_x))
-
-                # modify y, x stays the same
-                y *= 2.0
-                correct = n_x == 'Zero' or not _approx_equal(x, y, self.tol)
-                if not correct:
-                    counter.fail('modified y, x changed with x={:25s}'
-                                 ''.format(n_x))
-
-    def element_set_zero(self):
-        """Verify `LinearSpaceElement.set_zero`."""
-        try:
-            zero = self.space.zero()
-        except NotImplementedError:
-            print('*** SPACE HAS NO ZERO VECTOR ***')
-            return
-
-        with fail_counter(
-            test_name='Verify behavior of `LinearSpaceElement.set_zero`',
-            logger=self.log
-        ) as counter:
-
-            for [n_x, x] in samples(self.space):
-                x.set_zero()
-                correct = _approx_equal(x, zero, self.tol)
-                if not correct:
-                    counter.fail('failed with x={:25s}'
-                                 ''.format(n_x))
-
-    def element_equals(self):
-        """Verify `LinearSpaceElement.__eq__`."""
-        try:
-            zero = self.space.zero()
-        except NotImplementedError:
-            print('*** SPACE HAS NO ZERO VECTOR ***')
-            return
-
-        try:
-            zero == zero
-        except NotImplementedError:
-            self.log('Vector has no __eq__')
-            return
-
-        with fail_counter(
-            test_name='Verify behavior of `element1 == element2`',
-            logger=self.log
-        ) as counter:
-
-            for [n_x, x], [n_y, y] in samples(self.space,
-                                              self.space):
-                if n_x == n_y:
-                    if not x == y:
-                        counter.fail('failed x == x with x={:25s}'
-                                     ''.format(n_x))
-
-                    if x != y:
-                        counter.fail('failed not x != x with x={:25s}'
-                                     ''.format(n_x))
-                else:
-                    if x == y:
-                        counter.fail('failed not x == y with x={:25s}, '
-                                     'x={:25s}'.format(n_x, n_y))
-
-                    if not x != y:
-                        counter.fail('failed x != y with x={:25s}, x={:25s}'
-                                     ''.format(n_x, n_y))
-
-    def element_space(self):
-        """Verify `LinearSpaceElement.space`."""
-        with fail_counter(
-            test_name='Verify `LinearSpaceElement.space`',
-            logger=self.log
-        ) as counter:
-
-            for [n_x, x] in samples(self.space):
-                if x.space != self.space:
-                    counter.fail('failed with x={:25s}'.format(n_x))
-
-    def element(self):
-        """Verify `LinearSpaceElement`."""
-
-        self.log('\n== Verifying element attributes ==\n')
-        self.element_assign()
-        self.element_copy()
-        self.element_set_zero()
-        self.element_equals()
-        self.element_space()
-
     def run_tests(self):
         """Run all tests on this space."""
         self.log('\n== RUNNING ALL TESTS ==\n')
         self.log('Space = {}'.format(self.space))
         self.field()
-        self.element_method()
+        self.element()
         self.linearity()
         self.inner()
         self.norm()
@@ -1021,7 +933,6 @@ class SpaceTest(object):
         self.multiply()
         self.equals()
         self.contains()
-        self.element()
 
     def __str__(self):
         """Return ``str(self)``."""

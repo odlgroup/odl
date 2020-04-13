@@ -79,10 +79,13 @@ def steepest_descent(f, x, line_search=1.0, maxiter=1000, tol=1e-16,
     [GNS2009] Griva, I, Nash, S G, and Sofer, A. *Linear and nonlinear
     optimization*. Siam, 2009.
     """
+    space = f.domain
     grad = f.gradient
-    if x not in grad.domain:
-        raise TypeError('`x` {!r} is not in the domain of `grad` {!r}'
-                        ''.format(x, grad.domain))
+    if x not in space:
+        raise TypeError(
+            'expected `x in f.domain`, but {!r} is not in {!r}'
+            ''.format(x, space)
+        )
 
     if not callable(line_search):
         line_search = ConstantLineSearch(line_search)
@@ -91,12 +94,12 @@ def steepest_descent(f, x, line_search=1.0, maxiter=1000, tol=1e-16,
     for _ in range(maxiter):
         grad(x, out=grad_x)
 
-        dir_derivative = -grad_x.norm() ** 2
+        dir_derivative = -grad.range.norm(grad_x) ** 2
         if np.abs(dir_derivative) < tol:
             return  # we have converged
-        step = line_search(x, -grad_x, dir_derivative)
 
-        x.lincomb(1, x, -step, grad_x)
+        step = line_search(x, -grad_x, dir_derivative)
+        space.lincomb(1, x, -step, grad_x, out=x)  # x <- x - step * grad
 
         if projection is not None:
             projection(x)
@@ -155,26 +158,30 @@ def adam(f, x, learning_rate=1e-3, beta1=0.9, beta2=0.999, eps=1e-8,
     *Adam: A Method for Stochastic Optimization*, ICLR 2015.
     """
     grad = f.gradient
-    if x not in grad.domain:
-        raise TypeError('`x` {!r} is not in the domain of `grad` {!r}'
-                        ''.format(x, grad.domain))
+    space = f.domain
 
-    m = grad.domain.zero()
-    v = grad.domain.zero()
+    if x not in space:
+        raise TypeError(
+            '`x` {!r} is not in the domain {!r} of `f`'.format(x, space)
+        )
 
-    grad_x = grad.range.element()
+    m = space.zero()
+    v = space.zero()
+
+    gx = space.element()
     for _ in range(maxiter):
-        grad(x, out=grad_x)
+        grad(x, out=gx)
 
-        if grad_x.norm() < tol:
+        if space.norm(gx) < tol:
             return
 
-        m.lincomb(beta1, m, 1 - beta1, grad_x)
-        v.lincomb(beta2, v, 1 - beta2, grad_x ** 2)
-
+        # m = beta1 * m + (1 - beta1) * grad(x)
+        space.lincomb(beta1, m, 1 - beta1, gx, out=m)
+        # v = beta2 * v + (1 - beta2) * grad(x) ** 2
+        space.lincomb(beta2, v, 1 - beta2, gx ** 2, out=v)
         step = learning_rate * np.sqrt(1 - beta2) / (1 - beta1)
-
-        x.lincomb(1, x, -step, m / (np.sqrt(v) + eps))
+        # x = x - step * m / (sqrt(v) + eps)
+        space.lincomb(1, x, -step, m / (np.sqrt(v) + eps), out=x)
 
         if callback is not None:
             callback(x)

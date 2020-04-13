@@ -155,12 +155,12 @@ if __name__ == '__main__':
     n = 300
 
     # 2D
-    discr = odl.uniform_discr([-1, -1], [1, 1], [n, n])
-    derenzo_sources(discr).show('derenzo_sources 2d')
+    space = odl.uniform_discr([-1, -1], [1, 1], [n, n])
+    space.show(derenzo_sources(space), 'derenzo_sources 2d')
 
     # 3D
-    discr = odl.uniform_discr([-1, -1, -1], [1, 1, 1], [300, 300, 300])
-    derenzo_sources(discr).show('derenzo_sources 3d')
+    space = odl.uniform_discr([-1, -1, -1], [1, 1, 1], [300, 300, 300])
+    space.show(derenzo_sources(space), 'derenzo_sources 3d')
 
     # Run also the doctests
     run_doctests()

@@ -8,18 +8,16 @@
 # v. 2.0. If a copy of the MPL was not distributed with this file, You can
 # obtain one at https://mozilla.org/MPL/2.0/.
 
-from __future__ import print_function, division, absolute_import
+from __future__ import absolute_import, division, print_function
+
 import numpy as np
 
+from odl.operator.default_ops import (
+    ConstantOperator, IdentityOperator, InnerProductOperator)
 from odl.operator.operator import (
-    Operator, OperatorComp, OperatorLeftScalarMult, OperatorRightScalarMult,
-    OperatorRightVectorMult, OperatorSum, OperatorPointwiseProduct)
-from odl.operator.default_ops import (IdentityOperator, ConstantOperator)
-from odl.solvers.nonsmooth import (proximal_arg_scaling, proximal_translation,
-                                   proximal_quadratic_perturbation,
-                                   proximal_const_func, proximal_convex_conj)
-from odl.util import signature_string, indent
-
+    Operator, OperatorComp, OperatorLeftScalarMult, OperatorPointwiseProduct,
+    OperatorRightScalarMult, OperatorRightVectorMult, OperatorSum)
+from odl.util import indent, signature_string
 
 __all__ = ('Functional', 'FunctionalLeftScalarMult',
            'FunctionalRightScalarMult', 'FunctionalComp',
@@ -204,7 +202,7 @@ class Functional(Operator):
         -------
         derivative : `Operator`
         """
-        return self.gradient(point).T
+        return InnerProductOperator(self.domain, self.gradient(point))
 
     def translated(self, shift):
         """Return a translation of the functional.
@@ -505,6 +503,7 @@ class FunctionalLeftScalarMult(Functional, OperatorLeftScalarMult):
         --------
         odl.solvers.nonsmooth.proximal_operators.proximal_const_func
         """
+        from odl.solvers.nonsmooth import proximal_const_func
 
         if self.scalar < 0:
             raise ValueError('proximal operator of functional scaled with a '
@@ -590,6 +589,8 @@ class FunctionalRightScalarMult(Functional, OperatorRightScalarMult):
         --------
         odl.solvers.nonsmooth.proximal_operators.proximal_arg_scaling
         """
+        from odl.solvers.nonsmooth import proximal_arg_scaling
+
         return proximal_arg_scaling(self.functional.proximal, self.scalar)
 
 
@@ -853,8 +854,11 @@ class FunctionalTranslation(Functional):
         --------
         odl.solvers.nonsmooth.proximal_operators.proximal_translation
         """
-        return proximal_translation(self.functional.proximal,
-                                    self.translation)
+        from odl.solvers.nonsmooth import proximal_translation
+
+        return proximal_translation(
+            self.functional.proximal, self.translation
+        )
 
     @property
     def convex_conj(self):
@@ -1009,7 +1013,9 @@ class FunctionalQuadraticPerturb(Functional):
         if linear_term is None:
             grad_lipschitz = func.grad_lipschitz
         else:
-            grad_lipschitz = (func.grad_lipschitz + self.linear_term.norm())
+            grad_lipschitz = (
+                func.grad_lipschitz + func.domain.norm(linear_term)
+            )
 
         constant = func.domain.field.element(constant)
         if constant.imag != 0:
@@ -1044,27 +1050,36 @@ class FunctionalQuadraticPerturb(Functional):
 
     def _call(self, x):
         """Apply the functional to the given point."""
-        return (self.functional(x) +
-                self.quadratic_coeff * x.inner(x) +
-                x.inner(self.linear_term) + self.constant)
+        return (
+            self.functional(x)
+            + self.quadratic_coeff * self.domain.inner(x, x)
+            + self.domain.inner(x, self.linear_term)
+            + self.constant
+        )
 
     @property
     def gradient(self):
         """Gradient operator of the functional."""
-        return (self.functional.gradient +
-                (2 * self.quadratic_coeff) * IdentityOperator(self.domain) +
-                ConstantOperator(self.linear_term))
+        return (
+            self.functional.gradient
+            + (2 * self.quadratic_coeff) * IdentityOperator(self.domain)
+            + ConstantOperator(self.domain, self.linear_term)
+        )
 
     @property
     def proximal(self):
         """Proximal factory of the quadratically perturbed functional."""
+        from odl.solvers.nonsmooth import proximal_quadratic_perturbation
+
         if self.quadratic_coeff < 0:
             raise TypeError('`quadratic_coeff` {} must be non-negative'
                             ''.format(self.quadratic_coeff))
 
         return proximal_quadratic_perturbation(
             self.functional.proximal,
-            a=self.quadratic_coeff, u=self.linear_term)
+            a=self.quadratic_coeff,
+            u=self.linear_term,
+        )
 
     @property
     def convex_conj(self):
@@ -1320,6 +1335,8 @@ class FunctionalDefaultConvexConjugate(Functional):
         proximal : proximal_convex_conj
             Proximal computed using the Moreu identity
         """
+        from odl.solvers.nonsmooth import proximal_convex_conj
+
         return proximal_convex_conj(self.convex_conj.proximal)
 
     def __repr__(self):
@@ -1394,28 +1411,18 @@ class BregmanDistance(Functional):
             raise TypeError('`functional` {} not an instance of ``Functional``'
                             ''.format(functional))
         self.__functional = functional
-
-        if point not in functional.domain:
-            raise ValueError('`point` {} is not in `functional.domain` {}'
-                             ''.format(point, functional.domain))
-        self.__point = point
-
-        if subgrad not in functional.domain:
-            raise TypeError(
-                '`subgrad` must be an element in `functional.domain`, got '
-                '{}'.format(subgrad))
-        self.__subgrad = subgrad
-
-        self.__constant = -functional(point) + subgrad.inner(point)
-
+        space = functional.domain
+        self.__point = space.element(point)
+        self.__subgrad = space.element(subgrad)
+        self.__constant = -functional(point) + space.inner(subgrad, point)
         self.__bregman_dist = FunctionalQuadraticPerturb(
-            functional, linear_term=-subgrad, constant=self.__constant)
-
-        grad_lipschitz = functional.grad_lipschitz + subgrad.norm()
+            functional, linear_term=-subgrad, constant=self.__constant
+        )
+        grad_lipschitz = functional.grad_lipschitz + space.norm(subgrad)
 
         super(BregmanDistance, self).__init__(
-            space=functional.domain, linear=False,
-            grad_lipschitz=grad_lipschitz)
+            space, linear=False, grad_lipschitz=grad_lipschitz
+        )
 
     @property
     def functional(self):
@@ -1449,15 +1456,10 @@ class BregmanDistance(Functional):
     @property
     def gradient(self):
         """Gradient operator of the functional."""
-        try:
-            op_to_return = self.functional.gradient
-        except NotImplementedError:
-            raise NotImplementedError(
-                '`self.functional.gradient` is not implemented for '
-                '`self.functional` {}'.format(self.functional))
-
-        op_to_return = op_to_return - ConstantOperator(self.subgrad)
-        return op_to_return
+        return (
+            self.functional.gradient
+            - ConstantOperator(self.domain, self.subgrad)
+        )
 
     def __repr__(self):
         '''Return ``repr(self)``.'''
@@ -1515,7 +1517,7 @@ def simple_functional(space, fcall=None, grad=None, prox=None, grad_lip=np.nan,
     >>> func([1, 2, 3])
     14.0
     >>> func.gradient([1, 2, 3])
-    rn(3).element([ 2.,  4.,  6.])
+    array([ 2.,  4.,  6.])
     """
     if grad is not None and not isinstance(grad, Operator):
         grad_in = grad

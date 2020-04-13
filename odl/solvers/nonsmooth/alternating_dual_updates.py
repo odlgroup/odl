@@ -190,7 +190,7 @@ def adupdates(x, g, L, stepsize, inner_stepsizes, niter, random=False,
             tmp_ran = tmp_rans[L[j].range]
             proxs[j](arg, out=tmp_ran)
             x -= 1.0 / stepsize * L[j].adjoint(tmp_ran - duals[j])
-            duals[j].assign(tmp_ran)
+            ranges[j].assign(duals[j], tmp_ran)
 
             if callback is not None and callback_loop == 'inner':
                 callback(x)
@@ -229,4 +229,4 @@ def adupdates_simple(x, g, L, stepsize, inner_stepsizes, niter,
                          else duals[j] + stepsize *
                          np.asarray(inner_stepsizes[j]) * L[j](x)))
             x -= 1.0 / stepsize * L[j].adjoint(dual_tmp - duals[j])
-            duals[j].assign(dual_tmp)
+            ranges[j].assign(duals[j], dual_tmp)

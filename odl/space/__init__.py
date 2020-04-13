@@ -10,7 +10,7 @@
 
 from __future__ import absolute_import
 
-from . import base_tensors, entry_points, weighting
+from . import base_tensors, entry_points
 from .npy_tensors import *
 from .pspace import *
 from .space_utils import *

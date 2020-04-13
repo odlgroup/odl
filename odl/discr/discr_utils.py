@@ -1321,7 +1321,7 @@ def _make_dual_use_func(func_ip, func_oop, domain, out_dtype):
                     # in which case we copy.
                     out = np.broadcast_to(out, out_shape)
                     if not out.flags.writeable:
-                        out = out.copy()
+                        out = np.copy(out)
 
             elif tensor_valued:
                 # The out object can be any array-like of objects with shapes

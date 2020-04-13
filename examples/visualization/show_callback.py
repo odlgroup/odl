@@ -8,12 +8,12 @@ sleep = odl.solvers.CallbackSleep(seconds=1.0)
 
 # Callback in 1d adds new lines to the figure
 space_1d = odl.uniform_discr(0, 1, 100)
-callback = sleep & odl.solvers.CallbackShow()
+callback = sleep & odl.solvers.CallbackShow(space_1d)
 for name, elem in space_1d.examples:
     callback(elem)
 
 # Callback in 2d replaces the figure in place
 space_2d = odl.uniform_discr([0, 0], [1, 1], [100, 100])
-callback = sleep & odl.solvers.CallbackShow()
+callback = sleep & odl.solvers.CallbackShow(space_2d)
 for name, elem in space_2d.examples:
     callback(elem)

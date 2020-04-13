@@ -101,10 +101,8 @@ class PartialDerivative(PointwiseTensorFieldOperator):
         >>> discr = odl.uniform_discr([0, 0], [2, 1], f.shape)
         >>> par_deriv = PartialDerivative(discr, axis=0, pad_mode='order1')
         >>> par_deriv(f)
-        uniform_discr([ 0.,  0.], [ 2.,  1.], (2, 5)).element(
-            [[ 0.,  1.,  2.,  3.,  4.],
-             [ 0.,  1.,  2.,  3.,  4.]]
-        )
+        array([[ 0.,  1.,  2.,  3.,  4.],
+               [ 0.,  1.,  2.,  3.,  4.]])
         """
         if not isinstance(domain, DiscretizedSpace):
             raise TypeError('`domain` {!r} is not a DiscretizedSpace instance'
@@ -137,11 +135,9 @@ class PartialDerivative(PointwiseTensorFieldOperator):
         if out is None:
             out = self.range.element()
 
-        # TODO: this pipes CUDA arrays through NumPy. Write native operator.
-        with writable_array(out) as out_arr:
-            finite_diff(x.asarray(), axis=self.axis, dx=self.dx,
-                        method=self.method, pad_mode=self.pad_mode,
-                        pad_const=self.pad_const, out=out_arr)
+        finite_diff(x, axis=self.axis, dx=self.dx,
+                    method=self.method, pad_mode=self.pad_mode,
+                    pad_const=self.pad_const, out=out)
         return out
 
     def derivative(self, point=None):
@@ -274,26 +270,20 @@ class Gradient(PointwiseTensorFieldOperator):
         >>> grad = Gradient(discr)
         >>> grad_f = grad(f)
         >>> grad_f[0]
-        uniform_discr([ 0.,  0.], [ 2.,  5.], (2, 5)).element(
-            [[ 0.,  1.,  2.,  3.,  4.],
-             [ 0., -2., -4., -6., -8.]]
-        )
+        array([[ 0.,  1.,  2.,  3.,  4.],
+               [ 0., -2., -4., -6., -8.]])
         >>> grad_f[1]
-        uniform_discr([ 0.,  0.], [ 2.,  5.], (2, 5)).element(
-            [[ 1.,  1.,  1.,  1., -4.],
-             [ 2.,  2.,  2.,  2., -8.]]
-        )
+        array([[ 1.,  1.,  1.,  1., -4.],
+               [ 2.,  2.,  2.,  2., -8.]])
 
         Verify adjoint:
 
         >>> g = grad.range.element((data, data ** 2))
         >>> adj_g = grad.adjoint(g)
         >>> adj_g
-        uniform_discr([ 0.,  0.], [ 2.,  5.], (2, 5)).element(
-            [[  0.,  -2.,  -5.,  -8., -11.],
-             [  0.,  -5., -14., -23., -32.]]
-        )
-        >>> g.inner(grad_f) / f.inner(adj_g)
+        array([[ -0.,  -2.,  -5.,  -8., -11.],
+               [ -0.,  -5., -14., -23., -32.]])
+        >>> grad.range.inner(g, grad_f) / grad.domain.inner(f, adj_g)
         1.0
         """
         if domain is None and range is None:
@@ -347,16 +337,14 @@ class Gradient(PointwiseTensorFieldOperator):
         if out is None:
             out = self.range.element()
 
-        x_arr = x.asarray()
         ndim = self.domain.ndim
         dx = self.domain.cell_sides
 
         for axis in range(ndim):
-            with writable_array(out[axis]) as out_arr:
-                finite_diff(x_arr, axis=axis, dx=dx[axis], method=self.method,
-                            pad_mode=self.pad_mode,
-                            pad_const=self.pad_const,
-                            out=out_arr)
+            finite_diff(x, axis=axis, dx=dx[axis], method=self.method,
+                        pad_mode=self.pad_mode,
+                        pad_const=self.pad_const,
+                        out=out[axis])
         return out
 
     def derivative(self, point=None):
@@ -494,16 +482,16 @@ class Divergence(PointwiseTensorFieldOperator):
         ...                  [2., 3., 4., 5., 6.]])
         >>> f = div.domain.element([data, data])
         >>> div_f = div(f)
-        >>> print(div_f)
-        [[  2.,   2.,   2.,   2.,  -3.],
-         [  2.,   2.,   2.,   2.,  -4.],
-         [ -1.,  -2.,  -3.,  -4., -12.]]
+        >>> div_f
+        array([[  2.,   2.,   2.,   2.,  -3.],
+               [  2.,   2.,   2.,   2.,  -4.],
+               [ -1.,  -2.,  -3.,  -4., -12.]])
 
         Verify adjoint:
 
         >>> g = div.range.element(data ** 2)
         >>> adj_div_g = div.adjoint(g)
-        >>> g.inner(div_f) / f.inner(adj_div_g)
+        >>> div.range.inner(g, div_f) / div.domain.inner(f, adj_div_g)
         1.0
         """
         if domain is None and range is None:
@@ -560,7 +548,7 @@ class Divergence(PointwiseTensorFieldOperator):
         ndim = self.range.ndim
         dx = self.range.cell_sides
 
-        tmp = np.empty(out.shape, out.dtype, order=out.space.default_order)
+        tmp = np.empty(out.shape, out.dtype, order=self.range.default_order)
         with writable_array(out) as out_arr:
             for axis in range(ndim):
                 finite_diff(x[axis], axis=axis, dx=dx[axis],
@@ -679,11 +667,9 @@ class Laplacian(PointwiseTensorFieldOperator):
         >>> f = space.element(data)
         >>> lap = Laplacian(space)
         >>> lap(f)
-        uniform_discr([ 0.,  0.], [ 3.,  3.], (3, 3)).element(
-            [[ 0.,  1.,  0.],
-             [ 1., -4.,  1.],
-             [ 0.,  1.,  0.]]
-        )
+        array([[ 0.,  1.,  0.],
+               [ 1., -4.,  1.],
+               [ 0.,  1.,  0.]])
         """
         if not isinstance(domain, DiscretizedSpace):
             raise TypeError('`domain` {!r} is not a DiscretizedSpace instance'
@@ -701,7 +687,7 @@ class Laplacian(PointwiseTensorFieldOperator):
                              ''.format(pad_mode_in))
         if pad_mode in ('order1', 'order1_adjoint',
                         'order2', 'order2_adjoint'):
-            # TODO: Add these pad modes
+            # TODO: add these pad modes
             raise ValueError('`pad_mode` {} not implemented for Laplacian.'
                              ''.format(pad_mode_in))
 
@@ -712,31 +698,27 @@ class Laplacian(PointwiseTensorFieldOperator):
         if out is None:
             out = self.range.zero()
         else:
-            out.set_zero()
+            out[:] = 0
 
-        x_arr = x.asarray()
-        out_arr = out.asarray()
-        tmp = np.empty(out.shape, out.dtype, order=out.space.default_order)
-
+        tmp = np.empty(out.shape, out.dtype, order=self.range.default_order)
         ndim = self.domain.ndim
         dx = self.domain.cell_sides
 
-        with writable_array(out) as out_arr:
-            for axis in range(ndim):
-                # TODO: this can be optimized
-                finite_diff(x_arr, axis=axis, dx=dx[axis] ** 2,
-                            method='forward',
-                            pad_mode=self.pad_mode,
-                            pad_const=self.pad_const, out=tmp)
+        for axis in range(ndim):
+            # TODO: this can be optimized
+            finite_diff(x, axis=axis, dx=dx[axis] ** 2,
+                        method='forward',
+                        pad_mode=self.pad_mode,
+                        pad_const=self.pad_const, out=tmp)
 
-                out_arr += tmp
+            out += tmp
 
-                finite_diff(x_arr, axis=axis, dx=dx[axis] ** 2,
-                            method='backward',
-                            pad_mode=self.pad_mode,
-                            pad_const=self.pad_const, out=tmp)
+            finite_diff(x, axis=axis, dx=dx[axis] ** 2,
+                        method='backward',
+                        pad_mode=self.pad_mode,
+                        pad_const=self.pad_const, out=tmp)
 
-                out_arr -= tmp
+            out -= tmp
 
         return out
 
@@ -880,7 +862,7 @@ def finite_diff(f, axis, dx=1.0, method='forward', out=None,
 
     In-place evaluation:
 
-    >>> out = f.copy()
+    >>> out = np.copy(f)
     >>> out is finite_diff(f, axis=0, out=out)
     True
     """

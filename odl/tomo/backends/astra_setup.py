@@ -29,7 +29,7 @@ import warnings
 
 import numpy as np
 
-from odl.discr import DiscretizedSpace, DiscretizedSpaceElement
+from odl.discr import DiscretizedSpace
 from odl.tomo.geometry import (
     DivergentBeamGeometry, Flat1dDetector, Flat2dDetector, Geometry,
     ParallelBeamGeometry)
@@ -570,7 +570,7 @@ def astra_data(astra_geom, datatype, data=None, ndim=2, allow_copy=False):
         Handle for the new ASTRA internal data object.
     """
     if data is not None:
-        if isinstance(data, (DiscretizedSpaceElement, np.ndarray)):
+        if isinstance(data, np.ndarray):
             ndim = data.ndim
         else:
             raise TypeError('`data` {!r} is neither DiscretizedSpaceElement '
@@ -604,8 +604,6 @@ def astra_data(astra_geom, datatype, data=None, ndim=2, allow_copy=False):
         else:
             if isinstance(data, np.ndarray):
                 return link(astra_dtype_str, astra_geom, data)
-            elif data.tensor.impl == 'numpy':
-                return link(astra_dtype_str, astra_geom, data.asarray())
             else:
                 # Something else than NumPy data representation
                 raise NotImplementedError('ASTRA supports data wrapping only '

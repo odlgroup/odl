@@ -192,6 +192,9 @@ def pdhg(x, f, g, L, niter, tau=None, sigma=None, **kwargs):
         raise TypeError('`f.domain` {!r} must equal `op.domain` {!r}'
                         ''.format(f.domain, L.domain))
 
+    primal_space = f.domain
+    dual_space = g.domain
+
     # Step size parameters
     tau, sigma = pdhg_stepsize(L, tau, sigma)
 
@@ -234,18 +237,21 @@ def pdhg(x, f, g, L, niter, tau=None, sigma=None, **kwargs):
     # Initialize the relaxation variable
     x_relax = kwargs.pop('x_relax', None)
     if x_relax is None:
-        x_relax = x.copy()
+        x_relax = primal_space.copy(x)
     elif x_relax not in L.domain:
-        raise TypeError('`x_relax` {} is not in the domain of '
-                        '`L` {}'.format(x_relax.space, L.domain))
+        raise TypeError(
+            '`x_relax` {} is not in the domain of `L` {}'
+            ''.format(x_relax, L.domain)
+        )
 
     # Initialize the dual variable
     y = kwargs.pop('y', None)
     if y is None:
         y = L.range.zero()
     elif y not in L.range:
-        raise TypeError('`y` {} is not in the range of `L` '
-                        '{}'.format(y.space, L.range))
+        raise TypeError(
+            '`y` {} is not in the range of `L` {}'.format(y, L.range)
+        )
 
     # Get the proximals
     proximal_primal = f.proximal
@@ -257,20 +263,20 @@ def pdhg(x, f, g, L, niter, tau=None, sigma=None, **kwargs):
         proximal_primal_tau = proximal_primal(tau)
 
     # Temporary copy to store previous iterate
-    x_old = x.space.element()
+    x_old = primal_space.element()
 
     # Temporaries
-    dual_tmp = L.range.element()
-    primal_tmp = L.domain.element()
+    dual_tmp = dual_space.element()
+    primal_tmp = primal_space.element()
 
     for _ in range(niter):
         # Copy required for relaxation
-        x_old.assign(x)
+        primal_space.assign(x_old, x)
 
         # Gradient ascent in the dual variable y
-        # Compute dual_tmp = y + sigma * L(x_relax)
+        # dual_tmp <- y + sigma * L(x_relax)
         L(x_relax, out=dual_tmp)
-        dual_tmp.lincomb(1, y, sigma, dual_tmp)
+        dual_space.lincomb(1, y, sigma, dual_tmp, out=dual_tmp)
 
         # Apply the dual proximal
         if not proximal_constant:
@@ -278,9 +284,9 @@ def pdhg(x, f, g, L, niter, tau=None, sigma=None, **kwargs):
         proximal_dual_sigma(dual_tmp, out=y)
 
         # Gradient descent in the primal variable x
-        # Compute primal_tmp = x + (- tau) * L.derivative(x).adjoint(y)
+        # primal_tmp <- x - tau * L.derivative(x).adjoint(y)
         L.derivative(x).adjoint(y, out=primal_tmp)
-        primal_tmp.lincomb(1, x, -tau, primal_tmp)
+        primal_space.lincomb(1, x, -tau, primal_tmp, out=primal_tmp)
 
         # Apply the primal proximal
         if not proximal_constant:
@@ -299,7 +305,8 @@ def pdhg(x, f, g, L, niter, tau=None, sigma=None, **kwargs):
             sigma *= theta
 
         # Over-relaxation in the primal variable x
-        x_relax.lincomb(1 + theta, x, -theta, x_old)
+        # x_relax <- x + theta * (x - x_old)
+        primal_space.lincomb(1 + theta, x, -theta, x_old, out=x_relax)
 
         if callback is not None:
             callback(x)

@@ -10,7 +10,7 @@ class Convolution(odl.Operator):
     The operator inherits from ``odl.Operator`` to be able to be used with ODL.
     """
 
-    def __init__(self, kernel):
+    def __init__(self, space, kernel):
         """Initialize a convolution operator with a known kernel."""
 
         # Store the kernel
@@ -20,7 +20,8 @@ class Convolution(odl.Operator):
         # This sets properties such as domain and range and allows the other
         # operator convenience functions to work.
         super(Convolution, self).__init__(
-            domain=kernel.space, range=kernel.space, linear=True)
+            domain=space, range=space, linear=True
+        )
 
     def _call(self, x):
         """Implement calling the operator by calling scipy."""
@@ -45,7 +46,7 @@ space = odl.uniform_discr([-1, -1], [1, 1], [100, 100])
 kernel = odl.phantom.cuboid(space, [-0.05, -0.05], [0.05, 0.05])
 
 # Create convolution operator
-A = Convolution(kernel)
+A = Convolution(space, kernel)
 
 # Create phantom (the "unknown" solution)
 phantom = odl.phantom.shepp_logan(space, modified=True)
@@ -54,6 +55,6 @@ phantom = odl.phantom.shepp_logan(space, modified=True)
 g = A(phantom)
 
 # Display the results using the show method
-kernel.show('kernel')
-phantom.show('phantom')
-g.show('convolved phantom')
+space.show(kernel, 'Convolution Kernel')
+space.show(phantom, 'Phantom')
+space.show(g, 'Convolved Phantom')

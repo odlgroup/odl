@@ -23,7 +23,7 @@ class MyFunctional(odl.solvers.Functional):
 
     def _call(self, x):
         # This is what is returned when calling my_func(x)
-        return x.norm()**2
+        return self.domain.norm(x) ** 2
 
     @property
     def gradient(self):
@@ -42,26 +42,40 @@ n = 10
 space = odl.rn(n)
 my_func = MyFunctional(space=space)
 
-# The functional evaluates correctly
+# Functional evaluation
 x = space.element(np.random.randn(n))
-print(my_func(x) == x.norm() ** 2)
+print(
+    'f(x) == ||x||^2                             ?',
+    my_func(x) == space.norm(x) ** 2,
+)
 
-# The gradient works
-my_gradient = my_func.gradient
-print(my_gradient(x) == 2.0 * x)
+# Gradient
+my_grad = my_func.gradient
+print(
+    'grad f(x) == 2 * x                          ?',
+    all(my_grad(x) == 2.0 * x),
+)
 
-# The standard implementation of the directional derivative works
+# Derivative (implemented via gradient)
 p = space.element(np.random.randn(n))
 my_deriv = my_func.derivative(x)
-print(my_deriv(p) == my_gradient(x).inner(p))
+print(
+    'Df(p)(x) == <grad f(x), p>                  ?',
+    my_deriv(p) == space.inner(my_grad(x), p),
+)
 
-# The conjugate functional works
+# Convex conjugate
 my_func_conj = my_func.convex_conj
-print(my_func_conj(x) == 1.0 / 4.0 * x.norm() ** 2)
+print(
+    'f*(x) == ||x||^2 / 4                        ?',
+    my_func_conj(x) == space.norm(x) ** 2 / 4,
+)
 
-# As a final, a bit more advanced, test, this check that the a scaled and
-# translated version of the functional evalutes the gradient correctly
+# Scaling and translating a functional, checking the gradient
 scal = np.random.rand()
 transl = space.element(np.random.randn(n))
-scal_and_transl_func_gradient = (scal * my_func.translated(transl)).gradient
-print(scal_and_transl_func_gradient(x) == scal * my_func.gradient(x - transl))
+scal_transl_grad = (scal * my_func.translated(transl)).gradient
+print(
+    'grad [s * f(. - t)](x) == s * grad f(x - t) ?',
+    all(scal_transl_grad(x) == scal * my_func.gradient(x - transl)),
+)
