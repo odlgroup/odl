@@ -11,7 +11,7 @@ ODL tests are run using pytest_, and there are several types:
 Name            Command                    Description
 ==============  =========================  =======
 Unit tests      ``pytest``                 Test "micro-features" of the code
-Large-scale     ``pytest --largescale``    Unit tests with large inputs and more cases
+Large-scale     ``pytest -S largescale``   Unit tests with large inputs and more cases
 Doctests        ``pytest``                 Validate usage examples in docstrings
 Examples        ``pytest --examples``      Run all examples in the `examples`_ folder
 Documentation   ``pytest --doctest-doc``   Run the doctest examples in the Sphinx documentation
@@ -33,7 +33,7 @@ For more information consult the `pytest`_ documentation and look at existing te
 
 
     def myfunction(x):
-        """Convert ``x`` to a integer and add 1"""
+        """Convert ``x`` to a integer and add 1."""
         return int(x) + 1
 
 

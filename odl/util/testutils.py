@@ -30,8 +30,6 @@ __all__ = (
     'is_subdict',
     'skip_if_no_pyfftw',
     'skip_if_no_pywavelets',
-    'skip_if_no_largescale',
-    'skip_if_no_benchmark',
     'simple_fixture',
     'noise_array',
     'noise_element',
@@ -201,7 +199,6 @@ def is_subdict(subdict, dictionary):
 
 
 try:
-    # Try catch in case user does not have pytest
     import pytest
 
 except ImportError:
@@ -214,8 +211,6 @@ except ImportError:
 
     skip_if_no_pyfftw = identity
     skip_if_no_pywavelets = identity
-    skip_if_no_largescale = identity
-    skip_if_no_benchmark = identity
 
 else:
     # Mark decorators for test parameters
@@ -226,14 +221,6 @@ else:
     skip_if_no_pywavelets = pytest.mark.skipif(
         'not odl.trafos.PYWT_AVAILABLE',
         reason='PyWavelets not available',
-    )
-    skip_if_no_largescale = pytest.mark.skipif(
-        "not pytest.config.getoption('--largescale')",
-        reason='--largescale option not given',
-    )
-    skip_if_no_benchmark = pytest.mark.skipif(
-        "not pytest.config.getoption('--benchmark')",
-        reason='--benchmark option not given',
     )
 
 

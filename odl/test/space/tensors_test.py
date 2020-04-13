@@ -93,10 +93,7 @@ weight_params = [1.0, 0.5, _pos_array(odl.tensor_space((3, 4)))]
 weight_ids = [' weight=1.0 ', ' weight=0.5 ', ' weight=<array> ']
 
 
-# scope='module' removed due to pytest issue, see
-# https://github.com/pytest-dev/pytest/issues/6497
-# TODO: re-introduce when fixed
-@pytest.fixture(params=weight_params, ids=weight_ids)
+@pytest.fixture(scope='module', params=weight_params, ids=weight_ids)
 def weight(request):
     return request.param
 
@@ -108,7 +105,7 @@ def tspace(odl_floating_dtype, odl_tspace_impl):
     return odl.tensor_space(shape=(3, 4), dtype=dtype, impl=impl)
 
 
-# --- Space classes --- #
+# --- Tests --- #
 
 
 def test_init_npy_tspace():
@@ -451,8 +448,8 @@ def test_lincomb_discontig(odl_tspace_impl):
             _test_lincomb(tspace, a, b, discontig=True)
 
 
-def test_lincomb_raise(tspace):
-    """Test if lincomb raises correctly for bad input."""
+def test_lincomb_exceptions(tspace):
+    """Test whether lincomb raises correctly for bad output element."""
     other_space = odl.rn((4, 3), impl=tspace.impl)
 
     other_x = other_space.zero()
