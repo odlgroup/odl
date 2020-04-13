@@ -779,13 +779,13 @@ class FourierTransformBase(Operator):
 
         Other Parameters
         ----------------
-        tmp_r : `DiscretizedSpaceElement` or `numpy.ndarray`, optional
+        tmp_r : `numpy.ndarray`, optional
             Temporary for calculations in the real space (domain of
             this transform). It is shared with the inverse.
 
             Variants using this: R2C, R2HC, C2R (inverse)
 
-        tmp_f : `DiscretizedSpaceElement` or `numpy.ndarray`, optional
+        tmp_f : `numpy.ndarray`, optional
             Temporary for calculations in the frequency (reciprocal)
             space. It is shared with the inverse.
 

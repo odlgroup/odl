@@ -14,7 +14,7 @@ import numpy as np
 import pytest
 
 import odl
-from odl.discr.discr_space import DiscretizedSpace, DiscretizedSpaceElement
+from odl.discr.discr_space import DiscretizedSpace
 from odl.space.base_tensors import TensorSpace
 from odl.util.testutils import all_almost_equal, all_equal, simple_fixture
 
