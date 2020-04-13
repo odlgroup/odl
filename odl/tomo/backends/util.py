@@ -1,4 +1,16 @@
-__all__ = tuple()
+# Copyright 2014-2020 The ODL contributors
+#
+# This file is part of ODL.
+#
+# This Source Code Form is subject to the terms of the Mozilla Public License,
+# v. 2.0. If a copy of the MPL was not distributed with this file, You can
+# obtain one at https://mozilla.org/MPL/2.0/.
+
+"""Utilities for tomo backends."""
+
+from functools import wraps
+
+__all__ = ()
 
 
 def _add_default_complex_impl(fn):
@@ -20,6 +32,7 @@ def _add_default_complex_impl(fn):
         A wrapper function to be executed by a Python decorator.
     """
 
+    @wraps(fn)
     def wrapper(self, x, out=None, **kwargs):
         if self.vol_space.is_real and self.proj_space.is_real:
             return fn(self, x, out, **kwargs)
