@@ -13,8 +13,8 @@ from __future__ import absolute_import
 from .astra_cpu import *
 from .astra_cuda import *
 from .astra_setup import *
-from .util import *
 from .skimage_radon import *
+from .util import *
 
 __all__ = ()
 __all__ += astra_cpu.__all__

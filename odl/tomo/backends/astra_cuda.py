@@ -10,18 +10,18 @@
 
 from __future__ import absolute_import, division, print_function
 
+import warnings
 from multiprocessing import Lock
 
 import numpy as np
-import warnings
 from packaging.version import parse as parse_version
 
 from odl.discr import DiscretizedSpace
-from odl.tomo.backends.util import _add_default_complex_impl
 from odl.tomo.backends.astra_setup import (
     ASTRA_VERSION, astra_algorithm, astra_data, astra_projection_geometry,
-    astra_projector, astra_volume_geometry, astra_supports,
-    astra_versions_supporting)
+    astra_projector, astra_supports, astra_versions_supporting,
+    astra_volume_geometry)
+from odl.tomo.backends.util import _add_default_complex_impl
 from odl.tomo.geometry import (
     ConeBeamGeometry, FanBeamGeometry, Geometry, Parallel2dGeometry,
     Parallel3dAxisGeometry)
@@ -61,15 +61,15 @@ class AstraCudaImpl:
             Projection space, the space of the result.
         """
         if not isinstance(geometry, Geometry):
-            raise TypeError('`geometry` must be a `Geometry` instance, got '
-                            '{!r}'.format(geometry))
-
+            raise TypeError(
+                '`geometry` must be a `Geometry` instance, got {!r}'
+                ''.format(geometry)
+            )
         if not isinstance(vol_space, DiscretizedSpace):
             raise TypeError(
                 '`vol_space` must be a `DiscreteLP` instance, got {!r}'
                 ''.format(vol_space)
             )
-
         if not isinstance(proj_space, DiscretizedSpace):
             raise TypeError(
                 '`proj_space` must be a `DiscreteLP` instance, got {!r}'
@@ -79,10 +79,13 @@ class AstraCudaImpl:
         # Print a warning if the detector midpoint normal vector at any
         # angle is perpendicular to the geometry axis in parallel 3d
         # single-axis geometry -- this is broken in some ASTRA versions
-        if (isinstance(geometry, Parallel3dAxisGeometry) and
-                not astra_supports('par3d_det_mid_pt_perp_to_axis')):
+        if (
+            isinstance(geometry, Parallel3dAxisGeometry)
+            and not astra_supports('par3d_det_mid_pt_perp_to_axis')
+        ):
             req_ver = astra_versions_supporting(
-                'par3d_det_mid_pt_perp_to_axis')
+                'par3d_det_mid_pt_perp_to_axis'
+            )
             axis = geometry.axis
             mid_pt = geometry.det_params.mid_pt
             for i, angle in enumerate(geometry.angles):
@@ -144,32 +147,46 @@ class AstraCudaImpl:
         # Create ASTRA data structures
         vol_geom = astra_volume_geometry(self.vol_space)
         proj_geom = astra_projection_geometry(self.geometry)
-        self.vol_id = astra_data(vol_geom,
-                                 datatype='volume',
-                                 ndim=self.vol_space.ndim,
-                                 data=self.vol_array,
-                                 allow_copy=False)
+        self.vol_id = astra_data(
+            vol_geom,
+            datatype='volume',
+            ndim=self.vol_space.ndim,
+            data=self.vol_array,
+            allow_copy=False,
+        )
 
         proj_type = 'cuda' if proj_ndim == 2 else 'cuda3d'
         self.proj_id = astra_projector(
             proj_type, vol_geom, proj_geom, proj_ndim
         )
 
-        self.sino_id = astra_data(proj_geom,
-                                  datatype='projection',
-                                  ndim=proj_ndim,
-                                  data=self.proj_array,
-                                  allow_copy=False)
+        self.sino_id = astra_data(
+            proj_geom,
+            datatype='projection',
+            ndim=proj_ndim,
+            data=self.proj_array,
+            allow_copy=False,
+        )
 
         # Create algorithm
         self.algo_forward_id = astra_algorithm(
-            'forward', proj_ndim, self.vol_id, self.sino_id,
-            proj_id=self.proj_id, impl='cuda')
+            'forward',
+            proj_ndim,
+            self.vol_id,
+            self.sino_id,
+            self.proj_id,
+            impl='cuda',
+        )
 
         # Create algorithm
         self.algo_backward_id = astra_algorithm(
-            'backward', proj_ndim, self.vol_id, self.sino_id,
-            proj_id=self.proj_id, impl='cuda')
+            'backward',
+            proj_ndim,
+            self.vol_id,
+            self.sino_id,
+            self.proj_id,
+            impl='cuda',
+        )
 
     @_add_default_complex_impl
     def call_forward(self, x, out=None, **kwargs):
@@ -220,8 +237,10 @@ class AstraCudaImpl:
                     self.proj_space.shape)
 
             # Fix scaling to weight by pixel size
-            if (isinstance(self.geometry, Parallel2dGeometry) and
-                    parse_version(ASTRA_VERSION) < parse_version('1.9.9.dev')):
+            if (
+                isinstance(self.geometry, Parallel2dGeometry)
+                and parse_version(ASTRA_VERSION) < parse_version('1.9.9.dev')
+            ):
                 # parallel2d scales with pixel stride
                 out *= 1 / float(self.geometry.det_partition.cell_volume)
 
@@ -265,7 +284,8 @@ class AstraCudaImpl:
                 shape = (-1,) + self.geometry.det_partition.shape
                 reshaped_proj_data = proj_data.asarray().reshape(shape)
                 swapped_proj_data = np.ascontiguousarray(
-                    np.swapaxes(reshaped_proj_data, 0, 1))
+                    np.swapaxes(reshaped_proj_data, 0, 1)
+                )
                 astra.data3d.store(self.sino_id, swapped_proj_data)
 
             # Run algorithm
@@ -276,7 +296,8 @@ class AstraCudaImpl:
 
             # Fix scaling to weight by pixel/voxel size
             out *= astra_cuda_bp_scaling_factor(
-                self.proj_space, self.vol_space, self.geometry)
+                self.proj_space, self.vol_space, self.geometry
+            )
 
             return out
 
@@ -328,10 +349,12 @@ def astra_cuda_bp_scaling_factor(proj_space, vol_space, geometry):
     proj_size = float(proj_space.partition.size)
     proj_weighting = proj_extent / proj_size
 
-    scaling_factor *= (proj_space.weighting.const /
-                       proj_weighting)
-    scaling_factor /= (vol_space.weighting.const /
-                       vol_space.cell_volume)
+    scaling_factor *= (
+        proj_space.weighting.const / proj_weighting
+    )
+    scaling_factor /= (
+        vol_space.weighting.const / vol_space.cell_volume
+    )
 
     if parse_version(ASTRA_VERSION) < parse_version('1.8rc1'):
         # Scaling for the old, pre-1.8 behaviour
@@ -392,8 +415,9 @@ def astra_cuda_bp_scaling_factor(proj_space, vol_space, geometry):
             # missing factor src_radius ** 2 in the ASTRA BP with
             # density weighting.
             det_px_area = geometry.det_partition.cell_volume
-            scaling_factor *= (src_radius ** 2 * det_px_area ** 2 /
-                               vol_space.cell_volume ** 2)
+            scaling_factor *= (
+                src_radius ** 2 * det_px_area ** 2 / vol_space.cell_volume ** 2
+            )
     elif parse_version(ASTRA_VERSION) < parse_version('1.9.9.dev'):
         # Scaling for intermediate dev releases between 1.8.3 and 1.9.9.dev
         if isinstance(geometry, Parallel2dGeometry):

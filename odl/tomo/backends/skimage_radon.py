@@ -10,14 +10,14 @@
 
 from __future__ import division
 
-import numpy as np
 import warnings
 
-from odl.tomo import Parallel2dGeometry, Geometry
+import numpy as np
 
 from odl.discr import (
-    uniform_discr_frompartition, uniform_partition, DiscretizedSpace)
+    DiscretizedSpace, uniform_discr_frompartition, uniform_partition)
 from odl.discr.discr_utils import linear_interpolator, point_collocation
+from odl.tomo import Geometry, Parallel2dGeometry
 from odl.tomo.backends.util import _add_default_complex_impl
 from odl.util.utility import writable_array
 
@@ -189,52 +189,58 @@ class SkImageImpl:
         ----------
         geometry : `Geometry`
             Geometry defining the tomographic setup.
-        vol_space : `DiscreteLp`
+        vol_space : `DiscretizedSpace`
             Reconstruction space, the space of the images to be forward
             projected.
-        proj_space : `DiscreteLp`
+        proj_space : `DiscretizedSpace`
             Projection space, the space of the result.
         """
         if not isinstance(geometry, Geometry):
-            raise TypeError('`geometry` must be a `Geometry` instance, got '
-                            '{!r}'.format(geometry))
-
+            raise TypeError(
+                '`geometry` must be a `Geometry` instance, got {!r}'
+                ''.format(geometry)
+            )
         if not isinstance(vol_space, DiscretizedSpace):
             raise TypeError(
                 '`vol_space` must be a `DiscretizedSpace` instance, got {!r}'
                 ''.format(vol_space)
             )
-
         if not isinstance(proj_space, DiscretizedSpace):
             raise TypeError(
                 '`proj_space` must be a `DiscretizedSpace` instance, got {!r}'
                 ''.format(proj_space)
+            )
+        if not isinstance(geometry, Parallel2dGeometry):
+            raise TypeError(
+                "{!r} backend only supports 2d parallel geometries"
+                ''.format(self.__name__)
+            )
+        mid_pt = vol_space.domain.mid_pt
+        if not np.allclose(mid_pt, [0, 0]):
+            raise ValueError(
+                'reconstruction space must be centered at (0, 0), '
+                'got midpoint {}'.format(mid_pt)
+            )
+        shape = vol_space.shape
+        if shape[0] != shape[1]:
+            raise ValueError(
+                '`vol_space.shape` must have equal entries, got {}'
+                ''.format(shape)
+            )
+        extent = vol_space.domain.extent
+        if extent[0] != extent[1]:
+            raise ValueError(
+                '`vol_space.extent` must have equal entries, got {}'
+                ''.format(extent)
             )
 
         if vol_space.size >= 256 ** 2:
             warnings.warn(
                 "The 'skimage' backend may be too slow for volumes of this "
                 "size. Consider using 'astra_cpu', or 'astra_cuda' if your "
-                "machine has an Nvidia GPU.", RuntimeWarning)
-
-        if not isinstance(geometry, Parallel2dGeometry):
-            raise TypeError("{!r} backend only supports 2d parallel "
-                            'geometries'.format(self.__name__))
-
-        mid_pt = vol_space.domain.mid_pt
-        if not np.allclose(mid_pt, [0, 0]):
-            raise ValueError('Reconstruction space must be centered at (0, 0),'
-                             'got midpoint {}'.format(mid_pt))
-
-        shape = vol_space.shape
-        if shape[0] != shape[1]:
-            raise ValueError('`vol_space.shape` must have equal entries, '
-                             'got {}'.format(shape))
-
-        extent = vol_space.domain.extent
-        if extent[0] != extent[1]:
-            raise ValueError('`vol_space.extent` must have equal entries, '
-                             'got {}'.format(extent))
+                "machine has an Nvidia GPU.",
+                RuntimeWarning,
+            )
 
         self.geometry = geometry
         self._vol_space = vol_space
@@ -251,9 +257,11 @@ class SkImageImpl:
     @_add_default_complex_impl
     def call_forward(self, x, out, **kwargs):
         return skimage_radon_forward_projector(
-            x, self.geometry, self.proj_space.real_space, out)
+            x, self.geometry, self.proj_space.real_space, out
+        )
 
     @_add_default_complex_impl
     def call_backward(self, x, out, **kwargs):
         return skimage_radon_back_projector(
-            x, self.geometry, self.vol_space.real_space, out)
+            x, self.geometry, self.vol_space.real_space, out
+        )

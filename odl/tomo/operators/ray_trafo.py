@@ -93,8 +93,10 @@ class RayTransform(Operator):
                 '{!r}'.format(vol_space))
 
         if not isinstance(geometry, Geometry):
-            raise TypeError('`geometry` must be a `Geometry` instance, got '
-                            '{!r}'.format(geometry))
+            raise TypeError(
+                '`geometry` must be a `Geometry` instance, got {!r}'
+                ''.format(geometry)
+            )
 
         # Generate or check projection space
         proj_space = kwargs.pop('proj_space', None)
@@ -105,7 +107,9 @@ class RayTransform(Operator):
                 weighting = None
             elif (
                 isinstance(vol_space.weighting, ConstWeighting)
-                and np.isclose(vol_space.weighting.const, vol_space.cell_volume)
+                and np.isclose(
+                    vol_space.weighting.const, vol_space.cell_volume
+                )
             ):
                 # Approximate cell volume
                 # TODO: find a way to treat angles and detector differently
@@ -120,9 +124,11 @@ class RayTransform(Operator):
             else:
                 raise NotImplementedError('unknown weighting of domain')
 
-            proj_tspace = vol_space.tspace_type(geometry.partition.shape,
-                                                weighting=weighting,
-                                                dtype=dtype)
+            proj_tspace = vol_space.tspace_type(
+                geometry.partition.shape,
+                weighting=weighting,
+                dtype=dtype,
+            )
 
             if geometry.motion_partition.ndim == 0:
                 angle_labels = []
@@ -188,8 +194,10 @@ class RayTransform(Operator):
         impl = kwargs.pop('impl', None)
         impl_type, self.__cached_impl = self._check_impl(impl)
         self._impl_type = impl_type
-        self.__impl = impl.lower() \
-            if isinstance(impl, str) else impl_type.__name__
+        if isinstance(impl, str):
+            self.__impl = impl.lower()
+        else:
+            self.__impl = impl_type.__name__
 
         self._geometry = geometry
 
@@ -212,9 +220,10 @@ class RayTransform(Operator):
 
         if impl is None:  # User didn't specify a backend
             if not RAY_TRAFO_IMPLS:
-                raise RuntimeError('no ray transform back-end available; '
-                                   'this requires 3rd party packages, please '
-                                   'check the install docs')
+                raise RuntimeError(
+                    'no ray transform back-end available; this requires '
+                    '3rd party packages, please check the install docs'
+                )
 
             # Select fastest available
             impl_type = next(reversed(RAY_TRAFO_IMPLS.values()))
@@ -227,7 +236,8 @@ class RayTransform(Operator):
 
                 if impl.lower() not in RAY_TRAFO_IMPLS.keys():
                     raise ValueError(
-                        '{!r} back-end not available'.format(impl))
+                        '{!r} back-end not available'.format(impl)
+                    )
 
                 impl_type = RAY_TRAFO_IMPLS[impl.lower()]
             elif isinstance(impl, type) or isinstance(impl, object):
@@ -236,8 +246,10 @@ class RayTransform(Operator):
                 backward = getattr(impl, "call_backward", None)
 
                 if not callable(forward) and not callable(backward):
-                    raise TypeError('Type {!r} must be have a `call_forward` '
-                                    'or `call_backward`.'.format(impl))
+                    raise TypeError(
+                        'type {!r} must be have a `call_forward` '
+                        'or `call_backward`.'.format(impl)
+                    )
 
                 if isinstance(impl, type):
                     impl_type = impl
@@ -306,8 +318,7 @@ class RayTransform(Operator):
             A sinogram, from the projection space `RayTransform.range`.
         """
 
-        return self.create_impl(self.use_cache) \
-            .call_forward(x, out, **kwargs)
+        return self.create_impl(self.use_cache).call_forward(x, out, **kwargs)
 
     @property
     def geometry(self):
@@ -356,8 +367,9 @@ class RayTransform(Operator):
                         `RayBackProjection.range`.
                     """
 
-                    return ray_trafo.create_impl(ray_trafo.use_cache) \
-                        .call_backward(x, out, **kwargs)
+                    return ray_trafo.create_impl(
+                        ray_trafo.use_cache
+                    ).call_backward(x, out, **kwargs)
 
                 @property
                 def geometry(self):
@@ -369,8 +381,9 @@ class RayTransform(Operator):
 
             kwargs = self._extra_kwargs.copy()
             kwargs['domain'] = self.range
-            self._adjoint = RayBackProjection(range=self.domain, linear=True,
-                                              **kwargs)
+            self._adjoint = RayBackProjection(
+                range=self.domain, linear=True, **kwargs
+            )
 
         return self._adjoint
 
