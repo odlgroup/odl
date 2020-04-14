@@ -116,7 +116,7 @@ Examples
 Examples, while not technically tests in the traditional sense, still constitute a part of the test framework for ODL by showing how different parts of ODL work together and by ensuring that functions that depend on each other work as expected.
 The main purpose of the examples is however to show ODL from a users perspective and particular care should be taken to keep them readable and working since this is often the first thing users see when they start using ODL.
 
-It is even possible to run all examples as part of the test suite by running ``pytest -S examples``, but be aware that this requires all ODL dependencies to be installed and that plotting windows can be opened during execution.
+It is even possible to run all examples as part of the test suite by running ``pytest -S examples``, but be aware that this requires all ODL dependencies to be installed and can take a long time.
 
 Consult the `examples`_ directory for an impression of the style in which ODL examples are written.
 
