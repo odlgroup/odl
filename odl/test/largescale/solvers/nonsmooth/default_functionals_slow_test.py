@@ -282,4 +282,4 @@ def test_proximal_convex_conj_kl_cross_entropy_solving_opt_problem():
 
 
 if __name__ == '__main__':
-    odl.util.test_file(__file__, ['-S', 'slow'])
+    odl.util.test_file(__file__, ['-S', 'largescale'])
