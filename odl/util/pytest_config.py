@@ -87,7 +87,13 @@ def pytest_addoption(parser):
         'Available suites: largescale, examples, doc_doctests'
     )
     parser.addoption(
-        '-S', '--suite', nargs='*', metavar='NAME', type=str, help=suite_help
+        '-S',
+        '--suite',
+        nargs='*',
+        metavar='NAME',
+        type=str,
+        default=[],
+        help=suite_help,
     )
 
 
