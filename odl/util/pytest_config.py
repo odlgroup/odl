@@ -83,10 +83,11 @@ if not PYWT_AVAILABLE:
 
 def pytest_addoption(parser):
     suite_help = (
-        'enable an opt-in test suite NAME. Available suites: largescale'
+        'enable an opt-in test suite NAME. '
+        'Available suites: largescale, examples, doc_doctests'
     )
     parser.addoption(
-        '-S', '--suite', action='store', metavar='NAME', help=suite_help
+        '-S', '--suite', nargs='*', metavar='NAME', type=str, help=suite_help
     )
 
 
@@ -100,7 +101,7 @@ def pytest_configure(config):
 def pytest_runtest_setup(item):
     suites = [mark.args[0] for mark in item.iter_markers(name='suite')]
     if suites:
-        if item.config.getoption("-S") not in suites:
+        if not any(val in suites for val in item.config.getoption('-S')):
             pytest.skip('test not in suites {!r}'.format(suites))
 
 
