@@ -1,4 +1,4 @@
-# Copyright 2014-2018 The ODL contributors
+# Copyright 2014-2020 The ODL contributors
 #
 # This file is part of ODL.
 #
@@ -16,26 +16,26 @@ This test file assumes that all dependencies are installed.
 """
 
 from __future__ import division
+
 import doctest
-from doctest import IGNORE_EXCEPTION_DETAIL, ELLIPSIS, NORMALIZE_WHITESPACE
 import os
+from doctest import ELLIPSIS, IGNORE_EXCEPTION_DETAIL, NORMALIZE_WHITESPACE
+
+import numpy
 import pytest
+
+import odl
+from odl.util.testutils import simple_fixture
+
 try:
     import matplotlib
-    matplotlib.use('Agg')  # To avoid the backend freezing
+    matplotlib.use('agg')  # prevent backend from freezing
     import matplotlib.pyplot as plt
 except ImportError:
     pass
 
-# Modules to be added to testing globals
-import numpy
-import odl
-try:
-    import proximal
-except ImportError:
-    proximal = None
 
-doctest_extraglobs = {'odl': odl, 'np': numpy, 'proximal': proximal}
+doctest_extraglobs = {'odl': odl, 'np': numpy}
 
 root_dir = os.path.join(os.path.abspath(os.path.dirname(__file__)),
                         os.pardir, os.pardir, 'doc', 'source')
@@ -55,13 +55,10 @@ for test_dir in test_dirs:
                 doc_src_files.append(os.path.join(path, filename))
 
 
-@pytest.fixture(scope="module", ids=doc_src_files, params=doc_src_files)
-def doc_src_file(request):
-    return request.param
+doc_src_file = simple_fixture("doc_src_file", doc_src_files)
 
 
-@pytest.mark.skipif("not pytest.config.getoption('--doctest-doc')",
-                    reason='Need --doctest-doc option to run')
+@pytest.mark.suite("doc_doctests")
 def test_file(doc_src_file):
     # FIXXXME: This doesn't seem to actually test the file :-(
     doctest.testfile(doc_src_file, module_relative=False, report=True,

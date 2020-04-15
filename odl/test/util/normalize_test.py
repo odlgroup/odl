@@ -22,10 +22,6 @@ from odl.util.testutils import simple_fixture
 length = simple_fixture('length', [1, 2])
 
 
-# For this and other fixtures below:
-# scope='module' removed due to pytest issue, see
-# https://github.com/pytest-dev/pytest/issues/6497
-# TODO: re-introduce when fixed
 single_conv_params = [(-1.0, float),
                       (2, float),
                       ('10', float),
@@ -41,7 +37,7 @@ single_conv_ids = [' input = {0[0]}, conv = {0[1]} '.format(p)
                    for p in single_conv_params]
 
 
-@pytest.fixture(ids=single_conv_ids, params=single_conv_params)
+@pytest.fixture(scope='module', ids=single_conv_ids, params=single_conv_params)
 def single_conv(request):
     return request.param
 
@@ -64,7 +60,7 @@ seq_conv_ids = [' input = {0[0]}, conv = {0[1]} '.format(p)
                 for p in seq_conv_params]
 
 
-@pytest.fixture(ids=seq_conv_ids, params=seq_conv_params)
+@pytest.fixture(scope='module', ids=seq_conv_ids, params=seq_conv_params)
 def seq_conv(request):
     return request.param
 
@@ -82,7 +78,7 @@ axes_conv_ids = [' axes={0[0]}, conv={0[1]} '.format(axis)
                  for axis in axes_conv_params]
 
 
-@pytest.fixture(ids=axes_conv_ids, params=axes_conv_params)
+@pytest.fixture(scope='module', ids=axes_conv_ids, params=axes_conv_params)
 def axes_conv(request):
     return request.param
 

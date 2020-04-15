@@ -7,15 +7,15 @@ Testing in ODL
 ODL tests are run using pytest_, and there are several types:
 
 
-==============  =========================  =======
-Name            Command                    Description
-==============  =========================  =======
-Unit tests      ``pytest``                 Test "micro-features" of the code
-Large-scale     ``pytest --largescale``    Unit tests with large inputs and more cases
-Doctests        ``pytest``                 Validate usage examples in docstrings
-Examples        ``pytest --examples``      Run all examples in the `examples`_ folder
-Documentation   ``pytest --doctest-doc``   Run the doctest examples in the Sphinx documentation
-==============  =========================  =======
+==============  ==========================  =======
+Name            Command                     Description
+==============  ==========================  =======
+Unit tests      ``pytest``                  Test "micro-features" of the code
+Large-scale     ``pytest -S largescale``    Unit tests with large inputs and more cases
+Doctests        ``pytest``                  Validate usage examples in docstrings
+Examples        ``pytest -S examples``      Run all examples in the `examples`_ folder
+Documentation   ``pytest -S doc_doctests``  Run the doctest examples in the Sphinx documentation
+==============  ==========================  =======
 
 Unit tests
 ~~~~~~~~~~
@@ -33,7 +33,7 @@ For more information consult the `pytest`_ documentation and look at existing te
 
 
     def myfunction(x):
-        """Convert ``x`` to a integer and add 1"""
+        """Convert ``x`` to a integer and add 1."""
         return int(x) + 1
 
 
@@ -116,7 +116,7 @@ Examples
 Examples, while not technically tests in the traditional sense, still constitute a part of the test framework for ODL by showing how different parts of ODL work together and by ensuring that functions that depend on each other work as expected.
 The main purpose of the examples is however to show ODL from a users perspective and particular care should be taken to keep them readable and working since this is often the first thing users see when they start using ODL.
 
-It is even possible to run all examples as part of the test suite by running ``pytest --examples``, but be aware that this requires all ODL dependencies to be installed and that plotting windows can be opened during execution.
+It is even possible to run all examples as part of the test suite by running ``pytest -S examples``, but be aware that this requires all ODL dependencies to be installed and can take a long time.
 
 Consult the `examples`_ directory for an impression of the style in which ODL examples are written.
 

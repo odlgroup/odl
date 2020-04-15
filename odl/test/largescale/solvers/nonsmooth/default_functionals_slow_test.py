@@ -1,4 +1,4 @@
-# Copyright 2014-2019 The ODL contributors
+# Copyright 2014-2020 The ODL contributors
 #
 # This file is part of ODL.
 #
@@ -16,14 +16,13 @@ import scipy.special
 
 import odl
 from odl.solvers.functional.functional import FunctionalDefaultConvexConjugate
-from odl.util.testutils import (
-    all_almost_equal, noise_element, simple_fixture, skip_if_no_largescale)
-
+from odl.util.testutils import all_almost_equal, noise_element, simple_fixture
 
 # --- pytest fixtures --- #
 
 
-pytestmark = skip_if_no_largescale
+# Global pytest mark
+pytestmark = pytest.mark.suite('largescale')
 
 
 stepsize = simple_fixture('stepsize', [0.1, 1.0, 10.0])
@@ -72,8 +71,11 @@ def functional(request, linear_offset, quadratic_offset, dual):
                                        outer_exp=outer_exp,
                                        singular_vector_exp=singular_vector_exp)
     elif name == 'quadratic':
-        func = odl.solvers.QuadraticForm(operator=odl.IdentityOperator(space),
-                                         vector=space.one(), constant=0.623)
+        func = odl.solvers.QuadraticForm(
+            operator=odl.IdentityOperator(space),
+            vector=space.one(),
+            constant=0.623,
+        )
     elif name == 'linear':
         func = odl.solvers.QuadraticForm(vector=space.one(), constant=0.623)
     elif name == 'huber':
@@ -91,7 +93,8 @@ def functional(request, linear_offset, quadratic_offset, dual):
 
         quadratic_coeff = 1.32
         func = odl.solvers.FunctionalQuadraticPerturb(
-            func, quadratic_coeff=quadratic_coeff, linear_term=g)
+            func, quadratic_coeff=quadratic_coeff, linear_term=g
+        )
 
     elif linear_offset:
         g = noise_element(space)
@@ -279,4 +282,4 @@ def test_proximal_convex_conj_kl_cross_entropy_solving_opt_problem():
 
 
 if __name__ == '__main__':
-    odl.util.test_file(__file__, ['--largescale'])
+    odl.util.test_file(__file__, ['-S', 'largescale'])

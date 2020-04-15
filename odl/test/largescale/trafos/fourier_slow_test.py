@@ -1,4 +1,4 @@
-# Copyright 2014-2019 The ODL contributors
+# Copyright 2014-2020 The ODL contributors
 #
 # This file is part of ODL.
 #
@@ -18,14 +18,13 @@ import numpy as np
 import pytest
 
 import odl
-from odl.util.testutils import (
-    simple_fixture, skip_if_no_largescale, skip_if_no_pyfftw)
-
+from odl.util.testutils import simple_fixture, skip_if_no_pyfftw
 
 # --- pytest fixtures --- #
 
 
-pytestmark = skip_if_no_largescale
+# Global pytest mark
+pytestmark = pytest.mark.suite('largescale')
 
 
 impl = simple_fixture(
@@ -85,4 +84,4 @@ def test_fourier_trafo_forward_complex(domain, impl):
 
 
 if __name__ == '__main__':
-    odl.util.test_file(__file__, ['--largescale'])
+    odl.util.test_file(__file__, ['-S', 'largescale'])

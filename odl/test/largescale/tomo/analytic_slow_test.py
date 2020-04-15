@@ -1,4 +1,4 @@
-# Copyright 2014-2017 The ODL contributors
+# Copyright 2014-2020 The ODL contributors
 #
 # This file is part of ODL.
 #
@@ -17,13 +17,13 @@ import odl
 import odl.tomo as tomo
 from odl.tomo.util.testutils import (
     skip_if_no_astra, skip_if_no_astra_cuda, skip_if_no_skimage)
-from odl.util.testutils import simple_fixture, skip_if_no_largescale
-
+from odl.util.testutils import simple_fixture
 
 # --- pytest fixtures --- #
 
 
-pytestmark = skip_if_no_largescale
+# Global pytest mark
+pytestmark = pytest.mark.suite('largescale')
 
 
 filter_type = simple_fixture(
@@ -230,4 +230,4 @@ def test_fbp_reconstruction_filters(filter_type, frequency_scaling, weighting):
 
 
 if __name__ == '__main__':
-    odl.util.test_file(__file__, ['--largescale'])
+    odl.util.test_file(__file__, ['-S', 'largescale'])

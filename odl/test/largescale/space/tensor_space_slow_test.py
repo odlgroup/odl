@@ -1,4 +1,4 @@
-# Copyright 2014-2019 The ODL contributors
+# Copyright 2014-2020 The ODL contributors
 #
 # This file is part of ODL.
 #
@@ -14,14 +14,13 @@ import numpy as np
 import pytest
 
 import odl
-from odl.util.testutils import (
-    all_almost_equal, dtype_tol, noise_elements, skip_if_no_largescale)
-
+from odl.util.testutils import all_almost_equal, dtype_tol, noise_elements
 
 # --- pytest fixtures --- #
 
 
-pytestmark = skip_if_no_largescale
+# Global pytest mark
+pytestmark = pytest.mark.suite('largescale')
 
 
 spc_params = ['rn', '1d', '3d']
@@ -333,4 +332,4 @@ def test_operators(tspace):
 
 
 if __name__ == '__main__':
-    odl.util.test_file(__file__)
+    odl.util.test_file(__file__, ['-S', 'largescale'])

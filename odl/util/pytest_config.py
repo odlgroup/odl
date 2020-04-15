@@ -1,4 +1,4 @@
-# Copyright 2014-2019 The ODL contributors
+# Copyright 2014-2020 The ODL contributors
 #
 # This file is part of ODL.
 #
@@ -8,10 +8,13 @@
 
 """Test configuration file."""
 
-from __future__ import print_function, division, absolute_import
-import numpy as np
+from __future__ import absolute_import, division, print_function
+
 import operator
 import os
+from os import path
+
+import numpy as np
 
 import odl
 from odl.space.entry_points import tensor_space_impl_names
@@ -19,10 +22,16 @@ from odl.trafos.backends import PYFFTW_AVAILABLE, PYWT_AVAILABLE
 from odl.util.testutils import simple_fixture
 
 try:
+    import pytest
     from pytest import fixture
 except ImportError:
-    # Make fixture the identity decorator (default of OptionalArgDecorator)
-    from odl.util.utility import OptionalArgDecorator as fixture
+    pytest = None
+
+    # Identity fixture
+    def fixture(*arg, **kw):
+        if arg and callable(arg[0]):
+            return arg[0]
+        return fixture
 
 
 # --- Add numpy and ODL to all doctests ---
@@ -34,26 +43,13 @@ def _add_doctest_np_odl(doctest_namespace):
     doctest_namespace['odl'] = odl
 
 
-def pytest_addoption(parser):
-    parser.addoption('--largescale', action='store_true',
-                     help='Run large and slow tests')
-
-    parser.addoption('--benchmark', action='store_true',
-                     help='Run benchmarks')
-
-    parser.addoption('--examples', action='store_true',
-                     help='Run examples')
-
-    parser.addoption('--doctest-doc', action='store_true',
-                     help='Run doctests in the documentation')
-
-
 # --- Ignored tests due to missing modules ---
 
-this_dir = os.path.dirname(__file__)
-odl_root = os.path.abspath(os.path.join(this_dir, os.pardir, os.pardir))
-collect_ignore = [os.path.join(odl_root, 'setup.py'),
-                  os.path.join(odl_root, 'odl', 'contrib')]
+
+this_dir = path.dirname(__file__)
+odl_root = path.abspath(path.join(this_dir, '..', '..'))
+collect_ignore = [path.join(odl_root, 'setup.py'),
+                  path.join(odl_root, 'odl', 'contrib')]
 
 
 # Add example directories to `collect_ignore`
@@ -61,7 +57,7 @@ def find_example_dirs():
     dirs = []
     for dirpath, dirnames, _ in os.walk(odl_root):
         if 'examples' in dirnames:
-            dirs.append(os.path.join(dirpath, 'examples'))
+            dirs.append(path.join(dirpath, 'examples'))
     return dirs
 
 
@@ -70,22 +66,57 @@ collect_ignore.extend(find_example_dirs())
 
 if not PYFFTW_AVAILABLE:
     collect_ignore.append(
-        os.path.join(odl_root, 'odl', 'trafos', 'backends',
-                     'pyfftw_bindings.py'))
+        path.join(odl_root, 'odl', 'trafos', 'backends', 'pyfftw_bindings.py')
+    )
 if not PYWT_AVAILABLE:
     collect_ignore.append(
-        os.path.join(odl_root, 'odl', 'trafos', 'backends',
-                     'pywt_bindings.py'))
+        path.join(odl_root, 'odl', 'trafos', 'backends', 'pywt_bindings.py')
+    )
     # Currently `pywt` is the only implementation
     collect_ignore.append(
-        os.path.join(odl_root, 'odl', 'trafos', 'wavelet.py'))
+        path.join(odl_root, 'odl', 'trafos', 'wavelet.py')
+    )
+
+
+# --- Command-line options --- #
+
+
+def pytest_addoption(parser):
+    suite_help = (
+        'enable an opt-in test suite NAME. '
+        'Available suites: largescale, examples, doc_doctests'
+    )
+    parser.addoption(
+        '-S',
+        '--suite',
+        nargs='*',
+        metavar='NAME',
+        type=str,
+        default=[],
+        help=suite_help,
+    )
+
+
+def pytest_configure(config):
+    # Register an additional marker
+    config.addinivalue_line(
+        'markers', 'suite(name): mark test to belong to an opt-in suite'
+    )
+
+
+def pytest_runtest_setup(item):
+    suites = [mark.args[0] for mark in item.iter_markers(name='suite')]
+    if suites:
+        if not any(val in suites for val in item.config.getoption('-S')):
+            pytest.skip('test not in suites {!r}'.format(suites))
 
 
 # Remove duplicates
 collect_ignore = list(set(collect_ignore))
-collect_ignore = [os.path.normcase(ignored) for ignored in collect_ignore]
+collect_ignore = [path.normcase(ignored) for ignored in collect_ignore]
 
 
+# NB: magical `path` param name is needed
 def pytest_ignore_collect(path, config):
     normalized = os.path.normcase(str(path))
     return any(normalized.startswith(ignored) for ignored in collect_ignore)

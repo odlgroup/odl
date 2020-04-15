@@ -1,4 +1,4 @@
-# Copyright 2014-2019 The ODL contributors
+# Copyright 2014-2020 The ODL contributors
 #
 # This file is part of ODL.
 #
@@ -17,13 +17,13 @@ from packaging.version import parse as parse_version
 import odl
 from odl.tomo.util.testutils import (
     skip_if_no_astra, skip_if_no_astra_cuda, skip_if_no_skimage)
-from odl.util.testutils import simple_fixture, skip_if_no_largescale
-
+from odl.util.testutils import all_almost_equal, simple_fixture
 
 # --- pytest fixtures --- #
 
 
-pytestmark = skip_if_no_largescale
+# Global pytest mark
+pytestmark = pytest.mark.suite('largescale')
 
 
 dtype_params = ['float32', 'float64', 'complex64']
@@ -212,7 +212,7 @@ def test_adjoint_of_adjoint(projector):
     proj_adj_adj_adj = projector.adjoint.adjoint.adjoint(proj)
 
     # Verify A^*(y) == ((A^*)^*)^*(x)
-    assert proj_adj == proj_adj_adj_adj
+    assert all_almost_equal(proj_adj, proj_adj_adj_adj)
 
 
 def test_reconstruction(projector):
@@ -243,4 +243,4 @@ def test_reconstruction(projector):
 
 
 if __name__ == '__main__':
-    odl.util.test_file(__file__, ['--largescale'])
+    odl.util.test_file(__file__, ['-S', 'largescale'])
