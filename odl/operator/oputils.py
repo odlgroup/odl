@@ -1,4 +1,4 @@
-# Copyright 2014-2019 The ODL contributors
+# Copyright 2014-2020 The ODL contributors
 #
 # This file is part of ODL.
 #
@@ -8,17 +8,21 @@
 
 """Convenience functions for operators."""
 
-from __future__ import print_function, division, absolute_import
-from future.utils import native
-import numpy as np
+from __future__ import absolute_import, division, print_function
 
-from odl.space.base_tensors import TensorSpace
+import numpy as np
+from future.utils import native
 from odl.space import ProductSpace
+from odl.space.base_tensors import TensorSpace
 from odl.util import nd_iterator
 from odl.util.testutils import noise_element
 
-__all__ = ('matrix_representation', 'power_method_opnorm', 'as_scipy_operator',
-           'as_scipy_functional', 'as_proximal_lang_operator')
+__all__ = (
+    'matrix_representation',
+    'power_method_opnorm',
+    'as_scipy_operator',
+    'as_scipy_functional',
+)
 
 
 def matrix_representation(op):
@@ -379,56 +383,7 @@ def as_scipy_functional(func, return_gradient=False):
         return func_call
 
 
-def as_proximal_lang_operator(op, norm_bound=None):
-    """Wrap ``op`` as a ``proximal.BlackBox``.
-
-    This is intended to be used with the `ProxImaL language solvers.
-    <https://github.com/comp-imaging/proximal>`_
-
-    For documentation on the proximal language (ProxImaL) see [Hei+2016].
-
-    Parameters
-    ----------
-    op : `Operator`
-        Linear operator to be wrapped. Its domain and range must implement
-        ``shape``, and elements in these need to implement ``asarray``.
-    norm_bound : float, optional
-        An upper bound on the spectral norm of the operator. Note that this is
-        the norm as defined by ProxImaL, and hence use the unweighted spaces.
-
-    Returns
-    -------
-    ``proximal.BlackBox`` : proximal_lang_operator
-        The wrapped operator.
-
-    Notes
-    -----
-    If the data representation of ``op``'s domain and range is of type
-    `NumpyTensorSpace` this incurs no significant overhead. If the data
-    space is implemented with CUDA or some other non-local representation,
-    the overhead is significant.
-
-    References
-    ----------
-    [Hei+2016] Heide, F et al. *ProxImaL: Efficient Image Optimization using
-    Proximal Algorithms*. ACM Transactions on Graphics (TOG), 2016.
-    """
-    # TODO: use out parameter once "as editable array" is added
-
-    def forward(inp, out):
-        out[:] = op(inp).asarray()
-
-    def adjoint(inp, out):
-        out[:] = op.adjoint(inp).asarray()
-
-    import proximal
-    return proximal.LinOpFactory(input_shape=op.domain.shape,
-                                 output_shape=op.range.shape,
-                                 forward=forward,
-                                 adjoint=adjoint,
-                                 norm_bound=norm_bound)
-
-
 if __name__ == '__main__':
     from odl.util.testutils import run_doctests
+
     run_doctests()

@@ -1,4 +1,4 @@
-# Copyright 2014-2017 The ODL contributors
+# Copyright 2014-2020 The ODL contributors
 #
 # This file is part of ODL.
 #
@@ -8,7 +8,9 @@
 
 from __future__ import absolute_import
 
-__all__ = ()
-
 from .functional import *
+from .operator import *
+
+__all__ = ()
 __all__ += functional.__all__
+__all__ += operator.__all__
