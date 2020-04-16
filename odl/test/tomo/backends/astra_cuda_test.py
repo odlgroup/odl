@@ -14,8 +14,7 @@ import numpy as np
 import pytest
 
 import odl
-from odl.tomo.backends.astra_cuda import (
-    AstraCudaBackProjectorImpl, AstraCudaProjectorImpl)
+from odl.tomo.backends.astra_cuda import AstraCudaImpl
 from odl.tomo.util.testutils import skip_if_no_astra_cuda
 
 
@@ -85,24 +84,25 @@ def test_astra_cuda_projector(space_and_geometry):
     """Test ASTRA CUDA projector."""
 
     # Create reco space and a phantom
-    reco_space, geom = space_and_geometry
-    phantom = odl.phantom.cuboid(reco_space)
+    vol_space, geom = space_and_geometry
+    phantom = odl.phantom.cuboid(vol_space)
 
     # Make projection space
     proj_space = odl.uniform_discr_frompartition(geom.partition,
-                                                 dtype=reco_space.dtype)
+                                                 dtype=vol_space.dtype)
+
+    # create RayTransform implementation
+    astra_cuda = AstraCudaImpl(geom, vol_space, proj_space)
 
     # Forward evaluation
-    projector = AstraCudaProjectorImpl(geom, reco_space, proj_space)
-    proj_data = projector.call_forward(phantom)
+    proj_data = astra_cuda.call_forward(phantom)
     assert proj_data in proj_space
     assert proj_data.norm() > 0
     assert np.all(proj_data.asarray() >= 0)
 
     # Backward evaluation
-    back_projector = AstraCudaBackProjectorImpl(geom, reco_space, proj_space)
-    backproj = back_projector.call_backward(proj_data)
-    assert backproj in reco_space
+    backproj = astra_cuda.call_backward(proj_data)
+    assert backproj in vol_space
     assert backproj.norm() > 0
     assert np.all(proj_data.asarray() >= 0)
 
