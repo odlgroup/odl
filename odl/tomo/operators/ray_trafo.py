@@ -23,6 +23,7 @@ from odl.tomo.backends.astra_cpu import AstraCpuImpl
 from odl.tomo.backends.astra_cuda import AstraCudaImpl
 from odl.tomo.backends.skimage_radon import SkImageImpl
 from odl.tomo.geometry import Geometry
+from odl.util import is_string
 
 # RAY_TRAFO_IMPLS are used by `RayTransform` when no `impl` is given.
 # The last inserted implementation has highest priority.
@@ -33,9 +34,6 @@ if ASTRA_AVAILABLE:
     RAY_TRAFO_IMPLS['astra_cpu'] = AstraCpuImpl
 if ASTRA_CUDA_AVAILABLE:
     RAY_TRAFO_IMPLS['astra_cuda'] = AstraCudaImpl
-
-# Used to warn the user when a backend is not available/installed.
-_ALL_IMPLS = ('astra_cuda', 'astra_cpu', 'skimage')
 
 __all__ = ('RayTransform',)
 
@@ -194,7 +192,7 @@ class RayTransform(Operator):
         impl = kwargs.pop('impl', None)
         impl_type, self.__cached_impl = self._check_impl(impl)
         self._impl_type = impl_type
-        if isinstance(impl, str):
+        if is_string(impl):
             self.__impl = impl.lower()
         else:
             self.__impl = impl_type.__name__
@@ -221,8 +219,8 @@ class RayTransform(Operator):
         if impl is None:  # User didn't specify a backend
             if not RAY_TRAFO_IMPLS:
                 raise RuntimeError(
-                    'no ray transform back-end available; this requires '
-                    '3rd party packages, please check the install docs'
+                    'No `RayTransform` back-end available; this requires '
+                    '3rd party packages, please check the install docs.'
                 )
 
             # Select fastest available
@@ -230,13 +228,14 @@ class RayTransform(Operator):
 
         else:
             # User did specify `impl`
-            if isinstance(impl, str):
-                if impl.lower() not in _ALL_IMPLS:
-                    raise ValueError('`impl` {!r} not understood'.format(impl))
-
+            if is_string(impl):
                 if impl.lower() not in RAY_TRAFO_IMPLS.keys():
                     raise ValueError(
-                        '{!r} back-end not available'.format(impl)
+                        'The {!r} `impl` is not found. This `impl` is either '
+                        'not supported, it may be misspelled, or external '
+                        'packages required are not available. Consult '
+                        '`RAY_TRAFO_IMPLS` to find the run-time available '
+                        'implementations.'.format(impl)
                     )
 
                 impl_type = RAY_TRAFO_IMPLS[impl.lower()]
@@ -260,7 +259,7 @@ class RayTransform(Operator):
                     impl_instance = impl
             else:
                 raise TypeError(
-                    '`impl` {!r} should be a `str`, or an object or type '
+                    '`impl` {!r} should be a string, or an object or type '
                     'having a `call_forward()` and/or `call_backward()`. '
                     ''.format(type(impl))
                 )
