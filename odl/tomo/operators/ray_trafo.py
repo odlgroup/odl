@@ -190,7 +190,7 @@ class RayTransform(Operator):
 
         # Check `impl`
         impl = kwargs.pop('impl', None)
-        impl_type, self.__cached_impl = self._check_impl(impl)
+        impl_type, self.__cached_impl = self._initialize_impl(impl)
         self._impl_type = impl_type
         if is_string(impl):
             self.__impl = impl.lower()
@@ -212,7 +212,7 @@ class RayTransform(Operator):
         )
 
     @staticmethod
-    def _check_impl(impl):
+    def _initialize_impl(impl):
         """Internal method to verify the validity of the `impl` kwarg."""
         impl_instance = None
 
@@ -246,8 +246,8 @@ class RayTransform(Operator):
 
                 if not callable(forward) and not callable(backward):
                     raise TypeError(
-                        'type {!r} must be have a `call_forward` '
-                        'or `call_backward`.'.format(impl)
+                        'Type {!r} must have a `call_forward()` '
+                        'and/or `call_backward()`.'.format(impl)
                     )
 
                 if isinstance(impl, type):
@@ -275,7 +275,7 @@ class RayTransform(Operator):
 
         return self.__impl
 
-    def create_impl(self, use_cache=True):
+    def get_impl(self, use_cache=True):
         """Fetches or instantiates implementation backend for evaluation.
 
         Parameters
@@ -298,26 +298,25 @@ class RayTransform(Operator):
         return self.__cached_impl
 
     def _call(self, x, out=None, **kwargs):
-        """Forward projection
+        """Forward projection.
 
         Parameters
         ----------
         x : DiscreteLpElement
-            A volume. Must be an element from `RayTransform.domain`.
+            A volume. Must be an element of `RayTransform.domain`.
         out : `RayTransform.range` element, optional
-            A DiscreteLpElement from `RayTransform.range`, to which the result
-            of the operator evaluation is written.
+            Element to which the result of the operator evaluation is written.
         **kwargs
-            Arbitrary keyword arguments, passed on to the implementation
+            Extra keyword arguments, passed on to the implementation
             backend.
 
         Returns
         -------
         DiscreteLpElement
-            A sinogram, from the projection space `RayTransform.range`.
+            Result of the transform, an element of the range.
         """
 
-        return self.create_impl(self.use_cache).call_forward(x, out, **kwargs)
+        return self.get_impl(self.use_cache).call_forward(x, out, **kwargs)
 
     @property
     def geometry(self):
@@ -343,30 +342,28 @@ class RayTransform(Operator):
                 """Adjoint of the discrete Ray transform between L^p spaces."""
 
                 def _call(self, x, out=None, **kwargs):
-                    """Backprojection
+                    """Backprojection.
 
                     Parameters
                     ----------
                     x : DiscreteLpElement
-                        A sinogram. Must be an element from
+                        A sinogram. Must be an element of
                         `RayTransform.range` (domain of `RayBackProjection`).
                     out : `RayBackProjection.domain` element, optional
-                        A volume (an element from the volume space
-                        `RayTransform.domain` or, equivalently,
-                        `RayBackprojection.range`). The result of this
-                        evaluation is written into this variable.
+                        A volume to which the result of this evaluation is
+                        written.
                     **kwargs
-                        Arbitrary keyword arguments, passed on to the
+                        Extra keyword arguments, passed on to the
                         implementation backend.
 
                     Returns
                     -------
                     DiscreteLpElement
-                        The reconstructed volume, an element in
-                        `RayBackProjection.range`.
+                        Result of the transform in the domain
+                        of `RayProjection`.
                     """
 
-                    return ray_trafo.create_impl(
+                    return ray_trafo.get_impl(
                         ray_trafo.use_cache
                     ).call_backward(x, out, **kwargs)
 
