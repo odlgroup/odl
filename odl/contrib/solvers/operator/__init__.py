@@ -1,4 +1,4 @@
-# Copyright 2014-2017 The ODL contributors
+# Copyright 2014-2020 The ODL contributors
 #
 # This file is part of ODL.
 #
@@ -6,15 +6,9 @@
 # v. 2.0. If a copy of the MPL was not distributed with this file, You can
 # obtain one at https://mozilla.org/MPL/2.0/.
 
-"""Modules for handling MRC(-like) data."""
-
-
 from __future__ import absolute_import
 
+from .proximal_lang import *
+
 __all__ = ()
-
-from .uncompr_bin import *
-__all__ += uncompr_bin.__all__
-
-from .mrc import *
-__all__ += mrc.__all__
+__all__ += proximal_lang.__all__
