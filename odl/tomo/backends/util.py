@@ -22,12 +22,11 @@ def _add_default_complex_impl(fn):
 
     The wrapper will only work for methods of which the class provides a
     `vol_space` and `proj_space`. Typically, this will then work as a decorator
-    on the method, e.g.:
-    ```
+    on the method, e.g. ::
+
         @_add_default_complex_impl
         def call_forward(self, x, out=None, **kwargs):
             # Code that should run for real input and output
-    ```
 
     Parameters
     ----------
