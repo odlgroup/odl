@@ -272,7 +272,6 @@ class RayTransform(Operator):
 
         If a custom ``impl`` was provided this method returns a ``str``
         of the type."""
-
         return self.__impl
 
     def get_impl(self, use_cache=True):
@@ -315,7 +314,6 @@ class RayTransform(Operator):
         DiscreteLpElement
             Result of the transform, an element of the range.
         """
-
         return self.get_impl(self.use_cache).call_forward(x, out, **kwargs)
 
     @property
@@ -362,7 +360,6 @@ class RayTransform(Operator):
                         Result of the transform in the domain
                         of `RayProjection`.
                     """
-
                     return ray_trafo.get_impl(
                         ray_trafo.use_cache
                     ).call_backward(x, out, **kwargs)

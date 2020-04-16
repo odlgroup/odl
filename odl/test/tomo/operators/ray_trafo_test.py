@@ -20,7 +20,6 @@ from odl.tomo.util.testutils import (
     skip_if_no_astra, skip_if_no_astra_cuda, skip_if_no_skimage)
 from odl.util.testutils import all_almost_equal, simple_fixture
 
-
 # --- pytest fixtures --- #
 
 
@@ -105,7 +104,6 @@ projectors.extend(
      for proj_cfg in ['par2d skimage uniform',
                       'par2d skimage half_uniform'])
 )
-
 
 projector_ids = [
     " geom='{}' - impl='{}' - angles='{}' ".format(*p.values[0].split())
@@ -348,6 +346,7 @@ def test_complex(impl):
 
     assert all_almost_equal(backproj_vol.real, true_vol_re)
     assert all_almost_equal(backproj_vol.imag, true_vol_im)
+
 
 def test_anisotropic_voxels(geometry):
     """Test projection and backprojection with anisotropic voxels."""
