@@ -108,7 +108,7 @@ class AstraCudaImpl:
 
         self.create_ids()
 
-        # ASTRA projectors are not thread-safe, thus we need to lock ourselves
+        # ASTRA projectors are not thread-safe, thus we need to lock manually
         self._mutex = Lock()
 
     @property
