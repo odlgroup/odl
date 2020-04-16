@@ -14,17 +14,27 @@ __all__ = ()
 
 
 def _add_default_complex_impl(fn):
-    """Wrapper to call a class method twice when it is complex.
+    """Wrapper to call a real-valued class method twice when input is complex.
 
-    This function helps `RayTransform` implementations by splitting
-    complex-valued forward/backward function calls into two real-valued calls.
+    This function helps `RayTransform` implementations with extending methods
+    that work for real-valued elements to complex-valued elements, by splitting
+    complex calls into two individual real calls.
+
+    The wrapper will only work for methods of which the class provides a
+    `vol_space` and `proj_space`. Typically, this will then work as a decorator
+    on the method, e.g.:
+    ```
+        @_add_default_complex_impl
+        def call_forward(self, x, out=None, **kwargs):
+            # Code that should run for real input and output
+    ```
 
     Parameters
     ----------
     fn : Callable
         Function with signature ``fn(self, x, out=None, **kwargs)``.
         ``self`` must be an object instance having ``self.vol_space`` and
-        ``self.proj_space``. These spaces must be both real or both complex.
+        ``self.proj_space``.
 
     Returns
     -------
