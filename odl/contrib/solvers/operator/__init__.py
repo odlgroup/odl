@@ -8,7 +8,7 @@
 
 from __future__ import absolute_import
 
-from .oputils import *
+from .proximal_lang import *
 
 __all__ = ()
-__all__ += oputils.__all__
+__all__ += proximal_lang.__all__
