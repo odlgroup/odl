@@ -601,5 +601,20 @@ def test_binning(binning_setup):
     assert out_arr.dtype == true_out_arr.dtype
 
 
+def test_binning_corner_cases():
+    # 0-dim
+    arr = np.array(1.0)
+    assert binning(arr, 2) == 1.0  # ok since there are no axes
+    with pytest.raises(ValueError):
+        binning(arr, [2])  # not ok, too many binning values
+
+    # 0 in shape, never ok
+    arr = np.ones((4, 0))
+    with pytest.raises(ValueError):
+        binning(arr, 2)
+    with pytest.raises(ValueError):
+        binning(arr, [1, 1])
+
+
 if __name__ == '__main__':
     odl.util.test_file(__file__)

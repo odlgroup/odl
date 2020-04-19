@@ -914,12 +914,24 @@ def binning(arr, bin_size, reduction=np.sum):
     if not all(b > 0 for b in bin_sizes):
         raise ValueError('expected positive `bin_size`, got {}'
                          ''.format(bin_size))
-
+    if len(bin_sizes) > d:
+        raise ValueError(
+            'more bin sizes ({}) than array axes ({})'
+            ''.format(len(bin_sizes), d)
+        )
+    if any(b > n for n, b in zip(arr.shape, bin_sizes)):
+        raise ValueError(
+            '`bin_size` {} may not exceed array shape {} in any axis'
+            ''.format(bin_size, arr.shape)
+        )
     if not all(n % b == 0 for n, b in zip(arr.shape, bin_sizes)):
-        raise ValueError('`bin_size` must divide `arr.shape` evenly, but '
-                         '`{} / {}` has a remainder of {}'
-                         ''.format(arr.shape, bin_size,
-                                   tuple(np.remainder(arr.shape, bin_sizes))))
+        raise ValueError(
+            '`bin_size` must divide `arr.shape` evenly, but `{} / {}` has a '
+            'remainder of {}'
+            ''.format(
+                arr.shape, bin_size, tuple(np.remainder(arr.shape, bin_sizes))
+            )
+        )
 
     red_shp = []
     red_axes = []
