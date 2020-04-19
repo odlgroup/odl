@@ -1,4 +1,4 @@
-# Copyright 2014-2017 The ODL contributors
+# Copyright 2014-2020 The ODL contributors
 #
 # This file is part of ODL.
 #
@@ -7,15 +7,16 @@
 # obtain one at https://mozilla.org/MPL/2.0/.
 
 from __future__ import division
+
 import numpy as np
-import pytest
-
 import odl
-from odl.util import (
-    apply_on_boundary, fast_1d_tensor_mult, resize_array, is_real_dtype)
-from odl.util.numerics import _SUPPORTED_RESIZE_PAD_MODES
-from odl.util.testutils import all_equal, dtype_tol, simple_fixture
-
+import pytest
+from odl.util import is_real_dtype
+from odl.util.numerics import (
+    _SUPPORTED_RESIZE_PAD_MODES, apply_on_boundary, binning,
+    fast_1d_tensor_mult, resize_array)
+from odl.util.testutils import (
+    all_almost_equal, all_equal, dtype_tol, simple_fixture)
 
 # --- pytest fixtures --- #
 
@@ -122,6 +123,96 @@ def resize_setup(padding, variant):
         raise ValueError('unknown variant')
 
     return pad_mode, pad_const, newshp, offset, array_in, true_out
+
+
+bin_size = simple_fixture(
+    'bin_size', [0, 1, 2, 3, (1, 2), (4, 2), (8, 1), (2, 0)]
+)
+bin_reduction = simple_fixture(
+    'bin_reduction', [np.sum, np.max, np.mean], fmt=' {name}={value.__name__} '
+)
+bin_dtype = simple_fixture("bin_dtype", ['float64', 'int64'])
+
+
+@pytest.fixture(scope="module")
+def binning_setup(bin_size, bin_reduction, bin_dtype):
+    arr = np.array([
+        [0, 1, -1, 2, 0, 6],
+        [-4, 2, 5, 2, -2, -1],
+        [0, 0, 1, 0, 1, -1],
+        [1, -1, 1, -1, 1, -1],
+    ], dtype=bin_dtype)
+
+    if bin_reduction == np.sum:
+        out_dtype = bin_dtype
+
+        if bin_size == 1:
+            true_out_arr = arr.astype(out_dtype)
+        elif bin_size == 2:
+            true_out_arr = np.array([
+                [-1, 8, 3],
+                [0, 1, 0],
+            ], dtype=out_dtype)
+        elif bin_size == (1, 2):
+            true_out_arr = np.array([
+                [1, 1, 6],
+                [-2, 7, -3],
+                [0, 1, 0],
+                [0, 0, 0],
+            ], dtype=out_dtype)
+        elif bin_size == (4, 2):
+            true_out_arr = np.array([[-1, 9, 3]], dtype=out_dtype)
+        else:
+            true_out_arr = None
+
+    elif bin_reduction == np.max:
+        out_dtype = bin_dtype
+
+        if bin_size == 1:
+            true_out_arr = arr.astype(out_dtype)
+        elif bin_size == 2:
+            true_out_arr = np.array([
+                [2, 5, 6],
+                [1, 1, 1],
+            ], dtype=out_dtype)
+        elif bin_size == (1, 2):
+            true_out_arr = np.array([
+                [1, 2, 6],
+                [2, 5, -1],
+                [0, 1, 1],
+                [1, 1, 1],
+            ], dtype=out_dtype)
+        elif bin_size == (4, 2):
+            true_out_arr = np.array([[2, 5, 6]], dtype=out_dtype)
+        else:
+            true_out_arr = None
+
+    elif bin_reduction == np.mean:
+        out_dtype = np.result_type(bin_dtype, 1.0)
+
+        if bin_size == 1:
+            true_out_arr = arr.astype(out_dtype)
+        elif bin_size == 2:
+            true_out_arr = np.array([
+                [-0.25, 2, 0.75],
+                [0, 0.25, 0],
+            ], dtype=out_dtype)
+        elif bin_size == (1, 2):
+            true_out_arr = np.array([
+                [0.5, 0.5, 3],
+                [-1, 3.5, -1.5],
+                [0, 0.5, 0],
+                [0, 0, 0],
+            ], dtype=out_dtype)
+        elif bin_size == (4, 2):
+            true_out_arr = np.array([[-0.125, 1.125, 0.375]], dtype=out_dtype)
+        else:
+            true_out_arr = None
+
+    else:
+        assert False, "unknown reduction"
+
+    return bin_size, bin_reduction, bin_dtype, arr, true_out_arr
 
 
 # --- apply_on_boundary --- #
@@ -480,6 +571,34 @@ def test_resize_array_raise():
         resize_array(small_arr, (7, 1), pad_mode='periodic')
     with pytest.raises(ValueError):
         resize_array(small_arr, (3, 4), offset=(0, 1), pad_mode='periodic')
+
+
+def test_binning(binning_setup):
+    """Validate the ``binning`` function."""
+    bin_size, bin_reduction, _, arr, true_out_arr = binning_setup
+
+    # Error scenarios
+    bin_sizes = bin_size if isinstance(bin_size, tuple) else [bin_size] * 2
+    if 0 in bin_sizes:
+        # 0 not allowed
+        with pytest.raises(ValueError):
+            binning(arr, bin_size, bin_reduction)
+        return
+    if any(b > n for b, n in zip(bin_sizes, arr.shape)):
+        # Bin size larger than array size not allowed
+        with pytest.raises(ValueError):
+            binning(arr, bin_size, bin_reduction)
+        return
+    if any(n % b != 0 for b, n in zip(bin_sizes, arr.shape)):
+        # Division remainder of size/bin_size not allowed
+        with pytest.raises(ValueError):
+            binning(arr, bin_size, bin_reduction)
+        return
+
+    # Success scenarios
+    out_arr = binning(arr, bin_size, bin_reduction)
+    assert all_almost_equal(out_arr, true_out_arr)
+    assert out_arr.dtype == true_out_arr.dtype
 
 
 if __name__ == '__main__':
