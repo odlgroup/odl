@@ -1,4 +1,4 @@
-# Copyright 2014-2019 The ODL contributors
+# Copyright 2014-2020 The ODL contributors
 #
 # This file is part of ODL.
 #
@@ -8,14 +8,18 @@
 
 """Numerical helper functions for convenience or speed."""
 
-from __future__ import print_function, division, absolute_import
-import numpy as np
+from __future__ import absolute_import, division, print_function
 
+import numpy as np
 from odl.util.normalize import normalized_scalar_param_list, safe_int_conv
 
-
-__all__ = ('apply_on_boundary', 'fast_1d_tensor_mult', 'resize_array',
-           'zscore')
+__all__ = (
+    'apply_on_boundary',
+    'fast_1d_tensor_mult',
+    'resize_array',
+    'zscore',
+    'binning',
+)
 
 
 _SUPPORTED_RESIZE_PAD_MODES = ('constant', 'symmetric', 'periodic',
@@ -847,11 +851,6 @@ def zscore(arr):
     return arr
 
 
-if __name__ == '__main__':
-    from odl.util.testutils import run_doctests
-    run_doctests()
-
-
 def binning(arr, bin_size, reduction=np.sum):
     """Bin an array by a factor.
 
@@ -948,3 +947,8 @@ def binning(arr, bin_size, reduction=np.sum):
                          ''.format(out_shp, arr.shape, bin_size))
 
     return red_arr
+
+
+if __name__ == '__main__':
+    from odl.util.testutils import run_doctests
+    run_doctests()
