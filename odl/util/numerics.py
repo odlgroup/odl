@@ -860,7 +860,7 @@ def binning(arr, bin_size, reduction=np.sum):
         The array that should be binned.
     bin_size : positive int or sequence
         Size or per-axis sizes of the bins.
-    reduction: callable
+    reduction: callable, optional
         Function used to perform the binning by reduction over temporary
         axes of size ``bin_size``. It is called as ::
 
@@ -868,6 +868,8 @@ def binning(arr, bin_size, reduction=np.sum):
 
         hence it must support this signature. The function is expected to
         collapse ``reduction_axes``.
+
+        Default: `numpy.sum`
 
     Returns
     -------
@@ -914,9 +916,9 @@ def binning(arr, bin_size, reduction=np.sum):
     if not all(b > 0 for b in bin_sizes):
         raise ValueError('expected positive `bin_size`, got {}'
                          ''.format(bin_size))
-    if len(bin_sizes) > d:
+    if len(bin_sizes) != d:
         raise ValueError(
-            'more bin sizes ({}) than array axes ({})'
+            '`len(bin_sizes)` must be equal to `arr.ndim`, but {} != {}'
             ''.format(len(bin_sizes), d)
         )
     if any(b > n for n, b in zip(arr.shape, bin_sizes)):

@@ -126,7 +126,7 @@ def resize_setup(padding, variant):
 
 
 bin_size = simple_fixture(
-    'bin_size', [0, 1, 2, 3, (1, 2), (4, 2), (8, 1), (2, 0)]
+    'bin_size', [0, 1, 2, 3, (1, 2), (4, 2), (8, 1), (2, 0), (2, 2, 2)]
 )
 bin_reduction = simple_fixture(
     'bin_reduction', [np.sum, np.max, np.mean], fmt=' {name}={value.__name__} '
@@ -584,6 +584,9 @@ def test_binning(binning_setup):
         with pytest.raises(ValueError):
             binning(arr, bin_size, bin_reduction)
         return
+    if len(bin_sizes) != arr.ndim:
+        with pytest.raises(ValueError):
+            binning(arr, bin_size, bin_reduction)
     if any(b > n for b, n in zip(bin_sizes, arr.shape)):
         # Bin size larger than array size not allowed
         with pytest.raises(ValueError):
