@@ -587,6 +587,7 @@ def test_binning(binning_setup):
     if len(bin_sizes) != arr.ndim:
         with pytest.raises(ValueError):
             binning(arr, bin_size, bin_reduction)
+        return
     if any(b > n for b, n in zip(bin_sizes, arr.shape)):
         # Bin size larger than array size not allowed
         with pytest.raises(ValueError):
