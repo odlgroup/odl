@@ -1,4 +1,4 @@
-# Copyright 2014-2019 The ODL contributors
+# Copyright 2014-2020 The ODL contributors
 #
 # This file is part of ODL.
 #
@@ -8,14 +8,18 @@
 
 """Numerical helper functions for convenience or speed."""
 
-from __future__ import print_function, division, absolute_import
-import numpy as np
+from __future__ import absolute_import, division, print_function
 
+import numpy as np
 from odl.util.normalize import normalized_scalar_param_list, safe_int_conv
 
-
-__all__ = ('apply_on_boundary', 'fast_1d_tensor_mult', 'resize_array',
-           'zscore')
+__all__ = (
+    'apply_on_boundary',
+    'fast_1d_tensor_mult',
+    'resize_array',
+    'zscore',
+    'binning',
+)
 
 
 _SUPPORTED_RESIZE_PAD_MODES = ('constant', 'symmetric', 'periodic',
@@ -845,6 +849,118 @@ def zscore(arr):
     if std != 0:
         arr /= std
     return arr
+
+
+def binning(arr, bin_size, reduction=np.sum):
+    """Bin an array by a factor.
+
+    Parameters
+    ----------
+    arr : `array-like`
+        The array that should be binned.
+    bin_size : positive int or sequence
+        Size or per-axis sizes of the bins.
+    reduction: callable, optional
+        Function used to perform the binning by reduction over temporary
+        axes of size ``bin_size``. It is called as ::
+
+            reduction(reshaped_arr, axis=reduction_axes)
+
+        hence it must support this signature. The function is expected to
+        collapse ``reduction_axes``.
+
+        Default: `numpy.sum`
+
+    Returns
+    -------
+    binned_arr : numpy.ndarray
+        Array of shape ``n[i] // b[i]`` in axis ``i``, where ``n`` refers
+        to the original shape and ``b`` to the bin sizes.
+
+    Examples
+    --------
+    Binning by the same factor in all axes can be done with an integer
+    ``bin_size``:
+
+    >>> arr = np.arange(24).reshape((4, 6))
+    >>> arr
+    array([[ 0,  1,  2,  3,  4,  5],
+           [ 6,  7,  8,  9, 10, 11],
+           [12, 13, 14, 15, 16, 17],
+           [18, 19, 20, 21, 22, 23]])
+    >>> binning(arr, bin_size=2)
+    array([[14, 22, 30],
+           [62, 70, 78]])
+
+    If a sequence is given, the bin sizes are specific for each axis:
+
+    >>> binning(arr, bin_size=(2, 3))
+    array([[ 24,  42],
+           [ 96, 114]])
+
+    Instead of the default `numpy.sum`, other functions that accept an
+    array as first argument and an ``axis`` keyword argument can be used for
+    reduction. For instance, `numpy.max`, resulting in "max pooling":
+
+    >>> binning(arr, bin_size=2, reduction=np.max)
+    array([[ 7,  9, 11],
+           [19, 21, 23]])
+    """
+    arr = np.asarray(arr)
+    d = arr.ndim
+    try:
+        bin_sizes = [int(bin_size)] * d
+    except TypeError:
+        bin_sizes = bin_size
+
+    if not all(b > 0 for b in bin_sizes):
+        raise ValueError('expected positive `bin_size`, got {}'
+                         ''.format(bin_size))
+    if len(bin_sizes) != d:
+        raise ValueError(
+            '`len(bin_sizes)` must be equal to `arr.ndim`, but {} != {}'
+            ''.format(len(bin_sizes), d)
+        )
+    if any(b > n for n, b in zip(arr.shape, bin_sizes)):
+        raise ValueError(
+            '`bin_size` {} may not exceed array shape {} in any axis'
+            ''.format(bin_size, arr.shape)
+        )
+    if not all(n % b == 0 for n, b in zip(arr.shape, bin_sizes)):
+        raise ValueError(
+            '`bin_size` must divide `arr.shape` evenly, but `{} / {}` has a '
+            'remainder of {}'
+            ''.format(
+                arr.shape, bin_size, tuple(np.remainder(arr.shape, bin_sizes))
+            )
+        )
+
+    red_shp = []
+    red_axes = []
+    ax = 0
+    for n, b in zip(arr.shape, bin_sizes):
+        if b == 1:
+            # Optimization for "no binning"
+            red_shp.append(n)
+            ax += 1
+        else:
+            red_shp.append(n // b)
+            red_shp.append(b)
+            red_axes.append(ax + 1)
+            ax += 2
+
+    red_axes = tuple(red_axes)
+
+    reshaped_arr = arr.reshape(red_shp)
+    red_arr = reduction(reshaped_arr, axis=red_axes)
+
+    out_shp = tuple(n for i, n in enumerate(red_shp) if i not in red_axes)
+    if red_arr.shape != out_shp:
+        raise ValueError('`reduction` does not produce the expected shape '
+                         '{} from `arr.shape = {}` and `bin_size = {}`'
+                         ''.format(out_shp, arr.shape, bin_size))
+
+    return red_arr
 
 
 if __name__ == '__main__':
