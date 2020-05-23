@@ -62,7 +62,7 @@ phantom = odl.phantom.shepp_logan(space, modified=True)
 data = ray_trafo(phantom)
 
 # Compute steplength
-omega = n * odl.power_method_opnorm(ray_trafo) ** (-2)
+omega = n * odl.power_method_opnorm(ray_trafo, maxiter=5) ** (-2)
 
 # Optionally pass callback to the solver to display intermediate results
 callback = (odl.solvers.CallbackPrintIteration() &

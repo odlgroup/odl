@@ -52,7 +52,7 @@ line_search = 1.0
 # line_search = odl.solvers.BacktrackingLineSearch(obj_fun)
 
 # Create initial estimate of the inverse Hessian by a diagonal estimate
-opnorm = odl.power_method_opnorm(ray_trafo)
+opnorm = odl.power_method_opnorm(ray_trafo, maxiter=5)
 hessinv_estimate = odl.ScalingOperator(reco_space, 1 / opnorm ** 2)
 
 # Optionally pass callback to the solver to display intermediate results

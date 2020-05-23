@@ -72,7 +72,7 @@ L = [ray_trafo, gradient]
 
 # Estimated operator norms, which are used to ensure that we fulfill the
 # convergence criteria of the optimization algorithm
-ray_trafo_norm = odl.power_method_opnorm(ray_trafo, maxiter=20)
+ray_trafo_norm = odl.power_method_opnorm(ray_trafo, maxiter=10)
 gradient_norm = odl.power_method_opnorm(gradient, maxiter=20)
 
 # Parameters for the optimization method; tuned in order to reduce the number

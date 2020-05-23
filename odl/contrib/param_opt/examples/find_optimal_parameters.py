@@ -95,10 +95,11 @@ elif reconstruction_method == 'huber':
 
         # Run the algorithm
         x = ray_trafo.domain.zero()
+        opnorm = odl.power_method_opnorm(ray_trafo, maxiter=5)
         odl.solvers.bfgs_method(
             obj_fun, x, maxiter=maxiter, num_store=num_store,
-            hessinv_estimate=odl.ScalingOperator(
-                space, 1 / odl.power_method_opnorm(ray_trafo) ** 2))
+            hessinv_estimate=odl.ScalingOperator(space, 1 / opnorm ** 2)
+        )
 
         return x
 
@@ -130,7 +131,7 @@ elif reconstruction_method == 'tv':
         g = odl.solvers.SeparableSum(l2_norm, l1_norm)
 
         # Select solver parameters
-        op_norm = 1.5 * odl.power_method_opnorm(op, maxiter=10)
+        op_norm = 1.5 * odl.power_method_opnorm(op, maxiter=5)
 
         # Run the algorithm
         x = op.domain.zero()

@@ -63,7 +63,7 @@ f = odl.solvers.ZeroFunctional(L.domain)
 # --- Select parameters and solve using ADMM --- #
 
 # Estimated operator norm, add 10 percent for some safety margin
-op_norm = 1.1 * odl.power_method_opnorm(L, maxiter=20)
+op_norm = 1.1 * odl.power_method_opnorm(L, maxiter=10)
 
 niter = 200  # Number of iterations
 sigma = 2.0  # Step size for g.proximal

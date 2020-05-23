@@ -47,7 +47,7 @@ g = [data_matching, penalizer]
 L = [sum_op, coeff_op]
 
 tau = 1
-opnorms = [odl.power_method_opnorm(op) for op in L]
+opnorms = [odl.power_method_opnorm(op, maxiter=20) for op in L]
 sigma = [1 / opnorm ** 2 for opnorm in opnorms]
 
 callback = odl.solvers.CallbackShow(step=10)

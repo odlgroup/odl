@@ -54,7 +54,7 @@ g = odl.solvers.SeparableSum(l2_norm, l1_norm)
 
 
 # Estimated operator norm, add 10 percent to ensure ||K||_2^2 * sigma * tau < 1
-op_norm = 1.1 * odl.power_method_opnorm(op, xstart=noisy)
+op_norm = 1.1 * odl.power_method_opnorm(op, xstart=noisy, maxiter=20)
 
 niter = 200  # Number of iterations
 tau = 1.0 / op_norm  # Step size for the primal variable

@@ -126,7 +126,7 @@ With this addition we are ready to try solving the inverse problem using the `la
 .. code-block:: python
 
    # Need operator norm for step length (omega)
-   opnorm = odl.power_method_opnorm(A)
+   opnorm = odl.power_method_opnorm(A, maxiter=20)
 
    f = space.zero()
    odl.solvers.landweber(A, f, g, niter=100, omega=1/opnorm**2)
@@ -244,8 +244,8 @@ e.g. `forward_backward_pd`, `pdhg`, etc in the ODL `examples/solvers <https://gi
 
     # Find scaling constants so that the solver converges.
     # See the douglas_rachford_pd documentation for more information.
-    opnorm_A = odl.power_method_opnorm(A, xstart=g)
-    opnorm_grad = odl.power_method_opnorm(grad, xstart=g)
+    opnorm_A = odl.power_method_opnorm(A, xstart=g, maxiter=20)
+    opnorm_grad = odl.power_method_opnorm(grad, xstart=g, maxiter=20)
     sigma = [1 / opnorm_A ** 2, 1 / opnorm_grad ** 2]
     tau = 1.0
 

@@ -84,10 +84,11 @@ class OperatorTest(object):
         """
         self.log('\n== Calculating operator norm ==\n')
 
-        operator_norm = max(power_method_opnorm(self.operator, maxiter=2,
-                                                xstart=x)
-                            for name, x in samples(self.operator.domain)
-                            if name != 'Zero')
+        operator_norm = max(
+            power_method_opnorm(self.operator, maxiter=1, xstart=x)
+            for name, x in samples(self.operator.domain)
+            if name != 'Zero'
+        )
 
         self.log('Norm is at least: {}'.format(operator_norm))
         self.operator_norm = operator_norm
