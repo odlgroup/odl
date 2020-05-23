@@ -143,13 +143,12 @@ def test_matrix_representation_wrong_range():
 
 def test_power_method_opnorm_symm():
     """Test the power method on a symmetrix matrix operator"""
-    # Test matrix with eigenvalues 1 and -2
-    # Rather nasty case since the eigenvectors are almost parallel
-    mat = np.array([[10, -18],
-                    [6, -11]], dtype=float)
+    # Test matrix with singular values 1.2 and 1.0
+    mat = np.array([[0.9509044, -0.64566614],
+                    [-0.44583952, -0.95923051]])
 
     op = odl.MatrixOperator(mat)
-    true_opnorm = 2
+    true_opnorm = 1.2
     opnorm_est = power_method_opnorm(op)
     assert opnorm_est == pytest.approx(true_opnorm, rel=1e-2)
 
@@ -202,14 +201,7 @@ def test_power_method_opnorm_exceptions():
         op = odl.MatrixOperator([[0., 1.],
                                  [0., 0.]])
 
-        power_method_opnorm(op, maxiter=2, xstart=op.domain.one())
-
-    with pytest.raises(ValueError):
-        # Uneven number of iterates for non square operator
-        op = odl.MatrixOperator([[1., 2., 3.],
-                                 [4., 5., 6.]])
-
-        power_method_opnorm(op, maxiter=1, xstart=op.domain.one())
+        power_method_opnorm(op, maxiter=2, xstart=op.domain.element([1, 0]))
 
 
 if __name__ == '__main__':

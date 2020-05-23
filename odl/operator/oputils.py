@@ -9,9 +9,11 @@
 """Convenience functions for operators."""
 
 from __future__ import absolute_import, division, print_function
+from future.utils import native
 
 import numpy as np
-from future.utils import native
+
+from odl.operator.operator import Operator
 from odl.space import ProductSpace
 from odl.space.base_tensors import TensorSpace
 from odl.util import nd_iterator
@@ -125,24 +127,22 @@ def matrix_representation(op):
     return matrix
 
 
-def power_method_opnorm(op, xstart=None, maxiter=100, rtol=1e-05, atol=1e-08,
+def power_method_opnorm(op, xstart=None, maxiter=None, rtol=1e-05, atol=1e-08,
                         callback=None):
     r"""Estimate the operator norm with the power method.
 
     Parameters
     ----------
     op : `Operator`
-        Operator whose norm is to be estimated. If its `Operator.range`
-        range does not coincide with its `Operator.domain`, an
-        `Operator.adjoint` must be defined (which implies that the
-        operator must be linear).
+        Operator whose norm is to be estimated. Must be linear and define an
+        `Operator.adjoint`.
     xstart : ``op.domain`` `element-like`, optional
         Starting point of the iteration. By default an `Operator.domain`
         element containing noise is used.
     maxiter : positive int, optional
-        Number of iterations to perform. If the domain and range of ``op``
-        do not match, it needs to be an even number. If ``None`` is given,
-        iterate until convergence.
+        Number of iterations to perform. Each iteration involves an evaluation
+        of ``op`` and ``op.adjoint``. For the default ``None``, the iteration
+        will run until convergence.
     rtol : float, optional
         Relative tolerance parameter (see Notes).
     atol : float, optional
@@ -175,13 +175,18 @@ def power_method_opnorm(op, xstart=None, maxiter=100, rtol=1e-05, atol=1e-08,
 
     for all :math:`x` in the domain of :math:`A`.
 
-    The operator is evaluated until ``maxiter`` operator calls or until the
-    relative error is small enough. The error measure is given by
+    The operator :math:`A^*A` is evaluated at most ``maxiter`` times, or until
+    the distance between iterates becomes small enough in the sense ::
 
-        ``abs(a - b) <= (atol + rtol * abs(b))``,
+        abs(a - b) <= (atol + rtol * abs(b))
 
     where ``a`` and ``b`` are consecutive iterates.
     """
+    if not isinstance(op, Operator):
+        raise TypeError(
+            '`op` must be an `Operator` instance, got object of type {}'
+            ''.format(type(op).__name__)
+        )
     if maxiter is None:
         maxiter = np.iinfo(int).max
 
@@ -190,26 +195,15 @@ def power_method_opnorm(op, xstart=None, maxiter=100, rtol=1e-05, atol=1e-08,
         raise ValueError('`maxiter` must be positive, got {}'
                          ''.format(maxiter_in))
 
-    if op.domain == op.range:
-        use_normal = False
-        ncalls = maxiter
-    else:
-        # Do the power iteration for A*A; the norm of A*A(x_N) is then
-        # an estimate of the square of the operator norm
-        # We do only half the number of iterations compared to the usual
-        # case to have the same number of operator evaluations.
-        use_normal = True
-        ncalls = maxiter // 2
-        if ncalls * 2 != maxiter:
-            raise ValueError('``maxiter`` must be an even number for '
-                             'non-self-adjoint operator, got {}'
-                             ''.format(maxiter_in))
+    # The power iteration should approximate the largest singular value, thus
+    # we perform it for A^*A to get its largest eigenvalue and take the square
+    # root.
 
     # Make sure starting point is ok or select initial guess
     if xstart is None:
         x = noise_element(op.domain)
     else:
-        # copy to ensure xstart is not modified
+        # Copy to ensure `xstart` is not modified
         x = op.domain.element(xstart).copy()
 
     # Take first iteration step to normalize input
@@ -218,40 +212,24 @@ def power_method_opnorm(op, xstart=None, maxiter=100, rtol=1e-05, atol=1e-08,
         raise ValueError('``xstart`` must be nonzero')
     x /= x_norm
 
-    # utility to calculate opnorm from xnorm
-    def calc_opnorm(x_norm):
-        if use_normal:
-            return np.sqrt(x_norm)
-        else:
-            return x_norm
+    # Initial guess
+    opnorm = np.sqrt(x_norm)
 
-    # initial guess of opnorm
-    opnorm = calc_opnorm(x_norm)
-
-    # temporary to improve performance
     tmp = op.range.element()
-
-    # Use the power method to estimate opnorm
-    for i in range(ncalls):
-        if use_normal:
-            op(x, out=tmp)
-            op.adjoint(tmp, out=x)
-        else:
-            op(x, out=tmp)
-            x, tmp = tmp, x
-
-        # Calculate x norm and verify it is valid
+    for i in range(maxiter):
+        op(x, out=tmp)
+        op.adjoint(tmp, out=x)
         x_norm = x.norm()
         if x_norm == 0:
-            raise ValueError('reached ``x=0`` after {} iterations'.format(i))
+            raise ValueError('reached `x=0` after {} iterations'.format(i + 1))
         if not np.isfinite(x_norm):
-            raise ValueError('reached nonfinite ``x={}`` after {} iterations'
-                             ''.format(x, i))
+            raise ValueError(
+                'reached `x` with norm {} after {} iterations'
+                ''.format(x_norm, i + 1)
+            )
+        opnorm, opnorm_old = np.sqrt(x_norm), opnorm
 
-        # Calculate opnorm
-        opnorm, opnorm_old = calc_opnorm(x_norm), opnorm
-
-        # If the breaking condition holds, stop. Else rescale and go on.
+        # Check stopping criterion
         if np.isclose(opnorm, opnorm_old, rtol, atol):
             break
         else:
