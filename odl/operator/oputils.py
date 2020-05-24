@@ -161,7 +161,7 @@ def power_method_opnorm(op, xstart=None, maxiter=None, rtol=1e-05, atol=1e-08,
 
     >>> space = odl.uniform_discr(0, 1, 5)
     >>> op = odl.ScalingOperator(space, 2.0)
-    >>> opnorm_est = power_method_opnorm(op)
+    >>> opnorm_est = power_method_opnorm(op, maxiter=2)
     >>> round(opnorm_est, ndigits=1)
     2.0
 

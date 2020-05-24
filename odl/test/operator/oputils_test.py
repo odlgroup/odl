@@ -149,12 +149,12 @@ def test_power_method_opnorm_symm():
 
     op = odl.MatrixOperator(mat)
     true_opnorm = 1.2
-    opnorm_est = power_method_opnorm(op)
+    opnorm_est = power_method_opnorm(op, maxiter=100)
     assert opnorm_est == pytest.approx(true_opnorm, rel=1e-2)
 
     # Start at a different point
     xstart = odl.rn(2).element([0.8, 0.5])
-    opnorm_est = power_method_opnorm(op, xstart=xstart)
+    opnorm_est = power_method_opnorm(op, xstart=xstart, maxiter=100)
     assert opnorm_est == pytest.approx(true_opnorm, rel=1e-2)
 
 
