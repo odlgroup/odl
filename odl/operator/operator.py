@@ -729,11 +729,12 @@ class Operator(object):
 
         Examples
         --------
-        Some operators know their own operator norm and do not need an estimate
+        Some operators know their own operator norm and do not need an
+        estimate:
 
         >>> spc = odl.rn(3)
-        >>> id = odl.IdentityOperator(spc)
-        >>> id.norm(True)
+        >>> I = odl.IdentityOperator(spc)
+        >>> I.norm(estimate=False)
         1.0
 
         For others, there is no closed form expression and an estimate is
@@ -741,7 +742,7 @@ class Operator(object):
 
         >>> spc = odl.uniform_discr(0, 1, 3)
         >>> grad = odl.Gradient(spc)
-        >>> opnorm = grad.norm(estimate=True)
+        >>> opnorm = grad.norm(estimate=True, maxiter=20)
         """
         if not estimate:
             raise NotImplementedError('`Operator.norm()` not implemented, use '
