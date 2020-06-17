@@ -21,7 +21,6 @@ from odl.tomo.geometry.geometry import (
 from odl.tomo.util.utility import (
     euler_matrix, is_inside_bounds, transform_system)
 from odl.util import array_str, indent, signature_string
-from odl.tomo.util.source_detector_shifts import flying_focal_spot
 
 __all__ = ('FanBeamGeometry', 'ConeBeamGeometry',
            'cone_beam_geometry', 'helical_geometry')
@@ -174,7 +173,7 @@ class FanBeamGeometry(DivergentBeamGeometry):
         >>> geom = FanBeamGeometry(
         ...     apart, dpart,
         ...     src_radius=1, det_radius=5,
-        ...     src_shift_func=lambda angle: flying_focal_spot(
+        ...     src_shift_func=lambda angle: odl.tomo.flying_focal_spot(
         ...             angle, apart=apart, shifts=[(0.1, 0), (0, 0.1)]
         ...         )
         ...     )
@@ -239,7 +238,11 @@ class FanBeamGeometry(DivergentBeamGeometry):
                                         axis=det_axis_init,
                                         check_bounds=check_bounds)
 
-        self.__src_shift_func = src_shift_func
+        if src_shift_func is None:
+            self.__src_shift_func = lambda x: np.array(
+                [0.0, 0.0], dtype=float, ndmin=2)
+        else:
+            self.__src_shift_func = src_shift_func
 
         translation = kwargs.pop('translation', None)
         super(FanBeamGeometry, self).__init__(
@@ -389,11 +392,7 @@ class FanBeamGeometry(DivergentBeamGeometry):
     @property
     def src_shift_func(self):
         """Source shifts in the geometry."""
-        if self.__src_shift_func is None:
-            return lambda x: np.array(
-                [0.0, 0.0], dtype=float, ndmin=2)
-        else:
-            return self.__src_shift_func
+        return self.__src_shift_func
 
     def src_position(self, angle):
         """Return the source position at ``angle``.
@@ -459,7 +458,7 @@ class FanBeamGeometry(DivergentBeamGeometry):
         >>> geom = FanBeamGeometry(
         ...     apart, dpart,
         ...     src_radius=1, det_radius=5,
-        ...     src_shift_func=lambda angle: flying_focal_spot(
+        ...     src_shift_func=lambda angle: odl.tomo.flying_focal_spot(
         ...         angle,
         ...         apart=apart,
         ...         shifts=[(0.1, 0), (0, 0.1)]),
@@ -855,7 +854,7 @@ class ConeBeamGeometry(DivergentBeamGeometry, AxisOrientedGeometry):
         >>> geom = ConeBeamGeometry(
         ...     apart, dpart,
         ...     src_radius=1, det_radius=5,
-        ...     src_shift_func=lambda angle: flying_focal_spot(
+        ...     src_shift_func=lambda angle: odl.tomo.flying_focal_spot(
         ...         angle,
         ...         apart=apart,
         ...         shifts=[(0, 0.1, 0), (0, 0, 0.1)]))
@@ -947,7 +946,11 @@ class ConeBeamGeometry(DivergentBeamGeometry, AxisOrientedGeometry):
             raise ValueError('det_curvature_radius {} must be a 2-tuple'
                              ''.format(det_curvature_radius))
 
-        self.__src_shift_func = src_shift_func
+        if src_shift_func is None:
+            self.__src_shift_func = lambda x: np.array(
+                [0.0, 0.0, 0.0], dtype=float, ndmin=2)
+        else:
+            self.__src_shift_func = src_shift_func
 
         super(ConeBeamGeometry, self).__init__(
             ndim=3, motion_part=apart, detector=detector, **kwargs)
@@ -1128,11 +1131,7 @@ class ConeBeamGeometry(DivergentBeamGeometry, AxisOrientedGeometry):
     @property
     def src_shift_func(self):
         """Source shifts in the geometry."""
-        if self.__src_shift_func is None:
-            return lambda x: np.array(
-                [0.0, 0.0, 0.0], dtype=float, ndmin=2)
-        else:
-            return self.__src_shift_func
+        return self.__src_shift_func
 
     def det_axes(self, angle):
         """Return the detector axes tuple at ``angle``.
@@ -1317,7 +1316,7 @@ class ConeBeamGeometry(DivergentBeamGeometry, AxisOrientedGeometry):
         >>> geom = ConeBeamGeometry(
         ...     apart, dpart,
         ...     src_radius=1, det_radius=5,
-        ...     src_shift_func=lambda angle: flying_focal_spot(
+        ...     src_shift_func=lambda angle: odl.tomo.flying_focal_spot(
         ...         angle,
         ...         apart=apart,
         ...         shifts=[(0, 0.1, 0), (0, 0, 0.1)]),
@@ -1347,13 +1346,8 @@ class ConeBeamGeometry(DivergentBeamGeometry, AxisOrientedGeometry):
                                        -self.src_to_det_init)
                      + np.multiply.outer(src_shifts[:, 1], tangent))
         center_to_src_init = center_to_src_init + ffs_shift
-        # broadcasting to perform matrix multiplication "manually",
-        # since existing numpy functions do cross product along the outer
-        # dimensions, which we don't need here
-        center_to_src_init = np.repeat(center_to_src_init, 3,
-                                       axis=-2).reshape(-1, 3, 3)
-        # `circle_component` has shape (a, ndim)
-        circle_component = np.sum(rot_matrix * center_to_src_init, axis=-1)
+        circle_component = np.einsum('...ij,...j->...i',
+                                     rot_matrix, center_to_src_init)
 
         # Increment along the rotation axis according to pitch and
         # offset_along_axis

@@ -10,12 +10,13 @@
 
 from __future__ import division
 from itertools import permutations, product
+from functools import partial
 import pytest
 import numpy as np
 
 import odl
 from odl.util.testutils import all_almost_equal, all_equal, simple_fixture
-from odl.tomo.util.source_detector_shifts import flying_focal_spot
+from odl.tomo.util import flying_focal_spot
 
 
 # --- pytest fixtures --- #
@@ -550,30 +551,31 @@ def test_fanbeam_frommatrix():
                                                    det_rad, sing_mat)
 
 
-def test_fanbeam_flying_focal_spot():
+def test_fanbeam_flying_focal_spot(init1=None):
     """Test the flying focal spot in 2d fan beam geometry."""
     full_angle = np.pi
-    apart = odl.uniform_partition(0, full_angle, 10)
-    dpart = odl.uniform_partition(0, 1, 10)
+    n_angles = 2 * 6
+    apart = odl.uniform_partition(0, full_angle, n_angles)
+    dpart = odl.uniform_partition(-1, 1, 11)
     src_rad = 10
     det_rad = 5
     # Source positions with flying focal spot should correspond to
     # source positions of 2 geometries with different starting positions
-    shift1 = np.array([2, -3])
-    shift2 = np.array([-2, 3])
+    shift1 = np.array([2.0, -3.0])
+    shift2 = np.array([-2.0, 3.0])
     init = np.array([1, 0], dtype=np.float32)
+
+    ffs = partial(flying_focal_spot, apart=apart, shifts=[shift1, shift2])
     geom_ffs = odl.tomo.FanBeamGeometry(
         apart, dpart,
         src_rad, det_rad,
         src_to_det_init=init,
-        src_shift_func=lambda angle: flying_focal_spot(
-            angle, apart=apart,
-            shifts=[shift1, shift2]))
+        src_shift_func=ffs)
     # angles must be shifted to match discretization of apart
-    ang1 = -full_angle / 20
-    apart1 = odl.uniform_partition(ang1, full_angle + ang1, 5)
-    ang2 = full_angle / 20
-    apart2 = odl.uniform_partition(ang2, full_angle + ang2, 5)
+    ang1 = -full_angle / (n_angles * 2)
+    apart1 = odl.uniform_partition(ang1, full_angle + ang1, n_angles // 2)
+    ang2 = full_angle / (n_angles * 2)
+    apart2 = odl.uniform_partition(ang2, full_angle + ang2, n_angles // 2)
 
     init1 = init + np.array([0, shift1[1]]) / (src_rad + shift1[0])
     init2 = init + np.array([0, shift2[1]]) / (src_rad + shift2[0])
@@ -591,11 +593,17 @@ def test_fanbeam_flying_focal_spot():
     assert all_almost_equal(sp[0::2], sp1)
     assert all_almost_equal(sp[1::2], sp2)
 
+    # detector positions are not affected by flying focal spot
+    geom = odl.tomo.FanBeamGeometry(apart, dpart,
+                                    src_rad, det_rad,
+                                    src_to_det_init=init)
+    assert all_almost_equal(geom.det_refpoint(geom.angles),
+                            geom_ffs.det_refpoint(geom_ffs.angles))
 
 def test_helical_cone_beam_props(detector_type, shift):
     """Test basic properties of 3D helical cone beam geometries."""
     full_angle = 2 * np.pi
-    apart = odl.uniform_partition(0, full_angle, 10)
+    apart = odl.uniform_partition(0, full_angle, 13)
     dpart = odl.uniform_partition([0, 0], [1, 1], (10, 10))
     src_rad = 10
     det_rad = 5
@@ -732,27 +740,27 @@ def test_helical_cone_beam_props(detector_type, shift):
 def test_conebeam_flying_focal_spot():
     """Test the flying focal spot in 3d cone beam geometry."""
     full_angle = np.pi
-    apart = odl.uniform_partition(0, full_angle, 10)
-    dpart = odl.uniform_partition([0, 0], [1, 1], (10, 10))
+    n_angles = 2 * 7
+    apart = odl.uniform_partition(0, full_angle, n_angles)
+    dpart = odl.uniform_partition([-1, -1], [1, 1], (10, 10))
     src_rad = 10
     det_rad = 5
     # Source positions with flying focal spot should correspond to
     # source positions of 2 geometries with different starting positions
-    shift1 = np.array([2, -3, 1])
-    shift2 = np.array([-2, 3, -1])
+    shift1 = np.array([2.0, -3.0, 1.0])
+    shift2 = np.array([-2.0, 3.0, -1.0])
     init = np.array([1, 0, 0], dtype=np.float32)
+    ffs = partial(flying_focal_spot, apart=apart, shifts=[shift1, shift2])
     geom_ffs = odl.tomo.ConeBeamGeometry(
         apart, dpart,
         src_rad, det_rad,
         src_to_det_init=init,
-        src_shift_func=lambda angle: flying_focal_spot(
-            angle, apart=apart,
-            shifts=[shift1, shift2]))
+        src_shift_func=ffs)
     # angles must be shifted to match discretization of apart
-    ang1 = -full_angle / 20
-    apart1 = odl.uniform_partition(ang1, full_angle + ang1, 5)
-    ang2 = full_angle / 20
-    apart2 = odl.uniform_partition(ang2, full_angle + ang2, 5)
+    ang1 = -full_angle / (n_angles * 2)
+    apart1 = odl.uniform_partition(ang1, full_angle + ang1, n_angles // 2)
+    ang2 = full_angle / (n_angles * 2)
+    apart2 = odl.uniform_partition(ang2, full_angle + ang2, n_angles // 2)
 
     init1 = init + np.array([0, shift1[1], 0]) / (src_rad + shift1[0])
     init2 = init + np.array([0, shift2[1], 0]) / (src_rad + shift2[0])
@@ -771,6 +779,13 @@ def test_conebeam_flying_focal_spot():
     sp = geom_ffs.src_position(geom_ffs.angles)
     assert all_almost_equal(sp[0::2], sp1)
     assert all_almost_equal(sp[1::2], sp2)
+
+    # detector positions are not affected by flying focal spot
+    geom = odl.tomo.ConeBeamGeometry(apart, dpart,
+                                     src_rad, det_rad,
+                                     src_to_det_init=init)
+    assert all_almost_equal(geom.det_refpoint(geom.angles),
+                            geom_ffs.det_refpoint(geom_ffs.angles))
 
 
 def test_cone_beam_slanted_detector():

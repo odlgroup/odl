@@ -10,14 +10,15 @@
 
 from __future__ import print_function, division, absolute_import
 import numpy as np
-from odl.discr import uniform_discr_frompartition
 from odl.discr.discr_utils import nearest_interpolator
 
-__all__ = ('flying_focal_spot')
+__all__ = ('flying_focal_spot',)
 
 
 def flying_focal_spot(angle, apart, shifts):
     """Flying focal spot shifts for divergent beam geometries.
+    Shifts are defined only for grid points of angular partition.
+    For all other angles nearest neighbor interpolation is used.
 
     Parameters
     ----------
@@ -32,15 +33,20 @@ def flying_focal_spot(angle, apart, shifts):
         represent shifts along the following directions:
         det_to_src, tangent to the rotation, rotation axis.
     """
+    assert apart.ndim == 1
+
     angle = np.array(angle, dtype=float, copy=False, ndmin=1)
-    interpolator = nearest_interpolator(np.arange(apart.size),
-                                        apart.coord_vectors)
-    ind = interpolator(angle)
+    assert angle.ndim == 1
 
     shifts = np.array(shifts, dtype=float, ndmin=2)
     if shifts.shape[1] not in [2, 3]:
         raise ValueError('Flying focal spot shifts must have '
                          'shape (2,) or (3,), got {}'.format(shifts))
+
+    interpolator = nearest_interpolator(np.arange(apart.size),
+                                        apart.coord_vectors)
+    ind = interpolator(angle)
+
     k = len(shifts)
     result = [shifts[int(i) % k] for i in ind]
     return np.array(result, dtype=float, ndmin=2)
