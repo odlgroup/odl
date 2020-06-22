@@ -480,8 +480,8 @@ def test_source_detector_shifts_2d():
     """Check that source/detector shifts are handled correctly.
 
     We forward project a Shepp-Logan phantom and check that reconstruction
-    with flying focal spot is equal to a sum of reconstructions with two
-    geometries which mimic ffs by using initial offsets
+    with flying focal spot is close to an average of reconstructions with
+    several geometries which mimic ffs by using initial offsets
     (the detector must be large enough, not to be influenced by shifts)
     """
 
@@ -493,16 +493,17 @@ def test_source_detector_shifts_2d():
     phantom = odl.phantom.shepp_logan(space)
 
     full_angle = np.pi
-    n_angles = 2 * 6
+    n_angles = 2 * 10
     apart = odl.uniform_partition(0, full_angle, n_angles)
-    dpart = odl.uniform_partition(-2, 2, 11)
-    src_rad = 10
-    det_rad = 10
+    dpart = odl.uniform_partition(-4, 4, 80)
+    src_rad = 2
+    det_rad = 2
     # Source positions with flying focal spot should correspond to
     # source positions of 2 geometries with different starting positions
-    shift1 = np.array([2.0, -3.0])
-    shift2 = np.array([-2.0, 3.0])
+    shift1 = np.array([0.0, -0.03])
+    shift2 = np.array([0.0, 0.03])
     init = np.array([1, 0], dtype=np.float32)
+    det_init = np.array([0, -1], dtype=np.float32)
 
     ffs = partial(odl.tomo.flying_focal_spot,
                   apart=apart,
@@ -511,6 +512,7 @@ def test_source_detector_shifts_2d():
         apart, dpart,
         src_rad, det_rad,
         src_to_det_init=init,
+        det_axis_init=det_init,
         src_shift_func=ffs)
     # angles must be shifted to match discretization of apart
     ang1 = -full_angle / (n_angles * 2)
@@ -524,9 +526,9 @@ def test_source_detector_shifts_2d():
     src_rad1 = np.linalg.norm(np.array([src_rad, 0]) + shift1)
     src_rad2 = np.linalg.norm(np.array([src_rad, 0]) + shift2)
     geom1 = odl.tomo.FanBeamGeometry(apart1, dpart, src_rad1, det_rad,
-                                     src_to_det_init=init1)
+                                     src_to_det_init=init1, det_axis_init=det_init)
     geom2 = odl.tomo.FanBeamGeometry(apart2, dpart, src_rad2, det_rad,
-                                     src_to_det_init=init2)
+                                     src_to_det_init=init2, det_axis_init=det_init)
 
     sp1 = geom1.src_position(geom1.angles)
     sp2 = geom2.src_position(geom2.angles)
@@ -538,17 +540,18 @@ def test_source_detector_shifts_2d():
     op1 = odl.tomo.RayTransform(space, geom1)
     op2 = odl.tomo.RayTransform(space, geom2)
     im = op_ffs.adjoint(op_ffs(phantom))
-    im_combined = op1.adjoint(op1(phantom)) + op2.adjoint(op2(phantom))
-    assert all_almost_equal(im.asarray(), im_combined.asarray())
+    im_combined = (op1.adjoint(op1(phantom)) + op2.adjoint(op2(phantom))) / 2
+    assert all_almost_equal(im.asarray(), im_combined.asarray(), 1)
+    np.max(np.abs(im.asarray()-im_combined.asarray()))
 
 
 def test_source_detector_shifts_3d():
     """Check that source/detector shifts are handled correctly.
 
     We forward project a Shepp-Logan phantom and check that reconstruction
-    with flying focal spot is equal to a sum of reconstructions with two
+    with flying focal spot is close to a sum of reconstructions with two
     geometries which mimic ffs by using initial offsets
-    (the detector must be large enough, not to be influenced by shifts)
+    (the geometries are not completely equivalent)
     """
 
     # If no implementation is available, skip
@@ -558,17 +561,19 @@ def test_source_detector_shifts_3d():
     space = odl.uniform_discr([-1] * 3, [1] * 3, [10] * 3)
     phantom = odl.phantom.shepp_logan(space)
 
-    full_angle = np.pi
-    n_angles = 2 * 7
+    full_angle = 2 * np.pi
+    n_angles = 2 * 10
     apart = odl.uniform_partition(0, full_angle, n_angles)
-    dpart = odl.uniform_partition([-2, -2], [2, 2], (11, 11))
-    src_rad = 10
-    det_rad = 10
+    dpart = odl.uniform_partition([-4, -4], [4, 4], (80, 80))
+    src_rad = 2
+    det_rad = 2
+    pitch = 0.2
     # Source positions with flying focal spot should correspond to
     # source positions of 2 geometries with different starting positions
-    shift1 = np.array([2.0, -3.0, 1.0])
-    shift2 = np.array([-2.0, 3.0, -1.0])
+    shift1 = np.array([0.0, -0.02, 0.01])
+    shift2 = np.array([0.0, 0.02, -0.01])
     init = np.array([1, 0, 0], dtype=np.float32)
+    det_init = np.array([[0, -1, 0], [0, 0, 1]], dtype=np.float32)
     ffs = partial(odl.tomo.flying_focal_spot,
                   apart=apart,
                   shifts=[shift1, shift2])
@@ -576,7 +581,9 @@ def test_source_detector_shifts_3d():
         apart, dpart,
         src_rad, det_rad,
         src_to_det_init=init,
-        src_shift_func=ffs)
+        det_axes_init=det_init,
+        src_shift_func=ffs,
+        pitch=pitch)
     # angles must be shifted to match discretization of apart
     ang1 = -full_angle / (n_angles * 2)
     apart1 = odl.uniform_partition(ang1, full_angle + ang1, n_angles // 2)
@@ -590,10 +597,14 @@ def test_source_detector_shifts_3d():
     src_rad2 = np.linalg.norm(np.array([src_rad + shift2[0], shift2[1], 0]))
     geom1 = odl.tomo.ConeBeamGeometry(apart1, dpart, src_rad1, det_rad,
                                       src_to_det_init=init1,
-                                      offset_along_axis=shift1[2])
+                                      det_axes_init=det_init,
+                                      offset_along_axis=shift1[2],
+                                      pitch=pitch)
     geom2 = odl.tomo.ConeBeamGeometry(apart2, dpart, src_rad2, det_rad,
                                       src_to_det_init=init2,
-                                      offset_along_axis=shift2[2])
+                                      det_axes_init=det_init,
+                                      offset_along_axis=shift2[2],
+                                      pitch=pitch)
 
     sp1 = geom1.src_position(geom1.angles)
     sp2 = geom2.src_position(geom2.angles)
@@ -605,8 +616,8 @@ def test_source_detector_shifts_3d():
     op1 = odl.tomo.RayTransform(space, geom1)
     op2 = odl.tomo.RayTransform(space, geom2)
     im = op_ffs.adjoint(op_ffs(phantom))
-    im_combined = op1.adjoint(op1(phantom)) + op2.adjoint(op2(phantom))
-    assert all_almost_equal(im.asarray(), im_combined.asarray())
+    im_combined = (op1.adjoint(op1(phantom)) + op2.adjoint(op2(phantom))) / 2
+    assert all_almost_equal(im.asarray(), im_combined.asarray(), 1)
 
 
 if __name__ == '__main__':
