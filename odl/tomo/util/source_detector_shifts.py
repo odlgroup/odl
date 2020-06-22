@@ -31,7 +31,8 @@ def flying_focal_spot(angle, apart, shifts):
         Each vectors in a sequence represent a subsequent shift
         relative to the default source position. Vector elements
         represent shifts along the following directions:
-        det_to_src, tangent to the rotation, rotation axis.
+        det_to_src, tangent to the rotation
+        (projected on a plane perpendicular to rotation axis), rotation axis.
     """
     assert apart.ndim == 1
 

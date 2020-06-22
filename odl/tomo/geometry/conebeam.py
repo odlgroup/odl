@@ -485,14 +485,10 @@ class FanBeamGeometry(DivergentBeamGeometry):
                                        -self.src_to_det_init)
                      + np.multiply.outer(src_shifts[:, 1], tangent))
         center_to_src_init = center_to_src_init + ffs_shift
-        # broadcasting to perform matrix multiplication "manually",
-        # since existing numpy functions do cross product along the outer
-        # dimensions, which we don't need here
-        center_to_src_init = np.repeat(center_to_src_init, 2,
-                                       axis=-2).reshape(-1, 2, 2)
         pos_vec = (self.translation[None, :]
-                   + np.sum(self.rotation_matrix(angle) * center_to_src_init,
-                            axis=-1))
+                   + np.einsum('...ij,...j->...i',
+                               self.rotation_matrix(angle),
+                               center_to_src_init))
         if squeeze_out:
             pos_vec = pos_vec.squeeze()
 
@@ -719,7 +715,9 @@ class ConeBeamGeometry(DivergentBeamGeometry, AxisOrientedGeometry):
             Should return a 3 dimensional vector representing a shift
             relative to the default source position. Vector elements
             represent shifts along the following directions:
-            det_to_src, tangent to the rotation, rotation axis.
+            det_to_src, tangent to the rotation
+            (projected on plane perpendicular to rotation axis),
+            rotation axis.
 
         Other Parameters
         ----------------

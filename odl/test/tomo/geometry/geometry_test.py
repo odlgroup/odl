@@ -16,7 +16,6 @@ import numpy as np
 
 import odl
 from odl.util.testutils import all_almost_equal, all_equal, simple_fixture
-from odl.tomo.util import flying_focal_spot
 
 
 # --- pytest fixtures --- #
@@ -565,7 +564,9 @@ def test_fanbeam_flying_focal_spot(init1=None):
     shift2 = np.array([-2.0, 3.0])
     init = np.array([1, 0], dtype=np.float32)
 
-    ffs = partial(flying_focal_spot, apart=apart, shifts=[shift1, shift2])
+    ffs = partial(odl.tomo.flying_focal_spot,
+                  apart=apart,
+                  shifts=[shift1, shift2])
     geom_ffs = odl.tomo.FanBeamGeometry(
         apart, dpart,
         src_rad, det_rad,
@@ -750,7 +751,9 @@ def test_conebeam_flying_focal_spot():
     shift1 = np.array([2.0, -3.0, 1.0])
     shift2 = np.array([-2.0, 3.0, -1.0])
     init = np.array([1, 0, 0], dtype=np.float32)
-    ffs = partial(flying_focal_spot, apart=apart, shifts=[shift1, shift2])
+    ffs = partial(odl.tomo.flying_focal_spot,
+                  apart=apart,
+                  shifts=[shift1, shift2])
     geom_ffs = odl.tomo.ConeBeamGeometry(
         apart, dpart,
         src_rad, det_rad,
@@ -946,6 +949,42 @@ def test_helical_geometry_helper():
     mag = (3 + 9) / (3 + rho)
     delta_h = space.cell_sides[2] * mag
     assert geometry.det_partition.cell_sides[1] <= delta_h
+
+
+def test_source_detector_shifts():
+    """Test source-detector shift functions, e.g. flying focal spot.
+
+    See the `flying_focal_spot` documentation for the exact conditions.
+    """
+    n_angles = np.random.randint(1, 100)
+    apart = odl.uniform_partition(0, np.pi, n_angles)
+    part_angles = apart.meshgrid[0]
+
+    # shifts are periodic
+    def check_shifts(ffs, shifts):
+        i = 0
+        while i < part_angles.size:
+            j = min(len(ffs), i + len(shifts))
+            assert all_almost_equal(ffs[i:j], shifts[:(j - i)])
+            i = j
+
+    # shifts define ffs at partition points
+    n_shifts = np.random.randint(1, n_angles)
+    shift_dim = 3
+    shifts = np.random.uniform(size=(n_shifts, shift_dim))
+    ffs = odl.tomo.flying_focal_spot(part_angles, apart, shifts)
+    check_shifts(ffs, shifts)
+
+    shift_dim = 2
+    shifts = np.random.uniform(size=(n_shifts, shift_dim))
+    ffs = odl.tomo.flying_focal_spot(part_angles, apart, shifts)
+    check_shifts(ffs, shifts)
+
+    # shifts at other angles ar defined by nearest neighbor interpolation
+    d = np.random.uniform(-0.49, 0.49) * apart.cell_volume
+    shifts = np.random.uniform(size=(n_shifts, shift_dim))
+    ffs = odl.tomo.flying_focal_spot(part_angles + d, apart, shifts)
+    check_shifts(ffs, shifts)
 
 
 if __name__ == '__main__':
