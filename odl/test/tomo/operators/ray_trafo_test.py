@@ -480,9 +480,9 @@ def test_source_detector_shifts_2d():
     """Check that source/detector shifts are handled correctly.
 
     We forward project a Shepp-Logan phantom and check that reconstruction
-    with flying focal spot is close to an average of reconstructions with
-    several geometries which mimic ffs by using initial offsets
-    (the detector must be large enough, not to be influenced by shifts)
+    with flying focal spot is equal to a sum of reconstructions with two
+    geometries which mimic ffs by using initial angular offsets and
+    detector shifts
     """
 
     if not odl.tomo.ASTRA_AVAILABLE:
@@ -499,8 +499,8 @@ def test_source_detector_shifts_2d():
     det_rad = 2
     # Source positions with flying focal spot should correspond to
     # source positions of 2 geometries with different starting positions
-    shift1 = np.array([0.0, -0.03])
-    shift2 = np.array([0.0, 0.03])
+    shift1 = np.array([0.0, -0.3])
+    shift2 = np.array([0.0, 0.3])
     init = np.array([1, 0], dtype=np.float32)
     det_init = np.array([0, -1], dtype=np.float32)
 
@@ -524,33 +524,43 @@ def test_source_detector_shifts_2d():
     # radius also changes when a shift is applied
     src_rad1 = np.linalg.norm(np.array([src_rad, 0]) + shift1)
     src_rad2 = np.linalg.norm(np.array([src_rad, 0]) + shift2)
-    geom1 = odl.tomo.FanBeamGeometry(apart1, dpart, src_rad1, det_rad,
-                                     src_to_det_init=init1, det_axis_init=det_init)
-    geom2 = odl.tomo.FanBeamGeometry(apart2, dpart, src_rad2, det_rad,
-                                     src_to_det_init=init2, det_axis_init=det_init)
-
-    sp1 = geom1.src_position(geom1.angles)
-    sp2 = geom2.src_position(geom2.angles)
-    sp = geom_ffs.src_position(geom_ffs.angles)
-    assert all_almost_equal(sp[0::2], sp1)
-    assert all_almost_equal(sp[1::2], sp2)
+    det_rad1 = np.linalg.norm(
+        np.array([det_rad, shift1[1] / src_rad * det_rad]))
+    det_rad2 = np.linalg.norm(
+        np.array([det_rad, shift2[1] / src_rad * det_rad]))
+    geom1 = odl.tomo.FanBeamGeometry(apart1, dpart,
+                                     src_rad1, det_rad1,
+                                     src_to_det_init=init1,
+                                     det_axis_init=det_init)
+    geom2 = odl.tomo.FanBeamGeometry(apart2, dpart,
+                                     src_rad2, det_rad2,
+                                     src_to_det_init=init2,
+                                     det_axis_init=det_init)
 
     op_ffs = odl.tomo.RayTransform(space, geom_ffs)
     op1 = odl.tomo.RayTransform(space, geom1)
     op2 = odl.tomo.RayTransform(space, geom2)
-    im = op_ffs.adjoint(op_ffs(phantom))
-    im_combined = (op1.adjoint(op1(phantom)) + op2.adjoint(op2(phantom))) / 2
-    assert all_almost_equal(im.asarray(), im_combined.asarray(), 1)
-    np.max(np.abs(im.asarray()-im_combined.asarray()))
+    y_ffs = op_ffs(phantom)
+    y1 = op1(phantom)
+    y2 = op2(phantom)
+    assert all_almost_equal(np.mean(y_ffs[::2], axis=-1), np.mean(y1, axis=1))
+    assert all_almost_equal(np.mean(y_ffs[1::2], axis=-1), np.mean(y2, axis=1))
+
+    im = op_ffs.adjoint(y_ffs).asarray()
+    im1 = op1.adjoint(y1).asarray()
+    im2 = op2.adjoint(y2).asarray()
+    im_combined = (im1 + im2) / 2
+    rel_error = np.abs((im - im_combined) / im)
+    assert np.max(rel_error) < 1e-6
 
 
 def test_source_detector_shifts_3d():
     """Check that source/detector shifts are handled correctly.
 
     We forward project a Shepp-Logan phantom and check that reconstruction
-    with flying focal spot is close to a sum of reconstructions with two
-    geometries which mimic ffs by using initial offsets
-    (the geometries are not completely equivalent)
+    with flying focal spot is equal to a sum of reconstructions with two
+    geometries which mimic ffs by using initial angular offsets and
+    detector shifts
     """
 
     if not odl.tomo.ASTRA_CUDA_AVAILABLE:
@@ -562,26 +572,26 @@ def test_source_detector_shifts_3d():
     full_angle = 2 * np.pi
     n_angles = 2 * 10
     apart = odl.uniform_partition(0, full_angle, n_angles)
-    dpart = odl.uniform_partition([-4, -4], [4, 4], (80, 80))
+    dpart = odl.uniform_partition([-4] * 2, [4] * 2, (80) * 2)
     src_rad = 2
     det_rad = 2
     pitch = 0.2
     # Source positions with flying focal spot should correspond to
     # source positions of 2 geometries with different starting positions
-    shift1 = np.array([0.0, -0.02, 0.01])
-    shift2 = np.array([0.0, 0.02, -0.01])
+    shift1 = np.array([0.0, -0.2, 0.1])
+    shift2 = np.array([0.0, 0.2, -0.1])
     init = np.array([1, 0, 0], dtype=np.float32)
     det_init = np.array([[0, -1, 0], [0, 0, 1]], dtype=np.float32)
     ffs = partial(odl.tomo.flying_focal_spot,
                   apart=apart,
                   shifts=[shift1, shift2])
-    geom_ffs = odl.tomo.ConeBeamGeometry(
-        apart, dpart,
-        src_rad, det_rad,
-        src_to_det_init=init,
-        det_axes_init=det_init,
-        src_shift_func=ffs,
-        pitch=pitch)
+    geom_ffs = odl.tomo.ConeBeamGeometry(apart, dpart,
+                                         src_rad, det_rad,
+                                         src_to_det_init=init,
+                                         det_axes_init=det_init,
+                                         src_shift_func=ffs,
+                                         det_shift_func=ffs,
+                                         pitch=pitch)
     # angles must be shifted to match discretization of apart
     ang1 = -full_angle / (n_angles * 2)
     apart1 = odl.uniform_partition(ang1, full_angle + ang1, n_angles // 2)
@@ -593,29 +603,46 @@ def test_source_detector_shifts_3d():
     # radius also changes when a shift is applied
     src_rad1 = np.linalg.norm(np.array([src_rad + shift1[0], shift1[1], 0]))
     src_rad2 = np.linalg.norm(np.array([src_rad + shift2[0], shift2[1], 0]))
-    geom1 = odl.tomo.ConeBeamGeometry(apart1, dpart, src_rad1, det_rad,
+    det_rad1 = np.linalg.norm(
+        np.array([det_rad, det_rad / src_rad * shift1[1], 0]))
+    det_rad2 = np.linalg.norm(
+        np.array([det_rad, det_rad / src_rad * shift2[1], 0]))
+    geom1 = odl.tomo.ConeBeamGeometry(apart1, dpart, src_rad1, det_rad1,
                                       src_to_det_init=init1,
                                       det_axes_init=det_init,
                                       offset_along_axis=shift1[2],
                                       pitch=pitch)
-    geom2 = odl.tomo.ConeBeamGeometry(apart2, dpart, src_rad2, det_rad,
+    geom2 = odl.tomo.ConeBeamGeometry(apart2, dpart, src_rad2, det_rad2,
                                       src_to_det_init=init2,
                                       det_axes_init=det_init,
                                       offset_along_axis=shift2[2],
                                       pitch=pitch)
 
-    sp1 = geom1.src_position(geom1.angles)
-    sp2 = geom2.src_position(geom2.angles)
-    sp = geom_ffs.src_position(geom_ffs.angles)
-    assert all_almost_equal(sp[0::2], sp1)
-    assert all_almost_equal(sp[1::2], sp2)
+    assert all_almost_equal(geom_ffs.src_position(geom_ffs.angles)[::2], geom1.src_position(geom1.angles))
+    assert all_almost_equal(geom_ffs.src_position(geom_ffs.angles)[1::2], geom2.src_position(geom2.angles))
+
+    assert all_almost_equal(geom_ffs.det_refpoint(geom_ffs.angles)[::2], geom1.det_refpoint(geom1.angles))
+    assert all_almost_equal(geom_ffs.det_refpoint(geom_ffs.angles)[1::2], geom2.det_refpoint(geom2.angles))
+
+    assert all_almost_equal(geom_ffs.det_axes(geom_ffs.angles)[::2], geom1.det_axes(geom1.angles))
+    assert all_almost_equal(geom_ffs.det_axes(geom_ffs.angles)[1::2], geom2.det_axes(geom2.angles))
 
     op_ffs = odl.tomo.RayTransform(space, geom_ffs)
     op1 = odl.tomo.RayTransform(space, geom1)
     op2 = odl.tomo.RayTransform(space, geom2)
-    im = op_ffs.adjoint(op_ffs(phantom))
-    im_combined = (op1.adjoint(op1(phantom)) + op2.adjoint(op2(phantom))) / 2
-    assert all_almost_equal(im.asarray(), im_combined.asarray(), 1)
+    y_ffs = op_ffs(phantom)
+    y1 = op1(phantom)
+    y2 = op2(phantom)
+    assert all_almost_equal(np.mean(y_ffs[::2], axis=(1, 2)),
+                            np.mean(y1, axis=(1, 2)))
+    assert all_almost_equal(np.mean(y_ffs[1::2], axis=(1, 2)),
+                            np.mean(y2, axis=(1, 2)))
+    im = op_ffs.adjoint(y_ffs).asarray()
+    im_combined = (op1.adjoint(y1).asarray() + op2.adjoint(y2).asarray())
+    # the scaling is a bit off for older versions of astra
+    im_combined = im_combined / np.sum(im_combined) * np.sum(im)
+    rel_error = np.abs((im - im_combined) / im)[im > 0]
+    assert np.max(rel_error) < 1e-6
 
 
 if __name__ == '__main__':

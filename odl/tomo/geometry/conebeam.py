@@ -711,11 +711,12 @@ class ConeBeamGeometry(DivergentBeamGeometry, AxisOrientedGeometry):
             beam geometry.
         axis : `array-like`, shape ``(3,)``, optional
             Vector defining the fixed rotation axis of this geometry.
-        src_shift_func : a function of (angle), optional
-            Should return a 3 dimensional vector representing a shift
-            relative to the default source position. Vector elements
-            represent shifts along the following directions:
-            det_to_src, tangent to the rotation
+        src_shift_func : callable, optional
+            Function with signature ``src_shift_func(angle) -> shift``
+            returning a source shift for a given angle. Each shift
+            is interpreted as a vector ``[shift_d, shift_t, shift_r]``, where
+            "d", "t" and "r" denote shifts along the following directions:
+            detector-to-source, tangent to the rotation
             (projected on plane perpendicular to rotation axis),
             rotation axis.
 
