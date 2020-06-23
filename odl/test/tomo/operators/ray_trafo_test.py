@@ -485,7 +485,6 @@ def test_source_detector_shifts_2d():
     (the detector must be large enough, not to be influenced by shifts)
     """
 
-    # If no implementation is available, skip
     if not odl.tomo.ASTRA_AVAILABLE:
         pytest.skip(msg='ASTRA not available, skipping 2d test')
 
@@ -554,7 +553,6 @@ def test_source_detector_shifts_3d():
     (the geometries are not completely equivalent)
     """
 
-    # If no implementation is available, skip
     if not odl.tomo.ASTRA_CUDA_AVAILABLE:
         pytest.skip(msg='ASTRA_CUDA not available, skipping 3d test')
 
