@@ -1014,10 +1014,9 @@ class CallbackProgressBar(Callback):
 
     def __call__(self, _):
         """Update the progressbar."""
+        self.iter += 1
         if self.iter % self.step == 0:
             self.pbar.update(self.step)
-
-        self.iter += 1
 
     def reset(self):
         """Set `iter` to 0."""
