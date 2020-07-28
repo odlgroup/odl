@@ -301,7 +301,7 @@ class RayTransform(Operator):
 
         Parameters
         ----------
-        x : DiscreteLpElement
+        x : DiscretizedSpaceElement
             A volume. Must be an element of `RayTransform.domain`.
         out : `RayTransform.range` element, optional
             Element to which the result of the operator evaluation is written.
@@ -311,7 +311,7 @@ class RayTransform(Operator):
 
         Returns
         -------
-        DiscreteLpElement
+        DiscretizedSpaceElement
             Result of the transform, an element of the range.
         """
         return self.get_impl(self.use_cache).call_forward(x, out, **kwargs)
@@ -344,7 +344,7 @@ class RayTransform(Operator):
 
                     Parameters
                     ----------
-                    x : DiscreteLpElement
+                    x : DiscretizedSpaceElement
                         A sinogram. Must be an element of
                         `RayTransform.range` (domain of `RayBackProjection`).
                     out : `RayBackProjection.domain` element, optional
@@ -356,7 +356,7 @@ class RayTransform(Operator):
 
                     Returns
                     -------
-                    DiscreteLpElement
+                    DiscretizedSpaceElement
                         Result of the transform in the domain
                         of `RayProjection`.
                     """
