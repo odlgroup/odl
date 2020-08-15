@@ -8,7 +8,7 @@ matrix:
 
         # Using Python 3.6 as main version due to availability of wheels (SciPy, NumPy, ...)
         - python: 3.6
-          env: NUMPY_VERSION=1.13.3
+          env: NUMPY_VERSION='1.13.3' PIP_2020_DEPENDENCY_RESOLVER_FLAG='--use-feature=2020-resolver'
 
         - python: 3.6
           env: NUMPY_VERSION='1.14.*'
@@ -48,7 +48,6 @@ install:
         wget -q https://repo.continuum.io/miniconda/Miniconda2-latest-Linux-x86_64.sh -O miniconda.sh;
       else
         wget -q https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh -O miniconda.sh;
-        PIP_2020_DEPENDENCY_RESOLVER_FLAG='--use-feature=2020-resolver'
       fi
     - bash miniconda.sh -b -p $HOME/miniconda
     - export PATH="$HOME/miniconda/bin:$PATH"
