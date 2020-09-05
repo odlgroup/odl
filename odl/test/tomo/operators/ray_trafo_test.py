@@ -540,7 +540,7 @@ def test_source_shifts_2d():
     """
 
     if not odl.tomo.ASTRA_AVAILABLE:
-        pytest.skip(msg='ASTRA not available, skipping 2d test')
+        pytest.skip(msg='ASTRA required but not available')
 
     d = 10
     space = odl.uniform_discr([-1] * 2, [1] * 2, [d] * 2)
@@ -638,8 +638,9 @@ def test_detector_shifts_3d():
     geom_shift = odl.tomo.ConeBeamGeometry(apart, dpart, src_rad, det_rad,
                                            det_shift_func=lambda angle: shift)
 
-    assert all_almost_equal(geom.angles, geom_shift.angles)
     angles = geom.angles
+
+    assert all_almost_equal(angles, geom_shift.angles)
     assert all_almost_equal(geom.src_position(angles),
                             geom_shift.src_position(angles))
     assert all_almost_equal(geom.det_axes(angles),
@@ -672,7 +673,6 @@ def test_source_shifts_3d():
     geometries which mimic ffs by using initial angular offsets and
     detector shifts
     """
-
     if not odl.tomo.ASTRA_CUDA_AVAILABLE:
         pytest.skip(msg='ASTRA_CUDA not available, skipping 3d test')
 
