@@ -67,12 +67,12 @@ class AstraCudaImpl:
             )
         if not isinstance(vol_space, DiscretizedSpace):
             raise TypeError(
-                '`vol_space` must be a `DiscreteLP` instance, got {!r}'
+                '`vol_space` must be a `DiscretizedSpace` instance, got {!r}'
                 ''.format(vol_space)
             )
         if not isinstance(proj_space, DiscretizedSpace):
             raise TypeError(
-                '`proj_space` must be a `DiscreteLP` instance, got {!r}'
+                '`proj_space` must be a `DiscretizedSpace` instance, got {!r}'
                 ''.format(proj_space)
             )
 

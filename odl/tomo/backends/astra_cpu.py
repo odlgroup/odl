@@ -288,10 +288,10 @@ class AstraCpuImpl:
         ----------
         geometry : `Geometry`
             Geometry defining the tomographic setup.
-        vol_space : `DiscreteLp`
+        vol_space : `DiscretizedSpace`
             Reconstruction space, the space of the images to be forward
             projected.
-        proj_space : `DiscreteLp`
+        proj_space : `DiscretizedSpace`
             Projection space, the space of the result.
         """
         if not isinstance(geometry, Geometry):
