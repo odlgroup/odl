@@ -50,7 +50,8 @@ class FanBeamGeometry(DivergentBeamGeometry):
     _default_config = dict(src_to_det_init=(0, 1), det_axis_init=(1, 0))
 
     def __init__(self, apart, dpart, src_radius, det_radius,
-                 det_curvature_radius=None, src_to_det_init=(0, 1), **kwargs):
+                 det_curvature_radius=None, src_to_det_init=(0, 1),
+                 src_shift_func=None, det_shift_func=None, **kwargs):
         """Initialize a new instance.
 
         Parameters
@@ -70,6 +71,18 @@ class FanBeamGeometry(DivergentBeamGeometry):
         src_to_det_init : `array-like` (shape ``(2,)``), optional
             Initial state of the vector pointing from source to detector
             reference point. The zero vector is not allowed.
+        src_shift_func : callable, optional
+            Function with signature ``src_shift_func(angle) -> shift``
+            returning a source shift for a given angle.
+            Each shift is interpreted as a vector ``[shift_d, shift_t]``, where
+            "d" and "t" denote shifts in the detector-to-source and
+            tangent directions, respectively.
+        det_shift_func : callable, optional
+            Function with signature ``det_shift_func(angle) -> shift``
+            returning a detector shift for a given angle.
+            Each shift is interpreted as a vector ``[shift_d, shift_t]``, where
+            "d" and "t" denote shifts in the source-to-detector and
+            tangent directions, respectively.
 
         Other Parameters
         ----------------
@@ -159,6 +172,23 @@ class FanBeamGeometry(DivergentBeamGeometry):
         True
         >>> np.allclose(geom.det_axis_init, e_y)
         True
+
+        Specifying a flying focal spot and detector offset:
+
+        >>> apart = odl.uniform_partition(0, 2 * np.pi, 4)
+        >>> geom = FanBeamGeometry(
+        ...     apart, dpart,
+        ...     src_radius=1, det_radius=5,
+        ...     src_shift_func=lambda angle: odl.tomo.flying_focal_spot(
+        ...             angle, apart=apart, shifts=[(0.1, 0), (0, 0.1)]),
+        ...     det_shift_func=lambda angle: [0.0, 0.05])
+        >>> geom.src_shift_func(geom.angles)
+        array([[ 0.1, 0. ],
+               [ 0. , 0.1],
+               [ 0.1, 0. ],
+               [ 0. , 0.1]])
+        >>> geom.det_shift_func(geom.angles)
+        [0.0, 0.05]
         """
         default_src_to_det_init = self._default_config['src_to_det_init']
         default_det_axis_init = self._default_config['det_axis_init']
@@ -214,6 +244,7 @@ class FanBeamGeometry(DivergentBeamGeometry):
                                         radius=det_curvature_radius,
                                         axis=det_axis_init,
                                         check_bounds=check_bounds)
+
         translation = kwargs.pop('translation', None)
         super(FanBeamGeometry, self).__init__(
             ndim=2, motion_part=apart, detector=detector,
@@ -235,6 +266,18 @@ class FanBeamGeometry(DivergentBeamGeometry):
         if self.motion_partition.ndim != 1:
             raise ValueError('`apart` has dimension {}, expected 1'
                              ''.format(self.motion_partition.ndim))
+
+        if src_shift_func is None:
+            self.__src_shift_func = lambda x: np.array(
+                [0.0, 0.0], dtype=float, ndmin=2)
+        else:
+            self.__src_shift_func = src_shift_func
+
+        if det_shift_func is None:
+            self.__det_shift_func = lambda x: np.array(
+                [0.0, 0.0], dtype=float, ndmin=2)
+        else:
+            self.__det_shift_func = det_shift_func
 
     @classmethod
     def frommatrix(cls, apart, dpart, src_radius, det_radius, init_matrix,
@@ -359,13 +402,31 @@ class FanBeamGeometry(DivergentBeamGeometry):
         """Discrete angles given in this geometry."""
         return self.motion_grid.coord_vectors[0]
 
+    @property
+    def src_shift_func(self):
+        """Source shifts in the geometry."""
+        return self.__src_shift_func
+
+    @property
+    def det_shift_func(self):
+        """Detector shifts in the geometry."""
+        return self.__det_shift_func
+
     def src_position(self, angle):
         """Return the source position at ``angle``.
 
         For an angle ``phi``, the source position is given by ::
 
             src(phi) = translation +
-                       rot_matrix(phi) * (-src_rad * src_to_det_init)
+                       rot_matrix(phi) * (-src_rad * src_to_det_init) +
+                       source_shift(phi)
+
+        where ``src_to_det_init`` is the initial unit vector pointing
+        from source to detector and
+            source_shift(phi) = rot_matrix(phi) *
+                                (shift[0] * (-src_to_det_init) +
+                                shift[1] * tangent)
+        where ``tangent`` is a vector tangent to the trajectory
 
         where ``src_to_det_init`` is the initial unit vector pointing
         from source to detector.
@@ -408,16 +469,44 @@ class FanBeamGeometry(DivergentBeamGeometry):
         True
         >>> np.allclose(points[1], [2, 0])
         True
+
+        Specifying flying focal spot:
+
+        >>> apart = odl.uniform_partition(0, 2 * np.pi, 4)
+        >>> geom = FanBeamGeometry(
+        ...     apart, dpart,
+        ...     src_radius=1, det_radius=5,
+        ...     src_shift_func=lambda angle: odl.tomo.flying_focal_spot(
+        ...         angle,
+        ...         apart=apart,
+        ...         shifts=[(0.1, 0), (0, 0.1)]),
+        ...     src_to_det_init=(-0.71, 0.71))
+        >>> geom.angles
+        array([ 0.78539816,  2.35619449,  3.92699082,  5.49778714])
+        >>> np.round(geom.src_position(geom.angles), 2)
+        array([[ 1.1, -0. ],
+               [-0.1,  1. ],
+               [-1.1,  0. ],
+               [ 0.1, -1. ]])
         """
         squeeze_out = (np.shape(angle) == ())
         angle = np.array(angle, dtype=float, copy=False, ndmin=1)
+        src_shifts = self.src_shift_func(angle)
 
         # Initial vector from the rotation center to the source. It can be
         # computed this way since source and detector are at maximum distance,
         # i.e. the connecting line passes the origin.
         center_to_src_init = -self.src_radius * self.src_to_det_init
+        # shifting the source according to ffs
+        tangent = np.array([self.src_to_det_init[1], -self.src_to_det_init[0]])
+        ffs_shift = (np.multiply.outer(src_shifts[:, 0],
+                                       -self.src_to_det_init)
+                     + np.multiply.outer(src_shifts[:, 1], tangent))
+        center_to_src_init = center_to_src_init + ffs_shift
         pos_vec = (self.translation[None, :]
-                   + self.rotation_matrix(angle).dot(center_to_src_init))
+                   + np.einsum('...ij,...j->...i',
+                               self.rotation_matrix(angle),
+                               center_to_src_init))
         if squeeze_out:
             pos_vec = pos_vec.squeeze()
 
@@ -429,10 +518,15 @@ class FanBeamGeometry(DivergentBeamGeometry):
         For an angle ``phi``, the detector position is given by ::
 
             det_ref(phi) = translation +
-                           rot_matrix(phi) * (det_rad * src_to_det_init)
+                           rot_matrix(phi) * (det_rad * src_to_det_init) +
+                           detector_shift(phi)
 
         where ``src_to_det_init`` is the initial unit vector pointing
-        from source to detector.
+        from source to detector and
+            detector_shift(phi) = rot_matrix(phi) *
+                                  (shift[0] * src_to_det_init +
+                                  shift[1] * tangent)
+        where ``tangent`` is a vector tangent to the trajectory
 
         Parameters
         ----------
@@ -472,16 +566,41 @@ class FanBeamGeometry(DivergentBeamGeometry):
         True
         >>> np.allclose(points[1], [-5, 0])
         True
+
+        Specifying detector offset:
+
+        >>> apart = odl.uniform_partition(0, 2 * np.pi, 4)
+        >>> geom = FanBeamGeometry(
+        ...     apart, dpart,
+        ...     src_radius=1, det_radius=1,
+        ...     det_shift_func=lambda angle: [0.0, 0.1],
+        ...     src_to_det_init=(0.71, -0.71))
+        >>> geom.angles
+        array([ 0.78539816,  2.35619449,  3.92699082,  5.49778714])
+        >>> np.round(geom.det_refpoint(geom.angles), 2)
+        array([[ 1. ,  0.1],
+               [-0.1,  1. ],
+               [-1. , -0.1],
+               [ 0.1, -1. ]])
         """
         squeeze_out = (np.shape(angle) == ())
         angle = np.array(angle, dtype=float, copy=False, ndmin=1)
+        det_shifts = np.array(self.det_shift_func(angle), dtype=float, ndmin=2)
 
         # Initial vector from the rotation center to the detector. It can be
         # computed this way since source and detector are at maximum distance,
         # i.e. the connecting line passes the origin.
         center_to_det_init = self.det_radius * self.src_to_det_init
+        # shifting the detector
+        tangent = np.array([-self.src_to_det_init[1], self.src_to_det_init[0]])
+        shift = (np.multiply.outer(det_shifts[:, 0],
+                                   self.src_to_det_init)
+                 + np.multiply.outer(det_shifts[:, 1], tangent))
+        center_to_det_init = center_to_det_init + shift
         refpt = (self.translation[None, :]
-                 + self.rotation_matrix(angle).dot(center_to_det_init))
+                 + np.einsum('...ij,...j->...i',
+                             self.rotation_matrix(angle),
+                             center_to_det_init))
         if squeeze_out:
             refpt = refpt.squeeze()
 
@@ -583,6 +702,8 @@ class FanBeamGeometry(DivergentBeamGeometry):
                                det_curvature_radius=self.det_curvature_radius,
                                src_to_det_init=self.src_to_det_init,
                                det_axis_init=self._det_axis_init_arg,
+                               src_shift_func=self.src_shift_func,
+                               det_shift_func=self.det_shift_func,
                                translation=self.translation)
 
 
@@ -612,7 +733,8 @@ class ConeBeamGeometry(DivergentBeamGeometry, AxisOrientedGeometry):
                            det_axes_init=((1, 0, 0), (0, 0, 1)))
 
     def __init__(self, apart, dpart, src_radius, det_radius,
-                 det_curvature_radius=None, pitch=0, axis=(0, 0, 1), **kwargs):
+                 det_curvature_radius=None, pitch=0, axis=(0, 0, 1),
+                 src_shift_func=None, det_shift_func=None, **kwargs):
         """Initialize a new instance.
 
         Parameters
@@ -639,6 +761,22 @@ class ConeBeamGeometry(DivergentBeamGeometry, AxisOrientedGeometry):
             beam geometry.
         axis : `array-like`, shape ``(3,)``, optional
             Vector defining the fixed rotation axis of this geometry.
+        src_shift_func : callable, optional
+            Function with signature ``src_shift_func(angle) -> shift``
+            returning a source shift for a given angle. Each shift
+            is interpreted as a vector ``[shift_d, shift_t, shift_r]``, where
+            "d", "t" and "r" denote shifts along the following directions:
+            detector-to-source, tangent to the rotation
+            (projected on plane perpendicular to rotation axis),
+            rotation axis.
+        det_shift_func : callable, optional
+            Function with signature ``det_shift_func(angle) -> shift``
+            returning a detector shift for a given angle. Each shift
+            is interpreted as a vector ``[shift_d, shift_t, shift_r]``, where
+            "d", "t" and "r" denote shifts along the following directions:
+            source-to-detector, tangent to the rotation
+            (projected on plane perpendicular to rotation axis),
+            rotation axis.
 
         Other Parameters
         ----------------
@@ -766,6 +904,23 @@ class ConeBeamGeometry(DivergentBeamGeometry, AxisOrientedGeometry):
         True
         >>> np.allclose(geom.det_axes_init, (e_y, e_z))
         True
+
+        Specifying a flying focal spot and detector offset:
+
+        >>> apart = odl.uniform_partition(0, 2 * np.pi, 4)
+        >>> geom = ConeBeamGeometry(
+        ...     apart, dpart,
+        ...     src_radius=1, det_radius=5,
+        ...     src_shift_func=lambda angle: odl.tomo.flying_focal_spot(
+        ...         angle, apart=apart, shifts=[(0, 0.1, 0), (0, 0, 0.1)]),
+        ...     det_shift_func=lambda angle: [0.0, 0.05, 0.03])
+        >>> geom.src_shift_func(geom.angles)
+        array([[ 0. , 0.1, 0. ],
+               [ 0. , 0. , 0.1],
+               [ 0. , 0.1, 0. ],
+               [ 0. , 0. , 0.1]])
+        >>> geom.det_shift_func(geom.angles)
+        [0.0, 0.05, 0.03]
         """
         default_axis = self._default_config['axis']
         default_src_to_det_init = self._default_config['src_to_det_init']
@@ -848,6 +1003,7 @@ class ConeBeamGeometry(DivergentBeamGeometry, AxisOrientedGeometry):
         else:
             raise ValueError('det_curvature_radius {} must be a 2-tuple'
                              ''.format(det_curvature_radius))
+
         super(ConeBeamGeometry, self).__init__(
             ndim=3, motion_part=apart, detector=detector, **kwargs)
 
@@ -867,6 +1023,18 @@ class ConeBeamGeometry(DivergentBeamGeometry, AxisOrientedGeometry):
         if self.motion_partition.ndim != 1:
             raise ValueError('`apart` has dimension {}, expected 1'
                              ''.format(self.motion_partition.ndim))
+
+        if src_shift_func is None:
+            self.__src_shift_func = lambda x: np.array(
+                [0.0, 0.0, 0.0], dtype=float, ndmin=2)
+        else:
+            self.__src_shift_func = src_shift_func
+
+        if det_shift_func is None:
+            self.__det_shift_func = lambda x: np.array(
+                [0.0, 0.0, 0.0], dtype=float, ndmin=2)
+        else:
+            self.__det_shift_func = det_shift_func
 
     @classmethod
     def frommatrix(cls, apart, dpart, src_radius, det_radius, init_matrix,
@@ -1024,6 +1192,16 @@ class ConeBeamGeometry(DivergentBeamGeometry, AxisOrientedGeometry):
         """Discrete angles given in this geometry."""
         return self.motion_grid.coord_vectors[0]
 
+    @property
+    def src_shift_func(self):
+        """Source shifts in the geometry."""
+        return self.__src_shift_func
+
+    @property
+    def det_shift_func(self):
+        """Detector shifts in the geometry."""
+        return self.__det_shift_func
+
     def det_axes(self, angle):
         """Return the detector axes tuple at ``angle``.
 
@@ -1062,10 +1240,15 @@ class ConeBeamGeometry(DivergentBeamGeometry, AxisOrientedGeometry):
 
             det_ref(phi) = translation +
                            rot_matrix(phi) * (det_rad * src_to_det_init) +
-                           (offset_along_axis + pitch * phi) * axis
+                           (offset_along_axis + pitch * phi) * axis +
+                           detector_shift(phi)
 
         where ``src_to_det_init`` is the initial unit vector pointing
-        from source to detector.
+        from source to detector and
+            detector_shift(phi) = rot_matrix(phi) *
+                                  (shift1 * src_to_det_init +
+                                  shift2 * cross(-src_to_det_init, axis))
+                                  shift3 * axis
 
         Parameters
         ----------
@@ -1109,24 +1292,49 @@ class ConeBeamGeometry(DivergentBeamGeometry, AxisOrientedGeometry):
         True
         >>> geom.det_refpoint(np.zeros((4, 5))).shape
         (4, 5, 3)
+
+        Specifying detector offset:
+
+        >>> apart = odl.uniform_partition(0, 2 * np.pi, 4)
+        >>> geom = ConeBeamGeometry(
+        ...     apart, dpart,
+        ...     src_radius=1, det_radius=1,
+        ...     det_shift_func=lambda angle:[0, 0.1, -0.1],
+        ...     src_to_det_init=(0.71, -0.71, 0))
+        >>> geom.angles
+        array([ 0.78539816,  2.35619449,  3.92699082,  5.49778714])
+        >>> np.round(geom.det_refpoint(geom.angles), 2)
+        array([[ 1. ,  0.1, -0.1],
+               [-0.1,  1. , -0.1],
+               [-1. , -0.1, -0.1],
+               [ 0.1, -1. , -0.1]])
         """
         squeeze_out = (np.shape(angle) == ())
         angle = np.array(angle, dtype=float, copy=False, ndmin=1)
         rot_matrix = self.rotation_matrix(angle)
         extra_dims = angle.ndim
+        det_shifts = np.array(self.det_shift_func(angle), dtype=float, ndmin=2)
 
         # Initial vector from center of rotation to detector.
         # It can be computed this way since source and detector are at
         # maximum distance, i.e. the connecting line passes the center.
         center_to_det_init = self.det_radius * self.src_to_det_init
+        # shifting the detector according to det_shift_func
+        tangent = -np.cross(self.src_to_det_init, self.axis)
+        tangent /= np.linalg.norm(tangent)
+        det_shift = (np.multiply.outer(det_shifts[:, 0], self.src_to_det_init)
+                     + np.multiply.outer(det_shifts[:, 1], tangent))
+        center_to_det_init = center_to_det_init + det_shift
         # `circle_component` has shape (a, ndim)
-        circle_component = rot_matrix.dot(center_to_det_init)
+        circle_component = np.einsum('...ij,...j->...i',
+                                     rot_matrix, center_to_det_init)
 
         # Increment along the rotation axis according to pitch and
         # offset_along_axis
         # `shift_along_axis` has shape angles.shape
         shift_along_axis = (self.offset_along_axis
-                            + self.pitch * angle / (2 * np.pi))
+                            + self.pitch * angle / (2 * np.pi)
+                            + det_shifts[:, 2])
         # Create outer product of `shift_along_axis` and `axis`, resulting
         # in shape (a, ndim)
         pitch_component = np.multiply.outer(shift_along_axis, self.axis)
@@ -1148,10 +1356,15 @@ class ConeBeamGeometry(DivergentBeamGeometry, AxisOrientedGeometry):
 
             src(phi) = translation +
                        rot_matrix(phi) * (-src_rad * src_to_det_init) +
-                       (offset_along_axis + pitch * phi) * axis
+                       (offset_along_axis + pitch * phi) * axis +
+                       source_shift(phi)
 
         where ``src_to_det_init`` is the initial unit vector pointing
-        from source to detector.
+        from source to detector and
+            source_shift(phi) = rot_matrix(phi) *
+                                (shift1 * (-src_to_det_init) +
+                                shift2 * cross(src_to_det_init, axis))
+                                shift3 * axis
 
         Parameters
         ----------
@@ -1195,24 +1408,50 @@ class ConeBeamGeometry(DivergentBeamGeometry, AxisOrientedGeometry):
         True
         >>> geom.src_position(np.zeros((4, 5))).shape
         (4, 5, 3)
+
+        Specifying flying focal spot:
+
+        >>> apart = odl.uniform_partition(0, 2 * np.pi, 4)
+        >>> geom = ConeBeamGeometry(
+        ...     apart, dpart,
+        ...     src_radius=1, det_radius=5,
+        ...     src_shift_func=lambda angle: odl.tomo.flying_focal_spot(
+        ...         angle, apart=apart, shifts=[(0, 0.1, 0), (0, 0, 0.1)]),
+        ...     src_to_det_init=(-0.71, 0.71, 0))
+        >>> geom.angles
+        array([ 0.78539816,  2.35619449,  3.92699082,  5.49778714])
+        >>> np.round(geom.src_position(geom.angles), 2)
+        array([[ 1. ,  0.1,  0. ],
+               [ 0. ,  1. ,  0.1],
+               [-1. , -0.1,  0. ],
+               [-0. , -1. ,  0.1]])
         """
         squeeze_out = (np.shape(angle) == ())
         angle = np.array(angle, dtype=float, copy=False, ndmin=1)
         rot_matrix = self.rotation_matrix(angle)
         extra_dims = angle.ndim
+        src_shifts = self.src_shift_func(angle)
 
         # Initial vector from center of rotation to source.
         # It can be computed this way since source and detector are at
         # maximum distance, i.e. the connecting line passes the center.
         center_to_src_init = -self.src_radius * self.src_to_det_init
-        # `circle_component` has shape (a, ndim)
-        circle_component = rot_matrix.dot(center_to_src_init)
+        # shifting the source according to ffs
+        tangent = -np.cross(-self.src_to_det_init, self.axis)
+        tangent /= np.linalg.norm(tangent)
+        ffs_shift = (np.multiply.outer(src_shifts[:, 0],
+                                       -self.src_to_det_init)
+                     + np.multiply.outer(src_shifts[:, 1], tangent))
+        center_to_src_init = center_to_src_init + ffs_shift
+        circle_component = np.einsum('...ij,...j->...i',
+                                     rot_matrix, center_to_src_init)
 
         # Increment along the rotation axis according to pitch and
         # offset_along_axis
         # `shift_along_axis` has shape angles.shape
         shift_along_axis = (self.offset_along_axis
-                            + self.pitch * angle / (2 * np.pi))
+                            + self.pitch * angle / (2 * np.pi)
+                            + src_shifts[:, 2])
         # Create outer product of `shift_along_axis` and `axis`, resulting
         # in shape (a, ndim)
         pitch_component = np.multiply.outer(shift_along_axis, self.axis)
@@ -1299,6 +1538,8 @@ class ConeBeamGeometry(DivergentBeamGeometry, AxisOrientedGeometry):
                                 offset_along_axis=self.offset_along_axis,
                                 src_to_det_init=self._src_to_det_init_arg,
                                 det_axes_init=self._det_axes_init_arg,
+                                src_shift_func=self.src_shift_func,
+                                det_shift_func=self.det_shift_func,
                                 translation=self.translation)
 
     # Manually override the abstract method in `Geometry` since it's found

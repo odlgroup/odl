@@ -12,6 +12,8 @@ from __future__ import absolute_import
 
 from . import testutils
 from .utility import *
+from .source_detector_shifts import *
 
 __all__ = ()
 __all__ += utility.__all__
+__all__ += source_detector_shifts.__all__
