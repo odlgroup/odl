@@ -190,7 +190,7 @@ def power_method_opnorm(op, xstart=None, maxiter=100, rtol=1e-05, atol=1e-08,
         raise ValueError('`maxiter` must be positive, got {}'
                          ''.format(maxiter_in))
 
-    if op.domain == op.range:
+    if op.adjoint is op:
         use_normal = False
         ncalls = maxiter
     else:
