@@ -1796,6 +1796,11 @@ def parallel_beam_geometry(space, num_angles=None, det_shape=None):
         det_max_pt = [rho, max_h]
         if det_shape is None:
             det_shape = [num_px_horiz, num_px_vert]
+    else:
+        raise ValueError(
+            "`space` must be 2- or 3-dimensional, got space.ndim={}"
+            "".format(space.ndim)
+        )
 
     if num_angles is None:
         num_angles = int(np.ceil(omega * rho))

@@ -2070,6 +2070,7 @@ class ConeVecGeometry(VecGeometry):
         vec : `numpy.ndarray`, shape (`ndim`,)
             (Unit) vector pointing from the detector to the source.
         """
+        # TODO: vectorize
         if self.check_bounds:
             if not is_inside_bounds(mparam, self.motion_params):
                 raise ValueError('`mparam` {} not in the valid range {}'
