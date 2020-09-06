@@ -419,8 +419,8 @@ def vecs_odl_to_astra_coords(vecs):
     |       |        | ``Z`` | ``X``  |
     +-------+--------+-------+--------+
 
-    Thus, the conversion ODL→ASTRA is a rotation by +90 degrees in 2D, and
-    an XZ axis swap in 3D.
+    Thus, the coordinate conversion ODL→ASTRA is a transposed rotation
+    by +90 degrees in 2D, and an XZ axis swap in 3D.
 
     Parameters
     ----------
@@ -440,9 +440,9 @@ def vecs_odl_to_astra_coords(vecs):
     if vecs.shape[1] == 6:
         # 2D geometry
         # ODL x = ASTRA -y, ODL y = ASTRA x
-        # Thus: ODL->ASTRA conversion is a rotation by +90 degrees
+        # Thus: ODL->ASTRA conversion is a transposed rotation by +90 degrees
         rot_90 = euler_matrix(np.pi / 2)
-        # Bulk matrix-vector product
+        # Bulk transposed-matrix-vector product
         vecs[:, 0:2] = np.einsum('kj,ik->ij', rot_90, vecs[:, 0:2])
         vecs[:, 2:4] = np.einsum('kj,ik->ij', rot_90, vecs[:, 2:4])
         vecs[:, 4:6] = np.einsum('kj,ik->ij', rot_90, vecs[:, 4:6])
@@ -451,7 +451,7 @@ def vecs_odl_to_astra_coords(vecs):
     elif vecs.shape[1] == 12:
         # 3D geometry
         # ASTRA has (z, y, x) axis convention, in contrast to (x, y, z) in ODL,
-        # so we need to adapt to this by changing the order.
+        # so we need to adapt to this by swapping x and z
         newind = []
         for i in range(4):
             newind.extend([2 + 3 * i, 1 + 3 * i, 0 + 3 * i])
@@ -479,8 +479,8 @@ def vecs_astra_to_odl_coords(vecs):
     |       |        | ``Z`` | ``X``  |
     +-------+--------+-------+--------+
 
-    Thus, the conversion ASTRA→ODL is a rotation by -90 degrees in 2D, and
-    an XZ axis swap in 3D.
+    Thus, the coordinate conversion ASTRA->ODL is a transposed rotation
+    by -90 degrees in 2D, and an XZ axis swap in 3D.
 
     Parameters
     ----------
@@ -500,9 +500,9 @@ def vecs_astra_to_odl_coords(vecs):
     if vecs.shape[1] == 6:
         # 2D geometry
         # ODL x = ASTRA -y, ODL y = ASTRA x
-        # Thus: ODL->ASTRA conversion is a rotation by -90 degrees
+        # Thus: ODL->ASTRA conversion is a transposed rotation by -90 degrees
         rot_minus_90 = euler_matrix(-np.pi / 2)
-        # Bulk matrix-vector product
+        # Bulk transposed-matrix-vector product
         vecs[:, 0:2] = np.einsum('kj,ik->ij', rot_minus_90, vecs[:, 0:2])
         vecs[:, 2:4] = np.einsum('kj,ik->ij', rot_minus_90, vecs[:, 2:4])
         vecs[:, 4:6] = np.einsum('kj,ik->ij', rot_minus_90, vecs[:, 4:6])
@@ -511,11 +511,10 @@ def vecs_astra_to_odl_coords(vecs):
     elif vecs.shape[1] == 12:
         # 3D geometry
         # ASTRA has (z, y, x) axis convention, in contrast to (x, y, z) in ODL,
-        # so we need to adapt to this by changing the order.
+        # so we need to adapt to this by swapping x and z
         newind = []
         for i in range(4):
             newind.extend([2 + 3 * i, 1 + 3 * i, 0 + 3 * i])
-        newind = np.argsort(newind).tolist()
         return vecs[:, newind]
     else:
         raise ValueError('`vecs` must have shape (N, 6) or (N, 12), got '
@@ -529,16 +528,16 @@ def parallel_2d_geom_to_astra_vecs(geometry, coords='ODL'):
     parallel beam geometries, see ``'parallel_vec'`` in the
     `ASTRA projection geometry documentation`_.
 
-    Each row of the returned vectors corresponds to a single projection
-    and consists of ::
+    Each row of the returned array is a vector corresponding to a single
+    projection and consists of ::
 
         (rayX, rayY, dX, dY, uX, uY)
 
     with
 
-        - ``ray``: the ray direction
-        - ``d``  : the center of the detector
-        - ``u``  : the vector from detector pixel 0 to 1
+    - ``ray``: the ray direction
+    - ``d``  : the center of the detector
+    - ``u``  : the vector from detector pixel 0 to 1
 
     .. note::
         The returned vectors are the result of converting from ODL coordinates
@@ -599,8 +598,8 @@ def parallel_3d_geom_to_astra_vecs(geometry, coords='ODL'):
     parallel beam geometries, see ``'parallel3d_vec'`` in the
     `ASTRA projection geometry documentation`_.
 
-    Each row of the returned vectors corresponds to a single projection
-    and consists of ::
+    Each row of the returned array is a vector corresponding to a single
+    projection and consists of ::
 
         (rayX, rayY, rayZ, dX, dY, dZ, uX, uY, uZ, vX, vY, vZ)
 
@@ -676,8 +675,8 @@ def cone_2d_geom_to_astra_vecs(geometry, coords='ODL'):
     fan beam geometries, see ``'fanflat_vec'`` in the
     `ASTRA projection geometry documentation`_.
 
-    Each row of the returned vectors corresponds to a single projection
-    and consists of ::
+    Each row of the returned array is a vector corresponding to a single
+    projection and consists of ::
 
         (srcX, srcY, dX, dY, uX, uY)
 
@@ -742,8 +741,8 @@ def cone_3d_geom_to_astra_vecs(geometry, coords='ODL'):
     cone beam geometries, see ``'cone_vec'`` in the
     `ASTRA projection geometry documentation`_.
 
-    Each row of the returned vectors corresponds to a single projection
-    and consists of ::
+    Each row of the returned array is a vector corresponding to a single
+    projection and consists of ::
 
         (srcX, srcY, srcZ, dX, dY, dZ, uX, uY, uZ, vX, vY, vZ)
 
