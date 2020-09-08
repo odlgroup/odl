@@ -106,7 +106,7 @@ def load_projections(folder, indices=None):
 
     # Get the angles
     angles = [d.DetectorFocalCenterAngularPosition for d in datasets]
-    angles = -np.unwrap(angles) - np.pi  # different defintion of angles
+    angles = -np.unwrap(angles) - np.pi  # different definition of angles
 
     # Set minimum and maximum corners
     shape = np.array([datasets[0].NumberofDetectorColumns,
@@ -162,7 +162,7 @@ def load_projections(folder, indices=None):
     # Create partition for detector
     detector_partition = odl.uniform_partition(minp, maxp, shape)
 
-    # Convert offset to odl defintions
+    # Convert offset to odl definitions
     offset_along_axis = (mean_offset_along_axis_for_ffz +
                          datasets[0].DetectorFocalCenterAxialPosition -
                          angles[0] / (2 * np.pi) * pitch)
@@ -188,8 +188,10 @@ def load_projections(folder, indices=None):
 
     # Calculate projection data in rectangular coordinates since we have no
     # backend that supports cylindrical
-    interpolator = linear_interpolator(data_array, (theta, u, v))
-    proj_data = ray_trafo.range.element(interpolator)
+    interpolator = linear_interpolator(
+        data_array, ray_trafo.range.coord_vectors
+    )
+    proj_data = interpolator((theta, u, v))
 
     return geometry, proj_data.asarray()
 
