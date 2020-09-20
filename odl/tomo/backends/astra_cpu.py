@@ -311,7 +311,7 @@ class AstraCpuImpl:
             )
         if geometry.ndim > 2:
             raise ValueError(
-                '`impl` {!r} only works for 2d'.format(self.__name__)
+                '`impl` {!r} only works for 2d'.format(self.__class__.__name__)
             )
 
         if vol_space.size >= 512 ** 2:
