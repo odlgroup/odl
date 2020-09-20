@@ -530,6 +530,7 @@ def test_detector_shifts_2d():
     rel_error = np.max(error[im > 0] / im[im > 0])
     assert rel_error < space.cell_volume
 
+
 def test_source_shifts_2d():
     """Check that source shifts are handled correctly.
 
@@ -618,8 +619,8 @@ def test_detector_shifts_3d():
     and back-projection with and without detector shifts are
     numerically close (the error depends on domain discretization).
     """
-    if not odl.tomo.ASTRA_AVAILABLE:
-        pytest.skip(msg='ASTRA not available, skipping 2d test')
+    if not odl.tomo.ASTRA_CUDA_AVAILABLE:
+        pytest.skip(msg='ASTRA CUDA required but not available')
 
     d = 100
     space = odl.uniform_discr([-1] * 3, [1] * 3, [d] * 3)
