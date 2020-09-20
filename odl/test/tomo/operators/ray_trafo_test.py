@@ -489,7 +489,7 @@ def test_detector_shifts_2d():
 
     d = 10
     space = odl.uniform_discr([-1] * 2, [1] * 2, [d] * 2)
-    phantom = odl.phantom.cuboid(space, [-1/3] * 2, [1/3] * 2)
+    phantom = odl.phantom.cuboid(space, [-1 / 3] * 2, [1 / 3] * 2)
 
     full_angle = 2 * np.pi
     n_angles = 2 * 10
@@ -500,9 +500,10 @@ def test_detector_shifts_2d():
     geom = odl.tomo.FanBeamGeometry(apart, dpart, src_rad, det_rad)
     k = 3
     shift = k * dpart.cell_sides[0]
-    geom_shift = odl.tomo.FanBeamGeometry(apart, dpart, src_rad, det_rad,
-                                          det_shift_func=
-                                          lambda angle: [0.0, shift])
+    geom_shift = odl.tomo.FanBeamGeometry(
+        apart, dpart, src_rad, det_rad,
+        det_shift_func=lambda angle: [0.0, shift]
+    )
 
     assert all_almost_equal(geom.angles, geom_shift.angles)
     angles = geom.angles
@@ -545,7 +546,7 @@ def test_source_shifts_2d():
 
     d = 10
     space = odl.uniform_discr([-1] * 2, [1] * 2, [d] * 2)
-    phantom = odl.phantom.cuboid(space, [-1/3] * 2, [1/3] * 2)
+    phantom = odl.phantom.cuboid(space, [-1 / 3] * 2, [1 / 3] * 2)
 
     full_angle = 2 * np.pi
     n_angles = 2 * 10
@@ -624,7 +625,7 @@ def test_detector_shifts_3d():
 
     d = 100
     space = odl.uniform_discr([-1] * 3, [1] * 3, [d] * 3)
-    phantom = odl.phantom.cuboid(space, [-1/3] * 3, [1/3] * 3)
+    phantom = odl.phantom.cuboid(space, [-1 / 3] * 3, [1 / 3] * 3)
 
     full_angle = 2 * np.pi
     n_angles = 2 * 100
@@ -662,7 +663,7 @@ def test_detector_shifts_3d():
     # check back-projection
     im = op.adjoint(y).asarray()
     im_shift = op_shift.adjoint(y_shift).asarray()
-    error = np.max(np.abs(im_shift-im))
+    error = np.max(np.abs(im_shift - im))
     assert error < 1e-3
 
 
@@ -679,7 +680,7 @@ def test_source_shifts_3d():
 
     d = 10
     space = odl.uniform_discr([-1] * 3, [1] * 3, [d] * 3)
-    phantom = odl.phantom.cuboid(space, [-1/3] * 3, [1/3] * 3)
+    phantom = odl.phantom.cuboid(space, [-1 / 3] * 3, [1 / 3] * 3)
 
     full_angle = 2 * np.pi
     n_angles = 2 * 10
