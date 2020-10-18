@@ -213,7 +213,7 @@ class SkImageImpl:
         if not isinstance(geometry, Parallel2dGeometry):
             raise TypeError(
                 "{!r} backend only supports 2d parallel geometries"
-                ''.format(self.__name__)
+                ''.format(self.__class__.__name__)
             )
         mid_pt = vol_space.domain.mid_pt
         if not np.allclose(mid_pt, [0, 0]):
@@ -265,3 +265,9 @@ class SkImageImpl:
         return skimage_radon_back_projector(
             x, self.geometry, self.vol_space.real_space, out
         )
+
+
+if __name__ == '__main__':
+    from odl.util.testutils import run_doctests
+
+    run_doctests()
