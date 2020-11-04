@@ -507,18 +507,16 @@ def _resize_discr(discr, newshp, offset, discr_kwargs):
     for axis, (n_orig, n_new, off, on_bdry) in enumerate(zip(
             discr.shape, newshp, offset, nodes_on_bdry)):
 
-        if not affected[axis]:
-            new_minpt.append(discr.min_pt[axis])
-            new_maxpt.append(discr.max_pt[axis])
-            continue
-
-        n_diff = n_new - n_orig
-        if off is None:
-            num_r = n_diff // 2
-            num_l = n_diff - num_r
+        if affected[axis]:
+            n_diff = n_new - n_orig
+            if off is None:
+                num_r = n_diff // 2
+                num_l = n_diff - num_r
+            else:
+                num_r = n_diff - off
+                num_l = off
         else:
-            num_r = n_diff - off
-            num_l = off
+            num_l, num_r = 0, 0
 
         try:
             on_bdry_l, on_bdry_r = on_bdry
