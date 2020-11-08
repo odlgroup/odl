@@ -238,9 +238,11 @@ def astra_volume_geometry(vol_space):
         # NOTE: We need to flip the sign of the (ODL) x component since
         # ASTRA seems to move it in the other direction. Not quite clear
         # why.
-        vol_geom = astra.create_vol_geom(vol_shp[0], vol_shp[1],
-                                         vol_min[1], vol_max[1],
-                                         -vol_max[0], -vol_min[0])
+        vol_geom = astra.create_vol_geom(
+            vol_shp[0], vol_shp[1],
+            vol_min[1], vol_max[1],
+            -vol_max[0], -vol_min[0],
+        )
     elif vol_space.ndim == 3:
         # Not supported in all versions of ASTRA
         if (
@@ -265,10 +267,12 @@ def astra_volume_geometry(vol_space):
         #    'WindowMaxY': y_min,
         #    'WindowMinZ': x_min,
         #    'WindowMaxZ': x_min}
-        vol_geom = astra.create_vol_geom(vol_shp[1], vol_shp[2], vol_shp[0],
-                                         vol_min[2], vol_max[2],
-                                         vol_min[1], vol_max[1],
-                                         vol_min[0], vol_max[0])
+        vol_geom = astra.create_vol_geom(
+            vol_shp[1], vol_shp[2], vol_shp[0],
+            vol_min[2], vol_max[2],
+            vol_min[1], vol_max[1],
+            vol_min[0], vol_max[0],
+        )
     else:
         raise ValueError('{}-dimensional volume geometries not supported '
                          'by ASTRA'.format(vol_space.ndim))
@@ -316,7 +320,8 @@ def astra_projection_geometry(geometry):
             # geometry by 90 degrees clockwise
             angles = geometry.angles - np.pi / 2
             proj_geom = astra.create_proj_geom(
-                'parallel', det_width, det_count, angles)
+                'parallel', det_width, det_count, angles
+            )
 
     # Parallel 2D vec
     elif isinstance(geometry, ParallelVecGeometry) and geometry.ndim == 2:
@@ -458,8 +463,10 @@ def vecs_odl_to_astra_coords(vecs):
         return vecs[:, newind]
 
     else:
-        raise ValueError('`vecs` must have shape (N, 6) or (N, 12), got '
-                         'array with shape {}'.format(vecs.shape))
+        raise ValueError(
+            '`vecs` must have shape (N, 6) or (N, 12), got array with shape {}'
+            ''.format(vecs.shape)
+        )
 
 
 def vecs_astra_to_odl_coords(vecs):
@@ -516,9 +523,12 @@ def vecs_astra_to_odl_coords(vecs):
         for i in range(4):
             newind.extend([2 + 3 * i, 1 + 3 * i, 0 + 3 * i])
         return vecs[:, newind]
+
     else:
-        raise ValueError('`vecs` must have shape (N, 6) or (N, 12), got '
-                         'array with shape {}'.format(vecs.shape))
+        raise ValueError(
+            '`vecs` must have shape (N, 6) or (N, 12), got array with shape {}'
+            ''.format(vecs.shape)
+        )
 
 
 def parallel_2d_geom_to_astra_vecs(geometry, coords='ODL'):
@@ -653,10 +663,10 @@ def parallel_3d_geom_to_astra_vecs(geometry, coords='ODL'):
     # `det_axes` gives shape (N, 2, 3), swap to get (2, N, 3)
     det_axes = np.moveaxis(geometry.det_axes(angles), -2, 0)
     px_sizes = geometry.det_partition.cell_sides
-    # Swap detector axes to have better memory layout in  projection data.
+    # Swap detector axes to have better memory layout in projection data.
     # ASTRA produces `(v, theta, u)` layout, and to map to ODL layout
     # `(theta, u, v)` a complete roll must be performed, which is the
-    # worst case (compeltely discontiguous).
+    # worst case (completely non-contiguous).
     # Instead we swap `u` and `v`, resulting in the effective ASTRA result
     # `(u, theta, v)`. Here we only need to swap axes 0 and 1, which
     # keeps at least contiguous blocks in `v`.
@@ -840,8 +850,10 @@ def astra_data(astra_geom, datatype, data=None, ndim=2, allow_copy=False):
         if isinstance(data, (DiscretizedSpaceElement, np.ndarray)):
             ndim = data.ndim
         else:
-            raise TypeError('`data` {!r} is neither DiscretizedSpaceElement '
-                            'instance nor a `numpy.ndarray`'.format(data))
+            raise TypeError(
+                '`data` must be `DiscretizedSpaceElement` or `numpy.ndarray`, '
+                'got {!r}'.format(data)
+            )
     else:
         ndim = int(ndim)
 
@@ -860,8 +872,9 @@ def astra_data(astra_geom, datatype, data=None, ndim=2, allow_copy=False):
         link = astra.data3d.link
         create = astra.data3d.create
     else:
-        raise ValueError('{}-dimensional data not supported'
-                         ''.format(ndim))
+        raise ValueError(
+            '{}-dimensional data not supported'.format(ndim)
+        )
 
     # ASTRA checks if data is c-contiguous and aligned
     if data is not None:
@@ -875,9 +888,10 @@ def astra_data(astra_geom, datatype, data=None, ndim=2, allow_copy=False):
                 return link(astra_dtype_str, astra_geom, data.asarray())
             else:
                 # Something else than NumPy data representation
-                raise NotImplementedError('ASTRA supports data wrapping only '
-                                          'for `numpy.ndarray` instances, got '
-                                          '{!r}'.format(data))
+                raise NotImplementedError(
+                    'ASTRA supports data wrapping only for `numpy.ndarray`, '
+                    'got {!r}'.format(data)
+                )
     else:
         return create(astra_dtype_str, astra_geom)
 
@@ -904,8 +918,9 @@ def astra_projector(astra_proj_type, astra_vol_geom, astra_proj_geom, ndim):
         Handle for the created ASTRA internal projector object.
     """
     if 'type' not in astra_proj_geom:
-        raise ValueError('invalid projection geometry dict {}'
-                         ''.format(astra_proj_geom))
+        raise ValueError(
+            'invalid projection geometry dict {}'.format(astra_proj_geom)
+        )
 
     ndim = int(ndim)
 
@@ -954,11 +969,12 @@ def astra_projector(astra_proj_type, astra_vol_geom, astra_proj_geom, ndim):
         )
 
     # Create config dict
-    proj_cfg = {}
-    proj_cfg['type'] = astra_proj_type
-    proj_cfg['VolumeGeometry'] = astra_vol_geom
-    proj_cfg['ProjectionGeometry'] = astra_proj_geom
-    proj_cfg['options'] = {}
+    proj_cfg = {
+        'type': astra_proj_type,
+        'VolumeGeometry': astra_vol_geom,
+        'ProjectionGeometry': astra_proj_geom,
+        'options': {}
+    }
 
     # Add the approximate 1/r^2 weighting exposed in intermediate versions of
     # ASTRA
@@ -1001,25 +1017,36 @@ def astra_algorithm(direction, ndim, vol_id, sino_id, proj_id, impl):
     if direction not in ('forward', 'backward'):
         raise ValueError("`direction` '{}' not understood".format(direction))
     if ndim not in (2, 3):
-        raise ValueError('{}-dimensional projectors not supported'
-                         ''.format(ndim))
+        raise ValueError(
+            '{}-dimensional projectors not supported'.format(ndim)
+        )
     if impl not in ('cpu', 'cuda'):
-        raise ValueError("`impl` type '{}' not understood"
-                         ''.format(impl))
+        raise ValueError(
+            '`impl` type {!r} not understood'.format(impl)
+        )
     if ndim == 3 and impl == 'cpu':
         raise NotImplementedError(
-            '3d algorithms for CPU not supported by ASTRA')
+            '3d algorithms for CPU not supported by ASTRA'
+        )
     if proj_id is None and impl == 'cpu':
         raise ValueError("'cpu' implementation requires projector ID")
 
-    algo_map = {'forward': {2: {'cpu': 'FP', 'cuda': 'FP_CUDA'},
-                            3: {'cpu': None, 'cuda': 'FP3D_CUDA'}},
-                'backward': {2: {'cpu': 'BP', 'cuda': 'BP_CUDA'},
-                             3: {'cpu': None, 'cuda': 'BP3D_CUDA'}}}
+    algo_map = {
+        'forward': {
+            2: {'cpu': 'FP', 'cuda': 'FP_CUDA'},
+            3: {'cpu': None, 'cuda': 'FP3D_CUDA'}
+        },
+        'backward': {
+            2: {'cpu': 'BP', 'cuda': 'BP_CUDA'},
+            3: {'cpu': None, 'cuda': 'BP3D_CUDA'}
+        }
+    }
 
-    algo_cfg = {'type': algo_map[direction][ndim][impl],
-                'ProjectorId': proj_id,
-                'ProjectionDataId': sino_id}
+    algo_cfg = {
+        'type': algo_map[direction][ndim][impl],
+        'ProjectorId': proj_id,
+        'ProjectionDataId': sino_id
+    }
     if direction == 'forward':
         algo_cfg['VolumeDataId'] = vol_id
     else:

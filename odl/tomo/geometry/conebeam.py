@@ -1964,7 +1964,7 @@ class ConeVecGeometry(VecGeometry):
     linear paths.
     """
 
-    # `rotation_matrix` not implemented; reason: missing
+    # `rotation_matrix` not implemented; reason: does not apply
 
     @property
     def _slice_src(self):
@@ -2021,6 +2021,7 @@ class ConeVecGeometry(VecGeometry):
         >>> geom_3d.src_position(0.5)  # mean value
         array([ 0.5, -0.5,  0. ])
         """
+        # TODO: Use NN interpolation instead of linear
         # TODO: vectorize
         if (self.check_bounds and
                 not is_inside_bounds(index, self.motion_params)):

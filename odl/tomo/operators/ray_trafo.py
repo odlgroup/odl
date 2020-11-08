@@ -125,8 +125,10 @@ class RayTransform(Operator):
                 )
             ):
                 # Approximate cell volume
-                angle_weight = float(geometry.motion_partition.extent.prod() /
-                                     geometry.motion_partition.size)
+                angle_weight = float(
+                    np.prod(geometry.motion_partition.extent)
+                    / geometry.motion_partition.size
+                )
                 weighting = angle_weight * geometry.det_partition.cell_volume
             else:
                 raise NotImplementedError('unknown weighting of domain')
