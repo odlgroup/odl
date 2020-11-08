@@ -1421,8 +1421,10 @@ def pkg_supports(feature, pkg_version, pkg_feat_dict):
     ver_reqs = [Requirement(ver_spec) for ver_spec in ver_specs]
 
     # If one of the requirements in the list is met, return True, else False
-    return any(req.specifier.contains(pkg_version, prereleases=True)
-               for req in ver_reqs)
+    return any(
+        req.specifier.contains(pkg_version, prereleases=True)
+        for req in ver_reqs
+    )
 
 
 @contextmanager
