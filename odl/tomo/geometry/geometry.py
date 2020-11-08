@@ -638,7 +638,7 @@ class AxisOrientedGeometry(object):
 class VecGeometry(Geometry):
     """Abstract 2D or 3D geometry defined by a collection of vectors.
 
-    This geometry gives maximal flexibility for representing locations
+    This geometry gives maximum flexibility for representing locations
     and orientations of ray/source and detector for parallel or cone beam
     acquisition schemes. It is defined by a set of vectors per projection,
     namely
@@ -677,7 +677,7 @@ class VecGeometry(Geometry):
     linear paths.
     """
 
-    # `rotation_matrix` not implemented; reason: missing
+    # `rotation_matrix` not implemented; reason: does not apply
     # `det_to_src` not implemented; reason: depends on subclass
 
     def __init__(self, det_shape, vectors):
@@ -694,12 +694,15 @@ class VecGeometry(Geometry):
             determines the number of projections, and the number of columns
             the spatial dimension (6 for 2D, 12 for 3D).
         """
+        vectors = self.__vectors = np.asarray(vectors, dtype=float)
         self.__vectors = np.asarray(vectors, dtype=float)
-        if self.__vectors.ndim != 2:
-            raise ValueError('`vectors` must be 2-dimensional, got array '
-                             'with ndim = {}'.format(self.__vectors.ndim))
+        if vectors.ndim != 2:
+            raise ValueError(
+                '`vectors` must be 2-dimensional, got array with ndim = {}'
+                ''.format(vectors.ndim)
+            )
 
-        num_projs = self.__vectors.shape[0]
+        num_projs = vectors.shape[0]
         if num_projs == 0:
             raise ValueError('`vectors` is empty')
 
@@ -708,35 +711,41 @@ class VecGeometry(Geometry):
         elif self.__vectors.shape[1] == 12:
             ndim = 3
         else:
-            raise ValueError('`vectors` must have 6 or 12 columns, got '
-                             'array with {} columns'
-                             ''.format(self.__vectors.shape[1]))
+            raise ValueError(
+                '`vectors` must have 6 or 12 columns, got array with '
+                '{} columns'.format(vectors.shape[1])
+            )
 
         # Make angle partition with spacing 1
-        mpart = uniform_partition(0, num_projs - 1, num_projs,
-                                  nodes_on_bdry=True)
+        mpart = uniform_partition(
+            0, num_projs - 1, num_projs, nodes_on_bdry=True
+        )
 
         # Detector is initialized using the first set of vectors. This
         # assumes that the detector pixels do not change their physical
         # sizes during acquisition, but has no effect on the computations.
         # For those, only the `vectors` are used.
         if ndim == 2:
-            det_u = self.__vectors[0, 4:6]
-            det_shape = normalized_scalar_param_list(det_shape, length=1,
-                                                     param_conv=safe_int_conv)
+            det_u = vectors[0, 4:6]
+            det_shape = normalized_scalar_param_list(
+                det_shape, length=1, param_conv=safe_int_conv
+            )
             det_cell_size = np.linalg.norm(det_u)
             det_part = uniform_partition(
                 min_pt=-(det_cell_size * det_shape[0]) / 2,
                 max_pt=(det_cell_size * det_shape[0]) / 2,
-                shape=det_shape)
+                shape=det_shape
+            )
             detector = Flat1dDetector(det_part, axis=det_u)
         elif ndim == 3:
-            det_u = self.__vectors[0, 6:9]
-            det_v = self.__vectors[0, 9:12]
-            det_shape = normalized_scalar_param_list(det_shape, length=2,
-                                                     param_conv=safe_int_conv)
+            det_u = vectors[0, 6:9]
+            det_v = vectors[0, 9:12]
+            det_shape = normalized_scalar_param_list(
+                det_shape, length=2, param_conv=safe_int_conv
+            )
             det_cell_sides = np.array(
-                [np.linalg.norm(det_u), np.linalg.norm(det_v)])
+                [np.linalg.norm(det_u), np.linalg.norm(det_v)]
+            )
             det_part = uniform_partition(
                 min_pt=-(det_cell_sides * det_shape) / 2,
                 max_pt=(det_cell_sides * det_shape) / 2,
@@ -902,10 +911,14 @@ class VecGeometry(Geometry):
 
         Broadcasting of arguments:
 
+        >>> # d(0.4) + 2 * u(0.4) = d(0) + 2 * u(0)
+        >>> # d(0.6) + 2 * u(0.6) = d(1) + 2 * u(1)
         >>> idcs = np.array([0.4, 0.6])[:, None]
         >>> dpar = np.array([2.0])[None, :]
         >>> geom_2d.det_point_position(idcs, dpar)
-
+        array([[[ 2.,  1.]],
+        <BLANKLINE>
+               [[-1.,  2.]]])
 
         Do the same in 3D, with reference points ``(0, 1, 0)`` and
         ``(-1, 0, 0)``, and horizontal ``u``  axis vectors ``(1, 0, 0)`` and
@@ -934,11 +947,16 @@ class VecGeometry(Geometry):
 
         Broadcasting of arguments:
 
+        >>> # d(0.4) + 2 * u(0.4) + 1 * u(0.4) = d(0) + 2 * u(0) + 1 * v(0)
+        >>> # d(0.6) + 2 * u(0.6) + 1 * u(0.6) = d(1) + 2 * u(1) + 1 * v(1)
         >>> idcs = np.array([0.4, 0.6])[:, None]
-        >>> dpar = np.array([2.0, 1.0])[:, None]
+        >>> dpar = np.array([2.0, 1.0])[None, :]
         >>> geom_3d.det_point_position(idcs, dpar)
-
+        array([[[ 2.,  1.,  1.]],
+        <BLANKLINE>
+               [[-1.,  2.,  1.]]])
         """
+        dparam = np.asarray(dparam)
         if self.check_bounds:
             if not is_inside_bounds(index, self.motion_params):
                 raise ValueError(
@@ -955,10 +973,12 @@ class VecGeometry(Geometry):
         if self.ndim == 2:
             det_shift = dparam * self.det_axis(index)
         elif self.ndim == 3:
+            dpar0 = dparam[..., 0]
+            dpar1 = dparam[..., 1]
             axes = self.det_axes(index)
-            det_shift = sum(
-                di * ax for di, ax in zip(dparam, self.det_axes(index))
-            )
+            ax0 = axes[..., 0, :]
+            ax1 = axes[..., 1, :]
+            det_shift = dpar0 * ax0 + dpar1 * ax1
         else:
             raise RuntimeError('invalid `ndim`')
 
@@ -1021,7 +1041,7 @@ class VecGeometry(Geometry):
             squeeze_index = False
 
         vectors = self.vectors[index_int]
-        det_us = vectors[:, self._slice_det_u]
+        det_us = vectors[..., self._slice_det_u]
         if squeeze_index:
             return det_us[0]
         else:
@@ -1093,7 +1113,7 @@ class VecGeometry(Geometry):
         vectors = self.vectors[index_int]
         if self.ndim == 2:
             axes = np.empty(index_int.shape + (2,))
-            axes[:] = vectors[:, self._slice_det_u]
+            axes[:] = vectors[..., self._slice_det_u]
         elif self.ndim == 3:
             axes = np.empty(index_int.shape + (2, 3))
             axes[..., 0, :] = vectors[..., self._slice_det_u]
@@ -1159,7 +1179,8 @@ class VecGeometry(Geometry):
         if np.isscalar(sub_vecs) or not hasattr(sub_vecs, 'shape'):
             raise ValueError(
                 'indexing of `vectors` results in scalar or non-array '
-                '(type {})'.format(type(sub_vecs)))
+                '(type {})'.format(type(sub_vecs))
+            )
 
         if sub_vecs.ndim == 1 and sub_vecs.shape[0] == self.vectors.shape[1]:
             # Reduced to single vector, add missing dimension
