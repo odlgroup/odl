@@ -49,7 +49,7 @@ print('FBP done after {:.3f} seconds'.format(stop-start))
 fbp_result_HU = (fbp_result-0.0192)/0.0192*1000
 
 # Save reconstruction in Numpy format
-fbp_filename = proj_folder+'fbp_result.npy'
+fbp_filename = proj_folder+'/fbp_result.npy'
 print("Saving reconstruction data in {:s}".format(fbp_filename))
 np.save(fbp_filename, fbp_result_HU)
 
@@ -58,9 +58,9 @@ ref = recon_space.element(volume)
 diff = recon_space.element(volume - fbp_result_HU.asarray())
 
 # Compare the computed recon to reference reconstruction (coronal slice)
-fbp_result_HU.show('Recon (coronal)')
-ref.show('Reference (coronal)')
-diff.show('Diff (coronal)')
+fbp_result_HU.show('Recon (axial)')
+ref.show('Reference (axial)')
+diff.show('Diff (axial)')
 
 coords = [0, None, None]
 fbp_result_HU.show('Recon (sagittal)', coords=coords)

@@ -19,6 +19,7 @@ In addition to the standard ODL requirements, this library also requires:
 from __future__ import division
 import numpy as np
 import os
+import sys
 import pydicom
 import odl
 import tqdm
@@ -40,6 +41,8 @@ __all__ = ('load_projections', 'load_reconstruction')
 def _read_projections(folder, indices):
     """Read mayo projections from a folder."""
     datasets = []
+    data_array = []
+    angles = []
 
     # Get the relevant file names
     file_names = sorted([f for f in os.listdir(folder) if f.endswith(".dcm")])
@@ -49,23 +52,23 @@ def _read_projections(folder, indices):
 
     file_names = file_names[indices]
 
-    data_array = None
-
     for i, file_name in enumerate(tqdm.tqdm(file_names,
                                             'Loading projection data')):
         # read the file
-        dataset = pydicom.read_file(folder + '/' + file_name)
+        try:
+            dataset = pydicom.read_file(folder + os.path.sep + file_name)
+        except:
+            print("corrupted file: {}".format(file_name), file=sys.stderr)
+            print("error:\n{}".format(sys.exc_info()[1]), file=sys.stderr)
+            print("skipping to next file..", file=sys.stderr)
+            continue
 
-        if data_array is None:
+        if not data_array:
             # Get some required data
             rows = dataset.NumberofDetectorRows
             cols = dataset.NumberofDetectorColumns
             rescale_intercept = dataset.RescaleIntercept
             rescale_slope = dataset.RescaleSlope
-
-            data_array = np.empty((len(file_names), cols, rows),
-                                  dtype='float32')
-            angles = np.empty(len(file_names), dtype='float32')
 
         else:
             # Sanity checks
@@ -85,14 +88,16 @@ def _read_projections(folder, indices):
         proj_array *= rescale_slope
         proj_array += rescale_intercept
 
-        data_array[i] = proj_array[:, ::-1]
-        angles[i] = dataset.DetectorFocalCenterAngularPosition
+        data_array.append(proj_array[:, ::-1])
+        angles.append(dataset.DetectorFocalCenterAngularPosition)
         datasets.append(dataset)
 
+    data_array = np.array(data_array)
+    angles = np.array(angles)
     return datasets, data_array, angles
 
 
-def load_projections(folder, indices=None):
+def load_projections(folder, indices=None, use_ffs=True):
     """Load geometry and data stored in Mayo format from folder.
 
     Parameters
@@ -143,35 +148,17 @@ def load_projections(folder, indices=None):
     num_rot = (angles[-1] - angles[0]) / (2 * np.pi)
     pitch = table_dist / num_rot
 
-    # TODO: Understand and re-implement the flying focal spot
-    # # Get flying focal spot data
-    # offset_axial = np.array([d.SourceAxialPositionShift for d in datasets])
-    # offset_angular = np.array([d.SourceAngularPositionShift for d in datasets])
-    # offset_radial = np.array([d.SourceRadialDistanceShift for d in datasets])
+    # offsets: focal spot -> detector’s focal center
+    offset_angular = np.array([d.SourceAngularPositionShift for d in datasets])
+    offset_radial = np.array([d.SourceRadialDistanceShift for d in datasets])
+    offset_axial = np.array([d.SourceAxialPositionShift for d in datasets])
+    
+    # angles have inverse convention
+    shift_d = np.cos(-offset_angular) * (src_radius + offset_radial) - src_radius
+    shift_t = np.sin(-offset_angular) * (src_radius + offset_radial)
+    shift_r = + offset_axial
 
-    # # TODO(adler-j): Implement proper handling of flying focal spot.
-    # # Currently we do not fully account for it, merely making some "first
-    # # order corrections" to the detector position and radial offset.
-
-    # # Update angles with flying focal spot (in plane direction).
-    # # This increases the resolution of the reconstructions.
-    # angles = angles - offset_angular
-
-    # # We correct for the mean offset due to the rotated angles, we need to
-    # # shift the detector.
-    # offset_detector_by_angles = det_radius * np.mean(offset_angular)
-    # det_minp[0] -= offset_detector_by_angles
-    # det_maxp[0] -= offset_detector_by_angles
-
-    # # We currently apply only the mean of the offsets
-    # src_radius = src_radius + np.mean(offset_radial)
-
-    # # Partially compensate for a movement of the source by moving the object
-    # # instead. We need to rescale by the magnification to get the correct
-    # # change in the detector. This approximation is only exactly valid on the
-    # # axis of rotation.
-    # mean_offset_along_axis_for_ffz = np.mean(offset_axial) * (
-    #     src_radius / (src_radius + det_radius))
+    shifts = np.transpose(np.vstack([shift_d, shift_t, shift_r]))
 
     # Create partition for detector
     detector_partition = odl.uniform_partition(det_minp, det_maxp, det_shape)
@@ -183,12 +170,20 @@ def load_projections(folder, indices=None):
 
     # Assemble geometry
     angle_partition = odl.nonuniform_partition(angles)
+
+    # Flying focal spot
+    src_shift_func = None
+    if use_ffs:
+        src_shift_func = lambda angle: odl.tomo.flying_focal_spot(
+                        angle, apart=angle_partition, shifts=shifts)
+
     geometry = odl.tomo.ConeBeamGeometry(angle_partition,
                                          detector_partition,
                                          src_radius=src_radius,
                                          det_radius=det_radius,
                                          pitch=pitch,
-                                         offset_along_axis=offset_along_axis)
+                                         offset_along_axis=offset_along_axis,
+                                         src_shift_func=src_shift_func)
 
     return geometry, data_array
 
@@ -281,7 +276,7 @@ def load_reconstruction(folder, slice_start=0, slice_end=-1):
 
     for file_name in tqdm.tqdm(file_names, 'loading volume data'):
         # read the file
-        dataset = pydicom.read_file(folder + '/' + file_name)
+        dataset = pydicom.read_file(folder + os.path.sep + file_name)
 
         # Get parameters
         pixel_size = np.array(dataset.PixelSpacing)
