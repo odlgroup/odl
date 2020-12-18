@@ -1,10 +1,10 @@
 """Reconstruct Mayo dataset using FBP and compare to reference recon.
 
 Note that this example requires that Mayo has been previously downloaded and is
-stored in the location indicated by "mayo_dir".
+stored in the location indicated by "proj_folder" and "rec_folder".
 
 In this example we only use a subset of the data for performance reasons,
-there are ~32 000 projections in the full dataset.
+there are ~32 000 projections per patient in the full dataset.
 """
 import numpy as np
 import odl
@@ -14,7 +14,7 @@ from time import perf_counter
 # define data folders
 proj_folder = odl.__path__[0] + '/../../data/LDCT-and-Projection-data/' \
              'L004/08-21-2018-10971/1.000000-Full dose projections-24362/'
-img_folder = odl.__path__[0] + '/../../data/LDCT-and-Projection-data/' \
+rec_folder = odl.__path__[0] + '/../../data/LDCT-and-Projection-data/' \
              'L004/08-21-2018-84608/1.000000-Full dose images-59704/'
 
 # Load projection data
@@ -22,8 +22,8 @@ print("Loading projection data from {:s}".format(proj_folder))
 geometry, proj_data = mayo.load_projections(proj_folder,
                                             indices=slice(16000, 19000))
 # Load reconstruction data
-print("Loading reference data from {:s}".format(img_folder))
-recon_space, volume = mayo.load_reconstruction(img_folder)
+print("Loading reference data from {:s}".format(rec_folder))
+recon_space, volume = mayo.load_reconstruction(rec_folder)
 
 # ray transform
 ray_trafo = odl.tomo.RayTransform(recon_space, geometry)

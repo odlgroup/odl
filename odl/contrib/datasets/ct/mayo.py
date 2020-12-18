@@ -42,7 +42,6 @@ def _read_projections(folder, indices):
     """Read mayo projections from a folder."""
     datasets = []
     data_array = []
-    angles = []
 
     # Get the relevant file names
     file_names = sorted([f for f in os.listdir(folder) if f.endswith(".dcm")])
@@ -82,19 +81,15 @@ def _read_projections(folder, indices):
         proj_array = np.array(np.frombuffer(dataset.PixelData, 'H'),
                               dtype='float32')
         proj_array = proj_array.reshape([cols, rows])
-        # proj_array = proj_array.reshape([rows, cols], order='F').T
-
-        # Rescale array (no HU)
-        proj_array *= rescale_slope
-        proj_array += rescale_intercept
-
         data_array.append(proj_array[:, ::-1])
-        angles.append(dataset.DetectorFocalCenterAngularPosition)
         datasets.append(dataset)
 
     data_array = np.array(data_array)
-    angles = np.array(angles)
-    return datasets, data_array, angles
+    # Rescale array
+    data_array *= rescale_slope
+    data_array += rescale_intercept
+
+    return datasets, data_array
 
 
 def load_projections(folder, indices=None, use_ffs=True):
@@ -107,10 +102,9 @@ def load_projections(folder, indices=None, use_ffs=True):
     indices : optional
         Indices of the projections to load.
         Accepts advanced indexing such as slice or list of indices.
-    num_slices: int, optional
-        Number of slices to consider for the reconstruction volume;
-        the other parameters are hard-coded. With default value (None)
-        a *temporary* volume is created.
+    use_ffs : bool, optional
+        If ``True``, a source shift is applied to compensate the flying focal spot.
+        Default: ``True``
 
     Returns
     -------
@@ -120,10 +114,12 @@ def load_projections(folder, indices=None, use_ffs=True):
         Projection data, given as the line integral of the linear attenuation
         coefficient (g/cm^3). Its unit is thus g/cm^2.
     """
-    datasets, data_array, angles = _read_projections(folder, indices)
+    datasets, data_array = _read_projections(folder, indices)
 
+    # Get the angles
+    angles = np.array([d.DetectorFocalCenterAngularPosition for d in datasets])
     # Reverse angular axis and set origin at 6 o'clock
-    angles = -np.unwrap(angles) - np.pi 
+    angles = -np.unwrap(angles) - np.pi
 
     # Set minimum and maximum corners
     det_shape = np.array([datasets[0].NumberofDetectorColumns,
@@ -148,11 +144,11 @@ def load_projections(folder, indices=None, use_ffs=True):
     num_rot = (angles[-1] - angles[0]) / (2 * np.pi)
     pitch = table_dist / num_rot
 
-    # offsets: focal spot -> detector’s focal center
+    # offsets: detector’s focal center -> focal spot
     offset_angular = np.array([d.SourceAngularPositionShift for d in datasets])
     offset_radial = np.array([d.SourceRadialDistanceShift for d in datasets])
     offset_axial = np.array([d.SourceAxialPositionShift for d in datasets])
-    
+
     # angles have inverse convention
     shift_d = np.cos(-offset_angular) * (src_radius + offset_radial) - src_radius
     shift_t = np.sin(-offset_angular) * (src_radius + offset_radial)
@@ -164,7 +160,6 @@ def load_projections(folder, indices=None, use_ffs=True):
     detector_partition = odl.uniform_partition(det_minp, det_maxp, det_shape)
 
     # Convert offset to odl definitions
-    # offset_along_axis = (mean_offset_along_axis_for_ffz +
     offset_along_axis = datasets[0].DetectorFocalCenterAxialPosition - \
                         angles[0] / (2 * np.pi) * pitch
 
@@ -187,35 +182,26 @@ def load_projections(folder, indices=None, use_ffs=True):
 
     return geometry, data_array
 
-    
-
-def get_default_recon_space():
-    # Create a *temporary* ray transform (we need its range)
-    num_slices = 97
-    pixel_spacing = np.array([0.75,0.75])
-    num_pixel = np.array([512,512])
-    slice_dist = 5.
-    origin = np.zeros(3)
-    mid_table = (datasets[0].DetectorFocalCenterAxialPosition +
-                    datasets[-1].DetectorFocalCenterAxialPosition) / 2
-    min_pt = np.copy(origin)
-    min_pt[:2] -= pixel_spacing * num_pixel / 2
-    min_pt[2] += mid_table - num_slices * slice_dist / 2
-
-    max_pt = np.copy(min_pt)
-    max_pt[:2] += pixel_spacing * num_pixel
-    max_pt[2] += num_slices * slice_dist
-
-    recon_dim = np.array([*num_pixel, num_slices], dtype=np.int32)
-    recon_space = odl.uniform_discr(min_pt, max_pt,
-                                    shape=recon_dim,
-                                    dtype=np.float32)
-    return recon_space
-
-
-# ray_trafo = odl.tomo.RayTransform(recon_space, geometry, interp='linear')
 
 def interpolate_flat_grid(data_array, range_grid, radial_dist):
+    """Return the linear interpolator of the projection data on a flat detector.
+
+    Parameters
+    ----------
+    data_array : `numpy.ndarray`
+        Projection data on the cylindrical detector that should be interpolated.
+    range_grid : RectGrid
+        Rectilinear grid on the flat detector.
+    radial_dist : float
+        The constant radial distance, that is the distance between the detector’s
+        focal center and its central element.
+
+    Returns
+    -------
+    proj_data : `numpy.ndarray`
+        Interpolated projection data on the flat rectilinear grid.
+    """
+
     # convert coordinates
     theta, up, vp = range_grid.meshgrid #ray_trafo.range.grid.meshgrid
     # d = src_radius + det_radius
@@ -225,12 +211,11 @@ def interpolate_flat_grid(data_array, range_grid, radial_dist):
     # Calculate projection data in rectangular coordinates since we have no
     # backend that supports cylindrical
     interpolator = linear_interpolator(
-        data_array, range_grid.coord_vectors # ray_trafo.range.grid.coord_vectors
+        data_array, range_grid.coord_vectors
     )
     proj_data = interpolator((theta, u, v))
 
     return proj_data
-
 
 
 def load_reconstruction(folder, slice_start=0, slice_end=-1):
@@ -291,7 +276,6 @@ def load_reconstruction(folder, slice_start=0, slice_end=-1):
         data_array = np.rot90(data_array, -1)
 
         # Convert from storage type to densities
-        # TODO: Optimize these computations
         hu_values = (dataset.RescaleSlope * data_array +
                      dataset.RescaleIntercept)
 
