@@ -1,0 +1,8 @@
+:orphan:
+
+Detector.surface_measure
+===================================================
+
+.. currentmodule:: odl.tomo.geometry.detector
+
+.. automethod:: Detector.surface_measure

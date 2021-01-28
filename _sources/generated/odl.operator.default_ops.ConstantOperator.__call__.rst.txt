@@ -1,0 +1,8 @@
+:orphan:
+
+ConstantOperator.__call__
+==================================================
+
+.. currentmodule:: odl.operator.default_ops
+
+.. automethod:: ConstantOperator.__call__

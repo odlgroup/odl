@@ -1,0 +1,43 @@
+﻿IndicatorNonnegativity
+=================================================================
+
+.. currentmodule:: odl.solvers.functional.default_functionals
+
+.. autoclass:: IndicatorNonnegativity
+   :show-inheritance:
+   
+   
+   .. automethod:: __init__
+   
+      
+   
+   .. HACK -- the point here is that we don't want this to appear in the output, but the autosummary should still generate the pages.
+      .. autosummary::
+         :toctree:
+      
+         IndicatorNonnegativity.__call__
+         IndicatorNonnegativity.__eq__
+         IndicatorNonnegativity._call
+         IndicatorNonnegativity.bregman
+         IndicatorNonnegativity.derivative
+         IndicatorNonnegativity.norm
+         IndicatorNonnegativity.translated
+   
+
+    
+   .. HACK -- the point here is that we don't want this to appear in the output, but the autosummary should still generate the pages.
+      .. autosummary::
+         :toctree:
+      
+         IndicatorNonnegativity.adjoint
+         IndicatorNonnegativity.convex_conj
+         IndicatorNonnegativity.domain
+         IndicatorNonnegativity.grad_lipschitz
+         IndicatorNonnegativity.gradient
+         IndicatorNonnegativity.inverse
+         IndicatorNonnegativity.is_functional
+         IndicatorNonnegativity.is_linear
+         IndicatorNonnegativity.proximal
+         IndicatorNonnegativity.range
+   
+   

@@ -1,0 +1,8 @@
+:orphan:
+
+ResizingOperator.__eq__
+===========================================
+
+.. currentmodule:: odl.discr.discr_ops
+
+.. automethod:: ResizingOperator.__eq__

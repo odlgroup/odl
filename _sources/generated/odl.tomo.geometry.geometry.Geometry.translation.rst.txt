@@ -1,0 +1,6 @@
+Geometry.translation
+===============================================
+
+.. currentmodule:: odl.tomo.geometry.geometry
+
+.. autoproperty:: Geometry.translation

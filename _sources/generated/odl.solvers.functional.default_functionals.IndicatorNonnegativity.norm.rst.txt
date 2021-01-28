@@ -1,0 +1,8 @@
+:orphan:
+
+IndicatorNonnegativity.norm
+======================================================================
+
+.. currentmodule:: odl.solvers.functional.default_functionals
+
+.. automethod:: IndicatorNonnegativity.norm

@@ -1,0 +1,6 @@
+OperatorLeftVectorMult.vector
+===================================================
+
+.. currentmodule:: odl.operator.operator
+
+.. autoproperty:: OperatorLeftVectorMult.vector

@@ -1,0 +1,8 @@
+:orphan:
+
+RectGrid.insert
+==============================
+
+.. currentmodule:: odl.discr.grid
+
+.. automethod:: RectGrid.insert

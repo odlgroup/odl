@@ -1,0 +1,8 @@
+:orphan:
+
+FanBeamGeometry.__eq__
+=================================================
+
+.. currentmodule:: odl.tomo.geometry.conebeam
+
+.. automethod:: FanBeamGeometry.__eq__

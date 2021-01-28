@@ -1,0 +1,6 @@
+AstraCudaImpl.proj_space
+=====================================================
+
+.. currentmodule:: odl.tomo.backends.astra_cuda
+
+.. autoproperty:: AstraCudaImpl.proj_space

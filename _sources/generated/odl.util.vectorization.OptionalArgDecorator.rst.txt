@@ -1,0 +1,28 @@
+﻿OptionalArgDecorator
+===========================================
+
+.. currentmodule:: odl.util.vectorization
+
+.. autoclass:: OptionalArgDecorator
+   :show-inheritance:
+   
+   
+   .. automethod:: __init__
+   
+      
+   
+   .. HACK -- the point here is that we don't want this to appear in the output, but the autosummary should still generate the pages.
+      .. autosummary::
+         :toctree:
+      
+         OptionalArgDecorator.__call__
+         OptionalArgDecorator.__eq__
+   
+
+    
+   .. HACK -- the point here is that we don't want this to appear in the output, but the autosummary should still generate the pages.
+      .. autosummary::
+         :toctree:
+      
+   
+   

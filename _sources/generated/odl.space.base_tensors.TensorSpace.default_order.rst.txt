@@ -1,0 +1,6 @@
+TensorSpace.default_order
+================================================
+
+.. currentmodule:: odl.space.base_tensors
+
+.. autoproperty:: TensorSpace.default_order

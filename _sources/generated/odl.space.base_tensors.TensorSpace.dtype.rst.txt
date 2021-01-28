@@ -1,0 +1,6 @@
+TensorSpace.dtype
+========================================
+
+.. currentmodule:: odl.space.base_tensors
+
+.. autoproperty:: TensorSpace.dtype

@@ -1,0 +1,19 @@
+transmission
+============
+
+Phantoms typically used in transmission tomography.
+
+.. currentmodule:: odl.phantom.transmission
+
+
+
+
+.. rubric:: Functions
+
+.. autosummary::
+   :toctree: generated/
+
+   ~odl.phantom.transmission.forbild
+   ~odl.phantom.transmission.shepp_logan
+   ~odl.phantom.transmission.shepp_logan_ellipsoids
+

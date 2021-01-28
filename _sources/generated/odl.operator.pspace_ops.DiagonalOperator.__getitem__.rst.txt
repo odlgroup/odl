@@ -1,0 +1,8 @@
+:orphan:
+
+DiagonalOperator.__getitem__
+====================================================
+
+.. currentmodule:: odl.operator.pspace_ops
+
+.. automethod:: DiagonalOperator.__getitem__

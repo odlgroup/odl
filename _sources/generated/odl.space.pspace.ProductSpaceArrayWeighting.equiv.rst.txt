@@ -1,0 +1,8 @@
+:orphan:
+
+ProductSpaceArrayWeighting.equiv
+=================================================
+
+.. currentmodule:: odl.space.pspace
+
+.. automethod:: ProductSpaceArrayWeighting.equiv

@@ -1,0 +1,8 @@
+:orphan:
+
+sinh_op.__eq__
+======================================
+
+.. currentmodule:: odl.ufunc_ops.ufunc_ops
+
+.. automethod:: sinh_op.__eq__

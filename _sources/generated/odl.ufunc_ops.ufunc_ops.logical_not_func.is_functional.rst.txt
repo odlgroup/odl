@@ -1,0 +1,6 @@
+logical_not_func.is_functional
+======================================================
+
+.. currentmodule:: odl.ufunc_ops.ufunc_ops
+
+.. autoproperty:: logical_not_func.is_functional

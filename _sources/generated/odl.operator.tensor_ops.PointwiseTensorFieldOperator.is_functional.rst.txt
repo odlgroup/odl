@@ -1,0 +1,6 @@
+PointwiseTensorFieldOperator.is_functional
+==================================================================
+
+.. currentmodule:: odl.operator.tensor_ops
+
+.. autoproperty:: PointwiseTensorFieldOperator.is_functional

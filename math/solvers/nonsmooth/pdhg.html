@@ -1,0 +1,315 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>Primal-Dual Hybrid Gradient Algorithm (PDHG) &mdash; odl 1.0.0.dev0 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/custom.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../../" src="../../../_static/documentation_options.js"></script>
+        <script src="../../../_static/jquery.js"></script>
+        <script src="../../../_static/underscore.js"></script>
+        <script src="../../../_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="../../../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+    <link rel="next" title="Proximal Operators" href="proximal_operators.html" />
+    <link rel="prev" title="Solvers" href="../solvers.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../../index.html" class="icon icon-home"> odl
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                1.0.0.dev0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Getting Started</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../getting_started/getting_started.html">Getting Started</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Working with ODL</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../../../guide/guide.html">User’s guide – selected topics</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../../math.html">Mathematical Background</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../../linear_spaces.html">Linear Spaces</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../discretization.html">Discretizations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../resizing_ops.html">Resizing Operators</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../derivatives_guide.html">On the different notions of derivative</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../trafos/index.html">Transformations</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="../solvers.html">Solvers</a><ul class="current">
+<li class="toctree-l3 current"><a class="current reference internal" href="#">Primal-Dual Hybrid Gradient Algorithm (PDHG)</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#the-general-problem">The general problem</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#the-algorithm">The algorithm</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="proximal_operators.html">Proximal Operators</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<p class="caption"><span class="caption-text">Developer zone</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../dev/dev.html">Contributing to ODL</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Useful facts</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../guide/faq.html">Frequently asked questions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../guide/glossary.html">Glossary</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../release_notes.html">Release Notes</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../refs.html">References</a></li>
+</ul>
+<p class="caption"><span class="caption-text">API Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../odl.html">odl</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">odl</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="../../math.html">Mathematical Background</a> &raquo;</li>
+        
+          <li><a href="../solvers.html">Solvers</a> &raquo;</li>
+        
+      <li>Primal-Dual Hybrid Gradient Algorithm (PDHG)</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            <a href="../../../_sources/math/solvers/nonsmooth/pdhg.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="primal-dual-hybrid-gradient-algorithm-pdhg">
+<span id="pdhg-math"></span><h1>Primal-Dual Hybrid Gradient Algorithm (PDHG)<a class="headerlink" href="#primal-dual-hybrid-gradient-algorithm-pdhg" title="Permalink to this headline">¶</a></h1>
+<p>This page introduces the mathematics behind the Primal-Dual Hybrid Gradient Algorithm.
+For an applied point of view, please see <a class="reference internal" href="../../../guide/pdhg_guide.html#pdhg-guide"><span class="std std-ref">the user’s guide to this method</span></a>.</p>
+<div class="section" id="the-general-problem">
+<h2>The general problem<a class="headerlink" href="#the-general-problem" title="Permalink to this headline">¶</a></h2>
+<p>The Primal-Dual Hybrid Gradient Algorithm (PDHG) algorithm, as studied in <a class="reference internal" href="../../../refs.html#cp2011a" id="id1"><span>[CP2011a]</span></a>, is a first order method for non-smooth convex optimization problems with known saddle-point structure</p>
+<div class="math">
+<p><img src="../../../_images/math/35739b8a98d01f45eb2209319580c1b1c753abb4.png" alt="\max_{y \in Y} \min_{x \in X} \big( \langle L x, y\rangle_Y + g(x) - f^*(y) \big) ,"/></p>
+</div><p>where <img class="math" src="../../../_images/math/ed38fa24f1c94891bd312012aab3f6673be3eb83.png" alt="X"/> and <img class="math" src="../../../_images/math/7daf0d4815e763eb90f0d5f1dc406f668c1e21db.png" alt="Y"/> are Hilbert spaces with inner product <img class="math" src="../../../_images/math/424855c1a402bbc4d851a3ae488d6f2799546d00.png" alt="\langle\cdot,\cdot\rangle"/> and norm <img class="math" src="../../../_images/math/e5d2ff2eb7911b37c43417ab67902919566a736f.png" alt="\|.\|_2 = \langle\cdot,\cdot\rangle^{1/2}"/>, <img class="math" src="../../../_images/math/19eef1966f7c545af3ac8c0fa486974d873e3c65.png" alt="L"/> is a continuous linear operator <img class="math" src="../../../_images/math/cfe1a54dc9b75edf22922c3be8196b49fbc2cb15.png" alt="L: X \to Y"/>, <img class="math" src="../../../_images/math/0c5f4e78f54d4ab9d228b8b2784f9343359d6316.png" alt="g: X \to [0,+\infty]"/> and <img class="math" src="../../../_images/math/caca634b0873b1c7090317209b869db9001d44be.png" alt="f: Y \to [0,+\infty]"/> are proper, convex and lower semi-continuous functionals, and <img class="math" src="../../../_images/math/81a2248d85ab7962d41c1d317398b81627d9e633.png" alt="f^*"/> is the convex (or Fenchel) conjugate of f, (see <a class="reference internal" href="../../../guide/glossary.html#term-convex-conjugate"><span class="xref std std-term">convex conjugate</span></a>).</p>
+<p>The saddle-point problem is a primal-dual formulation of the primal minimization problem</p>
+<div class="math">
+<p><img src="../../../_images/math/ba3e0e02a9e181816173f8e4192bf6a64aecb733.png" alt="\min_{x \in X} \big( g(x) + f(L x) \big)."/></p>
+</div><p>The corresponding dual maximization problem is</p>
+<div class="math">
+<p><img src="../../../_images/math/1222b4db7c17fcd9c77a950bae1becde61fc372a.png" alt="\max_{y \in Y} \big( g^*(-L^* x) - f^*(y) \big)"/></p>
+</div><p>with <img class="math" src="../../../_images/math/06947c8db160fcf0972208d799a8df5caa9987ad.png" alt="L^*"/> being the adjoint of the operator <img class="math" src="../../../_images/math/19eef1966f7c545af3ac8c0fa486974d873e3c65.png" alt="L"/>.</p>
+</div>
+<div class="section" id="the-algorithm">
+<h2>The algorithm<a class="headerlink" href="#the-algorithm" title="Permalink to this headline">¶</a></h2>
+<p>PDHG basically consists in alternating a gradient-like ascent in the dual variable <img class="math" src="../../../_images/math/1b5e577d6216dca3af7d87aa122a0b9b360d6cb3.png" alt="y"/> and a gradient-like descent in the primal variable <img class="math" src="../../../_images/math/888f7c323ac0341871e867220ae2d76467d74d6e.png" alt="x"/>.
+Additionally, an over-relaxation in the primal variable is performed.</p>
+<div class="section" id="initialization">
+<h3>Initialization<a class="headerlink" href="#initialization" title="Permalink to this headline">¶</a></h3>
+<p>Choose <img class="math" src="../../../_images/math/4579c0d6252cc39bba63a5f196a0373aec5a90d4.png" alt="\tau &gt; 0"/>, <img class="math" src="../../../_images/math/103d72f989f117c6474654ac88b28bfa0c94a039.png" alt="\sigma &gt; 0"/>, <img class="math" src="../../../_images/math/945ffffedefdf26c41830e437501956e8202eebf.png" alt="\theta \in [0,1]"/>,
+<img class="math" src="../../../_images/math/b7fec0292d54b886ea23358f34a20bb008ae476a.png" alt="x_0 \in X"/>, <img class="math" src="../../../_images/math/a6d45a1fe937f623ad8c63f8aa99542b30c98e3f.png" alt="y_0 \in Y"/>, <img class="math" src="../../../_images/math/5726c3170912887f8d500aa023b0600a76e9a3d7.png" alt="\bar x_0 = x_0"/></p>
+</div>
+<div class="section" id="iteration">
+<h3>Iteration<a class="headerlink" href="#iteration" title="Permalink to this headline">¶</a></h3>
+<p>For <img class="math" src="../../../_images/math/3a1566b32cb2e6ae1beaa7fda234d15a4d24de79.png" alt="n &gt; 0"/> update <img class="math" src="../../../_images/math/08dfd7399e8e2f0a9715c6f9a13a55d8a368a038.png" alt="x_n"/>, <img class="math" src="../../../_images/math/2c90139a969e27fc1c05729a4f456f2f81850b40.png" alt="y_n"/>, and <img class="math" src="../../../_images/math/824d059e6170a1c41f4cd21cb13a403b62fb3031.png" alt="\bar x_n"/> as
+follows:</p>
+<div class="math">
+<p><img src="../../../_images/math/3d85f5939d59441db31b67603191d264c89379a9.png" alt="y_{n+1}         &amp;= \text{prox}_{\sigma f^*}(y_n + \sigma L \bar x_n),
+
+x_{n+1}         &amp;= \text{prox}_{\tau g}(x_n - \tau  L^* y_{n+1}),
+
+\bar x_{n+1}    &amp;= x_{n+1} + \theta (x_{n+1} - x_n),"/></p>
+</div><p>Here, <img class="math" src="../../../_images/math/94759565f776f1c342ab572a371c09f72b65aaa0.png" alt="\text{prox}"/> stands for <a class="reference internal" href="../../../guide/glossary.html#term-proximal"><span class="xref std std-term">proximal operator</span></a>.</p>
+</div>
+<div class="section" id="step-sizes">
+<h3>Step sizes<a class="headerlink" href="#step-sizes" title="Permalink to this headline">¶</a></h3>
+<p>A simple choice of step size parameters is <img class="math" src="../../../_images/math/3212a2fb47d8cdb3da5abf81035336f4f0767385.png" alt="\tau = \sigma &lt; \frac{1}{\|L\|}"/>, since the requirement <img class="math" src="../../../_images/math/bab141160e31b9ce4b223fda239536c9b9173160.png" alt="\sigma \tau \|L\|^2 &lt; 1"/> guarantees convergence of the algorithm.
+Of course, this does not imply that this choice is anywhere near optimal, but it can serve as a good starting point.</p>
+</div>
+<div class="section" id="acceleration">
+<h3>Acceleration<a class="headerlink" href="#acceleration" title="Permalink to this headline">¶</a></h3>
+<p>If <img class="math" src="../../../_images/math/157ba5711de84b4c715a0478fd8ae440e596d96e.png" alt="g"/> or <img class="math" src="../../../_images/math/81a2248d85ab7962d41c1d317398b81627d9e633.png" alt="f^*"/> is uniformly convex, convergence can be accelerated using variable step sizes as follows:</p>
+<p>Replace <img class="math" src="../../../_images/math/1c7cf924308d084bb03e3da5fb3d58269d0be911.png" alt="\tau \to \tau_n"/>, <img class="math" src="../../../_images/math/6a1e9b774e48a697ec9863c739f0fff47f227519.png" alt="\sigma \to \sigma_n"/>, and <img class="math" src="../../../_images/math/e1648f98c728c6752b9e0499d7dbef3eb96f6ac3.png" alt="\theta \to \theta_n"/> and choose <img class="math" src="../../../_images/math/d4276ec5fea1b113f732bbe44ed010e3478432cb.png" alt="\tau_0 \sigma_0 \|L\|^2 &lt; 1"/> and <img class="math" src="../../../_images/math/e93ab34ca4b02cae1a343411de631fbed5d733f8.png" alt="\gamma &gt; 0"/>.
+After the update of the primal variable <img class="math" src="../../../_images/math/5685317665034d2e1b14023cf1bb086affaa5d21.png" alt="x_{n+1}"/> and before the update of the relaxation variable <img class="math" src="../../../_images/math/221edddbfccecd1769dfb70c5f43f6e37a3ba3e4.png" alt="\bar x_{n+1}"/> use the following update scheme for relaxation and step size parameters:</p>
+<div class="math">
+<p><img src="../../../_images/math/f5d1b1240d3a272e41f5fc508bc6f4427d08dc7d.png" alt="\theta_n        &amp;= \frac{1}{\sqrt{1 + 2 \gamma \tau_n}},
+
+\tau_{n+1}      &amp;= \theta_n \tau_n,
+
+\sigma_{n+1}    &amp;= \frac{\sigma_n}{\theta_n}."/></p>
+</div><p>Instead of choosing step size parameters, preconditioning techniques can be employed, see <a class="reference internal" href="../../../refs.html#cp2011b" id="id2"><span>[CP2011b]</span></a>.
+In this case the steps <img class="math" src="../../../_images/math/914b2d4b6659b86d3153d5510839dfb254dfc8a3.png" alt="\tau"/> and <img class="math" src="../../../_images/math/b52df27bfb0b1e3af0c2c68a7b9da459178c2a7d.png" alt="\sigma"/> are replaced by symmetric and positive definite matrices <img class="math" src="../../../_images/math/e8dea8254118f111b5fb20895b03528c17566f06.png" alt="T"/> and <img class="math" src="../../../_images/math/6edc5c119344e25a06e6ac4cb56f2d5e2f09a2f1.png" alt="\Sigma"/>, respectively, and convergence holds for <img class="math" src="../../../_images/math/2aff987bdaf7d11ec240579ac8a1b1c362275dcc.png" alt="\| \Sigma^{1/2}\,L\, T^{1/2}\|^2 &lt; 1"/>.</p>
+<p>For more on proximal operators and algorithms see <a class="reference internal" href="../../../refs.html#pb2014" id="id3"><span>[PB2014]</span></a>.
+The implementation of PDHG in ODL is along the lines of <a class="reference internal" href="../../../refs.html#sid-2012" id="id4"><span>[Sid+2012]</span></a>.</p>
+</div>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+        <a href="proximal_operators.html" class="btn btn-neutral float-right" title="Proximal Operators" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="../solvers.html" class="btn btn-neutral float-left" title="Solvers" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &#169; Copyright 2014-2020 The ODL Contributors.
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

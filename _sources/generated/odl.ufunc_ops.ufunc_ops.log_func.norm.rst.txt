@@ -1,0 +1,8 @@
+:orphan:
+
+log_func.norm
+=====================================
+
+.. currentmodule:: odl.ufunc_ops.ufunc_ops
+
+.. automethod:: log_func.norm

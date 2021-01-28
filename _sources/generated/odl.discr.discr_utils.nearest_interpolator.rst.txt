@@ -1,0 +1,6 @@
+﻿nearest_interpolator
+==========================================
+
+.. currentmodule:: odl.discr.discr_utils
+
+.. autofunction:: nearest_interpolator

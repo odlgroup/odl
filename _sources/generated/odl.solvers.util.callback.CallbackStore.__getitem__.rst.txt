@@ -1,0 +1,8 @@
+:orphan:
+
+CallbackStore.__getitem__
+===================================================
+
+.. currentmodule:: odl.solvers.util.callback
+
+.. automethod:: CallbackStore.__getitem__

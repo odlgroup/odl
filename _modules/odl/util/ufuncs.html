@@ -1,0 +1,529 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>odl.util.ufuncs &mdash; odl 1.0.0.dev0 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/custom.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../../" src="../../../_static/documentation_options.js"></script>
+        <script src="../../../_static/jquery.js"></script>
+        <script src="../../../_static/underscore.js"></script>
+        <script src="../../../_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="../../../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../../index.html" class="icon icon-home"> odl
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                1.0.0.dev0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Getting Started</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../getting_started/getting_started.html">Getting Started</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Working with ODL</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../guide/guide.html">User’s guide – selected topics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../math/math.html">Mathematical Background</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Developer zone</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../dev/dev.html">Contributing to ODL</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Useful facts</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../guide/faq.html">Frequently asked questions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../guide/glossary.html">Glossary</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../release_notes.html">Release Notes</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../refs.html">References</a></li>
+</ul>
+<p class="caption"><span class="caption-text">API Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../odl.html">odl</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">odl</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="../../index.html">Module code</a> &raquo;</li>
+        
+      <li>odl.util.ufuncs</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for odl.util.ufuncs</h1><div class="highlight"><pre>
+<span></span><span class="c1"># Copyright 2014-2019 The ODL contributors</span>
+<span class="c1">#</span>
+<span class="c1"># This file is part of ODL.</span>
+<span class="c1">#</span>
+<span class="c1"># This Source Code Form is subject to the terms of the Mozilla Public License,</span>
+<span class="c1"># v. 2.0. If a copy of the MPL was not distributed with this file, You can</span>
+<span class="c1"># obtain one at https://mozilla.org/MPL/2.0/.</span>
+
+<span class="sd">&quot;&quot;&quot;Universal functions (ufuncs) for ODL-wrapped arrays.</span>
+
+<span class="sd">These functions are internal and should only be used as methods on</span>
+<span class="sd">`Tensor`-like classes.</span>
+
+<span class="sd">See `numpy.ufuncs</span>
+<span class="sd">&lt;http://docs.scipy.org/doc/numpy/reference/ufuncs.html&gt;`_</span>
+<span class="sd">for more information.</span>
+
+<span class="sd">Notes</span>
+<span class="sd">-----</span>
+<span class="sd">The default implementation of these methods uses the ``__array_ufunc__``</span>
+<span class="sd">dispatch machinery `introduced in Numpy 1.13</span>
+<span class="sd">&lt;https://github.com/charris/numpy/blob/master/doc/source/reference/\</span>
+<span class="sd">arrays.classes.rst#special-attributes-and-methods&gt;`_.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">print_function</span><span class="p">,</span> <span class="n">division</span><span class="p">,</span> <span class="n">absolute_import</span>
+<span class="kn">from</span> <span class="nn">builtins</span> <span class="kn">import</span> <span class="nb">object</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">re</span>
+
+
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;TensorSpaceUfuncs&#39;</span><span class="p">,</span> <span class="s1">&#39;ProductSpaceUfuncs&#39;</span><span class="p">)</span>
+
+
+<span class="c1"># Some are ignored since they don&#39;t cooperate with dtypes, needs fix</span>
+<span class="n">RAW_UFUNCS</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;absolute&#39;</span><span class="p">,</span> <span class="s1">&#39;add&#39;</span><span class="p">,</span> <span class="s1">&#39;arccos&#39;</span><span class="p">,</span> <span class="s1">&#39;arccosh&#39;</span><span class="p">,</span> <span class="s1">&#39;arcsin&#39;</span><span class="p">,</span> <span class="s1">&#39;arcsinh&#39;</span><span class="p">,</span>
+              <span class="s1">&#39;arctan&#39;</span><span class="p">,</span> <span class="s1">&#39;arctan2&#39;</span><span class="p">,</span> <span class="s1">&#39;arctanh&#39;</span><span class="p">,</span> <span class="s1">&#39;bitwise_and&#39;</span><span class="p">,</span> <span class="s1">&#39;bitwise_or&#39;</span><span class="p">,</span>
+              <span class="s1">&#39;bitwise_xor&#39;</span><span class="p">,</span> <span class="s1">&#39;ceil&#39;</span><span class="p">,</span> <span class="s1">&#39;conj&#39;</span><span class="p">,</span> <span class="s1">&#39;copysign&#39;</span><span class="p">,</span> <span class="s1">&#39;cos&#39;</span><span class="p">,</span> <span class="s1">&#39;cosh&#39;</span><span class="p">,</span>
+              <span class="s1">&#39;deg2rad&#39;</span><span class="p">,</span> <span class="s1">&#39;divide&#39;</span><span class="p">,</span> <span class="s1">&#39;equal&#39;</span><span class="p">,</span> <span class="s1">&#39;exp&#39;</span><span class="p">,</span> <span class="s1">&#39;exp2&#39;</span><span class="p">,</span> <span class="s1">&#39;expm1&#39;</span><span class="p">,</span> <span class="s1">&#39;floor&#39;</span><span class="p">,</span>
+              <span class="s1">&#39;floor_divide&#39;</span><span class="p">,</span> <span class="s1">&#39;fmax&#39;</span><span class="p">,</span> <span class="s1">&#39;fmin&#39;</span><span class="p">,</span> <span class="s1">&#39;fmod&#39;</span><span class="p">,</span> <span class="s1">&#39;greater&#39;</span><span class="p">,</span>
+              <span class="s1">&#39;greater_equal&#39;</span><span class="p">,</span> <span class="s1">&#39;hypot&#39;</span><span class="p">,</span> <span class="s1">&#39;invert&#39;</span><span class="p">,</span> <span class="s1">&#39;isfinite&#39;</span><span class="p">,</span> <span class="s1">&#39;isinf&#39;</span><span class="p">,</span> <span class="s1">&#39;isnan&#39;</span><span class="p">,</span>
+              <span class="s1">&#39;left_shift&#39;</span><span class="p">,</span> <span class="s1">&#39;less&#39;</span><span class="p">,</span> <span class="s1">&#39;less_equal&#39;</span><span class="p">,</span> <span class="s1">&#39;log&#39;</span><span class="p">,</span> <span class="s1">&#39;log10&#39;</span><span class="p">,</span> <span class="s1">&#39;log1p&#39;</span><span class="p">,</span>
+              <span class="s1">&#39;log2&#39;</span><span class="p">,</span> <span class="s1">&#39;logaddexp&#39;</span><span class="p">,</span> <span class="s1">&#39;logaddexp2&#39;</span><span class="p">,</span> <span class="s1">&#39;logical_and&#39;</span><span class="p">,</span> <span class="s1">&#39;logical_not&#39;</span><span class="p">,</span>
+              <span class="s1">&#39;logical_or&#39;</span><span class="p">,</span> <span class="s1">&#39;logical_xor&#39;</span><span class="p">,</span> <span class="s1">&#39;maximum&#39;</span><span class="p">,</span> <span class="s1">&#39;minimum&#39;</span><span class="p">,</span> <span class="s1">&#39;mod&#39;</span><span class="p">,</span> <span class="s1">&#39;modf&#39;</span><span class="p">,</span>
+              <span class="s1">&#39;multiply&#39;</span><span class="p">,</span> <span class="s1">&#39;negative&#39;</span><span class="p">,</span> <span class="s1">&#39;not_equal&#39;</span><span class="p">,</span> <span class="s1">&#39;power&#39;</span><span class="p">,</span>
+              <span class="s1">&#39;rad2deg&#39;</span><span class="p">,</span> <span class="s1">&#39;reciprocal&#39;</span><span class="p">,</span> <span class="s1">&#39;remainder&#39;</span><span class="p">,</span> <span class="s1">&#39;right_shift&#39;</span><span class="p">,</span> <span class="s1">&#39;rint&#39;</span><span class="p">,</span>
+              <span class="s1">&#39;sign&#39;</span><span class="p">,</span> <span class="s1">&#39;signbit&#39;</span><span class="p">,</span> <span class="s1">&#39;sin&#39;</span><span class="p">,</span> <span class="s1">&#39;sinh&#39;</span><span class="p">,</span> <span class="s1">&#39;sqrt&#39;</span><span class="p">,</span> <span class="s1">&#39;square&#39;</span><span class="p">,</span> <span class="s1">&#39;subtract&#39;</span><span class="p">,</span>
+              <span class="s1">&#39;tan&#39;</span><span class="p">,</span> <span class="s1">&#39;tanh&#39;</span><span class="p">,</span> <span class="s1">&#39;true_divide&#39;</span><span class="p">,</span> <span class="s1">&#39;trunc&#39;</span><span class="p">]</span>
+<span class="c1"># ,&#39;isreal&#39;, &#39;iscomplex&#39;, &#39;ldexp&#39;, &#39;frexp&#39;</span>
+
+<span class="c1"># Add some standardized information</span>
+<span class="n">UFUNCS</span> <span class="o">=</span> <span class="p">[]</span>
+<span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">RAW_UFUNCS</span><span class="p">:</span>
+    <span class="n">ufunc</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">np</span><span class="p">,</span> <span class="n">name</span><span class="p">)</span>
+    <span class="n">n_in</span><span class="p">,</span> <span class="n">n_out</span> <span class="o">=</span> <span class="n">ufunc</span><span class="o">.</span><span class="n">nin</span><span class="p">,</span> <span class="n">ufunc</span><span class="o">.</span><span class="n">nout</span>
+    <span class="n">descr</span> <span class="o">=</span> <span class="n">ufunc</span><span class="o">.</span><span class="vm">__doc__</span><span class="o">.</span><span class="n">splitlines</span><span class="p">()[</span><span class="mi">2</span><span class="p">]</span>
+    <span class="c1"># Numpy occasionally uses single ticks for doc, we only use them for links</span>
+    <span class="n">descr</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="s1">&#39;`+&#39;</span><span class="p">,</span> <span class="s1">&#39;``&#39;</span><span class="p">,</span> <span class="n">descr</span><span class="p">)</span>
+    <span class="n">doc</span> <span class="o">=</span> <span class="n">descr</span> <span class="o">+</span> <span class="s2">&quot;&quot;&quot;</span>
+
+<span class="s2">See Also</span>
+<span class="s2">--------</span>
+<span class="s2">numpy.</span><span class="si">{}</span><span class="s2"></span>
+<span class="s2">&quot;&quot;&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
+    <span class="n">UFUNCS</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">name</span><span class="p">,</span> <span class="n">n_in</span><span class="p">,</span> <span class="n">n_out</span><span class="p">,</span> <span class="n">doc</span><span class="p">))</span>
+
+<span class="c1"># TODO: add the following reductions (to the CUDA implementation):</span>
+<span class="c1"># [&#39;var&#39;, &#39;trace&#39;, &#39;tensordot&#39;, &#39;std&#39;, &#39;ptp&#39;, &#39;mean&#39;, &#39;diff&#39;, &#39;cumsum&#39;,</span>
+<span class="c1">#  &#39;cumprod&#39;, &#39;average&#39;]</span>
+
+
+<span class="c1"># --- Wrappers for `Tensor` --- #</span>
+
+
+<div class="viewcode-block" id="wrap_ufunc_base"><a class="viewcode-back" href="../../../generated/odl.util.ufuncs.wrap_ufunc_base.html#odl.util.ufuncs.wrap_ufunc_base">[docs]</a><span class="k">def</span> <span class="nf">wrap_ufunc_base</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">n_in</span><span class="p">,</span> <span class="n">n_out</span><span class="p">,</span> <span class="n">doc</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Return ufunc wrapper for implementation-agnostic ufunc classes.&quot;&quot;&quot;</span>
+    <span class="n">ufunc</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">np</span><span class="p">,</span> <span class="n">name</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">n_in</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">n_out</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">def</span> <span class="nf">wrapper</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">out</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+                <span class="k">if</span> <span class="n">out</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">out</span><span class="p">,</span> <span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">elem</span><span class="p">),</span>
+                                                   <span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">elem</span><span class="o">.</span><span class="n">data</span><span class="p">))):</span>
+                    <span class="n">out</span> <span class="o">=</span> <span class="p">(</span><span class="n">out</span><span class="p">,)</span>
+
+                <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">elem</span><span class="o">.</span><span class="n">__array_ufunc__</span><span class="p">(</span>
+                    <span class="n">ufunc</span><span class="p">,</span> <span class="s1">&#39;__call__&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">elem</span><span class="p">,</span> <span class="n">out</span><span class="o">=</span><span class="n">out</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+        <span class="k">elif</span> <span class="n">n_out</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
+            <span class="k">def</span> <span class="nf">wrapper</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">out</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+                <span class="k">if</span> <span class="n">out</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="n">out</span> <span class="o">=</span> <span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+
+                <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">elem</span><span class="o">.</span><span class="n">__array_ufunc__</span><span class="p">(</span>
+                    <span class="n">ufunc</span><span class="p">,</span> <span class="s1">&#39;__call__&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">elem</span><span class="p">,</span> <span class="n">out</span><span class="o">=</span><span class="n">out</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">NotImplementedError</span>
+
+    <span class="k">elif</span> <span class="n">n_in</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">n_out</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">def</span> <span class="nf">wrapper</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x2</span><span class="p">,</span> <span class="n">out</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+                <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">elem</span><span class="o">.</span><span class="n">__array_ufunc__</span><span class="p">(</span>
+                    <span class="n">ufunc</span><span class="p">,</span> <span class="s1">&#39;__call__&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">elem</span><span class="p">,</span> <span class="n">x2</span><span class="p">,</span> <span class="n">out</span><span class="o">=</span><span class="p">(</span><span class="n">out</span><span class="p">,),</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">NotImplementedError</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span>
+
+    <span class="n">wrapper</span><span class="o">.</span><span class="vm">__name__</span> <span class="o">=</span> <span class="n">wrapper</span><span class="o">.</span><span class="vm">__qualname__</span> <span class="o">=</span> <span class="n">name</span>
+    <span class="n">wrapper</span><span class="o">.</span><span class="vm">__doc__</span> <span class="o">=</span> <span class="n">doc</span>
+    <span class="k">return</span> <span class="n">wrapper</span></div>
+
+
+<div class="viewcode-block" id="TensorSpaceUfuncs"><a class="viewcode-back" href="../../../generated/odl.util.ufuncs.TensorSpaceUfuncs.html#odl.util.ufuncs.TensorSpaceUfuncs">[docs]</a><span class="k">class</span> <span class="nc">TensorSpaceUfuncs</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+
+    <span class="sd">&quot;&quot;&quot;Ufuncs for `Tensor` objects.</span>
+
+<span class="sd">    Internal object, should not be created except in `Tensor`.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="TensorSpaceUfuncs.__init__"><a class="viewcode-back" href="../../../generated/odl.util.ufuncs.TensorSpaceUfuncs.html#odl.util.ufuncs.TensorSpaceUfuncs.__init__">[docs]</a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">elem</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Create ufunc wrapper for elem.&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">elem</span> <span class="o">=</span> <span class="n">elem</span></div>
+
+    <span class="c1"># Reductions for backwards compatibility</span>
+
+<div class="viewcode-block" id="TensorSpaceUfuncs.sum"><a class="viewcode-back" href="../../../generated/odl.util.ufuncs.TensorSpaceUfuncs.sum.html#odl.util.ufuncs.TensorSpaceUfuncs.sum">[docs]</a>    <span class="k">def</span> <span class="nf">sum</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">out</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">keepdims</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return the sum of ``self``.</span>
+
+<span class="sd">        See Also</span>
+<span class="sd">        --------</span>
+<span class="sd">        numpy.sum</span>
+<span class="sd">        prod</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">elem</span><span class="o">.</span><span class="n">__array_ufunc__</span><span class="p">(</span>
+            <span class="n">np</span><span class="o">.</span><span class="n">add</span><span class="p">,</span> <span class="s1">&#39;reduce&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">elem</span><span class="p">,</span>
+            <span class="n">axis</span><span class="o">=</span><span class="n">axis</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">dtype</span><span class="p">,</span> <span class="n">out</span><span class="o">=</span><span class="p">(</span><span class="n">out</span><span class="p">,),</span> <span class="n">keepdims</span><span class="o">=</span><span class="n">keepdims</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="TensorSpaceUfuncs.prod"><a class="viewcode-back" href="../../../generated/odl.util.ufuncs.TensorSpaceUfuncs.prod.html#odl.util.ufuncs.TensorSpaceUfuncs.prod">[docs]</a>    <span class="k">def</span> <span class="nf">prod</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">out</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">keepdims</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return the product of ``self``.</span>
+
+<span class="sd">        See Also</span>
+<span class="sd">        --------</span>
+<span class="sd">        numpy.prod</span>
+<span class="sd">        sum</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">elem</span><span class="o">.</span><span class="n">__array_ufunc__</span><span class="p">(</span>
+            <span class="n">np</span><span class="o">.</span><span class="n">multiply</span><span class="p">,</span> <span class="s1">&#39;reduce&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">elem</span><span class="p">,</span>
+            <span class="n">axis</span><span class="o">=</span><span class="n">axis</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">dtype</span><span class="p">,</span> <span class="n">out</span><span class="o">=</span><span class="p">(</span><span class="n">out</span><span class="p">,),</span> <span class="n">keepdims</span><span class="o">=</span><span class="n">keepdims</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="TensorSpaceUfuncs.min"><a class="viewcode-back" href="../../../generated/odl.util.ufuncs.TensorSpaceUfuncs.min.html#odl.util.ufuncs.TensorSpaceUfuncs.min">[docs]</a>    <span class="k">def</span> <span class="nf">min</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">out</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">keepdims</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return the minimum of ``self``.</span>
+
+<span class="sd">        See Also</span>
+<span class="sd">        --------</span>
+<span class="sd">        numpy.amin</span>
+<span class="sd">        max</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">elem</span><span class="o">.</span><span class="n">__array_ufunc__</span><span class="p">(</span>
+            <span class="n">np</span><span class="o">.</span><span class="n">minimum</span><span class="p">,</span> <span class="s1">&#39;reduce&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">elem</span><span class="p">,</span>
+            <span class="n">axis</span><span class="o">=</span><span class="n">axis</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">dtype</span><span class="p">,</span> <span class="n">out</span><span class="o">=</span><span class="p">(</span><span class="n">out</span><span class="p">,),</span> <span class="n">keepdims</span><span class="o">=</span><span class="n">keepdims</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="TensorSpaceUfuncs.max"><a class="viewcode-back" href="../../../generated/odl.util.ufuncs.TensorSpaceUfuncs.max.html#odl.util.ufuncs.TensorSpaceUfuncs.max">[docs]</a>    <span class="k">def</span> <span class="nf">max</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">out</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">keepdims</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return the maximum of ``self``.</span>
+
+<span class="sd">        See Also</span>
+<span class="sd">        --------</span>
+<span class="sd">        numpy.amax</span>
+<span class="sd">        min</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">elem</span><span class="o">.</span><span class="n">__array_ufunc__</span><span class="p">(</span>
+            <span class="n">np</span><span class="o">.</span><span class="n">maximum</span><span class="p">,</span> <span class="s1">&#39;reduce&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">elem</span><span class="p">,</span>
+            <span class="n">axis</span><span class="o">=</span><span class="n">axis</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">dtype</span><span class="p">,</span> <span class="n">out</span><span class="o">=</span><span class="p">(</span><span class="n">out</span><span class="p">,),</span> <span class="n">keepdims</span><span class="o">=</span><span class="n">keepdims</span><span class="p">)</span></div></div>
+
+
+<span class="c1"># Add ufunc methods to ufunc class</span>
+<span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">n_in</span><span class="p">,</span> <span class="n">n_out</span><span class="p">,</span> <span class="n">doc</span> <span class="ow">in</span> <span class="n">UFUNCS</span><span class="p">:</span>
+    <span class="n">method</span> <span class="o">=</span> <span class="n">wrap_ufunc_base</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">n_in</span><span class="p">,</span> <span class="n">n_out</span><span class="p">,</span> <span class="n">doc</span><span class="p">)</span>
+    <span class="nb">setattr</span><span class="p">(</span><span class="n">TensorSpaceUfuncs</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">method</span><span class="p">)</span>
+
+
+<span class="c1"># --- Wrappers for `ProductSpaceElement` --- #</span>
+
+
+<div class="viewcode-block" id="wrap_ufunc_productspace"><a class="viewcode-back" href="../../../generated/odl.util.ufuncs.wrap_ufunc_productspace.html#odl.util.ufuncs.wrap_ufunc_productspace">[docs]</a><span class="k">def</span> <span class="nf">wrap_ufunc_productspace</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">n_in</span><span class="p">,</span> <span class="n">n_out</span><span class="p">,</span> <span class="n">doc</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Return ufunc wrapper for `ProductSpaceUfuncs`.&quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">n_in</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">n_out</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">def</span> <span class="nf">wrapper</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">out</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+                <span class="k">if</span> <span class="n">out</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="n">result</span> <span class="o">=</span> <span class="p">[</span><span class="nb">getattr</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">ufuncs</span><span class="p">,</span> <span class="n">name</span><span class="p">)(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+                              <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">elem</span><span class="p">]</span>
+                    <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">elem</span><span class="o">.</span><span class="n">space</span><span class="o">.</span><span class="n">element</span><span class="p">(</span><span class="n">result</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="k">for</span> <span class="n">x</span><span class="p">,</span> <span class="n">out_x</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">elem</span><span class="p">,</span> <span class="n">out</span><span class="p">):</span>
+                        <span class="nb">getattr</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">ufuncs</span><span class="p">,</span> <span class="n">name</span><span class="p">)(</span><span class="n">out</span><span class="o">=</span><span class="n">out_x</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+                    <span class="k">return</span> <span class="n">out</span>
+
+        <span class="k">elif</span> <span class="n">n_out</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
+            <span class="k">def</span> <span class="nf">wrapper</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">out1</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">out2</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+                <span class="k">if</span> <span class="n">out1</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="n">out1</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">elem</span><span class="o">.</span><span class="n">space</span><span class="o">.</span><span class="n">element</span><span class="p">()</span>
+                <span class="k">if</span> <span class="n">out2</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="n">out2</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">elem</span><span class="o">.</span><span class="n">space</span><span class="o">.</span><span class="n">element</span><span class="p">()</span>
+                <span class="k">for</span> <span class="n">x</span><span class="p">,</span> <span class="n">out1_x</span><span class="p">,</span> <span class="n">out2_x</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">elem</span><span class="p">,</span> <span class="n">out1</span><span class="p">,</span> <span class="n">out2</span><span class="p">):</span>
+                    <span class="nb">getattr</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">ufuncs</span><span class="p">,</span> <span class="n">name</span><span class="p">)(</span><span class="n">out1</span><span class="o">=</span><span class="n">out1_x</span><span class="p">,</span> <span class="n">out2</span><span class="o">=</span><span class="n">out2_x</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+                <span class="k">return</span> <span class="n">out1</span><span class="p">,</span> <span class="n">out2</span>
+
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">NotImplementedError</span>
+
+    <span class="k">elif</span> <span class="n">n_in</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">n_out</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">def</span> <span class="nf">wrapper</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x2</span><span class="p">,</span> <span class="n">out</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+                <span class="k">if</span> <span class="n">x2</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">elem</span><span class="o">.</span><span class="n">space</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="n">out</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                        <span class="n">result</span> <span class="o">=</span> <span class="p">[</span><span class="nb">getattr</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">ufuncs</span><span class="p">,</span> <span class="n">name</span><span class="p">)(</span><span class="n">x2p</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+                                  <span class="k">for</span> <span class="n">x</span><span class="p">,</span> <span class="n">x2p</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">elem</span><span class="p">,</span> <span class="n">x2</span><span class="p">)]</span>
+                        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">elem</span><span class="o">.</span><span class="n">space</span><span class="o">.</span><span class="n">element</span><span class="p">(</span><span class="n">result</span><span class="p">)</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="k">for</span> <span class="n">x</span><span class="p">,</span> <span class="n">x2p</span><span class="p">,</span> <span class="n">outp</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">elem</span><span class="p">,</span> <span class="n">x2</span><span class="p">,</span> <span class="n">out</span><span class="p">):</span>
+                            <span class="nb">getattr</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">ufuncs</span><span class="p">,</span> <span class="n">name</span><span class="p">)(</span><span class="n">x2p</span><span class="p">,</span> <span class="n">out</span><span class="o">=</span><span class="n">outp</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+                        <span class="k">return</span> <span class="n">out</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="n">out</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                        <span class="n">result</span> <span class="o">=</span> <span class="p">[</span><span class="nb">getattr</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">ufuncs</span><span class="p">,</span> <span class="n">name</span><span class="p">)(</span><span class="n">x2</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+                                  <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">elem</span><span class="p">]</span>
+                        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">elem</span><span class="o">.</span><span class="n">space</span><span class="o">.</span><span class="n">element</span><span class="p">(</span><span class="n">result</span><span class="p">)</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="k">for</span> <span class="n">x</span><span class="p">,</span> <span class="n">outp</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">elem</span><span class="p">,</span> <span class="n">out</span><span class="p">):</span>
+                            <span class="nb">getattr</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">ufuncs</span><span class="p">,</span> <span class="n">name</span><span class="p">)(</span><span class="n">x2</span><span class="p">,</span> <span class="n">out</span><span class="o">=</span><span class="n">outp</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+                        <span class="k">return</span> <span class="n">out</span>
+
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">NotImplementedError</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span>
+
+    <span class="n">wrapper</span><span class="o">.</span><span class="vm">__name__</span> <span class="o">=</span> <span class="n">wrapper</span><span class="o">.</span><span class="vm">__qualname__</span> <span class="o">=</span> <span class="n">name</span>
+    <span class="n">wrapper</span><span class="o">.</span><span class="vm">__doc__</span> <span class="o">=</span> <span class="n">doc</span>
+    <span class="k">return</span> <span class="n">wrapper</span></div>
+
+
+<div class="viewcode-block" id="ProductSpaceUfuncs"><a class="viewcode-back" href="../../../generated/odl.util.ufuncs.ProductSpaceUfuncs.html#odl.util.ufuncs.ProductSpaceUfuncs">[docs]</a><span class="k">class</span> <span class="nc">ProductSpaceUfuncs</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+
+    <span class="sd">&quot;&quot;&quot;Ufuncs for `ProductSpaceElement` objects.</span>
+
+<span class="sd">    Internal object, should not be created except in `ProductSpaceElement`.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+<div class="viewcode-block" id="ProductSpaceUfuncs.__init__"><a class="viewcode-back" href="../../../generated/odl.util.ufuncs.ProductSpaceUfuncs.html#odl.util.ufuncs.ProductSpaceUfuncs.__init__">[docs]</a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">elem</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Create ufunc wrapper for ``elem``.&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">elem</span> <span class="o">=</span> <span class="n">elem</span></div>
+
+<div class="viewcode-block" id="ProductSpaceUfuncs.sum"><a class="viewcode-back" href="../../../generated/odl.util.ufuncs.ProductSpaceUfuncs.sum.html#odl.util.ufuncs.ProductSpaceUfuncs.sum">[docs]</a>    <span class="k">def</span> <span class="nf">sum</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return the sum of ``self``.</span>
+
+<span class="sd">        See Also</span>
+<span class="sd">        --------</span>
+<span class="sd">        numpy.sum</span>
+<span class="sd">        prod</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">results</span> <span class="o">=</span> <span class="p">[</span><span class="n">x</span><span class="o">.</span><span class="n">ufuncs</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">elem</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">results</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="ProductSpaceUfuncs.prod"><a class="viewcode-back" href="../../../generated/odl.util.ufuncs.ProductSpaceUfuncs.prod.html#odl.util.ufuncs.ProductSpaceUfuncs.prod">[docs]</a>    <span class="k">def</span> <span class="nf">prod</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return the product of ``self``.</span>
+
+<span class="sd">        See Also</span>
+<span class="sd">        --------</span>
+<span class="sd">        numpy.prod</span>
+<span class="sd">        sum</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">results</span> <span class="o">=</span> <span class="p">[</span><span class="n">x</span><span class="o">.</span><span class="n">ufuncs</span><span class="o">.</span><span class="n">prod</span><span class="p">()</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">elem</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">prod</span><span class="p">(</span><span class="n">results</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="ProductSpaceUfuncs.min"><a class="viewcode-back" href="../../../generated/odl.util.ufuncs.ProductSpaceUfuncs.min.html#odl.util.ufuncs.ProductSpaceUfuncs.min">[docs]</a>    <span class="k">def</span> <span class="nf">min</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return the minimum of ``self``.</span>
+
+<span class="sd">        See Also</span>
+<span class="sd">        --------</span>
+<span class="sd">        numpy.amin</span>
+<span class="sd">        max</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">results</span> <span class="o">=</span> <span class="p">[</span><span class="n">x</span><span class="o">.</span><span class="n">ufuncs</span><span class="o">.</span><span class="n">min</span><span class="p">()</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">elem</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">results</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="ProductSpaceUfuncs.max"><a class="viewcode-back" href="../../../generated/odl.util.ufuncs.ProductSpaceUfuncs.max.html#odl.util.ufuncs.ProductSpaceUfuncs.max">[docs]</a>    <span class="k">def</span> <span class="nf">max</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return the maximum of ``self``.</span>
+
+<span class="sd">        See Also</span>
+<span class="sd">        --------</span>
+<span class="sd">        numpy.amax</span>
+<span class="sd">        min</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">results</span> <span class="o">=</span> <span class="p">[</span><span class="n">x</span><span class="o">.</span><span class="n">ufuncs</span><span class="o">.</span><span class="n">max</span><span class="p">()</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">elem</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">results</span><span class="p">)</span></div></div>
+
+
+<span class="c1"># Add ufunc methods to ufunc class</span>
+<span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">n_in</span><span class="p">,</span> <span class="n">n_out</span><span class="p">,</span> <span class="n">doc</span> <span class="ow">in</span> <span class="n">UFUNCS</span><span class="p">:</span>
+    <span class="n">method</span> <span class="o">=</span> <span class="n">wrap_ufunc_productspace</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">n_in</span><span class="p">,</span> <span class="n">n_out</span><span class="p">,</span> <span class="n">doc</span><span class="p">)</span>
+    <span class="nb">setattr</span><span class="p">(</span><span class="n">ProductSpaceUfuncs</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">method</span><span class="p">)</span>
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &#169; Copyright 2014-2020 The ODL Contributors.
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

@@ -1,0 +1,367 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>How to document &mdash; odl 1.0.0.dev0 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Testing in ODL" href="testing.html" />
+    <link rel="prev" title="Extending ODL" href="extend.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../index.html" class="icon icon-home"> odl
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                1.0.0.dev0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Getting Started</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../getting_started/getting_started.html">Getting Started</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Working with ODL</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../guide/guide.html">User’s guide – selected topics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../math/math.html">Mathematical Background</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Developer zone</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="dev.html">Contributing to ODL</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="dev.html#introduction">Introduction</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="dev.html#contents">Contents</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="extend.html">Extending ODL</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#">How to document</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#some-short-tips">Some short tips</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#quick-summary-of-pep257">Quick summary of PEP257</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#advanced">Advanced</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="testing.html">Testing in ODL</a></li>
+<li class="toctree-l3"><a class="reference internal" href="release.html">The ODL release process</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gitwash/index.html">Working with ODL source code</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<p class="caption"><span class="caption-text">Useful facts</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../guide/faq.html">Frequently asked questions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../guide/glossary.html">Glossary</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../release_notes.html">Release Notes</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../refs.html">References</a></li>
+</ul>
+<p class="caption"><span class="caption-text">API Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../odl.html">odl</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">odl</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="dev.html">Contributing to ODL</a> &raquo;</li>
+        
+      <li>How to document</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            <a href="../_sources/dev/document.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="how-to-document">
+<span id="dev-document"></span><h1>How to document<a class="headerlink" href="#how-to-document" title="Permalink to this headline">¶</a></h1>
+<p>ODL is documented using <a class="reference external" href="http://sphinx-doc.org/">Sphinx</a> and a <a class="reference external" href="https://github.com/odlgroup/numpydoc">modified version of</a> <a class="reference external" href="https://github.com/numpy/numpydoc">numpydoc</a>. An example documentation is
+given below.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">MyClass</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+
+    <span class="sd">&quot;&quot;&quot;Calculate important things.</span>
+
+<span class="sd">    The first line summarizes the class, after that comes a blank</span>
+<span class="sd">    line followed by a more detailed description (both optional).</span>
+<span class="sd">    Confine the docstring to 72 characters per line. In general, try</span>
+<span class="sd">    to follow `PEP257`_ in the docstring style.</span>
+
+<span class="sd">    Docstrings can have sections with headers, signalized by a</span>
+<span class="sd">    single-dash underline, e.g. &quot;References&quot;. Check out</span>
+<span class="sd">    `Numpydoc`_ for the recognized section labels.</span>
+
+<span class="sd">    References</span>
+<span class="sd">    ----------</span>
+<span class="sd">    .. _PEP257: https://www.python.org/dev/peps/pep-0257/</span>
+<span class="sd">    .. _Numpydoc: https://github.com/numpy/numpy/blob/master/doc/\</span>
+<span class="sd">HOWTO_DOCUMENT.rst.txt</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">c</span><span class="p">,</span> <span class="n">parameter</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Initializer doc goes here.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        c : float</span>
+<span class="sd">            Constant to scale by.</span>
+<span class="sd">        parameter : float, optional</span>
+<span class="sd">            Some extra parameter.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">c</span> <span class="o">=</span> <span class="n">c</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">parameter</span> <span class="o">=</span> <span class="n">parameter</span>
+
+    <span class="k">def</span> <span class="nf">my_method</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Calculate ``c * (x + y)``.</span>
+
+<span class="sd">        The first row is a summary, after that comes</span>
+<span class="sd">        a more detailed description.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        x : float</span>
+<span class="sd">            First summand.</span>
+<span class="sd">        y : float</span>
+<span class="sd">            Second summand.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        scaled_sum : float</span>
+<span class="sd">            Result of ``c * (x + y)``.</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        --------</span>
+<span class="sd">        Examples should be working pieces of code and are checked with</span>
+<span class="sd">        ``doctest`` for consistent output.</span>
+
+<span class="sd">        &gt;&gt;&gt; obj = MyClass(5)</span>
+<span class="sd">        &gt;&gt;&gt; obj(3, 5)</span>
+<span class="sd">        8.0</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">c</span> <span class="o">*</span> <span class="p">(</span><span class="n">x</span> <span class="o">+</span> <span class="n">y</span><span class="p">)</span>
+
+     <span class="k">def</span> <span class="nf">my_other_method</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+         <span class="sd">&quot;&quot;&quot;Print the parameter.</span>
+
+<span class="sd">         See Also</span>
+<span class="sd">         --------</span>
+<span class="sd">         my_method : some calculation, but not much</span>
+<span class="sd">         &quot;&quot;&quot;</span>
+         <span class="nb">print</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">parameter</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="section" id="some-short-tips">
+<h2>Some short tips<a class="headerlink" href="#some-short-tips" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li><p>Text within backticks: <code class="docutils literal notranslate"><span class="pre">`some_target`</span></code> will create a link to the target (e.g.
+<code class="docutils literal notranslate"><span class="pre">`numpy.ndarray`</span></code>).</p></li>
+<li><p>Make sure that the first line is short and descriptive.</p></li>
+<li><p>Examples are often better than long descriptions.</p></li>
+<li><p>Numpy and ODL are both imported by default in doctests, so there is no need for <code class="docutils literal notranslate"><span class="pre">import</span> <span class="pre">numpy</span> <span class="pre">as</span> <span class="pre">np</span></code> or <code class="docutils literal notranslate"><span class="pre">import</span> <span class="pre">odl</span></code>.</p></li>
+</ul>
+</div>
+<div class="section" id="quick-summary-of-pep257">
+<h2>Quick summary of <a class="reference external" href="https://www.python.org/dev/peps/pep-0257/">PEP257</a><a class="headerlink" href="#quick-summary-of-pep257" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li><p>Write docstrings always with triple double quotes <code class="docutils literal notranslate"><span class="pre">&quot;&quot;&quot;</span></code>, even one-liners.</p></li>
+<li><p>Class docstrings are separated from the class definition line by a blank line, functions and methods begin directly in the next line.</p></li>
+<li><p>Use imperative style (“Calculate”, not “Calculates”) in the summary (=first) line and end it with a full stop. Do not add a space after the opening triple quotes.</p></li>
+<li><p>For one-liners: put the closing quotes on the same line. Otherwise: make a new line for the closing quotes.</p></li>
+<li><p>Document at least all <em>public</em> methods and attributes.</p></li>
+</ul>
+</div>
+<div class="section" id="advanced">
+<h2>Advanced<a class="headerlink" href="#advanced" title="Permalink to this headline">¶</a></h2>
+<p>This section covers advanced topics for developers that need to change internals of the documentation.</p>
+<div class="section" id="re-generating-the-doc">
+<h3>Re-generating the doc<a class="headerlink" href="#re-generating-the-doc" title="Permalink to this headline">¶</a></h3>
+<p>The HTML documentation is generated by running <code class="docutils literal notranslate"><span class="pre">make</span> <span class="pre">html</span></code> in the <code class="docutils literal notranslate"><span class="pre">doc/</span></code> folder.
+Autosummary currently does not support nested modules, so to handle this, we auto-generate <code class="docutils literal notranslate"><span class="pre">.rst</span></code> files for each module. This is done in each invocation of <code class="docutils literal notranslate"><span class="pre">make</span> <span class="pre">html</span></code>.
+If results are inconsistent after changing code (or switching branches), e.g. warnings about missing modules appear, run <code class="docutils literal notranslate"><span class="pre">make</span> <span class="pre">clean</span></code> an build the docs from scratch with <code class="docutils literal notranslate"><span class="pre">make</span> <span class="pre">html</span></code>.</p>
+</div>
+<div class="section" id="modifications-to-numpydoc">
+<h3>Modifications to numpydoc<a class="headerlink" href="#modifications-to-numpydoc" title="Permalink to this headline">¶</a></h3>
+<p>Numpydoc has been modified in the following ways:</p>
+<ul class="simple">
+<li><p>The <code class="docutils literal notranslate"><span class="pre">numpy</span></code> sphinx domain has been removed.</p></li>
+<li><p>More <code class="docutils literal notranslate"><span class="pre">extra_public_methods</span></code> have been added.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">:autoclass:</span></code> summaries now link to full name, which allows subclassing between packages.</p></li>
+</ul>
+</div>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+        <a href="testing.html" class="btn btn-neutral float-right" title="Testing in ODL" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="extend.html" class="btn btn-neutral float-left" title="Extending ODL" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &#169; Copyright 2014-2020 The ODL Contributors.
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

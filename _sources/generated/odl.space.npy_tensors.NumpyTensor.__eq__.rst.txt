@@ -1,0 +1,8 @@
+:orphan:
+
+NumpyTensor.__eq__
+========================================
+
+.. currentmodule:: odl.space.npy_tensors
+
+.. automethod:: NumpyTensor.__eq__

@@ -1,0 +1,6 @@
+copysign_op.inverse
+===========================================
+
+.. currentmodule:: odl.ufunc_ops.ufunc_ops
+
+.. autoproperty:: copysign_op.inverse

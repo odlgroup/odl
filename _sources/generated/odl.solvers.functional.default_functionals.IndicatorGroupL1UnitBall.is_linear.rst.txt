@@ -1,0 +1,6 @@
+IndicatorGroupL1UnitBall.is_linear
+=============================================================================
+
+.. currentmodule:: odl.solvers.functional.default_functionals
+
+.. autoproperty:: IndicatorGroupL1UnitBall.is_linear

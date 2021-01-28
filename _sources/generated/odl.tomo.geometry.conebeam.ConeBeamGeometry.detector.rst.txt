@@ -1,0 +1,6 @@
+ConeBeamGeometry.detector
+====================================================
+
+.. currentmodule:: odl.tomo.geometry.conebeam
+
+.. autoproperty:: ConeBeamGeometry.detector

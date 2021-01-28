@@ -1,0 +1,8 @@
+:orphan:
+
+PointwiseInnerBase.derivative
+=====================================================
+
+.. currentmodule:: odl.operator.tensor_ops
+
+.. automethod:: PointwiseInnerBase.derivative

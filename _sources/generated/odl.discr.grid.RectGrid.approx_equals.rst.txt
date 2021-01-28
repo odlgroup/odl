@@ -1,0 +1,8 @@
+:orphan:
+
+RectGrid.approx_equals
+=====================================
+
+.. currentmodule:: odl.discr.grid
+
+.. automethod:: RectGrid.approx_equals

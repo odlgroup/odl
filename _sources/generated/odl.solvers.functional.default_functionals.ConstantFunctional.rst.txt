@@ -1,0 +1,44 @@
+﻿ConstantFunctional
+=============================================================
+
+.. currentmodule:: odl.solvers.functional.default_functionals
+
+.. autoclass:: ConstantFunctional
+   :show-inheritance:
+   
+   
+   .. automethod:: __init__
+   
+      
+   
+   .. HACK -- the point here is that we don't want this to appear in the output, but the autosummary should still generate the pages.
+      .. autosummary::
+         :toctree:
+      
+         ConstantFunctional.__call__
+         ConstantFunctional.__eq__
+         ConstantFunctional._call
+         ConstantFunctional.bregman
+         ConstantFunctional.derivative
+         ConstantFunctional.norm
+         ConstantFunctional.translated
+   
+
+    
+   .. HACK -- the point here is that we don't want this to appear in the output, but the autosummary should still generate the pages.
+      .. autosummary::
+         :toctree:
+      
+         ConstantFunctional.adjoint
+         ConstantFunctional.constant
+         ConstantFunctional.convex_conj
+         ConstantFunctional.domain
+         ConstantFunctional.grad_lipschitz
+         ConstantFunctional.gradient
+         ConstantFunctional.inverse
+         ConstantFunctional.is_functional
+         ConstantFunctional.is_linear
+         ConstantFunctional.proximal
+         ConstantFunctional.range
+   
+   

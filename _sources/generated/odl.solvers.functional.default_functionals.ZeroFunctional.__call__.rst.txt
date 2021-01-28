@@ -1,0 +1,8 @@
+:orphan:
+
+ZeroFunctional.__call__
+==================================================================
+
+.. currentmodule:: odl.solvers.functional.default_functionals
+
+.. automethod:: ZeroFunctional.__call__

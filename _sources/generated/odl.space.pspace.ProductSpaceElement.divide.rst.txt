@@ -1,0 +1,8 @@
+:orphan:
+
+ProductSpaceElement.divide
+===========================================
+
+.. currentmodule:: odl.space.pspace
+
+.. automethod:: ProductSpaceElement.divide

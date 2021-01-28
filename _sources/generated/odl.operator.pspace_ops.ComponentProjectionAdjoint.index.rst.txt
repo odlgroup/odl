@@ -1,0 +1,6 @@
+ComponentProjectionAdjoint.index
+========================================================
+
+.. currentmodule:: odl.operator.pspace_ops
+
+.. autoproperty:: ComponentProjectionAdjoint.index

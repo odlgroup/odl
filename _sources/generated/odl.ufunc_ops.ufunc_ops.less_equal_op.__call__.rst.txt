@@ -1,0 +1,8 @@
+:orphan:
+
+less_equal_op.__call__
+==============================================
+
+.. currentmodule:: odl.ufunc_ops.ufunc_ops
+
+.. automethod:: less_equal_op.__call__

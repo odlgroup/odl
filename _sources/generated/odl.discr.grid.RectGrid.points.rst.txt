@@ -1,0 +1,8 @@
+:orphan:
+
+RectGrid.points
+==============================
+
+.. currentmodule:: odl.discr.grid
+
+.. automethod:: RectGrid.points

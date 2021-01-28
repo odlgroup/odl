@@ -1,0 +1,8 @@
+:orphan:
+
+FunctionalRightScalarMult.derivative
+======================================================================
+
+.. currentmodule:: odl.solvers.functional.functional
+
+.. automethod:: FunctionalRightScalarMult.derivative

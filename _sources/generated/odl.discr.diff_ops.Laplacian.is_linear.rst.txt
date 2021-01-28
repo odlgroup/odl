@@ -1,0 +1,6 @@
+Laplacian.is_linear
+======================================
+
+.. currentmodule:: odl.discr.diff_ops
+
+.. autoproperty:: Laplacian.is_linear

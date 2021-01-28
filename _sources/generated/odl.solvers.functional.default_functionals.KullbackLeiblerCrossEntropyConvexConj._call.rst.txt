@@ -1,0 +1,8 @@
+:orphan:
+
+KullbackLeiblerCrossEntropyConvexConj._call
+======================================================================================
+
+.. currentmodule:: odl.solvers.functional.default_functionals
+
+.. automethod:: KullbackLeiblerCrossEntropyConvexConj._call

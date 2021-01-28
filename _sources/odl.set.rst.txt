@@ -1,0 +1,19 @@
+set
+===
+
+Core sets and spaces.
+
+.. currentmodule:: odl.set
+
+
+.. rubric:: Modules
+
+.. toctree::
+   :maxdepth: 2
+
+   odl.set.domain
+   odl.set.sets
+   odl.set.space
+
+
+

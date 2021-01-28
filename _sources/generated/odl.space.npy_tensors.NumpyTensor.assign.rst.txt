@@ -1,0 +1,8 @@
+:orphan:
+
+NumpyTensor.assign
+========================================
+
+.. currentmodule:: odl.space.npy_tensors
+
+.. automethod:: NumpyTensor.assign

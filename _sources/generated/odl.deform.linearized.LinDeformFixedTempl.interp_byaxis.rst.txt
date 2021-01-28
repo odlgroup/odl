@@ -1,0 +1,6 @@
+LinDeformFixedTempl.interp_byaxis
+=======================================================
+
+.. currentmodule:: odl.deform.linearized
+
+.. autoproperty:: LinDeformFixedTempl.interp_byaxis

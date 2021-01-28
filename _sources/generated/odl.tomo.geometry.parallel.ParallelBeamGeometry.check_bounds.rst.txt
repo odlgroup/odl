@@ -1,0 +1,6 @@
+ParallelBeamGeometry.check_bounds
+============================================================
+
+.. currentmodule:: odl.tomo.geometry.parallel
+
+.. autoproperty:: ParallelBeamGeometry.check_bounds

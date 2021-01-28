@@ -1,0 +1,18 @@
+proximal_gradient_solvers
+=========================
+
+(Fast) Iterative shrinkage-thresholding algorithm.
+
+.. currentmodule:: odl.solvers.nonsmooth.proximal_gradient_solvers
+
+
+
+
+.. rubric:: Functions
+
+.. autosummary::
+   :toctree: generated/
+
+   ~odl.solvers.nonsmooth.proximal_gradient_solvers.accelerated_proximal_gradient
+   ~odl.solvers.nonsmooth.proximal_gradient_solvers.proximal_gradient
+

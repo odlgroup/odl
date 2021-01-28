@@ -1,0 +1,1468 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>odl.discr.grid &mdash; odl 1.0.0.dev0 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/custom.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../../" src="../../../_static/documentation_options.js"></script>
+        <script src="../../../_static/jquery.js"></script>
+        <script src="../../../_static/underscore.js"></script>
+        <script src="../../../_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="../../../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../../index.html" class="icon icon-home"> odl
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                1.0.0.dev0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Getting Started</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../getting_started/getting_started.html">Getting Started</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Working with ODL</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../guide/guide.html">User’s guide – selected topics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../math/math.html">Mathematical Background</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Developer zone</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../dev/dev.html">Contributing to ODL</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Useful facts</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../guide/faq.html">Frequently asked questions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../guide/glossary.html">Glossary</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../release_notes.html">Release Notes</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../refs.html">References</a></li>
+</ul>
+<p class="caption"><span class="caption-text">API Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../odl.html">odl</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">odl</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="../../index.html">Module code</a> &raquo;</li>
+        
+      <li>odl.discr.grid</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for odl.discr.grid</h1><div class="highlight"><pre>
+<span></span><span class="c1"># Copyright 2014-2020 The ODL contributors</span>
+<span class="c1">#</span>
+<span class="c1"># This file is part of ODL.</span>
+<span class="c1">#</span>
+<span class="c1"># This Source Code Form is subject to the terms of the Mozilla Public License,</span>
+<span class="c1"># v. 2.0. If a copy of the MPL was not distributed with this file, You can</span>
+<span class="c1"># obtain one at https://mozilla.org/MPL/2.0/.</span>
+
+<span class="sd">&quot;&quot;&quot;Sparse implementations of n-dimensional sampling grids.</span>
+
+<span class="sd">Sampling grids are collections of points in an n-dimensional coordinate</span>
+<span class="sd">space with a certain structure which is exploited to minimize storage.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">print_function</span><span class="p">,</span> <span class="n">division</span><span class="p">,</span> <span class="n">absolute_import</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+
+<span class="kn">from</span> <span class="nn">odl.set</span> <span class="kn">import</span> <span class="n">Set</span><span class="p">,</span> <span class="n">IntervalProd</span>
+<span class="kn">from</span> <span class="nn">odl.util</span> <span class="kn">import</span> <span class="p">(</span>
+    <span class="n">normalized_index_expression</span><span class="p">,</span> <span class="n">normalized_scalar_param_list</span><span class="p">,</span> <span class="n">safe_int_conv</span><span class="p">,</span>
+    <span class="n">array_str</span><span class="p">,</span> <span class="n">signature_string</span><span class="p">,</span> <span class="n">indent</span><span class="p">,</span> <span class="n">npy_printoptions</span><span class="p">)</span>
+
+
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">(</span>
+    <span class="s1">&#39;sparse_meshgrid&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;RectGrid&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;uniform_grid&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;uniform_grid_fromintv&#39;</span><span class="p">,</span>
+<span class="p">)</span>
+
+
+<div class="viewcode-block" id="sparse_meshgrid"><a class="viewcode-back" href="../../../generated/odl.discr.grid.sparse_meshgrid.html#odl.discr.grid.sparse_meshgrid">[docs]</a><span class="k">def</span> <span class="nf">sparse_meshgrid</span><span class="p">(</span><span class="o">*</span><span class="n">x</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Make a sparse `meshgrid` by adding empty dimensions.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    x1,...,xN : `array-like`</span>
+<span class="sd">        Input arrays to turn into sparse meshgrid vectors.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    meshgrid : tuple of `numpy.ndarray`&#39;s</span>
+<span class="sd">        Sparse coordinate vectors representing an N-dimensional grid.</span>
+
+<span class="sd">    See Also</span>
+<span class="sd">    --------</span>
+<span class="sd">    numpy.meshgrid : dense or sparse meshgrids</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    &gt;&gt;&gt; x, y = [0, 1], [2, 3, 4]</span>
+<span class="sd">    &gt;&gt;&gt; mesh = sparse_meshgrid(x, y)</span>
+<span class="sd">    &gt;&gt;&gt; sum(xi for xi in mesh).ravel()  # first axis slowest</span>
+<span class="sd">    array([2, 3, 4, 3, 4, 5])</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">n</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+    <span class="n">mesh</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">ax</span><span class="p">,</span> <span class="n">xi</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
+        <span class="n">xi</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">xi</span><span class="p">)</span>
+        <span class="n">slc</span> <span class="o">=</span> <span class="p">[</span><span class="kc">None</span><span class="p">]</span> <span class="o">*</span> <span class="n">n</span>
+        <span class="n">slc</span><span class="p">[</span><span class="n">ax</span><span class="p">]</span> <span class="o">=</span> <span class="nb">slice</span><span class="p">(</span><span class="kc">None</span><span class="p">)</span>
+        <span class="n">mesh</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">ascontiguousarray</span><span class="p">(</span><span class="n">xi</span><span class="p">[</span><span class="nb">tuple</span><span class="p">(</span><span class="n">slc</span><span class="p">)]))</span>
+
+    <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">mesh</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="RectGrid"><a class="viewcode-back" href="../../../generated/odl.discr.grid.RectGrid.html#odl.discr.grid.RectGrid">[docs]</a><span class="k">class</span> <span class="nc">RectGrid</span><span class="p">(</span><span class="n">Set</span><span class="p">):</span>
+
+    <span class="sd">&quot;&quot;&quot;An n-dimensional rectilinear grid.</span>
+
+<span class="sd">    A rectilinear grid is the set of points defined by all possible</span>
+<span class="sd">    combination of coordinates taken from fixed coordinate vectors.</span>
+
+<span class="sd">    The storage need for a rectilinear grid is only the sum of the lengths</span>
+<span class="sd">    of the coordinate vectors, while the total number of points is</span>
+<span class="sd">    the product of these lengths. This class makes use of that</span>
+<span class="sd">    sparse storage scheme.</span>
+
+<span class="sd">    See ``Notes`` for details.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="RectGrid.__init__"><a class="viewcode-back" href="../../../generated/odl.discr.grid.RectGrid.html#odl.discr.grid.RectGrid.__init__">[docs]</a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">coord_vectors</span><span class="p">):</span>
+        <span class="sa">r</span><span class="sd">&quot;&quot;&quot;Initialize a new instance.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        vec1,...,vecN : `array-like`</span>
+<span class="sd">            The coordinate vectors defining the grid points. They must</span>
+<span class="sd">            be sorted in ascending order and may not contain</span>
+<span class="sd">            duplicates. Empty vectors are not allowed.</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        --------</span>
+<span class="sd">        &gt;&gt;&gt; g = RectGrid([1, 2, 5], [-2, 1.5, 2])</span>
+<span class="sd">        &gt;&gt;&gt; g</span>
+<span class="sd">        RectGrid(</span>
+<span class="sd">            [ 1.,  2.,  5.],</span>
+<span class="sd">            [-2. ,  1.5,  2. ]</span>
+<span class="sd">        )</span>
+<span class="sd">        &gt;&gt;&gt; g.ndim  # number of axes</span>
+<span class="sd">        2</span>
+<span class="sd">        &gt;&gt;&gt; g.shape  # points per axis</span>
+<span class="sd">        (3, 3)</span>
+<span class="sd">        &gt;&gt;&gt; g.size  # total number of points</span>
+<span class="sd">        9</span>
+
+<span class="sd">        Grid points can be extracted with index notation (NOTE: This is</span>
+<span class="sd">        slow, do not loop over the grid using indices!):</span>
+
+<span class="sd">        &gt;&gt;&gt; g = RectGrid([-1, 0, 3], [2, 4, 5], [5], [2, 4, 7])</span>
+<span class="sd">        &gt;&gt;&gt; g[0, 0, 0, 0]</span>
+<span class="sd">        array([-1.,  2.,  5.,  2.])</span>
+
+<span class="sd">        Slices and ellipsis are also supported:</span>
+
+<span class="sd">        &gt;&gt;&gt; g[:, 0, 0, 0]</span>
+<span class="sd">        RectGrid(</span>
+<span class="sd">            [-1.,  0.,  3.],</span>
+<span class="sd">            [ 2.],</span>
+<span class="sd">            [ 5.],</span>
+<span class="sd">            [ 2.]</span>
+<span class="sd">        )</span>
+<span class="sd">        &gt;&gt;&gt; g[0, ..., 1:]</span>
+<span class="sd">        RectGrid(</span>
+<span class="sd">            [-1.],</span>
+<span class="sd">            [ 2.,  4.,  5.],</span>
+<span class="sd">            [ 5.],</span>
+<span class="sd">            [ 4.,  7.]</span>
+<span class="sd">        )</span>
+
+<span class="sd">        Notes</span>
+<span class="sd">        -----</span>
+<span class="sd">        In 2 dimensions, for example, given two coordinate vectors</span>
+
+<span class="sd">        .. math::</span>
+<span class="sd">            v_1 = (-1, 0, 2),\ v_2 = (0, 1)</span>
+
+<span class="sd">        the corresponding rectilinear grid :math:`G` is the set of all</span>
+<span class="sd">        2d points whose first component is from :math:`v_1` and the</span>
+<span class="sd">        second component from :math:`v_2`:</span>
+
+<span class="sd">        .. math::</span>
+<span class="sd">            G = \{(-1, 0), (-1, 1), (0, 0), (0, 1), (2, 0), (2, 1)\}</span>
+
+<span class="sd">        Here is a graphical representation::</span>
+
+<span class="sd">               :    :        :</span>
+<span class="sd">               :    :        :</span>
+<span class="sd">            1 -x----x--------x-...</span>
+<span class="sd">               |    |        |</span>
+<span class="sd">            0 -x----x--------x-...</span>
+<span class="sd">               |    |        |</span>
+<span class="sd">              -1    0        2</span>
+
+<span class="sd">        Apparently, this structure can represent grids with arbitrary step</span>
+<span class="sd">        sizes in each axis.</span>
+
+<span class="sd">        Note that the above ordering of points is the standard ``&#39;C&#39;``</span>
+<span class="sd">        ordering where the first axis (:math:`v_1`) varies slowest.</span>
+<span class="sd">        Ordering is only relevant when the point array is actually created;</span>
+<span class="sd">        the grid itself is independent of this ordering.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">RectGrid</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+
+        <span class="n">vecs</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">atleast_1d</span><span class="p">(</span><span class="n">vec</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s1">&#39;float64&#39;</span><span class="p">)</span>
+                     <span class="k">for</span> <span class="n">vec</span> <span class="ow">in</span> <span class="n">coord_vectors</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">vec</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">vecs</span><span class="p">):</span>
+
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">vec</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;vector </span><span class="si">{}</span><span class="s1"> has zero length&#39;</span>
+                                 <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">))</span>
+
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">all</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">isfinite</span><span class="p">(</span><span class="n">vec</span><span class="p">)):</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;vector </span><span class="si">{}</span><span class="s1"> contains invalid entries&#39;</span>
+                                 <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">))</span>
+
+            <span class="k">if</span> <span class="n">vec</span><span class="o">.</span><span class="n">ndim</span> <span class="o">!=</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;vector </span><span class="si">{}</span><span class="s1"> has </span><span class="si">{}</span><span class="s1"> dimensions instead of 1&#39;</span>
+                                 <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="n">vec</span><span class="o">.</span><span class="n">ndim</span><span class="p">))</span>
+
+            <span class="n">sorted_vec</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="n">vec</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">any</span><span class="p">(</span><span class="n">vec</span> <span class="o">!=</span> <span class="n">sorted_vec</span><span class="p">):</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;vector </span><span class="si">{}</span><span class="s1"> not sorted&#39;</span>
+                                 <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">))</span>
+
+            <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">any</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">diff</span><span class="p">(</span><span class="n">vec</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">):</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;vector </span><span class="si">{}</span><span class="s1"> contains duplicates&#39;</span>
+                                 <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">))</span>
+
+        <span class="c1"># Lazily evaluates strides when needed but stores the result</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__stride</span> <span class="o">=</span> <span class="kc">None</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">__coord_vectors</span> <span class="o">=</span> <span class="n">vecs</span>
+
+        <span class="c1"># Non-degenerate axes</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__nondegen_byaxis</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">v</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">coord_vectors</span><span class="p">)</span>
+
+        <span class="c1"># Uniformity, setting True in degenerate axes</span>
+        <span class="n">diffs</span> <span class="o">=</span> <span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">diff</span><span class="p">(</span><span class="n">v</span><span class="p">)</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">coord_vectors</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__is_uniform_byaxis</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span>
+            <span class="p">(</span><span class="n">diff</span><span class="o">.</span><span class="n">size</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)</span> <span class="ow">or</span> <span class="n">np</span><span class="o">.</span><span class="n">allclose</span><span class="p">(</span><span class="n">diff</span><span class="p">,</span> <span class="n">diff</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+            <span class="k">for</span> <span class="n">diff</span> <span class="ow">in</span> <span class="n">diffs</span><span class="p">)</span></div>
+
+    <span class="c1"># Attributes</span>
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">coord_vectors</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Coordinate vectors of the grid.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        coord_vectors : tuple of `numpy.ndarray`&#39;s</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        --------</span>
+<span class="sd">        &gt;&gt;&gt; g = RectGrid([0, 1], [-1, 0, 2])</span>
+<span class="sd">        &gt;&gt;&gt; x, y = g.coord_vectors</span>
+<span class="sd">        &gt;&gt;&gt; x</span>
+<span class="sd">        array([ 0.,  1.])</span>
+<span class="sd">        &gt;&gt;&gt; y</span>
+<span class="sd">        array([-1.,  0.,  2.])</span>
+
+<span class="sd">        See Also</span>
+<span class="sd">        --------</span>
+<span class="sd">        meshgrid : Same result but with nd arrays</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__coord_vectors</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">ndim</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Number of dimensions of the grid.&quot;&quot;&quot;</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__ndim</span>
+        <span class="k">except</span> <span class="ne">AttributeError</span><span class="p">:</span>
+            <span class="n">ndim</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">coord_vectors</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">__ndim</span> <span class="o">=</span> <span class="n">ndim</span>
+            <span class="k">return</span> <span class="n">ndim</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">shape</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Number of grid points per axis.&quot;&quot;&quot;</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__shape</span>
+        <span class="k">except</span> <span class="ne">AttributeError</span><span class="p">:</span>
+            <span class="n">shape</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">vec</span><span class="p">)</span> <span class="k">for</span> <span class="n">vec</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">coord_vectors</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">__shape</span> <span class="o">=</span> <span class="n">shape</span>
+            <span class="k">return</span> <span class="n">shape</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">size</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Total number of grid points.&quot;&quot;&quot;</span>
+        <span class="c1"># Since np.prod(()) == 1.0 we need to handle that by ourselves</span>
+        <span class="k">return</span> <span class="p">(</span><span class="mi">0</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">shape</span> <span class="o">==</span> <span class="p">()</span> <span class="k">else</span>
+                <span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">prod</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="s1">&#39;int64&#39;</span><span class="p">)))</span>
+
+    <span class="k">def</span> <span class="fm">__len__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return ``len(self)``.</span>
+
+<span class="sd">        The length along the first dimension.</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        --------</span>
+<span class="sd">        &gt;&gt;&gt; g = RectGrid([0, 1], [-1, 0, 2], [4, 5, 6])</span>
+<span class="sd">        &gt;&gt;&gt; len(g)</span>
+<span class="sd">        2</span>
+
+<span class="sd">        See Also</span>
+<span class="sd">        --------</span>
+<span class="sd">        size : The total number of elements.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="mi">0</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">shape</span> <span class="o">==</span> <span class="p">()</span> <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">min_pt</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Vector containing the minimal grid coordinates per axis.</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        --------</span>
+<span class="sd">        &gt;&gt;&gt; g = RectGrid([1, 2, 5], [-2, 1.5, 2])</span>
+<span class="sd">        &gt;&gt;&gt; g.min_pt</span>
+<span class="sd">        array([ 1., -2.])</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">vec</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">for</span> <span class="n">vec</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">coord_vectors</span><span class="p">])</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">max_pt</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Vector containing the maximal grid coordinates per axis.</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        --------</span>
+<span class="sd">        &gt;&gt;&gt; g = RectGrid([1, 2, 5], [-2, 1.5, 2])</span>
+<span class="sd">        &gt;&gt;&gt; g.max_pt</span>
+<span class="sd">        array([ 5.,  2.])</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">vec</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="k">for</span> <span class="n">vec</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">coord_vectors</span><span class="p">])</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">nondegen_byaxis</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Boolean array with ``True`` entries for non-degenerate axes.</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        --------</span>
+<span class="sd">        &gt;&gt;&gt; g = uniform_grid([0, 0], [1, 1], (5, 1))</span>
+<span class="sd">        &gt;&gt;&gt; g.nondegen_byaxis</span>
+<span class="sd">        (True, False)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__nondegen_byaxis</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">is_uniform_byaxis</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Boolean tuple showing uniformity of this grid per axis.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__is_uniform_byaxis</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">is_uniform</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;``True`` if this grid is uniform in all axes, else ``False``.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="nb">all</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">is_uniform_byaxis</span><span class="p">)</span>
+
+    <span class="c1"># min, max and extent are for set duck-typing</span>
+<div class="viewcode-block" id="RectGrid.min"><a class="viewcode-back" href="../../../generated/odl.discr.grid.RectGrid.min.html#odl.discr.grid.RectGrid.min">[docs]</a>    <span class="k">def</span> <span class="nf">min</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return `min_pt`.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        kwargs</span>
+<span class="sd">            For duck-typing with `numpy.amin`</span>
+
+<span class="sd">        See Also</span>
+<span class="sd">        --------</span>
+<span class="sd">        max</span>
+<span class="sd">        odl.set.domain.IntervalProd.min</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        --------</span>
+<span class="sd">        &gt;&gt;&gt; g = RectGrid([1, 2, 5], [-2, 1.5, 2])</span>
+<span class="sd">        &gt;&gt;&gt; g.min()</span>
+<span class="sd">        array([ 1., -2.])</span>
+
+<span class="sd">        Also works with Numpy:</span>
+
+<span class="sd">        &gt;&gt;&gt; np.min(g)</span>
+<span class="sd">        array([ 1., -2.])</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">out</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;out&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">out</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">out</span><span class="p">[:]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">min_pt</span>
+            <span class="k">return</span> <span class="n">out</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">min_pt</span></div>
+
+<div class="viewcode-block" id="RectGrid.max"><a class="viewcode-back" href="../../../generated/odl.discr.grid.RectGrid.max.html#odl.discr.grid.RectGrid.max">[docs]</a>    <span class="k">def</span> <span class="nf">max</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return `max_pt`.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        kwargs</span>
+<span class="sd">            For duck-typing with `numpy.amax`</span>
+
+<span class="sd">        See Also</span>
+<span class="sd">        --------</span>
+<span class="sd">        min</span>
+<span class="sd">        odl.set.domain.IntervalProd.max</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        --------</span>
+<span class="sd">        &gt;&gt;&gt; g = RectGrid([1, 2, 5], [-2, 1.5, 2])</span>
+<span class="sd">        &gt;&gt;&gt; g.max()</span>
+<span class="sd">        array([ 5.,  2.])</span>
+
+<span class="sd">        Also works with Numpy:</span>
+
+<span class="sd">        &gt;&gt;&gt; np.max(g)</span>
+<span class="sd">        array([ 5.,  2.])</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">out</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;out&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">out</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">out</span><span class="p">[:]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">max_pt</span>
+            <span class="k">return</span> <span class="n">out</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">max_pt</span></div>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">mid_pt</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Midpoint of the grid, not necessarily a grid point.</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        --------</span>
+<span class="sd">        &gt;&gt;&gt; rg = uniform_grid([-1.5, -1], [-0.5, 3], (2, 3))</span>
+<span class="sd">        &gt;&gt;&gt; rg.mid_pt</span>
+<span class="sd">        array([-1.,  1.])</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">max_pt</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">min_pt</span><span class="p">)</span> <span class="o">/</span> <span class="mi">2</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">stride</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Step per axis between neighboring points of a uniform grid.</span>
+
+<span class="sd">        If the grid contains axes that are not uniform, ``stride`` has</span>
+<span class="sd">        a ``NaN`` entry.</span>
+
+<span class="sd">        For degenerate (length 1) axes, ``stride`` has value ``0.0``.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        stride : numpy.array</span>
+<span class="sd">            Array of dtype ``float`` and length `ndim`.</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        --------</span>
+<span class="sd">        &gt;&gt;&gt; rg = uniform_grid([-1.5, -1], [-0.5, 3], (2, 3))</span>
+<span class="sd">        &gt;&gt;&gt; rg.stride</span>
+<span class="sd">        array([ 1.,  2.])</span>
+
+<span class="sd">        NaN returned for non-uniform dimension:</span>
+
+<span class="sd">        &gt;&gt;&gt; g = RectGrid([0, 1, 2], [0, 1, 4])</span>
+<span class="sd">        &gt;&gt;&gt; g.stride</span>
+<span class="sd">        array([ 1.,  nan])</span>
+
+<span class="sd">        0.0 returned for degenerate dimension:</span>
+
+<span class="sd">        &gt;&gt;&gt; g = RectGrid([0, 1, 2], [0])</span>
+<span class="sd">        &gt;&gt;&gt; g.stride</span>
+<span class="sd">        array([ 1.,  0.])</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># Cache for efficiency instead of re-computing</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">__stride</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">strd</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ndim</span><span class="p">):</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_uniform_byaxis</span><span class="p">[</span><span class="n">i</span><span class="p">]:</span>
+                    <span class="n">strd</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="s1">&#39;nan&#39;</span><span class="p">))</span>
+                <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">nondegen_byaxis</span><span class="p">[</span><span class="n">i</span><span class="p">]:</span>
+                    <span class="n">strd</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">extent</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">/</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">-</span> <span class="mf">1.0</span><span class="p">))</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">strd</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="mf">0.0</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">__stride</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">strd</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__stride</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">extent</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return the edge lengths of this grid&#39;s minimal bounding box.</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        --------</span>
+<span class="sd">        &gt;&gt;&gt; g = RectGrid([1, 2, 5], [-2, 1.5, 2])</span>
+<span class="sd">        &gt;&gt;&gt; g.extent</span>
+<span class="sd">        array([ 4.,  4.])</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">max_pt</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">min_pt</span>
+
+<div class="viewcode-block" id="RectGrid.convex_hull"><a class="viewcode-back" href="../../../generated/odl.discr.grid.RectGrid.convex_hull.html#odl.discr.grid.RectGrid.convex_hull">[docs]</a>    <span class="k">def</span> <span class="nf">convex_hull</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return the smallest `IntervalProd` containing this grid.</span>
+
+<span class="sd">        The convex hull of a set is the union of all line segments</span>
+<span class="sd">        between points in the set. For a rectilinear grid, it is the</span>
+<span class="sd">        interval product given by the extremal coordinates.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        convex_hull : `IntervalProd`</span>
+<span class="sd">            Interval product defined by the minimum and maximum points</span>
+<span class="sd">            of the grid.</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        --------</span>
+<span class="sd">        &gt;&gt;&gt; g = RectGrid([-1, 0, 3], [2, 4], [5], [2, 4, 7])</span>
+<span class="sd">        &gt;&gt;&gt; g.convex_hull()</span>
+<span class="sd">        IntervalProd([-1.,  2.,  5.,  2.], [ 3.,  4.,  5.,  7.])</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">IntervalProd</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">min</span><span class="p">(),</span> <span class="bp">self</span><span class="o">.</span><span class="n">max</span><span class="p">())</span></div>
+
+<div class="viewcode-block" id="RectGrid.element"><a class="viewcode-back" href="../../../generated/odl.discr.grid.RectGrid.element.html#odl.discr.grid.RectGrid.element">[docs]</a>    <span class="k">def</span> <span class="nf">element</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;An arbitrary element, the minimum coordinates.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">min_pt</span></div>
+
+<div class="viewcode-block" id="RectGrid.approx_equals"><a class="viewcode-back" href="../../../generated/odl.discr.grid.RectGrid.approx_equals.html#odl.discr.grid.RectGrid.approx_equals">[docs]</a>    <span class="k">def</span> <span class="nf">approx_equals</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">,</span> <span class="n">atol</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Test if this grid is equal to another grid.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        other :</span>
+<span class="sd">            Object to be tested</span>
+<span class="sd">        atol : float</span>
+<span class="sd">            Allow deviations up to this number in absolute value</span>
+<span class="sd">            per vector entry.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        equals : bool</span>
+<span class="sd">            ``True`` if ``other`` is a `RectGrid` instance with all</span>
+<span class="sd">            coordinate vectors equal (up to the given tolerance), to</span>
+<span class="sd">            the ones of this grid, ``False`` otherwise.</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        --------</span>
+<span class="sd">        &gt;&gt;&gt; g1 = RectGrid([0, 1], [-1, 0, 2])</span>
+<span class="sd">        &gt;&gt;&gt; g2 = RectGrid([-0.1, 1.1], [-1, 0.1, 2])</span>
+<span class="sd">        &gt;&gt;&gt; g1.approx_equals(g2, atol=0)</span>
+<span class="sd">        False</span>
+<span class="sd">        &gt;&gt;&gt; g1.approx_equals(g2, atol=0.15)</span>
+<span class="sd">        True</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">other</span> <span class="ow">is</span> <span class="bp">self</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">True</span>
+
+        <span class="k">return</span> <span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">other</span><span class="p">)</span> <span class="ow">is</span> <span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="ow">and</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">ndim</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">ndim</span> <span class="ow">and</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">shape</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">shape</span> <span class="ow">and</span>
+                <span class="nb">all</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">allclose</span><span class="p">(</span><span class="n">vec_s</span><span class="p">,</span> <span class="n">vec_o</span><span class="p">,</span> <span class="n">atol</span><span class="o">=</span><span class="n">atol</span><span class="p">,</span> <span class="n">rtol</span><span class="o">=</span><span class="mf">0.0</span><span class="p">)</span>
+                    <span class="k">for</span> <span class="p">(</span><span class="n">vec_s</span><span class="p">,</span> <span class="n">vec_o</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">coord_vectors</span><span class="p">,</span>
+                                              <span class="n">other</span><span class="o">.</span><span class="n">coord_vectors</span><span class="p">)))</span></div>
+
+<div class="viewcode-block" id="RectGrid.__eq__"><a class="viewcode-back" href="../../../generated/odl.discr.grid.RectGrid.__eq__.html#odl.discr.grid.RectGrid.__eq__">[docs]</a>    <span class="k">def</span> <span class="fm">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return ``self == other``.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># Implemented separately for performance reasons</span>
+        <span class="k">if</span> <span class="n">other</span> <span class="ow">is</span> <span class="bp">self</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">True</span>
+
+        <span class="k">return</span> <span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">other</span><span class="p">)</span> <span class="ow">is</span> <span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="ow">and</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">shape</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">shape</span> <span class="ow">and</span>
+                <span class="nb">all</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array_equal</span><span class="p">(</span><span class="n">vec_s</span><span class="p">,</span> <span class="n">vec_o</span><span class="p">)</span>
+                    <span class="k">for</span> <span class="p">(</span><span class="n">vec_s</span><span class="p">,</span> <span class="n">vec_o</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">coord_vectors</span><span class="p">,</span>
+                                              <span class="n">other</span><span class="o">.</span><span class="n">coord_vectors</span><span class="p">)))</span></div>
+
+    <span class="k">def</span> <span class="fm">__hash__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return ``hash(self)``.&quot;&quot;&quot;</span>
+        <span class="c1"># TODO: update with #841</span>
+        <span class="n">coord_vec_str</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">cv</span><span class="o">.</span><span class="n">tobytes</span><span class="p">()</span> <span class="k">for</span> <span class="n">cv</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">coord_vectors</span><span class="p">)</span>
+        <span class="k">return</span> <span class="nb">hash</span><span class="p">((</span><span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">),</span> <span class="n">coord_vec_str</span><span class="p">))</span>
+
+<div class="viewcode-block" id="RectGrid.approx_contains"><a class="viewcode-back" href="../../../generated/odl.discr.grid.RectGrid.approx_contains.html#odl.discr.grid.RectGrid.approx_contains">[docs]</a>    <span class="k">def</span> <span class="nf">approx_contains</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">,</span> <span class="n">atol</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Test if ``other`` belongs to this grid up to a tolerance.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        other : `array-like` or float</span>
+<span class="sd">            The object to test for membership in this grid</span>
+<span class="sd">        atol : float</span>
+<span class="sd">            Allow deviations up to this number in absolute value</span>
+<span class="sd">            per vector entry.</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        --------</span>
+<span class="sd">        &gt;&gt;&gt; g = RectGrid([0, 1], [-1, 0, 2])</span>
+<span class="sd">        &gt;&gt;&gt; g.approx_contains([0, 0], atol=0.0)</span>
+<span class="sd">        True</span>
+<span class="sd">        &gt;&gt;&gt; [0, 0] in g  # equivalent</span>
+<span class="sd">        True</span>
+<span class="sd">        &gt;&gt;&gt; g.approx_contains([0.1, -0.1], atol=0.0)</span>
+<span class="sd">        False</span>
+<span class="sd">        &gt;&gt;&gt; g.approx_contains([0.1, -0.1], atol=0.15)</span>
+<span class="sd">        True</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">other</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">atleast_1d</span><span class="p">(</span><span class="n">other</span><span class="p">)</span>
+        <span class="k">return</span> <span class="p">(</span><span class="n">other</span><span class="o">.</span><span class="n">shape</span> <span class="o">==</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ndim</span><span class="p">,)</span> <span class="ow">and</span>
+                <span class="nb">all</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">any</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">isclose</span><span class="p">(</span><span class="n">vector</span><span class="p">,</span> <span class="n">coord</span><span class="p">,</span> <span class="n">atol</span><span class="o">=</span><span class="n">atol</span><span class="p">,</span> <span class="n">rtol</span><span class="o">=</span><span class="mf">0.0</span><span class="p">))</span>
+                    <span class="k">for</span> <span class="n">vector</span><span class="p">,</span> <span class="n">coord</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">coord_vectors</span><span class="p">,</span> <span class="n">other</span><span class="p">)))</span></div>
+
+<div class="viewcode-block" id="RectGrid.__contains__"><a class="viewcode-back" href="../../../generated/odl.discr.grid.RectGrid.__contains__.html#odl.discr.grid.RectGrid.__contains__">[docs]</a>    <span class="k">def</span> <span class="fm">__contains__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return ``other in self``.&quot;&quot;&quot;</span>
+        <span class="n">other</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">atleast_1d</span><span class="p">(</span><span class="n">other</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">other</span><span class="o">.</span><span class="n">dtype</span> <span class="o">==</span> <span class="n">np</span><span class="o">.</span><span class="n">dtype</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+            <span class="k">return</span> <span class="kc">False</span>
+        <span class="k">return</span> <span class="p">(</span><span class="n">other</span><span class="o">.</span><span class="n">shape</span> <span class="o">==</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ndim</span><span class="p">,)</span> <span class="ow">and</span>
+                <span class="nb">all</span><span class="p">(</span><span class="n">coord</span> <span class="ow">in</span> <span class="n">vector</span>
+                    <span class="k">for</span> <span class="n">vector</span><span class="p">,</span> <span class="n">coord</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">coord_vectors</span><span class="p">,</span> <span class="n">other</span><span class="p">)))</span></div>
+
+<div class="viewcode-block" id="RectGrid.is_subgrid"><a class="viewcode-back" href="../../../generated/odl.discr.grid.RectGrid.is_subgrid.html#odl.discr.grid.RectGrid.is_subgrid">[docs]</a>    <span class="k">def</span> <span class="nf">is_subgrid</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">,</span> <span class="n">atol</span><span class="o">=</span><span class="mf">0.0</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return ``True`` if this grid is a subgrid of ``other``.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        other :  `RectGrid`</span>
+<span class="sd">            The other grid which is supposed to contain this grid</span>
+<span class="sd">        atol : float, optional</span>
+<span class="sd">            Allow deviations up to this number in absolute value</span>
+<span class="sd">            per coordinate vector entry.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        is_subgrid : bool</span>
+<span class="sd">            ``True`` if all coordinate vectors of ``self`` are within</span>
+<span class="sd">            absolute distance ``atol`` of the other grid, else ``False``.</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        --------</span>
+<span class="sd">        &gt;&gt;&gt; rg = uniform_grid([-2, -2], [0, 4], (3, 4))</span>
+<span class="sd">        &gt;&gt;&gt; rg.coord_vectors</span>
+<span class="sd">        (array([-2., -1.,  0.]), array([-2.,  0.,  2.,  4.]))</span>
+<span class="sd">        &gt;&gt;&gt; rg_sub = uniform_grid([-1, 2], [0, 4], (2, 2))</span>
+<span class="sd">        &gt;&gt;&gt; rg_sub.coord_vectors</span>
+<span class="sd">        (array([-1.,  0.]), array([ 2.,  4.]))</span>
+<span class="sd">        &gt;&gt;&gt; rg_sub.is_subgrid(rg)</span>
+<span class="sd">        True</span>
+
+<span class="sd">        Fuzzy check is also possible. Note that the tolerance still</span>
+<span class="sd">        applies to the coordinate vectors.</span>
+
+<span class="sd">        &gt;&gt;&gt; rg_sub = uniform_grid([-1.015, 2], [0, 3.99], (2, 2))</span>
+<span class="sd">        &gt;&gt;&gt; rg_sub.is_subgrid(rg, atol=0.01)</span>
+<span class="sd">        False</span>
+<span class="sd">        &gt;&gt;&gt; rg_sub.is_subgrid(rg, atol=0.02)</span>
+<span class="sd">        True</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># Optimization for some common cases</span>
+        <span class="k">if</span> <span class="n">other</span> <span class="ow">is</span> <span class="bp">self</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">True</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="n">RectGrid</span><span class="p">):</span>
+            <span class="k">return</span> <span class="kc">False</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">all</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">&lt;=</span> <span class="n">other</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="ow">and</span>
+                   <span class="bp">self</span><span class="o">.</span><span class="n">min_pt</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">&gt;=</span> <span class="n">other</span><span class="o">.</span><span class="n">min_pt</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">-</span> <span class="n">atol</span> <span class="ow">and</span>
+                   <span class="bp">self</span><span class="o">.</span><span class="n">max_pt</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">&lt;=</span> <span class="n">other</span><span class="o">.</span><span class="n">max_pt</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">+</span> <span class="n">atol</span>
+                   <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ndim</span><span class="p">)):</span>
+            <span class="k">return</span> <span class="kc">False</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">size</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">True</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_uniform</span> <span class="ow">and</span> <span class="n">other</span><span class="o">.</span><span class="n">is_uniform</span><span class="p">:</span>
+            <span class="c1"># For uniform grids, it suffices to show that min_pt, max_pt</span>
+            <span class="c1"># and g[1,...,1] are contained in the other grid. For axes</span>
+            <span class="c1"># with less than 2 points, this reduces to min_pt and max_pt,</span>
+            <span class="c1"># and the corresponding indices in the other check point are</span>
+            <span class="c1"># set to 0.</span>
+            <span class="n">minmax_contained</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="n">other</span><span class="o">.</span><span class="n">approx_contains</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">min_pt</span><span class="p">,</span> <span class="n">atol</span><span class="o">=</span><span class="n">atol</span><span class="p">)</span> <span class="ow">and</span>
+                <span class="n">other</span><span class="o">.</span><span class="n">approx_contains</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">max_pt</span><span class="p">,</span> <span class="n">atol</span><span class="o">=</span><span class="n">atol</span><span class="p">))</span>
+            <span class="n">check_idx</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ndim</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">int</span><span class="p">)</span>
+            <span class="n">check_idx</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span> <span class="o">&gt;=</span> <span class="mi">3</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span>
+            <span class="n">checkpt_contained</span> <span class="o">=</span> <span class="n">other</span><span class="o">.</span><span class="n">approx_contains</span><span class="p">(</span><span class="bp">self</span><span class="p">[</span><span class="nb">tuple</span><span class="p">(</span><span class="n">check_idx</span><span class="p">)],</span>
+                                                      <span class="n">atol</span><span class="o">=</span><span class="n">atol</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">minmax_contained</span> <span class="ow">and</span> <span class="n">checkpt_contained</span>
+
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># Array version of the fuzzy subgrid test, about 3 times faster</span>
+            <span class="c1"># than the loop version.</span>
+            <span class="k">for</span> <span class="n">vec_o</span><span class="p">,</span> <span class="n">vec_s</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">other</span><span class="o">.</span><span class="n">coord_vectors</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">coord_vectors</span><span class="p">):</span>
+                <span class="c1"># Create array of differences of all entries in vec_o and</span>
+                <span class="c1"># vec_s. If there is no almost zero entry in each row,</span>
+                <span class="c1"># return False.</span>
+                <span class="n">vec_o_mg</span><span class="p">,</span> <span class="n">vec_s_mg</span> <span class="o">=</span> <span class="n">sparse_meshgrid</span><span class="p">(</span><span class="n">vec_o</span><span class="p">,</span> <span class="n">vec_s</span><span class="p">)</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">all</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">any</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">isclose</span><span class="p">(</span><span class="n">vec_s_mg</span><span class="p">,</span> <span class="n">vec_o_mg</span><span class="p">,</span> <span class="n">atol</span><span class="o">=</span><span class="n">atol</span><span class="p">),</span>
+                                     <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)):</span>
+                    <span class="k">return</span> <span class="kc">False</span>
+            <span class="k">return</span> <span class="kc">True</span></div>
+
+<div class="viewcode-block" id="RectGrid.insert"><a class="viewcode-back" href="../../../generated/odl.discr.grid.RectGrid.insert.html#odl.discr.grid.RectGrid.insert">[docs]</a>    <span class="k">def</span> <span class="nf">insert</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">index</span><span class="p">,</span> <span class="o">*</span><span class="n">grids</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return a copy with ``grids`` inserted before ``index``.</span>
+
+<span class="sd">        The given grids are inserted (as a block) into ``self``, yielding</span>
+<span class="sd">        a new grid whose number of dimensions is the sum of the numbers of</span>
+<span class="sd">        dimensions of all involved grids.</span>
+<span class="sd">        Note that no changes are made in-place.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        index : int</span>
+<span class="sd">            The index of the dimension before which ``grids`` are to</span>
+<span class="sd">            be inserted. Negative indices count backwards from</span>
+<span class="sd">            ``self.ndim``.</span>
+<span class="sd">        grid1, ..., gridN :  `RectGrid`</span>
+<span class="sd">            The grids to be inserted into ``self``.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        newgrid : `RectGrid`</span>
+<span class="sd">            The enlarged grid.</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        --------</span>
+<span class="sd">        &gt;&gt;&gt; g1 = RectGrid([0, 1], [-1, 0, 2])</span>
+<span class="sd">        &gt;&gt;&gt; g2 = RectGrid([1], [-6, 15])</span>
+<span class="sd">        &gt;&gt;&gt; g1.insert(1, g2)</span>
+<span class="sd">        RectGrid(</span>
+<span class="sd">            [ 0.,  1.],</span>
+<span class="sd">            [ 1.],</span>
+<span class="sd">            [ -6.,  15.],</span>
+<span class="sd">            [-1.,  0.,  2.]</span>
+<span class="sd">        )</span>
+<span class="sd">        &gt;&gt;&gt; g1.insert(1, g2, g2)</span>
+<span class="sd">        RectGrid(</span>
+<span class="sd">            [ 0.,  1.],</span>
+<span class="sd">            [ 1.],</span>
+<span class="sd">            [ -6.,  15.],</span>
+<span class="sd">            [ 1.],</span>
+<span class="sd">            [ -6.,  15.],</span>
+<span class="sd">            [-1.,  0.,  2.]</span>
+<span class="sd">        )</span>
+
+<span class="sd">        See Also</span>
+<span class="sd">        --------</span>
+<span class="sd">        append</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">index</span><span class="p">,</span> <span class="n">index_in</span> <span class="o">=</span> <span class="n">safe_int_conv</span><span class="p">(</span><span class="n">index</span><span class="p">),</span> <span class="n">index</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="o">-</span><span class="bp">self</span><span class="o">.</span><span class="n">ndim</span> <span class="o">&lt;=</span> <span class="n">index</span> <span class="o">&lt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ndim</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">IndexError</span><span class="p">(</span><span class="s1">&#39;index </span><span class="si">{0}</span><span class="s1"> outside the valid range -</span><span class="si">{1}</span><span class="s1"> ... </span><span class="si">{1}</span><span class="s1">&#39;</span>
+                             <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">index_in</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">ndim</span><span class="p">))</span>
+        <span class="k">if</span> <span class="n">index</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">index</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ndim</span>
+
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">grids</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="c1"># Copy of `self`</span>
+            <span class="k">return</span> <span class="n">RectGrid</span><span class="p">(</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">coord_vectors</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="nb">len</span><span class="p">(</span><span class="n">grids</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="c1"># Insert single grid</span>
+            <span class="n">grid</span> <span class="o">=</span> <span class="n">grids</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">grid</span><span class="p">,</span> <span class="n">RectGrid</span><span class="p">):</span>
+                <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">{!r}</span><span class="s1"> is not a `RectGrid` instance&#39;</span>
+                                <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">grid</span><span class="p">))</span>
+            <span class="n">new_vecs</span> <span class="o">=</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">coord_vectors</span><span class="p">[:</span><span class="n">index</span><span class="p">]</span> <span class="o">+</span> <span class="n">grid</span><span class="o">.</span><span class="n">coord_vectors</span> <span class="o">+</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">coord_vectors</span><span class="p">[</span><span class="n">index</span><span class="p">:])</span>
+            <span class="k">return</span> <span class="n">RectGrid</span><span class="p">(</span><span class="o">*</span><span class="n">new_vecs</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># Recursively insert first grid and the remaining into the result</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="n">index</span><span class="p">,</span> <span class="n">grids</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span>
+                <span class="n">index</span> <span class="o">+</span> <span class="n">grids</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">ndim</span><span class="p">,</span> <span class="o">*</span><span class="p">(</span><span class="n">grids</span><span class="p">[</span><span class="mi">1</span><span class="p">:]))</span></div>
+
+<div class="viewcode-block" id="RectGrid.append"><a class="viewcode-back" href="../../../generated/odl.discr.grid.RectGrid.append.html#odl.discr.grid.RectGrid.append">[docs]</a>    <span class="k">def</span> <span class="nf">append</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">grids</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Insert ``grids`` at the end as a block.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        grid1, ..., gridN :  `RectGrid`</span>
+<span class="sd">            The grids to be appended to ``self``.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        newgrid : `RectGrid`</span>
+<span class="sd">            The enlarged grid.</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        --------</span>
+<span class="sd">        &gt;&gt;&gt; g1 = RectGrid([0, 1], [-1, 0, 2])</span>
+<span class="sd">        &gt;&gt;&gt; g2 = RectGrid([1], [-6, 15])</span>
+<span class="sd">        &gt;&gt;&gt; g1.append(g2)</span>
+<span class="sd">        RectGrid(</span>
+<span class="sd">            [ 0.,  1.],</span>
+<span class="sd">            [-1.,  0.,  2.],</span>
+<span class="sd">            [ 1.],</span>
+<span class="sd">            [ -6.,  15.]</span>
+<span class="sd">        )</span>
+<span class="sd">        &gt;&gt;&gt; g1.append(g2, g2)</span>
+<span class="sd">        RectGrid(</span>
+<span class="sd">            [ 0.,  1.],</span>
+<span class="sd">            [-1.,  0.,  2.],</span>
+<span class="sd">            [ 1.],</span>
+<span class="sd">            [ -6.,  15.],</span>
+<span class="sd">            [ 1.],</span>
+<span class="sd">            [ -6.,  15.]</span>
+<span class="sd">        )</span>
+
+<span class="sd">        See Also</span>
+<span class="sd">        --------</span>
+<span class="sd">        insert</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ndim</span><span class="p">,</span> <span class="o">*</span><span class="n">grids</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="RectGrid.squeeze"><a class="viewcode-back" href="../../../generated/odl.discr.grid.RectGrid.squeeze.html#odl.discr.grid.RectGrid.squeeze">[docs]</a>    <span class="k">def</span> <span class="nf">squeeze</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return the grid with removed degenerate (length 1) dimensions.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        axis : None or index expression, optional</span>
+<span class="sd">            Subset of the axes to squeeze. Default: All axes.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        squeezed : `RectGrid`</span>
+<span class="sd">            Squeezed grid.</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        --------</span>
+<span class="sd">        &gt;&gt;&gt; g = RectGrid([0, 1], [-1], [-1, 0, 2])</span>
+<span class="sd">        &gt;&gt;&gt; g.squeeze()</span>
+<span class="sd">        RectGrid(</span>
+<span class="sd">            [ 0.,  1.],</span>
+<span class="sd">            [-1.,  0.,  2.]</span>
+<span class="sd">        )</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">axis</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">rng</span> <span class="o">=</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ndim</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">rng</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">atleast_1d</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ndim</span><span class="p">)[</span><span class="n">axis</span><span class="p">]))</span>
+
+        <span class="n">new_indcs</span> <span class="o">=</span> <span class="p">[</span><span class="n">i</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ndim</span><span class="p">)</span>
+                     <span class="k">if</span> <span class="n">i</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">rng</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">nondegen_byaxis</span><span class="p">[</span><span class="n">i</span><span class="p">]]</span>
+        <span class="n">coord_vecs</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">coord_vectors</span><span class="p">[</span><span class="n">axis</span><span class="p">]</span> <span class="k">for</span> <span class="n">axis</span> <span class="ow">in</span> <span class="n">new_indcs</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">RectGrid</span><span class="p">(</span><span class="o">*</span><span class="n">coord_vecs</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="RectGrid.points"><a class="viewcode-back" href="../../../generated/odl.discr.grid.RectGrid.points.html#odl.discr.grid.RectGrid.points">[docs]</a>    <span class="k">def</span> <span class="nf">points</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">order</span><span class="o">=</span><span class="s1">&#39;C&#39;</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;All grid points in a single array.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        order : {&#39;C&#39;, &#39;F&#39;}, optional</span>
+<span class="sd">            Axis ordering in the resulting point array.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        points : `numpy.ndarray`</span>
+<span class="sd">            The shape of the array is ``size x ndim``, i.e. the points</span>
+<span class="sd">            are stored as rows.</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        --------</span>
+<span class="sd">        &gt;&gt;&gt; g = RectGrid([0, 1], [-1, 0, 2])</span>
+<span class="sd">        &gt;&gt;&gt; g.points()</span>
+<span class="sd">        array([[ 0., -1.],</span>
+<span class="sd">               [ 0.,  0.],</span>
+<span class="sd">               [ 0.,  2.],</span>
+<span class="sd">               [ 1., -1.],</span>
+<span class="sd">               [ 1.,  0.],</span>
+<span class="sd">               [ 1.,  2.]])</span>
+<span class="sd">        &gt;&gt;&gt; g.points(order=&#39;F&#39;)</span>
+<span class="sd">        array([[ 0., -1.],</span>
+<span class="sd">               [ 1., -1.],</span>
+<span class="sd">               [ 0.,  0.],</span>
+<span class="sd">               [ 1.,  0.],</span>
+<span class="sd">               [ 0.,  2.],</span>
+<span class="sd">               [ 1.,  2.]])</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="nb">str</span><span class="p">(</span><span class="n">order</span><span class="p">)</span><span class="o">.</span><span class="n">upper</span><span class="p">()</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">(</span><span class="s1">&#39;C&#39;</span><span class="p">,</span> <span class="s1">&#39;F&#39;</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;order </span><span class="si">{!r}</span><span class="s1"> not recognized&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">order</span><span class="p">))</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">order</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">order</span><span class="p">)</span><span class="o">.</span><span class="n">upper</span><span class="p">()</span>
+
+        <span class="n">axes</span> <span class="o">=</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ndim</span><span class="p">)</span> <span class="k">if</span> <span class="n">order</span> <span class="o">==</span> <span class="s1">&#39;C&#39;</span> <span class="k">else</span> <span class="nb">reversed</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ndim</span><span class="p">))</span>
+        <span class="n">shape</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">shape</span> <span class="k">if</span> <span class="n">order</span> <span class="o">==</span> <span class="s1">&#39;C&#39;</span> <span class="k">else</span> <span class="nb">tuple</span><span class="p">(</span><span class="nb">reversed</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">shape</span><span class="p">))</span>
+        <span class="n">point_arr</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">size</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">ndim</span><span class="p">))</span>
+
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">axis</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">axes</span><span class="p">):</span>
+            <span class="n">view</span> <span class="o">=</span> <span class="n">point_arr</span><span class="p">[:,</span> <span class="n">axis</span><span class="p">]</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">shape</span><span class="p">)</span>
+            <span class="n">coord_shape</span> <span class="o">=</span> <span class="p">(</span><span class="mi">1</span><span class="p">,)</span> <span class="o">*</span> <span class="n">i</span> <span class="o">+</span> <span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,)</span> <span class="o">+</span> <span class="p">(</span><span class="mi">1</span><span class="p">,)</span> <span class="o">*</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ndim</span> <span class="o">-</span> <span class="n">i</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
+            <span class="n">view</span><span class="p">[:]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">coord_vectors</span><span class="p">[</span><span class="n">axis</span><span class="p">]</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">coord_shape</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">point_arr</span></div>
+
+<div class="viewcode-block" id="RectGrid.corner_grid"><a class="viewcode-back" href="../../../generated/odl.discr.grid.RectGrid.corner_grid.html#odl.discr.grid.RectGrid.corner_grid">[docs]</a>    <span class="k">def</span> <span class="nf">corner_grid</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return a grid with only the corner points.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        cgrid : `RectGrid`</span>
+<span class="sd">            Grid with size 2 in non-degenerate dimensions and 1</span>
+<span class="sd">            in degenerate ones</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        --------</span>
+<span class="sd">        &gt;&gt;&gt; g = RectGrid([0, 1], [-1, 0, 2])</span>
+<span class="sd">        &gt;&gt;&gt; g.corner_grid()</span>
+<span class="sd">        uniform_grid([ 0., -1.], [ 1.,  2.], (2, 2))</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">minmax_vecs</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">axis</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ndim</span><span class="p">):</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="n">axis</span><span class="p">]</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="n">minmax_vecs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">coord_vectors</span><span class="p">[</span><span class="n">axis</span><span class="p">][</span><span class="mi">0</span><span class="p">])</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">minmax_vecs</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">coord_vectors</span><span class="p">[</span><span class="n">axis</span><span class="p">][</span><span class="mi">0</span><span class="p">],</span>
+                                    <span class="bp">self</span><span class="o">.</span><span class="n">coord_vectors</span><span class="p">[</span><span class="n">axis</span><span class="p">][</span><span class="o">-</span><span class="mi">1</span><span class="p">]))</span>
+
+        <span class="k">return</span> <span class="n">RectGrid</span><span class="p">(</span><span class="o">*</span><span class="n">minmax_vecs</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="RectGrid.corners"><a class="viewcode-back" href="../../../generated/odl.discr.grid.RectGrid.corners.html#odl.discr.grid.RectGrid.corners">[docs]</a>    <span class="k">def</span> <span class="nf">corners</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">order</span><span class="o">=</span><span class="s1">&#39;C&#39;</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Corner points of the grid in a single array.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        order : {&#39;C&#39;, &#39;F&#39;}, optional</span>
+<span class="sd">            Axis ordering in the resulting point array</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        corners : `numpy.ndarray`</span>
+<span class="sd">            The size of the array is 2^m x ndim, where m is the number</span>
+<span class="sd">            of non-degenerate axes, i.e. the corners are stored as rows.</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        --------</span>
+<span class="sd">        &gt;&gt;&gt; g = RectGrid([0, 1], [-1, 0, 2])</span>
+<span class="sd">        &gt;&gt;&gt; g.corners()</span>
+<span class="sd">        array([[ 0., -1.],</span>
+<span class="sd">               [ 0.,  2.],</span>
+<span class="sd">               [ 1., -1.],</span>
+<span class="sd">               [ 1.,  2.]])</span>
+<span class="sd">        &gt;&gt;&gt; g.corners(order=&#39;F&#39;)</span>
+<span class="sd">        array([[ 0., -1.],</span>
+<span class="sd">               [ 1., -1.],</span>
+<span class="sd">               [ 0.,  2.],</span>
+<span class="sd">               [ 1.,  2.]])</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">corner_grid</span><span class="p">()</span><span class="o">.</span><span class="n">points</span><span class="p">(</span><span class="n">order</span><span class="o">=</span><span class="n">order</span><span class="p">)</span></div>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">meshgrid</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;A grid suitable for function evaluation.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        meshgrid : tuple of `numpy.ndarray`&#39;s</span>
+<span class="sd">            Function evaluation grid with ``ndim`` axes</span>
+
+<span class="sd">        See Also</span>
+<span class="sd">        --------</span>
+<span class="sd">        numpy.meshgrid</span>
+<span class="sd">            Coordinate matrices from coordinate vectors.</span>
+<span class="sd">            We use ``indexing=&#39;ij&#39;`` and ``copy=True``</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        --------</span>
+<span class="sd">        &gt;&gt;&gt; g = RectGrid([0, 1], [-1, 0, 2])</span>
+<span class="sd">        &gt;&gt;&gt; x, y = g.meshgrid</span>
+<span class="sd">        &gt;&gt;&gt; x</span>
+<span class="sd">        array([[ 0.],</span>
+<span class="sd">               [ 1.]])</span>
+<span class="sd">        &gt;&gt;&gt; y</span>
+<span class="sd">        array([[-1.,  0.,  2.]])</span>
+
+<span class="sd">        Easy function evaluation via broadcasting:</span>
+
+<span class="sd">        &gt;&gt;&gt; x ** 2 - y ** 2</span>
+<span class="sd">        array([[-1.,  0., -4.],</span>
+<span class="sd">               [ 0.,  1., -3.]])</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">sparse_meshgrid</span><span class="p">(</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">coord_vectors</span><span class="p">)</span>
+
+<div class="viewcode-block" id="RectGrid.__getitem__"><a class="viewcode-back" href="../../../generated/odl.discr.grid.RectGrid.__getitem__.html#odl.discr.grid.RectGrid.__getitem__">[docs]</a>    <span class="k">def</span> <span class="fm">__getitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">indices</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return ``self[indices]``.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        indices : index expression</span>
+<span class="sd">            Object determining which parts of the grid to extract.</span>
+<span class="sd">            ``None`` (new axis) and empty axes are not supported.</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        --------</span>
+<span class="sd">        Indexing with integers along all axes produces an array (a point):</span>
+
+<span class="sd">        &gt;&gt;&gt; g = RectGrid([-1, 0, 3], [2, 4, 5], [5], [2, 4, 7])</span>
+<span class="sd">        &gt;&gt;&gt; g[0, 0, 0, 0]</span>
+<span class="sd">        array([-1.,  2.,  5.,  2.])</span>
+
+<span class="sd">        Otherwise, a new RectGrid is returned:</span>
+
+<span class="sd">        &gt;&gt;&gt; g[:, 0, 0, 0]</span>
+<span class="sd">        RectGrid(</span>
+<span class="sd">            [-1.,  0.,  3.],</span>
+<span class="sd">            [ 2.],</span>
+<span class="sd">            [ 5.],</span>
+<span class="sd">            [ 2.]</span>
+<span class="sd">        )</span>
+<span class="sd">        &gt;&gt;&gt; g[0, ..., 1:]</span>
+<span class="sd">        RectGrid(</span>
+<span class="sd">            [-1.],</span>
+<span class="sd">            [ 2.,  4.,  5.],</span>
+<span class="sd">            [ 5.],</span>
+<span class="sd">            [ 4.,  7.]</span>
+<span class="sd">        )</span>
+<span class="sd">        &gt;&gt;&gt; g[::2, ..., ::2]</span>
+<span class="sd">        RectGrid(</span>
+<span class="sd">            [-1.,  3.],</span>
+<span class="sd">            [ 2.,  4.,  5.],</span>
+<span class="sd">            [ 5.],</span>
+<span class="sd">            [ 2.,  7.]</span>
+<span class="sd">        )</span>
+
+<span class="sd">        Too few indices are filled up with an ellipsis from the right:</span>
+
+<span class="sd">        &gt;&gt;&gt; g[0]</span>
+<span class="sd">        RectGrid(</span>
+<span class="sd">            [-1.],</span>
+<span class="sd">            [ 2.,  4.,  5.],</span>
+<span class="sd">            [ 5.],</span>
+<span class="sd">            [ 2.,  4.,  7.]</span>
+<span class="sd">        )</span>
+<span class="sd">        &gt;&gt;&gt; g[0] == g[0, :, :, :] == g[0, ...]</span>
+<span class="sd">        True</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">indices</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">indices</span><span class="p">:</span>
+                <span class="n">new_coord_vecs</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">coord_vectors</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="n">indices</span><span class="p">]]</span>
+                <span class="n">new_coord_vecs</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">coord_vectors</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">new_coord_vecs</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="k">return</span> <span class="n">RectGrid</span><span class="p">(</span><span class="o">*</span><span class="n">new_coord_vecs</span><span class="p">)</span>
+
+        <span class="n">indices</span> <span class="o">=</span> <span class="n">normalized_index_expression</span><span class="p">(</span><span class="n">indices</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span>
+                                              <span class="n">int_to_slice</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+
+        <span class="c1"># If all indices are integers, return an array (a point). Otherwise,</span>
+        <span class="c1"># create a new grid.</span>
+        <span class="k">if</span> <span class="nb">all</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">isscalar</span><span class="p">(</span><span class="n">idx</span><span class="p">)</span> <span class="k">for</span> <span class="n">idx</span> <span class="ow">in</span> <span class="n">indices</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">fromiter</span><span class="p">(</span>
+                <span class="p">(</span><span class="n">v</span><span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="n">idx</span><span class="p">)]</span> <span class="k">for</span> <span class="n">idx</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">indices</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">coord_vectors</span><span class="p">)),</span>
+                <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">new_coord_vecs</span> <span class="o">=</span> <span class="p">[</span><span class="n">vec</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span>
+                              <span class="k">for</span> <span class="n">idx</span><span class="p">,</span> <span class="n">vec</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">indices</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">coord_vectors</span><span class="p">)]</span>
+            <span class="k">return</span> <span class="n">RectGrid</span><span class="p">(</span><span class="o">*</span><span class="n">new_coord_vecs</span><span class="p">)</span></div>
+
+    <span class="k">def</span> <span class="nf">__array__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Used with ``numpy``. Returns `points`.</span>
+
+<span class="sd">        This allows usage of RectGrid with some numpy functions.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        dtype : `numpy.dtype`</span>
+<span class="sd">            The Numpy data type of the result array. ``None`` means `float`.</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        --------</span>
+<span class="sd">        &gt;&gt;&gt; g = RectGrid([0, 1], [-2, 0, 2])</span>
+
+<span class="sd">        Convert to an array:</span>
+
+<span class="sd">        &gt;&gt;&gt; np.asarray(g)</span>
+<span class="sd">        array([[ 0., -2.],</span>
+<span class="sd">               [ 0.,  0.],</span>
+<span class="sd">               [ 0.,  2.],</span>
+<span class="sd">               [ 1., -2.],</span>
+<span class="sd">               [ 1.,  0.],</span>
+<span class="sd">               [ 1.,  2.]])</span>
+
+<span class="sd">        Calculate the midpoint:</span>
+
+<span class="sd">        &gt;&gt;&gt; np.mean(g, axis=0)</span>
+<span class="sd">        array([ 0.5,  0. ])</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">points</span><span class="p">()</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">dtype</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return ``repr(self)``.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_uniform</span><span class="p">:</span>
+            <span class="n">ctor</span> <span class="o">=</span> <span class="s1">&#39;uniform_grid&#39;</span>
+            <span class="n">posargs</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">min_pt</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">max_pt</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">shape</span><span class="p">]</span>
+            <span class="n">posmod</span> <span class="o">=</span> <span class="p">[</span><span class="n">array_str</span><span class="p">,</span> <span class="n">array_str</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">]</span>
+            <span class="k">with</span> <span class="n">npy_printoptions</span><span class="p">(</span><span class="n">precision</span><span class="o">=</span><span class="mi">4</span><span class="p">):</span>
+                <span class="n">inner_str</span> <span class="o">=</span> <span class="n">signature_string</span><span class="p">(</span><span class="n">posargs</span><span class="p">,</span> <span class="p">[],</span> <span class="n">mod</span><span class="o">=</span><span class="p">[</span><span class="n">posmod</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">])</span>
+            <span class="k">return</span> <span class="s1">&#39;</span><span class="si">{}</span><span class="s1">(</span><span class="si">{}</span><span class="s1">)&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">ctor</span><span class="p">,</span> <span class="n">inner_str</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">ctor</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span>
+            <span class="n">posargs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">coord_vectors</span>
+            <span class="n">posmod</span> <span class="o">=</span> <span class="n">array_str</span>
+            <span class="n">inner_str</span> <span class="o">=</span> <span class="n">signature_string</span><span class="p">(</span><span class="n">posargs</span><span class="p">,</span> <span class="p">[],</span> <span class="n">sep</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;,</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">,</span> <span class="s1">&#39;, &#39;</span><span class="p">,</span> <span class="s1">&#39;, &#39;</span><span class="p">],</span>
+                                         <span class="n">mod</span><span class="o">=</span><span class="p">[</span><span class="n">posmod</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">])</span>
+            <span class="k">return</span> <span class="s1">&#39;</span><span class="si">{}</span><span class="s1">(</span><span class="se">\n</span><span class="si">{}</span><span class="se">\n</span><span class="s1">)&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">ctor</span><span class="p">,</span> <span class="n">indent</span><span class="p">(</span><span class="n">inner_str</span><span class="p">))</span>
+
+    <span class="fm">__str__</span> <span class="o">=</span> <span class="fm">__repr__</span></div>
+
+
+<div class="viewcode-block" id="uniform_grid_fromintv"><a class="viewcode-back" href="../../../generated/odl.discr.grid.uniform_grid_fromintv.html#odl.discr.grid.uniform_grid_fromintv">[docs]</a><span class="k">def</span> <span class="nf">uniform_grid_fromintv</span><span class="p">(</span><span class="n">intv_prod</span><span class="p">,</span> <span class="n">shape</span><span class="p">,</span> <span class="n">nodes_on_bdry</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Return a grid from sampling an interval product uniformly.</span>
+
+<span class="sd">    The resulting grid will by default include ``intv_prod.min_pt`` and</span>
+<span class="sd">    ``intv_prod.max_pt`` as grid points. If you want a subdivision into</span>
+<span class="sd">    equally sized cells with grid points in the middle, use</span>
+<span class="sd">    `uniform_partition` instead.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    intv_prod : `IntervalProd`</span>
+<span class="sd">        Set to be sampled.</span>
+<span class="sd">    shape : int or sequence of ints</span>
+<span class="sd">        Number of nodes per axis. Entries corresponding to degenerate axes</span>
+<span class="sd">        must be equal to 1.</span>
+<span class="sd">    nodes_on_bdry : bool or sequence, optional</span>
+<span class="sd">        If a sequence is provided, it determines per axis whether to</span>
+<span class="sd">        place the last grid point on the boundary (``True``) or shift it</span>
+<span class="sd">        by half a cell size into the interior (``False``). In each axis,</span>
+<span class="sd">        an entry may consist in a single bool or a 2-tuple of</span>
+<span class="sd">        bool. In the latter case, the first tuple entry decides for</span>
+<span class="sd">        the left, the second for the right boundary. The length of the</span>
+<span class="sd">        sequence must be ``array.ndim``.</span>
+
+<span class="sd">        A single boolean is interpreted as a global choice for all</span>
+<span class="sd">        boundaries.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    sampling : `RectGrid`</span>
+<span class="sd">        Uniform sampling grid for the interval product.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    &gt;&gt;&gt; rbox = odl.IntervalProd([-1.5, 2], [-0.5, 3])</span>
+<span class="sd">    &gt;&gt;&gt; grid = uniform_grid_fromintv(rbox, (3, 3))</span>
+<span class="sd">    &gt;&gt;&gt; grid.coord_vectors</span>
+<span class="sd">    (array([-1.5, -1. , -0.5]), array([ 2. ,  2.5,  3. ]))</span>
+
+<span class="sd">    To have the nodes in the &quot;middle&quot;, use ``nodes_on_bdry=False``:</span>
+
+<span class="sd">    &gt;&gt;&gt; grid = uniform_grid_fromintv(rbox, (2, 2), nodes_on_bdry=False)</span>
+<span class="sd">    &gt;&gt;&gt; grid.coord_vectors</span>
+<span class="sd">    (array([-1.25, -0.75]), array([ 2.25,  2.75]))</span>
+
+<span class="sd">    See Also</span>
+<span class="sd">    --------</span>
+<span class="sd">    uniform_grid : Create a uniform grid directly.</span>
+<span class="sd">    odl.discr.partition.uniform_partition_fromintv :</span>
+<span class="sd">        divide interval product into equally sized subsets</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">intv_prod</span><span class="p">,</span> <span class="n">IntervalProd</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">{!r}</span><span class="s1"> is not an `IntervalProd` instance&#39;</span>
+                        <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">intv_prod</span><span class="p">))</span>
+
+    <span class="k">if</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">any</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">isinf</span><span class="p">(</span><span class="n">intv_prod</span><span class="o">.</span><span class="n">min_pt</span><span class="p">))</span> <span class="ow">or</span>
+            <span class="n">np</span><span class="o">.</span><span class="n">any</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">isinf</span><span class="p">(</span><span class="n">intv_prod</span><span class="o">.</span><span class="n">max_pt</span><span class="p">))):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;`intv_prod` must be finite, got </span><span class="si">{!r}</span><span class="s1">&#39;</span>
+                         <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="s1">&#39;intv_prod&#39;</span><span class="p">))</span>
+
+    <span class="n">shape</span> <span class="o">=</span> <span class="n">normalized_scalar_param_list</span><span class="p">(</span><span class="n">shape</span><span class="p">,</span> <span class="n">intv_prod</span><span class="o">.</span><span class="n">ndim</span><span class="p">,</span> <span class="n">safe_int_conv</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">shape</span><span class="p">(</span><span class="n">nodes_on_bdry</span><span class="p">)</span> <span class="o">==</span> <span class="p">():</span>
+        <span class="n">nodes_on_bdry</span> <span class="o">=</span> <span class="p">([(</span><span class="nb">bool</span><span class="p">(</span><span class="n">nodes_on_bdry</span><span class="p">),</span> <span class="nb">bool</span><span class="p">(</span><span class="n">nodes_on_bdry</span><span class="p">))]</span> <span class="o">*</span>
+                         <span class="n">intv_prod</span><span class="o">.</span><span class="n">ndim</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">intv_prod</span><span class="o">.</span><span class="n">ndim</span> <span class="o">==</span> <span class="mi">1</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">nodes_on_bdry</span><span class="p">)</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
+        <span class="n">nodes_on_bdry</span> <span class="o">=</span> <span class="p">[</span><span class="n">nodes_on_bdry</span><span class="p">]</span>
+    <span class="k">elif</span> <span class="nb">len</span><span class="p">(</span><span class="n">nodes_on_bdry</span><span class="p">)</span> <span class="o">!=</span> <span class="n">intv_prod</span><span class="o">.</span><span class="n">ndim</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;`nodes_on_bdry` has length </span><span class="si">{}</span><span class="s1">, expected </span><span class="si">{}</span><span class="s1">&#39;</span>
+                         <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">nodes_on_bdry</span><span class="p">),</span> <span class="n">intv_prod</span><span class="o">.</span><span class="n">ndim</span><span class="p">))</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">shape</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">n</span><span class="p">)</span> <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">shape</span><span class="p">)</span>
+
+    <span class="c1"># We need to determine the placement of the grid minimum and maximum</span>
+    <span class="c1"># points based on the choices in nodes_on_bdry. If in a given axis,</span>
+    <span class="c1"># and for a given side (left or right), the entry is True, the node lies</span>
+    <span class="c1"># on the boundary, so this coordinate can simply be taken as-is.</span>
+    <span class="c1">#</span>
+    <span class="c1"># Otherwise, the following conditions must be met:</span>
+    <span class="c1">#</span>
+    <span class="c1"># 1. The node should be half a stride s away from the boundary</span>
+    <span class="c1"># 2. Adding or subtracting (n-1)*s should give the other extremal node.</span>
+    <span class="c1">#</span>
+    <span class="c1"># If both nodes are to be shifted half a stride inside,</span>
+    <span class="c1"># the second condition yields</span>
+    <span class="c1"># a + s/2 + (n-1)*s = b - s/2 =&gt; s = (b - a) / n,</span>
+    <span class="c1"># hence the extremal grid points are</span>
+    <span class="c1"># gmin = a + s/2 = a + (b - a) / (2 * n),</span>
+    <span class="c1"># gmax = b - s/2 = b - (b - a) / (2 * n).</span>
+    <span class="c1">#</span>
+    <span class="c1"># In the case where one node, say the rightmost, lies on the boundary,</span>
+    <span class="c1"># the condition 2. reads as</span>
+    <span class="c1"># a + s/2 + (n-1)*s = b =&gt; s = (b - a) / (n - 1/2),</span>
+    <span class="c1"># thus</span>
+    <span class="c1"># gmin = a + (b - a) / (2 * n - 1).</span>
+
+    <span class="n">gmin</span><span class="p">,</span> <span class="n">gmax</span> <span class="o">=</span> <span class="p">[],</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">n</span><span class="p">,</span> <span class="n">xmin</span><span class="p">,</span> <span class="n">xmax</span><span class="p">,</span> <span class="n">on_bdry</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">shape</span><span class="p">,</span> <span class="n">intv_prod</span><span class="o">.</span><span class="n">min_pt</span><span class="p">,</span>
+                                      <span class="n">intv_prod</span><span class="o">.</span><span class="n">max_pt</span><span class="p">,</span> <span class="n">nodes_on_bdry</span><span class="p">):</span>
+
+        <span class="c1"># Unpack the tuple if possible, else use bool globally for this axis</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">bdry_l</span><span class="p">,</span> <span class="n">bdry_r</span> <span class="o">=</span> <span class="n">on_bdry</span>
+        <span class="k">except</span> <span class="ne">TypeError</span><span class="p">:</span>
+            <span class="n">bdry_l</span> <span class="o">=</span> <span class="n">bdry_r</span> <span class="o">=</span> <span class="n">on_bdry</span>
+
+        <span class="k">if</span> <span class="n">bdry_l</span> <span class="ow">and</span> <span class="n">bdry_r</span><span class="p">:</span>
+            <span class="n">gmin</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">xmin</span><span class="p">)</span>
+            <span class="n">gmax</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">xmax</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">bdry_l</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">bdry_r</span><span class="p">:</span>
+            <span class="n">gmin</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">xmin</span><span class="p">)</span>
+            <span class="n">gmax</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">xmax</span> <span class="o">-</span> <span class="p">(</span><span class="n">xmax</span> <span class="o">-</span> <span class="n">xmin</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">n</span> <span class="o">-</span> <span class="mi">1</span><span class="p">))</span>
+        <span class="k">elif</span> <span class="ow">not</span> <span class="n">bdry_l</span> <span class="ow">and</span> <span class="n">bdry_r</span><span class="p">:</span>
+            <span class="n">gmin</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">xmin</span> <span class="o">+</span> <span class="p">(</span><span class="n">xmax</span> <span class="o">-</span> <span class="n">xmin</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">n</span> <span class="o">-</span> <span class="mi">1</span><span class="p">))</span>
+            <span class="n">gmax</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">xmax</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">gmin</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">xmin</span> <span class="o">+</span> <span class="p">(</span><span class="n">xmax</span> <span class="o">-</span> <span class="n">xmin</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">n</span><span class="p">))</span>
+            <span class="n">gmax</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">xmax</span> <span class="o">-</span> <span class="p">(</span><span class="n">xmax</span> <span class="o">-</span> <span class="n">xmin</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">n</span><span class="p">))</span>
+
+    <span class="c1"># Create the grid</span>
+    <span class="n">coord_vecs</span> <span class="o">=</span> <span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="n">mi</span><span class="p">,</span> <span class="n">ma</span><span class="p">,</span> <span class="n">num</span><span class="p">,</span> <span class="n">endpoint</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">)</span>
+                  <span class="k">for</span> <span class="n">mi</span><span class="p">,</span> <span class="n">ma</span><span class="p">,</span> <span class="n">num</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">gmin</span><span class="p">,</span> <span class="n">gmax</span><span class="p">,</span> <span class="n">shape</span><span class="p">)]</span>
+    <span class="k">return</span> <span class="n">RectGrid</span><span class="p">(</span><span class="o">*</span><span class="n">coord_vecs</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="uniform_grid"><a class="viewcode-back" href="../../../generated/odl.discr.grid.uniform_grid.html#odl.discr.grid.uniform_grid">[docs]</a><span class="k">def</span> <span class="nf">uniform_grid</span><span class="p">(</span><span class="n">min_pt</span><span class="p">,</span> <span class="n">max_pt</span><span class="p">,</span> <span class="n">shape</span><span class="p">,</span> <span class="n">nodes_on_bdry</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Return a grid from sampling an implicit interval product uniformly.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    min_pt : float or sequence of float</span>
+<span class="sd">        Vectors of lower ends of the intervals in the product.</span>
+<span class="sd">    max_pt : float or sequence of float</span>
+<span class="sd">        Vectors of upper ends of the intervals in the product.</span>
+<span class="sd">    shape : int or sequence of ints</span>
+<span class="sd">        Number of nodes per axis. Entries corresponding to degenerate axes</span>
+<span class="sd">        must be equal to 1.</span>
+<span class="sd">    nodes_on_bdry : bool or sequence, optional</span>
+<span class="sd">        If a sequence is provided, it determines per axis whether to</span>
+<span class="sd">        place the last grid point on the boundary (``True``) or shift it</span>
+<span class="sd">        by half a cell size into the interior (``False``). In each axis,</span>
+<span class="sd">        an entry may consist in a single bool or a 2-tuple of</span>
+<span class="sd">        bool. In the latter case, the first tuple entry decides for</span>
+<span class="sd">        the left, the second for the right boundary. The length of the</span>
+<span class="sd">        sequence must be ``array.ndim``.</span>
+
+<span class="sd">        A single boolean is interpreted as a global choice for all</span>
+<span class="sd">        boundaries.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    uniform_grid : `RectGrid`</span>
+<span class="sd">        The resulting uniform grid.</span>
+
+<span class="sd">    See Also</span>
+<span class="sd">    --------</span>
+<span class="sd">    uniform_grid_fromintv :</span>
+<span class="sd">        sample a given interval product</span>
+<span class="sd">    odl.discr.partition.uniform_partition :</span>
+<span class="sd">        divide implicitly defined interval product into equally</span>
+<span class="sd">        sized subsets</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    By default, the min/max points are included in the grid:</span>
+
+<span class="sd">    &gt;&gt;&gt; grid = odl.uniform_grid([-1.5, 2], [-0.5, 3], (3, 3))</span>
+<span class="sd">    &gt;&gt;&gt; grid.coord_vectors</span>
+<span class="sd">    (array([-1.5, -1. , -0.5]), array([ 2. ,  2.5,  3. ]))</span>
+
+<span class="sd">    If ``shape`` is supposed to refer to small subvolumes, and the grid</span>
+<span class="sd">    should be their centers, use the option ``nodes_on_bdry=False``:</span>
+
+<span class="sd">    &gt;&gt;&gt; grid = odl.uniform_grid([-1.5, 2], [-0.5, 3], (2, 2),</span>
+<span class="sd">    ...                         nodes_on_bdry=False)</span>
+<span class="sd">    &gt;&gt;&gt; grid.coord_vectors</span>
+<span class="sd">    (array([-1.25, -0.75]), array([ 2.25,  2.75]))</span>
+
+<span class="sd">    In 1D, we don&#39;t need sequences:</span>
+
+<span class="sd">    &gt;&gt;&gt; grid = odl.uniform_grid(0, 1, 3)</span>
+<span class="sd">    &gt;&gt;&gt; grid.coord_vectors</span>
+<span class="sd">    (array([ 0. ,  0.5,  1. ]),)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">uniform_grid_fromintv</span><span class="p">(</span><span class="n">IntervalProd</span><span class="p">(</span><span class="n">min_pt</span><span class="p">,</span> <span class="n">max_pt</span><span class="p">),</span> <span class="n">shape</span><span class="p">,</span>
+                                 <span class="n">nodes_on_bdry</span><span class="o">=</span><span class="n">nodes_on_bdry</span><span class="p">)</span></div>
+
+
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s1">&#39;__main__&#39;</span><span class="p">:</span>
+    <span class="kn">from</span> <span class="nn">odl.util.testutils</span> <span class="kn">import</span> <span class="n">run_doctests</span>
+    <span class="n">run_doctests</span><span class="p">()</span>
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &#169; Copyright 2014-2020 The ODL Contributors.
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

@@ -1,0 +1,8 @@
+:orphan:
+
+RealPart._call
+=======================================
+
+.. currentmodule:: odl.operator.default_ops
+
+.. automethod:: RealPart._call

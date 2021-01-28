@@ -1,0 +1,6 @@
+RectGrid.coord_vectors
+=====================================
+
+.. currentmodule:: odl.discr.grid
+
+.. autoproperty:: RectGrid.coord_vectors

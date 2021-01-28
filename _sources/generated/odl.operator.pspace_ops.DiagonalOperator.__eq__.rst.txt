@@ -1,0 +1,8 @@
+:orphan:
+
+DiagonalOperator.__eq__
+===============================================
+
+.. currentmodule:: odl.operator.pspace_ops
+
+.. automethod:: DiagonalOperator.__eq__

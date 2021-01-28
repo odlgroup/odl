@@ -1,0 +1,41 @@
+﻿PointwiseInnerAdjoint
+=============================================
+
+.. currentmodule:: odl.operator.tensor_ops
+
+.. autoclass:: PointwiseInnerAdjoint
+   :show-inheritance:
+   
+   
+   .. automethod:: __init__
+   
+      
+   
+   .. HACK -- the point here is that we don't want this to appear in the output, but the autosummary should still generate the pages.
+      .. autosummary::
+         :toctree:
+      
+         PointwiseInnerAdjoint.__call__
+         PointwiseInnerAdjoint.__eq__
+         PointwiseInnerAdjoint._call
+         PointwiseInnerAdjoint.derivative
+         PointwiseInnerAdjoint.norm
+   
+
+    
+   .. HACK -- the point here is that we don't want this to appear in the output, but the autosummary should still generate the pages.
+      .. autosummary::
+         :toctree:
+      
+         PointwiseInnerAdjoint.adjoint
+         PointwiseInnerAdjoint.base_space
+         PointwiseInnerAdjoint.domain
+         PointwiseInnerAdjoint.inverse
+         PointwiseInnerAdjoint.is_functional
+         PointwiseInnerAdjoint.is_linear
+         PointwiseInnerAdjoint.is_weighted
+         PointwiseInnerAdjoint.range
+         PointwiseInnerAdjoint.vecfield
+         PointwiseInnerAdjoint.weights
+   
+   

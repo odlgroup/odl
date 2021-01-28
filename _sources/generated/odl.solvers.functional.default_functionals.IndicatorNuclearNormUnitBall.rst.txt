@@ -1,0 +1,43 @@
+﻿IndicatorNuclearNormUnitBall
+=======================================================================
+
+.. currentmodule:: odl.solvers.functional.default_functionals
+
+.. autoclass:: IndicatorNuclearNormUnitBall
+   :show-inheritance:
+   
+   
+   .. automethod:: __init__
+   
+      
+   
+   .. HACK -- the point here is that we don't want this to appear in the output, but the autosummary should still generate the pages.
+      .. autosummary::
+         :toctree:
+      
+         IndicatorNuclearNormUnitBall.__call__
+         IndicatorNuclearNormUnitBall.__eq__
+         IndicatorNuclearNormUnitBall._call
+         IndicatorNuclearNormUnitBall.bregman
+         IndicatorNuclearNormUnitBall.derivative
+         IndicatorNuclearNormUnitBall.norm
+         IndicatorNuclearNormUnitBall.translated
+   
+
+    
+   .. HACK -- the point here is that we don't want this to appear in the output, but the autosummary should still generate the pages.
+      .. autosummary::
+         :toctree:
+      
+         IndicatorNuclearNormUnitBall.adjoint
+         IndicatorNuclearNormUnitBall.convex_conj
+         IndicatorNuclearNormUnitBall.domain
+         IndicatorNuclearNormUnitBall.grad_lipschitz
+         IndicatorNuclearNormUnitBall.gradient
+         IndicatorNuclearNormUnitBall.inverse
+         IndicatorNuclearNormUnitBall.is_functional
+         IndicatorNuclearNormUnitBall.is_linear
+         IndicatorNuclearNormUnitBall.proximal
+         IndicatorNuclearNormUnitBall.range
+   
+   

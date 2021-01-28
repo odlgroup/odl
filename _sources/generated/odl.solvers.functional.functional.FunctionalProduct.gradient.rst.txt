@@ -1,0 +1,6 @@
+FunctionalProduct.gradient
+============================================================
+
+.. currentmodule:: odl.solvers.functional.functional
+
+.. autoproperty:: FunctionalProduct.gradient

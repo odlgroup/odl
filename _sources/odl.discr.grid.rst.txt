@@ -1,0 +1,30 @@
+grid
+====
+
+Sparse implementations of n-dimensional sampling grids.
+
+Sampling grids are collections of points in an n-dimensional coordinate
+space with a certain structure which is exploited to minimize storage.
+
+
+.. currentmodule:: odl.discr.grid
+
+
+
+.. rubric:: Classes
+
+.. autosummary::
+   :toctree: generated/
+
+   ~odl.discr.grid.RectGrid
+
+
+.. rubric:: Functions
+
+.. autosummary::
+   :toctree: generated/
+
+   ~odl.discr.grid.sparse_meshgrid
+   ~odl.discr.grid.uniform_grid
+   ~odl.discr.grid.uniform_grid_fromintv
+

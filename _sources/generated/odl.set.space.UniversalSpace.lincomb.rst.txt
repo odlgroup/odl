@@ -1,0 +1,8 @@
+:orphan:
+
+UniversalSpace.lincomb
+====================================
+
+.. currentmodule:: odl.set.space
+
+.. automethod:: UniversalSpace.lincomb

@@ -1,0 +1,43 @@
+﻿NuclearNorm
+======================================================
+
+.. currentmodule:: odl.solvers.functional.default_functionals
+
+.. autoclass:: NuclearNorm
+   :show-inheritance:
+   
+   
+   .. automethod:: __init__
+   
+      
+   
+   .. HACK -- the point here is that we don't want this to appear in the output, but the autosummary should still generate the pages.
+      .. autosummary::
+         :toctree:
+      
+         NuclearNorm.__call__
+         NuclearNorm.__eq__
+         NuclearNorm._call
+         NuclearNorm.bregman
+         NuclearNorm.derivative
+         NuclearNorm.norm
+         NuclearNorm.translated
+   
+
+    
+   .. HACK -- the point here is that we don't want this to appear in the output, but the autosummary should still generate the pages.
+      .. autosummary::
+         :toctree:
+      
+         NuclearNorm.adjoint
+         NuclearNorm.convex_conj
+         NuclearNorm.domain
+         NuclearNorm.grad_lipschitz
+         NuclearNorm.gradient
+         NuclearNorm.inverse
+         NuclearNorm.is_functional
+         NuclearNorm.is_linear
+         NuclearNorm.proximal
+         NuclearNorm.range
+   
+   

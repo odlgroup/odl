@@ -1,0 +1,8 @@
+:orphan:
+
+ProductSpaceUfuncs.bitwise_or
+=============================================
+
+.. currentmodule:: odl.util.ufuncs
+
+.. automethod:: ProductSpaceUfuncs.bitwise_or

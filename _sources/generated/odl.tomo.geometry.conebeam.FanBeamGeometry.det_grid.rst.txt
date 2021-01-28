@@ -1,0 +1,6 @@
+FanBeamGeometry.det_grid
+===================================================
+
+.. currentmodule:: odl.tomo.geometry.conebeam
+
+.. autoproperty:: FanBeamGeometry.det_grid

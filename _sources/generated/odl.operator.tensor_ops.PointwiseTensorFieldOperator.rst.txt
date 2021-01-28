@@ -1,0 +1,38 @@
+﻿PointwiseTensorFieldOperator
+====================================================
+
+.. currentmodule:: odl.operator.tensor_ops
+
+.. autoclass:: PointwiseTensorFieldOperator
+   :show-inheritance:
+   
+   
+   .. automethod:: __init__
+   
+      
+   
+   .. HACK -- the point here is that we don't want this to appear in the output, but the autosummary should still generate the pages.
+      .. autosummary::
+         :toctree:
+      
+         PointwiseTensorFieldOperator.__call__
+         PointwiseTensorFieldOperator.__eq__
+         PointwiseTensorFieldOperator._call
+         PointwiseTensorFieldOperator.derivative
+         PointwiseTensorFieldOperator.norm
+   
+
+    
+   .. HACK -- the point here is that we don't want this to appear in the output, but the autosummary should still generate the pages.
+      .. autosummary::
+         :toctree:
+      
+         PointwiseTensorFieldOperator.adjoint
+         PointwiseTensorFieldOperator.base_space
+         PointwiseTensorFieldOperator.domain
+         PointwiseTensorFieldOperator.inverse
+         PointwiseTensorFieldOperator.is_functional
+         PointwiseTensorFieldOperator.is_linear
+         PointwiseTensorFieldOperator.range
+   
+   

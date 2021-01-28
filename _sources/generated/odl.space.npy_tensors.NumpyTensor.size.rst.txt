@@ -1,0 +1,6 @@
+NumpyTensor.size
+======================================
+
+.. currentmodule:: odl.space.npy_tensors
+
+.. autoproperty:: NumpyTensor.size

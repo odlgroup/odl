@@ -1,0 +1,8 @@
+:orphan:
+
+RealNumbers.__contains__
+=====================================
+
+.. currentmodule:: odl.set.sets
+
+.. automethod:: RealNumbers.__contains__

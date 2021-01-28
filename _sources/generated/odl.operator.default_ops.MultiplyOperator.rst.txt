@@ -1,0 +1,38 @@
+﻿MultiplyOperator
+=========================================
+
+.. currentmodule:: odl.operator.default_ops
+
+.. autoclass:: MultiplyOperator
+   :show-inheritance:
+   
+   
+   .. automethod:: __init__
+   
+      
+   
+   .. HACK -- the point here is that we don't want this to appear in the output, but the autosummary should still generate the pages.
+      .. autosummary::
+         :toctree:
+      
+         MultiplyOperator.__call__
+         MultiplyOperator.__eq__
+         MultiplyOperator._call
+         MultiplyOperator.derivative
+         MultiplyOperator.norm
+   
+
+    
+   .. HACK -- the point here is that we don't want this to appear in the output, but the autosummary should still generate the pages.
+      .. autosummary::
+         :toctree:
+      
+         MultiplyOperator.adjoint
+         MultiplyOperator.domain
+         MultiplyOperator.inverse
+         MultiplyOperator.is_functional
+         MultiplyOperator.is_linear
+         MultiplyOperator.multiplicand
+         MultiplyOperator.range
+   
+   

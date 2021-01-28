@@ -1,0 +1,6 @@
+trunc_func.proximal
+===========================================
+
+.. currentmodule:: odl.ufunc_ops.ufunc_ops
+
+.. autoproperty:: trunc_func.proximal

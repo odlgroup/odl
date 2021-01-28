@@ -1,0 +1,6 @@
+﻿safe_int_conv
+================================
+
+.. currentmodule:: odl.util.normalize
+
+.. autofunction:: safe_int_conv

@@ -1,0 +1,8 @@
+:orphan:
+
+sinh_func.__call__
+==========================================
+
+.. currentmodule:: odl.ufunc_ops.ufunc_ops
+
+.. automethod:: sinh_func.__call__

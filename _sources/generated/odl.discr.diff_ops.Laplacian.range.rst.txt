@@ -1,0 +1,6 @@
+Laplacian.range
+==================================
+
+.. currentmodule:: odl.discr.diff_ops
+
+.. autoproperty:: Laplacian.range

@@ -1,0 +1,722 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>odl.solvers.smooth.newton &mdash; odl 1.0.0.dev0 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../../../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../../../../_static/custom.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../../../" src="../../../../_static/documentation_options.js"></script>
+        <script src="../../../../_static/jquery.js"></script>
+        <script src="../../../../_static/underscore.js"></script>
+        <script src="../../../../_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="../../../../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../../../index.html" class="icon icon-home"> odl
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                1.0.0.dev0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Getting Started</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../getting_started/getting_started.html">Getting Started</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Working with ODL</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../guide/guide.html">User’s guide – selected topics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../math/math.html">Mathematical Background</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Developer zone</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../dev/dev.html">Contributing to ODL</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Useful facts</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../guide/faq.html">Frequently asked questions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../guide/glossary.html">Glossary</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../release_notes.html">Release Notes</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../refs.html">References</a></li>
+</ul>
+<p class="caption"><span class="caption-text">API Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../odl.html">odl</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../../index.html">odl</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../../../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="../../../index.html">Module code</a> &raquo;</li>
+        
+      <li>odl.solvers.smooth.newton</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for odl.solvers.smooth.newton</h1><div class="highlight"><pre>
+<span></span><span class="c1"># Copyright 2014-2019 The ODL contributors</span>
+<span class="c1">#</span>
+<span class="c1"># This file is part of ODL.</span>
+<span class="c1">#</span>
+<span class="c1"># This Source Code Form is subject to the terms of the Mozilla Public License,</span>
+<span class="c1"># v. 2.0. If a copy of the MPL was not distributed with this file, You can</span>
+<span class="c1"># obtain one at https://mozilla.org/MPL/2.0/.</span>
+
+<span class="sd">&quot;&quot;&quot;(Quasi-)Newton schemes to find zeros of functionals.&quot;&quot;&quot;</span>
+
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">print_function</span><span class="p">,</span> <span class="n">division</span><span class="p">,</span> <span class="n">absolute_import</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+
+<span class="kn">from</span> <span class="nn">odl.solvers.util</span> <span class="kn">import</span> <span class="n">ConstantLineSearch</span>
+<span class="kn">from</span> <span class="nn">odl.solvers.iterative.iterative</span> <span class="kn">import</span> <span class="n">conjugate_gradient</span>
+
+
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;newtons_method&#39;</span><span class="p">,</span> <span class="s1">&#39;bfgs_method&#39;</span><span class="p">,</span> <span class="s1">&#39;broydens_method&#39;</span><span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">_bfgs_direction</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">hessinv_estimate</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="sa">r</span><span class="sd">&quot;&quot;&quot;Compute ``Hn^-1(x)`` for the L-BFGS method.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    s : sequence of `LinearSpaceElement`</span>
+<span class="sd">        The ``s`` coefficients in the BFGS update, see Notes.</span>
+<span class="sd">    y : sequence of `LinearSpaceElement`</span>
+<span class="sd">        The ``y`` coefficients in the BFGS update, see Notes.</span>
+<span class="sd">    x : `LinearSpaceElement`</span>
+<span class="sd">        Point in which to evaluate the product.</span>
+<span class="sd">    hessinv_estimate : `Operator`, optional</span>
+<span class="sd">        Initial estimate of the hessian ``H0^-1``.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    r : ``x.space`` element</span>
+<span class="sd">        The result of ``Hn^-1(x)``.</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    :math:`H_n^{-1}` is defined recursively as</span>
+
+<span class="sd">    .. math::</span>
+<span class="sd">        H_{n+1}^{-1} =</span>
+<span class="sd">        \left(I - \frac{ s_n y_n^T}{y_n^T s_n} \right)</span>
+<span class="sd">        H_{n}^{-1}</span>
+<span class="sd">        \left(I - \frac{ y_n s_n^T}{y_n^T s_n} \right) +</span>
+<span class="sd">        \frac{s_n s_n^T}{y_n^T \, s_n}</span>
+
+<span class="sd">    With :math:`H_0^{-1}` given by ``hess_estimate``.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">s</span><span class="p">)</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="n">y</span><span class="p">)</span>
+
+    <span class="n">r</span> <span class="o">=</span> <span class="n">x</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+    <span class="n">alphas</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">s</span><span class="p">))</span>
+    <span class="n">rhos</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">s</span><span class="p">))</span>
+
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">reversed</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">s</span><span class="p">))):</span>
+        <span class="n">rhos</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="mf">1.0</span> <span class="o">/</span> <span class="n">y</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">inner</span><span class="p">(</span><span class="n">s</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
+        <span class="n">alphas</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">rhos</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">*</span> <span class="p">(</span><span class="n">s</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">inner</span><span class="p">(</span><span class="n">r</span><span class="p">))</span>
+        <span class="n">r</span><span class="o">.</span><span class="n">lincomb</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">r</span><span class="p">,</span> <span class="o">-</span><span class="n">alphas</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">y</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
+
+    <span class="k">if</span> <span class="n">hessinv_estimate</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">r</span> <span class="o">=</span> <span class="n">hessinv_estimate</span><span class="p">(</span><span class="n">r</span><span class="p">)</span>
+
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">s</span><span class="p">)):</span>
+        <span class="n">beta</span> <span class="o">=</span> <span class="n">rhos</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">*</span> <span class="p">(</span><span class="n">y</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">inner</span><span class="p">(</span><span class="n">r</span><span class="p">))</span>
+        <span class="n">r</span><span class="o">.</span><span class="n">lincomb</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">r</span><span class="p">,</span> <span class="n">alphas</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">-</span> <span class="n">beta</span><span class="p">,</span> <span class="n">s</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
+
+    <span class="k">return</span> <span class="n">r</span>
+
+
+<span class="k">def</span> <span class="nf">_broydens_direction</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">hessinv_estimate</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">impl</span><span class="o">=</span><span class="s1">&#39;first&#39;</span><span class="p">):</span>
+    <span class="sa">r</span><span class="sd">&quot;&quot;&quot;Compute ``Hn^-1(x)`` for Broydens method.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    s : sequence of `LinearSpaceElement`&#39;s&#39;</span>
+<span class="sd">        The ``s`` coefficients in the Broydens update, see Notes.</span>
+<span class="sd">    y : sequence of `LinearSpaceElement`&#39;s&#39;</span>
+<span class="sd">        The ``y`` coefficients in the Broydens update, see Notes.</span>
+<span class="sd">    x : `LinearSpaceElement`</span>
+<span class="sd">        Point in which to evaluate the product.</span>
+<span class="sd">    hessinv_estimate : `Operator`, optional</span>
+<span class="sd">        Initial estimate of the hessian ``H0^-1``.</span>
+<span class="sd">    impl : {&#39;first&#39;, &#39;second&#39;}, optional</span>
+<span class="sd">        The type of Broydens method to use.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    r : ``x.space`` element</span>
+<span class="sd">        The result of ``Hn^-1(x)``.</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    For ``impl = &#39;first&#39;``, :math:`H_n^{-1}` is defined recursively as</span>
+
+<span class="sd">    .. math::</span>
+<span class="sd">        H_{n+1}^{-1} = \left(I + s_n y_n^T \right) H_{n}^{-1}</span>
+
+<span class="sd">    and for ``impl = &#39;second&#39;``:</span>
+
+<span class="sd">    .. math::</span>
+<span class="sd">        H_{n+1}^{-1} = H_{n}^{-1} + s_n y_n^T</span>
+
+<span class="sd">    With :math:`H_0^{-1}` given by ``hess_estimate``.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">s</span><span class="p">)</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="n">y</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">hessinv_estimate</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">r</span> <span class="o">=</span> <span class="n">hessinv_estimate</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">r</span> <span class="o">=</span> <span class="n">x</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">s</span><span class="p">)):</span>
+        <span class="k">if</span> <span class="n">impl</span> <span class="o">==</span> <span class="s1">&#39;first&#39;</span><span class="p">:</span>
+            <span class="n">r</span><span class="o">.</span><span class="n">lincomb</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">r</span><span class="p">,</span> <span class="n">y</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">inner</span><span class="p">(</span><span class="n">r</span><span class="p">),</span> <span class="n">s</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
+        <span class="k">elif</span> <span class="n">impl</span> <span class="o">==</span> <span class="s1">&#39;second&#39;</span><span class="p">:</span>
+            <span class="n">r</span><span class="o">.</span><span class="n">lincomb</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">r</span><span class="p">,</span> <span class="n">y</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">inner</span><span class="p">(</span><span class="n">x</span><span class="p">),</span> <span class="n">s</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s1">&#39;unknown `impl`&#39;</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">r</span>
+
+
+<div class="viewcode-block" id="newtons_method"><a class="viewcode-back" href="../../../../generated/odl.solvers.smooth.newton.newtons_method.html#odl.solvers.smooth.newton.newtons_method">[docs]</a><span class="k">def</span> <span class="nf">newtons_method</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">line_search</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">maxiter</span><span class="o">=</span><span class="mi">1000</span><span class="p">,</span> <span class="n">tol</span><span class="o">=</span><span class="mf">1e-16</span><span class="p">,</span>
+                   <span class="n">cg_iter</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">callback</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="sa">r</span><span class="sd">&quot;&quot;&quot;Newton&#39;s method for minimizing a functional.</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    This is a general and optimized implementation of Newton&#39;s method</span>
+<span class="sd">    for solving the problem:</span>
+
+<span class="sd">    .. math::</span>
+<span class="sd">        \min f(x)</span>
+
+<span class="sd">    for a differentiable function</span>
+<span class="sd">    :math:`f: \mathcal{X}\to \mathbb{R}` on a Hilbert space</span>
+<span class="sd">    :math:`\mathcal{X}`. It does so by finding a zero of the gradient</span>
+
+<span class="sd">    .. math::</span>
+<span class="sd">        \nabla f: \mathcal{X} \to \mathcal{X}.</span>
+
+<span class="sd">    of finding a root of a function.</span>
+
+<span class="sd">    The algorithm is well-known and there is a vast literature about it.</span>
+<span class="sd">    Among others, the method is described in [BV2004], Sections 9.5</span>
+<span class="sd">    and 10.2 (`book available online</span>
+<span class="sd">    &lt;http://stanford.edu/~boyd/cvxbook/bv_cvxbook.pdf&gt;`_),</span>
+<span class="sd">    [GNS2009],  Section 2.7 for solving nonlinear equations and Section</span>
+<span class="sd">    11.3 for its use in minimization, and wikipedia on `Newton&#39;s_method</span>
+<span class="sd">    &lt;https://en.wikipedia.org/wiki/Newton&#39;s_method&gt;`_.</span>
+
+<span class="sd">    The algorithm works by iteratively solving</span>
+
+<span class="sd">    .. math::</span>
+<span class="sd">        \partial f(x_k)p_k = -f(x_k)</span>
+
+<span class="sd">    and then updating as</span>
+
+<span class="sd">    .. math::</span>
+<span class="sd">        x_{k+1} = x_k + \alpha x_k,</span>
+
+<span class="sd">    where :math:`\alpha` is a suitable step length (see the</span>
+<span class="sd">    references). In this implementation the system of equations are</span>
+<span class="sd">    solved using the conjugate gradient method.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    f : `Functional`</span>
+<span class="sd">        Goal functional. Needs to have ``f.gradient`` and</span>
+<span class="sd">        ``f.gradient.derivative``.</span>
+<span class="sd">    x : ``op.domain`` element</span>
+<span class="sd">        Starting point of the iteration</span>
+<span class="sd">    line_search : float or `LineSearch`, optional</span>
+<span class="sd">        Strategy to choose the step length. If a float is given, uses it as a</span>
+<span class="sd">        fixed step length.</span>
+<span class="sd">    maxiter : int, optional</span>
+<span class="sd">        Maximum number of iterations.</span>
+<span class="sd">    tol : float, optional</span>
+<span class="sd">        Tolerance that should be used for terminating the iteration.</span>
+<span class="sd">    cg_iter : int, optional</span>
+<span class="sd">        Number of iterations in the the conjugate gradient solver,</span>
+<span class="sd">        for computing the search direction.</span>
+<span class="sd">    callback : callable, optional</span>
+<span class="sd">        Object executing code per iteration, e.g. plotting each iterate</span>
+
+<span class="sd">    References</span>
+<span class="sd">    ----------</span>
+<span class="sd">    [BV2004] Boyd, S, and Vandenberghe, L. *Convex optimization*.</span>
+<span class="sd">    Cambridge university press, 2004.</span>
+
+<span class="sd">    [GNS2009] Griva, I, Nash, S G, and Sofer, A. *Linear and nonlinear</span>
+<span class="sd">    optimization*. Siam, 2009.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># TODO: update doc</span>
+    <span class="n">grad</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">gradient</span>
+    <span class="k">if</span> <span class="n">x</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">grad</span><span class="o">.</span><span class="n">domain</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;`x` </span><span class="si">{!r}</span><span class="s1"> is not in the domain of `f` </span><span class="si">{!r}</span><span class="s1">&#39;</span>
+                        <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">grad</span><span class="o">.</span><span class="n">domain</span><span class="p">))</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">callable</span><span class="p">(</span><span class="n">line_search</span><span class="p">):</span>
+        <span class="n">line_search</span> <span class="o">=</span> <span class="n">ConstantLineSearch</span><span class="p">(</span><span class="n">line_search</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">cg_iter</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="c1"># Motivated by that if it is Ax = b, x and b in Rn, it takes at most n</span>
+        <span class="c1"># iterations to solve with cg</span>
+        <span class="n">cg_iter</span> <span class="o">=</span> <span class="n">grad</span><span class="o">.</span><span class="n">domain</span><span class="o">.</span><span class="n">size</span>
+
+    <span class="c1"># TODO: optimize by using lincomb and avoiding to create copies</span>
+    <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">maxiter</span><span class="p">):</span>
+
+        <span class="c1"># Initialize the search direction to 0</span>
+        <span class="n">search_direction</span> <span class="o">=</span> <span class="n">x</span><span class="o">.</span><span class="n">space</span><span class="o">.</span><span class="n">zero</span><span class="p">()</span>
+
+        <span class="c1"># Compute hessian (as operator) and gradient in the current point</span>
+        <span class="n">hessian</span> <span class="o">=</span> <span class="n">grad</span><span class="o">.</span><span class="n">derivative</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+        <span class="n">deriv_in_point</span> <span class="o">=</span> <span class="n">grad</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+
+        <span class="c1"># Solving A*x = b for x, in this case f&#39;&#39;(x)*p = -f&#39;(x)</span>
+        <span class="c1"># TODO: Let the user provide/choose method for how to solve this?</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">hessian_inverse</span> <span class="o">=</span> <span class="n">hessian</span><span class="o">.</span><span class="n">inverse</span>
+        <span class="k">except</span> <span class="ne">NotImplementedError</span><span class="p">:</span>
+            <span class="n">conjugate_gradient</span><span class="p">(</span><span class="n">hessian</span><span class="p">,</span> <span class="n">search_direction</span><span class="p">,</span>
+                               <span class="o">-</span><span class="n">deriv_in_point</span><span class="p">,</span> <span class="n">cg_iter</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">hessian_inverse</span><span class="p">(</span><span class="o">-</span><span class="n">deriv_in_point</span><span class="p">,</span> <span class="n">out</span><span class="o">=</span><span class="n">search_direction</span><span class="p">)</span>
+
+        <span class="c1"># Computing step length</span>
+        <span class="n">dir_deriv</span> <span class="o">=</span> <span class="n">search_direction</span><span class="o">.</span><span class="n">inner</span><span class="p">(</span><span class="n">deriv_in_point</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">dir_deriv</span><span class="p">)</span> <span class="o">&lt;=</span> <span class="n">tol</span><span class="p">:</span>
+            <span class="k">return</span>
+
+        <span class="n">step_length</span> <span class="o">=</span> <span class="n">line_search</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">search_direction</span><span class="p">,</span> <span class="n">dir_deriv</span><span class="p">)</span>
+
+        <span class="c1"># Updating</span>
+        <span class="n">x</span> <span class="o">+=</span> <span class="n">step_length</span> <span class="o">*</span> <span class="n">search_direction</span>
+
+        <span class="k">if</span> <span class="n">callback</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">callback</span><span class="p">(</span><span class="n">x</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="bfgs_method"><a class="viewcode-back" href="../../../../generated/odl.solvers.smooth.newton.bfgs_method.html#odl.solvers.smooth.newton.bfgs_method">[docs]</a><span class="k">def</span> <span class="nf">bfgs_method</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">line_search</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">maxiter</span><span class="o">=</span><span class="mi">1000</span><span class="p">,</span> <span class="n">tol</span><span class="o">=</span><span class="mf">1e-15</span><span class="p">,</span> <span class="n">num_store</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                <span class="n">hessinv_estimate</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">callback</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="sa">r</span><span class="sd">&quot;&quot;&quot;Quasi-Newton BFGS method to minimize a differentiable function.</span>
+
+<span class="sd">    Can use either the regular BFGS method, or the limited memory BFGS method.</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    This is a general and optimized implementation of a quasi-Newton</span>
+<span class="sd">    method with BFGS update for solving a general unconstrained</span>
+<span class="sd">    optimization problem</span>
+
+<span class="sd">    .. math::</span>
+<span class="sd">        \min f(x)</span>
+
+<span class="sd">    for a differentiable function</span>
+<span class="sd">    :math:`f: \mathcal{X}\to \mathbb{R}` on a Hilbert space</span>
+<span class="sd">    :math:`\mathcal{X}`. It does so by finding a zero of the gradient</span>
+
+<span class="sd">    .. math::</span>
+<span class="sd">        \nabla f: \mathcal{X} \to \mathcal{X}.</span>
+
+<span class="sd">    The QN method is an approximate Newton method, where the Hessian</span>
+<span class="sd">    is approximated and gradually updated in each step. This</span>
+<span class="sd">    implementation uses the rank-one BFGS update schema where the</span>
+<span class="sd">    inverse of the Hessian is recalculated in each iteration.</span>
+
+<span class="sd">    The algorithm is described in [GNS2009], Section 12.3 and in the</span>
+<span class="sd">    `BFGS Wikipedia article</span>
+<span class="sd">    &lt;https://en.wikipedia.org/wiki/Broyden%E2%80%93Fletcher%E2%80%93\</span>
+<span class="sd">Goldfarb%E2%80%93Shanno_algorithm&gt;`_</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    f : `Functional`</span>
+<span class="sd">        Functional with ``f.gradient``.</span>
+<span class="sd">    x : ``f.domain`` element</span>
+<span class="sd">        Starting point of the iteration</span>
+<span class="sd">    line_search : float or `LineSearch`, optional</span>
+<span class="sd">        Strategy to choose the step length. If a float is given, uses it as a</span>
+<span class="sd">        fixed step length.</span>
+<span class="sd">    maxiter : int, optional</span>
+<span class="sd">        Maximum number of iterations.</span>
+<span class="sd">    tol : float, optional</span>
+<span class="sd">        Tolerance that should be used for terminating the iteration.</span>
+<span class="sd">    num_store : int, optional</span>
+<span class="sd">        Maximum number of correction factors to store. For ``None``, the method</span>
+<span class="sd">        is the regular BFGS method. For an integer, the method becomes the</span>
+<span class="sd">        Limited Memory BFGS method.</span>
+<span class="sd">    hessinv_estimate : `Operator`, optional</span>
+<span class="sd">        Initial estimate of the inverse of the Hessian operator. Needs to be an</span>
+<span class="sd">        operator from ``f.domain`` to ``f.domain``.</span>
+<span class="sd">        Default: Identity on ``f.domain``</span>
+<span class="sd">    callback : callable, optional</span>
+<span class="sd">        Object executing code per iteration, e.g. plotting each iterate.</span>
+
+<span class="sd">    References</span>
+<span class="sd">    ----------</span>
+<span class="sd">    [GNS2009] Griva, I, Nash, S G, and Sofer, A. *Linear and nonlinear</span>
+<span class="sd">    optimization*. Siam, 2009.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">grad</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">gradient</span>
+    <span class="k">if</span> <span class="n">x</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">grad</span><span class="o">.</span><span class="n">domain</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;`x` </span><span class="si">{!r}</span><span class="s1"> is not in the domain of `grad` </span><span class="si">{!r}</span><span class="s1">&#39;</span>
+                        <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">grad</span><span class="o">.</span><span class="n">domain</span><span class="p">))</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">callable</span><span class="p">(</span><span class="n">line_search</span><span class="p">):</span>
+        <span class="n">line_search</span> <span class="o">=</span> <span class="n">ConstantLineSearch</span><span class="p">(</span><span class="n">line_search</span><span class="p">)</span>
+
+    <span class="n">ys</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">ss</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="n">grad_x</span> <span class="o">=</span> <span class="n">grad</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">maxiter</span><span class="p">):</span>
+        <span class="c1"># Determine a stepsize using line search</span>
+        <span class="n">search_dir</span> <span class="o">=</span> <span class="o">-</span><span class="n">_bfgs_direction</span><span class="p">(</span><span class="n">ss</span><span class="p">,</span> <span class="n">ys</span><span class="p">,</span> <span class="n">grad_x</span><span class="p">,</span> <span class="n">hessinv_estimate</span><span class="p">)</span>
+        <span class="n">dir_deriv</span> <span class="o">=</span> <span class="n">search_dir</span><span class="o">.</span><span class="n">inner</span><span class="p">(</span><span class="n">grad_x</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">dir_deriv</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">return</span>  <span class="c1"># we found an optimum</span>
+        <span class="n">step</span> <span class="o">=</span> <span class="n">line_search</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">direction</span><span class="o">=</span><span class="n">search_dir</span><span class="p">,</span> <span class="n">dir_derivative</span><span class="o">=</span><span class="n">dir_deriv</span><span class="p">)</span>
+
+        <span class="c1"># Update x</span>
+        <span class="n">x_update</span> <span class="o">=</span> <span class="n">search_dir</span>
+        <span class="n">x_update</span> <span class="o">*=</span> <span class="n">step</span>
+        <span class="n">x</span> <span class="o">+=</span> <span class="n">x_update</span>
+
+        <span class="n">grad_x</span><span class="p">,</span> <span class="n">grad_diff</span> <span class="o">=</span> <span class="n">grad</span><span class="p">(</span><span class="n">x</span><span class="p">),</span> <span class="n">grad_x</span>
+        <span class="c1"># grad_diff = grad(x) - grad(x_old)</span>
+        <span class="n">grad_diff</span><span class="o">.</span><span class="n">lincomb</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="n">grad_diff</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">grad_x</span><span class="p">)</span>
+
+        <span class="n">y_inner_s</span> <span class="o">=</span> <span class="n">grad_diff</span><span class="o">.</span><span class="n">inner</span><span class="p">(</span><span class="n">x_update</span><span class="p">)</span>
+
+        <span class="c1"># Test for convergence</span>
+        <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">y_inner_s</span><span class="p">)</span> <span class="o">&lt;</span> <span class="n">tol</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">grad_x</span><span class="o">.</span><span class="n">norm</span><span class="p">()</span> <span class="o">&lt;</span> <span class="n">tol</span><span class="p">:</span>
+                <span class="k">return</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="c1"># Reset if needed</span>
+                <span class="n">ys</span> <span class="o">=</span> <span class="p">[]</span>
+                <span class="n">ss</span> <span class="o">=</span> <span class="p">[]</span>
+                <span class="k">continue</span>
+
+        <span class="c1"># Update Hessian</span>
+        <span class="n">ys</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">grad_diff</span><span class="p">)</span>
+        <span class="n">ss</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">x_update</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">num_store</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="c1"># Throw away factors if they are too many.</span>
+            <span class="n">ss</span> <span class="o">=</span> <span class="n">ss</span><span class="p">[</span><span class="o">-</span><span class="n">num_store</span><span class="p">:]</span>
+            <span class="n">ys</span> <span class="o">=</span> <span class="n">ys</span><span class="p">[</span><span class="o">-</span><span class="n">num_store</span><span class="p">:]</span>
+
+        <span class="k">if</span> <span class="n">callback</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">callback</span><span class="p">(</span><span class="n">x</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="broydens_method"><a class="viewcode-back" href="../../../../generated/odl.solvers.smooth.newton.broydens_method.html#odl.solvers.smooth.newton.broydens_method">[docs]</a><span class="k">def</span> <span class="nf">broydens_method</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">line_search</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">impl</span><span class="o">=</span><span class="s1">&#39;first&#39;</span><span class="p">,</span> <span class="n">maxiter</span><span class="o">=</span><span class="mi">1000</span><span class="p">,</span>
+                    <span class="n">tol</span><span class="o">=</span><span class="mf">1e-15</span><span class="p">,</span> <span class="n">hessinv_estimate</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                    <span class="n">callback</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="sa">r</span><span class="sd">&quot;&quot;&quot;Broyden&#39;s first method, a quasi-Newton scheme.</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    This is a general and optimized implementation of Broyden&#39;s method,</span>
+<span class="sd">    a quasi-Newton method for solving a general unconstrained optimization</span>
+<span class="sd">    problem</span>
+
+<span class="sd">    .. math::</span>
+<span class="sd">        \min f(x)</span>
+
+<span class="sd">    for a differentiable function</span>
+<span class="sd">    :math:`f: \mathcal{X}\to \mathbb{R}` on a Hilbert space</span>
+<span class="sd">    :math:`\mathcal{X}`. It does so by finding a zero of the gradient</span>
+
+<span class="sd">    .. math::</span>
+<span class="sd">        \nabla f: \mathcal{X} \to \mathcal{X}</span>
+
+<span class="sd">    using a Newton-type update scheme with approximate Hessian.</span>
+
+<span class="sd">    The algorithm is described in [Bro1965] and [Kva1991], and in a</span>
+<span class="sd">    `Wikipedia article</span>
+<span class="sd">    &lt;https://en.wikipedia.org/wiki/Broyden&#39;s_method&gt;`_.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    f : `Functional`</span>
+<span class="sd">        Functional with ``f.gradient``</span>
+<span class="sd">    x : ``f.domain`` element</span>
+<span class="sd">        Starting point of the iteration</span>
+<span class="sd">    line_search : float or `LineSearch`, optional</span>
+<span class="sd">        Strategy to choose the step length. If a float is given, uses it as a</span>
+<span class="sd">        fixed step length.</span>
+<span class="sd">    impl : {&#39;first&#39;, &#39;second&#39;}, optional</span>
+<span class="sd">        What version of Broydens method to use. First is also known as Broydens</span>
+<span class="sd">        &#39;good&#39; method, while the second is known as Broydens &#39;bad&#39; method.</span>
+<span class="sd">    maxiter : int, optional</span>
+<span class="sd">        Maximum number of iterations.</span>
+<span class="sd">        ``tol``.</span>
+<span class="sd">    tol : float, optional</span>
+<span class="sd">        Tolerance that should be used for terminating the iteration.</span>
+<span class="sd">    hessinv_estimate : `Operator`, optional</span>
+<span class="sd">        Initial estimate of the inverse of the Hessian operator. Needs to be an</span>
+<span class="sd">        operator from ``f.domain`` to ``f.domain``.</span>
+<span class="sd">        Default: Identity on ``f.domain``</span>
+<span class="sd">    callback : callable, optional</span>
+<span class="sd">        Object executing code per iteration, e.g. plotting each iterate.</span>
+
+<span class="sd">    References</span>
+<span class="sd">    ----------</span>
+<span class="sd">    [Bro1965] Broyden, C G. *A class of methods for solving nonlinear</span>
+<span class="sd">    simultaneous equations*. Mathematics of computation, 33 (1965),</span>
+<span class="sd">    pp 577--593.</span>
+
+<span class="sd">    [Kva1991] Kvaalen, E. *A faster Broyden method*. BIT Numerical</span>
+<span class="sd">    Mathematics 31 (1991), pp 369--372.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">grad</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">gradient</span>
+    <span class="k">if</span> <span class="n">x</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">grad</span><span class="o">.</span><span class="n">domain</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;`x` </span><span class="si">{!r}</span><span class="s1"> is not in the domain of `grad` </span><span class="si">{!r}</span><span class="s1">&#39;</span>
+                        <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">grad</span><span class="o">.</span><span class="n">domain</span><span class="p">))</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">callable</span><span class="p">(</span><span class="n">line_search</span><span class="p">):</span>
+        <span class="n">line_search</span> <span class="o">=</span> <span class="n">ConstantLineSearch</span><span class="p">(</span><span class="n">line_search</span><span class="p">)</span>
+
+    <span class="n">impl</span><span class="p">,</span> <span class="n">impl_in</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">impl</span><span class="p">)</span><span class="o">.</span><span class="n">lower</span><span class="p">(),</span> <span class="n">impl</span>
+    <span class="k">if</span> <span class="n">impl</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">(</span><span class="s1">&#39;first&#39;</span><span class="p">,</span> <span class="s1">&#39;second&#39;</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;`impl` </span><span class="si">{!r}</span><span class="s1"> not understood&#39;</span>
+                         <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">impl_in</span><span class="p">))</span>
+
+    <span class="n">ss</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">ys</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="n">grad_x</span> <span class="o">=</span> <span class="n">grad</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">maxiter</span><span class="p">):</span>
+        <span class="c1"># find step size</span>
+        <span class="n">search_dir</span> <span class="o">=</span> <span class="o">-</span><span class="n">_broydens_direction</span><span class="p">(</span><span class="n">ss</span><span class="p">,</span> <span class="n">ys</span><span class="p">,</span> <span class="n">grad_x</span><span class="p">,</span>
+                                          <span class="n">hessinv_estimate</span><span class="p">,</span> <span class="n">impl</span><span class="p">)</span>
+        <span class="n">dir_deriv</span> <span class="o">=</span> <span class="n">search_dir</span><span class="o">.</span><span class="n">inner</span><span class="p">(</span><span class="n">grad_x</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">dir_deriv</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">return</span>  <span class="c1"># we found an optimum</span>
+
+        <span class="n">step</span> <span class="o">=</span> <span class="n">line_search</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">search_dir</span><span class="p">,</span> <span class="n">dir_deriv</span><span class="p">)</span>
+
+        <span class="c1"># update x</span>
+        <span class="n">x_update</span> <span class="o">=</span> <span class="n">step</span> <span class="o">*</span> <span class="n">search_dir</span>
+        <span class="n">x</span> <span class="o">+=</span> <span class="n">x_update</span>
+
+        <span class="c1"># compute new gradient</span>
+        <span class="n">grad_x</span><span class="p">,</span> <span class="n">grad_x_old</span> <span class="o">=</span> <span class="n">grad</span><span class="p">(</span><span class="n">x</span><span class="p">),</span> <span class="n">grad_x</span>
+        <span class="n">delta_grad</span> <span class="o">=</span> <span class="n">grad_x</span> <span class="o">-</span> <span class="n">grad_x_old</span>
+
+        <span class="c1"># update hessian.</span>
+        <span class="c1"># TODO: reuse from above</span>
+        <span class="n">v</span> <span class="o">=</span> <span class="n">_broydens_direction</span><span class="p">(</span><span class="n">ss</span><span class="p">,</span> <span class="n">ys</span><span class="p">,</span> <span class="n">delta_grad</span><span class="p">,</span> <span class="n">hessinv_estimate</span><span class="p">,</span>
+                                <span class="n">impl</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">impl</span> <span class="o">==</span> <span class="s1">&#39;first&#39;</span><span class="p">:</span>
+            <span class="n">divisor</span> <span class="o">=</span> <span class="n">x_update</span><span class="o">.</span><span class="n">inner</span><span class="p">(</span><span class="n">v</span><span class="p">)</span>
+
+            <span class="c1"># Test for convergence</span>
+            <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">divisor</span><span class="p">)</span> <span class="o">&lt;</span> <span class="n">tol</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">grad_x</span><span class="o">.</span><span class="n">norm</span><span class="p">()</span> <span class="o">&lt;</span> <span class="n">tol</span><span class="p">:</span>
+                    <span class="k">return</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="c1"># Reset if needed</span>
+                    <span class="n">ys</span> <span class="o">=</span> <span class="p">[]</span>
+                    <span class="n">ss</span> <span class="o">=</span> <span class="p">[]</span>
+                    <span class="k">continue</span>
+            <span class="n">u</span> <span class="o">=</span> <span class="p">(</span><span class="n">x_update</span> <span class="o">-</span> <span class="n">v</span><span class="p">)</span> <span class="o">/</span> <span class="n">divisor</span>
+            <span class="n">ss</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">u</span><span class="p">)</span>
+            <span class="n">ys</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">x_update</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">impl</span> <span class="o">==</span> <span class="s1">&#39;second&#39;</span><span class="p">:</span>
+            <span class="n">divisor</span> <span class="o">=</span> <span class="n">delta_grad</span><span class="o">.</span><span class="n">inner</span><span class="p">(</span><span class="n">delta_grad</span><span class="p">)</span>
+
+            <span class="c1"># Test for convergence</span>
+            <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">divisor</span><span class="p">)</span> <span class="o">&lt;</span> <span class="n">tol</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">grad_x</span><span class="o">.</span><span class="n">norm</span><span class="p">()</span> <span class="o">&lt;</span> <span class="n">tol</span><span class="p">:</span>
+                    <span class="k">return</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="c1"># Reset if needed</span>
+                    <span class="n">ys</span> <span class="o">=</span> <span class="p">[]</span>
+                    <span class="n">ss</span> <span class="o">=</span> <span class="p">[]</span>
+                    <span class="k">continue</span>
+            <span class="n">u</span> <span class="o">=</span> <span class="p">(</span><span class="n">x_update</span> <span class="o">-</span> <span class="n">v</span><span class="p">)</span> <span class="o">/</span> <span class="n">divisor</span>
+            <span class="n">ss</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">u</span><span class="p">)</span>
+            <span class="n">ys</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">delta_grad</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">callback</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">callback</span><span class="p">(</span><span class="n">x</span><span class="p">)</span></div>
+
+
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s1">&#39;__main__&#39;</span><span class="p">:</span>
+    <span class="kn">from</span> <span class="nn">odl.util.testutils</span> <span class="kn">import</span> <span class="n">run_doctests</span>
+    <span class="n">run_doctests</span><span class="p">()</span>
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &#169; Copyright 2014-2020 The ODL Contributors.
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

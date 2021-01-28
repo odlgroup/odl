@@ -1,0 +1,8 @@
+:orphan:
+
+NumpyTensor.asarray
+=========================================
+
+.. currentmodule:: odl.space.npy_tensors
+
+.. automethod:: NumpyTensor.asarray

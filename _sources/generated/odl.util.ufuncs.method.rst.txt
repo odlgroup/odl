@@ -1,0 +1,6 @@
+﻿method
+======================
+
+.. currentmodule:: odl.util.ufuncs
+
+.. autofunction:: method

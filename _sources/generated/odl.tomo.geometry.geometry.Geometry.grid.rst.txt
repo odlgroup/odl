@@ -1,0 +1,6 @@
+Geometry.grid
+========================================
+
+.. currentmodule:: odl.tomo.geometry.geometry
+
+.. autoproperty:: Geometry.grid

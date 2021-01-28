@@ -1,0 +1,6 @@
+ResizingOperator.domain
+===========================================
+
+.. currentmodule:: odl.discr.discr_ops
+
+.. autoproperty:: ResizingOperator.domain

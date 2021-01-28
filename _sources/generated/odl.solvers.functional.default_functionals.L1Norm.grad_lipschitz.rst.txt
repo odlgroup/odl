@@ -1,0 +1,6 @@
+L1Norm.grad_lipschitz
+================================================================
+
+.. currentmodule:: odl.solvers.functional.default_functionals
+
+.. autoproperty:: L1Norm.grad_lipschitz

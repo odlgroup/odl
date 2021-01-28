@@ -1,0 +1,1736 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>odl.util.utility &mdash; odl 1.0.0.dev0 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/custom.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../../" src="../../../_static/documentation_options.js"></script>
+        <script src="../../../_static/jquery.js"></script>
+        <script src="../../../_static/underscore.js"></script>
+        <script src="../../../_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="../../../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../../index.html" class="icon icon-home"> odl
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                1.0.0.dev0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Getting Started</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../getting_started/getting_started.html">Getting Started</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Working with ODL</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../guide/guide.html">User’s guide – selected topics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../math/math.html">Mathematical Background</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Developer zone</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../dev/dev.html">Contributing to ODL</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Useful facts</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../guide/faq.html">Frequently asked questions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../guide/glossary.html">Glossary</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../release_notes.html">Release Notes</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../refs.html">References</a></li>
+</ul>
+<p class="caption"><span class="caption-text">API Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../odl.html">odl</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">odl</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="../../index.html">Module code</a> &raquo;</li>
+        
+      <li>odl.util.utility</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for odl.util.utility</h1><div class="highlight"><pre>
+<span></span><span class="c1"># Copyright 2014-2020 The ODL contributors</span>
+<span class="c1">#</span>
+<span class="c1"># This file is part of ODL.</span>
+<span class="c1">#</span>
+<span class="c1"># This Source Code Form is subject to the terms of the Mozilla Public License,</span>
+<span class="c1"># v. 2.0. If a copy of the MPL was not distributed with this file, You can</span>
+<span class="c1"># obtain one at https://mozilla.org/MPL/2.0/.</span>
+
+<span class="sd">&quot;&quot;&quot;Utilities mainly for internal use.&quot;&quot;&quot;</span>
+
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">absolute_import</span><span class="p">,</span> <span class="n">division</span><span class="p">,</span> <span class="n">print_function</span>
+<span class="kn">from</span> <span class="nn">future.moves.itertools</span> <span class="kn">import</span> <span class="n">zip_longest</span>
+
+<span class="kn">import</span> <span class="nn">contextlib</span>
+<span class="kn">from</span> <span class="nn">collections</span> <span class="kn">import</span> <span class="n">OrderedDict</span>
+<span class="kn">from</span> <span class="nn">contextlib</span> <span class="kn">import</span> <span class="n">contextmanager</span>
+<span class="kn">from</span> <span class="nn">itertools</span> <span class="kn">import</span> <span class="n">product</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">(</span>
+    <span class="s1">&#39;REPR_PRECISION&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;indent&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;dedent&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;npy_printoptions&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;array_str&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;dtype_repr&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;dtype_str&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;cache_arguments&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;is_numeric_dtype&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;is_int_dtype&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;is_floating_dtype&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;is_real_dtype&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;is_real_floating_dtype&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;is_complex_floating_dtype&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;real_dtype&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;complex_dtype&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;is_string&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;nd_iterator&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;conj_exponent&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;nullcontext&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;writable_array&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;signature_string&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;signature_string_parts&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;repr_string&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;attribute_repr_string&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;method_repr_string&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;run_from_ipython&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;npy_random_seed&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;unique&#39;</span><span class="p">,</span>
+<span class="p">)</span>
+
+
+<span class="n">REPR_PRECISION</span> <span class="o">=</span> <span class="mi">4</span>  <span class="c1"># For printing scalars and array entries</span>
+<span class="n">TYPE_MAP_R2C</span> <span class="o">=</span> <span class="p">{</span><span class="n">np</span><span class="o">.</span><span class="n">dtype</span><span class="p">(</span><span class="n">dtype</span><span class="p">):</span> <span class="n">np</span><span class="o">.</span><span class="n">result_type</span><span class="p">(</span><span class="n">dtype</span><span class="p">,</span> <span class="mi">1</span><span class="n">j</span><span class="p">)</span>
+                <span class="k">for</span> <span class="n">dtype</span> <span class="ow">in</span> <span class="n">np</span><span class="o">.</span><span class="n">sctypes</span><span class="p">[</span><span class="s1">&#39;float&#39;</span><span class="p">]}</span>
+
+<span class="n">TYPE_MAP_C2R</span> <span class="o">=</span> <span class="p">{</span><span class="n">cdt</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">cdt</span><span class="p">)</span><span class="o">.</span><span class="n">real</span><span class="o">.</span><span class="n">dtype</span>
+                <span class="k">for</span> <span class="n">rdt</span><span class="p">,</span> <span class="n">cdt</span> <span class="ow">in</span> <span class="n">TYPE_MAP_R2C</span><span class="o">.</span><span class="n">items</span><span class="p">()}</span>
+<span class="n">TYPE_MAP_C2R</span><span class="o">.</span><span class="n">update</span><span class="p">({</span><span class="n">k</span><span class="p">:</span> <span class="n">k</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">TYPE_MAP_R2C</span><span class="o">.</span><span class="n">keys</span><span class="p">()})</span>
+
+
+<div class="viewcode-block" id="indent"><a class="viewcode-back" href="../../../generated/odl.util.utility.indent.html#odl.util.utility.indent">[docs]</a><span class="k">def</span> <span class="nf">indent</span><span class="p">(</span><span class="n">string</span><span class="p">,</span> <span class="n">indent_str</span><span class="o">=</span><span class="s1">&#39;    &#39;</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Return a copy of ``string`` indented by ``indent_str``.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    string : str</span>
+<span class="sd">        Text that should be indented.</span>
+<span class="sd">    indent_str : str, optional</span>
+<span class="sd">        String to be inserted before each new line. The default is to</span>
+<span class="sd">        indent by 4 spaces.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    indented : str</span>
+<span class="sd">        The indented text.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    &gt;&gt;&gt; text = &#39;&#39;&#39;This is line 1.</span>
+<span class="sd">    ... Next line.</span>
+<span class="sd">    ... And another one.&#39;&#39;&#39;</span>
+<span class="sd">    &gt;&gt;&gt; print(text)</span>
+<span class="sd">    This is line 1.</span>
+<span class="sd">    Next line.</span>
+<span class="sd">    And another one.</span>
+<span class="sd">    &gt;&gt;&gt; print(indent(text))</span>
+<span class="sd">        This is line 1.</span>
+<span class="sd">        Next line.</span>
+<span class="sd">        And another one.</span>
+
+<span class="sd">    Indenting by random stuff:</span>
+
+<span class="sd">    &gt;&gt;&gt; print(indent(text, indent_str=&#39;&lt;-&gt;&#39;))</span>
+<span class="sd">    &lt;-&gt;This is line 1.</span>
+<span class="sd">    &lt;-&gt;Next line.</span>
+<span class="sd">    &lt;-&gt;And another one.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">indent_str</span> <span class="o">+</span> <span class="n">row</span> <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">string</span><span class="o">.</span><span class="n">splitlines</span><span class="p">())</span></div>
+
+
+<div class="viewcode-block" id="dedent"><a class="viewcode-back" href="../../../generated/odl.util.utility.dedent.html#odl.util.utility.dedent">[docs]</a><span class="k">def</span> <span class="nf">dedent</span><span class="p">(</span><span class="n">string</span><span class="p">,</span> <span class="n">indent_str</span><span class="o">=</span><span class="s1">&#39;   &#39;</span><span class="p">,</span> <span class="n">max_levels</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Revert the effect of indentation.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    Remove a simple one-level indentation:</span>
+
+<span class="sd">    &gt;&gt;&gt; text = &#39;&#39;&#39;&lt;-&gt;This is line 1.</span>
+<span class="sd">    ... &lt;-&gt;Next line.</span>
+<span class="sd">    ... &lt;-&gt;And another one.&#39;&#39;&#39;</span>
+<span class="sd">    &gt;&gt;&gt; print(text)</span>
+<span class="sd">    &lt;-&gt;This is line 1.</span>
+<span class="sd">    &lt;-&gt;Next line.</span>
+<span class="sd">    &lt;-&gt;And another one.</span>
+<span class="sd">    &gt;&gt;&gt; print(dedent(text, &#39;&lt;-&gt;&#39;))</span>
+<span class="sd">    This is line 1.</span>
+<span class="sd">    Next line.</span>
+<span class="sd">    And another one.</span>
+
+<span class="sd">    Multiple levels of indentation:</span>
+
+<span class="sd">    &gt;&gt;&gt; text = &#39;&#39;&#39;&lt;-&gt;Level 1.</span>
+<span class="sd">    ... &lt;-&gt;&lt;-&gt;Level 2.</span>
+<span class="sd">    ... &lt;-&gt;&lt;-&gt;&lt;-&gt;Level 3.&#39;&#39;&#39;</span>
+<span class="sd">    &gt;&gt;&gt; print(text)</span>
+<span class="sd">    &lt;-&gt;Level 1.</span>
+<span class="sd">    &lt;-&gt;&lt;-&gt;Level 2.</span>
+<span class="sd">    &lt;-&gt;&lt;-&gt;&lt;-&gt;Level 3.</span>
+<span class="sd">    &gt;&gt;&gt; print(dedent(text, &#39;&lt;-&gt;&#39;))</span>
+<span class="sd">    Level 1.</span>
+<span class="sd">    &lt;-&gt;Level 2.</span>
+<span class="sd">    &lt;-&gt;&lt;-&gt;Level 3.</span>
+
+<span class="sd">    &gt;&gt;&gt; text = &#39;&#39;&#39;&lt;-&gt;&lt;-&gt;Level 2.</span>
+<span class="sd">    ... &lt;-&gt;&lt;-&gt;&lt;-&gt;Level 3.&#39;&#39;&#39;</span>
+<span class="sd">    &gt;&gt;&gt; print(text)</span>
+<span class="sd">    &lt;-&gt;&lt;-&gt;Level 2.</span>
+<span class="sd">    &lt;-&gt;&lt;-&gt;&lt;-&gt;Level 3.</span>
+<span class="sd">    &gt;&gt;&gt; print(dedent(text, &#39;&lt;-&gt;&#39;))</span>
+<span class="sd">    Level 2.</span>
+<span class="sd">    &lt;-&gt;Level 3.</span>
+<span class="sd">    &gt;&gt;&gt; print(dedent(text, &#39;&lt;-&gt;&#39;, max_levels=1))</span>
+<span class="sd">    &lt;-&gt;Level 2.</span>
+<span class="sd">    &lt;-&gt;&lt;-&gt;Level 3.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">indent_str</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">string</span>
+
+    <span class="n">lines</span> <span class="o">=</span> <span class="n">string</span><span class="o">.</span><span class="n">splitlines</span><span class="p">()</span>
+
+    <span class="c1"># Determine common (minimum) number of indentation levels, capped at</span>
+    <span class="c1"># `max_levels` if given</span>
+    <span class="k">def</span> <span class="nf">num_indents</span><span class="p">(</span><span class="n">line</span><span class="p">):</span>
+        <span class="n">max_num</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">ceil</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">line</span><span class="p">)</span> <span class="o">/</span> <span class="nb">len</span><span class="p">(</span><span class="n">indent_str</span><span class="p">)))</span>
+
+        <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span>  <span class="c1"># set for the case the loop is not run (`max_num == 0`)</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">max_num</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">line</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="n">indent_str</span><span class="p">):</span>
+                <span class="n">line</span> <span class="o">=</span> <span class="n">line</span><span class="p">[</span><span class="nb">len</span><span class="p">(</span><span class="n">indent_str</span><span class="p">):]</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">break</span>
+
+        <span class="k">return</span> <span class="n">i</span>
+
+    <span class="n">num_levels</span> <span class="o">=</span> <span class="n">num_indents</span><span class="p">(</span><span class="nb">min</span><span class="p">(</span><span class="n">lines</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="n">num_indents</span><span class="p">))</span>
+    <span class="k">if</span> <span class="n">max_levels</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">num_levels</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">num_levels</span><span class="p">,</span> <span class="n">max_levels</span><span class="p">)</span>
+
+    <span class="c1"># Dedent</span>
+    <span class="n">dedent_len</span> <span class="o">=</span> <span class="n">num_levels</span> <span class="o">*</span> <span class="nb">len</span><span class="p">(</span><span class="n">indent_str</span><span class="p">)</span>
+    <span class="k">return</span> <span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">line</span><span class="p">[</span><span class="n">dedent_len</span><span class="p">:]</span> <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">lines</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="npy_printoptions"><a class="viewcode-back" href="../../../generated/odl.util.utility.npy_printoptions.html#odl.util.utility.npy_printoptions">[docs]</a><span class="nd">@contextmanager</span>
+<span class="k">def</span> <span class="nf">npy_printoptions</span><span class="p">(</span><span class="o">**</span><span class="n">extra_opts</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Context manager to temporarily set NumPy print options.</span>
+
+<span class="sd">    See Also</span>
+<span class="sd">    --------</span>
+<span class="sd">    numpy.get_printoptions</span>
+<span class="sd">    numpy.set_printoptions</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    &gt;&gt;&gt; print(np.array([np.nan, 1.00001]))</span>
+<span class="sd">    [     nan  1.00001]</span>
+<span class="sd">    &gt;&gt;&gt; with npy_printoptions(precision=3):</span>
+<span class="sd">    ...     print(np.array([np.nan, 1.00001]))</span>
+<span class="sd">    [ nan   1.]</span>
+<span class="sd">    &gt;&gt;&gt; with npy_printoptions(nanstr=&#39;whoah!&#39;):</span>
+<span class="sd">    ...     print(np.array([np.nan, 1.00001]))</span>
+<span class="sd">    [  whoah!  1.00001]</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">orig_opts</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">get_printoptions</span><span class="p">()</span>
+
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">new_opts</span> <span class="o">=</span> <span class="n">orig_opts</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+        <span class="n">new_opts</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">extra_opts</span><span class="p">)</span>
+        <span class="n">np</span><span class="o">.</span><span class="n">set_printoptions</span><span class="p">(</span><span class="o">**</span><span class="n">new_opts</span><span class="p">)</span>
+        <span class="k">yield</span>
+
+    <span class="k">finally</span><span class="p">:</span>
+        <span class="n">np</span><span class="o">.</span><span class="n">set_printoptions</span><span class="p">(</span><span class="o">**</span><span class="n">orig_opts</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="array_str"><a class="viewcode-back" href="../../../generated/odl.util.utility.array_str.html#odl.util.utility.array_str">[docs]</a><span class="k">def</span> <span class="nf">array_str</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">nprint</span><span class="o">=</span><span class="mi">6</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Stringification of an array.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    a : `array-like`</span>
+<span class="sd">        The array to print.</span>
+<span class="sd">    nprint : int, optional</span>
+<span class="sd">        Maximum number of elements to print per axis in ``a``. For larger</span>
+<span class="sd">        arrays, a summary is printed, with ``nprint // 2`` elements on</span>
+<span class="sd">        each side and ``...`` in the middle (per axis).</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    Printing 1D arrays:</span>
+
+<span class="sd">    &gt;&gt;&gt; print(array_str(np.arange(4)))</span>
+<span class="sd">    [0, 1, 2, 3]</span>
+<span class="sd">    &gt;&gt;&gt; print(array_str(np.arange(10)))</span>
+<span class="sd">    [0, 1, 2, ..., 7, 8, 9]</span>
+<span class="sd">    &gt;&gt;&gt; print(array_str(np.arange(10), nprint=10))</span>
+<span class="sd">    [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]</span>
+
+<span class="sd">    For 2D and higher, the ``nprint`` limitation applies per axis:</span>
+
+<span class="sd">    &gt;&gt;&gt; print(array_str(np.arange(24).reshape(4, 6)))</span>
+<span class="sd">    [[ 0,  1,  2,  3,  4,  5],</span>
+<span class="sd">     [ 6,  7,  8,  9, 10, 11],</span>
+<span class="sd">     [12, 13, 14, 15, 16, 17],</span>
+<span class="sd">     [18, 19, 20, 21, 22, 23]]</span>
+<span class="sd">    &gt;&gt;&gt; print(array_str(np.arange(32).reshape(4, 8)))</span>
+<span class="sd">    [[ 0,  1,  2, ...,  5,  6,  7],</span>
+<span class="sd">     [ 8,  9, 10, ..., 13, 14, 15],</span>
+<span class="sd">     [16, 17, 18, ..., 21, 22, 23],</span>
+<span class="sd">     [24, 25, 26, ..., 29, 30, 31]]</span>
+<span class="sd">    &gt;&gt;&gt; print(array_str(np.arange(32).reshape(8, 4)))</span>
+<span class="sd">    [[ 0,  1,  2,  3],</span>
+<span class="sd">     [ 4,  5,  6,  7],</span>
+<span class="sd">     [ 8,  9, 10, 11],</span>
+<span class="sd">     ...,</span>
+<span class="sd">     [20, 21, 22, 23],</span>
+<span class="sd">     [24, 25, 26, 27],</span>
+<span class="sd">     [28, 29, 30, 31]]</span>
+<span class="sd">    &gt;&gt;&gt; print(array_str(np.arange(64).reshape(8, 8)))</span>
+<span class="sd">    [[ 0,  1,  2, ...,  5,  6,  7],</span>
+<span class="sd">     [ 8,  9, 10, ..., 13, 14, 15],</span>
+<span class="sd">     [16, 17, 18, ..., 21, 22, 23],</span>
+<span class="sd">     ...,</span>
+<span class="sd">     [40, 41, 42, ..., 45, 46, 47],</span>
+<span class="sd">     [48, 49, 50, ..., 53, 54, 55],</span>
+<span class="sd">     [56, 57, 58, ..., 61, 62, 63]]</span>
+
+<span class="sd">    Printing of empty arrays and 0D arrays:</span>
+
+<span class="sd">    &gt;&gt;&gt; print(array_str(np.array([])))  # 1D, size=0</span>
+<span class="sd">    []</span>
+<span class="sd">    &gt;&gt;&gt; print(array_str(np.array(1.0)))  # 0D, size=1</span>
+<span class="sd">    1.0</span>
+
+<span class="sd">    Small deviations from round numbers will be suppressed:</span>
+
+<span class="sd">    &gt;&gt;&gt; # 2.0000000000000004 in double precision</span>
+<span class="sd">    &gt;&gt;&gt; print(array_str((np.array([2.0]) ** 0.5) ** 2))</span>
+<span class="sd">    [ 2.]</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">a</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">a</span><span class="p">)</span>
+
+    <span class="n">max_shape</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">n</span> <span class="k">if</span> <span class="n">n</span> <span class="o">&lt;</span> <span class="n">nprint</span> <span class="k">else</span> <span class="n">nprint</span> <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">a</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+    <span class="k">with</span> <span class="n">npy_printoptions</span><span class="p">(</span><span class="n">threshold</span><span class="o">=</span><span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">prod</span><span class="p">(</span><span class="n">max_shape</span><span class="p">)),</span>
+                          <span class="n">edgeitems</span><span class="o">=</span><span class="n">nprint</span> <span class="o">//</span> <span class="mi">2</span><span class="p">,</span>
+                          <span class="n">suppress</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+        <span class="n">a_str</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array2string</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">separator</span><span class="o">=</span><span class="s1">&#39;, &#39;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">a_str</span></div>
+
+
+<div class="viewcode-block" id="dtype_repr"><a class="viewcode-back" href="../../../generated/odl.util.utility.dtype_repr.html#odl.util.utility.dtype_repr">[docs]</a><span class="k">def</span> <span class="nf">dtype_repr</span><span class="p">(</span><span class="n">dtype</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Stringify ``dtype`` for ``repr`` with default for int and float.&quot;&quot;&quot;</span>
+    <span class="n">dtype</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dtype</span><span class="p">(</span><span class="n">dtype</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">dtype</span> <span class="o">==</span> <span class="n">np</span><span class="o">.</span><span class="n">dtype</span><span class="p">(</span><span class="nb">int</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s2">&quot;&#39;int&#39;&quot;</span>
+    <span class="k">elif</span> <span class="n">dtype</span> <span class="o">==</span> <span class="n">np</span><span class="o">.</span><span class="n">dtype</span><span class="p">(</span><span class="nb">float</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s2">&quot;&#39;float&#39;&quot;</span>
+    <span class="k">elif</span> <span class="n">dtype</span> <span class="o">==</span> <span class="n">np</span><span class="o">.</span><span class="n">dtype</span><span class="p">(</span><span class="nb">complex</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s2">&quot;&#39;complex&#39;&quot;</span>
+    <span class="k">elif</span> <span class="n">dtype</span><span class="o">.</span><span class="n">shape</span><span class="p">:</span>
+        <span class="k">return</span> <span class="s2">&quot;(&#39;</span><span class="si">{}</span><span class="s2">&#39;, </span><span class="si">{}</span><span class="s2">)&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">dtype</span><span class="o">.</span><span class="n">base</span><span class="p">,</span> <span class="n">dtype</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="s2">&quot;&#39;</span><span class="si">{}</span><span class="s2">&#39;&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">dtype</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="dtype_str"><a class="viewcode-back" href="../../../generated/odl.util.utility.dtype_str.html#odl.util.utility.dtype_str">[docs]</a><span class="k">def</span> <span class="nf">dtype_str</span><span class="p">(</span><span class="n">dtype</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Stringify ``dtype`` for ``str`` with default for int and float.&quot;&quot;&quot;</span>
+    <span class="n">dtype</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dtype</span><span class="p">(</span><span class="n">dtype</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">dtype</span> <span class="o">==</span> <span class="n">np</span><span class="o">.</span><span class="n">dtype</span><span class="p">(</span><span class="nb">int</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s1">&#39;int&#39;</span>
+    <span class="k">elif</span> <span class="n">dtype</span> <span class="o">==</span> <span class="n">np</span><span class="o">.</span><span class="n">dtype</span><span class="p">(</span><span class="nb">float</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s1">&#39;float&#39;</span>
+    <span class="k">elif</span> <span class="n">dtype</span> <span class="o">==</span> <span class="n">np</span><span class="o">.</span><span class="n">dtype</span><span class="p">(</span><span class="nb">complex</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s1">&#39;complex&#39;</span>
+    <span class="k">elif</span> <span class="n">dtype</span><span class="o">.</span><span class="n">shape</span><span class="p">:</span>
+        <span class="k">return</span> <span class="s2">&quot;(&#39;</span><span class="si">{}</span><span class="s2">&#39;, </span><span class="si">{}</span><span class="s2">)&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">dtype</span><span class="o">.</span><span class="n">base</span><span class="p">,</span> <span class="n">dtype</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="s1">&#39;</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">dtype</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="cache_arguments"><a class="viewcode-back" href="../../../generated/odl.util.utility.cache_arguments.html#odl.util.utility.cache_arguments">[docs]</a><span class="k">def</span> <span class="nf">cache_arguments</span><span class="p">(</span><span class="n">function</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Decorate function to cache the result with given arguments.</span>
+
+<span class="sd">    This is equivalent to `functools.lru_cache` with Python 3, and currently</span>
+<span class="sd">    does nothing with Python 2 but this may change at some later point.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    function : `callable`</span>
+<span class="sd">        Function that should be wrapped.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="kn">from</span> <span class="nn">functools</span> <span class="kn">import</span> <span class="n">lru_cache</span>
+        <span class="k">return</span> <span class="n">lru_cache</span><span class="p">()(</span><span class="n">function</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">function</span></div>
+
+
+<span class="nd">@cache_arguments</span>
+<span class="k">def</span> <span class="nf">is_numeric_dtype</span><span class="p">(</span><span class="n">dtype</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Return ``True`` if ``dtype`` is a numeric type.&quot;&quot;&quot;</span>
+    <span class="n">dtype</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dtype</span><span class="p">(</span><span class="n">dtype</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">issubsctype</span><span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="n">dtype</span><span class="p">,</span> <span class="s1">&#39;base&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">number</span><span class="p">)</span>
+
+
+<span class="nd">@cache_arguments</span>
+<span class="k">def</span> <span class="nf">is_int_dtype</span><span class="p">(</span><span class="n">dtype</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Return ``True`` if ``dtype`` is an integer type.&quot;&quot;&quot;</span>
+    <span class="n">dtype</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dtype</span><span class="p">(</span><span class="n">dtype</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">issubsctype</span><span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="n">dtype</span><span class="p">,</span> <span class="s1">&#39;base&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">integer</span><span class="p">)</span>
+
+
+<span class="nd">@cache_arguments</span>
+<span class="k">def</span> <span class="nf">is_floating_dtype</span><span class="p">(</span><span class="n">dtype</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Return ``True`` if ``dtype`` is a floating point type.&quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">is_real_floating_dtype</span><span class="p">(</span><span class="n">dtype</span><span class="p">)</span> <span class="ow">or</span> <span class="n">is_complex_floating_dtype</span><span class="p">(</span><span class="n">dtype</span><span class="p">)</span>
+
+
+<span class="nd">@cache_arguments</span>
+<span class="k">def</span> <span class="nf">is_real_dtype</span><span class="p">(</span><span class="n">dtype</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Return ``True`` if ``dtype`` is a real (including integer) type.&quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">is_numeric_dtype</span><span class="p">(</span><span class="n">dtype</span><span class="p">)</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">is_complex_floating_dtype</span><span class="p">(</span><span class="n">dtype</span><span class="p">)</span>
+
+
+<span class="nd">@cache_arguments</span>
+<span class="k">def</span> <span class="nf">is_real_floating_dtype</span><span class="p">(</span><span class="n">dtype</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Return ``True`` if ``dtype`` is a real floating point type.&quot;&quot;&quot;</span>
+    <span class="n">dtype</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dtype</span><span class="p">(</span><span class="n">dtype</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">issubsctype</span><span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="n">dtype</span><span class="p">,</span> <span class="s1">&#39;base&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">floating</span><span class="p">)</span>
+
+
+<span class="nd">@cache_arguments</span>
+<span class="k">def</span> <span class="nf">is_complex_floating_dtype</span><span class="p">(</span><span class="n">dtype</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Return ``True`` if ``dtype`` is a complex floating point type.&quot;&quot;&quot;</span>
+    <span class="n">dtype</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dtype</span><span class="p">(</span><span class="n">dtype</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">issubsctype</span><span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="n">dtype</span><span class="p">,</span> <span class="s1">&#39;base&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">complexfloating</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="real_dtype"><a class="viewcode-back" href="../../../generated/odl.util.utility.real_dtype.html#odl.util.utility.real_dtype">[docs]</a><span class="k">def</span> <span class="nf">real_dtype</span><span class="p">(</span><span class="n">dtype</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Return the real counterpart of ``dtype`` if existing.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    dtype :</span>
+<span class="sd">        Real or complex floating point data type. It can be given in any</span>
+<span class="sd">        way the `numpy.dtype` constructor understands.</span>
+<span class="sd">    default :</span>
+<span class="sd">        Object to be returned if no real counterpart is found for</span>
+<span class="sd">        ``dtype``, except for ``None``, in which case an error is raised.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    real_dtype : `numpy.dtype`</span>
+<span class="sd">        The real counterpart of ``dtype``.</span>
+
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
+<span class="sd">    ValueError</span>
+<span class="sd">        if there is no real counterpart to the given data type and</span>
+<span class="sd">        ``default == None``.</span>
+
+<span class="sd">    See Also</span>
+<span class="sd">    --------</span>
+<span class="sd">    complex_dtype</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    Convert scalar dtypes:</span>
+
+<span class="sd">    &gt;&gt;&gt; real_dtype(complex)</span>
+<span class="sd">    dtype(&#39;float64&#39;)</span>
+<span class="sd">    &gt;&gt;&gt; real_dtype(&#39;complex64&#39;)</span>
+<span class="sd">    dtype(&#39;float32&#39;)</span>
+<span class="sd">    &gt;&gt;&gt; real_dtype(float)</span>
+<span class="sd">    dtype(&#39;float64&#39;)</span>
+
+<span class="sd">    Dtypes with shape are also supported:</span>
+
+<span class="sd">    &gt;&gt;&gt; real_dtype(np.dtype((complex, (3,))))</span>
+<span class="sd">    dtype((&#39;&lt;f8&#39;, (3,)))</span>
+<span class="sd">    &gt;&gt;&gt; real_dtype((&#39;complex64&#39;, (3,)))</span>
+<span class="sd">    dtype((&#39;&lt;f4&#39;, (3,)))</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">dtype</span><span class="p">,</span> <span class="n">dtype_in</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dtype</span><span class="p">(</span><span class="n">dtype</span><span class="p">),</span> <span class="n">dtype</span>
+
+    <span class="k">if</span> <span class="n">is_real_floating_dtype</span><span class="p">(</span><span class="n">dtype</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">dtype</span>
+
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">real_base_dtype</span> <span class="o">=</span> <span class="n">TYPE_MAP_C2R</span><span class="p">[</span><span class="n">dtype</span><span class="o">.</span><span class="n">base</span><span class="p">]</span>
+    <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">default</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">default</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;no real counterpart exists for `dtype` </span><span class="si">{}</span><span class="s1">&#39;</span>
+                             <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">dtype_repr</span><span class="p">(</span><span class="n">dtype_in</span><span class="p">)))</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">dtype</span><span class="p">((</span><span class="n">real_base_dtype</span><span class="p">,</span> <span class="n">dtype</span><span class="o">.</span><span class="n">shape</span><span class="p">))</span></div>
+
+
+<div class="viewcode-block" id="complex_dtype"><a class="viewcode-back" href="../../../generated/odl.util.utility.complex_dtype.html#odl.util.utility.complex_dtype">[docs]</a><span class="k">def</span> <span class="nf">complex_dtype</span><span class="p">(</span><span class="n">dtype</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Return complex counterpart of ``dtype`` if existing, else ``default``.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    dtype :</span>
+<span class="sd">        Real or complex floating point data type. It can be given in any</span>
+<span class="sd">        way the `numpy.dtype` constructor understands.</span>
+<span class="sd">    default :</span>
+<span class="sd">        Object to be returned if no complex counterpart is found for</span>
+<span class="sd">        ``dtype``, except for ``None``, in which case an error is raised.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    complex_dtype : `numpy.dtype`</span>
+<span class="sd">        The complex counterpart of ``dtype``.</span>
+
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
+<span class="sd">    ValueError</span>
+<span class="sd">        if there is no complex counterpart to the given data type and</span>
+<span class="sd">        ``default == None``.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    Convert scalar dtypes:</span>
+
+<span class="sd">    &gt;&gt;&gt; complex_dtype(float)</span>
+<span class="sd">    dtype(&#39;complex128&#39;)</span>
+<span class="sd">    &gt;&gt;&gt; complex_dtype(&#39;float32&#39;)</span>
+<span class="sd">    dtype(&#39;complex64&#39;)</span>
+<span class="sd">    &gt;&gt;&gt; complex_dtype(complex)</span>
+<span class="sd">    dtype(&#39;complex128&#39;)</span>
+
+<span class="sd">    Dtypes with shape are also supported:</span>
+
+<span class="sd">    &gt;&gt;&gt; complex_dtype(np.dtype((float, (3,))))</span>
+<span class="sd">    dtype((&#39;&lt;c16&#39;, (3,)))</span>
+<span class="sd">    &gt;&gt;&gt; complex_dtype((&#39;float32&#39;, (3,)))</span>
+<span class="sd">    dtype((&#39;&lt;c8&#39;, (3,)))</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">dtype</span><span class="p">,</span> <span class="n">dtype_in</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dtype</span><span class="p">(</span><span class="n">dtype</span><span class="p">),</span> <span class="n">dtype</span>
+
+    <span class="k">if</span> <span class="n">is_complex_floating_dtype</span><span class="p">(</span><span class="n">dtype</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">dtype</span>
+
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">complex_base_dtype</span> <span class="o">=</span> <span class="n">TYPE_MAP_R2C</span><span class="p">[</span><span class="n">dtype</span><span class="o">.</span><span class="n">base</span><span class="p">]</span>
+    <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">default</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">default</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;no complex counterpart exists for `dtype` </span><span class="si">{}</span><span class="s1">&#39;</span>
+                             <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">dtype_repr</span><span class="p">(</span><span class="n">dtype_in</span><span class="p">)))</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">dtype</span><span class="p">((</span><span class="n">complex_base_dtype</span><span class="p">,</span> <span class="n">dtype</span><span class="o">.</span><span class="n">shape</span><span class="p">))</span></div>
+
+
+<div class="viewcode-block" id="is_string"><a class="viewcode-back" href="../../../generated/odl.util.utility.is_string.html#odl.util.utility.is_string">[docs]</a><span class="k">def</span> <span class="nf">is_string</span><span class="p">(</span><span class="n">obj</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Return ``True`` if ``obj`` behaves like a string, ``False`` else.&quot;&quot;&quot;</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">obj</span> <span class="o">+</span> <span class="s1">&#39;&#39;</span>
+    <span class="k">except</span> <span class="ne">TypeError</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">False</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">True</span></div>
+
+
+<div class="viewcode-block" id="nd_iterator"><a class="viewcode-back" href="../../../generated/odl.util.utility.nd_iterator.html#odl.util.utility.nd_iterator">[docs]</a><span class="k">def</span> <span class="nf">nd_iterator</span><span class="p">(</span><span class="n">shape</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Iterator over n-d cube with shape.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    shape : sequence of int</span>
+<span class="sd">        The number of points per axis</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    nd_iterator : generator</span>
+<span class="sd">        Generator returning tuples of integers of length ``len(shape)``.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    &gt;&gt;&gt; for pt in nd_iterator([2, 2]):</span>
+<span class="sd">    ...     print(pt)</span>
+<span class="sd">    (0, 0)</span>
+<span class="sd">    (0, 1)</span>
+<span class="sd">    (1, 0)</span>
+<span class="sd">    (1, 1)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">product</span><span class="p">(</span><span class="o">*</span><span class="nb">map</span><span class="p">(</span><span class="nb">range</span><span class="p">,</span> <span class="n">shape</span><span class="p">))</span></div>
+
+
+<div class="viewcode-block" id="conj_exponent"><a class="viewcode-back" href="../../../generated/odl.util.utility.conj_exponent.html#odl.util.utility.conj_exponent">[docs]</a><span class="k">def</span> <span class="nf">conj_exponent</span><span class="p">(</span><span class="n">exp</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Conjugate exponent ``exp / (exp - 1)``.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    exp : positive float or inf</span>
+<span class="sd">        Exponent for which to calculate the conjugate. Must be</span>
+<span class="sd">        at least 1.0.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    conj : positive float or inf</span>
+<span class="sd">        Conjugate exponent. For ``exp=1``, return ``float(&#39;inf&#39;)``,</span>
+<span class="sd">        for ``exp=float(&#39;inf&#39;)`` return 1. In all other cases, return</span>
+<span class="sd">        ``exp / (exp - 1)``.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">exp</span> <span class="o">==</span> <span class="mf">1.0</span><span class="p">:</span>
+        <span class="k">return</span> <span class="nb">float</span><span class="p">(</span><span class="s1">&#39;inf&#39;</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">exp</span> <span class="o">==</span> <span class="nb">float</span><span class="p">(</span><span class="s1">&#39;inf&#39;</span><span class="p">):</span>
+        <span class="k">return</span> <span class="mf">1.0</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">exp</span> <span class="o">/</span> <span class="p">(</span><span class="n">exp</span> <span class="o">-</span> <span class="mf">1.0</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="nullcontext"><a class="viewcode-back" href="../../../generated/odl.util.utility.nullcontext.html#odl.util.utility.nullcontext">[docs]</a><span class="nd">@contextmanager</span>
+<span class="k">def</span> <span class="nf">nullcontext</span><span class="p">(</span><span class="n">enter_result</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Backport of the Python &gt;=3.7 trivial context manager.</span>
+
+<span class="sd">    See `the Python documentation</span>
+<span class="sd">    &lt;https://docs.python.org/3/library/contextlib.html#contextlib.nullcontext&gt;`_</span>
+<span class="sd">    for details.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="k">yield</span> <span class="n">enter_result</span>
+    <span class="k">finally</span><span class="p">:</span>
+        <span class="k">pass</span></div>
+
+
+<span class="k">try</span><span class="p">:</span>
+    <span class="n">nullcontext</span> <span class="o">=</span> <span class="n">contextlib</span><span class="o">.</span><span class="n">nullcontext</span>
+<span class="k">except</span> <span class="ne">AttributeError</span><span class="p">:</span>
+    <span class="k">pass</span>
+
+
+<div class="viewcode-block" id="writable_array"><a class="viewcode-back" href="../../../generated/odl.util.utility.writable_array.html#odl.util.utility.writable_array">[docs]</a><span class="nd">@contextmanager</span>
+<span class="k">def</span> <span class="nf">writable_array</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Context manager that casts obj to a `numpy.array` and saves changes.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    obj : `array-like`</span>
+<span class="sd">        Object that should be made available as writable array.</span>
+<span class="sd">        It must be valid as input to `numpy.asarray` and needs to</span>
+<span class="sd">        support the syntax ``obj[:] = arr``.</span>
+<span class="sd">    kwargs :</span>
+<span class="sd">        Keyword arguments that should be passed to `numpy.asarray`.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    Convert list to array and use with numpy:</span>
+
+<span class="sd">    &gt;&gt;&gt; lst = [1, 2, 3]</span>
+<span class="sd">    &gt;&gt;&gt; with writable_array(lst) as arr:</span>
+<span class="sd">    ...    arr *= 2</span>
+<span class="sd">    &gt;&gt;&gt; lst</span>
+<span class="sd">    [2, 4, 6]</span>
+
+<span class="sd">    Usage with ODL vectors:</span>
+
+<span class="sd">    &gt;&gt;&gt; space = odl.uniform_discr(0, 1, 3)</span>
+<span class="sd">    &gt;&gt;&gt; x = space.element([1, 2, 3])</span>
+<span class="sd">    &gt;&gt;&gt; with writable_array(x) as arr:</span>
+<span class="sd">    ...     arr += [1, 1, 1]</span>
+<span class="sd">    &gt;&gt;&gt; x</span>
+<span class="sd">    uniform_discr(0.0, 1.0, 3).element([ 2.,  3.,  4.])</span>
+
+<span class="sd">    Additional keyword arguments are passed to `numpy.asarray`:</span>
+
+<span class="sd">    &gt;&gt;&gt; lst = [1, 2, 3]</span>
+<span class="sd">    &gt;&gt;&gt; with writable_array(lst, dtype=&#39;complex&#39;) as arr:</span>
+<span class="sd">    ...     print(arr)</span>
+<span class="sd">    [ 1.+0.j  2.+0.j  3.+0.j]</span>
+
+<span class="sd">    Note that the changes are only saved upon exiting the context</span>
+<span class="sd">    manger exits. Before, the input object is unchanged:</span>
+
+<span class="sd">    &gt;&gt;&gt; lst = [1, 2, 3]</span>
+<span class="sd">    &gt;&gt;&gt; with writable_array(lst) as arr:</span>
+<span class="sd">    ...     arr *= 2</span>
+<span class="sd">    ...     print(lst)</span>
+<span class="sd">    [1, 2, 3]</span>
+<span class="sd">    &gt;&gt;&gt; print(lst)</span>
+<span class="sd">    [2, 4, 6]</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">arr</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">arr</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="k">yield</span> <span class="n">arr</span>
+    <span class="k">finally</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">arr</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">obj</span><span class="p">[:]</span> <span class="o">=</span> <span class="n">arr</span></div>
+
+
+<div class="viewcode-block" id="signature_string"><a class="viewcode-back" href="../../../generated/odl.util.utility.signature_string.html#odl.util.utility.signature_string">[docs]</a><span class="k">def</span> <span class="nf">signature_string</span><span class="p">(</span><span class="n">posargs</span><span class="p">,</span> <span class="n">optargs</span><span class="p">,</span> <span class="n">sep</span><span class="o">=</span><span class="s1">&#39;, &#39;</span><span class="p">,</span> <span class="n">mod</span><span class="o">=</span><span class="s1">&#39;!r&#39;</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Return a stringified signature from given arguments.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    posargs : sequence</span>
+<span class="sd">        Positional argument values, always included in the returned string.</span>
+<span class="sd">        They appear in the string as (roughly)::</span>
+
+<span class="sd">            sep.join(str(arg) for arg in posargs)</span>
+
+<span class="sd">    optargs : sequence of 3-tuples</span>
+<span class="sd">        Optional arguments with names and defaults, given in the form::</span>
+
+<span class="sd">            [(name1, value1, default1), (name2, value2, default2), ...]</span>
+
+<span class="sd">        Only those parameters that are different from the given default</span>
+<span class="sd">        are included as ``name=value`` keyword pairs.</span>
+
+<span class="sd">        **Note:** The comparison is done by using ``if value == default:``,</span>
+<span class="sd">        which is not valid for, e.g., NumPy arrays.</span>
+
+<span class="sd">    sep : string or sequence of strings, optional</span>
+<span class="sd">        Separator(s) for the argument strings. A provided single string is</span>
+<span class="sd">        used for all joining operations.</span>
+<span class="sd">        A given sequence must have 3 entries ``pos_sep, opt_sep, part_sep``.</span>
+<span class="sd">        The ``pos_sep`` and ``opt_sep`` strings are used for joining the</span>
+<span class="sd">        respective sequences of argument strings, and ``part_sep`` joins</span>
+<span class="sd">        these two joined strings.</span>
+<span class="sd">    mod : string or callable or sequence, optional</span>
+<span class="sd">        Format modifier(s) for the argument strings.</span>
+<span class="sd">        In its most general form, ``mod`` is a sequence of 2 sequences</span>
+<span class="sd">        ``pos_mod, opt_mod`` with ``len(pos_mod) == len(posargs)`` and</span>
+<span class="sd">        ``len(opt_mod) == len(optargs)``. Each entry ``m`` in those sequences</span>
+<span class="sd">        can be eiter a string, resulting in the following stringification</span>
+<span class="sd">        of ``arg``::</span>
+
+<span class="sd">            arg_fmt = {{{}}}.format(m)</span>
+<span class="sd">            arg_str = arg_fmt.format(arg)</span>
+
+<span class="sd">        For a callable ``to_str``, the stringification is simply</span>
+<span class="sd">        ``arg_str = to_str(arg)``.</span>
+
+<span class="sd">        The entries ``pos_mod, opt_mod`` of ``mod`` can also be strings</span>
+<span class="sd">        or callables instead of sequences, in which case the modifier</span>
+<span class="sd">        applies to all corresponding arguments.</span>
+
+<span class="sd">        Finally, if ``mod`` is a string or callable, it is applied to</span>
+<span class="sd">        all arguments.</span>
+
+<span class="sd">        The default behavior is to apply the &quot;{!r}&quot; (``repr``) conversion.</span>
+<span class="sd">        For floating point scalars, the number of digits printed is</span>
+<span class="sd">        determined by the ``precision`` value in NumPy&#39;s printing options,</span>
+<span class="sd">        which can be temporarily modified with `npy_printoptions`.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    signature : string</span>
+<span class="sd">        Stringification of a signature, typically used in the form::</span>
+
+<span class="sd">            &#39;{}({})&#39;.format(self.__class__.__name__, signature)</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    Usage with non-trivial entries in both sequences, with a typical</span>
+<span class="sd">    use case:</span>
+
+<span class="sd">    &gt;&gt;&gt; posargs = [1, &#39;hello&#39;, None]</span>
+<span class="sd">    &gt;&gt;&gt; optargs = [(&#39;dtype&#39;, &#39;float32&#39;, &#39;float64&#39;)]</span>
+<span class="sd">    &gt;&gt;&gt; signature_string(posargs, optargs)</span>
+<span class="sd">    &quot;1, &#39;hello&#39;, None, dtype=&#39;float32&#39;&quot;</span>
+<span class="sd">    &gt;&gt;&gt; &#39;{}({})&#39;.format(&#39;MyClass&#39;, signature_string(posargs, optargs))</span>
+<span class="sd">    &quot;MyClass(1, &#39;hello&#39;, None, dtype=&#39;float32&#39;)&quot;</span>
+
+<span class="sd">    Empty sequences and optargs values equal to default are omitted:</span>
+
+<span class="sd">    &gt;&gt;&gt; posargs = [&#39;hello&#39;]</span>
+<span class="sd">    &gt;&gt;&gt; optargs = [(&#39;size&#39;, 1, 1)]</span>
+<span class="sd">    &gt;&gt;&gt; signature_string(posargs, optargs)</span>
+<span class="sd">    &quot;&#39;hello&#39;&quot;</span>
+<span class="sd">    &gt;&gt;&gt; posargs = []</span>
+<span class="sd">    &gt;&gt;&gt; optargs = [(&#39;size&#39;, 2, 1)]</span>
+<span class="sd">    &gt;&gt;&gt; signature_string(posargs, optargs)</span>
+<span class="sd">    &#39;size=2&#39;</span>
+<span class="sd">    &gt;&gt;&gt; posargs = []</span>
+<span class="sd">    &gt;&gt;&gt; optargs = [(&#39;size&#39;, 1, 1)]</span>
+<span class="sd">    &gt;&gt;&gt; signature_string(posargs, optargs)</span>
+<span class="sd">    &#39;&#39;</span>
+
+<span class="sd">    Using a different separator, globally or per argument &quot;category&quot;:</span>
+
+<span class="sd">    &gt;&gt;&gt; posargs = [1, &#39;hello&#39;, None]</span>
+<span class="sd">    &gt;&gt;&gt; optargs = [(&#39;dtype&#39;, &#39;float32&#39;, &#39;float64&#39;),</span>
+<span class="sd">    ...            (&#39;order&#39;, &#39;F&#39;, &#39;C&#39;)]</span>
+<span class="sd">    &gt;&gt;&gt; signature_string(posargs, optargs)</span>
+<span class="sd">    &quot;1, &#39;hello&#39;, None, dtype=&#39;float32&#39;, order=&#39;F&#39;&quot;</span>
+<span class="sd">    &gt;&gt;&gt; signature_string(posargs, optargs, sep=(&#39;,&#39;, &#39;,&#39;, &#39;, &#39;))</span>
+<span class="sd">    &quot;1,&#39;hello&#39;,None, dtype=&#39;float32&#39;,order=&#39;F&#39;&quot;</span>
+
+<span class="sd">    Using format modifiers:</span>
+
+<span class="sd">    &gt;&gt;&gt; posargs = [&#39;hello&#39;, 2.345]</span>
+<span class="sd">    &gt;&gt;&gt; optargs = [(&#39;extent&#39;, 1.442, 1.0), (&#39;spacing&#39;, 0.0151, 1.0)]</span>
+<span class="sd">    &gt;&gt;&gt; signature_string(posargs, optargs)</span>
+<span class="sd">    &quot;&#39;hello&#39;, 2.345, extent=1.442, spacing=0.0151&quot;</span>
+<span class="sd">    &gt;&gt;&gt; # Print only two significant digits for all arguments.</span>
+<span class="sd">    &gt;&gt;&gt; # NOTE: this also affects the string!</span>
+<span class="sd">    &gt;&gt;&gt; mod = &#39;:.2&#39;</span>
+<span class="sd">    &gt;&gt;&gt; signature_string(posargs, optargs, mod=mod)</span>
+<span class="sd">    &#39;he, 2.3, extent=1.4, spacing=0.015&#39;</span>
+<span class="sd">    &gt;&gt;&gt; mod = [[&#39;&#39;, &#39;&#39;], [&#39;:.3&#39;, &#39;:.2&#39;]]  # one modifier per argument</span>
+<span class="sd">    &gt;&gt;&gt; signature_string(posargs, optargs, mod=mod)</span>
+<span class="sd">    &quot;&#39;hello&#39;, 2.345, extent=1.44, spacing=0.015&quot;</span>
+
+<span class="sd">    Using callables for stringification:</span>
+
+<span class="sd">    &gt;&gt;&gt; posargs = [&#39;arg1&#39;, np.ones(3)]</span>
+<span class="sd">    &gt;&gt;&gt; optargs = []</span>
+<span class="sd">    &gt;&gt;&gt; signature_string(posargs, optargs, mod=[[&#39;&#39;, array_str], []])</span>
+<span class="sd">    &quot;&#39;arg1&#39;, [ 1., 1., 1.]&quot;</span>
+
+<span class="sd">    The number of printed digits in floating point numbers can be changed</span>
+<span class="sd">    with `npy_printoptions`:</span>
+
+<span class="sd">    &gt;&gt;&gt; posargs = [&#39;hello&#39;, 0.123456789012345]</span>
+<span class="sd">    &gt;&gt;&gt; optargs = [(&#39;extent&#39;, 1.234567890123456, 1.0)]</span>
+<span class="sd">    &gt;&gt;&gt; signature_string(posargs, optargs)  # default is 8 digits</span>
+<span class="sd">    &quot;&#39;hello&#39;, 0.12345679, extent=1.2345679&quot;</span>
+<span class="sd">    &gt;&gt;&gt; with npy_printoptions(precision=2):</span>
+<span class="sd">    ...     sig_str = signature_string(posargs, optargs)</span>
+<span class="sd">    &gt;&gt;&gt; sig_str</span>
+<span class="sd">    &quot;&#39;hello&#39;, 0.12, extent=1.2&quot;</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># Define the separators for the two possible cases</span>
+    <span class="k">if</span> <span class="n">is_string</span><span class="p">(</span><span class="n">sep</span><span class="p">):</span>
+        <span class="n">pos_sep</span> <span class="o">=</span> <span class="n">opt_sep</span> <span class="o">=</span> <span class="n">part_sep</span> <span class="o">=</span> <span class="n">sep</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">pos_sep</span><span class="p">,</span> <span class="n">opt_sep</span><span class="p">,</span> <span class="n">part_sep</span> <span class="o">=</span> <span class="n">sep</span>
+
+    <span class="c1"># Get the stringified parts</span>
+    <span class="n">posargs_conv</span><span class="p">,</span> <span class="n">optargs_conv</span> <span class="o">=</span> <span class="n">signature_string_parts</span><span class="p">(</span><span class="n">posargs</span><span class="p">,</span> <span class="n">optargs</span><span class="p">,</span> <span class="n">mod</span><span class="p">)</span>
+
+    <span class="c1"># Join the arguments using the separators</span>
+    <span class="n">parts</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">if</span> <span class="n">posargs_conv</span><span class="p">:</span>
+        <span class="n">parts</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">pos_sep</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">argstr</span> <span class="k">for</span> <span class="n">argstr</span> <span class="ow">in</span> <span class="n">posargs_conv</span><span class="p">))</span>
+    <span class="k">if</span> <span class="n">optargs_conv</span><span class="p">:</span>
+        <span class="n">parts</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">opt_sep</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">optargs_conv</span><span class="p">))</span>
+
+    <span class="k">return</span> <span class="n">part_sep</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">parts</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="signature_string_parts"><a class="viewcode-back" href="../../../generated/odl.util.utility.signature_string_parts.html#odl.util.utility.signature_string_parts">[docs]</a><span class="k">def</span> <span class="nf">signature_string_parts</span><span class="p">(</span><span class="n">posargs</span><span class="p">,</span> <span class="n">optargs</span><span class="p">,</span> <span class="n">mod</span><span class="o">=</span><span class="s1">&#39;!r&#39;</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Return stringified arguments as tuples.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    posargs : sequence</span>
+<span class="sd">        Positional argument values, always included in the returned string</span>
+<span class="sd">        tuple.</span>
+<span class="sd">    optargs : sequence of 3-tuples</span>
+<span class="sd">        Optional arguments with names and defaults, given in the form::</span>
+
+<span class="sd">            [(name1, value1, default1), (name2, value2, default2), ...]</span>
+
+<span class="sd">        Only those parameters that are different from the given default</span>
+<span class="sd">        are included as ``name=value`` keyword pairs.</span>
+
+<span class="sd">        **Note:** The comparison is done by using ``if value == default:``,</span>
+<span class="sd">        which is not valid for, e.g., NumPy arrays.</span>
+
+<span class="sd">    mod : string or callable or sequence, optional</span>
+<span class="sd">        Format modifier(s) for the argument strings.</span>
+<span class="sd">        In its most general form, ``mod`` is a sequence of 2 sequences</span>
+<span class="sd">        ``pos_mod, opt_mod`` with ``len(pos_mod) == len(posargs)`` and</span>
+<span class="sd">        ``len(opt_mod) == len(optargs)``. Each entry ``m`` in those sequences</span>
+<span class="sd">        can be a string, resulting in the following stringification</span>
+<span class="sd">        of ``arg``::</span>
+
+<span class="sd">            arg_fmt = {{{}}}.format(m)</span>
+<span class="sd">            arg_str = arg_fmt.format(arg)</span>
+
+<span class="sd">        For a callable ``to_str``, the stringification is simply</span>
+<span class="sd">        ``arg_str = to_str(arg)``.</span>
+
+<span class="sd">        The entries ``pos_mod, opt_mod`` of ``mod`` can also be strings</span>
+<span class="sd">        or callables instead of sequences, in which case the modifier</span>
+<span class="sd">        applies to all corresponding arguments.</span>
+
+<span class="sd">        Finally, if ``mod`` is a string or callable, it is applied to</span>
+<span class="sd">        all arguments.</span>
+
+<span class="sd">        The default behavior is to apply the &quot;{!r}&quot; (``repr``) conversion.</span>
+<span class="sd">        For floating point scalars, the number of digits printed is</span>
+<span class="sd">        determined by the ``precision`` value in NumPy&#39;s printing options,</span>
+<span class="sd">        which can be temporarily modified with `npy_printoptions`.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    pos_strings : tuple of str</span>
+<span class="sd">        The stringified positional arguments.</span>
+<span class="sd">    opt_strings : tuple of str</span>
+<span class="sd">        The stringified optional arguments, not including the ones</span>
+<span class="sd">        equal to their respective defaults.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># Convert modifiers to 2-sequence of sequence of strings</span>
+    <span class="k">if</span> <span class="n">is_string</span><span class="p">(</span><span class="n">mod</span><span class="p">)</span> <span class="ow">or</span> <span class="n">callable</span><span class="p">(</span><span class="n">mod</span><span class="p">):</span>
+        <span class="n">pos_mod</span> <span class="o">=</span> <span class="n">opt_mod</span> <span class="o">=</span> <span class="n">mod</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">pos_mod</span><span class="p">,</span> <span class="n">opt_mod</span> <span class="o">=</span> <span class="n">mod</span>
+
+    <span class="n">mods</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">m</span><span class="p">,</span> <span class="n">args</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">((</span><span class="n">pos_mod</span><span class="p">,</span> <span class="n">opt_mod</span><span class="p">),</span> <span class="p">(</span><span class="n">posargs</span><span class="p">,</span> <span class="n">optargs</span><span class="p">)):</span>
+        <span class="k">if</span> <span class="n">is_string</span><span class="p">(</span><span class="n">m</span><span class="p">)</span> <span class="ow">or</span> <span class="n">callable</span><span class="p">(</span><span class="n">m</span><span class="p">):</span>
+            <span class="n">mods</span><span class="o">.</span><span class="n">append</span><span class="p">([</span><span class="n">m</span><span class="p">]</span> <span class="o">*</span> <span class="nb">len</span><span class="p">(</span><span class="n">args</span><span class="p">))</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">m</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="n">mods</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">m</span> <span class="o">*</span> <span class="nb">len</span><span class="p">(</span><span class="n">args</span><span class="p">))</span>
+            <span class="k">elif</span> <span class="nb">len</span><span class="p">(</span><span class="n">m</span><span class="p">)</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="n">args</span><span class="p">):</span>
+                <span class="n">mods</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">m</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;sequence length mismatch: &#39;</span>
+                                 <span class="s1">&#39;len(</span><span class="si">{}</span><span class="s1">) != len(</span><span class="si">{}</span><span class="s1">)&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">m</span><span class="p">,</span> <span class="n">args</span><span class="p">))</span>
+
+    <span class="n">pos_mod</span><span class="p">,</span> <span class="n">opt_mod</span> <span class="o">=</span> <span class="n">mods</span>
+    <span class="n">precision</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">get_printoptions</span><span class="p">()[</span><span class="s1">&#39;precision&#39;</span><span class="p">]</span>
+
+    <span class="c1"># Stringify values, treating strings specially</span>
+    <span class="n">posargs_conv</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">arg</span><span class="p">,</span> <span class="n">modifier</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">posargs</span><span class="p">,</span> <span class="n">pos_mod</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">callable</span><span class="p">(</span><span class="n">modifier</span><span class="p">):</span>
+            <span class="n">posargs_conv</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">modifier</span><span class="p">(</span><span class="n">arg</span><span class="p">))</span>
+        <span class="k">elif</span> <span class="n">is_string</span><span class="p">(</span><span class="n">arg</span><span class="p">):</span>
+            <span class="c1"># Preserve single quotes for strings by default</span>
+            <span class="k">if</span> <span class="n">modifier</span><span class="p">:</span>
+                <span class="n">fmt</span> <span class="o">=</span> <span class="s1">&#39;{{</span><span class="si">{}</span><span class="s1">}}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">modifier</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">fmt</span> <span class="o">=</span> <span class="s2">&quot;&#39;</span><span class="si">{}</span><span class="s2">&#39;&quot;</span>
+            <span class="n">posargs_conv</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">fmt</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">arg</span><span class="p">))</span>
+        <span class="k">elif</span> <span class="n">np</span><span class="o">.</span><span class="n">isscalar</span><span class="p">(</span><span class="n">arg</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">str</span><span class="p">(</span><span class="n">arg</span><span class="p">)</span> <span class="ow">in</span> <span class="p">(</span><span class="s1">&#39;inf&#39;</span><span class="p">,</span> <span class="s1">&#39;nan&#39;</span><span class="p">):</span>
+            <span class="c1"># Make sure the string quotes are added</span>
+            <span class="n">posargs_conv</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;&#39;</span><span class="si">{}</span><span class="s2">&#39;&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">arg</span><span class="p">))</span>
+        <span class="k">elif</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">isscalar</span><span class="p">(</span><span class="n">arg</span><span class="p">)</span> <span class="ow">and</span>
+              <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">arg</span><span class="p">)</span><span class="o">.</span><span class="n">real</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s1">&#39;int64&#39;</span><span class="p">)</span> <span class="o">!=</span> <span class="n">arg</span> <span class="ow">and</span>
+              <span class="n">modifier</span> <span class="ow">in</span> <span class="p">(</span><span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="s1">&#39;!s&#39;</span><span class="p">,</span> <span class="s1">&#39;!r&#39;</span><span class="p">)):</span>
+            <span class="c1"># Floating point value, use numpy print option &#39;precision&#39;</span>
+            <span class="n">fmt</span> <span class="o">=</span> <span class="s1">&#39;{{:.</span><span class="si">{}</span><span class="s1">}}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">precision</span><span class="p">)</span>
+            <span class="n">posargs_conv</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">fmt</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">arg</span><span class="p">))</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># All non-string types are passed through a format conversion</span>
+            <span class="n">fmt</span> <span class="o">=</span> <span class="s1">&#39;{{</span><span class="si">{}</span><span class="s1">}}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">modifier</span><span class="p">)</span>
+            <span class="n">posargs_conv</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">fmt</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">arg</span><span class="p">))</span>
+
+    <span class="c1"># Build &#39;key=value&#39; strings for values that are not equal to default</span>
+    <span class="n">optargs_conv</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">value</span><span class="p">,</span> <span class="n">default</span><span class="p">),</span> <span class="n">modifier</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">optargs</span><span class="p">,</span> <span class="n">opt_mod</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">value</span> <span class="o">==</span> <span class="n">default</span><span class="p">:</span>
+            <span class="c1"># Don&#39;t include</span>
+            <span class="k">continue</span>
+
+        <span class="c1"># See above on str and repr</span>
+        <span class="k">if</span> <span class="n">callable</span><span class="p">(</span><span class="n">modifier</span><span class="p">):</span>
+            <span class="n">optargs_conv</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">{}</span><span class="s1">=</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">modifier</span><span class="p">(</span><span class="n">value</span><span class="p">)))</span>
+        <span class="k">elif</span> <span class="n">is_string</span><span class="p">(</span><span class="n">value</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">modifier</span><span class="p">:</span>
+                <span class="n">fmt</span> <span class="o">=</span> <span class="s1">&#39;{{</span><span class="si">{}</span><span class="s1">}}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">modifier</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">fmt</span> <span class="o">=</span> <span class="s2">&quot;&#39;</span><span class="si">{}</span><span class="s2">&#39;&quot;</span>
+            <span class="n">value_str</span> <span class="o">=</span> <span class="n">fmt</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+            <span class="n">optargs_conv</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">{}</span><span class="s1">=</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">value_str</span><span class="p">))</span>
+        <span class="k">elif</span> <span class="n">np</span><span class="o">.</span><span class="n">isscalar</span><span class="p">(</span><span class="n">value</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">str</span><span class="p">(</span><span class="n">value</span><span class="p">)</span> <span class="ow">in</span> <span class="p">(</span><span class="s1">&#39;inf&#39;</span><span class="p">,</span> <span class="s1">&#39;nan&#39;</span><span class="p">):</span>
+            <span class="c1"># Make sure the string quotes are added</span>
+            <span class="n">optargs_conv</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">{}</span><span class="s2">=&#39;</span><span class="si">{}</span><span class="s2">&#39;&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">value</span><span class="p">))</span>
+        <span class="k">elif</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">isscalar</span><span class="p">(</span><span class="n">value</span><span class="p">)</span> <span class="ow">and</span>
+              <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">value</span><span class="p">)</span><span class="o">.</span><span class="n">real</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s1">&#39;int64&#39;</span><span class="p">)</span> <span class="o">!=</span> <span class="n">value</span> <span class="ow">and</span>
+              <span class="n">modifier</span> <span class="ow">in</span> <span class="p">(</span><span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="s1">&#39;!s&#39;</span><span class="p">,</span> <span class="s1">&#39;!r&#39;</span><span class="p">)):</span>
+            <span class="n">fmt</span> <span class="o">=</span> <span class="s1">&#39;{{:.</span><span class="si">{}</span><span class="s1">}}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">precision</span><span class="p">)</span>
+            <span class="n">value_str</span> <span class="o">=</span> <span class="n">fmt</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+            <span class="n">optargs_conv</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">{}</span><span class="s1">=</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">value_str</span><span class="p">))</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">fmt</span> <span class="o">=</span> <span class="s1">&#39;{{</span><span class="si">{}</span><span class="s1">}}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">modifier</span><span class="p">)</span>
+            <span class="n">value_str</span> <span class="o">=</span> <span class="n">fmt</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+            <span class="n">optargs_conv</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">{}</span><span class="s1">=</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">value_str</span><span class="p">))</span>
+
+    <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">posargs_conv</span><span class="p">),</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">optargs_conv</span><span class="p">)</span></div>
+
+
+<span class="k">def</span> <span class="nf">_separators</span><span class="p">(</span><span class="n">strings</span><span class="p">,</span> <span class="n">linewidth</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Return separators that keep joined strings within the line width.&quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">strings</span><span class="p">)</span> <span class="o">&lt;=</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">()</span>
+
+    <span class="n">indent_len</span> <span class="o">=</span> <span class="mi">4</span>
+    <span class="n">separators</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">cur_line_len</span> <span class="o">=</span> <span class="n">indent_len</span> <span class="o">+</span> <span class="nb">len</span><span class="p">(</span><span class="n">strings</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="o">+</span> <span class="mi">1</span>
+    <span class="k">if</span> <span class="n">cur_line_len</span> <span class="o">+</span> <span class="mi">2</span> <span class="o">&lt;=</span> <span class="n">linewidth</span> <span class="ow">and</span> <span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">strings</span><span class="p">[</span><span class="mi">0</span><span class="p">]:</span>
+        <span class="c1"># Next string might fit on same line</span>
+        <span class="n">separators</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;, &#39;</span><span class="p">)</span>
+        <span class="n">cur_line_len</span> <span class="o">+=</span> <span class="mi">1</span>  <span class="c1"># for the extra space</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="c1"># Use linebreak if string contains newline or doesn&#39;t fit</span>
+        <span class="n">separators</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;,</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
+        <span class="n">cur_line_len</span> <span class="o">=</span> <span class="n">indent_len</span>
+
+    <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">s</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">strings</span><span class="p">[</span><span class="mi">1</span><span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">]):</span>
+        <span class="n">cur_line_len</span> <span class="o">+=</span> <span class="nb">len</span><span class="p">(</span><span class="n">s</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span>
+
+        <span class="k">if</span> <span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span> <span class="ow">in</span> <span class="n">s</span><span class="p">:</span>
+            <span class="c1"># Use linebreak before and after if string contains newline</span>
+            <span class="n">separators</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;,</span><span class="se">\n</span><span class="s1">&#39;</span>
+            <span class="n">cur_line_len</span> <span class="o">=</span> <span class="n">indent_len</span>
+            <span class="n">separators</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;,</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
+
+        <span class="k">elif</span> <span class="n">cur_line_len</span> <span class="o">+</span> <span class="mi">2</span> <span class="o">&lt;=</span> <span class="n">linewidth</span><span class="p">:</span>
+            <span class="c1"># This string fits, next one might also fit on same line</span>
+            <span class="n">separators</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;, &#39;</span><span class="p">)</span>
+            <span class="n">cur_line_len</span> <span class="o">+=</span> <span class="mi">1</span>  <span class="c1"># for the extra space</span>
+
+        <span class="k">elif</span> <span class="n">cur_line_len</span> <span class="o">&lt;=</span> <span class="n">linewidth</span><span class="p">:</span>
+            <span class="c1"># This string fits, but next one won&#39;t</span>
+            <span class="n">separators</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;,</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
+            <span class="n">cur_line_len</span> <span class="o">=</span> <span class="n">indent_len</span>
+
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># This string doesn&#39;t fit but has no newlines in it</span>
+            <span class="n">separators</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;,</span><span class="se">\n</span><span class="s1">&#39;</span>
+            <span class="n">cur_line_len</span> <span class="o">=</span> <span class="n">indent_len</span> <span class="o">+</span> <span class="nb">len</span><span class="p">(</span><span class="n">s</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span>
+
+            <span class="c1"># Need to determine again what should come next</span>
+            <span class="k">if</span> <span class="n">cur_line_len</span> <span class="o">+</span> <span class="mi">2</span> <span class="o">&lt;=</span> <span class="n">linewidth</span><span class="p">:</span>
+                <span class="c1"># Next string might fit on same line</span>
+                <span class="n">separators</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;, &#39;</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">separators</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;,</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
+
+    <span class="n">cur_line_len</span> <span class="o">+=</span> <span class="nb">len</span><span class="p">(</span><span class="n">strings</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
+    <span class="k">if</span> <span class="n">cur_line_len</span> <span class="o">+</span> <span class="mi">1</span> <span class="o">&gt;</span> <span class="n">linewidth</span> <span class="ow">or</span> <span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span> <span class="ow">in</span> <span class="n">strings</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]:</span>
+        <span class="c1"># This string and a comma don&#39;t fit on this line</span>
+        <span class="n">separators</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;,</span><span class="se">\n</span><span class="s1">&#39;</span>
+
+    <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">separators</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="repr_string"><a class="viewcode-back" href="../../../generated/odl.util.utility.repr_string.html#odl.util.utility.repr_string">[docs]</a><span class="k">def</span> <span class="nf">repr_string</span><span class="p">(</span><span class="n">outer_string</span><span class="p">,</span> <span class="n">inner_strings</span><span class="p">,</span> <span class="n">allow_mixed_seps</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+    <span class="sa">r</span><span class="sd">&quot;&quot;&quot;Return a pretty string for ``repr``.</span>
+
+<span class="sd">    The returned string is formatted such that it does not extend</span>
+<span class="sd">    beyond the line boundary if avoidable. The line width is taken from</span>
+<span class="sd">    NumPy&#39;s printing options that can be retrieved with</span>
+<span class="sd">    `numpy.get_printoptions`. They can be temporarily overridden</span>
+<span class="sd">    using the `npy_printoptions` context manager. See Examples for details.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    outer_string : str</span>
+<span class="sd">        Name of the class or function that should be printed outside</span>
+<span class="sd">        the parentheses.</span>
+<span class="sd">    inner_strings : sequence of sequence of str</span>
+<span class="sd">        Stringifications of the positional and optional arguments.</span>
+<span class="sd">        This is usually the return value of `signature_string_parts`.</span>
+<span class="sd">    allow_mixed_seps : bool, optional</span>
+<span class="sd">        If ``False`` and the string does not fit on one line, use</span>
+<span class="sd">        ``&#39;,\n&#39;`` to separate all strings.</span>
+<span class="sd">        By default, a mixture of ``&#39;, &#39;`` and ``&#39;,\n&#39;`` is used to fit</span>
+<span class="sd">        as much on one line as possible.</span>
+
+<span class="sd">        In case some of the ``inner_strings`` span multiple lines, it is</span>
+<span class="sd">        usually advisable to set ``allow_mixed_seps`` to ``False`` since</span>
+<span class="sd">        the result tends to be more readable that way.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    repr_string : str</span>
+<span class="sd">        Full string that can be returned by a class&#39; ``__repr__`` method.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    Things that fit into one line are printed on one line:</span>
+
+<span class="sd">    &gt;&gt;&gt; outer_string = &#39;MyClass&#39;</span>
+<span class="sd">    &gt;&gt;&gt; inner_strings = [(&#39;1&#39;, &quot;&#39;hello&#39;&quot;, &#39;None&#39;),</span>
+<span class="sd">    ...                  (&quot;dtype=&#39;float32&#39;&quot;,)]</span>
+<span class="sd">    &gt;&gt;&gt; print(repr_string(outer_string, inner_strings))</span>
+<span class="sd">    MyClass(1, &#39;hello&#39;, None, dtype=&#39;float32&#39;)</span>
+
+<span class="sd">    Otherwise, if a part of ``inner_strings`` fits on a line of its own,</span>
+<span class="sd">    it is printed on one line, but separated from the other part with</span>
+<span class="sd">    a line break:</span>
+
+<span class="sd">    &gt;&gt;&gt; outer_string = &#39;MyClass&#39;</span>
+<span class="sd">    &gt;&gt;&gt; inner_strings = [(&#39;2.0&#39;, &quot;&#39;this_is_a_very_long_argument_string&#39;&quot;),</span>
+<span class="sd">    ...                  (&quot;long_opt_arg=&#39;another_quite_long_string&#39;&quot;,)]</span>
+<span class="sd">    &gt;&gt;&gt; print(repr_string(outer_string, inner_strings))</span>
+<span class="sd">    MyClass(</span>
+<span class="sd">        2.0, &#39;this_is_a_very_long_argument_string&#39;,</span>
+<span class="sd">        long_opt_arg=&#39;another_quite_long_string&#39;</span>
+<span class="sd">    )</span>
+
+<span class="sd">    If those parts are themselves too long, they are broken down into</span>
+<span class="sd">    several lines:</span>
+
+<span class="sd">    &gt;&gt;&gt; outer_string = &#39;MyClass&#39;</span>
+<span class="sd">    &gt;&gt;&gt; inner_strings = [(&quot;&#39;this_is_a_very_long_argument_string&#39;&quot;,</span>
+<span class="sd">    ...                   &quot;&#39;another_very_long_argument_string&#39;&quot;),</span>
+<span class="sd">    ...                  (&quot;long_opt_arg=&#39;another_quite_long_string&#39;&quot;,</span>
+<span class="sd">    ...                   &quot;long_opt2_arg=&#39;this_wont_fit_on_one_line_either&#39;&quot;)]</span>
+<span class="sd">    &gt;&gt;&gt; print(repr_string(outer_string, inner_strings))</span>
+<span class="sd">    MyClass(</span>
+<span class="sd">        &#39;this_is_a_very_long_argument_string&#39;,</span>
+<span class="sd">        &#39;another_very_long_argument_string&#39;,</span>
+<span class="sd">        long_opt_arg=&#39;another_quite_long_string&#39;,</span>
+<span class="sd">        long_opt2_arg=&#39;this_wont_fit_on_one_line_either&#39;</span>
+<span class="sd">    )</span>
+
+<span class="sd">    The usage of mixed separators to optimally use horizontal space can</span>
+<span class="sd">    be disabled by setting ``allow_mixed_seps=False``:</span>
+
+<span class="sd">    &gt;&gt;&gt; outer_string = &#39;MyClass&#39;</span>
+<span class="sd">    &gt;&gt;&gt; inner_strings = [(&#39;2.0&#39;, &quot;&#39;this_is_a_very_long_argument_string&#39;&quot;),</span>
+<span class="sd">    ...                  (&quot;long_opt_arg=&#39;another_quite_long_string&#39;&quot;,)]</span>
+<span class="sd">    &gt;&gt;&gt; print(repr_string(outer_string, inner_strings, allow_mixed_seps=False))</span>
+<span class="sd">    MyClass(</span>
+<span class="sd">        2.0,</span>
+<span class="sd">        &#39;this_is_a_very_long_argument_string&#39;,</span>
+<span class="sd">        long_opt_arg=&#39;another_quite_long_string&#39;</span>
+<span class="sd">    )</span>
+
+<span class="sd">    With the ``npy_printoptions`` context manager, the available line</span>
+<span class="sd">    width can be changed:</span>
+
+<span class="sd">    &gt;&gt;&gt; outer_string = &#39;MyClass&#39;</span>
+<span class="sd">    &gt;&gt;&gt; inner_strings = [(&#39;1&#39;, &quot;&#39;hello&#39;&quot;, &#39;None&#39;),</span>
+<span class="sd">    ...                  (&quot;dtype=&#39;float32&#39;&quot;,)]</span>
+<span class="sd">    &gt;&gt;&gt; with npy_printoptions(linewidth=20):</span>
+<span class="sd">    ...     print(repr_string(outer_string, inner_strings))</span>
+<span class="sd">    MyClass(</span>
+<span class="sd">        1, &#39;hello&#39;,</span>
+<span class="sd">        None,</span>
+<span class="sd">        dtype=&#39;float32&#39;</span>
+<span class="sd">    )</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">linewidth</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">get_printoptions</span><span class="p">()[</span><span class="s1">&#39;linewidth&#39;</span><span class="p">]</span>
+    <span class="n">pos_strings</span><span class="p">,</span> <span class="n">opt_strings</span> <span class="o">=</span> <span class="n">inner_strings</span>
+    <span class="c1"># Length of the positional and optional argument parts of the signature,</span>
+    <span class="c1"># including separators `&#39;, &#39;`</span>
+    <span class="n">pos_sig_len</span> <span class="o">=</span> <span class="p">(</span><span class="nb">sum</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">pstr</span><span class="p">)</span> <span class="k">for</span> <span class="n">pstr</span> <span class="ow">in</span> <span class="n">pos_strings</span><span class="p">)</span> <span class="o">+</span>
+                   <span class="mi">2</span> <span class="o">*</span> <span class="nb">max</span><span class="p">((</span><span class="nb">len</span><span class="p">(</span><span class="n">pos_strings</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">),</span> <span class="mi">0</span><span class="p">))</span>
+    <span class="n">opt_sig_len</span> <span class="o">=</span> <span class="p">(</span><span class="nb">sum</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">pstr</span><span class="p">)</span> <span class="k">for</span> <span class="n">pstr</span> <span class="ow">in</span> <span class="n">opt_strings</span><span class="p">)</span> <span class="o">+</span>
+                   <span class="mi">2</span> <span class="o">*</span> <span class="nb">max</span><span class="p">((</span><span class="nb">len</span><span class="p">(</span><span class="n">opt_strings</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">),</span> <span class="mi">0</span><span class="p">))</span>
+
+    <span class="c1"># Length of the one-line string, including 2 for the parentheses and</span>
+    <span class="c1"># 2 for the joining &#39;, &#39;</span>
+    <span class="n">repr_len</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">outer_string</span><span class="p">)</span> <span class="o">+</span> <span class="mi">2</span> <span class="o">+</span> <span class="n">pos_sig_len</span> <span class="o">+</span> <span class="mi">2</span> <span class="o">+</span> <span class="n">opt_sig_len</span>
+
+    <span class="k">if</span> <span class="n">repr_len</span> <span class="o">&lt;=</span> <span class="n">linewidth</span> <span class="ow">and</span> <span class="ow">not</span> <span class="nb">any</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span> <span class="ow">in</span> <span class="n">s</span>
+                                         <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">pos_strings</span> <span class="o">+</span> <span class="n">opt_strings</span><span class="p">):</span>
+        <span class="c1"># Everything fits on one line</span>
+        <span class="n">fmt</span> <span class="o">=</span> <span class="s1">&#39;</span><span class="si">{}</span><span class="s1">(</span><span class="si">{}</span><span class="s1">)&#39;</span>
+        <span class="n">pos_str</span> <span class="o">=</span> <span class="s1">&#39;, &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">pos_strings</span><span class="p">)</span>
+        <span class="n">opt_str</span> <span class="o">=</span> <span class="s1">&#39;, &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">opt_strings</span><span class="p">)</span>
+        <span class="n">parts_sep</span> <span class="o">=</span> <span class="s1">&#39;, &#39;</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="c1"># Need to split lines in some way</span>
+        <span class="n">fmt</span> <span class="o">=</span> <span class="s1">&#39;</span><span class="si">{}</span><span class="s1">(</span><span class="se">\n</span><span class="si">{}</span><span class="se">\n</span><span class="s1">)&#39;</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">allow_mixed_seps</span><span class="p">:</span>
+            <span class="n">pos_separators</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;,</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">]</span> <span class="o">*</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">pos_strings</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">pos_separators</span> <span class="o">=</span> <span class="n">_separators</span><span class="p">(</span><span class="n">pos_strings</span><span class="p">,</span> <span class="n">linewidth</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">pos_strings</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">pos_str</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">pos_str</span> <span class="o">=</span> <span class="n">pos_strings</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="k">for</span> <span class="n">s</span><span class="p">,</span> <span class="n">sep</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">pos_strings</span><span class="p">[</span><span class="mi">1</span><span class="p">:],</span> <span class="n">pos_separators</span><span class="p">):</span>
+                <span class="n">pos_str</span> <span class="o">=</span> <span class="n">sep</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="n">pos_str</span><span class="p">,</span> <span class="n">s</span><span class="p">])</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">allow_mixed_seps</span><span class="p">:</span>
+            <span class="n">opt_separators</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;,</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">]</span> <span class="o">*</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">opt_strings</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">opt_separators</span> <span class="o">=</span> <span class="n">_separators</span><span class="p">(</span><span class="n">opt_strings</span><span class="p">,</span> <span class="n">linewidth</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">opt_strings</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">opt_str</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">opt_str</span> <span class="o">=</span> <span class="n">opt_strings</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="k">for</span> <span class="n">s</span><span class="p">,</span> <span class="n">sep</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">opt_strings</span><span class="p">[</span><span class="mi">1</span><span class="p">:],</span> <span class="n">opt_separators</span><span class="p">):</span>
+                <span class="n">opt_str</span> <span class="o">=</span> <span class="n">sep</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="n">opt_str</span><span class="p">,</span> <span class="n">s</span><span class="p">])</span>
+
+        <span class="c1"># Check if we can put both parts on one line. This requires their</span>
+        <span class="c1"># concatenation including 4 for indentation and 2 for &#39;, &#39; to</span>
+        <span class="c1"># be less than the line width. And they should contain no newline.</span>
+        <span class="k">if</span> <span class="n">pos_str</span> <span class="ow">and</span> <span class="n">opt_str</span><span class="p">:</span>
+            <span class="n">inner_len</span> <span class="o">=</span> <span class="mi">4</span> <span class="o">+</span> <span class="nb">len</span><span class="p">(</span><span class="n">pos_str</span><span class="p">)</span> <span class="o">+</span> <span class="mi">2</span> <span class="o">+</span> <span class="nb">len</span><span class="p">(</span><span class="n">opt_str</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="p">(</span><span class="n">pos_str</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">opt_str</span><span class="p">)</span> <span class="ow">or</span> <span class="p">(</span><span class="n">opt_str</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">pos_str</span><span class="p">):</span>
+            <span class="n">inner_len</span> <span class="o">=</span> <span class="mi">4</span> <span class="o">+</span> <span class="nb">len</span><span class="p">(</span><span class="n">pos_str</span><span class="p">)</span> <span class="o">+</span> <span class="nb">len</span><span class="p">(</span><span class="n">opt_str</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">inner_len</span> <span class="o">=</span> <span class="mi">0</span>
+
+        <span class="k">if</span> <span class="p">(</span><span class="ow">not</span> <span class="n">allow_mixed_seps</span> <span class="ow">or</span>
+                <span class="nb">any</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span> <span class="ow">in</span> <span class="n">s</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="p">[</span><span class="n">pos_str</span><span class="p">,</span> <span class="n">opt_str</span><span class="p">])</span> <span class="ow">or</span>
+                <span class="n">inner_len</span> <span class="o">&gt;</span> <span class="n">linewidth</span><span class="p">):</span>
+            <span class="n">parts_sep</span> <span class="o">=</span> <span class="s1">&#39;,</span><span class="se">\n</span><span class="s1">&#39;</span>
+            <span class="n">pos_str</span> <span class="o">=</span> <span class="n">indent</span><span class="p">(</span><span class="n">pos_str</span><span class="p">)</span>
+            <span class="n">opt_str</span> <span class="o">=</span> <span class="n">indent</span><span class="p">(</span><span class="n">opt_str</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">parts_sep</span> <span class="o">=</span> <span class="s1">&#39;, &#39;</span>
+            <span class="n">pos_str</span> <span class="o">=</span> <span class="n">indent</span><span class="p">(</span><span class="n">pos_str</span><span class="p">)</span>
+            <span class="c1"># Don&#39;t indent `opt_str`</span>
+
+    <span class="n">parts</span> <span class="o">=</span> <span class="p">[</span><span class="n">s</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="p">[</span><span class="n">pos_str</span><span class="p">,</span> <span class="n">opt_str</span><span class="p">]</span> <span class="k">if</span> <span class="n">s</span><span class="o">.</span><span class="n">strip</span><span class="p">()]</span>  <span class="c1"># ignore empty</span>
+    <span class="n">inner_string</span> <span class="o">=</span> <span class="n">parts_sep</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">parts</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">fmt</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">outer_string</span><span class="p">,</span> <span class="n">inner_string</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="attribute_repr_string"><a class="viewcode-back" href="../../../generated/odl.util.utility.attribute_repr_string.html#odl.util.utility.attribute_repr_string">[docs]</a><span class="k">def</span> <span class="nf">attribute_repr_string</span><span class="p">(</span><span class="n">inst_str</span><span class="p">,</span> <span class="n">attr_str</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Return a repr string for an attribute that respects line width.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    inst_str : str</span>
+<span class="sd">        Stringification of a class instance.</span>
+<span class="sd">    attr_str : str</span>
+<span class="sd">        Name of the attribute (not including the ``&#39;.&#39;``).</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    attr_repr_str : str</span>
+<span class="sd">        Concatenation of the two strings in a way that the line width</span>
+<span class="sd">        is respected.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    &gt;&gt;&gt; inst_str = &#39;rn((2, 3))&#39;</span>
+<span class="sd">    &gt;&gt;&gt; attr_str = &#39;byaxis&#39;</span>
+<span class="sd">    &gt;&gt;&gt; print(attribute_repr_string(inst_str, attr_str))</span>
+<span class="sd">    rn((2, 3)).byaxis</span>
+<span class="sd">    &gt;&gt;&gt; inst_str = &#39;MyClass()&#39;</span>
+<span class="sd">    &gt;&gt;&gt; attr_str = &#39;attr_name&#39;</span>
+<span class="sd">    &gt;&gt;&gt; print(attribute_repr_string(inst_str, attr_str))</span>
+<span class="sd">    MyClass().attr_name</span>
+<span class="sd">    &gt;&gt;&gt; inst_str = &#39;MyClass&#39;</span>
+<span class="sd">    &gt;&gt;&gt; attr_str = &#39;class_attr&#39;</span>
+<span class="sd">    &gt;&gt;&gt; print(attribute_repr_string(inst_str, attr_str))</span>
+<span class="sd">    MyClass.class_attr</span>
+<span class="sd">    &gt;&gt;&gt; long_inst_str = (</span>
+<span class="sd">    ...     &quot;MyClass(&#39;long string that will definitely trigger a line break&#39;)&quot;</span>
+<span class="sd">    ... )</span>
+<span class="sd">    &gt;&gt;&gt; long_attr_str = &#39;long_attribute_name&#39;</span>
+<span class="sd">    &gt;&gt;&gt; print(attribute_repr_string(long_inst_str, long_attr_str))</span>
+<span class="sd">    MyClass(</span>
+<span class="sd">        &#39;long string that will definitely trigger a line break&#39;</span>
+<span class="sd">    ).long_attribute_name</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">linewidth</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">get_printoptions</span><span class="p">()[</span><span class="s1">&#39;linewidth&#39;</span><span class="p">]</span>
+    <span class="k">if</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">inst_str</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span> <span class="o">+</span> <span class="nb">len</span><span class="p">(</span><span class="n">attr_str</span><span class="p">)</span> <span class="o">&lt;=</span> <span class="n">linewidth</span> <span class="ow">or</span>
+            <span class="s1">&#39;(&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">inst_str</span><span class="p">):</span>
+        <span class="c1"># Instance string + dot + attribute string fit in one line or</span>
+        <span class="c1"># no parentheses -&gt; keep instance string as-is and append attr string</span>
+        <span class="n">parts</span> <span class="o">=</span> <span class="p">[</span><span class="n">inst_str</span><span class="p">,</span> <span class="n">attr_str</span><span class="p">]</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="c1"># TODO(kohr-h): use `maxsplit=1` kwarg, not supported in Py 2</span>
+        <span class="n">left</span><span class="p">,</span> <span class="n">rest</span> <span class="o">=</span> <span class="n">inst_str</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;(&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="n">right</span><span class="p">,</span> <span class="n">middle</span> <span class="o">=</span> <span class="n">rest</span><span class="p">[::</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;)&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="n">middle</span><span class="p">,</span> <span class="n">right</span> <span class="o">=</span> <span class="n">middle</span><span class="p">[::</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="n">right</span><span class="p">[::</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+
+        <span class="k">if</span> <span class="n">middle</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span> <span class="ow">and</span> <span class="n">middle</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">):</span>
+            <span class="c1"># Already on multiple lines</span>
+            <span class="n">new_inst_str</span> <span class="o">=</span> <span class="n">inst_str</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">init_parts</span> <span class="o">=</span> <span class="p">[</span><span class="n">left</span><span class="p">]</span>
+            <span class="k">if</span> <span class="n">middle</span><span class="p">:</span>
+                <span class="n">init_parts</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">indent</span><span class="p">(</span><span class="n">middle</span><span class="p">))</span>
+            <span class="n">new_inst_str</span> <span class="o">=</span> <span class="s1">&#39;(</span><span class="se">\n</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">init_parts</span><span class="p">)</span> <span class="o">+</span> <span class="s1">&#39;</span><span class="se">\n</span><span class="s1">)&#39;</span> <span class="o">+</span> <span class="n">right</span>
+        <span class="n">parts</span> <span class="o">=</span> <span class="p">[</span><span class="n">new_inst_str</span><span class="p">,</span> <span class="n">attr_str</span><span class="p">]</span>
+
+    <span class="k">return</span> <span class="s1">&#39;.&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">parts</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="method_repr_string"><a class="viewcode-back" href="../../../generated/odl.util.utility.method_repr_string.html#odl.util.utility.method_repr_string">[docs]</a><span class="k">def</span> <span class="nf">method_repr_string</span><span class="p">(</span><span class="n">inst_str</span><span class="p">,</span> <span class="n">meth_str</span><span class="p">,</span> <span class="n">arg_strs</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                       <span class="n">allow_mixed_seps</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+    <span class="sa">r</span><span class="sd">&quot;&quot;&quot;Return a repr string for a method that respects line width.</span>
+
+<span class="sd">    This function is useful to generate a ``repr`` string for a derived</span>
+<span class="sd">    class that is created through a method, for instance ::</span>
+
+<span class="sd">        functional.translated(x)</span>
+
+<span class="sd">    as a better way of representing ::</span>
+
+<span class="sd">        FunctionalTranslation(functional, x)</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    inst_str : str</span>
+<span class="sd">        Stringification of a class instance.</span>
+<span class="sd">    meth_str : str</span>
+<span class="sd">        Name of the method (not including the ``&#39;.&#39;``).</span>
+<span class="sd">    arg_strs : sequence of str, optional</span>
+<span class="sd">        Stringification of the arguments to the method.</span>
+<span class="sd">    allow_mixed_seps : bool, optional</span>
+<span class="sd">        If ``False`` and the argument strings do not fit on one line, use</span>
+<span class="sd">        ``&#39;,\n&#39;`` to separate all strings.</span>
+<span class="sd">        By default, a mixture of ``&#39;, &#39;`` and ``&#39;,\n&#39;`` is used to fit</span>
+<span class="sd">        as much on one line as possible.</span>
+
+<span class="sd">        In case some of the ``arg_strs`` span multiple lines, it is</span>
+<span class="sd">        usually advisable to set ``allow_mixed_seps`` to ``False`` since</span>
+<span class="sd">        the result tends to be more readable that way.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    meth_repr_str : str</span>
+<span class="sd">        Concatenation of all strings in a way that the line width</span>
+<span class="sd">        is respected.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    &gt;&gt;&gt; inst_str = &#39;MyClass&#39;</span>
+<span class="sd">    &gt;&gt;&gt; meth_str = &#39;empty&#39;</span>
+<span class="sd">    &gt;&gt;&gt; arg_strs = []</span>
+<span class="sd">    &gt;&gt;&gt; print(method_repr_string(inst_str, meth_str, arg_strs))</span>
+<span class="sd">    MyClass.empty()</span>
+<span class="sd">    &gt;&gt;&gt; inst_str = &#39;MyClass&#39;</span>
+<span class="sd">    &gt;&gt;&gt; meth_str = &#39;fromfile&#39;</span>
+<span class="sd">    &gt;&gt;&gt; arg_strs = [&quot;&#39;tmpfile.txt&#39;&quot;]</span>
+<span class="sd">    &gt;&gt;&gt; print(method_repr_string(inst_str, meth_str, arg_strs))</span>
+<span class="sd">    MyClass.fromfile(&#39;tmpfile.txt&#39;)</span>
+<span class="sd">    &gt;&gt;&gt; inst_str = &quot;MyClass(&#39;init string&#39;)&quot;</span>
+<span class="sd">    &gt;&gt;&gt; meth_str = &#39;method&#39;</span>
+<span class="sd">    &gt;&gt;&gt; arg_strs = [&#39;2.0&#39;]</span>
+<span class="sd">    &gt;&gt;&gt; print(method_repr_string(inst_str, meth_str, arg_strs))</span>
+<span class="sd">    MyClass(&#39;init string&#39;).method(2.0)</span>
+<span class="sd">    &gt;&gt;&gt; long_inst_str = (</span>
+<span class="sd">    ...     &quot;MyClass(&#39;long string that will definitely trigger a line break&#39;)&quot;</span>
+<span class="sd">    ... )</span>
+<span class="sd">    &gt;&gt;&gt; meth_str = &#39;method&#39;</span>
+<span class="sd">    &gt;&gt;&gt; long_arg1 = &quot;&#39;long argument string that should come on the next line&#39;&quot;</span>
+<span class="sd">    &gt;&gt;&gt; arg2 = &#39;param1=1&#39;</span>
+<span class="sd">    &gt;&gt;&gt; arg3 = &#39;param2=2.0&#39;</span>
+<span class="sd">    &gt;&gt;&gt; arg_strs = [long_arg1, arg2, arg3]</span>
+<span class="sd">    &gt;&gt;&gt; print(method_repr_string(long_inst_str, meth_str, arg_strs))</span>
+<span class="sd">    MyClass(</span>
+<span class="sd">        &#39;long string that will definitely trigger a line break&#39;</span>
+<span class="sd">    ).method(</span>
+<span class="sd">        &#39;long argument string that should come on the next line&#39;,</span>
+<span class="sd">        param1=1, param2=2.0</span>
+<span class="sd">    )</span>
+<span class="sd">    &gt;&gt;&gt; print(method_repr_string(long_inst_str, meth_str, arg_strs,</span>
+<span class="sd">    ...                          allow_mixed_seps=False))</span>
+<span class="sd">    MyClass(</span>
+<span class="sd">        &#39;long string that will definitely trigger a line break&#39;</span>
+<span class="sd">    ).method(</span>
+<span class="sd">        &#39;long argument string that should come on the next line&#39;,</span>
+<span class="sd">        param1=1,</span>
+<span class="sd">        param2=2.0</span>
+<span class="sd">    )</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">linewidth</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">get_printoptions</span><span class="p">()[</span><span class="s1">&#39;linewidth&#39;</span><span class="p">]</span>
+
+    <span class="c1"># Part up to the method name</span>
+    <span class="k">if</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">inst_str</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span> <span class="o">+</span> <span class="nb">len</span><span class="p">(</span><span class="n">meth_str</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span> <span class="o">&lt;=</span> <span class="n">linewidth</span> <span class="ow">or</span>
+            <span class="s1">&#39;(&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">inst_str</span><span class="p">):</span>
+        <span class="n">init_parts</span> <span class="o">=</span> <span class="p">[</span><span class="n">inst_str</span><span class="p">,</span> <span class="n">meth_str</span><span class="p">]</span>
+        <span class="c1"># Length of the line to the end of the method name</span>
+        <span class="n">meth_line_start_len</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">inst_str</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span> <span class="o">+</span> <span class="nb">len</span><span class="p">(</span><span class="n">meth_str</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="c1"># TODO(kohr-h): use `maxsplit=1` kwarg, not supported in Py 2</span>
+        <span class="n">left</span><span class="p">,</span> <span class="n">rest</span> <span class="o">=</span> <span class="n">inst_str</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;(&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="n">right</span><span class="p">,</span> <span class="n">middle</span> <span class="o">=</span> <span class="n">rest</span><span class="p">[::</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;)&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="n">middle</span><span class="p">,</span> <span class="n">right</span> <span class="o">=</span> <span class="n">middle</span><span class="p">[::</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="n">right</span><span class="p">[::</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">middle</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span> <span class="ow">and</span> <span class="n">middle</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">):</span>
+            <span class="c1"># Already on multiple lines</span>
+            <span class="n">new_inst_str</span> <span class="o">=</span> <span class="n">inst_str</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">new_inst_str</span> <span class="o">=</span> <span class="s1">&#39;(</span><span class="se">\n</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="n">left</span><span class="p">,</span> <span class="n">indent</span><span class="p">(</span><span class="n">middle</span><span class="p">)])</span> <span class="o">+</span> <span class="s1">&#39;</span><span class="se">\n</span><span class="s1">)&#39;</span> <span class="o">+</span> <span class="n">right</span>
+
+        <span class="c1"># Length of the line to the end of the method name, consisting of</span>
+        <span class="c1"># &#39;)&#39; + &#39;.&#39; + &lt;method name&gt;</span>
+        <span class="n">meth_line_start_len</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">+</span> <span class="mi">1</span> <span class="o">+</span> <span class="nb">len</span><span class="p">(</span><span class="n">meth_str</span><span class="p">)</span>
+        <span class="n">init_parts</span> <span class="o">=</span> <span class="p">[</span><span class="n">new_inst_str</span><span class="p">,</span> <span class="n">meth_str</span><span class="p">]</span>
+
+    <span class="c1"># Method call part</span>
+    <span class="n">arg_str_oneline</span> <span class="o">=</span> <span class="s1">&#39;, &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">arg_strs</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">meth_line_start_len</span> <span class="o">+</span> <span class="mi">1</span> <span class="o">+</span> <span class="nb">len</span><span class="p">(</span><span class="n">arg_str_oneline</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span> <span class="o">&lt;=</span> <span class="n">linewidth</span><span class="p">:</span>
+        <span class="n">meth_call_str</span> <span class="o">=</span> <span class="s1">&#39;(&#39;</span> <span class="o">+</span> <span class="n">arg_str_oneline</span> <span class="o">+</span> <span class="s1">&#39;)&#39;</span>
+    <span class="k">elif</span> <span class="ow">not</span> <span class="n">arg_str_oneline</span><span class="p">:</span>
+        <span class="n">meth_call_str</span> <span class="o">=</span> <span class="s1">&#39;(</span><span class="se">\n</span><span class="s1">)&#39;</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">allow_mixed_seps</span><span class="p">:</span>
+            <span class="n">arg_seps</span> <span class="o">=</span> <span class="n">_separators</span><span class="p">(</span><span class="n">arg_strs</span><span class="p">,</span> <span class="n">linewidth</span> <span class="o">-</span> <span class="mi">4</span><span class="p">)</span>  <span class="c1"># indented</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">arg_seps</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;,</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">]</span> <span class="o">*</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">arg_strs</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
+
+        <span class="n">full_arg_str</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>
+        <span class="k">for</span> <span class="n">arg_str</span><span class="p">,</span> <span class="n">sep</span> <span class="ow">in</span> <span class="n">zip_longest</span><span class="p">(</span><span class="n">arg_strs</span><span class="p">,</span> <span class="n">arg_seps</span><span class="p">,</span> <span class="n">fillvalue</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">):</span>
+            <span class="n">full_arg_str</span> <span class="o">+=</span> <span class="n">arg_str</span> <span class="o">+</span> <span class="n">sep</span>
+
+        <span class="n">meth_call_str</span> <span class="o">=</span> <span class="s1">&#39;(</span><span class="se">\n</span><span class="s1">&#39;</span> <span class="o">+</span> <span class="n">indent</span><span class="p">(</span><span class="n">full_arg_str</span><span class="p">)</span> <span class="o">+</span> <span class="s1">&#39;</span><span class="se">\n</span><span class="s1">)&#39;</span>
+
+    <span class="k">return</span> <span class="s1">&#39;.&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">init_parts</span><span class="p">)</span> <span class="o">+</span> <span class="n">meth_call_str</span></div>
+
+
+<div class="viewcode-block" id="run_from_ipython"><a class="viewcode-back" href="../../../generated/odl.util.utility.run_from_ipython.html#odl.util.utility.run_from_ipython">[docs]</a><span class="k">def</span> <span class="nf">run_from_ipython</span><span class="p">():</span>
+    <span class="sd">&quot;&quot;&quot;If the process is run from IPython.&quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="s1">&#39;__IPYTHON__&#39;</span> <span class="ow">in</span> <span class="nb">globals</span><span class="p">()</span></div>
+
+
+<div class="viewcode-block" id="pkg_supports"><a class="viewcode-back" href="../../../generated/odl.util.utility.pkg_supports.html#odl.util.utility.pkg_supports">[docs]</a><span class="k">def</span> <span class="nf">pkg_supports</span><span class="p">(</span><span class="n">feature</span><span class="p">,</span> <span class="n">pkg_version</span><span class="p">,</span> <span class="n">pkg_feat_dict</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Return bool indicating whether a package supports ``feature``.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    feature : str</span>
+<span class="sd">        Name of a potential feature of a package.</span>
+<span class="sd">    pkg_version : str</span>
+<span class="sd">        Version of the package that should be checked for presence of the</span>
+<span class="sd">        feature.</span>
+<span class="sd">    pkg_feat_dict : dict</span>
+<span class="sd">        Specification of features of a package. Each item has the</span>
+<span class="sd">        following form::</span>
+
+<span class="sd">            feature_name: version_specification</span>
+
+<span class="sd">        Here, ``feature_name`` is a string that is matched against</span>
+<span class="sd">        ``feature``, and ``version_specification`` is a string or a</span>
+<span class="sd">        sequence of strings that specifies version sets. These</span>
+<span class="sd">        specifications are the same as for ``setuptools`` requirements,</span>
+<span class="sd">        just without the package name.</span>
+<span class="sd">        A ``None`` entry signals &quot;no support in any version&quot;, i.e.,</span>
+<span class="sd">        always ``False``.</span>
+<span class="sd">        If a sequence of requirements are given, they are OR-ed together.</span>
+<span class="sd">        See ``Examples`` for details.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    supports : bool</span>
+<span class="sd">        ``True`` if ``pkg_version`` of the package in question supports</span>
+<span class="sd">        ``feature``, ``False`` otherwise.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    &gt;&gt;&gt; feat_dict = {</span>
+<span class="sd">    ...     &#39;feat1&#39;: &#39;==0.5.1&#39;,</span>
+<span class="sd">    ...     &#39;feat2&#39;: &#39;&gt;0.6, &lt;=0.9&#39;,  # both required simultaneously</span>
+<span class="sd">    ...     &#39;feat3&#39;: [&#39;&gt;0.6&#39;, &#39;&lt;=0.9&#39;],  # only one required, i.e. always True</span>
+<span class="sd">    ...     &#39;feat4&#39;: [&#39;==0.5.1&#39;, &#39;&gt;0.6, &lt;=0.9&#39;],</span>
+<span class="sd">    ...     &#39;feat5&#39;: None</span>
+<span class="sd">    ... }</span>
+<span class="sd">    &gt;&gt;&gt; pkg_supports(&#39;feat1&#39;, &#39;0.5.1&#39;, feat_dict)</span>
+<span class="sd">    True</span>
+<span class="sd">    &gt;&gt;&gt; pkg_supports(&#39;feat1&#39;, &#39;0.4&#39;, feat_dict)</span>
+<span class="sd">    False</span>
+<span class="sd">    &gt;&gt;&gt; pkg_supports(&#39;feat2&#39;, &#39;0.5.1&#39;, feat_dict)</span>
+<span class="sd">    False</span>
+<span class="sd">    &gt;&gt;&gt; pkg_supports(&#39;feat2&#39;, &#39;0.6.1&#39;, feat_dict)</span>
+<span class="sd">    True</span>
+<span class="sd">    &gt;&gt;&gt; pkg_supports(&#39;feat2&#39;, &#39;0.9&#39;, feat_dict)</span>
+<span class="sd">    True</span>
+<span class="sd">    &gt;&gt;&gt; pkg_supports(&#39;feat2&#39;, &#39;1.0&#39;, feat_dict)</span>
+<span class="sd">    False</span>
+<span class="sd">    &gt;&gt;&gt; pkg_supports(&#39;feat3&#39;, &#39;0.4&#39;, feat_dict)</span>
+<span class="sd">    True</span>
+<span class="sd">    &gt;&gt;&gt; pkg_supports(&#39;feat3&#39;, &#39;1.0&#39;, feat_dict)</span>
+<span class="sd">    True</span>
+<span class="sd">    &gt;&gt;&gt; pkg_supports(&#39;feat4&#39;, &#39;0.5.1&#39;, feat_dict)</span>
+<span class="sd">    True</span>
+<span class="sd">    &gt;&gt;&gt; pkg_supports(&#39;feat4&#39;, &#39;0.6&#39;, feat_dict)</span>
+<span class="sd">    False</span>
+<span class="sd">    &gt;&gt;&gt; pkg_supports(&#39;feat4&#39;, &#39;0.6.1&#39;, feat_dict)</span>
+<span class="sd">    True</span>
+<span class="sd">    &gt;&gt;&gt; pkg_supports(&#39;feat4&#39;, &#39;1.0&#39;, feat_dict)</span>
+<span class="sd">    False</span>
+<span class="sd">    &gt;&gt;&gt; pkg_supports(&#39;feat5&#39;, &#39;0.6.1&#39;, feat_dict)</span>
+<span class="sd">    False</span>
+<span class="sd">    &gt;&gt;&gt; pkg_supports(&#39;feat5&#39;, &#39;1.0&#39;, feat_dict)</span>
+<span class="sd">    False</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="kn">from</span> <span class="nn">pkg_resources</span> <span class="kn">import</span> <span class="n">parse_requirements</span>
+
+    <span class="n">feature</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">feature</span><span class="p">)</span>
+    <span class="n">pkg_version</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">pkg_version</span><span class="p">)</span>
+    <span class="n">supp_versions</span> <span class="o">=</span> <span class="n">pkg_feat_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">feature</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">supp_versions</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">False</span>
+
+    <span class="c1"># Make sequence from single string</span>
+    <span class="k">if</span> <span class="n">is_string</span><span class="p">(</span><span class="n">supp_versions</span><span class="p">):</span>
+        <span class="n">supp_versions</span> <span class="o">=</span> <span class="p">[</span><span class="n">supp_versions</span><span class="p">]</span>
+
+    <span class="c1"># Make valid package requirements</span>
+    <span class="n">ver_specs</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;pkg&#39;</span> <span class="o">+</span> <span class="n">supp_ver</span> <span class="k">for</span> <span class="n">supp_ver</span> <span class="ow">in</span> <span class="n">supp_versions</span><span class="p">]</span>
+    <span class="c1"># Each parse_requirements list contains only one entry since we specify</span>
+    <span class="c1"># only one package</span>
+    <span class="n">ver_reqs</span> <span class="o">=</span> <span class="p">[</span><span class="nb">list</span><span class="p">(</span><span class="n">parse_requirements</span><span class="p">(</span><span class="n">ver_spec</span><span class="p">))[</span><span class="mi">0</span><span class="p">]</span>
+                <span class="k">for</span> <span class="n">ver_spec</span> <span class="ow">in</span> <span class="n">ver_specs</span><span class="p">]</span>
+
+    <span class="c1"># If one of the requirements in the list is met, return True</span>
+    <span class="k">for</span> <span class="n">req</span> <span class="ow">in</span> <span class="n">ver_reqs</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">req</span><span class="o">.</span><span class="n">specifier</span><span class="o">.</span><span class="n">contains</span><span class="p">(</span><span class="n">pkg_version</span><span class="p">,</span> <span class="n">prereleases</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+            <span class="k">return</span> <span class="kc">True</span>
+
+    <span class="c1"># No match</span>
+    <span class="k">return</span> <span class="kc">False</span></div>
+
+
+<div class="viewcode-block" id="npy_random_seed"><a class="viewcode-back" href="../../../generated/odl.util.utility.npy_random_seed.html#odl.util.utility.npy_random_seed">[docs]</a><span class="nd">@contextmanager</span>
+<span class="k">def</span> <span class="nf">npy_random_seed</span><span class="p">(</span><span class="n">seed</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Context manager to temporarily set the NumPy random generator seed.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    seed : int or None</span>
+<span class="sd">        Seed value for the random number generator.</span>
+<span class="sd">        ``None`` is interpreted as keeping the current seed.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    Use this to make drawing pseudo-random numbers repeatable:</span>
+
+<span class="sd">    &gt;&gt;&gt; with npy_random_seed(42):</span>
+<span class="sd">    ...     rand_int = np.random.randint(10)</span>
+<span class="sd">    &gt;&gt;&gt; with npy_random_seed(42):</span>
+<span class="sd">    ...     same_rand_int = np.random.randint(10)</span>
+<span class="sd">    &gt;&gt;&gt; rand_int == same_rand_int</span>
+<span class="sd">    True</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">do_seed</span> <span class="o">=</span> <span class="n">seed</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+    <span class="n">orig_rng_state</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">do_seed</span><span class="p">:</span>
+            <span class="n">orig_rng_state</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">get_state</span><span class="p">()</span>
+            <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">seed</span><span class="p">(</span><span class="n">seed</span><span class="p">)</span>
+        <span class="k">yield</span>
+
+    <span class="k">finally</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">do_seed</span> <span class="ow">and</span> <span class="n">orig_rng_state</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">set_state</span><span class="p">(</span><span class="n">orig_rng_state</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="unique"><a class="viewcode-back" href="../../../generated/odl.util.utility.unique.html#odl.util.utility.unique">[docs]</a><span class="k">def</span> <span class="nf">unique</span><span class="p">(</span><span class="n">seq</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Return the unique values in a sequence.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    seq : sequence</span>
+<span class="sd">        Sequence with (possibly duplicate) elements.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    unique : list</span>
+<span class="sd">        Unique elements of ``seq``.</span>
+<span class="sd">        Order is guaranteed to be the same as in seq.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    Determine unique elements in list</span>
+
+<span class="sd">    &gt;&gt;&gt; unique([1, 2, 3, 3])</span>
+<span class="sd">    [1, 2, 3]</span>
+
+<span class="sd">    &gt;&gt;&gt; unique((1, &#39;str&#39;, &#39;str&#39;))</span>
+<span class="sd">    [1, &#39;str&#39;]</span>
+
+<span class="sd">    The utility also works with unhashable types:</span>
+
+<span class="sd">    &gt;&gt;&gt; unique((1, [1], [1]))</span>
+<span class="sd">    [1, [1]]</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># First check if all elements are hashable, if so O(n) can be done</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="k">return</span> <span class="nb">list</span><span class="p">(</span><span class="n">OrderedDict</span><span class="o">.</span><span class="n">fromkeys</span><span class="p">(</span><span class="n">seq</span><span class="p">))</span>
+    <span class="k">except</span> <span class="ne">TypeError</span><span class="p">:</span>
+        <span class="c1"># Non-hashable, resort to O(n^2)</span>
+        <span class="n">unique_values</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">seq</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">i</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">unique_values</span><span class="p">:</span>
+                <span class="n">unique_values</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">unique_values</span></div>
+
+
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s1">&#39;__main__&#39;</span><span class="p">:</span>
+    <span class="kn">from</span> <span class="nn">odl.util.testutils</span> <span class="kn">import</span> <span class="n">run_doctests</span>
+    <span class="n">run_doctests</span><span class="p">()</span>
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &#169; Copyright 2014-2020 The ODL Contributors.
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

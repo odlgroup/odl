@@ -1,0 +1,58 @@
+﻿DiscretizedSpaceElement
+=============================================
+
+.. currentmodule:: odl.discr.discr_space
+
+.. autoclass:: DiscretizedSpaceElement
+   :show-inheritance:
+   
+   
+   .. automethod:: __init__
+   
+      
+   
+   .. HACK -- the point here is that we don't want this to appear in the output, but the autosummary should still generate the pages.
+      .. autosummary::
+         :toctree:
+      
+         DiscretizedSpaceElement.__eq__
+         DiscretizedSpaceElement.__getitem__
+         DiscretizedSpaceElement.__setitem__
+         DiscretizedSpaceElement.asarray
+         DiscretizedSpaceElement.assign
+         DiscretizedSpaceElement.astype
+         DiscretizedSpaceElement.conj
+         DiscretizedSpaceElement.copy
+         DiscretizedSpaceElement.dist
+         DiscretizedSpaceElement.divide
+         DiscretizedSpaceElement.inner
+         DiscretizedSpaceElement.lincomb
+         DiscretizedSpaceElement.multiply
+         DiscretizedSpaceElement.norm
+         DiscretizedSpaceElement.set_zero
+         DiscretizedSpaceElement.show
+   
+
+    
+   .. HACK -- the point here is that we don't want this to appear in the output, but the autosummary should still generate the pages.
+      .. autosummary::
+         :toctree:
+      
+         DiscretizedSpaceElement.T
+         DiscretizedSpaceElement.cell_sides
+         DiscretizedSpaceElement.cell_volume
+         DiscretizedSpaceElement.data
+         DiscretizedSpaceElement.dtype
+         DiscretizedSpaceElement.imag
+         DiscretizedSpaceElement.impl
+         DiscretizedSpaceElement.itemsize
+         DiscretizedSpaceElement.nbytes
+         DiscretizedSpaceElement.ndim
+         DiscretizedSpaceElement.real
+         DiscretizedSpaceElement.shape
+         DiscretizedSpaceElement.size
+         DiscretizedSpaceElement.space
+         DiscretizedSpaceElement.tensor
+         DiscretizedSpaceElement.ufuncs
+   
+   

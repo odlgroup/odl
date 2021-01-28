@@ -1,0 +1,8 @@
+:orphan:
+
+ProductSpaceOperator.norm
+=================================================
+
+.. currentmodule:: odl.operator.pspace_ops
+
+.. automethod:: ProductSpaceOperator.norm

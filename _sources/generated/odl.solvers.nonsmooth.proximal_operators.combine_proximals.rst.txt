@@ -1,0 +1,6 @@
+﻿combine_proximals
+==========================================================
+
+.. currentmodule:: odl.solvers.nonsmooth.proximal_operators
+
+.. autofunction:: combine_proximals

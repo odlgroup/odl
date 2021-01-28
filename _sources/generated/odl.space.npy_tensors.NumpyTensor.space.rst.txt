@@ -1,0 +1,6 @@
+NumpyTensor.space
+=======================================
+
+.. currentmodule:: odl.space.npy_tensors
+
+.. autoproperty:: NumpyTensor.space

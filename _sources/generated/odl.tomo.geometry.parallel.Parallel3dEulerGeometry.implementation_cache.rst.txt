@@ -1,0 +1,6 @@
+Parallel3dEulerGeometry.implementation_cache
+=======================================================================
+
+.. currentmodule:: odl.tomo.geometry.parallel
+
+.. autoproperty:: Parallel3dEulerGeometry.implementation_cache

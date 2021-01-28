@@ -1,0 +1,8 @@
+:orphan:
+
+IntervalProd.__eq__
+==================================
+
+.. currentmodule:: odl.set.domain
+
+.. automethod:: IntervalProd.__eq__

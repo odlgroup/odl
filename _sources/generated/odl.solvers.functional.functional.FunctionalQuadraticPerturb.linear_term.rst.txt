@@ -1,0 +1,6 @@
+FunctionalQuadraticPerturb.linear_term
+========================================================================
+
+.. currentmodule:: odl.solvers.functional.functional
+
+.. autoproperty:: FunctionalQuadraticPerturb.linear_term

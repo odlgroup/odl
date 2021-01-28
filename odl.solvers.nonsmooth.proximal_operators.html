@@ -1,0 +1,366 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>proximal_operators &mdash; odl 1.0.0.dev0 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="combine_proximals" href="generated/odl.solvers.nonsmooth.proximal_operators.combine_proximals.html" />
+    <link rel="prev" title="proximal_gradient" href="generated/odl.solvers.nonsmooth.proximal_gradient_solvers.proximal_gradient.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="index.html" class="icon icon-home"> odl
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                1.0.0.dev0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Getting Started</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="getting_started/getting_started.html">Getting Started</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Working with ODL</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="guide/guide.html">User’s guide – selected topics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="math/math.html">Mathematical Background</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Developer zone</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="dev/dev.html">Contributing to ODL</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Useful facts</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="guide/faq.html">Frequently asked questions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="guide/glossary.html">Glossary</a></li>
+<li class="toctree-l1"><a class="reference internal" href="release_notes.html">Release Notes</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="refs.html">References</a></li>
+</ul>
+<p class="caption"><span class="caption-text">API Reference</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="odl.html">odl</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="odl.contrib.html">contrib</a></li>
+<li class="toctree-l2"><a class="reference internal" href="odl.deform.html">deform</a></li>
+<li class="toctree-l2"><a class="reference internal" href="odl.diagnostics.html">diagnostics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="odl.discr.html">discr</a></li>
+<li class="toctree-l2"><a class="reference internal" href="odl.operator.html">operator</a></li>
+<li class="toctree-l2"><a class="reference internal" href="odl.phantom.html">phantom</a></li>
+<li class="toctree-l2"><a class="reference internal" href="odl.set.html">set</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="odl.solvers.html">solvers</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="odl.solvers.functional.html">functional</a></li>
+<li class="toctree-l3"><a class="reference internal" href="odl.solvers.iterative.html">iterative</a></li>
+<li class="toctree-l3 current"><a class="reference internal" href="odl.solvers.nonsmooth.html">nonsmooth</a><ul class="current">
+<li class="toctree-l4"><a class="reference internal" href="odl.solvers.nonsmooth.admm.html">admm</a></li>
+<li class="toctree-l4"><a class="reference internal" href="odl.solvers.nonsmooth.alternating_dual_updates.html">alternating_dual_updates</a></li>
+<li class="toctree-l4"><a class="reference internal" href="odl.solvers.nonsmooth.difference_convex.html">difference_convex</a></li>
+<li class="toctree-l4"><a class="reference internal" href="odl.solvers.nonsmooth.douglas_rachford.html">douglas_rachford</a></li>
+<li class="toctree-l4"><a class="reference internal" href="odl.solvers.nonsmooth.forward_backward.html">forward_backward</a></li>
+<li class="toctree-l4"><a class="reference internal" href="odl.solvers.nonsmooth.primal_dual_hybrid_gradient.html">primal_dual_hybrid_gradient</a></li>
+<li class="toctree-l4"><a class="reference internal" href="odl.solvers.nonsmooth.proximal_gradient_solvers.html">proximal_gradient_solvers</a></li>
+<li class="toctree-l4 current"><a class="current reference internal" href="#">proximal_operators</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="odl.solvers.smooth.html">smooth</a></li>
+<li class="toctree-l3"><a class="reference internal" href="odl.solvers.util.html">util</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="odl.space.html">space</a></li>
+<li class="toctree-l2"><a class="reference internal" href="odl.tomo.html">tomo</a></li>
+<li class="toctree-l2"><a class="reference internal" href="odl.trafos.html">trafos</a></li>
+<li class="toctree-l2"><a class="reference internal" href="odl.ufunc_ops.html">ufunc_ops</a></li>
+<li class="toctree-l2"><a class="reference internal" href="odl.util.html">util</a></li>
+</ul>
+</li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">odl</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="odl.html">odl</a> &raquo;</li>
+        
+          <li><a href="odl.solvers.html">solvers</a> &raquo;</li>
+        
+          <li><a href="odl.solvers.nonsmooth.html">nonsmooth</a> &raquo;</li>
+        
+      <li>proximal_operators</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            <a href="_sources/odl.solvers.nonsmooth.proximal_operators.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="proximal-operators">
+<h1>proximal_operators<a class="headerlink" href="#proximal-operators" title="Permalink to this headline">¶</a></h1>
+<p>Factory functions for creating proximal operators.</p>
+<p>Functions with <code class="docutils literal notranslate"><span class="pre">convex_conj</span></code> mean the proximal of the convex conjugate and
+are provided for convenience.</p>
+<p>For more details see <a class="reference internal" href="math/solvers/nonsmooth/proximal_operators.html#proximal-operators"><span class="std std-ref">Proximal Operators</span></a> and references therein. For
+more details on proximal operators including how to evaluate the proximal
+operator of a variety of functions see [PB2014].</p>
+<div class="section" id="references">
+<h2>References<a class="headerlink" href="#references" title="Permalink to this headline">¶</a></h2>
+<p>[PB2014] Parikh, N, and Boyd, S. <em>Proximal Algorithms</em>.
+Foundations and Trends in Optimization, 1 (2014), pp 127-239.</p>
+<p class="rubric">Functions</p>
+<table class="longtable docutils align-default">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="generated/odl.solvers.nonsmooth.proximal_operators.combine_proximals.html#odl.solvers.nonsmooth.proximal_operators.combine_proximals" title="odl.solvers.nonsmooth.proximal_operators.combine_proximals"><code class="xref py py-obj docutils literal notranslate"><span class="pre">combine_proximals</span></code></a>(\*factory_list)</p></td>
+<td><p>Combine proximal operators into a diagonal product space operator.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="generated/odl.solvers.nonsmooth.proximal_operators.proj_l1.html#odl.solvers.nonsmooth.proximal_operators.proj_l1" title="odl.solvers.nonsmooth.proximal_operators.proj_l1"><code class="xref py py-obj docutils literal notranslate"><span class="pre">proj_l1</span></code></a>(x[, radius, out])</p></td>
+<td><p>Projection onto l1-ball.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="generated/odl.solvers.nonsmooth.proximal_operators.proj_simplex.html#odl.solvers.nonsmooth.proximal_operators.proj_simplex" title="odl.solvers.nonsmooth.proximal_operators.proj_simplex"><code class="xref py py-obj docutils literal notranslate"><span class="pre">proj_simplex</span></code></a>(x[, diameter, out])</p></td>
+<td><p>Projection onto simplex.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="generated/odl.solvers.nonsmooth.proximal_operators.proximal_arg_scaling.html#odl.solvers.nonsmooth.proximal_operators.proximal_arg_scaling" title="odl.solvers.nonsmooth.proximal_operators.proximal_arg_scaling"><code class="xref py py-obj docutils literal notranslate"><span class="pre">proximal_arg_scaling</span></code></a>(prox_factory, scaling)</p></td>
+<td><p>Calculate the proximal of function F(x * scaling).</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="generated/odl.solvers.nonsmooth.proximal_operators.proximal_box_constraint.html#odl.solvers.nonsmooth.proximal_operators.proximal_box_constraint" title="odl.solvers.nonsmooth.proximal_operators.proximal_box_constraint"><code class="xref py py-obj docutils literal notranslate"><span class="pre">proximal_box_constraint</span></code></a>(space[, lower, upper])</p></td>
+<td><p>Proximal operator factory for <code class="docutils literal notranslate"><span class="pre">G(x)</span> <span class="pre">=</span> <span class="pre">ind(a</span> <span class="pre">&lt;=</span> <span class="pre">x</span> <span class="pre">&lt;=</span> <span class="pre">b)</span></code>.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="generated/odl.solvers.nonsmooth.proximal_operators.proximal_composition.html#odl.solvers.nonsmooth.proximal_operators.proximal_composition" title="odl.solvers.nonsmooth.proximal_operators.proximal_composition"><code class="xref py py-obj docutils literal notranslate"><span class="pre">proximal_composition</span></code></a>(proximal, operator, mu)</p></td>
+<td><p>Proximal operator factory of functional composed with unitary operator.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="generated/odl.solvers.nonsmooth.proximal_operators.proximal_const_func.html#odl.solvers.nonsmooth.proximal_operators.proximal_const_func" title="odl.solvers.nonsmooth.proximal_operators.proximal_const_func"><code class="xref py py-obj docutils literal notranslate"><span class="pre">proximal_const_func</span></code></a>(space)</p></td>
+<td><p>Proximal operator factory of the constant functional.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="generated/odl.solvers.nonsmooth.proximal_operators.proximal_convex_conj.html#odl.solvers.nonsmooth.proximal_operators.proximal_convex_conj" title="odl.solvers.nonsmooth.proximal_operators.proximal_convex_conj"><code class="xref py py-obj docutils literal notranslate"><span class="pre">proximal_convex_conj</span></code></a>(prox_factory)</p></td>
+<td><p>Calculate the proximal of the dual using Moreau decomposition.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="generated/odl.solvers.nonsmooth.proximal_operators.proximal_convex_conj_kl.html#odl.solvers.nonsmooth.proximal_operators.proximal_convex_conj_kl" title="odl.solvers.nonsmooth.proximal_operators.proximal_convex_conj_kl"><code class="xref py py-obj docutils literal notranslate"><span class="pre">proximal_convex_conj_kl</span></code></a>(space[, lam, g])</p></td>
+<td><p>Proximal operator factory of the convex conjugate of the KL divergence.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="generated/odl.solvers.nonsmooth.proximal_operators.proximal_convex_conj_kl_cross_entropy.html#odl.solvers.nonsmooth.proximal_operators.proximal_convex_conj_kl_cross_entropy" title="odl.solvers.nonsmooth.proximal_operators.proximal_convex_conj_kl_cross_entropy"><code class="xref py py-obj docutils literal notranslate"><span class="pre">proximal_convex_conj_kl_cross_entropy</span></code></a>(space)</p></td>
+<td><p>Proximal factory of the convex conj of cross entropy KL divergence.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="generated/odl.solvers.nonsmooth.proximal_operators.proximal_convex_conj_l1.html#odl.solvers.nonsmooth.proximal_operators.proximal_convex_conj_l1" title="odl.solvers.nonsmooth.proximal_operators.proximal_convex_conj_l1"><code class="xref py py-obj docutils literal notranslate"><span class="pre">proximal_convex_conj_l1</span></code></a>(space[, lam, g])</p></td>
+<td><p>Proximal operator factory of the L1 norm/distance convex conjugate.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="generated/odl.solvers.nonsmooth.proximal_operators.proximal_convex_conj_l1_l2.html#odl.solvers.nonsmooth.proximal_operators.proximal_convex_conj_l1_l2" title="odl.solvers.nonsmooth.proximal_operators.proximal_convex_conj_l1_l2"><code class="xref py py-obj docutils literal notranslate"><span class="pre">proximal_convex_conj_l1_l2</span></code></a>(space[, lam, g])</p></td>
+<td><p>Proximal operator factory of the L1-L2 norm/distance convex conjugate.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="generated/odl.solvers.nonsmooth.proximal_operators.proximal_convex_conj_l2.html#odl.solvers.nonsmooth.proximal_operators.proximal_convex_conj_l2" title="odl.solvers.nonsmooth.proximal_operators.proximal_convex_conj_l2"><code class="xref py py-obj docutils literal notranslate"><span class="pre">proximal_convex_conj_l2</span></code></a>(space[, lam, g])</p></td>
+<td><p>Proximal operator factory of the convex conj of the l2-norm/distance.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="generated/odl.solvers.nonsmooth.proximal_operators.proximal_convex_conj_l2_squared.html#odl.solvers.nonsmooth.proximal_operators.proximal_convex_conj_l2_squared" title="odl.solvers.nonsmooth.proximal_operators.proximal_convex_conj_l2_squared"><code class="xref py py-obj docutils literal notranslate"><span class="pre">proximal_convex_conj_l2_squared</span></code></a>(space[, lam, g])</p></td>
+<td><p>Proximal operator factory of the convex conj of the squared l2-dist</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="generated/odl.solvers.nonsmooth.proximal_operators.proximal_convex_conj_linfty.html#odl.solvers.nonsmooth.proximal_operators.proximal_convex_conj_linfty" title="odl.solvers.nonsmooth.proximal_operators.proximal_convex_conj_linfty"><code class="xref py py-obj docutils literal notranslate"><span class="pre">proximal_convex_conj_linfty</span></code></a>(space)</p></td>
+<td><p>Proximal operator factory of the Linfty norm/distance convex conjugate.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="generated/odl.solvers.nonsmooth.proximal_operators.proximal_huber.html#odl.solvers.nonsmooth.proximal_operators.proximal_huber" title="odl.solvers.nonsmooth.proximal_operators.proximal_huber"><code class="xref py py-obj docutils literal notranslate"><span class="pre">proximal_huber</span></code></a>(space, gamma)</p></td>
+<td><p>Proximal factory of the Huber norm.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="generated/odl.solvers.nonsmooth.proximal_operators.proximal_l1.html#odl.solvers.nonsmooth.proximal_operators.proximal_l1" title="odl.solvers.nonsmooth.proximal_operators.proximal_l1"><code class="xref py py-obj docutils literal notranslate"><span class="pre">proximal_l1</span></code></a>(space[, lam, g])</p></td>
+<td><p>Proximal operator factory of the L1 norm/distance.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="generated/odl.solvers.nonsmooth.proximal_operators.proximal_l1_l2.html#odl.solvers.nonsmooth.proximal_operators.proximal_l1_l2" title="odl.solvers.nonsmooth.proximal_operators.proximal_l1_l2"><code class="xref py py-obj docutils literal notranslate"><span class="pre">proximal_l1_l2</span></code></a>(space[, lam, g])</p></td>
+<td><p>Proximal operator factory of the group-L1-L2 norm/distance.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="generated/odl.solvers.nonsmooth.proximal_operators.proximal_l2.html#odl.solvers.nonsmooth.proximal_operators.proximal_l2" title="odl.solvers.nonsmooth.proximal_operators.proximal_l2"><code class="xref py py-obj docutils literal notranslate"><span class="pre">proximal_l2</span></code></a>(space[, lam, g])</p></td>
+<td><p>Proximal operator factory of the l2-norm/distance.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="generated/odl.solvers.nonsmooth.proximal_operators.proximal_l2_squared.html#odl.solvers.nonsmooth.proximal_operators.proximal_l2_squared" title="odl.solvers.nonsmooth.proximal_operators.proximal_l2_squared"><code class="xref py py-obj docutils literal notranslate"><span class="pre">proximal_l2_squared</span></code></a>(space[, lam, g])</p></td>
+<td><p>Proximal operator factory of the squared l2-norm/distance.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="generated/odl.solvers.nonsmooth.proximal_operators.proximal_linfty.html#odl.solvers.nonsmooth.proximal_operators.proximal_linfty" title="odl.solvers.nonsmooth.proximal_operators.proximal_linfty"><code class="xref py py-obj docutils literal notranslate"><span class="pre">proximal_linfty</span></code></a>(space)</p></td>
+<td><p>Proximal operator factory of the <code class="docutils literal notranslate"><span class="pre">l_\infty</span></code>-norm.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="generated/odl.solvers.nonsmooth.proximal_operators.proximal_nonnegativity.html#odl.solvers.nonsmooth.proximal_operators.proximal_nonnegativity" title="odl.solvers.nonsmooth.proximal_operators.proximal_nonnegativity"><code class="xref py py-obj docutils literal notranslate"><span class="pre">proximal_nonnegativity</span></code></a>(space)</p></td>
+<td><p>Function to create the proximal operator of <code class="docutils literal notranslate"><span class="pre">G(x)</span> <span class="pre">=</span> <span class="pre">ind(x</span> <span class="pre">&gt;=</span> <span class="pre">0)</span></code>.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="generated/odl.solvers.nonsmooth.proximal_operators.proximal_quadratic_perturbation.html#odl.solvers.nonsmooth.proximal_operators.proximal_quadratic_perturbation" title="odl.solvers.nonsmooth.proximal_operators.proximal_quadratic_perturbation"><code class="xref py py-obj docutils literal notranslate"><span class="pre">proximal_quadratic_perturbation</span></code></a>(prox_factory, a)</p></td>
+<td><p>Calculate the proximal of function F(x) + a * |x|^2 + &lt;u,x&gt;.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="generated/odl.solvers.nonsmooth.proximal_operators.proximal_translation.html#odl.solvers.nonsmooth.proximal_operators.proximal_translation" title="odl.solvers.nonsmooth.proximal_operators.proximal_translation"><code class="xref py py-obj docutils literal notranslate"><span class="pre">proximal_translation</span></code></a>(prox_factory, y)</p></td>
+<td><p>Calculate the proximal of the translated function F(x - y).</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+        <a href="generated/odl.solvers.nonsmooth.proximal_operators.combine_proximals.html" class="btn btn-neutral float-right" title="combine_proximals" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="generated/odl.solvers.nonsmooth.proximal_gradient_solvers.proximal_gradient.html" class="btn btn-neutral float-left" title="proximal_gradient" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &#169; Copyright 2014-2020 The ODL Contributors.
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

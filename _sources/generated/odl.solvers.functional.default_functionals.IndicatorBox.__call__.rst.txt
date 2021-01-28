@@ -1,0 +1,8 @@
+:orphan:
+
+IndicatorBox.__call__
+================================================================
+
+.. currentmodule:: odl.solvers.functional.default_functionals
+
+.. automethod:: IndicatorBox.__call__

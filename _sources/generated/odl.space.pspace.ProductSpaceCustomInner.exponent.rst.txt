@@ -1,0 +1,6 @@
+ProductSpaceCustomInner.exponent
+=================================================
+
+.. currentmodule:: odl.space.pspace
+
+.. autoproperty:: ProductSpaceCustomInner.exponent

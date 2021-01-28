@@ -1,0 +1,6 @@
+L1Norm.gradient
+==========================================================
+
+.. currentmodule:: odl.solvers.functional.default_functionals
+
+.. autoproperty:: L1Norm.gradient

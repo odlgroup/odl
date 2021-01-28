@@ -1,0 +1,31 @@
+﻿SkImageImpl
+===========================================
+
+.. currentmodule:: odl.tomo.backends.skimage_radon
+
+.. autoclass:: SkImageImpl
+   :show-inheritance:
+   
+   
+   .. automethod:: __init__
+   
+      
+   
+   .. HACK -- the point here is that we don't want this to appear in the output, but the autosummary should still generate the pages.
+      .. autosummary::
+         :toctree:
+      
+         SkImageImpl.__eq__
+         SkImageImpl.call_backward
+         SkImageImpl.call_forward
+   
+
+    
+   .. HACK -- the point here is that we don't want this to appear in the output, but the autosummary should still generate the pages.
+      .. autosummary::
+         :toctree:
+      
+         SkImageImpl.proj_space
+         SkImageImpl.vol_space
+   
+   

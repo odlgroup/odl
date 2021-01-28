@@ -1,0 +1,6 @@
+﻿OpDomainError
+===================================
+
+.. currentmodule:: odl.operator.operator
+
+.. autoexception:: OpDomainError

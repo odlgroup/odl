@@ -1,0 +1,8 @@
+:orphan:
+
+FiniteSet.__contains__
+===================================
+
+.. currentmodule:: odl.set.sets
+
+.. automethod:: FiniteSet.__contains__

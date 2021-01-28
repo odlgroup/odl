@@ -1,0 +1,291 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>Mathematical Background &mdash; odl 1.0.0.dev0 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Linear Spaces" href="linear_spaces.html" />
+    <link rel="prev" title="Primal-Dual Hybrid Gradient algorithm" href="../guide/pdhg_guide.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../index.html" class="icon icon-home"> odl
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                1.0.0.dev0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Getting Started</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../getting_started/getting_started.html">Getting Started</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Working with ODL</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../guide/guide.html">User’s guide – selected topics</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Mathematical Background</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="linear_spaces.html">Linear Spaces</a></li>
+<li class="toctree-l2"><a class="reference internal" href="discretization.html">Discretizations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="resizing_ops.html">Resizing Operators</a></li>
+<li class="toctree-l2"><a class="reference internal" href="derivatives_guide.html">On the different notions of derivative</a></li>
+<li class="toctree-l2"><a class="reference internal" href="trafos/index.html">Transformations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="solvers/solvers.html">Solvers</a></li>
+</ul>
+</li>
+</ul>
+<p class="caption"><span class="caption-text">Developer zone</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../dev/dev.html">Contributing to ODL</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Useful facts</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../guide/faq.html">Frequently asked questions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../guide/glossary.html">Glossary</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../release_notes.html">Release Notes</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../refs.html">References</a></li>
+</ul>
+<p class="caption"><span class="caption-text">API Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../odl.html">odl</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">odl</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+      <li>Mathematical Background</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            <a href="../_sources/math/math.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="mathematical-background">
+<h1>Mathematical Background<a class="headerlink" href="#mathematical-background" title="Permalink to this headline">¶</a></h1>
+<p>This section explains the mathematical concepts on which ODL is built.</p>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="linear_spaces.html">Linear Spaces</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="linear_spaces.html#definition-and-basic-properties">Definition and basic properties</a></li>
+<li class="toctree-l2"><a class="reference internal" href="linear_spaces.html#metric-spaces">Metric spaces</a></li>
+<li class="toctree-l2"><a class="reference internal" href="linear_spaces.html#normed-spaces">Normed spaces</a></li>
+<li class="toctree-l2"><a class="reference internal" href="linear_spaces.html#inner-product-spaces">Inner product spaces</a></li>
+<li class="toctree-l2"><a class="reference internal" href="linear_spaces.html#cartesian-spaces">Cartesian spaces</a></li>
+<li class="toctree-l2"><a class="reference internal" href="linear_spaces.html#weighted-cartesian-spaces">Weighted Cartesian spaces</a></li>
+<li class="toctree-l2"><a class="reference internal" href="linear_spaces.html#useful-wikipedia-articles">Useful Wikipedia articles</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="discretization.html">Discretizations</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="discretization.html#mathematical-background">Mathematical background</a></li>
+<li class="toctree-l2"><a class="reference internal" href="discretization.html#example">Example</a></li>
+<li class="toctree-l2"><a class="reference internal" href="discretization.html#useful-wikipedia-articles">Useful Wikipedia articles</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="resizing_ops.html">Resizing Operators</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="resizing_ops.html#introduction">Introduction</a></li>
+<li class="toctree-l2"><a class="reference internal" href="resizing_ops.html#basic-setting">Basic setting</a></li>
+<li class="toctree-l2"><a class="reference internal" href="resizing_ops.html#restriction-operator">Restriction operator</a></li>
+<li class="toctree-l2"><a class="reference internal" href="resizing_ops.html#extension-operators">Extension operators</a></li>
+<li class="toctree-l2"><a class="reference internal" href="resizing_ops.html#generalization-to-arbitrary-dimension">Generalization to arbitrary dimension</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="derivatives_guide.html">On the different notions of derivative</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="derivatives_guide.html#derivative">Derivative</a></li>
+<li class="toctree-l2"><a class="reference internal" href="derivatives_guide.html#gradient">Gradient</a></li>
+<li class="toctree-l2"><a class="reference internal" href="derivatives_guide.html#hessian">Hessian</a></li>
+<li class="toctree-l2"><a class="reference internal" href="derivatives_guide.html#spatial-gradient">Spatial Gradient</a></li>
+<li class="toctree-l2"><a class="reference internal" href="derivatives_guide.html#subgradient">Subgradient</a></li>
+<li class="toctree-l2"><a class="reference internal" href="derivatives_guide.html#notes-on-complex-spaces">Notes on complex spaces</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="trafos/index.html">Transformations</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="trafos/fourier_transform.html">Fourier Transform</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="solvers/solvers.html">Solvers</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="solvers/nonsmooth/pdhg.html">Primal-Dual Hybrid Gradient Algorithm (PDHG)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="solvers/nonsmooth/proximal_operators.html">Proximal Operators</a></li>
+</ul>
+</li>
+</ul>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+        <a href="linear_spaces.html" class="btn btn-neutral float-right" title="Linear Spaces" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="../guide/pdhg_guide.html" class="btn btn-neutral float-left" title="Primal-Dual Hybrid Gradient algorithm" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &#169; Copyright 2014-2020 The ODL Contributors.
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

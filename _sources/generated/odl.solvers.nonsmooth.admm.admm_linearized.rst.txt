@@ -1,0 +1,6 @@
+﻿admm_linearized
+==========================================
+
+.. currentmodule:: odl.solvers.nonsmooth.admm
+
+.. autofunction:: admm_linearized

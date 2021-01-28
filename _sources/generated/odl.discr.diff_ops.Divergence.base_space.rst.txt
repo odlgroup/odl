@@ -1,0 +1,6 @@
+Divergence.base_space
+========================================
+
+.. currentmodule:: odl.discr.diff_ops
+
+.. autoproperty:: Divergence.base_space

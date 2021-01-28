@@ -1,0 +1,8 @@
+:orphan:
+
+FunctionalSum.__call__
+========================================================
+
+.. currentmodule:: odl.solvers.functional.functional
+
+.. automethod:: FunctionalSum.__call__

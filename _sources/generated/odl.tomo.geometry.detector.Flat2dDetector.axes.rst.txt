@@ -1,0 +1,6 @@
+Flat2dDetector.axes
+==============================================
+
+.. currentmodule:: odl.tomo.geometry.detector
+
+.. autoproperty:: Flat2dDetector.axes

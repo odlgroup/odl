@@ -1,0 +1,17 @@
+operator
+========
+
+Standardized tests for `Operator`'s.
+
+.. currentmodule:: odl.diagnostics.operator
+
+
+
+.. rubric:: Classes
+
+.. autosummary::
+   :toctree: generated/
+
+   ~odl.diagnostics.operator.OperatorTest
+
+

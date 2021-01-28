@@ -1,0 +1,6 @@
+Divergence.range
+===================================
+
+.. currentmodule:: odl.discr.diff_ops
+
+.. autoproperty:: Divergence.range

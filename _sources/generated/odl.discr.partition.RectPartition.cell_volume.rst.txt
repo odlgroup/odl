@@ -1,0 +1,6 @@
+RectPartition.cell_volume
+=============================================
+
+.. currentmodule:: odl.discr.partition
+
+.. autoproperty:: RectPartition.cell_volume

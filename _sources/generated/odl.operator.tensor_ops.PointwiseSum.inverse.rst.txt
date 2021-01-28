@@ -1,0 +1,6 @@
+PointwiseSum.inverse
+============================================
+
+.. currentmodule:: odl.operator.tensor_ops
+
+.. autoproperty:: PointwiseSum.inverse

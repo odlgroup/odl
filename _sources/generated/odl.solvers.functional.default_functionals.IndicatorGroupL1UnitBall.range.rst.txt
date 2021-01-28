@@ -1,0 +1,6 @@
+IndicatorGroupL1UnitBall.range
+=========================================================================
+
+.. currentmodule:: odl.solvers.functional.default_functionals
+
+.. autoproperty:: IndicatorGroupL1UnitBall.range

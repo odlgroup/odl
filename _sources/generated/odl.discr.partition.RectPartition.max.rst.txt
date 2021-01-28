@@ -1,0 +1,8 @@
+:orphan:
+
+RectPartition.max
+=====================================
+
+.. currentmodule:: odl.discr.partition
+
+.. automethod:: RectPartition.max

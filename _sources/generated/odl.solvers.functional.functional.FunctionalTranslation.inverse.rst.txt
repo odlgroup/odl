@@ -1,0 +1,6 @@
+FunctionalTranslation.inverse
+===============================================================
+
+.. currentmodule:: odl.solvers.functional.functional
+
+.. autoproperty:: FunctionalTranslation.inverse

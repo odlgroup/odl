@@ -1,0 +1,6 @@
+Gradient.base_space
+======================================
+
+.. currentmodule:: odl.discr.diff_ops
+
+.. autoproperty:: Gradient.base_space

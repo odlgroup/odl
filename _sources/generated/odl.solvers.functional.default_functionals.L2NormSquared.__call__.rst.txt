@@ -1,0 +1,8 @@
+:orphan:
+
+L2NormSquared.__call__
+=================================================================
+
+.. currentmodule:: odl.solvers.functional.default_functionals
+
+.. automethod:: L2NormSquared.__call__

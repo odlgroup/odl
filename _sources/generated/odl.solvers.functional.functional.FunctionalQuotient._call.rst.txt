@@ -1,0 +1,8 @@
+:orphan:
+
+FunctionalQuotient._call
+==========================================================
+
+.. currentmodule:: odl.solvers.functional.functional
+
+.. automethod:: FunctionalQuotient._call

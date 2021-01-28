@@ -1,0 +1,8 @@
+:orphan:
+
+FunctionalQuotient.derivative
+===============================================================
+
+.. currentmodule:: odl.solvers.functional.functional
+
+.. automethod:: FunctionalQuotient.derivative

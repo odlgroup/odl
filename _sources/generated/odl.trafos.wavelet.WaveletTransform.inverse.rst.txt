@@ -1,0 +1,6 @@
+WaveletTransform.inverse
+===========================================
+
+.. currentmodule:: odl.trafos.wavelet
+
+.. autoproperty:: WaveletTransform.inverse

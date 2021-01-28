@@ -1,0 +1,6 @@
+PointwiseNorm.domain
+============================================
+
+.. currentmodule:: odl.operator.tensor_ops
+
+.. autoproperty:: PointwiseNorm.domain

@@ -1,0 +1,37 @@
+﻿ComplexModulus
+=======================================
+
+.. currentmodule:: odl.operator.default_ops
+
+.. autoclass:: ComplexModulus
+   :show-inheritance:
+   
+   
+   .. automethod:: __init__
+   
+      
+   
+   .. HACK -- the point here is that we don't want this to appear in the output, but the autosummary should still generate the pages.
+      .. autosummary::
+         :toctree:
+      
+         ComplexModulus.__call__
+         ComplexModulus.__eq__
+         ComplexModulus._call
+         ComplexModulus.derivative
+         ComplexModulus.norm
+   
+
+    
+   .. HACK -- the point here is that we don't want this to appear in the output, but the autosummary should still generate the pages.
+      .. autosummary::
+         :toctree:
+      
+         ComplexModulus.adjoint
+         ComplexModulus.domain
+         ComplexModulus.inverse
+         ComplexModulus.is_functional
+         ComplexModulus.is_linear
+         ComplexModulus.range
+   
+   

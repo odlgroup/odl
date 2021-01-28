@@ -1,0 +1,6 @@
+OperatorLeftScalarMult.scalar
+===================================================
+
+.. currentmodule:: odl.operator.operator
+
+.. autoproperty:: OperatorLeftScalarMult.scalar

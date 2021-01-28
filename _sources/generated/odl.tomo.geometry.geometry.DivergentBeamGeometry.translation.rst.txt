@@ -1,0 +1,6 @@
+DivergentBeamGeometry.translation
+============================================================
+
+.. currentmodule:: odl.tomo.geometry.geometry
+
+.. autoproperty:: DivergentBeamGeometry.translation

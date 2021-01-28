@@ -1,0 +1,43 @@
+﻿deg2rad_func
+====================================
+
+.. currentmodule:: odl.ufunc_ops.ufunc_ops
+
+.. autoclass:: deg2rad_func
+   :show-inheritance:
+   
+   
+   .. automethod:: __init__
+   
+      
+   
+   .. HACK -- the point here is that we don't want this to appear in the output, but the autosummary should still generate the pages.
+      .. autosummary::
+         :toctree:
+      
+         deg2rad_func.__call__
+         deg2rad_func.__eq__
+         deg2rad_func._call
+         deg2rad_func.bregman
+         deg2rad_func.derivative
+         deg2rad_func.norm
+         deg2rad_func.translated
+   
+
+    
+   .. HACK -- the point here is that we don't want this to appear in the output, but the autosummary should still generate the pages.
+      .. autosummary::
+         :toctree:
+      
+         deg2rad_func.adjoint
+         deg2rad_func.convex_conj
+         deg2rad_func.domain
+         deg2rad_func.grad_lipschitz
+         deg2rad_func.gradient
+         deg2rad_func.inverse
+         deg2rad_func.is_functional
+         deg2rad_func.is_linear
+         deg2rad_func.proximal
+         deg2rad_func.range
+   
+   

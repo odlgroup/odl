@@ -1,0 +1,8 @@
+:orphan:
+
+ProductSpaceElement.copy
+=========================================
+
+.. currentmodule:: odl.space.pspace
+
+.. automethod:: ProductSpaceElement.copy

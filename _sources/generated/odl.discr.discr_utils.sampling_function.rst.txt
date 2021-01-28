@@ -1,0 +1,6 @@
+﻿sampling_function
+=======================================
+
+.. currentmodule:: odl.discr.discr_utils
+
+.. autofunction:: sampling_function

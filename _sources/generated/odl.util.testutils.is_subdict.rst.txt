@@ -1,0 +1,6 @@
+﻿is_subdict
+=============================
+
+.. currentmodule:: odl.util.testutils
+
+.. autofunction:: is_subdict

@@ -1,0 +1,6 @@
+arctanh_func.range
+==========================================
+
+.. currentmodule:: odl.ufunc_ops.ufunc_ops
+
+.. autoproperty:: arctanh_func.range

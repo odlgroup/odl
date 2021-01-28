@@ -1,0 +1,8 @@
+:orphan:
+
+ProductSpaceUfuncs.cos
+======================================
+
+.. currentmodule:: odl.util.ufuncs
+
+.. automethod:: ProductSpaceUfuncs.cos

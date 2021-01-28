@@ -1,0 +1,6 @@
+﻿complex_dtype
+==============================
+
+.. currentmodule:: odl.util.utility
+
+.. autofunction:: complex_dtype

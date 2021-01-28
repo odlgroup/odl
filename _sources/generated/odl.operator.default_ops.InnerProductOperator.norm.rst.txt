@@ -1,0 +1,8 @@
+:orphan:
+
+InnerProductOperator.norm
+==================================================
+
+.. currentmodule:: odl.operator.default_ops
+
+.. automethod:: InnerProductOperator.norm

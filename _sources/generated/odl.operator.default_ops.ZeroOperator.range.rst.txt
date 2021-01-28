@@ -1,0 +1,6 @@
+ZeroOperator.range
+===========================================
+
+.. currentmodule:: odl.operator.default_ops
+
+.. autoproperty:: ZeroOperator.range

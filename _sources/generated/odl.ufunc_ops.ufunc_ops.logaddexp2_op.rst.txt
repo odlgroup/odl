@@ -1,0 +1,37 @@
+﻿logaddexp2_op
+=====================================
+
+.. currentmodule:: odl.ufunc_ops.ufunc_ops
+
+.. autoclass:: logaddexp2_op
+   :show-inheritance:
+   
+   
+   .. automethod:: __init__
+   
+      
+   
+   .. HACK -- the point here is that we don't want this to appear in the output, but the autosummary should still generate the pages.
+      .. autosummary::
+         :toctree:
+      
+         logaddexp2_op.__call__
+         logaddexp2_op.__eq__
+         logaddexp2_op._call
+         logaddexp2_op.derivative
+         logaddexp2_op.norm
+   
+
+    
+   .. HACK -- the point here is that we don't want this to appear in the output, but the autosummary should still generate the pages.
+      .. autosummary::
+         :toctree:
+      
+         logaddexp2_op.adjoint
+         logaddexp2_op.domain
+         logaddexp2_op.inverse
+         logaddexp2_op.is_functional
+         logaddexp2_op.is_linear
+         logaddexp2_op.range
+   
+   

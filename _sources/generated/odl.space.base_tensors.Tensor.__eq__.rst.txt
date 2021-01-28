@@ -1,0 +1,8 @@
+:orphan:
+
+Tensor.__eq__
+====================================
+
+.. currentmodule:: odl.space.base_tensors
+
+.. automethod:: Tensor.__eq__

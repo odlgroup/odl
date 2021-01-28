@@ -1,0 +1,37 @@
+﻿rint_op
+===============================
+
+.. currentmodule:: odl.ufunc_ops.ufunc_ops
+
+.. autoclass:: rint_op
+   :show-inheritance:
+   
+   
+   .. automethod:: __init__
+   
+      
+   
+   .. HACK -- the point here is that we don't want this to appear in the output, but the autosummary should still generate the pages.
+      .. autosummary::
+         :toctree:
+      
+         rint_op.__call__
+         rint_op.__eq__
+         rint_op._call
+         rint_op.derivative
+         rint_op.norm
+   
+
+    
+   .. HACK -- the point here is that we don't want this to appear in the output, but the autosummary should still generate the pages.
+      .. autosummary::
+         :toctree:
+      
+         rint_op.adjoint
+         rint_op.domain
+         rint_op.inverse
+         rint_op.is_functional
+         rint_op.is_linear
+         rint_op.range
+   
+   

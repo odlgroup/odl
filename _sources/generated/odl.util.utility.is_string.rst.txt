@@ -1,0 +1,6 @@
+﻿is_string
+==========================
+
+.. currentmodule:: odl.util.utility
+
+.. autofunction:: is_string

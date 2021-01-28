@@ -1,0 +1,8 @@
+:orphan:
+
+FunctionalDefaultConvexConjugate.__eq__
+=========================================================================
+
+.. currentmodule:: odl.solvers.functional.functional
+
+.. automethod:: FunctionalDefaultConvexConjugate.__eq__

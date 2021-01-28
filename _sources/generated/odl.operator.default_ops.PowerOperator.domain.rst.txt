@@ -1,0 +1,6 @@
+PowerOperator.domain
+=============================================
+
+.. currentmodule:: odl.operator.default_ops
+
+.. autoproperty:: PowerOperator.domain

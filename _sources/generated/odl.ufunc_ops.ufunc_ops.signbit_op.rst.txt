@@ -1,0 +1,37 @@
+﻿signbit_op
+==================================
+
+.. currentmodule:: odl.ufunc_ops.ufunc_ops
+
+.. autoclass:: signbit_op
+   :show-inheritance:
+   
+   
+   .. automethod:: __init__
+   
+      
+   
+   .. HACK -- the point here is that we don't want this to appear in the output, but the autosummary should still generate the pages.
+      .. autosummary::
+         :toctree:
+      
+         signbit_op.__call__
+         signbit_op.__eq__
+         signbit_op._call
+         signbit_op.derivative
+         signbit_op.norm
+   
+
+    
+   .. HACK -- the point here is that we don't want this to appear in the output, but the autosummary should still generate the pages.
+      .. autosummary::
+         :toctree:
+      
+         signbit_op.adjoint
+         signbit_op.domain
+         signbit_op.inverse
+         signbit_op.is_functional
+         signbit_op.is_linear
+         signbit_op.range
+   
+   

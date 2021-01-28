@@ -1,0 +1,6 @@
+ComponentProjection.is_linear
+=====================================================
+
+.. currentmodule:: odl.operator.pspace_ops
+
+.. autoproperty:: ComponentProjection.is_linear

@@ -1,0 +1,6 @@
+FunctionalQuadraticPerturb.range
+==================================================================
+
+.. currentmodule:: odl.solvers.functional.functional
+
+.. autoproperty:: FunctionalQuadraticPerturb.range

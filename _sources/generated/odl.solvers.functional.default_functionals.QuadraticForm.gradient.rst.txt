@@ -1,0 +1,6 @@
+QuadraticForm.gradient
+=================================================================
+
+.. currentmodule:: odl.solvers.functional.default_functionals
+
+.. autoproperty:: QuadraticForm.gradient

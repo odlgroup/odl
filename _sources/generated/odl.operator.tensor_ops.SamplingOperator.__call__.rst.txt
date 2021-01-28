@@ -1,0 +1,8 @@
+:orphan:
+
+SamplingOperator.__call__
+=================================================
+
+.. currentmodule:: odl.operator.tensor_ops
+
+.. automethod:: SamplingOperator.__call__

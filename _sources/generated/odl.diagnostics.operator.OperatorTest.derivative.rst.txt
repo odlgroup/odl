@@ -1,0 +1,8 @@
+:orphan:
+
+OperatorTest.derivative
+================================================
+
+.. currentmodule:: odl.diagnostics.operator
+
+.. automethod:: OperatorTest.derivative

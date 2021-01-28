@@ -1,0 +1,8 @@
+:orphan:
+
+ComplexModulus.norm
+============================================
+
+.. currentmodule:: odl.operator.default_ops
+
+.. automethod:: ComplexModulus.norm

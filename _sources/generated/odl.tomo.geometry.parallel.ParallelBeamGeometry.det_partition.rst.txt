@@ -1,0 +1,6 @@
+ParallelBeamGeometry.det_partition
+=============================================================
+
+.. currentmodule:: odl.tomo.geometry.parallel
+
+.. autoproperty:: ParallelBeamGeometry.det_partition

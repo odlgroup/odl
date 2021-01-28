@@ -1,0 +1,6 @@
+Parallel3dEulerGeometry.params
+=========================================================
+
+.. currentmodule:: odl.tomo.geometry.parallel
+
+.. autoproperty:: Parallel3dEulerGeometry.params

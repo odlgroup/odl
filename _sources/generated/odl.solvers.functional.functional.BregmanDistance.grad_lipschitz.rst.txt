@@ -1,0 +1,6 @@
+BregmanDistance.grad_lipschitz
+================================================================
+
+.. currentmodule:: odl.solvers.functional.functional
+
+.. autoproperty:: BregmanDistance.grad_lipschitz

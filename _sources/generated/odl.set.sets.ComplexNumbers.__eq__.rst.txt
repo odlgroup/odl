@@ -1,0 +1,8 @@
+:orphan:
+
+ComplexNumbers.__eq__
+==================================
+
+.. currentmodule:: odl.set.sets
+
+.. automethod:: ComplexNumbers.__eq__

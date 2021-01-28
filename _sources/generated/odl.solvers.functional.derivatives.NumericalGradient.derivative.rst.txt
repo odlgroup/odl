@@ -1,0 +1,8 @@
+:orphan:
+
+NumericalGradient.derivative
+===============================================================
+
+.. currentmodule:: odl.solvers.functional.derivatives
+
+.. automethod:: NumericalGradient.derivative

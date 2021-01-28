@@ -1,0 +1,537 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>odl.solvers.functional.derivatives &mdash; odl 1.0.0.dev0 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../../../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../../../../_static/custom.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../../../" src="../../../../_static/documentation_options.js"></script>
+        <script src="../../../../_static/jquery.js"></script>
+        <script src="../../../../_static/underscore.js"></script>
+        <script src="../../../../_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="../../../../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../../../index.html" class="icon icon-home"> odl
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                1.0.0.dev0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Getting Started</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../getting_started/getting_started.html">Getting Started</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Working with ODL</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../guide/guide.html">User’s guide – selected topics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../math/math.html">Mathematical Background</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Developer zone</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../dev/dev.html">Contributing to ODL</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Useful facts</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../guide/faq.html">Frequently asked questions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../guide/glossary.html">Glossary</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../release_notes.html">Release Notes</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../refs.html">References</a></li>
+</ul>
+<p class="caption"><span class="caption-text">API Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../odl.html">odl</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../../index.html">odl</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../../../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="../../../index.html">Module code</a> &raquo;</li>
+        
+      <li>odl.solvers.functional.derivatives</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for odl.solvers.functional.derivatives</h1><div class="highlight"><pre>
+<span></span><span class="c1"># Copyright 2014-2019 The ODL contributors</span>
+<span class="c1">#</span>
+<span class="c1"># This file is part of ODL.</span>
+<span class="c1">#</span>
+<span class="c1"># This Source Code Form is subject to the terms of the Mozilla Public License,</span>
+<span class="c1"># v. 2.0. If a copy of the MPL was not distributed with this file, You can</span>
+<span class="c1"># obtain one at https://mozilla.org/MPL/2.0/.</span>
+
+<span class="sd">&quot;&quot;&quot;Utilities for computing the gradient and Hessian of functionals.&quot;&quot;&quot;</span>
+
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">print_function</span><span class="p">,</span> <span class="n">division</span><span class="p">,</span> <span class="n">absolute_import</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+
+<span class="kn">from</span> <span class="nn">odl.solvers.functional.functional</span> <span class="kn">import</span> <span class="n">Functional</span>
+<span class="kn">from</span> <span class="nn">odl.operator</span> <span class="kn">import</span> <span class="n">Operator</span>
+<span class="kn">from</span> <span class="nn">odl.space.base_tensors</span> <span class="kn">import</span> <span class="n">TensorSpace</span>
+
+
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;NumericalDerivative&#39;</span><span class="p">,</span> <span class="s1">&#39;NumericalGradient&#39;</span><span class="p">,)</span>
+
+
+<div class="viewcode-block" id="NumericalDerivative"><a class="viewcode-back" href="../../../../generated/odl.solvers.functional.derivatives.NumericalDerivative.html#odl.solvers.functional.derivatives.NumericalDerivative">[docs]</a><span class="k">class</span> <span class="nc">NumericalDerivative</span><span class="p">(</span><span class="n">Operator</span><span class="p">):</span>
+
+    <span class="sd">&quot;&quot;&quot;The derivative of an operator by finite differences.</span>
+
+<span class="sd">    See Also</span>
+<span class="sd">    --------</span>
+<span class="sd">    NumericalGradient : Compute gradient of a functional</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="NumericalDerivative.__init__"><a class="viewcode-back" href="../../../../generated/odl.solvers.functional.derivatives.NumericalDerivative.html#odl.solvers.functional.derivatives.NumericalDerivative.__init__">[docs]</a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">operator</span><span class="p">,</span> <span class="n">point</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="s1">&#39;forward&#39;</span><span class="p">,</span> <span class="n">step</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sa">r</span><span class="sd">&quot;&quot;&quot;Initialize a new instance.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        operator : `Operator`</span>
+<span class="sd">            The operator whose derivative should be computed numerically. Its</span>
+<span class="sd">            domain and range must be `TensorSpace` spaces.</span>
+<span class="sd">        point : ``operator.domain`` `element-like`</span>
+<span class="sd">            The point to compute the derivative in.</span>
+<span class="sd">        method : {&#39;backward&#39;, &#39;forward&#39;, &#39;central&#39;}, optional</span>
+<span class="sd">            The method to use to compute the derivative.</span>
+<span class="sd">        step : float, optional</span>
+<span class="sd">            The step length used in the derivative computation.</span>
+<span class="sd">            Default: selects the step according to the dtype of the space.</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        --------</span>
+<span class="sd">        Compute a numerical estimate of the derivative (Hessian) of the squared</span>
+<span class="sd">        L2 norm:</span>
+
+<span class="sd">        &gt;&gt;&gt; space = odl.rn(3)</span>
+<span class="sd">        &gt;&gt;&gt; func = odl.solvers.L2NormSquared(space)</span>
+<span class="sd">        &gt;&gt;&gt; hess = NumericalDerivative(func.gradient, [1, 1, 1])</span>
+<span class="sd">        &gt;&gt;&gt; hess([0, 0, 1])</span>
+<span class="sd">        rn(3).element([ 0.,  0.,  2.])</span>
+
+<span class="sd">        Find the Hessian matrix:</span>
+
+<span class="sd">        &gt;&gt;&gt; hess_matrix = odl.matrix_representation(hess)</span>
+<span class="sd">        &gt;&gt;&gt; np.allclose(hess_matrix, 2 * np.eye(3))</span>
+<span class="sd">        True</span>
+
+<span class="sd">        Notes</span>
+<span class="sd">        -----</span>
+<span class="sd">        If the operator is :math:`A` and step size :math:`h` is used, the</span>
+<span class="sd">        derivative in the point :math:`x` and direction :math:`dx` is computed</span>
+<span class="sd">        as follows.</span>
+
+<span class="sd">        ``method=&#39;backward&#39;``:</span>
+
+<span class="sd">        .. math::</span>
+<span class="sd">            \partial A(x)(dx) =</span>
+<span class="sd">            (A(x) - A(x - dx \cdot h / \| dx \|))</span>
+<span class="sd">            \cdot \frac{\| dx \|}{h}</span>
+
+<span class="sd">        ``method=&#39;forward&#39;``:</span>
+
+<span class="sd">        .. math::</span>
+<span class="sd">            \partial A(x)(dx) =</span>
+<span class="sd">            (A(x + dx \cdot h / \| dx \|) - A(x))</span>
+<span class="sd">            \cdot \frac{\| dx \|}{h}</span>
+
+<span class="sd">        ``method=&#39;central&#39;``:</span>
+
+<span class="sd">        .. math::</span>
+<span class="sd">            \partial A(x)(dx) =</span>
+<span class="sd">            (A(x + dx \cdot h / (2 \| dx \|)) -</span>
+<span class="sd">             A(x - dx \cdot h / (2 \| dx \|))</span>
+<span class="sd">            \cdot \frac{\| dx \|}{h}</span>
+
+<span class="sd">        The number of operator evaluations is ``2``, regardless of parameters.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">operator</span><span class="p">,</span> <span class="n">Operator</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;`operator` has to be an `Operator` instance&#39;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">operator</span><span class="o">.</span><span class="n">domain</span><span class="p">,</span> <span class="n">TensorSpace</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;`operator.domain` must be a `TensorSpace` &#39;</span>
+                            <span class="s1">&#39;instance&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">operator</span><span class="o">.</span><span class="n">range</span><span class="p">,</span> <span class="n">TensorSpace</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;`operator.range` must be a `TensorSpace` &#39;</span>
+                            <span class="s1">&#39;instance&#39;</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">operator</span> <span class="o">=</span> <span class="n">operator</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">point</span> <span class="o">=</span> <span class="n">operator</span><span class="o">.</span><span class="n">domain</span><span class="o">.</span><span class="n">element</span><span class="p">(</span><span class="n">point</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">step</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="c1"># Use half of the number of digits as machine epsilon, this</span>
+            <span class="c1"># &quot;usually&quot; gives a good balance between precision and numerical</span>
+            <span class="c1"># stability.</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">step</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">finfo</span><span class="p">(</span><span class="n">operator</span><span class="o">.</span><span class="n">domain</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span><span class="o">.</span><span class="n">eps</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">step</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">step</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">method</span><span class="p">,</span> <span class="n">method_in</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">method</span><span class="p">)</span><span class="o">.</span><span class="n">lower</span><span class="p">(),</span> <span class="n">method</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">method</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">(</span><span class="s1">&#39;backward&#39;</span><span class="p">,</span> <span class="s1">&#39;forward&#39;</span><span class="p">,</span> <span class="s1">&#39;central&#39;</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;`method` &#39;</span><span class="si">{}</span><span class="s2">&#39; not understood&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">method_in</span><span class="p">)</span>
+
+        <span class="nb">super</span><span class="p">(</span><span class="n">NumericalDerivative</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span>
+            <span class="n">operator</span><span class="o">.</span><span class="n">domain</span><span class="p">,</span> <span class="n">operator</span><span class="o">.</span><span class="n">range</span><span class="p">,</span> <span class="n">linear</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="NumericalDerivative._call"><a class="viewcode-back" href="../../../../generated/odl.solvers.functional.derivatives.NumericalDerivative._call.html#odl.solvers.functional.derivatives.NumericalDerivative._call">[docs]</a>    <span class="k">def</span> <span class="nf">_call</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dx</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return ``self(x)``.&quot;&quot;&quot;</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">point</span>
+
+        <span class="n">dx_norm</span> <span class="o">=</span> <span class="n">dx</span><span class="o">.</span><span class="n">norm</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">dx_norm</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">return</span> <span class="mi">0</span>
+
+        <span class="n">scaled_dx</span> <span class="o">=</span> <span class="n">dx</span> <span class="o">*</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">step</span> <span class="o">/</span> <span class="n">dx_norm</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">method</span> <span class="o">==</span> <span class="s1">&#39;backward&#39;</span><span class="p">:</span>
+            <span class="n">dAdx</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">operator</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">operator</span><span class="p">(</span><span class="n">x</span> <span class="o">-</span> <span class="n">scaled_dx</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">method</span> <span class="o">==</span> <span class="s1">&#39;forward&#39;</span><span class="p">:</span>
+            <span class="n">dAdx</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">operator</span><span class="p">(</span><span class="n">x</span> <span class="o">+</span> <span class="n">scaled_dx</span><span class="p">)</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">operator</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">method</span> <span class="o">==</span> <span class="s1">&#39;central&#39;</span><span class="p">:</span>
+            <span class="n">dAdx</span> <span class="o">=</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">operator</span><span class="p">(</span><span class="n">x</span> <span class="o">+</span> <span class="n">scaled_dx</span> <span class="o">/</span> <span class="mi">2</span><span class="p">)</span> <span class="o">-</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">operator</span><span class="p">(</span><span class="n">x</span> <span class="o">-</span> <span class="n">scaled_dx</span> <span class="o">/</span> <span class="mi">2</span><span class="p">))</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s1">&#39;unknown method&#39;</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">dAdx</span> <span class="o">*</span> <span class="p">(</span><span class="n">dx_norm</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">step</span><span class="p">)</span></div></div>
+
+
+<div class="viewcode-block" id="NumericalGradient"><a class="viewcode-back" href="../../../../generated/odl.solvers.functional.derivatives.NumericalGradient.html#odl.solvers.functional.derivatives.NumericalGradient">[docs]</a><span class="k">class</span> <span class="nc">NumericalGradient</span><span class="p">(</span><span class="n">Operator</span><span class="p">):</span>
+
+    <span class="sd">&quot;&quot;&quot;The gradient of a `Functional` computed by finite differences.</span>
+
+<span class="sd">    See Also</span>
+<span class="sd">    --------</span>
+<span class="sd">    NumericalDerivative : Compute directional derivative</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="NumericalGradient.__init__"><a class="viewcode-back" href="../../../../generated/odl.solvers.functional.derivatives.NumericalGradient.html#odl.solvers.functional.derivatives.NumericalGradient.__init__">[docs]</a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">functional</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="s1">&#39;forward&#39;</span><span class="p">,</span> <span class="n">step</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Initialize a new instance.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        functional : `Functional`</span>
+<span class="sd">            The functional whose gradient should be computed. Its domain must</span>
+<span class="sd">            be a `TensorSpace`.</span>
+<span class="sd">        method : {&#39;backward&#39;, &#39;forward&#39;, &#39;central&#39;}, optional</span>
+<span class="sd">            The method to use to compute the gradient.</span>
+<span class="sd">        step : float, optional</span>
+<span class="sd">            The step length used in the derivative computation.</span>
+<span class="sd">            Default: selects the step according to the dtype of the space.</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        --------</span>
+<span class="sd">        &gt;&gt;&gt; space = odl.rn(3)</span>
+<span class="sd">        &gt;&gt;&gt; func = odl.solvers.L2NormSquared(space)</span>
+<span class="sd">        &gt;&gt;&gt; grad = NumericalGradient(func)</span>
+<span class="sd">        &gt;&gt;&gt; grad([1, 1, 1])</span>
+<span class="sd">        rn(3).element([ 2.,  2.,  2.])</span>
+
+<span class="sd">        The gradient gives the correct value with sufficiently small step size:</span>
+
+<span class="sd">        &gt;&gt;&gt; grad([1, 1, 1]) == func.gradient([1, 1, 1])</span>
+<span class="sd">        True</span>
+
+<span class="sd">        If the step is too large the result is not correct:</span>
+
+<span class="sd">        &gt;&gt;&gt; grad = NumericalGradient(func, step=0.5)</span>
+<span class="sd">        &gt;&gt;&gt; grad([1, 1, 1])</span>
+<span class="sd">        rn(3).element([ 2.5,  2.5,  2.5])</span>
+
+<span class="sd">        But it can be improved by using the more accurate ``method=&#39;central&#39;``:</span>
+
+<span class="sd">        &gt;&gt;&gt; grad = NumericalGradient(func, method=&#39;central&#39;, step=0.5)</span>
+<span class="sd">        &gt;&gt;&gt; grad([1, 1, 1])</span>
+<span class="sd">        rn(3).element([ 2.,  2.,  2.])</span>
+
+<span class="sd">        Notes</span>
+<span class="sd">        -----</span>
+<span class="sd">        If the functional is :math:`f` and step size :math:`h` is used, the</span>
+<span class="sd">        gradient is computed as follows.</span>
+
+<span class="sd">        ``method=&#39;backward&#39;``:</span>
+
+<span class="sd">        .. math::</span>
+<span class="sd">            (\nabla f(x))_i = \frac{f(x) - f(x - h e_i)}{h}</span>
+
+<span class="sd">        ``method=&#39;forward&#39;``:</span>
+
+<span class="sd">        .. math::</span>
+<span class="sd">            (\nabla f(x))_i = \frac{f(x + h e_i) - f(x)}{h}</span>
+
+<span class="sd">        ``method=&#39;central&#39;``:</span>
+
+<span class="sd">        .. math::</span>
+<span class="sd">            (\nabla f(x))_i = \frac{f(x + (h/2) e_i) - f(x - (h/2) e_i)}{h}</span>
+
+<span class="sd">        The number of function evaluations is ``functional.domain.size + 1`` if</span>
+<span class="sd">        ``&#39;backward&#39;`` or ``&#39;forward&#39;`` is used and</span>
+<span class="sd">        ``2 * functional.domain.size`` if ``&#39;central&#39;`` is used.</span>
+<span class="sd">        On large domains this will be computationally infeasible.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">functional</span><span class="p">,</span> <span class="n">Functional</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;`functional` has to be a `Functional` instance&#39;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">functional</span><span class="o">.</span><span class="n">domain</span><span class="p">,</span> <span class="n">TensorSpace</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;`functional.domain` must be a `TensorSpace` &#39;</span>
+                            <span class="s1">&#39;instance&#39;</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">functional</span> <span class="o">=</span> <span class="n">functional</span>
+        <span class="k">if</span> <span class="n">step</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="c1"># Use half of the number of digits as machine epsilon, this</span>
+            <span class="c1"># &quot;usually&quot; gives a good balance between precision and numerical</span>
+            <span class="c1"># stability.</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">step</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">finfo</span><span class="p">(</span><span class="n">functional</span><span class="o">.</span><span class="n">domain</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span><span class="o">.</span><span class="n">eps</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">step</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">step</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">method</span><span class="p">,</span> <span class="n">method_in</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">method</span><span class="p">)</span><span class="o">.</span><span class="n">lower</span><span class="p">(),</span> <span class="n">method</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">method</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">(</span><span class="s1">&#39;backward&#39;</span><span class="p">,</span> <span class="s1">&#39;forward&#39;</span><span class="p">,</span> <span class="s1">&#39;central&#39;</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;`method` &#39;</span><span class="si">{}</span><span class="s2">&#39; not understood&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">method_in</span><span class="p">)</span>
+
+        <span class="nb">super</span><span class="p">(</span><span class="n">NumericalGradient</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span>
+            <span class="n">functional</span><span class="o">.</span><span class="n">domain</span><span class="p">,</span> <span class="n">functional</span><span class="o">.</span><span class="n">domain</span><span class="p">,</span> <span class="n">linear</span><span class="o">=</span><span class="n">functional</span><span class="o">.</span><span class="n">is_linear</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="NumericalGradient._call"><a class="viewcode-back" href="../../../../generated/odl.solvers.functional.derivatives.NumericalGradient._call.html#odl.solvers.functional.derivatives.NumericalGradient._call">[docs]</a>    <span class="k">def</span> <span class="nf">_call</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return ``self(x)``.&quot;&quot;&quot;</span>
+        <span class="c1"># The algorithm takes finite differences in one dimension at a time</span>
+        <span class="c1"># reusing the dx vector to improve efficiency.</span>
+        <span class="n">dfdx</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">domain</span><span class="o">.</span><span class="n">zero</span><span class="p">()</span>
+        <span class="n">dx</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">domain</span><span class="o">.</span><span class="n">zero</span><span class="p">()</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">method</span> <span class="o">==</span> <span class="s1">&#39;backward&#39;</span><span class="p">:</span>
+            <span class="n">fx</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">functional</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">domain</span><span class="o">.</span><span class="n">size</span><span class="p">):</span>
+                <span class="n">dx</span><span class="p">[</span><span class="n">i</span> <span class="o">-</span> <span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>  <span class="c1"># reset step from last iteration</span>
+                <span class="n">dx</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">step</span>
+                <span class="n">dfdx</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">fx</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">functional</span><span class="p">(</span><span class="n">x</span> <span class="o">-</span> <span class="n">dx</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">method</span> <span class="o">==</span> <span class="s1">&#39;forward&#39;</span><span class="p">:</span>
+            <span class="n">fx</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">functional</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">domain</span><span class="o">.</span><span class="n">size</span><span class="p">):</span>
+                <span class="n">dx</span><span class="p">[</span><span class="n">i</span> <span class="o">-</span> <span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>  <span class="c1"># reset step from last iteration</span>
+                <span class="n">dx</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">step</span>
+                <span class="n">dfdx</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">functional</span><span class="p">(</span><span class="n">x</span> <span class="o">+</span> <span class="n">dx</span><span class="p">)</span> <span class="o">-</span> <span class="n">fx</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">method</span> <span class="o">==</span> <span class="s1">&#39;central&#39;</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">domain</span><span class="o">.</span><span class="n">size</span><span class="p">):</span>
+                <span class="n">dx</span><span class="p">[</span><span class="n">i</span> <span class="o">-</span> <span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>  <span class="c1"># reset step from last iteration</span>
+                <span class="n">dx</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">step</span> <span class="o">/</span> <span class="mi">2</span>
+                <span class="n">dfdx</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">functional</span><span class="p">(</span><span class="n">x</span> <span class="o">+</span> <span class="n">dx</span><span class="p">)</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">functional</span><span class="p">(</span><span class="n">x</span> <span class="o">-</span> <span class="n">dx</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s1">&#39;unknown method&#39;</span><span class="p">)</span>
+
+        <span class="n">dfdx</span> <span class="o">/=</span> <span class="bp">self</span><span class="o">.</span><span class="n">step</span>
+        <span class="k">return</span> <span class="n">dfdx</span></div>
+
+<div class="viewcode-block" id="NumericalGradient.derivative"><a class="viewcode-back" href="../../../../generated/odl.solvers.functional.derivatives.NumericalGradient.derivative.html#odl.solvers.functional.derivatives.NumericalGradient.derivative">[docs]</a>    <span class="k">def</span> <span class="nf">derivative</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">point</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return the derivative in ``point``.</span>
+
+<span class="sd">        The derivative of the gradient is often called the Hessian.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        point : `domain` `element-like`</span>
+<span class="sd">            The point that the derivative should be taken in.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        derivative : `NumericalDerivative`</span>
+<span class="sd">            Numerical estimate of the derivative. Uses the same method as this</span>
+<span class="sd">            operator does, but with half the number of significant digits in</span>
+<span class="sd">            the step size in order to preserve numerical stability.</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        --------</span>
+<span class="sd">        Compute a numerical estimate of the derivative of the squared L2 norm:</span>
+
+<span class="sd">        &gt;&gt;&gt; space = odl.rn(3)</span>
+<span class="sd">        &gt;&gt;&gt; func = odl.solvers.L2NormSquared(space)</span>
+<span class="sd">        &gt;&gt;&gt; grad = NumericalGradient(func)</span>
+<span class="sd">        &gt;&gt;&gt; hess = grad.derivative([1, 1, 1])</span>
+<span class="sd">        &gt;&gt;&gt; hess([1, 0, 0])</span>
+<span class="sd">        rn(3).element([ 2.,  0.,  0.])</span>
+
+<span class="sd">        Find the Hessian matrix:</span>
+
+<span class="sd">        &gt;&gt;&gt; hess_matrix = odl.matrix_representation(hess)</span>
+<span class="sd">        &gt;&gt;&gt; np.allclose(hess_matrix, 2 * np.eye(3))</span>
+<span class="sd">        True</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">NumericalDerivative</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">point</span><span class="p">,</span>
+                                   <span class="n">method</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">method</span><span class="p">,</span> <span class="n">step</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">step</span><span class="p">))</span></div></div>
+
+
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s1">&#39;__main__&#39;</span><span class="p">:</span>
+    <span class="kn">from</span> <span class="nn">odl.util.testutils</span> <span class="kn">import</span> <span class="n">run_doctests</span>
+    <span class="n">run_doctests</span><span class="p">()</span>
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &#169; Copyright 2014-2020 The ODL Contributors.
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

@@ -1,0 +1,6 @@
+﻿proximal_linfty
+========================================================
+
+.. currentmodule:: odl.solvers.nonsmooth.proximal_operators
+
+.. autofunction:: proximal_linfty

@@ -1,0 +1,6 @@
+IndicatorSumConstraint.domain
+========================================================================
+
+.. currentmodule:: odl.solvers.functional.default_functionals
+
+.. autoproperty:: IndicatorSumConstraint.domain

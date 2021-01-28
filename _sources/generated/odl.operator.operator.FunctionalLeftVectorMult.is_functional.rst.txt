@@ -1,0 +1,6 @@
+FunctionalLeftVectorMult.is_functional
+============================================================
+
+.. currentmodule:: odl.operator.operator
+
+.. autoproperty:: FunctionalLeftVectorMult.is_functional

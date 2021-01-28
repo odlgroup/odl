@@ -1,0 +1,6 @@
+UniversalSpace.examples
+=====================================
+
+.. currentmodule:: odl.set.space
+
+.. autoproperty:: UniversalSpace.examples

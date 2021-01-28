@@ -1,0 +1,8 @@
+:orphan:
+
+ProgressBar.start
+====================================
+
+.. currentmodule:: odl.util.testutils
+
+.. automethod:: ProgressBar.start

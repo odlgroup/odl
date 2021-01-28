@@ -1,0 +1,6 @@
+ZeroOperator.is_linear
+===============================================
+
+.. currentmodule:: odl.operator.default_ops
+
+.. autoproperty:: ZeroOperator.is_linear

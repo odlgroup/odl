@@ -1,0 +1,6 @@
+FunctionalTranslation.range
+=============================================================
+
+.. currentmodule:: odl.solvers.functional.functional
+
+.. autoproperty:: FunctionalTranslation.range

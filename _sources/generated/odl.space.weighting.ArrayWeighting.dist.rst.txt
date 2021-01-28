@@ -1,0 +1,8 @@
+:orphan:
+
+ArrayWeighting.dist
+=======================================
+
+.. currentmodule:: odl.space.weighting
+
+.. automethod:: ArrayWeighting.dist

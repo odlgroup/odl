@@ -1,0 +1,8 @@
+:orphan:
+
+ProductSpaceUfuncs.isfinite
+===========================================
+
+.. currentmodule:: odl.util.ufuncs
+
+.. automethod:: ProductSpaceUfuncs.isfinite

@@ -1,0 +1,6 @@
+ParallelHoleCollimatorGeometry.ndim
+===========================================================
+
+.. currentmodule:: odl.tomo.geometry.spect
+
+.. autoproperty:: ParallelHoleCollimatorGeometry.ndim

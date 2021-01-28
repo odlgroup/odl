@@ -1,0 +1,8 @@
+:orphan:
+
+TensorSpaceUfuncs.reciprocal
+============================================
+
+.. currentmodule:: odl.util.ufuncs
+
+.. automethod:: TensorSpaceUfuncs.reciprocal

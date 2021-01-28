@@ -1,0 +1,6 @@
+arctan_func.proximal
+============================================
+
+.. currentmodule:: odl.ufunc_ops.ufunc_ops
+
+.. autoproperty:: arctan_func.proximal

@@ -1,0 +1,6 @@
+IdentityOperator.adjoint
+=================================================
+
+.. currentmodule:: odl.operator.default_ops
+
+.. autoproperty:: IdentityOperator.adjoint

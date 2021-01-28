@@ -1,0 +1,8 @@
+:orphan:
+
+FanBeamGeometry.det_point_position
+=============================================================
+
+.. currentmodule:: odl.tomo.geometry.conebeam
+
+.. automethod:: FanBeamGeometry.det_point_position

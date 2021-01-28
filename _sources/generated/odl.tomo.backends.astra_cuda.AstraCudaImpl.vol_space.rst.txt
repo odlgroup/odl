@@ -1,0 +1,6 @@
+AstraCudaImpl.vol_space
+====================================================
+
+.. currentmodule:: odl.tomo.backends.astra_cuda
+
+.. autoproperty:: AstraCudaImpl.vol_space

@@ -1,0 +1,6 @@
+sign_func.range
+=======================================
+
+.. currentmodule:: odl.ufunc_ops.ufunc_ops
+
+.. autoproperty:: sign_func.range

@@ -1,0 +1,8 @@
+:orphan:
+
+DistOperator.norm
+==========================================
+
+.. currentmodule:: odl.operator.default_ops
+
+.. automethod:: DistOperator.norm

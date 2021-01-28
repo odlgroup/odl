@@ -1,0 +1,8 @@
+:orphan:
+
+WeightedSumSamplingOperator.norm
+========================================================
+
+.. currentmodule:: odl.operator.tensor_ops
+
+.. automethod:: WeightedSumSamplingOperator.norm

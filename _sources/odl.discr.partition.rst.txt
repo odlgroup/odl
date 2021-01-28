@@ -1,0 +1,33 @@
+partition
+=========
+
+Partitons of interval products based on rectilinear grids.
+
+A partition of a set is a finite collection of nonempty, pairwise
+disjoint subsets whose union is the original set. The partitions
+considered here are based on hypercubes, i.e. the tensor products
+of partitions of intervals.
+
+
+.. currentmodule:: odl.discr.partition
+
+
+
+.. rubric:: Classes
+
+.. autosummary::
+   :toctree: generated/
+
+   ~odl.discr.partition.RectPartition
+
+
+.. rubric:: Functions
+
+.. autosummary::
+   :toctree: generated/
+
+   ~odl.discr.partition.nonuniform_partition
+   ~odl.discr.partition.uniform_partition
+   ~odl.discr.partition.uniform_partition_fromgrid
+   ~odl.discr.partition.uniform_partition_fromintv
+

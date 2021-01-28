@@ -1,0 +1,6 @@
+RectPartition.shape
+=======================================
+
+.. currentmodule:: odl.discr.partition
+
+.. autoproperty:: RectPartition.shape

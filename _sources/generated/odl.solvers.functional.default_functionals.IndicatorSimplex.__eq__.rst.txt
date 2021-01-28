@@ -1,0 +1,8 @@
+:orphan:
+
+IndicatorSimplex.__eq__
+==================================================================
+
+.. currentmodule:: odl.solvers.functional.default_functionals
+
+.. automethod:: IndicatorSimplex.__eq__

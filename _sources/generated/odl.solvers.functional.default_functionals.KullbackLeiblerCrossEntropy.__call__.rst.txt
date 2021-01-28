@@ -1,0 +1,8 @@
+:orphan:
+
+KullbackLeiblerCrossEntropy.__call__
+===============================================================================
+
+.. currentmodule:: odl.solvers.functional.default_functionals
+
+.. automethod:: KullbackLeiblerCrossEntropy.__call__

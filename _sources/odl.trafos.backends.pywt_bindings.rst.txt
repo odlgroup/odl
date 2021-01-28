@@ -1,0 +1,24 @@
+pywt_bindings
+=============
+
+Bindings to the PyWavelets backend for wavelet transforms.
+
+`PyWavelets <https://pywavelets.readthedocs.io/>`_ is a Python library
+for wavelet transforms in arbitrary dimensions, featuring a large number
+of built-in wavelet filters.
+
+
+.. currentmodule:: odl.trafos.backends.pywt_bindings
+
+
+
+
+.. rubric:: Functions
+
+.. autosummary::
+   :toctree: generated/
+
+   ~odl.trafos.backends.pywt_bindings.precompute_raveled_slices
+   ~odl.trafos.backends.pywt_bindings.pywt_pad_mode
+   ~odl.trafos.backends.pywt_bindings.pywt_wavelet
+

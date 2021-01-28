@@ -1,0 +1,6 @@
+ZeroFunctional.convex_conj
+=====================================================================
+
+.. currentmodule:: odl.solvers.functional.default_functionals
+
+.. autoproperty:: ZeroFunctional.convex_conj

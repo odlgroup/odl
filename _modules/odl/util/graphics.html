@@ -1,0 +1,712 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>odl.util.graphics &mdash; odl 1.0.0.dev0 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/custom.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../../" src="../../../_static/documentation_options.js"></script>
+        <script src="../../../_static/jquery.js"></script>
+        <script src="../../../_static/underscore.js"></script>
+        <script src="../../../_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="../../../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../../index.html" class="icon icon-home"> odl
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                1.0.0.dev0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Getting Started</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../getting_started/getting_started.html">Getting Started</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Working with ODL</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../guide/guide.html">User’s guide – selected topics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../math/math.html">Mathematical Background</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Developer zone</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../dev/dev.html">Contributing to ODL</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Useful facts</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../guide/faq.html">Frequently asked questions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../guide/glossary.html">Glossary</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../release_notes.html">Release Notes</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../refs.html">References</a></li>
+</ul>
+<p class="caption"><span class="caption-text">API Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../odl.html">odl</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">odl</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="../../index.html">Module code</a> &raquo;</li>
+        
+      <li>odl.util.graphics</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for odl.util.graphics</h1><div class="highlight"><pre>
+<span></span><span class="c1"># Copyright 2014-2017 The ODL contributors</span>
+<span class="c1">#</span>
+<span class="c1"># This file is part of ODL.</span>
+<span class="c1">#</span>
+<span class="c1"># This Source Code Form is subject to the terms of the Mozilla Public License,</span>
+<span class="c1"># v. 2.0. If a copy of the MPL was not distributed with this file, You can</span>
+<span class="c1"># obtain one at https://mozilla.org/MPL/2.0/.</span>
+
+<span class="sd">&quot;&quot;&quot;Functions for graphical output.&quot;&quot;&quot;</span>
+
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">print_function</span><span class="p">,</span> <span class="n">division</span><span class="p">,</span> <span class="n">absolute_import</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">warnings</span>
+
+<span class="kn">from</span> <span class="nn">odl.util.testutils</span> <span class="kn">import</span> <span class="n">run_doctests</span>
+<span class="kn">from</span> <span class="nn">odl.util.utility</span> <span class="kn">import</span> <span class="n">is_real_dtype</span>
+
+
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;show_discrete_data&#39;</span><span class="p">,)</span>
+
+
+<div class="viewcode-block" id="warning_free_pause"><a class="viewcode-back" href="../../../generated/odl.util.graphics.warning_free_pause.html#odl.util.graphics.warning_free_pause">[docs]</a><span class="k">def</span> <span class="nf">warning_free_pause</span><span class="p">():</span>
+    <span class="sd">&quot;&quot;&quot;Issue a matplotlib pause without the warning.&quot;&quot;&quot;</span>
+    <span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
+
+    <span class="k">with</span> <span class="n">warnings</span><span class="o">.</span><span class="n">catch_warnings</span><span class="p">():</span>
+        <span class="n">warnings</span><span class="o">.</span><span class="n">filterwarnings</span><span class="p">(</span><span class="s2">&quot;ignore&quot;</span><span class="p">,</span>
+                                <span class="n">message</span><span class="o">=</span><span class="s2">&quot;Using default event loop until &quot;</span>
+                                        <span class="s2">&quot;function specific to this GUI is &quot;</span>
+                                        <span class="s2">&quot;implemented&quot;</span><span class="p">)</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">pause</span><span class="p">(</span><span class="mf">0.0001</span><span class="p">)</span></div>
+
+
+<span class="k">def</span> <span class="nf">_safe_minmax</span><span class="p">(</span><span class="n">values</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Calculate min and max of array with guards for nan and inf.&quot;&quot;&quot;</span>
+
+    <span class="c1"># Nan and inf guarded min and max</span>
+    <span class="n">isfinite</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">isfinite</span><span class="p">(</span><span class="n">values</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">any</span><span class="p">(</span><span class="n">isfinite</span><span class="p">):</span>
+        <span class="c1"># Only use finite values</span>
+        <span class="n">values</span> <span class="o">=</span> <span class="n">values</span><span class="p">[</span><span class="n">isfinite</span><span class="p">]</span>
+
+    <span class="n">minval</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">values</span><span class="p">)</span>
+    <span class="n">maxval</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">values</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">minval</span><span class="p">,</span> <span class="n">maxval</span>
+
+
+<span class="k">def</span> <span class="nf">_colorbar_ticks</span><span class="p">(</span><span class="n">minval</span><span class="p">,</span> <span class="n">maxval</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Return the ticks (values show) in the colorbar.&quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">isfinite</span><span class="p">(</span><span class="n">minval</span><span class="p">)</span> <span class="ow">and</span> <span class="n">np</span><span class="o">.</span><span class="n">isfinite</span><span class="p">(</span><span class="n">maxval</span><span class="p">)):</span>
+        <span class="k">return</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span>
+    <span class="k">elif</span> <span class="n">minval</span> <span class="o">==</span> <span class="n">maxval</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">[</span><span class="n">minval</span><span class="p">]</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="c1"># Add eps to ensure values stay inside the range of the colorbar.</span>
+        <span class="c1"># Otherwise they may occationally not display.</span>
+        <span class="n">eps</span> <span class="o">=</span> <span class="p">(</span><span class="n">maxval</span> <span class="o">-</span> <span class="n">minval</span><span class="p">)</span> <span class="o">/</span> <span class="mf">1e5</span>
+        <span class="k">return</span> <span class="p">[</span><span class="n">minval</span> <span class="o">+</span> <span class="n">eps</span><span class="p">,</span> <span class="p">(</span><span class="n">maxval</span> <span class="o">+</span> <span class="n">minval</span><span class="p">)</span> <span class="o">/</span> <span class="mf">2.</span><span class="p">,</span> <span class="n">maxval</span> <span class="o">-</span> <span class="n">eps</span><span class="p">]</span>
+
+
+<span class="k">def</span> <span class="nf">_digits</span><span class="p">(</span><span class="n">minval</span><span class="p">,</span> <span class="n">maxval</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Digits needed to comforatbly display values in [minval, maxval]&quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">minval</span> <span class="o">==</span> <span class="n">maxval</span><span class="p">:</span>
+        <span class="k">return</span> <span class="mi">3</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="nb">min</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span> <span class="nb">max</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="nb">int</span><span class="p">(</span><span class="mi">1</span> <span class="o">+</span> <span class="nb">abs</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">log10</span><span class="p">(</span><span class="n">maxval</span> <span class="o">-</span> <span class="n">minval</span><span class="p">)))))</span>
+
+
+<span class="k">def</span> <span class="nf">_colorbar_format</span><span class="p">(</span><span class="n">minval</span><span class="p">,</span> <span class="n">maxval</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Return the format string for the colorbar.&quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">isfinite</span><span class="p">(</span><span class="n">minval</span><span class="p">)</span> <span class="ow">and</span> <span class="n">np</span><span class="o">.</span><span class="n">isfinite</span><span class="p">(</span><span class="n">maxval</span><span class="p">)):</span>
+        <span class="k">return</span> <span class="nb">str</span><span class="p">(</span><span class="n">maxval</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="s1">&#39;%.</span><span class="si">{}</span><span class="s1">f&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">_digits</span><span class="p">(</span><span class="n">minval</span><span class="p">,</span> <span class="n">maxval</span><span class="p">))</span>
+
+
+<span class="k">def</span> <span class="nf">_axes_info</span><span class="p">(</span><span class="n">grid</span><span class="p">,</span> <span class="n">npoints</span><span class="o">=</span><span class="mi">5</span><span class="p">):</span>
+    <span class="n">result</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="n">min_pt</span> <span class="o">=</span> <span class="n">grid</span><span class="o">.</span><span class="n">min</span><span class="p">()</span>
+    <span class="n">max_pt</span> <span class="o">=</span> <span class="n">grid</span><span class="o">.</span><span class="n">max</span><span class="p">()</span>
+    <span class="k">for</span> <span class="n">axis</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">grid</span><span class="o">.</span><span class="n">ndim</span><span class="p">):</span>
+        <span class="n">xmin</span> <span class="o">=</span> <span class="n">min_pt</span><span class="p">[</span><span class="n">axis</span><span class="p">]</span>
+        <span class="n">xmax</span> <span class="o">=</span> <span class="n">max_pt</span><span class="p">[</span><span class="n">axis</span><span class="p">]</span>
+
+        <span class="n">points</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="n">xmin</span><span class="p">,</span> <span class="n">xmax</span><span class="p">,</span> <span class="n">npoints</span><span class="p">)</span>
+        <span class="n">indices</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">grid</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="n">axis</span><span class="p">]</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="n">npoints</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">int</span><span class="p">)</span>
+        <span class="n">tick_values</span> <span class="o">=</span> <span class="n">grid</span><span class="o">.</span><span class="n">coord_vectors</span><span class="p">[</span><span class="n">axis</span><span class="p">][</span><span class="n">indices</span><span class="p">]</span>
+
+        <span class="c1"># Do not use corner point in case of a partition, use outer corner</span>
+        <span class="n">tick_values</span><span class="p">[[</span><span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">]]</span> <span class="o">=</span> <span class="n">xmin</span><span class="p">,</span> <span class="n">xmax</span>
+
+        <span class="n">format_str</span> <span class="o">=</span> <span class="s1">&#39;{:.&#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">_digits</span><span class="p">(</span><span class="n">xmin</span><span class="p">,</span> <span class="n">xmax</span><span class="p">))</span> <span class="o">+</span> <span class="s1">&#39;f}&#39;</span>
+        <span class="n">tick_labels</span> <span class="o">=</span> <span class="p">[</span><span class="n">format_str</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">f</span><span class="p">)</span> <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">tick_values</span><span class="p">]</span>
+
+        <span class="n">result</span> <span class="o">+=</span> <span class="p">[(</span><span class="n">points</span><span class="p">,</span> <span class="n">tick_labels</span><span class="p">)]</span>
+
+    <span class="k">return</span> <span class="n">result</span>
+
+
+<div class="viewcode-block" id="show_discrete_data"><a class="viewcode-back" href="../../../generated/odl.util.graphics.show_discrete_data.html#odl.util.graphics.show_discrete_data">[docs]</a><span class="k">def</span> <span class="nf">show_discrete_data</span><span class="p">(</span><span class="n">values</span><span class="p">,</span> <span class="n">grid</span><span class="p">,</span> <span class="n">title</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">,</span>
+                       <span class="n">force_show</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">fig</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Display a discrete 1d or 2d function.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    values : `numpy.ndarray`</span>
+<span class="sd">        The values to visualize.</span>
+
+<span class="sd">    grid : `RectGrid` or `RectPartition`</span>
+<span class="sd">        Grid of the values.</span>
+
+<span class="sd">    title : string, optional</span>
+<span class="sd">        Set the title of the figure.</span>
+
+<span class="sd">    method : string, optional</span>
+<span class="sd">        1d methods:</span>
+
+<span class="sd">        &#39;plot&#39; : graph plot</span>
+
+<span class="sd">        &#39;scatter&#39; : scattered 2d points</span>
+<span class="sd">        (2nd axis &lt;-&gt; value)</span>
+
+<span class="sd">        2d methods:</span>
+
+<span class="sd">        &#39;imshow&#39; : image plot with coloring according to value,</span>
+<span class="sd">        including a colorbar.</span>
+
+<span class="sd">        &#39;scatter&#39; : cloud of scattered 3d points</span>
+<span class="sd">        (3rd axis &lt;-&gt; value)</span>
+
+<span class="sd">        &#39;wireframe&#39;, &#39;plot_wireframe&#39; : surface plot</span>
+
+<span class="sd">    force_show : bool, optional</span>
+<span class="sd">        Whether the plot should be forced to be shown now or deferred until</span>
+<span class="sd">        later. Note that some backends always displays the plot, regardless</span>
+<span class="sd">        of this value.</span>
+
+<span class="sd">    fig : `matplotlib.figure.Figure`, optional</span>
+<span class="sd">        The figure to show in. Expected to be of same &quot;style&quot;, as the figure</span>
+<span class="sd">        given by this function. The most common usecase is that fig is the</span>
+<span class="sd">        return value from an earlier call to this function.</span>
+<span class="sd">        Default: New figure</span>
+
+<span class="sd">    interp : {&#39;nearest&#39;, &#39;linear&#39;}, optional</span>
+<span class="sd">        Interpolation method to use.</span>
+<span class="sd">        Default: &#39;nearest&#39;</span>
+
+<span class="sd">    axis_labels : string, optional</span>
+<span class="sd">        Axis labels, default: [&#39;x&#39;, &#39;y&#39;]</span>
+
+<span class="sd">    update_in_place : bool, optional</span>
+<span class="sd">        Update the content of the figure in-place. Intended for faster real</span>
+<span class="sd">        time plotting, typically ~5 times faster.</span>
+<span class="sd">        This is only performed for ``method == &#39;imshow&#39;`` with real data and</span>
+<span class="sd">        ``fig != None``. Otherwise this parameter is treated as False.</span>
+<span class="sd">        Default: False</span>
+
+<span class="sd">    axis_fontsize : int, optional</span>
+<span class="sd">        Fontsize for the axes. Default: 16</span>
+
+<span class="sd">    colorbar : bool, optional</span>
+<span class="sd">        Argument relevant for 2d plots using ``method=&#39;imshow&#39;``. If ``True``,</span>
+<span class="sd">        include a colorbar in the plot.</span>
+<span class="sd">        Default: True</span>
+
+<span class="sd">    kwargs : {&#39;figsize&#39;, &#39;saveto&#39;, ...}, optional</span>
+<span class="sd">        Extra keyword arguments passed on to display method</span>
+<span class="sd">        See the Matplotlib functions for documentation of extra</span>
+<span class="sd">        options.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    fig : `matplotlib.figure.Figure`</span>
+<span class="sd">        The resulting figure. It is also shown to the user.</span>
+
+<span class="sd">    See Also</span>
+<span class="sd">    --------</span>
+<span class="sd">    matplotlib.pyplot.plot : Show graph plot</span>
+
+<span class="sd">    matplotlib.pyplot.imshow : Show data as image</span>
+
+<span class="sd">    matplotlib.pyplot.scatter : Show scattered 3d points</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># Importing pyplot takes ~2 sec, only import when needed.</span>
+    <span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
+
+    <span class="n">args_re</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">args_im</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">dsp_kwargs</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="n">sub_kwargs</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="n">arrange_subplots</span> <span class="o">=</span> <span class="p">(</span><span class="mi">121</span><span class="p">,</span> <span class="mi">122</span><span class="p">)</span>  <span class="c1"># horzontal arrangement</span>
+
+    <span class="c1"># Create axis labels which remember their original meaning</span>
+    <span class="n">axis_labels</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;axis_labels&#39;</span><span class="p">,</span> <span class="p">[</span><span class="s1">&#39;x&#39;</span><span class="p">,</span> <span class="s1">&#39;y&#39;</span><span class="p">])</span>
+
+    <span class="n">values_are_complex</span> <span class="o">=</span> <span class="ow">not</span> <span class="n">is_real_dtype</span><span class="p">(</span><span class="n">values</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span>
+    <span class="n">figsize</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;figsize&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+    <span class="n">saveto</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;saveto&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+    <span class="n">interp</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;interp&#39;</span><span class="p">,</span> <span class="s1">&#39;nearest&#39;</span><span class="p">)</span>
+    <span class="n">axis_fontsize</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;axis_fontsize&#39;</span><span class="p">,</span> <span class="mi">16</span><span class="p">)</span>
+    <span class="n">colorbar</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;colorbar&#39;</span><span class="p">,</span> <span class="kc">True</span><span class="p">)</span>
+
+    <span class="c1"># Normalize input</span>
+    <span class="n">interp</span><span class="p">,</span> <span class="n">interp_in</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">interp</span><span class="p">)</span><span class="o">.</span><span class="n">lower</span><span class="p">(),</span> <span class="n">interp</span>
+    <span class="n">method</span><span class="p">,</span> <span class="n">method_in</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">method</span><span class="p">)</span><span class="o">.</span><span class="n">lower</span><span class="p">(),</span> <span class="n">method</span>
+
+    <span class="c1"># Check if we should and can update the plot in-place</span>
+    <span class="n">update_in_place</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;update_in_place&#39;</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
+    <span class="k">if</span> <span class="p">(</span><span class="n">update_in_place</span> <span class="ow">and</span>
+            <span class="p">(</span><span class="n">fig</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">values_are_complex</span> <span class="ow">or</span> <span class="n">values</span><span class="o">.</span><span class="n">ndim</span> <span class="o">!=</span> <span class="mi">2</span> <span class="ow">or</span>
+             <span class="p">(</span><span class="n">values</span><span class="o">.</span><span class="n">ndim</span> <span class="o">==</span> <span class="mi">2</span> <span class="ow">and</span> <span class="n">method</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">(</span><span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="s1">&#39;imshow&#39;</span><span class="p">)))):</span>
+        <span class="n">update_in_place</span> <span class="o">=</span> <span class="kc">False</span>
+
+    <span class="k">if</span> <span class="n">values</span><span class="o">.</span><span class="n">ndim</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>  <span class="c1"># TODO: maybe a plotter class would be better</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">method</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">interp</span> <span class="o">==</span> <span class="s1">&#39;nearest&#39;</span><span class="p">:</span>
+                <span class="n">method</span> <span class="o">=</span> <span class="s1">&#39;step&#39;</span>
+                <span class="n">dsp_kwargs</span><span class="p">[</span><span class="s1">&#39;where&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;mid&#39;</span>
+            <span class="k">elif</span> <span class="n">interp</span> <span class="o">==</span> <span class="s1">&#39;linear&#39;</span><span class="p">:</span>
+                <span class="n">method</span> <span class="o">=</span> <span class="s1">&#39;plot&#39;</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;`interp` </span><span class="si">{!r}</span><span class="s1"> not supported&#39;</span>
+                                 <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">interp_in</span><span class="p">))</span>
+
+        <span class="k">if</span> <span class="n">method</span> <span class="o">==</span> <span class="s1">&#39;plot&#39;</span> <span class="ow">or</span> <span class="n">method</span> <span class="o">==</span> <span class="s1">&#39;step&#39;</span> <span class="ow">or</span> <span class="n">method</span> <span class="o">==</span> <span class="s1">&#39;scatter&#39;</span><span class="p">:</span>
+            <span class="n">args_re</span> <span class="o">+=</span> <span class="p">[</span><span class="n">grid</span><span class="o">.</span><span class="n">coord_vectors</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">values</span><span class="o">.</span><span class="n">real</span><span class="p">]</span>
+            <span class="n">args_im</span> <span class="o">+=</span> <span class="p">[</span><span class="n">grid</span><span class="o">.</span><span class="n">coord_vectors</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">values</span><span class="o">.</span><span class="n">imag</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;`method` </span><span class="si">{!r}</span><span class="s1"> not supported&#39;</span>
+                             <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">method_in</span><span class="p">))</span>
+
+    <span class="k">elif</span> <span class="n">values</span><span class="o">.</span><span class="n">ndim</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">method</span><span class="p">:</span>
+            <span class="n">method</span> <span class="o">=</span> <span class="s1">&#39;imshow&#39;</span>
+
+        <span class="k">if</span> <span class="n">method</span> <span class="o">==</span> <span class="s1">&#39;imshow&#39;</span><span class="p">:</span>
+            <span class="n">args_re</span> <span class="o">=</span> <span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">rot90</span><span class="p">(</span><span class="n">values</span><span class="o">.</span><span class="n">real</span><span class="p">)]</span>
+            <span class="n">args_im</span> <span class="o">=</span> <span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">rot90</span><span class="p">(</span><span class="n">values</span><span class="o">.</span><span class="n">imag</span><span class="p">)]</span> <span class="k">if</span> <span class="n">values_are_complex</span> <span class="k">else</span> <span class="p">[]</span>
+
+            <span class="n">extent</span> <span class="o">=</span> <span class="p">[</span><span class="n">grid</span><span class="o">.</span><span class="n">min</span><span class="p">()[</span><span class="mi">0</span><span class="p">],</span> <span class="n">grid</span><span class="o">.</span><span class="n">max</span><span class="p">()[</span><span class="mi">0</span><span class="p">],</span>
+                      <span class="n">grid</span><span class="o">.</span><span class="n">min</span><span class="p">()[</span><span class="mi">1</span><span class="p">],</span> <span class="n">grid</span><span class="o">.</span><span class="n">max</span><span class="p">()[</span><span class="mi">1</span><span class="p">]]</span>
+
+            <span class="k">if</span> <span class="n">interp</span> <span class="o">==</span> <span class="s1">&#39;nearest&#39;</span><span class="p">:</span>
+                <span class="n">interpolation</span> <span class="o">=</span> <span class="s1">&#39;nearest&#39;</span>
+            <span class="k">elif</span> <span class="n">interp</span> <span class="o">==</span> <span class="s1">&#39;linear&#39;</span><span class="p">:</span>
+                <span class="n">interpolation</span> <span class="o">=</span> <span class="s1">&#39;bilinear&#39;</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;`interp` </span><span class="si">{!r}</span><span class="s1"> not supported&#39;</span>
+                                 <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">interp_in</span><span class="p">))</span>
+
+            <span class="n">dsp_kwargs</span><span class="o">.</span><span class="n">update</span><span class="p">({</span><span class="s1">&#39;interpolation&#39;</span><span class="p">:</span> <span class="n">interpolation</span><span class="p">,</span>
+                               <span class="s1">&#39;cmap&#39;</span><span class="p">:</span> <span class="s1">&#39;bone&#39;</span><span class="p">,</span>
+                               <span class="s1">&#39;extent&#39;</span><span class="p">:</span> <span class="n">extent</span><span class="p">,</span>
+                               <span class="s1">&#39;aspect&#39;</span><span class="p">:</span> <span class="s1">&#39;auto&#39;</span><span class="p">})</span>
+        <span class="k">elif</span> <span class="n">method</span> <span class="o">==</span> <span class="s1">&#39;scatter&#39;</span><span class="p">:</span>
+            <span class="n">pts</span> <span class="o">=</span> <span class="n">grid</span><span class="o">.</span><span class="n">points</span><span class="p">()</span>
+            <span class="n">args_re</span> <span class="o">=</span> <span class="p">[</span><span class="n">pts</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">],</span> <span class="n">pts</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">],</span> <span class="n">values</span><span class="o">.</span><span class="n">ravel</span><span class="p">()</span><span class="o">.</span><span class="n">real</span><span class="p">]</span>
+            <span class="n">args_im</span> <span class="o">=</span> <span class="p">([</span><span class="n">pts</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">],</span> <span class="n">pts</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">],</span> <span class="n">values</span><span class="o">.</span><span class="n">ravel</span><span class="p">()</span><span class="o">.</span><span class="n">imag</span><span class="p">]</span>
+                       <span class="k">if</span> <span class="n">values_are_complex</span> <span class="k">else</span> <span class="p">[])</span>
+            <span class="n">sub_kwargs</span><span class="o">.</span><span class="n">update</span><span class="p">({</span><span class="s1">&#39;projection&#39;</span><span class="p">:</span> <span class="s1">&#39;3d&#39;</span><span class="p">})</span>
+        <span class="k">elif</span> <span class="n">method</span> <span class="ow">in</span> <span class="p">(</span><span class="s1">&#39;wireframe&#39;</span><span class="p">,</span> <span class="s1">&#39;plot_wireframe&#39;</span><span class="p">):</span>
+            <span class="n">method</span> <span class="o">=</span> <span class="s1">&#39;plot_wireframe&#39;</span>
+            <span class="n">x</span><span class="p">,</span> <span class="n">y</span> <span class="o">=</span> <span class="n">grid</span><span class="o">.</span><span class="n">meshgrid</span>
+            <span class="n">args_re</span> <span class="o">=</span> <span class="p">[</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">rot90</span><span class="p">(</span><span class="n">values</span><span class="o">.</span><span class="n">real</span><span class="p">)]</span>
+            <span class="n">args_im</span> <span class="o">=</span> <span class="p">([</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">rot90</span><span class="p">(</span><span class="n">values</span><span class="o">.</span><span class="n">imag</span><span class="p">)]</span> <span class="k">if</span> <span class="n">values_are_complex</span>
+                       <span class="k">else</span> <span class="p">[])</span>
+            <span class="n">sub_kwargs</span><span class="o">.</span><span class="n">update</span><span class="p">({</span><span class="s1">&#39;projection&#39;</span><span class="p">:</span> <span class="s1">&#39;3d&#39;</span><span class="p">})</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;`method` </span><span class="si">{!r}</span><span class="s1"> not supported&#39;</span>
+                             <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">method_in</span><span class="p">))</span>
+
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s1">&#39;no method for </span><span class="si">{}</span><span class="s1">d display implemented&#39;</span>
+                                  <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">values</span><span class="o">.</span><span class="n">ndim</span><span class="p">))</span>
+
+    <span class="c1"># Additional keyword args are passed on to the display method</span>
+    <span class="n">dsp_kwargs</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">fig</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="c1"># Reuse figure if given as input</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">fig</span><span class="p">,</span> <span class="n">plt</span><span class="o">.</span><span class="n">Figure</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;`fig` </span><span class="si">{}</span><span class="s1"> not a matplotlib figure&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">fig</span><span class="p">))</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">plt</span><span class="o">.</span><span class="n">fignum_exists</span><span class="p">(</span><span class="n">fig</span><span class="o">.</span><span class="n">number</span><span class="p">):</span>
+            <span class="c1"># If figure does not exist, user either closed the figure or</span>
+            <span class="c1"># is using IPython, in this case we need a new figure.</span>
+
+            <span class="n">fig</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="n">figsize</span><span class="p">)</span>
+            <span class="n">updatefig</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># Set current figure to given input</span>
+            <span class="n">fig</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">(</span><span class="n">fig</span><span class="o">.</span><span class="n">number</span><span class="p">)</span>
+            <span class="n">updatefig</span> <span class="o">=</span> <span class="kc">True</span>
+
+            <span class="k">if</span> <span class="n">values</span><span class="o">.</span><span class="n">ndim</span> <span class="o">&gt;</span> <span class="mi">1</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">update_in_place</span><span class="p">:</span>
+                <span class="c1"># If the figure is larger than 1d, we can clear it since we</span>
+                <span class="c1"># dont reuse anything. Keeping it causes performance problems.</span>
+                <span class="n">fig</span><span class="o">.</span><span class="n">clf</span><span class="p">()</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">fig</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="n">figsize</span><span class="p">)</span>
+        <span class="n">updatefig</span> <span class="o">=</span> <span class="kc">False</span>
+
+    <span class="k">if</span> <span class="n">values_are_complex</span><span class="p">:</span>
+        <span class="c1"># Real</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">fig</span><span class="o">.</span><span class="n">axes</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="c1"># Create new axis if needed</span>
+            <span class="n">sub_re</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplot</span><span class="p">(</span><span class="n">arrange_subplots</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="o">**</span><span class="n">sub_kwargs</span><span class="p">)</span>
+            <span class="n">sub_re</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="s1">&#39;Real part&#39;</span><span class="p">)</span>
+            <span class="n">sub_re</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="n">axis_labels</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">fontsize</span><span class="o">=</span><span class="n">axis_fontsize</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">values</span><span class="o">.</span><span class="n">ndim</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
+                <span class="n">sub_re</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="n">axis_labels</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">fontsize</span><span class="o">=</span><span class="n">axis_fontsize</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">sub_re</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s1">&#39;value&#39;</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">sub_re</span> <span class="o">=</span> <span class="n">fig</span><span class="o">.</span><span class="n">axes</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+        <span class="n">display_re</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">sub_re</span><span class="p">,</span> <span class="n">method</span><span class="p">)</span>
+        <span class="n">csub_re</span> <span class="o">=</span> <span class="n">display_re</span><span class="p">(</span><span class="o">*</span><span class="n">args_re</span><span class="p">,</span> <span class="o">**</span><span class="n">dsp_kwargs</span><span class="p">)</span>
+
+        <span class="c1"># Axis ticks</span>
+        <span class="k">if</span> <span class="n">method</span> <span class="o">==</span> <span class="s1">&#39;imshow&#39;</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">grid</span><span class="o">.</span><span class="n">is_uniform</span><span class="p">:</span>
+            <span class="p">(</span><span class="n">xpts</span><span class="p">,</span> <span class="n">xlabels</span><span class="p">),</span> <span class="p">(</span><span class="n">ypts</span><span class="p">,</span> <span class="n">ylabels</span><span class="p">)</span> <span class="o">=</span> <span class="n">_axes_info</span><span class="p">(</span><span class="n">grid</span><span class="p">)</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">xticks</span><span class="p">(</span><span class="n">xpts</span><span class="p">,</span> <span class="n">xlabels</span><span class="p">)</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">yticks</span><span class="p">(</span><span class="n">ypts</span><span class="p">,</span> <span class="n">ylabels</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">method</span> <span class="o">==</span> <span class="s1">&#39;imshow&#39;</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">fig</span><span class="o">.</span><span class="n">axes</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">2</span><span class="p">:</span>
+            <span class="c1"># Create colorbar if none seems to exist</span>
+
+            <span class="c1"># Use clim from kwargs if given</span>
+            <span class="k">if</span> <span class="s1">&#39;clim&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="p">:</span>
+                <span class="n">minval_re</span><span class="p">,</span> <span class="n">maxval_re</span> <span class="o">=</span> <span class="n">_safe_minmax</span><span class="p">(</span><span class="n">values</span><span class="o">.</span><span class="n">real</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">minval_re</span><span class="p">,</span> <span class="n">maxval_re</span> <span class="o">=</span> <span class="n">kwargs</span><span class="p">[</span><span class="s1">&#39;clim&#39;</span><span class="p">]</span>
+
+            <span class="n">ticks_re</span> <span class="o">=</span> <span class="n">_colorbar_ticks</span><span class="p">(</span><span class="n">minval_re</span><span class="p">,</span> <span class="n">maxval_re</span><span class="p">)</span>
+            <span class="n">fmt_re</span> <span class="o">=</span> <span class="n">_colorbar_format</span><span class="p">(</span><span class="n">minval_re</span><span class="p">,</span> <span class="n">maxval_re</span><span class="p">)</span>
+
+            <span class="n">plt</span><span class="o">.</span><span class="n">colorbar</span><span class="p">(</span><span class="n">csub_re</span><span class="p">,</span> <span class="n">orientation</span><span class="o">=</span><span class="s1">&#39;horizontal&#39;</span><span class="p">,</span>
+                         <span class="n">ticks</span><span class="o">=</span><span class="n">ticks_re</span><span class="p">,</span> <span class="nb">format</span><span class="o">=</span><span class="n">fmt_re</span><span class="p">)</span>
+
+        <span class="c1"># Imaginary</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">fig</span><span class="o">.</span><span class="n">axes</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">3</span><span class="p">:</span>
+            <span class="n">sub_im</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplot</span><span class="p">(</span><span class="n">arrange_subplots</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="o">**</span><span class="n">sub_kwargs</span><span class="p">)</span>
+            <span class="n">sub_im</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="s1">&#39;Imaginary part&#39;</span><span class="p">)</span>
+            <span class="n">sub_im</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="n">axis_labels</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">fontsize</span><span class="o">=</span><span class="n">axis_fontsize</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">values</span><span class="o">.</span><span class="n">ndim</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
+                <span class="n">sub_im</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="n">axis_labels</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">fontsize</span><span class="o">=</span><span class="n">axis_fontsize</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">sub_im</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s1">&#39;value&#39;</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">sub_im</span> <span class="o">=</span> <span class="n">fig</span><span class="o">.</span><span class="n">axes</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
+
+        <span class="n">display_im</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">sub_im</span><span class="p">,</span> <span class="n">method</span><span class="p">)</span>
+        <span class="n">csub_im</span> <span class="o">=</span> <span class="n">display_im</span><span class="p">(</span><span class="o">*</span><span class="n">args_im</span><span class="p">,</span> <span class="o">**</span><span class="n">dsp_kwargs</span><span class="p">)</span>
+
+        <span class="c1"># Axis ticks</span>
+        <span class="k">if</span> <span class="n">method</span> <span class="o">==</span> <span class="s1">&#39;imshow&#39;</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">grid</span><span class="o">.</span><span class="n">is_uniform</span><span class="p">:</span>
+            <span class="p">(</span><span class="n">xpts</span><span class="p">,</span> <span class="n">xlabels</span><span class="p">),</span> <span class="p">(</span><span class="n">ypts</span><span class="p">,</span> <span class="n">ylabels</span><span class="p">)</span> <span class="o">=</span> <span class="n">_axes_info</span><span class="p">(</span><span class="n">grid</span><span class="p">)</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">xticks</span><span class="p">(</span><span class="n">xpts</span><span class="p">,</span> <span class="n">xlabels</span><span class="p">)</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">yticks</span><span class="p">(</span><span class="n">ypts</span><span class="p">,</span> <span class="n">ylabels</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">method</span> <span class="o">==</span> <span class="s1">&#39;imshow&#39;</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">fig</span><span class="o">.</span><span class="n">axes</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">4</span><span class="p">:</span>
+            <span class="c1"># Create colorbar if none seems to exist</span>
+
+            <span class="c1"># Use clim from kwargs if given</span>
+            <span class="k">if</span> <span class="s1">&#39;clim&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="p">:</span>
+                <span class="n">minval_im</span><span class="p">,</span> <span class="n">maxval_im</span> <span class="o">=</span> <span class="n">_safe_minmax</span><span class="p">(</span><span class="n">values</span><span class="o">.</span><span class="n">imag</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">minval_im</span><span class="p">,</span> <span class="n">maxval_im</span> <span class="o">=</span> <span class="n">kwargs</span><span class="p">[</span><span class="s1">&#39;clim&#39;</span><span class="p">]</span>
+
+            <span class="n">ticks_im</span> <span class="o">=</span> <span class="n">_colorbar_ticks</span><span class="p">(</span><span class="n">minval_im</span><span class="p">,</span> <span class="n">maxval_im</span><span class="p">)</span>
+            <span class="n">fmt_im</span> <span class="o">=</span> <span class="n">_colorbar_format</span><span class="p">(</span><span class="n">minval_im</span><span class="p">,</span> <span class="n">maxval_im</span><span class="p">)</span>
+
+            <span class="n">plt</span><span class="o">.</span><span class="n">colorbar</span><span class="p">(</span><span class="n">csub_im</span><span class="p">,</span> <span class="n">orientation</span><span class="o">=</span><span class="s1">&#39;horizontal&#39;</span><span class="p">,</span>
+                         <span class="n">ticks</span><span class="o">=</span><span class="n">ticks_im</span><span class="p">,</span> <span class="nb">format</span><span class="o">=</span><span class="n">fmt_im</span><span class="p">)</span>
+
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">fig</span><span class="o">.</span><span class="n">axes</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="c1"># Create new axis object if needed</span>
+            <span class="n">sub</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplot</span><span class="p">(</span><span class="mi">111</span><span class="p">,</span> <span class="o">**</span><span class="n">sub_kwargs</span><span class="p">)</span>
+            <span class="n">sub</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="n">axis_labels</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">fontsize</span><span class="o">=</span><span class="n">axis_fontsize</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">values</span><span class="o">.</span><span class="n">ndim</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
+                <span class="n">sub</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="n">axis_labels</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">fontsize</span><span class="o">=</span><span class="n">axis_fontsize</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">sub</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s1">&#39;value&#39;</span><span class="p">)</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="c1"># For 3d plots</span>
+                <span class="n">sub</span><span class="o">.</span><span class="n">set_zlabel</span><span class="p">(</span><span class="s1">&#39;z&#39;</span><span class="p">)</span>
+            <span class="k">except</span> <span class="ne">AttributeError</span><span class="p">:</span>
+                <span class="k">pass</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">sub</span> <span class="o">=</span> <span class="n">fig</span><span class="o">.</span><span class="n">axes</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+        <span class="k">if</span> <span class="n">update_in_place</span><span class="p">:</span>
+            <span class="kn">import</span> <span class="nn">matplotlib</span> <span class="k">as</span> <span class="nn">mpl</span>
+            <span class="n">imgs</span> <span class="o">=</span> <span class="p">[</span><span class="n">obj</span> <span class="k">for</span> <span class="n">obj</span> <span class="ow">in</span> <span class="n">sub</span><span class="o">.</span><span class="n">get_children</span><span class="p">()</span>
+                    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="n">mpl</span><span class="o">.</span><span class="n">image</span><span class="o">.</span><span class="n">AxesImage</span><span class="p">)]</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">imgs</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="ow">and</span> <span class="n">updatefig</span><span class="p">:</span>
+                <span class="n">imgs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">set_data</span><span class="p">(</span><span class="n">args_re</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+                <span class="n">csub</span> <span class="o">=</span> <span class="n">imgs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+                <span class="c1"># Update min-max</span>
+                <span class="k">if</span> <span class="s1">&#39;clim&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="p">:</span>
+                    <span class="n">minval</span><span class="p">,</span> <span class="n">maxval</span> <span class="o">=</span> <span class="n">_safe_minmax</span><span class="p">(</span><span class="n">values</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">minval</span><span class="p">,</span> <span class="n">maxval</span> <span class="o">=</span> <span class="n">kwargs</span><span class="p">[</span><span class="s1">&#39;clim&#39;</span><span class="p">]</span>
+
+                <span class="n">csub</span><span class="o">.</span><span class="n">set_clim</span><span class="p">(</span><span class="n">minval</span><span class="p">,</span> <span class="n">maxval</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">display</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">sub</span><span class="p">,</span> <span class="n">method</span><span class="p">)</span>
+                <span class="n">csub</span> <span class="o">=</span> <span class="n">display</span><span class="p">(</span><span class="o">*</span><span class="n">args_re</span><span class="p">,</span> <span class="o">**</span><span class="n">dsp_kwargs</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">display</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">sub</span><span class="p">,</span> <span class="n">method</span><span class="p">)</span>
+            <span class="n">csub</span> <span class="o">=</span> <span class="n">display</span><span class="p">(</span><span class="o">*</span><span class="n">args_re</span><span class="p">,</span> <span class="o">**</span><span class="n">dsp_kwargs</span><span class="p">)</span>
+
+        <span class="c1"># Axis ticks</span>
+        <span class="k">if</span> <span class="n">method</span> <span class="o">==</span> <span class="s1">&#39;imshow&#39;</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">grid</span><span class="o">.</span><span class="n">is_uniform</span><span class="p">:</span>
+            <span class="p">(</span><span class="n">xpts</span><span class="p">,</span> <span class="n">xlabels</span><span class="p">),</span> <span class="p">(</span><span class="n">ypts</span><span class="p">,</span> <span class="n">ylabels</span><span class="p">)</span> <span class="o">=</span> <span class="n">_axes_info</span><span class="p">(</span><span class="n">grid</span><span class="p">)</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">xticks</span><span class="p">(</span><span class="n">xpts</span><span class="p">,</span> <span class="n">xlabels</span><span class="p">)</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">yticks</span><span class="p">(</span><span class="n">ypts</span><span class="p">,</span> <span class="n">ylabels</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">method</span> <span class="o">==</span> <span class="s1">&#39;imshow&#39;</span> <span class="ow">and</span> <span class="n">colorbar</span><span class="p">:</span>
+            <span class="c1"># Add colorbar</span>
+            <span class="c1"># Use clim from kwargs if given</span>
+            <span class="k">if</span> <span class="s1">&#39;clim&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="p">:</span>
+                <span class="n">minval</span><span class="p">,</span> <span class="n">maxval</span> <span class="o">=</span> <span class="n">_safe_minmax</span><span class="p">(</span><span class="n">values</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">minval</span><span class="p">,</span> <span class="n">maxval</span> <span class="o">=</span> <span class="n">kwargs</span><span class="p">[</span><span class="s1">&#39;clim&#39;</span><span class="p">]</span>
+
+            <span class="n">ticks</span> <span class="o">=</span> <span class="n">_colorbar_ticks</span><span class="p">(</span><span class="n">minval</span><span class="p">,</span> <span class="n">maxval</span><span class="p">)</span>
+            <span class="n">fmt</span> <span class="o">=</span> <span class="n">_colorbar_format</span><span class="p">(</span><span class="n">minval</span><span class="p">,</span> <span class="n">maxval</span><span class="p">)</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">fig</span><span class="o">.</span><span class="n">axes</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">2</span><span class="p">:</span>
+                <span class="c1"># Create colorbar if none seems to exist</span>
+                <span class="n">plt</span><span class="o">.</span><span class="n">colorbar</span><span class="p">(</span><span class="n">mappable</span><span class="o">=</span><span class="n">csub</span><span class="p">,</span> <span class="n">ticks</span><span class="o">=</span><span class="n">ticks</span><span class="p">,</span> <span class="nb">format</span><span class="o">=</span><span class="n">fmt</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="n">update_in_place</span><span class="p">:</span>
+                <span class="c1"># If it exists and we should update it</span>
+                <span class="n">csub</span><span class="o">.</span><span class="n">colorbar</span><span class="o">.</span><span class="n">set_clim</span><span class="p">(</span><span class="n">minval</span><span class="p">,</span> <span class="n">maxval</span><span class="p">)</span>
+                <span class="n">csub</span><span class="o">.</span><span class="n">colorbar</span><span class="o">.</span><span class="n">set_ticks</span><span class="p">(</span><span class="n">ticks</span><span class="p">)</span>
+                <span class="k">if</span> <span class="s1">&#39;%&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">fmt</span><span class="p">:</span>
+                    <span class="n">labels</span> <span class="o">=</span> <span class="p">[</span><span class="n">fmt</span><span class="p">]</span> <span class="o">*</span> <span class="nb">len</span><span class="p">(</span><span class="n">ticks</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">labels</span> <span class="o">=</span> <span class="p">[</span><span class="n">fmt</span> <span class="o">%</span> <span class="n">t</span> <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="n">ticks</span><span class="p">]</span>
+                <span class="n">csub</span><span class="o">.</span><span class="n">colorbar</span><span class="o">.</span><span class="n">set_ticklabels</span><span class="p">(</span><span class="n">labels</span><span class="p">)</span>
+                <span class="n">csub</span><span class="o">.</span><span class="n">colorbar</span><span class="o">.</span><span class="n">draw_all</span><span class="p">()</span>
+
+    <span class="c1"># Set title of window</span>
+    <span class="k">if</span> <span class="n">title</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">values_are_complex</span><span class="p">:</span>
+            <span class="c1"># Do not overwrite title for complex values</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="n">title</span><span class="p">)</span>
+        <span class="n">fig</span><span class="o">.</span><span class="n">canvas</span><span class="o">.</span><span class="n">manager</span><span class="o">.</span><span class="n">set_window_title</span><span class="p">(</span><span class="n">title</span><span class="p">)</span>
+
+    <span class="c1"># Fixes overlapping stuff at the expense of potentially squashed subplots</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">update_in_place</span><span class="p">:</span>
+        <span class="n">fig</span><span class="o">.</span><span class="n">tight_layout</span><span class="p">()</span>
+
+    <span class="k">if</span> <span class="n">updatefig</span> <span class="ow">or</span> <span class="n">plt</span><span class="o">.</span><span class="n">isinteractive</span><span class="p">():</span>
+        <span class="c1"># If we are running in interactive mode, we can always show the fig</span>
+        <span class="c1"># This causes an artifact, where users of `CallbackShow` without</span>
+        <span class="c1"># interactive mode only shows the figure after the second iteration.</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">(</span><span class="n">block</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">update_in_place</span><span class="p">:</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">draw</span><span class="p">()</span>
+            <span class="n">warning_free_pause</span><span class="p">()</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">sub</span><span class="o">.</span><span class="n">draw_artist</span><span class="p">(</span><span class="n">csub</span><span class="p">)</span>
+                <span class="n">fig</span><span class="o">.</span><span class="n">canvas</span><span class="o">.</span><span class="n">blit</span><span class="p">(</span><span class="n">fig</span><span class="o">.</span><span class="n">bbox</span><span class="p">)</span>
+                <span class="n">fig</span><span class="o">.</span><span class="n">canvas</span><span class="o">.</span><span class="n">update</span><span class="p">()</span>
+                <span class="n">fig</span><span class="o">.</span><span class="n">canvas</span><span class="o">.</span><span class="n">flush_events</span><span class="p">()</span>
+            <span class="k">except</span> <span class="ne">AttributeError</span><span class="p">:</span>
+                <span class="n">plt</span><span class="o">.</span><span class="n">draw</span><span class="p">()</span>
+                <span class="n">warning_free_pause</span><span class="p">()</span>
+
+    <span class="k">if</span> <span class="n">force_show</span><span class="p">:</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+
+    <span class="k">if</span> <span class="n">saveto</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">fig</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="n">saveto</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">fig</span></div>
+
+
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s1">&#39;__main__&#39;</span><span class="p">:</span>
+    <span class="n">run_doctests</span><span class="p">()</span>
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &#169; Copyright 2014-2020 The ODL Contributors.
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

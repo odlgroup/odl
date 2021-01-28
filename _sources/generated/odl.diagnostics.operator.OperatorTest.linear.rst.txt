@@ -1,0 +1,8 @@
+:orphan:
+
+OperatorTest.linear
+============================================
+
+.. currentmodule:: odl.diagnostics.operator
+
+.. automethod:: OperatorTest.linear

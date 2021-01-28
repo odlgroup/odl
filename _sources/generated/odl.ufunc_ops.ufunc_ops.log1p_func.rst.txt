@@ -1,0 +1,43 @@
+﻿log1p_func
+==================================
+
+.. currentmodule:: odl.ufunc_ops.ufunc_ops
+
+.. autoclass:: log1p_func
+   :show-inheritance:
+   
+   
+   .. automethod:: __init__
+   
+      
+   
+   .. HACK -- the point here is that we don't want this to appear in the output, but the autosummary should still generate the pages.
+      .. autosummary::
+         :toctree:
+      
+         log1p_func.__call__
+         log1p_func.__eq__
+         log1p_func._call
+         log1p_func.bregman
+         log1p_func.derivative
+         log1p_func.norm
+         log1p_func.translated
+   
+
+    
+   .. HACK -- the point here is that we don't want this to appear in the output, but the autosummary should still generate the pages.
+      .. autosummary::
+         :toctree:
+      
+         log1p_func.adjoint
+         log1p_func.convex_conj
+         log1p_func.domain
+         log1p_func.grad_lipschitz
+         log1p_func.gradient
+         log1p_func.inverse
+         log1p_func.is_functional
+         log1p_func.is_linear
+         log1p_func.proximal
+         log1p_func.range
+   
+   

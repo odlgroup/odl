@@ -1,0 +1,6 @@
+WaveletTransformInverse.adjoint
+==================================================
+
+.. currentmodule:: odl.trafos.wavelet
+
+.. autoproperty:: WaveletTransformInverse.adjoint

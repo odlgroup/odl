@@ -1,0 +1,6 @@
+﻿all_equal
+============================
+
+.. currentmodule:: odl.util.testutils
+
+.. autofunction:: all_equal

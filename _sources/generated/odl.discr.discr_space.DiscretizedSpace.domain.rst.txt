@@ -1,0 +1,6 @@
+DiscretizedSpace.domain
+=============================================
+
+.. currentmodule:: odl.discr.discr_space
+
+.. autoproperty:: DiscretizedSpace.domain

@@ -1,0 +1,63 @@
+﻿ProductSpace
+=============================
+
+.. currentmodule:: odl.space.pspace
+
+.. autoclass:: ProductSpace
+   :show-inheritance:
+   
+   
+   .. automethod:: __init__
+   
+      
+   
+   .. HACK -- the point here is that we don't want this to appear in the output, but the autosummary should still generate the pages.
+      .. autosummary::
+         :toctree:
+      
+         ProductSpace.__contains__
+         ProductSpace.__eq__
+         ProductSpace.__getitem__
+         ProductSpace._dist
+         ProductSpace._divide
+         ProductSpace._inner
+         ProductSpace._lincomb
+         ProductSpace._multiply
+         ProductSpace._norm
+         ProductSpace.astype
+         ProductSpace.contains_all
+         ProductSpace.contains_set
+         ProductSpace.dist
+         ProductSpace.divide
+         ProductSpace.element
+         ProductSpace.inner
+         ProductSpace.lincomb
+         ProductSpace.multiply
+         ProductSpace.norm
+         ProductSpace.one
+         ProductSpace.zero
+   
+
+    
+   .. HACK -- the point here is that we don't want this to appear in the output, but the autosummary should still generate the pages.
+      .. autosummary::
+         :toctree:
+      
+         ProductSpace.complex_space
+         ProductSpace.dtype
+         ProductSpace.element_type
+         ProductSpace.examples
+         ProductSpace.exponent
+         ProductSpace.field
+         ProductSpace.is_complex
+         ProductSpace.is_power_space
+         ProductSpace.is_real
+         ProductSpace.is_weighted
+         ProductSpace.nbytes
+         ProductSpace.real_space
+         ProductSpace.shape
+         ProductSpace.size
+         ProductSpace.spaces
+         ProductSpace.weighting
+   
+   

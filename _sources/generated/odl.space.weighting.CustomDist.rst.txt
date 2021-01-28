@@ -1,0 +1,34 @@
+﻿CustomDist
+==============================
+
+.. currentmodule:: odl.space.weighting
+
+.. autoclass:: CustomDist
+   :show-inheritance:
+   
+   
+   .. automethod:: __init__
+   
+      
+   
+   .. HACK -- the point here is that we don't want this to appear in the output, but the autosummary should still generate the pages.
+      .. autosummary::
+         :toctree:
+      
+         CustomDist.__eq__
+         CustomDist.equiv
+         CustomDist.inner
+         CustomDist.norm
+   
+
+    
+   .. HACK -- the point here is that we don't want this to appear in the output, but the autosummary should still generate the pages.
+      .. autosummary::
+         :toctree:
+      
+         CustomDist.dist
+         CustomDist.exponent
+         CustomDist.impl
+         CustomDist.repr_part
+   
+   

@@ -1,0 +1,6 @@
+ConstantOperator.domain
+================================================
+
+.. currentmodule:: odl.operator.default_ops
+
+.. autoproperty:: ConstantOperator.domain

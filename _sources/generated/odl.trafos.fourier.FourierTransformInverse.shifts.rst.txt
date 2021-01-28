@@ -1,0 +1,6 @@
+FourierTransformInverse.shifts
+=================================================
+
+.. currentmodule:: odl.trafos.fourier
+
+.. autoproperty:: FourierTransformInverse.shifts

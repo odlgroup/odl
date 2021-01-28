@@ -1,0 +1,6 @@
+FunctionalSum.right
+=====================================================
+
+.. currentmodule:: odl.solvers.functional.functional
+
+.. autoproperty:: FunctionalSum.right

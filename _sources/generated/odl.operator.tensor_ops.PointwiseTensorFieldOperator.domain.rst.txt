@@ -1,0 +1,6 @@
+PointwiseTensorFieldOperator.domain
+===========================================================
+
+.. currentmodule:: odl.operator.tensor_ops
+
+.. autoproperty:: PointwiseTensorFieldOperator.domain

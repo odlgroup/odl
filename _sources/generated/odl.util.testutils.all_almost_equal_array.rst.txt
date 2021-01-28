@@ -1,0 +1,6 @@
+﻿all_almost_equal_array
+=========================================
+
+.. currentmodule:: odl.util.testutils
+
+.. autofunction:: all_almost_equal_array

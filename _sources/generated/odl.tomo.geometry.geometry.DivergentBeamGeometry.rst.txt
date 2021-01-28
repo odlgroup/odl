@@ -1,0 +1,46 @@
+﻿DivergentBeamGeometry
+================================================
+
+.. currentmodule:: odl.tomo.geometry.geometry
+
+.. autoclass:: DivergentBeamGeometry
+   :show-inheritance:
+   
+   
+   .. automethod:: __init__
+   
+      
+   
+   .. HACK -- the point here is that we don't want this to appear in the output, but the autosummary should still generate the pages.
+      .. autosummary::
+         :toctree:
+      
+         DivergentBeamGeometry.__eq__
+         DivergentBeamGeometry.det_point_position
+         DivergentBeamGeometry.det_refpoint
+         DivergentBeamGeometry.det_to_src
+         DivergentBeamGeometry.rotation_matrix
+         DivergentBeamGeometry.src_position
+   
+
+    
+   .. HACK -- the point here is that we don't want this to appear in the output, but the autosummary should still generate the pages.
+      .. autosummary::
+         :toctree:
+      
+         DivergentBeamGeometry.check_bounds
+         DivergentBeamGeometry.det_grid
+         DivergentBeamGeometry.det_params
+         DivergentBeamGeometry.det_partition
+         DivergentBeamGeometry.detector
+         DivergentBeamGeometry.grid
+         DivergentBeamGeometry.implementation_cache
+         DivergentBeamGeometry.motion_grid
+         DivergentBeamGeometry.motion_params
+         DivergentBeamGeometry.motion_partition
+         DivergentBeamGeometry.ndim
+         DivergentBeamGeometry.params
+         DivergentBeamGeometry.partition
+         DivergentBeamGeometry.translation
+   
+   

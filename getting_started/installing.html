@@ -1,0 +1,320 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>Installing ODL &mdash; odl 1.0.0.dev0 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Installing ODL using conda" href="installing_conda.html" />
+    <link rel="prev" title="About ODL" href="about_odl.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../index.html" class="icon icon-home"> odl
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                1.0.0.dev0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Getting Started</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="getting_started.html">Getting Started</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="about_odl.html">About ODL</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Installing ODL</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#tl-dr">TL;DR</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#introduction">Introduction</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#consider-using-anaconda">Consider using Anaconda</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#which-python-version-to-use">Which Python version to use?</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#development-environment">Development environment</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#in-depth-guides">In-depth guides</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#issues">Issues</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="installing_conda.html">Installing ODL using conda</a></li>
+<li class="toctree-l2"><a class="reference internal" href="installing_pip.html">Installing ODL using pip</a></li>
+<li class="toctree-l2"><a class="reference internal" href="installing_source.html">Installing ODL from source</a></li>
+<li class="toctree-l2"><a class="reference internal" href="installing_extensions.html">Installing ODL extensions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="first_steps.html">First steps</a></li>
+</ul>
+</li>
+</ul>
+<p class="caption"><span class="caption-text">Working with ODL</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../guide/guide.html">User’s guide – selected topics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../math/math.html">Mathematical Background</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Developer zone</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../dev/dev.html">Contributing to ODL</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Useful facts</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../guide/faq.html">Frequently asked questions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../guide/glossary.html">Glossary</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../release_notes.html">Release Notes</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../refs.html">References</a></li>
+</ul>
+<p class="caption"><span class="caption-text">API Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../odl.html">odl</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">odl</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="getting_started.html">Getting Started</a> &raquo;</li>
+        
+      <li>Installing ODL</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            <a href="../_sources/getting_started/installing.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="installing-odl">
+<span id="id1"></span><h1>Installing ODL<a class="headerlink" href="#installing-odl" title="Permalink to this headline">¶</a></h1>
+<p>This guide will go through all steps necessary for a full ODL installation, starting from nothing more than a working operating system (Linux, MacOS or Windows).</p>
+<div class="section" id="tl-dr">
+<span id="installing-odl-tldr"></span><h2>TL;DR<a class="headerlink" href="#tl-dr" title="Permalink to this headline">¶</a></h2>
+<p>If you already have a working python environment, ODL and some basic dependencies can be installed using either <a class="reference external" href="https://pip.pypa.io/en/stable/">pip</a>:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$ pip install odl<span class="o">[</span>testing,show<span class="o">]</span>
+</pre></div>
+</div>
+<p>or conda:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$ conda install -c odlgroup odl matplotlib pytest scikit-image spyder
+</pre></div>
+</div>
+<p>After installation, the installation can be verified by running the tests:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$ python -c <span class="s2">&quot;import odl; odl.test()&quot;</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="introduction">
+<span id="installing-odl-introduction"></span><h2>Introduction<a class="headerlink" href="#introduction" title="Permalink to this headline">¶</a></h2>
+<p>Installing ODL is intended to be straightforward, and this guide is meant for new users.
+For a working installation you should perform the following steps:</p>
+<ol class="arabic simple">
+<li><p>Install a Python interpreter</p></li>
+<li><p>Install ODL and its dependencies</p></li>
+<li><p>(optional) Install extensions for more functionality</p></li>
+<li><p>(optional) Run the tests</p></li>
+</ol>
+</div>
+<div class="section" id="consider-using-anaconda">
+<span id="installing-odl-consider-anaconda"></span><h2>Consider using Anaconda<a class="headerlink" href="#consider-using-anaconda" title="Permalink to this headline">¶</a></h2>
+<p>We currently recommend to use <a class="reference external" href="https://anaconda.org/">Anaconda</a> on all platforms since it offers the best out-of-the-box installation and run-time experience.
+Anaconda also has other benefits, for example the possibility to work in completely isolated Python environments with own installed packages, thereby avoiding conflicts with system-wide installed packages.
+Furthermore, Anaconda cooperates with <code class="docutils literal notranslate"><span class="pre">pip</span></code> (see below), i.e. packages can be installed with both Anaconda’s internal mechanism and <code class="docutils literal notranslate"><span class="pre">pip</span></code> without conflicts.</p>
+<p>Alternatively, packages can be installed with <a class="reference external" href="https://pip.pypa.io/en/stable/">pip</a> in a user’s location, which should also avoid conflicts.
+We will provide instructions for this alternative.</p>
+<p>Another possibility is to use <a class="reference external" href="https://virtualenv.pypa.io/en/stable/">virtualenv</a>, which can be seen as a predecessor to Anaconda.
+Following the <code class="docutils literal notranslate"><span class="pre">pip</span></code> installation instructions in a <code class="docutils literal notranslate"><span class="pre">virtualenv</span></code> without the <code class="docutils literal notranslate"><span class="pre">--user</span></code> option works very well in our experience, but we do not provide explicit instructions for this variant.</p>
+</div>
+<div class="section" id="which-python-version-to-use">
+<span id="installing-odl-python-version"></span><h2>Which Python version to use?<a class="headerlink" href="#which-python-version-to-use" title="Permalink to this headline">¶</a></h2>
+<p>Any modern Python distribution supporting <a class="reference external" href="http://www.numpy.org/">NumPy</a> and <a class="reference external" href="https://www.scipy.org/">SciPy</a> should work for the core library, but some extensions require CPython (the standard Python distribution).</p>
+<p>ODL fully supports both Python 2 and Python 3.
+If you choose to use your system Python interpreter (the “pip install as user” variant), it may be a good idea to stick with the default one, i.e. the one invoked by the <code class="docutils literal notranslate"><span class="pre">python</span></code> command on the command line.
+Otherwise, we recommend using Python 3, since Python 2 support will be discontinued in 2020.</p>
+</div>
+<div class="section" id="development-environment">
+<span id="installing-odl-development-environment"></span><h2>Development environment<a class="headerlink" href="#development-environment" title="Permalink to this headline">¶</a></h2>
+<p>Since ODL is object-oriented, using an Integrated Development Environment (IDE) is recommended, but not required.
+The most popular ones are <a class="reference external" href="https://github.com/spyder-ide/spyder">Spyder</a> which works on all major platforms and can be installed through both <code class="docutils literal notranslate"><span class="pre">conda</span></code> and <code class="docutils literal notranslate"><span class="pre">pip</span></code>, and <a class="reference external" href="https://www.jetbrains.com/pycharm/">PyCharm</a> which can be integrated with any text editor of your choice, such as Emacs or Vim.</p>
+</div>
+<div class="section" id="in-depth-guides">
+<span id="installing-odl-in-depth-guides"></span><h2>In-depth guides<a class="headerlink" href="#in-depth-guides" title="Permalink to this headline">¶</a></h2>
+<p>If you are a new user or need more a detailed installation guide, we provide support for the following installation methods:</p>
+<ol class="arabic simple">
+<li><p><a class="reference internal" href="installing_conda.html#installing-odl-conda"><span class="std std-ref">Installing ODL using conda</span></a> (recommended for users)</p></li>
+<li><p><a class="reference internal" href="installing_pip.html#installing-odl-pip"><span class="std std-ref">Installing ODL using pip</span></a></p></li>
+<li><p><a class="reference internal" href="installing_source.html#installing-odl-source"><span class="std std-ref">Installing ODL from source</span></a> (recommended for developers)</p></li>
+</ol>
+<p>To further extend ODL capability, a <a class="reference internal" href="installing_extensions.html#installing-odl-extensions"><span class="std std-ref">large set of extensions</span></a> can also be installed.</p>
+</div>
+<div class="section" id="issues">
+<span id="installing-odl-issues"></span><h2>Issues<a class="headerlink" href="#issues" title="Permalink to this headline">¶</a></h2>
+<p>If you have any problems during installation, consult the help in the <a class="reference internal" href="../guide/faq.html#faq"><span class="std std-ref">FAQ</span></a>.
+If that does not help, <a class="reference external" href="https://github.com/odlgroup/odl/issues">make an issue on GitHub</a> or send us an email (<a class="reference external" href="mailto:odl&#37;&#52;&#48;math&#46;kth&#46;se">odl<span>&#64;</span>math<span>&#46;</span>kth<span>&#46;</span>se</a>) and we’ll try to assist you promptly.</p>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+        <a href="installing_conda.html" class="btn btn-neutral float-right" title="Installing ODL using conda" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="about_odl.html" class="btn btn-neutral float-left" title="About ODL" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &#169; Copyright 2014-2020 The ODL Contributors.
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

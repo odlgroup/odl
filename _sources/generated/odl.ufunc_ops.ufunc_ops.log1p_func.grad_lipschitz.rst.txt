@@ -1,0 +1,6 @@
+log1p_func.grad_lipschitz
+=================================================
+
+.. currentmodule:: odl.ufunc_ops.ufunc_ops
+
+.. autoproperty:: log1p_func.grad_lipschitz

@@ -1,0 +1,6 @@
+BroadcastOperator.is_functional
+=======================================================
+
+.. currentmodule:: odl.operator.pspace_ops
+
+.. autoproperty:: BroadcastOperator.is_functional

@@ -1,0 +1,8 @@
+:orphan:
+
+TensorSpaceUfuncs.__eq__
+========================================
+
+.. currentmodule:: odl.util.ufuncs
+
+.. automethod:: TensorSpaceUfuncs.__eq__

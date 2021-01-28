@@ -1,0 +1,6 @@
+IdentityFunctional.adjoint
+=====================================================================
+
+.. currentmodule:: odl.solvers.functional.default_functionals
+
+.. autoproperty:: IdentityFunctional.adjoint

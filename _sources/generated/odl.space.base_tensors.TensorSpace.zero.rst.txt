@@ -1,0 +1,8 @@
+:orphan:
+
+TensorSpace.zero
+=======================================
+
+.. currentmodule:: odl.space.base_tensors
+
+.. automethod:: TensorSpace.zero

@@ -1,0 +1,6 @@
+Divergence.is_linear
+=======================================
+
+.. currentmodule:: odl.discr.diff_ops
+
+.. autoproperty:: Divergence.is_linear

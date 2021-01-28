@@ -1,0 +1,6 @@
+FanBeamGeometry.partition
+====================================================
+
+.. currentmodule:: odl.tomo.geometry.conebeam
+
+.. autoproperty:: FanBeamGeometry.partition

@@ -1,0 +1,8 @@
+:orphan:
+
+FourierTransformBase._call
+=============================================
+
+.. currentmodule:: odl.trafos.fourier
+
+.. automethod:: FourierTransformBase._call

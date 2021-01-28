@@ -1,0 +1,8 @@
+:orphan:
+
+ComplexNumbers.__contains__
+========================================
+
+.. currentmodule:: odl.set.sets
+
+.. automethod:: ComplexNumbers.__contains__

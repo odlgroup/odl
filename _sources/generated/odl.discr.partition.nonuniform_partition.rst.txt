@@ -1,0 +1,6 @@
+﻿nonuniform_partition
+========================================
+
+.. currentmodule:: odl.discr.partition
+
+.. autofunction:: nonuniform_partition

@@ -1,0 +1,8 @@
+:orphan:
+
+Strings.__contains__
+=================================
+
+.. currentmodule:: odl.set.sets
+
+.. automethod:: Strings.__contains__

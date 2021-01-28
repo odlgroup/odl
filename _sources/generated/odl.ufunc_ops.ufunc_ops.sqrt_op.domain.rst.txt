@@ -1,0 +1,6 @@
+sqrt_op.domain
+======================================
+
+.. currentmodule:: odl.ufunc_ops.ufunc_ops
+
+.. autoproperty:: sqrt_op.domain

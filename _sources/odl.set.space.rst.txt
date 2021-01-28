@@ -1,0 +1,21 @@
+space
+=====
+
+Abstract linear vector spaces.
+
+.. currentmodule:: odl.set.space
+
+
+
+.. rubric:: Classes
+
+.. autosummary::
+   :toctree: generated/
+
+   ~odl.set.space.LinearSpace
+   ~odl.set.space.LinearSpaceElement
+   ~odl.set.space.LinearSpaceNotImplementedError
+   ~odl.set.space.LinearSpaceTypeError
+   ~odl.set.space.UniversalSpace
+
+

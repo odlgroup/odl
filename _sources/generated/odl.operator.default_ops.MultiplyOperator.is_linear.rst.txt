@@ -1,0 +1,6 @@
+MultiplyOperator.is_linear
+===================================================
+
+.. currentmodule:: odl.operator.default_ops
+
+.. autoproperty:: MultiplyOperator.is_linear

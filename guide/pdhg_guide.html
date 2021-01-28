@@ -1,0 +1,389 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>Primal-Dual Hybrid Gradient algorithm &mdash; odl 1.0.0.dev0 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Mathematical Background" href="../math/math.html" />
+    <link rel="prev" title="Using ODL with ProxImaL" href="proximal_lang_guide.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../index.html" class="icon icon-home"> odl
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                1.0.0.dev0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Getting Started</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../getting_started/getting_started.html">Getting Started</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Working with ODL</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="guide.html">User’s guide – selected topics</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="operator_guide.html">Operators</a></li>
+<li class="toctree-l2"><a class="reference internal" href="linearspace_guide.html">Linear spaces</a></li>
+<li class="toctree-l2"><a class="reference internal" href="numpy_guide.html">Using ODL with NumPy and SciPy</a></li>
+<li class="toctree-l2"><a class="reference internal" href="vectorization_guide.html">Vectorized functions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="geometry_guide.html">Tomographic acquisition geometries</a></li>
+<li class="toctree-l2"><a class="reference internal" href="functional_guide.html">Functional</a></li>
+<li class="toctree-l2"><a class="reference internal" href="proximal_lang_guide.html">Using ODL with ProxImaL</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Primal-Dual Hybrid Gradient algorithm</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#using-pdhg">Using PDHG</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#mathematical-problem-setup">Mathematical problem setup</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#numerical-solution-using-odl">Numerical solution using ODL</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../math/math.html">Mathematical Background</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Developer zone</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../dev/dev.html">Contributing to ODL</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Useful facts</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="faq.html">Frequently asked questions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="glossary.html">Glossary</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../release_notes.html">Release Notes</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../refs.html">References</a></li>
+</ul>
+<p class="caption"><span class="caption-text">API Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../odl.html">odl</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">odl</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="guide.html">User’s guide – selected topics</a> &raquo;</li>
+        
+      <li>Primal-Dual Hybrid Gradient algorithm</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            <a href="../_sources/guide/pdhg_guide.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="primal-dual-hybrid-gradient-algorithm">
+<span id="pdhg-guide"></span><h1>Primal-Dual Hybrid Gradient algorithm<a class="headerlink" href="#primal-dual-hybrid-gradient-algorithm" title="Permalink to this headline">¶</a></h1>
+<p>The Primal-Dual Hybrid Gradient (PDHG) algorithm was studied in 2011 by Chambolle and Pock in the paper <a class="reference external" href="https://hal.archives-ouvertes.fr/hal-00490826/document">A first-order primal-dual algorithm for convex problems with applications to imaging</a>.
+It is a method for solving convex non-smooth problems of the form</p>
+<div class="math">
+<p><img src="../_images/math/1466a9ddb377ec8e02d4fc51f4ce7451349f865e.png" alt="\min_{x \in X} f(x) + g(Lx),"/></p>
+</div><p>where <img class="math" src="../_images/math/19eef1966f7c545af3ac8c0fa486974d873e3c65.png" alt="L"/> is a linear <a class="reference internal" href="glossary.html#term-operator"><code class="xref any std std-term docutils literal notranslate"><span class="pre">Operator</span></code></a> <img class="math" src="../_images/math/8b306b0361d38e695b0aa94245449f4d0efd8bf5.png" alt="L : X -&gt; Y"/>, <img class="math" src="../_images/math/ed38fa24f1c94891bd312012aab3f6673be3eb83.png" alt="X"/> and <img class="math" src="../_images/math/7daf0d4815e763eb90f0d5f1dc406f668c1e21db.png" alt="Y"/> are (discretized) function spaces and <img class="math" src="../_images/math/9d6a4ebd8c111e5d4580cedc8a257eefa5cea94e.png" alt="f : X \to [0, +\infty]"/> and <img class="math" src="../_images/math/d0f8decc0bd208ee5e800e671cb9f70b38b26743.png" alt="g : Y \to [0, +\infty]"/> are proper, convex, lower semi-continuous functionals.
+For more information on the mathematics, please see <a class="reference internal" href="../math/solvers/nonsmooth/pdhg.html#pdhg-math"><span class="std std-ref">the mathematical background article on this method</span></a>.</p>
+<div class="section" id="using-pdhg">
+<h2>Using PDHG<a class="headerlink" href="#using-pdhg" title="Permalink to this headline">¶</a></h2>
+<p>There are several examples in <a class="reference external" href="https://github.com/odlgroup/odl/tree/master/examples">the examples folder of ODL</a>, including denoising, deblurring and tomography.
+Here, we will walk through the solution of a typical problem using the PDHG solver.</p>
+<div class="section" id="mathematical-problem-setup">
+<h3>Mathematical problem setup<a class="headerlink" href="#mathematical-problem-setup" title="Permalink to this headline">¶</a></h3>
+<p>The problem we’ll be looking at is the TV regularized denoising problem</p>
+<div class="math">
+<p><img src="../_images/math/e7c3cb092031b6d76ce3b2dd48e8750241f0134d.png" alt="\min_{x \in X} \left[ d(x) + r(x) + \iota_{[0, \infty]}(x) \right]"/></p>
+</div><p>with <img class="math" src="../_images/math/33ba7aae08929d475fe4acc0499f863d825096c1.png" alt="L^2"/> data discrepancy term for given data <img class="math" src="../_images/math/83442399bc6401e2bdbce56d5499dc51ca1b14f3.png" alt="y \in X"/>,</p>
+<div class="math">
+<p><img src="../_images/math/e7fb7c13a2168120c7fa2521ce68863e8422e69c.png" alt="d(x) = \frac{1}{2} \|x - y\|_2^2,"/></p>
+</div><p>TV regularization term</p>
+<div class="math">
+<p><img src="../_images/math/39312253993a643bb180a7eef90943e351be0c55.png" alt="r(x) = \lambda \|\nabla x\|_1"/></p>
+</div><p>and positivity constraint enforced by the indicator function</p>
+<div class="math">
+<p><img src="../_images/math/240224f7e1ffcc8cf6afc76f9df63fa09a2a68cc.png" alt="\iota_{[0, \infty]}(x) =
+\begin{cases}
+  0,         &amp; \text{ if } x \geq 0 \text{ everywhere}, \\
+  \infty,    &amp; \text{ else }.
+\end{cases}"/></p>
+</div><p>Here, <img class="math" src="../_images/math/8c4618a041f1353a85153ca52134f66a023a4b98.png" alt="\|\cdot\|_q"/> is the <img class="math" src="../_images/math/a1336f8ab05a4f4ea348adb704f2368315937d23.png" alt="L^q"/> norm (<img class="math" src="../_images/math/d3d249301c02f0b2d9c5a15a327ca266925a6ca5.png" alt="q = 1,2"/>), <img class="math" src="../_images/math/bb3d9e9b0298d335dede11ae3be7d6df30bbc804.png" alt="\nabla"/> the spatial gradient, and <img class="math" src="../_images/math/cefc603e5658facb747581f9567192993f21c7ab.png" alt="\lambda"/> a regularization parameter.</p>
+<p>The standard way of fitting this problem into the PDHG framework is to summarize both data fit and regularization terms into the composition part <img class="math" src="../_images/math/ea96ad8965e6cdc3398f6740379be274c278b40b.png" alt="g \circ L"/> of the solver, and to set <img class="math" src="../_images/math/5b7752c757e0b691a80ab8227eadb8a8389dc58a.png" alt="f"/> to the positivity constraint <img class="math" src="../_images/math/890d3e242ff8baaa858360e65c21c4ebbe062832.png" alt="\iota_{[0, \infty]}"/>.
+By setting <img class="math" src="../_images/math/446cbe66998a846cfda953b6328ea75d691ef425.png" alt="L = (I, \nabla): X \to X \times X^d"/>, where <img class="math" src="../_images/math/015755a22b6219b345c36a9a47b091dc56007486.png" alt="I"/> is the identity mapping on <img class="math" src="../_images/math/ed38fa24f1c94891bd312012aab3f6673be3eb83.png" alt="X"/>, we can write</p>
+<div class="math">
+<p><img src="../_images/math/81d3cf24a1003faba11a716af0cf2841028e8744.png" alt="d(x) + r(x)
+= \left \|
+\begin{pmatrix}
+  d(x) \\
+  p(x)
+\end{pmatrix}
+\right \|_1
+= \left \|
+\begin{pmatrix}
+  \|x - y\|_2^2 / 2 \\
+  \lambda \|\nabla x\|_1
+\end{pmatrix}
+\right \|_1
+= \big[ g \circ L \big](x)"/></p>
+</div><p>with the functional <img class="math" src="../_images/math/af3e107476ccabc70e2ae3c6122ff23781d057b9.png" alt="g: X \times X^d \to \mathbb{R}"/> defined by</p>
+<div class="math">
+<p><img src="../_images/math/e456dadc5b011fb4b90adac4295898f29f0e84cc.png" alt="g(x, u) = \left \|
+\begin{pmatrix}
+  \|x - y\|_2^2 / 2 \\
+  \lambda \|u\|_1
+\end{pmatrix}
+\right \|_1
+= \frac{1}{2} \|x - y\|_2^2 + \lambda \|u\|_1."/></p>
+</div><p>Note that the arguments <img class="math" src="../_images/math/82706aa66aa45b25a799786bc03a2fc7510cd390.png" alt="x, u"/> of <img class="math" src="../_images/math/157ba5711de84b4c715a0478fd8ae440e596d96e.png" alt="g"/> are independent, i.e. the sum of the two functionals is a <a class="reference internal" href="../generated/odl.solvers.functional.default_functionals.SeparableSum.html#odl.solvers.functional.default_functionals.SeparableSum" title="odl.solvers.functional.default_functionals.SeparableSum"><code class="xref any py py-class docutils literal notranslate"><span class="pre">SeparableSum</span></code></a>.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>The operator <img class="math" src="../_images/math/19eef1966f7c545af3ac8c0fa486974d873e3c65.png" alt="L"/> maps <img class="math" src="../_images/math/ed38fa24f1c94891bd312012aab3f6673be3eb83.png" alt="X"/> to the <a class="reference internal" href="../generated/odl.space.pspace.ProductSpace.html#odl.space.pspace.ProductSpace" title="odl.space.pspace.ProductSpace"><code class="xref any py py-class docutils literal notranslate"><span class="pre">ProductSpace</span></code></a> <img class="math" src="../_images/math/327850f980a736c9f808b32123fb9d45cfa200d8.png" alt="X \times X^d"/>.
+Such a “one-to-many” type of mapping is also called <a class="reference internal" href="../generated/odl.operator.pspace_ops.BroadcastOperator.html#odl.operator.pspace_ops.BroadcastOperator" title="odl.operator.pspace_ops.BroadcastOperator"><code class="xref any py py-class docutils literal notranslate"><span class="pre">BroadcastOperator</span></code></a>.</p>
+</div>
+</div>
+<div class="section" id="numerical-solution-using-odl">
+<h3>Numerical solution using ODL<a class="headerlink" href="#numerical-solution-using-odl" title="Permalink to this headline">¶</a></h3>
+<p>Now we implement a numerical solution to the above defined problem using PDHG in ODL.</p>
+<div class="section" id="problem-setup">
+<h4>Problem setup<a class="headerlink" href="#problem-setup" title="Permalink to this headline">¶</a></h4>
+<p>The first step in the problem setup is the definition of the spaces in which we want to solve the problem.
+In this case, we use an <img class="math" src="../_images/math/33ba7aae08929d475fe4acc0499f863d825096c1.png" alt="L^2"/> space on the square <img class="math" src="../_images/math/4fdbffff0f3a2ffe7369b71500305efcbd09ba36.png" alt="[0, 100] \times [0, 100]"/>.
+We choose 256 discretization points per axis:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">space</span> <span class="o">=</span> <span class="n">odl</span><span class="o">.</span><span class="n">uniform_discr</span><span class="p">(</span><span class="n">min_pt</span><span class="o">=</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="n">max_pt</span><span class="o">=</span><span class="p">[</span><span class="mi">100</span><span class="p">,</span> <span class="mi">100</span><span class="p">],</span> <span class="n">shape</span><span class="o">=</span><span class="p">[</span><span class="mi">256</span><span class="p">,</span> <span class="mi">256</span><span class="p">])</span>
+</pre></div>
+</div>
+<p>In real problems, the data <img class="math" src="../_images/math/1b5e577d6216dca3af7d87aa122a0b9b360d6cb3.png" alt="y"/> would be given by some measurement, but for the purpose of testing the solver, we generate data by creating a modified <a class="reference external" href="https://en.wikipedia.org/wiki/Shepp%E2%80%93Logan_phantom">Shepp-Logan phantom</a> and adding 10% Gaussian noise:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">phantom</span> <span class="o">=</span> <span class="n">odl</span><span class="o">.</span><span class="n">phantom</span><span class="o">.</span><span class="n">shepp_logan</span><span class="p">(</span><span class="n">space</span><span class="p">,</span> <span class="n">modified</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">data</span> <span class="o">=</span> <span class="n">phantom</span> <span class="o">+</span> <span class="n">odl</span><span class="o">.</span><span class="n">phantom</span><span class="o">.</span><span class="n">white_noise</span><span class="p">(</span><span class="n">space</span><span class="p">)</span> <span class="o">*</span> <span class="mf">0.1</span>
+</pre></div>
+</div>
+<p>We now need to define the forward operator <img class="math" src="../_images/math/19eef1966f7c545af3ac8c0fa486974d873e3c65.png" alt="L"/>, which we do one constituent at a time:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">ident</span> <span class="o">=</span> <span class="n">odl</span><span class="o">.</span><span class="n">IdentityOperator</span><span class="p">(</span><span class="n">space</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">grad</span> <span class="o">=</span> <span class="n">odl</span><span class="o">.</span><span class="n">Gradient</span><span class="p">(</span><span class="n">space</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>To create <img class="math" src="../_images/math/19eef1966f7c545af3ac8c0fa486974d873e3c65.png" alt="L"/>, we use the <a class="reference internal" href="../generated/odl.operator.pspace_ops.BroadcastOperator.html#odl.operator.pspace_ops.BroadcastOperator" title="odl.operator.pspace_ops.BroadcastOperator"><code class="xref any py py-class docutils literal notranslate"><span class="pre">BroadcastOperator</span></code></a> class as mentioned above:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">L</span> <span class="o">=</span> <span class="n">odl</span><span class="o">.</span><span class="n">BroadcastOperator</span><span class="p">(</span><span class="n">ident</span><span class="p">,</span> <span class="n">grad</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>We can now proceed to the problem specification.
+This step requires us to specify the functionals <img class="math" src="../_images/math/5b7752c757e0b691a80ab8227eadb8a8389dc58a.png" alt="f"/> and <img class="math" src="../_images/math/157ba5711de84b4c715a0478fd8ae440e596d96e.png" alt="g"/>, where the latter is the <a class="reference internal" href="../generated/odl.solvers.functional.default_functionals.SeparableSum.html#odl.solvers.functional.default_functionals.SeparableSum" title="odl.solvers.functional.default_functionals.SeparableSum"><code class="xref any py py-class docutils literal notranslate"><span class="pre">SeparableSum</span></code></a> of the squared <img class="math" src="../_images/math/33ba7aae08929d475fe4acc0499f863d825096c1.png" alt="L^2"/> distance to <img class="math" src="../_images/math/1b5e577d6216dca3af7d87aa122a0b9b360d6cb3.png" alt="y"/> and the (vectorial) <img class="math" src="../_images/math/fdf8b2d982ca0cf3ed55f38ac7a7c91ed311f566.png" alt="L^1"/> norm.
+These functionals are available in ODL as <a class="reference internal" href="../generated/odl.solvers.functional.default_functionals.L2NormSquared.html#odl.solvers.functional.default_functionals.L2NormSquared" title="odl.solvers.functional.default_functionals.L2NormSquared"><code class="xref any py py-class docutils literal notranslate"><span class="pre">L2NormSquared</span></code></a> and <a class="reference internal" href="../generated/odl.solvers.functional.default_functionals.L1Norm.html#odl.solvers.functional.default_functionals.L1Norm" title="odl.solvers.functional.default_functionals.L1Norm"><code class="xref any py py-class docutils literal notranslate"><span class="pre">L1Norm</span></code></a>, respectively:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">l2_norm_squared</span> <span class="o">=</span> <span class="n">odl</span><span class="o">.</span><span class="n">solvers</span><span class="o">.</span><span class="n">L2NormSquared</span><span class="p">(</span><span class="n">space</span><span class="p">)</span><span class="o">.</span><span class="n">translated</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">l1_norm</span> <span class="o">=</span> <span class="mf">0.0003</span> <span class="o">*</span> <span class="n">odl</span><span class="o">.</span><span class="n">solvers</span><span class="o">.</span><span class="n">L1Norm</span><span class="p">(</span><span class="n">grad</span><span class="o">.</span><span class="n">range</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">g</span> <span class="o">=</span> <span class="n">odl</span><span class="o">.</span><span class="n">solvers</span><span class="o">.</span><span class="n">SeparableSum</span><span class="p">(</span><span class="n">l2_norm_squared</span><span class="p">,</span> <span class="n">l1_norm</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>We don’t need to take extra care of the <img class="math" src="../_images/math/fdf8b2d982ca0cf3ed55f38ac7a7c91ed311f566.png" alt="L^1"/> norm being a vectorial norm since <a class="reference internal" href="../generated/odl.solvers.functional.default_functionals.L1Norm.html#odl.solvers.functional.default_functionals.L1Norm" title="odl.solvers.functional.default_functionals.L1Norm"><code class="xref any py py-class docutils literal notranslate"><span class="pre">L1Norm</span></code></a> also works on product spaces.</p>
+</div>
+<p>Finally, we define the functional for the nonnegativity constraint, available as the functional <a class="reference internal" href="../generated/odl.solvers.functional.default_functionals.IndicatorNonnegativity.html#odl.solvers.functional.default_functionals.IndicatorNonnegativity" title="odl.solvers.functional.default_functionals.IndicatorNonnegativity"><code class="xref any py py-class docutils literal notranslate"><span class="pre">IndicatorNonnegativity</span></code></a>:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">f</span> <span class="o">=</span> <span class="n">odl</span><span class="o">.</span><span class="n">solvers</span><span class="o">.</span><span class="n">IndicatorNonnegativity</span><span class="p">(</span><span class="n">space</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="calling-the-solver">
+<h4>Calling the solver<a class="headerlink" href="#calling-the-solver" title="Permalink to this headline">¶</a></h4>
+<p>Now that the problem is set up, we need to select some optimization parameters.
+For PDHG, there is one main rule that we can use:
+The product of the primal step <img class="math" src="../_images/math/914b2d4b6659b86d3153d5510839dfb254dfc8a3.png" alt="\tau"/>, the dual step <img class="math" src="../_images/math/b52df27bfb0b1e3af0c2c68a7b9da459178c2a7d.png" alt="\sigma"/> and the squared operator norm <img class="math" src="../_images/math/bde017f9e39a39b4284e36d7a044a09b46aa958b.png" alt="\|L\|^2"/> has to be smaller than 1, <img class="math" src="../_images/math/f1b074f72c5eee68c63cdc1033551c4881590502.png" alt="\tau \sigma \|L\|^2 &lt; 1"/>.
+Apart from this, there are no clear rules on how to select <img class="math" src="../_images/math/914b2d4b6659b86d3153d5510839dfb254dfc8a3.png" alt="\tau"/> and <img class="math" src="../_images/math/b52df27bfb0b1e3af0c2c68a7b9da459178c2a7d.png" alt="\sigma"/> – basically we’re left with trial and error.
+We decide to pick them both equal to <img class="math" src="../_images/math/5fee605f392339e9f7e7ecd176bff5b0abee43b5.png" alt="1 / \|L\|"/>.
+To calculate an estimate of the operator norm, we have the tool <a class="reference internal" href="../generated/odl.operator.oputils.power_method_opnorm.html#odl.operator.oputils.power_method_opnorm" title="odl.operator.oputils.power_method_opnorm"><code class="xref any py py-func docutils literal notranslate"><span class="pre">power_method_opnorm</span></code></a> which performs the simple <a class="reference external" href="https://en.wikipedia.org/wiki/Power_iteration">power iteration</a> to approximate the largest singular value of <img class="math" src="../_images/math/19eef1966f7c545af3ac8c0fa486974d873e3c65.png" alt="L"/>:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">op_norm</span> <span class="o">=</span> <span class="mf">1.1</span> <span class="o">*</span> <span class="n">odl</span><span class="o">.</span><span class="n">power_method_opnorm</span><span class="p">(</span><span class="n">L</span><span class="p">,</span> <span class="n">maxiter</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span> <span class="n">xstart</span><span class="o">=</span><span class="n">phantom</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">tau</span> <span class="o">=</span> <span class="n">sigma</span> <span class="o">=</span> <span class="mf">1.0</span> <span class="o">/</span> <span class="n">op_norm</span>
+</pre></div>
+</div>
+<p>Finally, we pick a starting point (zero) and run the algorithm:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">x</span> <span class="o">=</span> <span class="n">space</span><span class="o">.</span><span class="n">zero</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">odl</span><span class="o">.</span><span class="n">solvers</span><span class="o">.</span><span class="n">pdhg</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">f</span><span class="p">,</span> <span class="n">g</span><span class="p">,</span> <span class="n">L</span><span class="p">,</span> <span class="n">tau</span><span class="o">=</span><span class="n">tau</span><span class="p">,</span> <span class="n">sigma</span><span class="o">=</span><span class="n">sigma</span><span class="p">,</span> <span class="n">niter</span><span class="o">=</span><span class="mi">100</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Now we check the result after 100 iterations and compare it to the original:</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">fig1</span> <span class="o">=</span> <span class="n">phantom</span><span class="o">.</span><span class="n">show</span><span class="p">(</span><span class="s1">&#39;phantom&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">fig2</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">show</span><span class="p">(</span><span class="s1">&#39;noisy data&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">fig3</span> <span class="o">=</span> <span class="n">x</span><span class="o">.</span><span class="n">show</span><span class="p">(</span><span class="s1">&#39;TV denoised result&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>This yields the following images:</p>
+<img alt="../_images/pdhg_phantom.png" src="../_images/pdhg_phantom.png" />
+<img alt="../_images/pdhg_data.png" src="../_images/pdhg_data.png" />
+<img alt="../_images/pdhg_result.png" src="../_images/pdhg_result.png" />
+</div>
+</div>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+        <a href="../math/math.html" class="btn btn-neutral float-right" title="Mathematical Background" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="proximal_lang_guide.html" class="btn btn-neutral float-left" title="Using ODL with ProxImaL" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &#169; Copyright 2014-2020 The ODL Contributors.
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

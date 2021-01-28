@@ -1,0 +1,8 @@
+:orphan:
+
+arctanh_func.norm
+=========================================
+
+.. currentmodule:: odl.ufunc_ops.ufunc_ops
+
+.. automethod:: arctanh_func.norm

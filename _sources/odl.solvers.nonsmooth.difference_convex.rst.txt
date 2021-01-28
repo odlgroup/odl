@@ -1,0 +1,25 @@
+difference_convex
+=================
+
+Solvers for the optimization of the difference of convex functions.
+
+Collection of DCA (d.c. algorithms) and related methods which make use of
+structured optimization if the objective function can be written as a
+difference of two convex functions.
+
+
+.. currentmodule:: odl.solvers.nonsmooth.difference_convex
+
+
+
+
+.. rubric:: Functions
+
+.. autosummary::
+   :toctree: generated/
+
+   ~odl.solvers.nonsmooth.difference_convex.dca
+   ~odl.solvers.nonsmooth.difference_convex.doubleprox_dc
+   ~odl.solvers.nonsmooth.difference_convex.doubleprox_dc_simple
+   ~odl.solvers.nonsmooth.difference_convex.prox_dca
+

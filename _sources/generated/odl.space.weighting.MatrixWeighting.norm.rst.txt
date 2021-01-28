@@ -1,0 +1,8 @@
+:orphan:
+
+MatrixWeighting.norm
+========================================
+
+.. currentmodule:: odl.space.weighting
+
+.. automethod:: MatrixWeighting.norm

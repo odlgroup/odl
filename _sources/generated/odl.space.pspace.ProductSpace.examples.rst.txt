@@ -1,0 +1,6 @@
+ProductSpace.examples
+======================================
+
+.. currentmodule:: odl.space.pspace
+
+.. autoproperty:: ProductSpace.examples

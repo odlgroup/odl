@@ -1,0 +1,6 @@
+﻿is_valid_input_meshgrid
+==============================================
+
+.. currentmodule:: odl.util.vectorization
+
+.. autofunction:: is_valid_input_meshgrid

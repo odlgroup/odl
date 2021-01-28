@@ -1,0 +1,332 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>Maintainer workflow &mdash; odl 1.0.0.dev0 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/custom.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+        <script src="../../_static/jquery.js"></script>
+        <script src="../../_static/underscore.js"></script>
+        <script src="../../_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="../../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="Git resources" href="git_resources.html" />
+    <link rel="prev" title="Development workflow" href="development_workflow.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../index.html" class="icon icon-home"> odl
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                1.0.0.dev0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Getting Started</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../getting_started/getting_started.html">Getting Started</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Working with ODL</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../guide/guide.html">User’s guide – selected topics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../math/math.html">Mathematical Background</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Developer zone</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../dev.html">Contributing to ODL</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../dev.html#introduction">Introduction</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="../dev.html#contents">Contents</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="../extend.html">Extending ODL</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../document.html">How to document</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../testing.html">Testing in ODL</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../release.html">The ODL release process</a></li>
+<li class="toctree-l3 current"><a class="reference internal" href="index.html">Working with ODL source code</a><ul class="current">
+<li class="toctree-l4"><a class="reference internal" href="git_intro.html">Introduction</a></li>
+<li class="toctree-l4"><a class="reference internal" href="git_install.html">Install Git</a></li>
+<li class="toctree-l4"><a class="reference internal" href="following_latest.html">Following the latest source</a></li>
+<li class="toctree-l4"><a class="reference internal" href="patching.html">Making a patch</a></li>
+<li class="toctree-l4 current"><a class="reference internal" href="git_development.html">Git for development</a></li>
+<li class="toctree-l4"><a class="reference internal" href="git_resources.html">Git resources</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<p class="caption"><span class="caption-text">Useful facts</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../guide/faq.html">Frequently asked questions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../guide/glossary.html">Glossary</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../release_notes.html">Release Notes</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../refs.html">References</a></li>
+</ul>
+<p class="caption"><span class="caption-text">API Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../odl.html">odl</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">odl</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="../dev.html">Contributing to ODL</a> &raquo;</li>
+        
+          <li><a href="index.html">Working with ODL source code</a> &raquo;</li>
+        
+          <li><a href="git_development.html">Git for development</a> &raquo;</li>
+        
+      <li>Maintainer workflow</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            <a href="../../_sources/dev/gitwash/maintainer_workflow.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="maintainer-workflow">
+<span id="id1"></span><h1>Maintainer workflow<a class="headerlink" href="#maintainer-workflow" title="Permalink to this headline">¶</a></h1>
+<p>This page is for maintainers — those of us who merge our own or other
+peoples’ changes into the upstream repository.</p>
+<p>As a maintainer, you are completely on top of the basic stuff
+in <a class="reference internal" href="development_workflow.html#development-workflow"><span class="std std-ref">Development workflow</span></a>, of course.</p>
+<p>The instructions in <a class="reference internal" href="set_up_fork.html#linking-to-upstream"><span class="std std-ref">Linking your repository to the upstream repo</span></a> add a remote that has read-only
+access to the upstream repo.  Being a maintainer, you’ve got read-write access.</p>
+<p>It’s good to have your upstream remote under a scary name, to remind you that
+it’s a read-write remote:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$ git remote add upstream-rw git@github.com:odlgroup/odl.git
+$ git fetch upstream-rw
+</pre></div>
+</div>
+<div class="section" id="integrating-changes">
+<h2>Integrating changes<a class="headerlink" href="#integrating-changes" title="Permalink to this headline">¶</a></h2>
+<p>Let’s say you have some changes that need to go into trunk (<code class="docutils literal notranslate"><span class="pre">upstream-rw/master</span></code>).</p>
+<p>The changes are in some branch that you are currently on.  For example, you are
+looking at someone’s changes like this:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$ git remote add someone https://github.com/someone/odl.git
+$ git fetch someone
+$ git branch cool-feature --track someone/cool-feature
+$ git checkout cool-feature
+</pre></div>
+</div>
+<p>So now you are on the branch with the changes to be incorporated upstream. The
+rest of this section assumes you are on this branch.</p>
+<div class="section" id="a-few-commits">
+<h3>A few commits<a class="headerlink" href="#a-few-commits" title="Permalink to this headline">¶</a></h3>
+<p>If there are only a few commits, consider rebasing to upstream:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>  <span class="c1"># Fetch upstream changes</span>
+$ git fetch upstream-rw
+  <span class="c1"># rebase</span>
+$ git rebase upstream-rw/master
+</pre></div>
+</div>
+</div>
+<div class="section" id="a-long-series-of-commits">
+<h3>A long series of commits<a class="headerlink" href="#a-long-series-of-commits" title="Permalink to this headline">¶</a></h3>
+<p>If there are a longer series of related commits, consider a merge instead:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$ git fetch upstream-rw
+$ git merge --no-ff upstream-rw/master
+</pre></div>
+</div>
+<p>The merge will be detected by GitHub, and should close any related pull requests automatically.</p>
+<p>Note the <code class="docutils literal notranslate"><span class="pre">--no-ff</span></code> above.  This forces Git to make a merge commit, rather than
+doing a fast-forward, so that this set of commits branch off trunk and then rejoin
+the main history with a merge, rather than appearing to have been made directly
+on top of trunk.</p>
+</div>
+<div class="section" id="check-the-history">
+<h3>Check the history<a class="headerlink" href="#check-the-history" title="Permalink to this headline">¶</a></h3>
+<p>Now, in either case, you should check that the history is sensible and you have the right commits:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$ git log --oneline --graph
+$ git log -p upstream-rw/master..
+</pre></div>
+</div>
+<p>The first line above just shows the history in a compact way, with a text
+representation of the history graph. The second line shows the log of commits
+excluding those that can be reached from trunk (<code class="docutils literal notranslate"><span class="pre">upstream-rw/master</span></code>), and
+including those that can be reached from current HEAD (implied with the <code class="docutils literal notranslate"><span class="pre">..</span></code>
+at the end). So, it shows the commits unique to this branch compared to trunk.
+The <code class="docutils literal notranslate"><span class="pre">-p</span></code> option shows the diff for these commits in patch form.</p>
+</div>
+<div class="section" id="push-to-trunk">
+<h3>Push to trunk<a class="headerlink" href="#push-to-trunk" title="Permalink to this headline">¶</a></h3>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$ git push upstream-rw my-new-feature:master
+</pre></div>
+</div>
+<p>This pushes the <code class="docutils literal notranslate"><span class="pre">my-new-feature</span></code> branch in this repository to the <code class="docutils literal notranslate"><span class="pre">master</span></code>
+branch in the <code class="docutils literal notranslate"><span class="pre">upstream-rw</span></code> repository.</p>
+</div>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+        <a href="git_resources.html" class="btn btn-neutral float-right" title="Git resources" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="development_workflow.html" class="btn btn-neutral float-left" title="Development workflow" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &#169; Copyright 2014-2020 The ODL Contributors.
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

@@ -1,0 +1,6 @@
+CylindricalDetector.shape
+====================================================
+
+.. currentmodule:: odl.tomo.geometry.detector
+
+.. autoproperty:: CylindricalDetector.shape

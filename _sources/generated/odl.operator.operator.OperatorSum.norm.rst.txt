@@ -1,0 +1,8 @@
+:orphan:
+
+OperatorSum.norm
+======================================
+
+.. currentmodule:: odl.operator.operator
+
+.. automethod:: OperatorSum.norm

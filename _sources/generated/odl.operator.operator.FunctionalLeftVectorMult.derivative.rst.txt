@@ -1,0 +1,8 @@
+:orphan:
+
+FunctionalLeftVectorMult.derivative
+=========================================================
+
+.. currentmodule:: odl.operator.operator
+
+.. automethod:: FunctionalLeftVectorMult.derivative

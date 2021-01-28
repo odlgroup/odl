@@ -1,0 +1,6 @@
+ConeBeamGeometry.grid
+================================================
+
+.. currentmodule:: odl.tomo.geometry.conebeam
+
+.. autoproperty:: ConeBeamGeometry.grid

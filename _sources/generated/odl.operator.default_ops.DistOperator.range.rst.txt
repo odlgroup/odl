@@ -1,0 +1,6 @@
+DistOperator.range
+===========================================
+
+.. currentmodule:: odl.operator.default_ops
+
+.. autoproperty:: DistOperator.range

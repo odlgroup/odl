@@ -1,0 +1,6 @@
+BroadcastOperator.range
+===============================================
+
+.. currentmodule:: odl.operator.pspace_ops
+
+.. autoproperty:: BroadcastOperator.range

@@ -1,0 +1,60 @@
+﻿ConeBeamGeometry
+===========================================
+
+.. currentmodule:: odl.tomo.geometry.conebeam
+
+.. autoclass:: ConeBeamGeometry
+   :show-inheritance:
+   
+   
+   .. automethod:: __init__
+   
+      
+   
+   .. HACK -- the point here is that we don't want this to appear in the output, but the autosummary should still generate the pages.
+      .. autosummary::
+         :toctree:
+      
+         ConeBeamGeometry.__eq__
+         ConeBeamGeometry.__getitem__
+         ConeBeamGeometry.det_axes
+         ConeBeamGeometry.det_point_position
+         ConeBeamGeometry.det_refpoint
+         ConeBeamGeometry.det_to_src
+         ConeBeamGeometry.frommatrix
+         ConeBeamGeometry.rotation_matrix
+         ConeBeamGeometry.src_position
+   
+
+    
+   .. HACK -- the point here is that we don't want this to appear in the output, but the autosummary should still generate the pages.
+      .. autosummary::
+         :toctree:
+      
+         ConeBeamGeometry.angles
+         ConeBeamGeometry.axis
+         ConeBeamGeometry.check_bounds
+         ConeBeamGeometry.det_axes_init
+         ConeBeamGeometry.det_curvature_radius
+         ConeBeamGeometry.det_grid
+         ConeBeamGeometry.det_params
+         ConeBeamGeometry.det_partition
+         ConeBeamGeometry.det_radius
+         ConeBeamGeometry.det_shift_func
+         ConeBeamGeometry.detector
+         ConeBeamGeometry.grid
+         ConeBeamGeometry.implementation_cache
+         ConeBeamGeometry.motion_grid
+         ConeBeamGeometry.motion_params
+         ConeBeamGeometry.motion_partition
+         ConeBeamGeometry.ndim
+         ConeBeamGeometry.offset_along_axis
+         ConeBeamGeometry.params
+         ConeBeamGeometry.partition
+         ConeBeamGeometry.pitch
+         ConeBeamGeometry.src_radius
+         ConeBeamGeometry.src_shift_func
+         ConeBeamGeometry.src_to_det_init
+         ConeBeamGeometry.translation
+   
+   

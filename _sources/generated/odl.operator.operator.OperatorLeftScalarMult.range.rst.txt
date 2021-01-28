@@ -1,0 +1,6 @@
+OperatorLeftScalarMult.range
+==================================================
+
+.. currentmodule:: odl.operator.operator
+
+.. autoproperty:: OperatorLeftScalarMult.range

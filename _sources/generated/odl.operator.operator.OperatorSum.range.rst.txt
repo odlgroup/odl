@@ -1,0 +1,6 @@
+OperatorSum.range
+=======================================
+
+.. currentmodule:: odl.operator.operator
+
+.. autoproperty:: OperatorSum.range

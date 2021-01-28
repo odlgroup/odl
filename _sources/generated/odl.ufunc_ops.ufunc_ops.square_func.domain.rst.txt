@@ -1,0 +1,6 @@
+square_func.domain
+==========================================
+
+.. currentmodule:: odl.ufunc_ops.ufunc_ops
+
+.. autoproperty:: square_func.domain

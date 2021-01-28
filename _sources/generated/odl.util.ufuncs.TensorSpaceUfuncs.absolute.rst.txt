@@ -1,0 +1,8 @@
+:orphan:
+
+TensorSpaceUfuncs.absolute
+==========================================
+
+.. currentmodule:: odl.util.ufuncs
+
+.. automethod:: TensorSpaceUfuncs.absolute

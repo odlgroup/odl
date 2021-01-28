@@ -1,0 +1,6 @@
+Functional.grad_lipschitz
+===========================================================
+
+.. currentmodule:: odl.solvers.functional.functional
+
+.. autoproperty:: Functional.grad_lipschitz

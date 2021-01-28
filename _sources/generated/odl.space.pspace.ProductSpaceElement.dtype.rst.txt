@@ -1,0 +1,6 @@
+ProductSpaceElement.dtype
+==========================================
+
+.. currentmodule:: odl.space.pspace
+
+.. autoproperty:: ProductSpaceElement.dtype

@@ -1,0 +1,52 @@
+﻿ProductSpaceElement
+====================================
+
+.. currentmodule:: odl.space.pspace
+
+.. autoclass:: ProductSpaceElement
+   :show-inheritance:
+   
+   
+   .. automethod:: __init__
+   
+      
+   
+   .. HACK -- the point here is that we don't want this to appear in the output, but the autosummary should still generate the pages.
+      .. autosummary::
+         :toctree:
+      
+         ProductSpaceElement.__eq__
+         ProductSpaceElement.__getitem__
+         ProductSpaceElement.__setitem__
+         ProductSpaceElement.asarray
+         ProductSpaceElement.assign
+         ProductSpaceElement.conj
+         ProductSpaceElement.copy
+         ProductSpaceElement.dist
+         ProductSpaceElement.divide
+         ProductSpaceElement.inner
+         ProductSpaceElement.lincomb
+         ProductSpaceElement.multiply
+         ProductSpaceElement.norm
+         ProductSpaceElement.set_zero
+         ProductSpaceElement.show
+   
+
+    
+   .. HACK -- the point here is that we don't want this to appear in the output, but the autosummary should still generate the pages.
+      .. autosummary::
+         :toctree:
+      
+         ProductSpaceElement.T
+         ProductSpaceElement.dtype
+         ProductSpaceElement.imag
+         ProductSpaceElement.nbytes
+         ProductSpaceElement.ndim
+         ProductSpaceElement.parts
+         ProductSpaceElement.real
+         ProductSpaceElement.shape
+         ProductSpaceElement.size
+         ProductSpaceElement.space
+         ProductSpaceElement.ufuncs
+   
+   

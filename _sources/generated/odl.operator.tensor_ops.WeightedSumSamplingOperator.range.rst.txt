@@ -1,0 +1,6 @@
+WeightedSumSamplingOperator.range
+=========================================================
+
+.. currentmodule:: odl.operator.tensor_ops
+
+.. autoproperty:: WeightedSumSamplingOperator.range

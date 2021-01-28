@@ -1,0 +1,6 @@
+Divergence.inverse
+=====================================
+
+.. currentmodule:: odl.discr.diff_ops
+
+.. autoproperty:: Divergence.inverse

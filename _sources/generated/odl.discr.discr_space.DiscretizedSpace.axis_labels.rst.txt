@@ -1,0 +1,6 @@
+DiscretizedSpace.axis_labels
+==================================================
+
+.. currentmodule:: odl.discr.discr_space
+
+.. autoproperty:: DiscretizedSpace.axis_labels

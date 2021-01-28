@@ -1,0 +1,6 @@
+NumpyTensorSpaceCustomDist.repr_part
+==========================================================
+
+.. currentmodule:: odl.space.npy_tensors
+
+.. autoproperty:: NumpyTensorSpaceCustomDist.repr_part

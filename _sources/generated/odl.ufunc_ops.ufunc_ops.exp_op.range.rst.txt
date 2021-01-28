@@ -1,0 +1,6 @@
+exp_op.range
+====================================
+
+.. currentmodule:: odl.ufunc_ops.ufunc_ops
+
+.. autoproperty:: exp_op.range

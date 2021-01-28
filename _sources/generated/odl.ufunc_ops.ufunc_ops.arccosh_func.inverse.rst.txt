@@ -1,0 +1,6 @@
+arccosh_func.inverse
+============================================
+
+.. currentmodule:: odl.ufunc_ops.ufunc_ops
+
+.. autoproperty:: arccosh_func.inverse

@@ -1,0 +1,6 @@
+LinDeformFixedDisp.adjoint
+================================================
+
+.. currentmodule:: odl.deform.linearized
+
+.. autoproperty:: LinDeformFixedDisp.adjoint

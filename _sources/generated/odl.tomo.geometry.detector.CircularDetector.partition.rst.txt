@@ -1,0 +1,6 @@
+CircularDetector.partition
+=====================================================
+
+.. currentmodule:: odl.tomo.geometry.detector
+
+.. autoproperty:: CircularDetector.partition

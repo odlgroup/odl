@@ -1,0 +1,8 @@
+:orphan:
+
+CartesianProduct.element
+=====================================
+
+.. currentmodule:: odl.set.sets
+
+.. automethod:: CartesianProduct.element

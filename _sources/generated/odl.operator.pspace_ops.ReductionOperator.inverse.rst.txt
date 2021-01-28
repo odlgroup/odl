@@ -1,0 +1,6 @@
+ReductionOperator.inverse
+=================================================
+
+.. currentmodule:: odl.operator.pspace_ops
+
+.. autoproperty:: ReductionOperator.inverse

@@ -1,0 +1,33 @@
+﻿RealNumbers
+========================
+
+.. currentmodule:: odl.set.sets
+
+.. autoclass:: RealNumbers
+   :show-inheritance:
+   
+   
+   .. automethod:: __init__
+   
+      
+   
+   .. HACK -- the point here is that we don't want this to appear in the output, but the autosummary should still generate the pages.
+      .. autosummary::
+         :toctree:
+      
+         RealNumbers.__contains__
+         RealNumbers.__eq__
+         RealNumbers.contains_all
+         RealNumbers.contains_set
+         RealNumbers.element
+   
+
+    
+   .. HACK -- the point here is that we don't want this to appear in the output, but the autosummary should still generate the pages.
+      .. autosummary::
+         :toctree:
+      
+         RealNumbers.examples
+         RealNumbers.field
+   
+   

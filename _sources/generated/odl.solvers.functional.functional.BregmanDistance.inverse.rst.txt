@@ -1,0 +1,6 @@
+BregmanDistance.inverse
+=========================================================
+
+.. currentmodule:: odl.solvers.functional.functional
+
+.. autoproperty:: BregmanDistance.inverse

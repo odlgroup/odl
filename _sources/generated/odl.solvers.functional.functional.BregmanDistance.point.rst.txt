@@ -1,0 +1,6 @@
+BregmanDistance.point
+=======================================================
+
+.. currentmodule:: odl.solvers.functional.functional
+
+.. autoproperty:: BregmanDistance.point

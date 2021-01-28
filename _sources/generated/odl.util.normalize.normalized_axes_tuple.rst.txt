@@ -1,0 +1,6 @@
+﻿normalized_axes_tuple
+========================================
+
+.. currentmodule:: odl.util.normalize
+
+.. autofunction:: normalized_axes_tuple

@@ -1,0 +1,6 @@
+MatrixOperator.is_functional
+====================================================
+
+.. currentmodule:: odl.operator.tensor_ops
+
+.. autoproperty:: MatrixOperator.is_functional

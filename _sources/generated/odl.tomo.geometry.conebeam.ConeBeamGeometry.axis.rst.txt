@@ -1,0 +1,6 @@
+ConeBeamGeometry.axis
+================================================
+
+.. currentmodule:: odl.tomo.geometry.conebeam
+
+.. autoproperty:: ConeBeamGeometry.axis

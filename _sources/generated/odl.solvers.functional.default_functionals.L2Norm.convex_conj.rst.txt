@@ -1,0 +1,6 @@
+L2Norm.convex_conj
+=============================================================
+
+.. currentmodule:: odl.solvers.functional.default_functionals
+
+.. autoproperty:: L2Norm.convex_conj

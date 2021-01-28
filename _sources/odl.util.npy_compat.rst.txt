@@ -1,0 +1,13 @@
+npy_compat
+==========
+
+Numpy functions not available in the minimal required version.
+
+Current minimum Numpy version: 1.13.3
+
+
+.. currentmodule:: odl.util.npy_compat
+
+
+
+

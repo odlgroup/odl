@@ -1,0 +1,6 @@
+WaveletTransform.wavelet
+===========================================
+
+.. currentmodule:: odl.trafos.wavelet
+
+.. autoproperty:: WaveletTransform.wavelet

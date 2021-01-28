@@ -1,0 +1,6 @@
+RectPartition.min_pt
+========================================
+
+.. currentmodule:: odl.discr.partition
+
+.. autoproperty:: RectPartition.min_pt

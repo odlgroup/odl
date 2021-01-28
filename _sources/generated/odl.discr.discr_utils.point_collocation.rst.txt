@@ -1,0 +1,6 @@
+﻿point_collocation
+=======================================
+
+.. currentmodule:: odl.discr.discr_utils
+
+.. autofunction:: point_collocation

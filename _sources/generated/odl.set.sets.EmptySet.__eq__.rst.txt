@@ -1,0 +1,8 @@
+:orphan:
+
+EmptySet.__eq__
+============================
+
+.. currentmodule:: odl.set.sets
+
+.. automethod:: EmptySet.__eq__

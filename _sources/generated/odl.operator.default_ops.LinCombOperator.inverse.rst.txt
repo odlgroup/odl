@@ -1,0 +1,6 @@
+LinCombOperator.inverse
+================================================
+
+.. currentmodule:: odl.operator.default_ops
+
+.. autoproperty:: LinCombOperator.inverse

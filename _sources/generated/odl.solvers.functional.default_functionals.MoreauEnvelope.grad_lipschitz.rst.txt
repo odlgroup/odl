@@ -1,0 +1,6 @@
+MoreauEnvelope.grad_lipschitz
+========================================================================
+
+.. currentmodule:: odl.solvers.functional.default_functionals
+
+.. autoproperty:: MoreauEnvelope.grad_lipschitz

@@ -1,0 +1,6 @@
+﻿pdhg_stepsize
+===============================================================
+
+.. currentmodule:: odl.solvers.nonsmooth.primal_dual_hybrid_gradient
+
+.. autofunction:: pdhg_stepsize

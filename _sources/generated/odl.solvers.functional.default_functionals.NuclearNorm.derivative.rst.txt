@@ -1,0 +1,8 @@
+:orphan:
+
+NuclearNorm.derivative
+=================================================================
+
+.. currentmodule:: odl.solvers.functional.default_functionals
+
+.. automethod:: NuclearNorm.derivative

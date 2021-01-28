@@ -1,0 +1,6 @@
+Gradient.domain
+==================================
+
+.. currentmodule:: odl.discr.diff_ops
+
+.. autoproperty:: Gradient.domain

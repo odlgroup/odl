@@ -1,0 +1,8 @@
+:orphan:
+
+ProductSpaceUfuncs.less_equal
+=============================================
+
+.. currentmodule:: odl.util.ufuncs
+
+.. automethod:: ProductSpaceUfuncs.less_equal

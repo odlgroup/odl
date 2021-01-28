@@ -1,0 +1,8 @@
+:orphan:
+
+L2Norm.bregman
+=========================================================
+
+.. currentmodule:: odl.solvers.functional.default_functionals
+
+.. automethod:: L2Norm.bregman

@@ -1,0 +1,8 @@
+:orphan:
+
+PartialDerivative._call
+==========================================
+
+.. currentmodule:: odl.discr.diff_ops
+
+.. automethod:: PartialDerivative._call

@@ -1,0 +1,6 @@
+RosenbrockFunctional.inverse
+=================================================================
+
+.. currentmodule:: odl.solvers.functional.example_funcs
+
+.. autoproperty:: RosenbrockFunctional.inverse

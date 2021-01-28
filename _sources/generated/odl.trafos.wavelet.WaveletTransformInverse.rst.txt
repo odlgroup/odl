@@ -1,0 +1,45 @@
+﻿WaveletTransformInverse
+==========================================
+
+.. currentmodule:: odl.trafos.wavelet
+
+.. autoclass:: WaveletTransformInverse
+   :show-inheritance:
+   
+   
+   .. automethod:: __init__
+   
+      
+   
+   .. HACK -- the point here is that we don't want this to appear in the output, but the autosummary should still generate the pages.
+      .. autosummary::
+         :toctree:
+      
+         WaveletTransformInverse.__call__
+         WaveletTransformInverse.__eq__
+         WaveletTransformInverse._call
+         WaveletTransformInverse.derivative
+         WaveletTransformInverse.norm
+         WaveletTransformInverse.scales
+   
+
+    
+   .. HACK -- the point here is that we don't want this to appear in the output, but the autosummary should still generate the pages.
+      .. autosummary::
+         :toctree:
+      
+         WaveletTransformInverse.adjoint
+         WaveletTransformInverse.domain
+         WaveletTransformInverse.impl
+         WaveletTransformInverse.inverse
+         WaveletTransformInverse.is_biorthogonal
+         WaveletTransformInverse.is_functional
+         WaveletTransformInverse.is_linear
+         WaveletTransformInverse.is_orthogonal
+         WaveletTransformInverse.nlevels
+         WaveletTransformInverse.pad_const
+         WaveletTransformInverse.pad_mode
+         WaveletTransformInverse.range
+         WaveletTransformInverse.wavelet
+   
+   

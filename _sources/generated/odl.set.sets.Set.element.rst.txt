@@ -1,0 +1,8 @@
+:orphan:
+
+Set.element
+========================
+
+.. currentmodule:: odl.set.sets
+
+.. automethod:: Set.element

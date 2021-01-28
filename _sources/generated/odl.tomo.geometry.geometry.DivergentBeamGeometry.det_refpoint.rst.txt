@@ -1,0 +1,8 @@
+:orphan:
+
+DivergentBeamGeometry.det_refpoint
+=============================================================
+
+.. currentmodule:: odl.tomo.geometry.geometry
+
+.. automethod:: DivergentBeamGeometry.det_refpoint

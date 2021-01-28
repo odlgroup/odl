@@ -1,0 +1,34 @@
+﻿FiniteSet
+======================
+
+.. currentmodule:: odl.set.sets
+
+.. autoclass:: FiniteSet
+   :show-inheritance:
+   
+   
+   .. automethod:: __init__
+   
+      
+   
+   .. HACK -- the point here is that we don't want this to appear in the output, but the autosummary should still generate the pages.
+      .. autosummary::
+         :toctree:
+      
+         FiniteSet.__contains__
+         FiniteSet.__eq__
+         FiniteSet.__getitem__
+         FiniteSet.contains_all
+         FiniteSet.contains_set
+         FiniteSet.element
+   
+
+    
+   .. HACK -- the point here is that we don't want this to appear in the output, but the autosummary should still generate the pages.
+      .. autosummary::
+         :toctree:
+      
+         FiniteSet.elements
+         FiniteSet.examples
+   
+   

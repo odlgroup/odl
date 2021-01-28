@@ -1,0 +1,6 @@
+ParallelBeamGeometry.grid
+====================================================
+
+.. currentmodule:: odl.tomo.geometry.parallel
+
+.. autoproperty:: ParallelBeamGeometry.grid

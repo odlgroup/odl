@@ -1,0 +1,8 @@
+:orphan:
+
+RectPartition.points
+========================================
+
+.. currentmodule:: odl.discr.partition
+
+.. automethod:: RectPartition.points

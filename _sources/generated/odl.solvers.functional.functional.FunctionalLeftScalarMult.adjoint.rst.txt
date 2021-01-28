@@ -1,0 +1,6 @@
+FunctionalLeftScalarMult.adjoint
+==================================================================
+
+.. currentmodule:: odl.solvers.functional.functional
+
+.. autoproperty:: FunctionalLeftScalarMult.adjoint

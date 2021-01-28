@@ -1,0 +1,312 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>Discretizations &mdash; odl 1.0.0.dev0 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Resizing Operators" href="resizing_ops.html" />
+    <link rel="prev" title="Linear Spaces" href="linear_spaces.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../index.html" class="icon icon-home"> odl
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                1.0.0.dev0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Getting Started</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../getting_started/getting_started.html">Getting Started</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Working with ODL</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../guide/guide.html">User’s guide – selected topics</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="math.html">Mathematical Background</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="linear_spaces.html">Linear Spaces</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Discretizations</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#mathematical-background">Mathematical background</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#example">Example</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#useful-wikipedia-articles">Useful Wikipedia articles</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="resizing_ops.html">Resizing Operators</a></li>
+<li class="toctree-l2"><a class="reference internal" href="derivatives_guide.html">On the different notions of derivative</a></li>
+<li class="toctree-l2"><a class="reference internal" href="trafos/index.html">Transformations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="solvers/solvers.html">Solvers</a></li>
+</ul>
+</li>
+</ul>
+<p class="caption"><span class="caption-text">Developer zone</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../dev/dev.html">Contributing to ODL</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Useful facts</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../guide/faq.html">Frequently asked questions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../guide/glossary.html">Glossary</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../release_notes.html">Release Notes</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../refs.html">References</a></li>
+</ul>
+<p class="caption"><span class="caption-text">API Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../odl.html">odl</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">odl</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="math.html">Mathematical Background</a> &raquo;</li>
+        
+      <li>Discretizations</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            <a href="../_sources/math/discretization.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="discretizations">
+<span id="id1"></span><h1>Discretizations<a class="headerlink" href="#discretizations" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="mathematical-background">
+<h2>Mathematical background<a class="headerlink" href="#mathematical-background" title="Permalink to this headline">¶</a></h2>
+<p>In mathematics, the term <a class="reference internal" href="../guide/glossary.html#term-discretization"><span class="xref std std-term">discretization</span></a> stands for the transition from abstract, continuous,
+often infinite-dimensional objects to concrete, discrete, finite-dimensional counterparts. We define
+discretizations as tuples encompassing all necessary aspects involved in this transition. Let
+<img class="math" src="../_images/math/35934ec49b4c4203a014d2b6114c68b9b16e45eb.png" alt="\mathcal{X}"/> be an arbitrary set, <img class="math" src="../_images/math/19d28c5a6b8f9aa12237c6ad8b4f46bd17915d2d.png" alt="\mathbb{F}^n"/> be the set of <img class="math" src="../_images/math/5a939c5280da7202ca4531f175a7780ad5e1f80a.png" alt="n"/>-tuples where
+each component lies in <img class="math" src="../_images/math/092f5b0e7bb7f7ff443dd879aba1b635077467af.png" alt="\mathbb{F}"/>. We define two mappings</p>
+<div class="math">
+<p><img src="../_images/math/5d3f92821edda31f36d417802e1499a1f6170631.png" alt="\mathcal{R}_\mathcal{X}: \mathcal{X} \to \mathbb{F}^n,
+
+\mathcal{E}_\mathcal{X}: \mathbb{F}^n \to \mathcal{X},"/></p>
+</div><p>which we call <a class="reference internal" href="../guide/glossary.html#term-sampling"><span class="xref std std-term">sampling</span></a> and <a class="reference internal" href="../guide/glossary.html#term-interpolation"><span class="xref std std-term">interpolation</span></a>, respectively. Then, the discretization of
+<img class="math" src="../_images/math/35934ec49b4c4203a014d2b6114c68b9b16e45eb.png" alt="\mathcal{X}"/> with respect to <img class="math" src="../_images/math/19d28c5a6b8f9aa12237c6ad8b4f46bd17915d2d.png" alt="\mathbb{F}^n"/> and the above operators is defined as the
+tuple</p>
+<div class="math">
+<p><img src="../_images/math/6ec6e7f35fa657826afdc40cf330bdbcd4e055fc.png" alt="\mathcal{D}(\mathcal{X}) = (\mathcal{X}, \mathbb{F}^n,
+\mathcal{R}_\mathcal{X}, \mathcal{E}_\mathcal{X})."/></p>
+</div><p>The following abstract diagram visualizes a discretization:</p>
+<a class="reference internal image-reference" href="../_images/discr.png"><img alt="../_images/discr.png" src="../_images/discr.png" style="width: 130.0px; height: 195.60000000000002px;" /></a>
+<p>TODO: write up in more detail</p>
+</div>
+<div class="section" id="example">
+<h2>Example<a class="headerlink" href="#example" title="Permalink to this headline">¶</a></h2>
+<p>Let <img class="math" src="../_images/math/14bf5d6c49212ecfa4c3ad1b0a4f256ce2388486.png" alt="\mathcal{X} = C([0, 1])"/> be the space of real-valued
+continuous functions on the interval <img class="math" src="../_images/math/8027137b3073a7f5ca4e45ba2d030dcff154eca4.png" alt="[0, 1]"/>, and let <img class="math" src="../_images/math/fc66d2756bfc068e0ed1b8fd2d9f45aa9c7cb692.png" alt="x_1 &lt; \dots &lt; x_n"/>
+be ordered sampling points in <img class="math" src="../_images/math/8027137b3073a7f5ca4e45ba2d030dcff154eca4.png" alt="[0, 1]"/>.</p>
+<p><strong>Restriction operator:</strong></p>
+<p>We define the <em>grid collocation operator</em> as</p>
+<div class="math">
+<p><img src="../_images/math/abbeea27a4f9d82cf7d45058a90859e2ebbf6e99.png" alt="\mathcal{C}: \mathcal{X} \to \mathbb{R}^n,
+
+\mathcal{C}(f) := \big(f(x_1), \dots, f(x_n)\big)."/></p>
+</div><p>The abstract object in this case is the input function <img class="math" src="../_images/math/5b7752c757e0b691a80ab8227eadb8a8389dc58a.png" alt="f"/>, and
+the operator evaluates this function at the given points, resulting in
+a vector in <img class="math" src="../_images/math/b1fcdfedee20badc3539b9e3e967bf7be9a700ea.png" alt="\mathbb{R}^n"/>.</p>
+<p>This operator is implemented as <code class="xref any docutils literal notranslate"><span class="pre">PointCollocation</span></code>.</p>
+<p><strong>Extension operator:</strong></p>
+<p>Let discrete values <img class="math" src="../_images/math/e1adf4d880054874e83bfa570dcd1a01a35f817c.png" alt="\bar f \in \mathbb{R}^n"/> be given. Consider the linear interpolation
+of those values at a point <img class="math" src="../_images/math/430e3f359414ead5985175435ae8bc3dc9a019f0.png" alt="x \in [0, 1]"/>:</p>
+<div class="math">
+<p><img src="../_images/math/de35ddcfa12b4f25ec02d3bdd3026fbbea3544d8.png" alt="I(\bar f; x) := (1 - \lambda(x)) f_i + \lambda(x) f_{i+1},
+
+\lambda(x) = \frac{x - x_i}{x_{i+1} - x_i},"/></p>
+</div><p>where <img class="math" src="../_images/math/5aa339d4daf45a810dda332e3c80a0698e526e04.png" alt="i"/> is the index such that <img class="math" src="../_images/math/afb97c808b5a9c5e2a38fad11d160a277f4daa01.png" alt="x \in [x_i, x_{i+1})"/>.</p>
+<p>Then we can define the linear interpolation operator as</p>
+<div class="math">
+<p><img src="../_images/math/e910a25f1ef6493b9d4dacbaa0503aef3785ee3a.png" alt="\mathcal{L} : \mathbb{R}^n \to C([0, 1]),
+
+\mathcal{L}(\bar f) := I(\bar f; \cdot),"/></p>
+</div><p>where <img class="math" src="../_images/math/dae4b66332dec3d0094554598b31e612d89ab137.png" alt="I(\bar f; \cdot)"/> stands for the function
+<img class="math" src="../_images/math/d9763fb573eeeed7dd33527ef57fc7903d03326d.png" alt="x \mapsto I(\bar f; x)"/>.</p>
+<p>Hence, this operator maps the finite array <img class="math" src="../_images/math/e1adf4d880054874e83bfa570dcd1a01a35f817c.png" alt="\bar f \in \mathbb{R}^n"/>
+to the abstract interpolating function <img class="math" src="../_images/math/dae4b66332dec3d0094554598b31e612d89ab137.png" alt="I(\bar f; \cdot)"/>.</p>
+<p>This interpolation scheme is implemented in the <code class="xref any docutils literal notranslate"><span class="pre">LinearInterpolation</span></code> operator.</p>
+</div>
+<div class="section" id="useful-wikipedia-articles">
+<h2>Useful Wikipedia articles<a class="headerlink" href="#useful-wikipedia-articles" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li><p><a class="reference external" href="https://en.wikipedia.org/wiki/Discretization">Discretization</a></p></li>
+</ul>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+        <a href="resizing_ops.html" class="btn btn-neutral float-right" title="Resizing Operators" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="linear_spaces.html" class="btn btn-neutral float-left" title="Linear Spaces" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &#169; Copyright 2014-2020 The ODL Contributors.
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

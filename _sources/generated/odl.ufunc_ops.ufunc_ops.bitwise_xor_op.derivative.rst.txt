@@ -1,0 +1,8 @@
+:orphan:
+
+bitwise_xor_op.derivative
+=================================================
+
+.. currentmodule:: odl.ufunc_ops.ufunc_ops
+
+.. automethod:: bitwise_xor_op.derivative

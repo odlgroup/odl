@@ -1,0 +1,6 @@
+MatrixOperator.is_linear
+================================================
+
+.. currentmodule:: odl.operator.tensor_ops
+
+.. autoproperty:: MatrixOperator.is_linear

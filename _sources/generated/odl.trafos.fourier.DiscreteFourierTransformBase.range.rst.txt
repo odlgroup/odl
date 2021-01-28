@@ -1,0 +1,6 @@
+DiscreteFourierTransformBase.range
+=====================================================
+
+.. currentmodule:: odl.trafos.fourier
+
+.. autoproperty:: DiscreteFourierTransformBase.range

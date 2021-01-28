@@ -1,0 +1,6 @@
+NumpyTensor.data_ptr
+==========================================
+
+.. currentmodule:: odl.space.npy_tensors
+
+.. autoproperty:: NumpyTensor.data_ptr

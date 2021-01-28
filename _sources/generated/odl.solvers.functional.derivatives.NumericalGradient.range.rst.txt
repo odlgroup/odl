@@ -1,0 +1,6 @@
+NumericalGradient.range
+==========================================================
+
+.. currentmodule:: odl.solvers.functional.derivatives
+
+.. autoproperty:: NumericalGradient.range

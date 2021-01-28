@@ -1,0 +1,6 @@
+﻿steepest_descent
+============================================
+
+.. currentmodule:: odl.solvers.smooth.gradient
+
+.. autofunction:: steepest_descent

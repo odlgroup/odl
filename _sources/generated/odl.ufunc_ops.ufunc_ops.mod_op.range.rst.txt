@@ -1,0 +1,6 @@
+mod_op.range
+====================================
+
+.. currentmodule:: odl.ufunc_ops.ufunc_ops
+
+.. autoproperty:: mod_op.range

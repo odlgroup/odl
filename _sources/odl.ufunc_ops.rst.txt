@@ -1,0 +1,17 @@
+ufunc_ops
+=========
+
+Universal functions as `Operator` and `Functional`.
+
+.. currentmodule:: odl.ufunc_ops
+
+
+.. rubric:: Modules
+
+.. toctree::
+   :maxdepth: 2
+
+   odl.ufunc_ops.ufunc_ops
+
+
+

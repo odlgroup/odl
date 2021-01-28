@@ -1,0 +1,6 @@
+arctan_op.domain
+========================================
+
+.. currentmodule:: odl.ufunc_ops.ufunc_ops
+
+.. autoproperty:: arctan_op.domain

@@ -1,0 +1,8 @@
+:orphan:
+
+ComplexModulus.__call__
+================================================
+
+.. currentmodule:: odl.operator.default_ops
+
+.. automethod:: ComplexModulus.__call__

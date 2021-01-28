@@ -1,0 +1,494 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>odl.solvers.nonsmooth.difference_convex &mdash; odl 1.0.0.dev0 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../../../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../../../../_static/custom.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../../../" src="../../../../_static/documentation_options.js"></script>
+        <script src="../../../../_static/jquery.js"></script>
+        <script src="../../../../_static/underscore.js"></script>
+        <script src="../../../../_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="../../../../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../../../index.html" class="icon icon-home"> odl
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                1.0.0.dev0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Getting Started</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../getting_started/getting_started.html">Getting Started</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Working with ODL</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../guide/guide.html">User’s guide – selected topics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../math/math.html">Mathematical Background</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Developer zone</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../dev/dev.html">Contributing to ODL</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Useful facts</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../guide/faq.html">Frequently asked questions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../guide/glossary.html">Glossary</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../release_notes.html">Release Notes</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../refs.html">References</a></li>
+</ul>
+<p class="caption"><span class="caption-text">API Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../odl.html">odl</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../../index.html">odl</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../../../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="../../../index.html">Module code</a> &raquo;</li>
+        
+      <li>odl.solvers.nonsmooth.difference_convex</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for odl.solvers.nonsmooth.difference_convex</h1><div class="highlight"><pre>
+<span></span><span class="c1"># Copyright 2014-2019 The ODL contributors</span>
+<span class="c1">#</span>
+<span class="c1"># This file is part of ODL.</span>
+<span class="c1">#</span>
+<span class="c1"># This Source Code Form is subject to the terms of the Mozilla Public License,</span>
+<span class="c1"># v. 2.0. If a copy of the MPL was not distributed with this file, You can</span>
+<span class="c1"># obtain one at https://mozilla.org/MPL/2.0/.</span>
+
+<span class="sd">&quot;&quot;&quot;Solvers for the optimization of the difference of convex functions.</span>
+
+<span class="sd">Collection of DCA (d.c. algorithms) and related methods which make use of</span>
+<span class="sd">structured optimization if the objective function can be written as a</span>
+<span class="sd">difference of two convex functions.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">print_function</span><span class="p">,</span> <span class="n">division</span><span class="p">,</span> <span class="n">absolute_import</span>
+
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;dca&#39;</span><span class="p">,</span> <span class="s1">&#39;prox_dca&#39;</span><span class="p">,</span> <span class="s1">&#39;doubleprox_dc&#39;</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="dca"><a class="viewcode-back" href="../../../../generated/odl.solvers.nonsmooth.difference_convex.dca.html#odl.solvers.nonsmooth.difference_convex.dca">[docs]</a><span class="k">def</span> <span class="nf">dca</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">f</span><span class="p">,</span> <span class="n">g</span><span class="p">,</span> <span class="n">niter</span><span class="p">,</span> <span class="n">callback</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="sa">r</span><span class="sd">&quot;&quot;&quot;Subgradient DCA of Tao and An.</span>
+
+<span class="sd">    This algorithm solves a problem of the form ::</span>
+
+<span class="sd">        min_x f(x) - g(x),</span>
+
+<span class="sd">    where ``f`` and ``g`` are proper, convex and lower semicontinuous</span>
+<span class="sd">    functions.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    x : `LinearSpaceElement`</span>
+<span class="sd">        Initial point, updated in-place.</span>
+<span class="sd">    f : `Functional`</span>
+<span class="sd">        Convex functional. Needs to implement ``f.convex_conj.gradient``.</span>
+<span class="sd">    g : `Functional`</span>
+<span class="sd">        Convex functional. Needs to implement ``g.gradient``.</span>
+<span class="sd">    niter : int</span>
+<span class="sd">        Number of iterations.</span>
+<span class="sd">    callback : callable, optional</span>
+<span class="sd">        Function called with the current iterate after each iteration.</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    The algorithm is described in Section 3 and in particular in Theorem 3 of</span>
+<span class="sd">    `[TA1997] &lt;http://journals.math.ac.vn/acta/pdf/9701289.pdf&gt;`_. The problem</span>
+
+<span class="sd">    .. math::</span>
+<span class="sd">        \min f(x) - g(x)</span>
+
+<span class="sd">    has the first-order optimality condition :math:`0 \in \partial f(x) -</span>
+<span class="sd">    \partial g(x)`, i.e., aims at finding an :math:`x` so that there exists a</span>
+<span class="sd">    common element</span>
+
+<span class="sd">    .. math::</span>
+<span class="sd">        y \in \partial f(x) \cap \partial g(x).</span>
+
+<span class="sd">    The element :math:`y` can be seen as a solution of the Toland dual problem</span>
+
+<span class="sd">    .. math::</span>
+<span class="sd">        \min g^*(y) - f^*(y)</span>
+
+<span class="sd">    and the iteration is given by</span>
+
+<span class="sd">    .. math::</span>
+<span class="sd">        y_n \in \partial g(x_n), \qquad x_{n+1} \in \partial f^*(y_n),</span>
+
+<span class="sd">    for :math:`n\geq 0`. Here, a subgradient is found by evaluating the</span>
+<span class="sd">    gradient method of the respective functionals.</span>
+
+<span class="sd">    References</span>
+<span class="sd">    ----------</span>
+<span class="sd">    [TA1997] Tao, P D, and An, L T H. *Convex analysis approach to d.c.</span>
+<span class="sd">    programming: Theory, algorithms and applications*. Acta Mathematica</span>
+<span class="sd">    Vietnamica, 22.1 (1997), pp 289--355.</span>
+
+<span class="sd">    See also</span>
+<span class="sd">    --------</span>
+<span class="sd">    prox_dca :</span>
+<span class="sd">        Solver with a proximal step for ``f`` and a subgradient step for ``g``.</span>
+<span class="sd">    doubleprox_dc :</span>
+<span class="sd">        Solver with proximal steps for all the nonsmooth convex functionals</span>
+<span class="sd">        and a gradient step for a smooth functional.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">space</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">domain</span>
+    <span class="k">if</span> <span class="n">g</span><span class="o">.</span><span class="n">domain</span> <span class="o">!=</span> <span class="n">space</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;`f.domain` and `g.domain` need to be equal, but &#39;</span>
+                         <span class="s1">&#39;</span><span class="si">{}</span><span class="s1"> != </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">space</span><span class="p">,</span> <span class="n">g</span><span class="o">.</span><span class="n">domain</span><span class="p">))</span>
+    <span class="n">f_convex_conj</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">convex_conj</span>
+    <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">niter</span><span class="p">):</span>
+        <span class="n">f_convex_conj</span><span class="o">.</span><span class="n">gradient</span><span class="p">(</span><span class="n">g</span><span class="o">.</span><span class="n">gradient</span><span class="p">(</span><span class="n">x</span><span class="p">),</span> <span class="n">out</span><span class="o">=</span><span class="n">x</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">callback</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">callback</span><span class="p">(</span><span class="n">x</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="prox_dca"><a class="viewcode-back" href="../../../../generated/odl.solvers.nonsmooth.difference_convex.prox_dca.html#odl.solvers.nonsmooth.difference_convex.prox_dca">[docs]</a><span class="k">def</span> <span class="nf">prox_dca</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">f</span><span class="p">,</span> <span class="n">g</span><span class="p">,</span> <span class="n">niter</span><span class="p">,</span> <span class="n">gamma</span><span class="p">,</span> <span class="n">callback</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="sa">r</span><span class="sd">&quot;&quot;&quot;Proximal DCA of Sun, Sampaio and Candido.</span>
+
+<span class="sd">    This algorithm solves a problem of the form ::</span>
+
+<span class="sd">        min_x f(x) - g(x)</span>
+
+<span class="sd">    where ``f`` and ``g`` are two proper, convex and lower semicontinuous</span>
+<span class="sd">    functions.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    x : `LinearSpaceElement`</span>
+<span class="sd">        Initial point, updated in-place.</span>
+<span class="sd">    f : `Functional`</span>
+<span class="sd">        Convex functional. Needs to implement ``f.proximal``.</span>
+<span class="sd">    g : `Functional`</span>
+<span class="sd">        Convex functional. Needs to implement ``g.gradient``.</span>
+<span class="sd">    niter : int</span>
+<span class="sd">        Number of iterations.</span>
+<span class="sd">    gamma : positive float</span>
+<span class="sd">        Stepsize in the primal updates.</span>
+<span class="sd">    callback : callable, optional</span>
+<span class="sd">        Function called with the current iterate after each iteration.</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    The algorithm was proposed as Algorithm 2.3 in</span>
+<span class="sd">    `[SSC2003]</span>
+<span class="sd">    &lt;http://www.global-sci.org/jcm/readabs.php?vol=21&amp;no=4&amp;page=451&amp;year=2003&amp;ppage=462&gt;`_.</span>
+<span class="sd">    It solves the problem</span>
+
+<span class="sd">    .. math ::</span>
+<span class="sd">        \min f(x) - g(x)</span>
+
+<span class="sd">    by using subgradients of :math:`g` and proximal points of :math:`f`.</span>
+<span class="sd">    The iteration is given by</span>
+
+<span class="sd">    .. math ::</span>
+<span class="sd">        y_n \in \partial g(x_n), \qquad x_{n+1}</span>
+<span class="sd">            = \mathrm{Prox}_{\gamma f}(x_n + \gamma y_n).</span>
+
+<span class="sd">    In contrast to `dca`, `prox_dca` uses proximal steps with respect to the</span>
+<span class="sd">    convex part ``f``. Both algorithms use subgradients of the concave part</span>
+<span class="sd">    ``g``.</span>
+
+<span class="sd">    References</span>
+<span class="sd">    ----------</span>
+<span class="sd">    [SSC2003] Sun, W, Sampaio R J B, and Candido M A B. *Proximal point</span>
+<span class="sd">    algorithm for minimization of DC function*. Journal of Computational</span>
+<span class="sd">    Mathematics, 21.4 (2003), pp 451--462.</span>
+
+<span class="sd">    See also</span>
+<span class="sd">    --------</span>
+<span class="sd">    dca :</span>
+<span class="sd">        Solver with subgradinet steps for all the functionals.</span>
+<span class="sd">    doubleprox_dc :</span>
+<span class="sd">        Solver with proximal steps for all the nonsmooth convex functionals</span>
+<span class="sd">        and a gradient step for a smooth functional.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">space</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">domain</span>
+    <span class="k">if</span> <span class="n">g</span><span class="o">.</span><span class="n">domain</span> <span class="o">!=</span> <span class="n">space</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;`f.domain` and `g.domain` need to be equal, but &#39;</span>
+                         <span class="s1">&#39;</span><span class="si">{}</span><span class="s1"> != </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">space</span><span class="p">,</span> <span class="n">g</span><span class="o">.</span><span class="n">domain</span><span class="p">))</span>
+    <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">niter</span><span class="p">):</span>
+        <span class="n">f</span><span class="o">.</span><span class="n">proximal</span><span class="p">(</span><span class="n">gamma</span><span class="p">)(</span><span class="n">x</span><span class="o">.</span><span class="n">lincomb</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">gamma</span><span class="p">,</span> <span class="n">g</span><span class="o">.</span><span class="n">gradient</span><span class="p">(</span><span class="n">x</span><span class="p">)),</span> <span class="n">out</span><span class="o">=</span><span class="n">x</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">callback</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">callback</span><span class="p">(</span><span class="n">x</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="doubleprox_dc"><a class="viewcode-back" href="../../../../generated/odl.solvers.nonsmooth.difference_convex.doubleprox_dc.html#odl.solvers.nonsmooth.difference_convex.doubleprox_dc">[docs]</a><span class="k">def</span> <span class="nf">doubleprox_dc</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">f</span><span class="p">,</span> <span class="n">phi</span><span class="p">,</span> <span class="n">g</span><span class="p">,</span> <span class="n">K</span><span class="p">,</span> <span class="n">niter</span><span class="p">,</span> <span class="n">gamma</span><span class="p">,</span> <span class="n">mu</span><span class="p">,</span> <span class="n">callback</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="sa">r</span><span class="sd">&quot;&quot;&quot;Double-proxmial gradient d.c. algorithm of Banert and Bot.</span>
+
+<span class="sd">    This algorithm solves a problem of the form ::</span>
+
+<span class="sd">        min_x f(x) + phi(x) - g(Kx).</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    x : `LinearSpaceElement`</span>
+<span class="sd">        Initial primal guess, updated in-place.</span>
+<span class="sd">    y : `LinearSpaceElement`</span>
+<span class="sd">        Initial dual guess, updated in-place.</span>
+<span class="sd">    f : `Functional`</span>
+<span class="sd">        Convex functional. Needs to implement ``g.proximal``.</span>
+<span class="sd">    phi : `Functional`</span>
+<span class="sd">        Convex functional. Needs to implement ``phi.gradient``.</span>
+<span class="sd">        Convergence can be guaranteed if the gradient is Lipschitz continuous.</span>
+<span class="sd">    g : `Functional`</span>
+<span class="sd">        Convex functional. Needs to implement ``h.convex_conj.proximal``.</span>
+<span class="sd">    K : `Operator`</span>
+<span class="sd">        Linear operator. Needs to implement ``K.adjoint``</span>
+<span class="sd">    niter : int</span>
+<span class="sd">        Number of iterations.</span>
+<span class="sd">    gamma : positive float</span>
+<span class="sd">        Stepsize in the primal updates.</span>
+<span class="sd">    mu : positive float</span>
+<span class="sd">        Stepsize in the dual updates.</span>
+<span class="sd">    callback : callable, optional</span>
+<span class="sd">        Function called with the current iterate after each iteration.</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    This algorithm is proposed in `[BB2016]</span>
+<span class="sd">    &lt;https://arxiv.org/abs/1610.06538&gt;`_ and solves the d.c. problem</span>
+
+<span class="sd">    .. math ::</span>
+<span class="sd">        \min_x f(x) + \varphi(x) - g(Kx)</span>
+
+<span class="sd">    together with its Toland dual</span>
+
+<span class="sd">    .. math ::</span>
+<span class="sd">        \min_y g^*(y) - (f + \varphi)^*(K^* y).</span>
+
+<span class="sd">    The iterations are given by</span>
+
+<span class="sd">    .. math ::</span>
+<span class="sd">        x_{n+1} &amp;= \mathrm{Prox}_{\gamma f} (x_n + \gamma (K^* y_n</span>
+<span class="sd">                   - \nabla \varphi(x_n))), \\</span>
+<span class="sd">        y_{n+1} &amp;= \mathrm{Prox}_{\mu g^*} (y_n + \mu K x_{n+1}).</span>
+
+<span class="sd">    To guarantee convergence, the parameter :math:`\gamma` must satisfy</span>
+<span class="sd">    :math:`0 &lt; \gamma &lt; 2/L` where :math:`L` is the Lipschitz constant of</span>
+<span class="sd">    :math:`\nabla \varphi`.</span>
+
+<span class="sd">    References</span>
+<span class="sd">    ----------</span>
+<span class="sd">    [BB2016] Banert, S, and Bot, R I. *A general double-proximal gradient</span>
+<span class="sd">    algorithm for d.c. programming*. arXiv:1610.06538 [math.OC] (2016).</span>
+
+<span class="sd">    See also</span>
+<span class="sd">    --------</span>
+<span class="sd">    dca :</span>
+<span class="sd">        Solver with subgradient steps for all the functionals.</span>
+<span class="sd">    prox_dca :</span>
+<span class="sd">        Solver with a proximal step for ``f`` and a subgradient step for ``g``.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">primal_space</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">domain</span>
+    <span class="n">dual_space</span> <span class="o">=</span> <span class="n">g</span><span class="o">.</span><span class="n">domain</span>
+
+    <span class="k">if</span> <span class="n">phi</span><span class="o">.</span><span class="n">domain</span> <span class="o">!=</span> <span class="n">primal_space</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;`f.domain` and `phi.domain` need to be equal, but &#39;</span>
+                         <span class="s1">&#39;</span><span class="si">{}</span><span class="s1"> != </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">primal_space</span><span class="p">,</span> <span class="n">phi</span><span class="o">.</span><span class="n">domain</span><span class="p">))</span>
+    <span class="k">if</span> <span class="n">K</span><span class="o">.</span><span class="n">domain</span> <span class="o">!=</span> <span class="n">primal_space</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;`f.domain` and `K.domain` need to be equal, but &#39;</span>
+                         <span class="s1">&#39;</span><span class="si">{}</span><span class="s1"> != </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">primal_space</span><span class="p">,</span> <span class="n">K</span><span class="o">.</span><span class="n">domain</span><span class="p">))</span>
+    <span class="k">if</span> <span class="n">K</span><span class="o">.</span><span class="n">range</span> <span class="o">!=</span> <span class="n">dual_space</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;`g.domain` and `K.range` need to be equal, but &#39;</span>
+                         <span class="s1">&#39;</span><span class="si">{}</span><span class="s1"> != </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">dual_space</span><span class="p">,</span> <span class="n">K</span><span class="o">.</span><span class="n">range</span><span class="p">))</span>
+
+    <span class="n">g_convex_conj</span> <span class="o">=</span> <span class="n">g</span><span class="o">.</span><span class="n">convex_conj</span>
+    <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">niter</span><span class="p">):</span>
+        <span class="n">f</span><span class="o">.</span><span class="n">proximal</span><span class="p">(</span><span class="n">gamma</span><span class="p">)(</span><span class="n">x</span><span class="o">.</span><span class="n">lincomb</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span>
+                                    <span class="n">gamma</span><span class="p">,</span> <span class="n">K</span><span class="o">.</span><span class="n">adjoint</span><span class="p">(</span><span class="n">y</span><span class="p">)</span> <span class="o">-</span> <span class="n">phi</span><span class="o">.</span><span class="n">gradient</span><span class="p">(</span><span class="n">x</span><span class="p">)),</span>
+                          <span class="n">out</span><span class="o">=</span><span class="n">x</span><span class="p">)</span>
+        <span class="n">g_convex_conj</span><span class="o">.</span><span class="n">proximal</span><span class="p">(</span><span class="n">mu</span><span class="p">)(</span><span class="n">y</span><span class="o">.</span><span class="n">lincomb</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">mu</span><span class="p">,</span> <span class="n">K</span><span class="p">(</span><span class="n">x</span><span class="p">)),</span> <span class="n">out</span><span class="o">=</span><span class="n">y</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">callback</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">callback</span><span class="p">(</span><span class="n">x</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="doubleprox_dc_simple"><a class="viewcode-back" href="../../../../generated/odl.solvers.nonsmooth.difference_convex.doubleprox_dc_simple.html#odl.solvers.nonsmooth.difference_convex.doubleprox_dc_simple">[docs]</a><span class="k">def</span> <span class="nf">doubleprox_dc_simple</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">f</span><span class="p">,</span> <span class="n">phi</span><span class="p">,</span> <span class="n">g</span><span class="p">,</span> <span class="n">K</span><span class="p">,</span> <span class="n">niter</span><span class="p">,</span> <span class="n">gamma</span><span class="p">,</span> <span class="n">mu</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Non-optimized version of ``doubleprox_dc``.</span>
+<span class="sd">    This function is intended for debugging. It makes a lot of copies and</span>
+<span class="sd">    performs no error checking.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">niter</span><span class="p">):</span>
+        <span class="n">f</span><span class="o">.</span><span class="n">proximal</span><span class="p">(</span><span class="n">gamma</span><span class="p">)(</span><span class="n">x</span> <span class="o">+</span> <span class="n">gamma</span> <span class="o">*</span> <span class="n">K</span><span class="o">.</span><span class="n">adjoint</span><span class="p">(</span><span class="n">y</span><span class="p">)</span> <span class="o">-</span>
+                          <span class="n">gamma</span> <span class="o">*</span> <span class="n">phi</span><span class="o">.</span><span class="n">gradient</span><span class="p">(</span><span class="n">x</span><span class="p">),</span> <span class="n">out</span><span class="o">=</span><span class="n">x</span><span class="p">)</span>
+        <span class="n">g</span><span class="o">.</span><span class="n">convex_conj</span><span class="o">.</span><span class="n">proximal</span><span class="p">(</span><span class="n">mu</span><span class="p">)(</span><span class="n">y</span> <span class="o">+</span> <span class="n">mu</span> <span class="o">*</span> <span class="n">K</span><span class="p">(</span><span class="n">x</span><span class="p">),</span> <span class="n">out</span><span class="o">=</span><span class="n">y</span><span class="p">)</span></div>
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &#169; Copyright 2014-2020 The ODL Contributors.
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

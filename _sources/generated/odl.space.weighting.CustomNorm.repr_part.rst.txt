@@ -1,0 +1,6 @@
+CustomNorm.repr_part
+========================================
+
+.. currentmodule:: odl.space.weighting
+
+.. autoproperty:: CustomNorm.repr_part

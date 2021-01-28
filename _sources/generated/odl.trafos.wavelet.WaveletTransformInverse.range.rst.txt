@@ -1,0 +1,6 @@
+WaveletTransformInverse.range
+================================================
+
+.. currentmodule:: odl.trafos.wavelet
+
+.. autoproperty:: WaveletTransformInverse.range

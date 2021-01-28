@@ -1,0 +1,6 @@
+FunctionalScalarSum.right
+===========================================================
+
+.. currentmodule:: odl.solvers.functional.functional
+
+.. autoproperty:: FunctionalScalarSum.right

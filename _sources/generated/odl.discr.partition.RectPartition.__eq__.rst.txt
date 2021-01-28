@@ -1,0 +1,8 @@
+:orphan:
+
+RectPartition.__eq__
+========================================
+
+.. currentmodule:: odl.discr.partition
+
+.. automethod:: RectPartition.__eq__

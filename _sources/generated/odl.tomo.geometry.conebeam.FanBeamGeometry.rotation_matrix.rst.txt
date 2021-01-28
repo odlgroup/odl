@@ -1,0 +1,8 @@
+:orphan:
+
+FanBeamGeometry.rotation_matrix
+==========================================================
+
+.. currentmodule:: odl.tomo.geometry.conebeam
+
+.. automethod:: FanBeamGeometry.rotation_matrix

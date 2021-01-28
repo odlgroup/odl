@@ -1,0 +1,8 @@
+:orphan:
+
+Huber.__eq__
+=======================================================
+
+.. currentmodule:: odl.solvers.functional.default_functionals
+
+.. automethod:: Huber.__eq__

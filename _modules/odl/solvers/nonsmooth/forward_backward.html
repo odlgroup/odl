@@ -1,0 +1,416 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>odl.solvers.nonsmooth.forward_backward &mdash; odl 1.0.0.dev0 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../../../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../../../../_static/custom.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../../../" src="../../../../_static/documentation_options.js"></script>
+        <script src="../../../../_static/jquery.js"></script>
+        <script src="../../../../_static/underscore.js"></script>
+        <script src="../../../../_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="../../../../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../../../index.html" class="icon icon-home"> odl
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                1.0.0.dev0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Getting Started</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../getting_started/getting_started.html">Getting Started</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Working with ODL</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../guide/guide.html">User’s guide – selected topics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../math/math.html">Mathematical Background</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Developer zone</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../dev/dev.html">Contributing to ODL</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Useful facts</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../guide/faq.html">Frequently asked questions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../guide/glossary.html">Glossary</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../release_notes.html">Release Notes</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../refs.html">References</a></li>
+</ul>
+<p class="caption"><span class="caption-text">API Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../odl.html">odl</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../../index.html">odl</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../../../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="../../../index.html">Module code</a> &raquo;</li>
+        
+      <li>odl.solvers.nonsmooth.forward_backward</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for odl.solvers.nonsmooth.forward_backward</h1><div class="highlight"><pre>
+<span></span><span class="c1"># Copyright 2014-2019 The ODL contributors</span>
+<span class="c1">#</span>
+<span class="c1"># This file is part of ODL.</span>
+<span class="c1">#</span>
+<span class="c1"># This Source Code Form is subject to the terms of the Mozilla Public License,</span>
+<span class="c1"># v. 2.0. If a copy of the MPL was not distributed with this file, You can</span>
+<span class="c1"># obtain one at https://mozilla.org/MPL/2.0/.</span>
+
+<span class="sd">&quot;&quot;&quot;Optimization methods based on a forward-backward splitting scheme.&quot;&quot;&quot;</span>
+
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">print_function</span><span class="p">,</span> <span class="n">division</span><span class="p">,</span> <span class="n">absolute_import</span>
+
+<span class="kn">from</span> <span class="nn">odl.operator</span> <span class="kn">import</span> <span class="n">Operator</span>
+
+
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;forward_backward_pd&#39;</span><span class="p">,)</span>
+
+
+<div class="viewcode-block" id="forward_backward_pd"><a class="viewcode-back" href="../../../../generated/odl.solvers.nonsmooth.forward_backward.forward_backward_pd.html#odl.solvers.nonsmooth.forward_backward.forward_backward_pd">[docs]</a><span class="k">def</span> <span class="nf">forward_backward_pd</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">f</span><span class="p">,</span> <span class="n">g</span><span class="p">,</span> <span class="n">L</span><span class="p">,</span> <span class="n">h</span><span class="p">,</span> <span class="n">tau</span><span class="p">,</span> <span class="n">sigma</span><span class="p">,</span> <span class="n">niter</span><span class="p">,</span>
+                        <span class="n">callback</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="sa">r</span><span class="sd">&quot;&quot;&quot;The forward-backward primal-dual splitting algorithm.</span>
+
+<span class="sd">    The algorithm minimizes the sum of several convex functionals composed with</span>
+<span class="sd">    linear operators::</span>
+
+<span class="sd">        min_x f(x) + sum_i g_i(L_i x) + h(x)</span>
+
+<span class="sd">    where ``f``, ``g_i`` are convex functionals, ``L_i`` are linear</span>
+<span class="sd">    operators, and ``h`` is a convex and differentiable functional.</span>
+
+<span class="sd">    The method can also be used to solve the more general problem::</span>
+
+<span class="sd">        min_x f(x) + sum_i (g_i @ l_i)(L_i x) + h(x)</span>
+
+<span class="sd">    where ``l_i`` are strongly convex functionals and @ is the infimal</span>
+<span class="sd">    convolution::</span>
+
+<span class="sd">        (g @ l)(x) = inf_y { g(y) + l(x-y) }</span>
+
+<span class="sd">    Note that the strong convexity of ``l_i`` makes the convex conjugate</span>
+<span class="sd">    ``l_i^*`` differentiable; see the Notes section for more information on</span>
+<span class="sd">    this.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    x : `LinearSpaceElement`</span>
+<span class="sd">        Initial point, updated in-place.</span>
+<span class="sd">    f : `Functional`</span>
+<span class="sd">        The functional ``f``. Needs to have ``f.proximal``.</span>
+<span class="sd">    g : sequence of `Functional`&#39;s</span>
+<span class="sd">        The functionals ``g_i``. Needs to have ``g_i.convex_conj.proximal``.</span>
+<span class="sd">    L : sequence of `Operator`&#39;s&#39;</span>
+<span class="sd">        Sequence of linear operators ``L_i``, with as many elements as</span>
+<span class="sd">        ``g``.</span>
+<span class="sd">    h : `Functional`</span>
+<span class="sd">        The functional ``h``. Needs to have ``h.gradient``.</span>
+<span class="sd">    tau : float</span>
+<span class="sd">        Step size-like parameter for ``f``.</span>
+<span class="sd">    sigma : sequence of floats</span>
+<span class="sd">        Sequence of step size-like parameters for the sequence ``g``.</span>
+<span class="sd">    niter : int</span>
+<span class="sd">        Number of iterations.</span>
+<span class="sd">    callback : callable, optional</span>
+<span class="sd">        Function called with the current iterate after each iteration.</span>
+
+<span class="sd">    Other Parameters</span>
+<span class="sd">    ----------------</span>
+<span class="sd">    l : sequence of `Functional`&#39;s, optional</span>
+<span class="sd">        The functionals ``l_i``. Needs to have ``g_i.convex_conj.gradient``.</span>
+<span class="sd">        If omitted, the simpler problem without ``l_i``  will be considered.</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    The mathematical problem to solve is</span>
+
+<span class="sd">     .. math::</span>
+<span class="sd">        \min_x f(x) + \sum_{i=0}^n (g_i \Box l_i)(L_i x) + h(x),</span>
+
+<span class="sd">    where :math:`f`, :math:`g_i`, :math:`l_i` and :math:`h` are functionals and</span>
+<span class="sd">    :math:`L_i` are linear operators. The infimal convolution :math:`g \Box l`</span>
+<span class="sd">    is defined by</span>
+
+<span class="sd">     .. math::</span>
+<span class="sd">        (g \Box l)(x) = \inf_y g(y) + l(x - y).</span>
+
+<span class="sd">    The exact conditions on the involved functionals are as follows: :math:`f`</span>
+<span class="sd">    and :math:`g_i` are proper, convex and lower semicontinuous, and :math:`h`</span>
+<span class="sd">    is convex and differentiable with :math:`\eta^{-1}`-Lipschitz continuous</span>
+<span class="sd">    gradient, :math:`\eta &gt; 0`.</span>
+
+<span class="sd">    The optional operators :math:`\nabla l_i^*` need to be</span>
+<span class="sd">    :math:`\nu_i`-Lipschitz continuous. Note that in the paper, the condition</span>
+<span class="sd">    is formulated as :math:`l_i` being proper, lower</span>
+<span class="sd">    semicontinuous, and :math:`\nu_i^{-1}`-strongly convex, which implies that</span>
+<span class="sd">    :math:`l_i^*` have :math:`\nu_i`-Lipschitz continuous gradients.</span>
+
+<span class="sd">    If the optional operators :math:`\nabla l_i^*` are omitted, the simpler</span>
+<span class="sd">    problem without :math:`l_i` will be considered. Mathematically, this is</span>
+<span class="sd">    done by taking :math:`l_i` to be the functionals that are zero only in the</span>
+<span class="sd">    zero element and :math:`\infty` otherwise. This gives that :math:`l_i^*`</span>
+<span class="sd">    are the zero functionals, and hence the corresponding gradients are the</span>
+<span class="sd">    zero operators.</span>
+
+<span class="sd">    To guarantee convergence, the parameters :math:`\tau`, :math:`\sigma` and</span>
+<span class="sd">    :math:`L_i` need to satisfy</span>
+
+<span class="sd">    .. math::</span>
+<span class="sd">       2 \min \{ \frac{1}{\tau}, \frac{1}{\sigma_1}, \ldots,</span>
+<span class="sd">       \frac{1}{\sigma_m} \} \cdot \min\{ \eta, \nu_1, \ldots, \nu_m  \}</span>
+<span class="sd">       \cdot \sqrt{1 - \tau \sum_{i=1}^n \sigma_i ||L_i||^2} &gt; 1,</span>
+
+<span class="sd">    where, if the simpler problem is considered, all :math:`\nu_i` can be</span>
+<span class="sd">    considered to be :math:`\infty`.</span>
+
+<span class="sd">    For reference on the forward-backward primal-dual algorithm, see [BC2015].</span>
+
+<span class="sd">    For more on proximal operators and algorithms see [PB2014].</span>
+
+<span class="sd">    See Also</span>
+<span class="sd">    --------</span>
+<span class="sd">    odl.solvers.nonsmooth.primal_dual_hybrid_gradient.pdhg :</span>
+<span class="sd">        Solver for similar problems without differentiability in any</span>
+<span class="sd">        of the terms.</span>
+<span class="sd">    odl.solvers.nonsmooth.douglas_rachford.douglas_rachford_pd :</span>
+<span class="sd">        Solver for similar problems without differentiability in any</span>
+<span class="sd">        of the terms.</span>
+
+<span class="sd">    References</span>
+<span class="sd">    ----------</span>
+<span class="sd">    [BC2015] Bot, R I, and Csetnek, E R. *On the convergence rate of</span>
+<span class="sd">    a forward-backward type primal-dual splitting algorithm for convex</span>
+<span class="sd">    optimization problems*. Optimization, 64.1 (2015), pp 5--23.</span>
+
+<span class="sd">    [PB2014] Parikh, N, and Boyd, S. *Proximal Algorithms*.</span>
+<span class="sd">    Foundations and Trends in Optimization, 1 (2014), pp 127-239.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="c1"># Problem size</span>
+    <span class="n">m</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">L</span><span class="p">)</span>
+
+    <span class="c1"># Validate input</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">all</span><span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">op</span><span class="p">,</span> <span class="n">Operator</span><span class="p">)</span> <span class="k">for</span> <span class="n">op</span> <span class="ow">in</span> <span class="n">L</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;`L` not a sequence of operators&#39;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">all</span><span class="p">(</span><span class="n">op</span><span class="o">.</span><span class="n">is_linear</span> <span class="k">for</span> <span class="n">op</span> <span class="ow">in</span> <span class="n">L</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;not all operators in `L` are linear&#39;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">all</span><span class="p">(</span><span class="n">x</span> <span class="ow">in</span> <span class="n">op</span><span class="o">.</span><span class="n">domain</span> <span class="k">for</span> <span class="n">op</span> <span class="ow">in</span> <span class="n">L</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;`x` not in the domain of all operators in `L`&#39;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">sigma</span><span class="p">)</span> <span class="o">!=</span> <span class="n">m</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;len(sigma) != len(L)&#39;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">g</span><span class="p">)</span> <span class="o">!=</span> <span class="n">m</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;len(prox_cc_g) != len(L)&#39;</span><span class="p">)</span>
+
+    <span class="c1"># Extract operators</span>
+    <span class="n">prox_cc_g</span> <span class="o">=</span> <span class="p">[</span><span class="n">gi</span><span class="o">.</span><span class="n">convex_conj</span><span class="o">.</span><span class="n">proximal</span> <span class="k">for</span> <span class="n">gi</span> <span class="ow">in</span> <span class="n">g</span><span class="p">]</span>
+    <span class="n">grad_h</span> <span class="o">=</span> <span class="n">h</span><span class="o">.</span><span class="n">gradient</span>
+    <span class="n">prox_f</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">proximal</span>
+
+    <span class="n">l</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;l&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">l</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">l</span><span class="p">)</span> <span class="o">!=</span> <span class="n">m</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;`grad_cc_l` not same length as `L`&#39;</span><span class="p">)</span>
+        <span class="n">grad_cc_l</span> <span class="o">=</span> <span class="p">[</span><span class="n">li</span><span class="o">.</span><span class="n">convex_conj</span><span class="o">.</span><span class="n">gradient</span> <span class="k">for</span> <span class="n">li</span> <span class="ow">in</span> <span class="n">l</span><span class="p">]</span>
+
+    <span class="k">if</span> <span class="n">kwargs</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;unexpected keyword argument: </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">kwargs</span><span class="p">))</span>
+
+    <span class="c1"># Pre-allocate values</span>
+    <span class="n">v</span> <span class="o">=</span> <span class="p">[</span><span class="n">Li</span><span class="o">.</span><span class="n">range</span><span class="o">.</span><span class="n">zero</span><span class="p">()</span> <span class="k">for</span> <span class="n">Li</span> <span class="ow">in</span> <span class="n">L</span><span class="p">]</span>
+    <span class="n">y</span> <span class="o">=</span> <span class="n">x</span><span class="o">.</span><span class="n">space</span><span class="o">.</span><span class="n">zero</span><span class="p">()</span>
+
+    <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">niter</span><span class="p">):</span>
+        <span class="n">x_old</span> <span class="o">=</span> <span class="n">x</span>
+
+        <span class="n">tmp_1</span> <span class="o">=</span> <span class="n">grad_h</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="o">+</span> <span class="nb">sum</span><span class="p">(</span><span class="n">Li</span><span class="o">.</span><span class="n">adjoint</span><span class="p">(</span><span class="n">vi</span><span class="p">)</span> <span class="k">for</span> <span class="n">Li</span><span class="p">,</span> <span class="n">vi</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">L</span><span class="p">,</span> <span class="n">v</span><span class="p">))</span>
+        <span class="n">prox_f</span><span class="p">(</span><span class="n">tau</span><span class="p">)(</span><span class="n">x</span> <span class="o">-</span> <span class="n">tau</span> <span class="o">*</span> <span class="n">tmp_1</span><span class="p">,</span> <span class="n">out</span><span class="o">=</span><span class="n">x</span><span class="p">)</span>
+        <span class="n">y</span><span class="o">.</span><span class="n">lincomb</span><span class="p">(</span><span class="mf">2.0</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="n">x_old</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">m</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">l</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="c1"># In this case gradients were given.</span>
+                <span class="n">tmp_2</span> <span class="o">=</span> <span class="n">sigma</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">*</span> <span class="p">(</span><span class="n">L</span><span class="p">[</span><span class="n">i</span><span class="p">](</span><span class="n">y</span><span class="p">)</span> <span class="o">-</span> <span class="n">grad_cc_l</span><span class="p">[</span><span class="n">i</span><span class="p">](</span><span class="n">v</span><span class="p">[</span><span class="n">i</span><span class="p">]))</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="c1"># In this case gradients were not given. Therefore the gradient</span>
+                <span class="c1"># step is omitted. For more details, see the documentation.</span>
+                <span class="n">tmp_2</span> <span class="o">=</span> <span class="n">sigma</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">*</span> <span class="n">L</span><span class="p">[</span><span class="n">i</span><span class="p">](</span><span class="n">y</span><span class="p">)</span>
+
+            <span class="n">prox_cc_g</span><span class="p">[</span><span class="n">i</span><span class="p">](</span><span class="n">sigma</span><span class="p">[</span><span class="n">i</span><span class="p">])(</span><span class="n">v</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">+</span> <span class="n">tmp_2</span><span class="p">,</span> <span class="n">out</span><span class="o">=</span><span class="n">v</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
+
+        <span class="k">if</span> <span class="n">callback</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">callback</span><span class="p">(</span><span class="n">x</span><span class="p">)</span></div>
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &#169; Copyright 2014-2020 The ODL Contributors.
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

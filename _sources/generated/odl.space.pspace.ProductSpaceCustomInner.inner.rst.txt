@@ -1,0 +1,6 @@
+ProductSpaceCustomInner.inner
+==============================================
+
+.. currentmodule:: odl.space.pspace
+
+.. autoproperty:: ProductSpaceCustomInner.inner

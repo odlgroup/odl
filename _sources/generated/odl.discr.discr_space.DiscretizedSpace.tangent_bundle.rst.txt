@@ -1,0 +1,6 @@
+DiscretizedSpace.tangent_bundle
+=====================================================
+
+.. currentmodule:: odl.discr.discr_space
+
+.. autoproperty:: DiscretizedSpace.tangent_bundle

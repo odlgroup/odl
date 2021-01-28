@@ -1,0 +1,29 @@
+﻿CallbackProgressBar
+=============================================
+
+.. currentmodule:: odl.solvers.util.callback
+
+.. autoclass:: CallbackProgressBar
+   :show-inheritance:
+   
+   
+   .. automethod:: __init__
+   
+      
+   
+   .. HACK -- the point here is that we don't want this to appear in the output, but the autosummary should still generate the pages.
+      .. autosummary::
+         :toctree:
+      
+         CallbackProgressBar.__call__
+         CallbackProgressBar.__eq__
+         CallbackProgressBar.reset
+   
+
+    
+   .. HACK -- the point here is that we don't want this to appear in the output, but the autosummary should still generate the pages.
+      .. autosummary::
+         :toctree:
+      
+   
+   

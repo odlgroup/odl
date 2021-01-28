@@ -1,0 +1,6 @@
+OperatorSum.domain
+========================================
+
+.. currentmodule:: odl.operator.operator
+
+.. autoproperty:: OperatorSum.domain

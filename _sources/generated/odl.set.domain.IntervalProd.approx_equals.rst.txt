@@ -1,0 +1,8 @@
+:orphan:
+
+IntervalProd.approx_equals
+=========================================
+
+.. currentmodule:: odl.set.domain
+
+.. automethod:: IntervalProd.approx_equals

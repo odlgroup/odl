@@ -1,0 +1,6 @@
+KullbackLeiblerCrossEntropy.domain
+=============================================================================
+
+.. currentmodule:: odl.solvers.functional.default_functionals
+
+.. autoproperty:: KullbackLeiblerCrossEntropy.domain

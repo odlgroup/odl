@@ -1,0 +1,431 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>odl.solvers.iterative.statistical &mdash; odl 1.0.0.dev0 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../../../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../../../../_static/custom.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../../../" src="../../../../_static/documentation_options.js"></script>
+        <script src="../../../../_static/jquery.js"></script>
+        <script src="../../../../_static/underscore.js"></script>
+        <script src="../../../../_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="../../../../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../../../index.html" class="icon icon-home"> odl
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                1.0.0.dev0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Getting Started</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../getting_started/getting_started.html">Getting Started</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Working with ODL</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../guide/guide.html">User’s guide – selected topics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../math/math.html">Mathematical Background</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Developer zone</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../dev/dev.html">Contributing to ODL</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Useful facts</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../guide/faq.html">Frequently asked questions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../guide/glossary.html">Glossary</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../release_notes.html">Release Notes</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../refs.html">References</a></li>
+</ul>
+<p class="caption"><span class="caption-text">API Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../odl.html">odl</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../../index.html">odl</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../../../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="../../../index.html">Module code</a> &raquo;</li>
+        
+      <li>odl.solvers.iterative.statistical</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for odl.solvers.iterative.statistical</h1><div class="highlight"><pre>
+<span></span><span class="c1"># Copyright 2014-2019 The ODL contributors</span>
+<span class="c1">#</span>
+<span class="c1"># This file is part of ODL.</span>
+<span class="c1">#</span>
+<span class="c1"># This Source Code Form is subject to the terms of the Mozilla Public License,</span>
+<span class="c1"># v. 2.0. If a copy of the MPL was not distributed with this file, You can</span>
+<span class="c1"># obtain one at https://mozilla.org/MPL/2.0/.</span>
+
+<span class="sd">&quot;&quot;&quot;Maximum Likelihood Expectation Maximization algorithm.&quot;&quot;&quot;</span>
+
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">print_function</span><span class="p">,</span> <span class="n">division</span><span class="p">,</span> <span class="n">absolute_import</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;mlem&#39;</span><span class="p">,</span> <span class="s1">&#39;osmlem&#39;</span><span class="p">,</span> <span class="s1">&#39;poisson_log_likelihood&#39;</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="mlem"><a class="viewcode-back" href="../../../../generated/odl.solvers.iterative.statistical.mlem.html#odl.solvers.iterative.statistical.mlem">[docs]</a><span class="k">def</span> <span class="nf">mlem</span><span class="p">(</span><span class="n">op</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">niter</span><span class="p">,</span> <span class="n">callback</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+
+    <span class="sd">&quot;&quot;&quot;Maximum Likelihood Expectation Maximation algorithm.</span>
+
+<span class="sd">    Attempts to solve::</span>
+
+<span class="sd">        max_x L(x | data)</span>
+
+<span class="sd">    where ``L(x | data)`` is the Poisson likelihood of ``x`` given ``data``.</span>
+<span class="sd">    The likelihood depends on the forward operator ``op`` such that</span>
+<span class="sd">    (approximately)::</span>
+
+<span class="sd">        op(x) = data</span>
+
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    op : `Operator`</span>
+<span class="sd">        Forward operator in the inverse problem.</span>
+<span class="sd">    x : ``op.domain`` element</span>
+<span class="sd">        Vector to which the result is written. Its initial value is</span>
+<span class="sd">        used as starting point of the iteration, and its values are</span>
+<span class="sd">        updated in each iteration step.</span>
+<span class="sd">        The initial value of ``x`` should be non-negative.</span>
+<span class="sd">    data : ``op.range`` `element-like`</span>
+<span class="sd">        Right-hand side of the equation defining the inverse problem.</span>
+<span class="sd">    niter : int</span>
+<span class="sd">        Number of iterations.</span>
+<span class="sd">    callback : callable, optional</span>
+<span class="sd">        Function called with the current iterate after each iteration.</span>
+
+<span class="sd">    Other Parameters</span>
+<span class="sd">    ----------------</span>
+<span class="sd">    sensitivities : float or ``op.domain`` `element-like`, optional</span>
+<span class="sd">        The algorithm contains a ``A^T 1``</span>
+<span class="sd">        term, if this parameter is given, it is replaced by it.</span>
+<span class="sd">        Default: ``op.adjoint(op.range.one())``</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    Given a forward model :math:`A` and data :math:`g`,</span>
+<span class="sd">    the algorithm attempts to find an :math:`x` that maximizes:</span>
+
+<span class="sd">    .. math::</span>
+<span class="sd">        P(g | g \text{ is } Poisson(A(x)) \text{ distributed}).</span>
+
+<span class="sd">    The algorithm is explicitly given by:</span>
+
+<span class="sd">    .. math::</span>
+<span class="sd">       x_{n+1} = \frac{x_n}{A^* 1} A^* (g / A(x_n))</span>
+
+<span class="sd">    See Also</span>
+<span class="sd">    --------</span>
+<span class="sd">    osmlem : Ordered subsets MLEM</span>
+<span class="sd">    loglikelihood : Function for calculating the logarithm of the likelihood</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">osmlem</span><span class="p">([</span><span class="n">op</span><span class="p">],</span> <span class="n">x</span><span class="p">,</span> <span class="p">[</span><span class="n">data</span><span class="p">],</span> <span class="n">niter</span><span class="o">=</span><span class="n">niter</span><span class="p">,</span> <span class="n">callback</span><span class="o">=</span><span class="n">callback</span><span class="p">,</span>
+           <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="osmlem"><a class="viewcode-back" href="../../../../generated/odl.solvers.iterative.statistical.osmlem.html#odl.solvers.iterative.statistical.osmlem">[docs]</a><span class="k">def</span> <span class="nf">osmlem</span><span class="p">(</span><span class="n">op</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">niter</span><span class="p">,</span> <span class="n">callback</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="sa">r</span><span class="sd">&quot;&quot;&quot;Ordered Subsets Maximum Likelihood Expectation Maximation algorithm.</span>
+
+<span class="sd">    This solver attempts to solve::</span>
+
+<span class="sd">        max_x L(x | data)</span>
+
+<span class="sd">    where ``L(x, | data)`` is the likelihood of ``x`` given ``data``. The</span>
+<span class="sd">    likelihood depends on the forward operators ``op[0], ..., op[n-1]`` such</span>
+<span class="sd">    that (approximately)::</span>
+
+<span class="sd">        op[i](x) = data[i]</span>
+
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    op : sequence of `Operator`</span>
+<span class="sd">        Forward operators in the inverse problem.</span>
+<span class="sd">    x : ``op.domain`` element</span>
+<span class="sd">        Vector to which the result is written. Its initial value is</span>
+<span class="sd">        used as starting point of the iteration, and its values are</span>
+<span class="sd">        updated in each iteration step.</span>
+<span class="sd">        The initial value of ``x`` should be non-negative.</span>
+<span class="sd">      data : sequence of ``op.range`` `element-like`</span>
+<span class="sd">        Right-hand sides of the equation defining the inverse problem.</span>
+<span class="sd">    niter : int</span>
+<span class="sd">        Number of iterations.</span>
+<span class="sd">    callback : callable, optional</span>
+<span class="sd">        Function called with the current iterate after each iteration.</span>
+
+<span class="sd">    Other Parameters</span>
+<span class="sd">    ----------------</span>
+<span class="sd">    sensitivities : float or ``op.domain`` `element-like`, optional</span>
+<span class="sd">        The algorithm contains an ``A^T 1``</span>
+<span class="sd">        term, if this parameter is given, it is replaced by it.</span>
+<span class="sd">        Default: ``op[i].adjoint(op[i].range.one())``</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    Given forward models :math:`A_i`, and data :math:`g_i`,</span>
+<span class="sd">    :math:`i = 1, ..., M`,</span>
+<span class="sd">    the algorithm attempts to find an :math:`x` that</span>
+<span class="sd">    maximizes:</span>
+
+<span class="sd">    .. math::</span>
+<span class="sd">        \prod_{i=1}^M P(g_i | g_i \text{ is }</span>
+<span class="sd">        Poisson(A_i(x)) \text{ distributed}).</span>
+
+<span class="sd">    The algorithm is explicitly given by partial updates:</span>
+
+<span class="sd">    .. math::</span>
+<span class="sd">       x_{n + m/M} =</span>
+<span class="sd">       \frac{x_{n + (m - 1)/M}}{A_i^* 1} A_i^* (g_i / A_i(x_{n + (m - 1)/M}))</span>
+
+<span class="sd">    for :math:`m = 1, ..., M` and :math:`x_{n+1} = x_{n + M/M}`.</span>
+
+<span class="sd">    The algorithm is not guaranteed to converge, but works for many practical</span>
+<span class="sd">    problems.</span>
+
+<span class="sd">    References</span>
+<span class="sd">    ----------</span>
+<span class="sd">    Natterer, F. Mathematical Methods in Image Reconstruction, section 5.3.2.</span>
+
+<span class="sd">    See Also</span>
+<span class="sd">    --------</span>
+<span class="sd">    mlem : Ordinary MLEM algorithm without subsets.</span>
+<span class="sd">    loglikelihood : Function for calculating the logarithm of the likelihood</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">n_ops</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">op</span><span class="p">)</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">data</span><span class="p">)</span> <span class="o">!=</span> <span class="n">n_ops</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;number of data (</span><span class="si">{}</span><span class="s1">) does not match number of &#39;</span>
+                         <span class="s1">&#39;operators (</span><span class="si">{}</span><span class="s1">)&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">data</span><span class="p">),</span> <span class="n">n_ops</span><span class="p">))</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">all</span><span class="p">(</span><span class="n">x</span> <span class="ow">in</span> <span class="n">opi</span><span class="o">.</span><span class="n">domain</span> <span class="k">for</span> <span class="n">opi</span> <span class="ow">in</span> <span class="n">op</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;`x` not an element in the domains of all operators&#39;</span><span class="p">)</span>
+
+    <span class="c1"># Convert data to range elements</span>
+    <span class="n">data</span> <span class="o">=</span> <span class="p">[</span><span class="n">op</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">range</span><span class="o">.</span><span class="n">element</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="n">i</span><span class="p">])</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">op</span><span class="p">))]</span>
+
+    <span class="c1"># Parameter used to enforce positivity.</span>
+    <span class="c1"># TODO: let users give this.</span>
+    <span class="n">eps</span> <span class="o">=</span> <span class="mf">1e-8</span>
+
+    <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">any</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">less</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="mi">0</span><span class="p">)):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;`x` must be non-negative&#39;</span><span class="p">)</span>
+
+    <span class="c1"># Extract the sensitivites parameter</span>
+    <span class="n">sensitivities</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;sensitivities&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">sensitivities</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">sensitivities</span> <span class="o">=</span> <span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">maximum</span><span class="p">(</span><span class="n">opi</span><span class="o">.</span><span class="n">adjoint</span><span class="p">(</span><span class="n">opi</span><span class="o">.</span><span class="n">range</span><span class="o">.</span><span class="n">one</span><span class="p">()),</span> <span class="n">eps</span><span class="p">)</span>
+                         <span class="k">for</span> <span class="n">opi</span> <span class="ow">in</span> <span class="n">op</span><span class="p">]</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="c1"># Make sure the sensitivities is a list of the correct size.</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="nb">list</span><span class="p">(</span><span class="n">sensitivities</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">TypeError</span><span class="p">:</span>
+            <span class="n">sensitivities</span> <span class="o">=</span> <span class="p">[</span><span class="n">sensitivities</span><span class="p">]</span> <span class="o">*</span> <span class="n">n_ops</span>
+
+    <span class="n">tmp_dom</span> <span class="o">=</span> <span class="n">op</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">domain</span><span class="o">.</span><span class="n">element</span><span class="p">()</span>
+    <span class="n">tmp_ran</span> <span class="o">=</span> <span class="p">[</span><span class="n">opi</span><span class="o">.</span><span class="n">range</span><span class="o">.</span><span class="n">element</span><span class="p">()</span> <span class="k">for</span> <span class="n">opi</span> <span class="ow">in</span> <span class="n">op</span><span class="p">]</span>
+
+    <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">niter</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_ops</span><span class="p">):</span>
+            <span class="n">op</span><span class="p">[</span><span class="n">i</span><span class="p">](</span><span class="n">x</span><span class="p">,</span> <span class="n">out</span><span class="o">=</span><span class="n">tmp_ran</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
+            <span class="n">tmp_ran</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">ufuncs</span><span class="o">.</span><span class="n">maximum</span><span class="p">(</span><span class="n">eps</span><span class="p">,</span> <span class="n">out</span><span class="o">=</span><span class="n">tmp_ran</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
+            <span class="n">data</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">divide</span><span class="p">(</span><span class="n">tmp_ran</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">out</span><span class="o">=</span><span class="n">tmp_ran</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
+
+            <span class="n">op</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">adjoint</span><span class="p">(</span><span class="n">tmp_ran</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">out</span><span class="o">=</span><span class="n">tmp_dom</span><span class="p">)</span>
+            <span class="n">tmp_dom</span> <span class="o">/=</span> <span class="n">sensitivities</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+
+            <span class="n">x</span> <span class="o">*=</span> <span class="n">tmp_dom</span>
+
+            <span class="k">if</span> <span class="n">callback</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">callback</span><span class="p">(</span><span class="n">x</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="poisson_log_likelihood"><a class="viewcode-back" href="../../../../generated/odl.solvers.iterative.statistical.poisson_log_likelihood.html#odl.solvers.iterative.statistical.poisson_log_likelihood">[docs]</a><span class="k">def</span> <span class="nf">poisson_log_likelihood</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">data</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Poisson log-likelihood of ``data`` given noise parametrized by ``x``.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    x : ``op.domain`` element</span>
+<span class="sd">        Value to condition the log-likelihood on.</span>
+<span class="sd">    data : ``op.range`` element</span>
+<span class="sd">        Data whose log-likelihood given ``x`` shall be calculated.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">any</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">less</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="mi">0</span><span class="p">)):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;`x` must be non-negative&#39;</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">data</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">x</span> <span class="o">+</span> <span class="mf">1e-8</span><span class="p">)</span> <span class="o">-</span> <span class="n">x</span><span class="p">)</span></div>
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &#169; Copyright 2014-2020 The ODL Contributors.
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

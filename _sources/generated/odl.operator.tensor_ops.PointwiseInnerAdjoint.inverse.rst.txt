@@ -1,0 +1,6 @@
+PointwiseInnerAdjoint.inverse
+=====================================================
+
+.. currentmodule:: odl.operator.tensor_ops
+
+.. autoproperty:: PointwiseInnerAdjoint.inverse

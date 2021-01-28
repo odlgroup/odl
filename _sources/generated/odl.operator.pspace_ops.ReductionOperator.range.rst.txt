@@ -1,0 +1,6 @@
+ReductionOperator.range
+===============================================
+
+.. currentmodule:: odl.operator.pspace_ops
+
+.. autoproperty:: ReductionOperator.range

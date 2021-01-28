@@ -1,0 +1,8 @@
+:orphan:
+
+NumpyTensorSpace.astype
+=============================================
+
+.. currentmodule:: odl.space.npy_tensors
+
+.. automethod:: NumpyTensorSpace.astype

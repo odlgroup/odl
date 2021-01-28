@@ -1,0 +1,6 @@
+NumpyTensorSpaceArrayWeighting.exponent
+=============================================================
+
+.. currentmodule:: odl.space.npy_tensors
+
+.. autoproperty:: NumpyTensorSpaceArrayWeighting.exponent

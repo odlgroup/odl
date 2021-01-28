@@ -1,0 +1,37 @@
+﻿isfinite_op
+===================================
+
+.. currentmodule:: odl.ufunc_ops.ufunc_ops
+
+.. autoclass:: isfinite_op
+   :show-inheritance:
+   
+   
+   .. automethod:: __init__
+   
+      
+   
+   .. HACK -- the point here is that we don't want this to appear in the output, but the autosummary should still generate the pages.
+      .. autosummary::
+         :toctree:
+      
+         isfinite_op.__call__
+         isfinite_op.__eq__
+         isfinite_op._call
+         isfinite_op.derivative
+         isfinite_op.norm
+   
+
+    
+   .. HACK -- the point here is that we don't want this to appear in the output, but the autosummary should still generate the pages.
+      .. autosummary::
+         :toctree:
+      
+         isfinite_op.adjoint
+         isfinite_op.domain
+         isfinite_op.inverse
+         isfinite_op.is_functional
+         isfinite_op.is_linear
+         isfinite_op.range
+   
+   

@@ -1,0 +1,6 @@
+FlatteningOperator.order
+================================================
+
+.. currentmodule:: odl.operator.tensor_ops
+
+.. autoproperty:: FlatteningOperator.order

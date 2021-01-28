@@ -1,0 +1,8 @@
+:orphan:
+
+TensorSpace.norm
+=======================================
+
+.. currentmodule:: odl.space.base_tensors
+
+.. automethod:: TensorSpace.norm

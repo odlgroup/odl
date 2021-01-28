@@ -1,0 +1,8 @@
+:orphan:
+
+trunc_func.norm
+=======================================
+
+.. currentmodule:: odl.ufunc_ops.ufunc_ops
+
+.. automethod:: trunc_func.norm

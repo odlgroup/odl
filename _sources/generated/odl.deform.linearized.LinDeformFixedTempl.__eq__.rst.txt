@@ -1,0 +1,8 @@
+:orphan:
+
+LinDeformFixedTempl.__eq__
+================================================
+
+.. currentmodule:: odl.deform.linearized
+
+.. automethod:: LinDeformFixedTempl.__eq__

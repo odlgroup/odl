@@ -1,0 +1,6 @@
+ZeroFunctional.constant
+==================================================================
+
+.. currentmodule:: odl.solvers.functional.default_functionals
+
+.. autoproperty:: ZeroFunctional.constant

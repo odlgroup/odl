@@ -1,0 +1,6 @@
+ParallelBeamGeometry.ndim
+====================================================
+
+.. currentmodule:: odl.tomo.geometry.parallel
+
+.. autoproperty:: ParallelBeamGeometry.ndim

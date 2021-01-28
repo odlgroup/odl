@@ -1,0 +1,8 @@
+:orphan:
+
+rint_op.derivative
+==========================================
+
+.. currentmodule:: odl.ufunc_ops.ufunc_ops
+
+.. automethod:: rint_op.derivative

@@ -1,0 +1,6 @@
+﻿nullcontext
+============================
+
+.. currentmodule:: odl.util.utility
+
+.. autofunction:: nullcontext

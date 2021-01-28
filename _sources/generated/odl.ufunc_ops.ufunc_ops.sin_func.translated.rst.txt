@@ -1,0 +1,8 @@
+:orphan:
+
+sin_func.translated
+===========================================
+
+.. currentmodule:: odl.ufunc_ops.ufunc_ops
+
+.. automethod:: sin_func.translated

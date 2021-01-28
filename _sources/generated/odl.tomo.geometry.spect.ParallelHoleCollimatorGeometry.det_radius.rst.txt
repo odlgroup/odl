@@ -1,0 +1,6 @@
+ParallelHoleCollimatorGeometry.det_radius
+=================================================================
+
+.. currentmodule:: odl.tomo.geometry.spect
+
+.. autoproperty:: ParallelHoleCollimatorGeometry.det_radius

@@ -1,0 +1,6 @@
+WaveletTransformInverse.is_orthogonal
+========================================================
+
+.. currentmodule:: odl.trafos.wavelet
+
+.. autoproperty:: WaveletTransformInverse.is_orthogonal

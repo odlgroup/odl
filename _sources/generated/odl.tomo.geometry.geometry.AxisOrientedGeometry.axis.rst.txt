@@ -1,0 +1,6 @@
+AxisOrientedGeometry.axis
+====================================================
+
+.. currentmodule:: odl.tomo.geometry.geometry
+
+.. autoproperty:: AxisOrientedGeometry.axis

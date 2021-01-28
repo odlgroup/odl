@@ -1,0 +1,6 @@
+FanBeamGeometry.src_to_det_init
+==========================================================
+
+.. currentmodule:: odl.tomo.geometry.conebeam
+
+.. autoproperty:: FanBeamGeometry.src_to_det_init

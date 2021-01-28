@@ -1,0 +1,6 @@
+CylindricalDetector.partition
+========================================================
+
+.. currentmodule:: odl.tomo.geometry.detector
+
+.. autoproperty:: CylindricalDetector.partition

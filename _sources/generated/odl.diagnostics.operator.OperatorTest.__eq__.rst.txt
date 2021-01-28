@@ -1,0 +1,8 @@
+:orphan:
+
+OperatorTest.__eq__
+============================================
+
+.. currentmodule:: odl.diagnostics.operator
+
+.. automethod:: OperatorTest.__eq__

@@ -1,0 +1,37 @@
+﻿bitwise_and_op
+======================================
+
+.. currentmodule:: odl.ufunc_ops.ufunc_ops
+
+.. autoclass:: bitwise_and_op
+   :show-inheritance:
+   
+   
+   .. automethod:: __init__
+   
+      
+   
+   .. HACK -- the point here is that we don't want this to appear in the output, but the autosummary should still generate the pages.
+      .. autosummary::
+         :toctree:
+      
+         bitwise_and_op.__call__
+         bitwise_and_op.__eq__
+         bitwise_and_op._call
+         bitwise_and_op.derivative
+         bitwise_and_op.norm
+   
+
+    
+   .. HACK -- the point here is that we don't want this to appear in the output, but the autosummary should still generate the pages.
+      .. autosummary::
+         :toctree:
+      
+         bitwise_and_op.adjoint
+         bitwise_and_op.domain
+         bitwise_and_op.inverse
+         bitwise_and_op.is_functional
+         bitwise_and_op.is_linear
+         bitwise_and_op.range
+   
+   

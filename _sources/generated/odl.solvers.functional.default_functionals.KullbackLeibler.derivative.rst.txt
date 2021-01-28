@@ -1,0 +1,8 @@
+:orphan:
+
+KullbackLeibler.derivative
+=====================================================================
+
+.. currentmodule:: odl.solvers.functional.default_functionals
+
+.. automethod:: KullbackLeibler.derivative

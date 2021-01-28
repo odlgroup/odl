@@ -1,0 +1,6 @@
+FunctionalTranslation.convex_conj
+===================================================================
+
+.. currentmodule:: odl.solvers.functional.functional
+
+.. autoproperty:: FunctionalTranslation.convex_conj

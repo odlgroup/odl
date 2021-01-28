@@ -1,0 +1,6 @@
+FunctionalScalarSum.grad_lipschitz
+====================================================================
+
+.. currentmodule:: odl.solvers.functional.functional
+
+.. autoproperty:: FunctionalScalarSum.grad_lipschitz

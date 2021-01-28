@@ -1,0 +1,6 @@
+﻿wrap_ufunc_productspace
+=======================================
+
+.. currentmodule:: odl.util.ufuncs
+
+.. autofunction:: wrap_ufunc_productspace

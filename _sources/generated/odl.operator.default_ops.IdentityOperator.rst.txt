@@ -1,0 +1,38 @@
+﻿IdentityOperator
+=========================================
+
+.. currentmodule:: odl.operator.default_ops
+
+.. autoclass:: IdentityOperator
+   :show-inheritance:
+   
+   
+   .. automethod:: __init__
+   
+      
+   
+   .. HACK -- the point here is that we don't want this to appear in the output, but the autosummary should still generate the pages.
+      .. autosummary::
+         :toctree:
+      
+         IdentityOperator.__call__
+         IdentityOperator.__eq__
+         IdentityOperator._call
+         IdentityOperator.derivative
+         IdentityOperator.norm
+   
+
+    
+   .. HACK -- the point here is that we don't want this to appear in the output, but the autosummary should still generate the pages.
+      .. autosummary::
+         :toctree:
+      
+         IdentityOperator.adjoint
+         IdentityOperator.domain
+         IdentityOperator.inverse
+         IdentityOperator.is_functional
+         IdentityOperator.is_linear
+         IdentityOperator.range
+         IdentityOperator.scalar
+   
+   

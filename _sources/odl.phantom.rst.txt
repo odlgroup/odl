@@ -1,0 +1,22 @@
+phantom
+=======
+
+Test objects for tomography problems.
+
+.. currentmodule:: odl.phantom
+
+
+.. rubric:: Modules
+
+.. toctree::
+   :maxdepth: 2
+
+   odl.phantom.emission
+   odl.phantom.geometric
+   odl.phantom.misc_phantoms
+   odl.phantom.noise
+   odl.phantom.phantom_utils
+   odl.phantom.transmission
+
+
+

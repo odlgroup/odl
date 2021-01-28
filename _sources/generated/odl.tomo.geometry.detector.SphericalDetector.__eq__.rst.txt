@@ -1,0 +1,8 @@
+:orphan:
+
+SphericalDetector.__eq__
+===================================================
+
+.. currentmodule:: odl.tomo.geometry.detector
+
+.. automethod:: SphericalDetector.__eq__

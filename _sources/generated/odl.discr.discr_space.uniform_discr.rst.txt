@@ -1,0 +1,6 @@
+﻿uniform_discr
+===================================
+
+.. currentmodule:: odl.discr.discr_space
+
+.. autofunction:: uniform_discr

@@ -1,0 +1,6 @@
+SamplingOperator.variant
+================================================
+
+.. currentmodule:: odl.operator.tensor_ops
+
+.. autoproperty:: SamplingOperator.variant

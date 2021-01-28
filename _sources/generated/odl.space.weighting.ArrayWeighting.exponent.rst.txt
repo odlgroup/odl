@@ -1,0 +1,6 @@
+ArrayWeighting.exponent
+===========================================
+
+.. currentmodule:: odl.space.weighting
+
+.. autoproperty:: ArrayWeighting.exponent

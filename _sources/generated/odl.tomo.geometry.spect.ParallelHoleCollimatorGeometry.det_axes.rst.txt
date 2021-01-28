@@ -1,0 +1,8 @@
+:orphan:
+
+ParallelHoleCollimatorGeometry.det_axes
+===============================================================
+
+.. currentmodule:: odl.tomo.geometry.spect
+
+.. automethod:: ParallelHoleCollimatorGeometry.det_axes

@@ -1,0 +1,43 @@
+﻿arcsinh_func
+====================================
+
+.. currentmodule:: odl.ufunc_ops.ufunc_ops
+
+.. autoclass:: arcsinh_func
+   :show-inheritance:
+   
+   
+   .. automethod:: __init__
+   
+      
+   
+   .. HACK -- the point here is that we don't want this to appear in the output, but the autosummary should still generate the pages.
+      .. autosummary::
+         :toctree:
+      
+         arcsinh_func.__call__
+         arcsinh_func.__eq__
+         arcsinh_func._call
+         arcsinh_func.bregman
+         arcsinh_func.derivative
+         arcsinh_func.norm
+         arcsinh_func.translated
+   
+
+    
+   .. HACK -- the point here is that we don't want this to appear in the output, but the autosummary should still generate the pages.
+      .. autosummary::
+         :toctree:
+      
+         arcsinh_func.adjoint
+         arcsinh_func.convex_conj
+         arcsinh_func.domain
+         arcsinh_func.grad_lipschitz
+         arcsinh_func.gradient
+         arcsinh_func.inverse
+         arcsinh_func.is_functional
+         arcsinh_func.is_linear
+         arcsinh_func.proximal
+         arcsinh_func.range
+   
+   

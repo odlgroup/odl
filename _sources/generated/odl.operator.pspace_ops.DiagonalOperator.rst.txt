@@ -1,0 +1,42 @@
+﻿DiagonalOperator
+========================================
+
+.. currentmodule:: odl.operator.pspace_ops
+
+.. autoclass:: DiagonalOperator
+   :show-inheritance:
+   
+   
+   .. automethod:: __init__
+   
+      
+   
+   .. HACK -- the point here is that we don't want this to appear in the output, but the autosummary should still generate the pages.
+      .. autosummary::
+         :toctree:
+      
+         DiagonalOperator.__call__
+         DiagonalOperator.__eq__
+         DiagonalOperator.__getitem__
+         DiagonalOperator._call
+         DiagonalOperator.derivative
+         DiagonalOperator.norm
+   
+
+    
+   .. HACK -- the point here is that we don't want this to appear in the output, but the autosummary should still generate the pages.
+      .. autosummary::
+         :toctree:
+      
+         DiagonalOperator.adjoint
+         DiagonalOperator.domain
+         DiagonalOperator.inverse
+         DiagonalOperator.is_functional
+         DiagonalOperator.is_linear
+         DiagonalOperator.operators
+         DiagonalOperator.ops
+         DiagonalOperator.range
+         DiagonalOperator.shape
+         DiagonalOperator.size
+   
+   

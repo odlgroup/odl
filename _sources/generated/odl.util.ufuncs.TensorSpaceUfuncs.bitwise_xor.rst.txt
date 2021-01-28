@@ -1,0 +1,8 @@
+:orphan:
+
+TensorSpaceUfuncs.bitwise_xor
+=============================================
+
+.. currentmodule:: odl.util.ufuncs
+
+.. automethod:: TensorSpaceUfuncs.bitwise_xor

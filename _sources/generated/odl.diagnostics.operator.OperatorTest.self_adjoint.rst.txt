@@ -1,0 +1,8 @@
+:orphan:
+
+OperatorTest.self_adjoint
+==================================================
+
+.. currentmodule:: odl.diagnostics.operator
+
+.. automethod:: OperatorTest.self_adjoint

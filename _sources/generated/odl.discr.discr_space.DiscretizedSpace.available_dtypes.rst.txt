@@ -1,0 +1,8 @@
+:orphan:
+
+DiscretizedSpace.available_dtypes
+=======================================================
+
+.. currentmodule:: odl.discr.discr_space
+
+.. automethod:: DiscretizedSpace.available_dtypes

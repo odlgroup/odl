@@ -1,0 +1,6 @@
+ProductSpace.complex_space
+===========================================
+
+.. currentmodule:: odl.space.pspace
+
+.. autoproperty:: ProductSpace.complex_space

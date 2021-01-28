@@ -1,0 +1,43 @@
+﻿arccosh_func
+====================================
+
+.. currentmodule:: odl.ufunc_ops.ufunc_ops
+
+.. autoclass:: arccosh_func
+   :show-inheritance:
+   
+   
+   .. automethod:: __init__
+   
+      
+   
+   .. HACK -- the point here is that we don't want this to appear in the output, but the autosummary should still generate the pages.
+      .. autosummary::
+         :toctree:
+      
+         arccosh_func.__call__
+         arccosh_func.__eq__
+         arccosh_func._call
+         arccosh_func.bregman
+         arccosh_func.derivative
+         arccosh_func.norm
+         arccosh_func.translated
+   
+
+    
+   .. HACK -- the point here is that we don't want this to appear in the output, but the autosummary should still generate the pages.
+      .. autosummary::
+         :toctree:
+      
+         arccosh_func.adjoint
+         arccosh_func.convex_conj
+         arccosh_func.domain
+         arccosh_func.grad_lipschitz
+         arccosh_func.gradient
+         arccosh_func.inverse
+         arccosh_func.is_functional
+         arccosh_func.is_linear
+         arccosh_func.proximal
+         arccosh_func.range
+   
+   

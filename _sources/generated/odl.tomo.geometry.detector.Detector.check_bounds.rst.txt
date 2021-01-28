@@ -1,0 +1,6 @@
+Detector.check_bounds
+================================================
+
+.. currentmodule:: odl.tomo.geometry.detector
+
+.. autoproperty:: Detector.check_bounds

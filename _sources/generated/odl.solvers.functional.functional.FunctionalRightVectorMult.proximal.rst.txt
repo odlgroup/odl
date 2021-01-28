@@ -1,0 +1,6 @@
+FunctionalRightVectorMult.proximal
+====================================================================
+
+.. currentmodule:: odl.solvers.functional.functional
+
+.. autoproperty:: FunctionalRightVectorMult.proximal

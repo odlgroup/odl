@@ -1,0 +1,8 @@
+:orphan:
+
+FunctionalScalarSum.norm
+==========================================================
+
+.. currentmodule:: odl.solvers.functional.functional
+
+.. automethod:: FunctionalScalarSum.norm

@@ -1,0 +1,6 @@
+DiscretizedSpaceElement.shape
+===================================================
+
+.. currentmodule:: odl.discr.discr_space
+
+.. autoproperty:: DiscretizedSpaceElement.shape

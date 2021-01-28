@@ -1,0 +1,8 @@
+:orphan:
+
+TensorSpace.astype
+=========================================
+
+.. currentmodule:: odl.space.base_tensors
+
+.. automethod:: TensorSpace.astype

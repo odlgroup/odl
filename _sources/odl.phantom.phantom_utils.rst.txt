@@ -1,0 +1,17 @@
+phantom_utils
+=============
+
+Utilities for creating phantoms.
+
+.. currentmodule:: odl.phantom.phantom_utils
+
+
+
+
+.. rubric:: Functions
+
+.. autosummary::
+   :toctree: generated/
+
+   ~odl.phantom.phantom_utils.cylinders_from_ellipses
+

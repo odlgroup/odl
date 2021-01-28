@@ -1,0 +1,29 @@
+﻿CallbackPrintHardwareUsage
+====================================================
+
+.. currentmodule:: odl.solvers.util.callback
+
+.. autoclass:: CallbackPrintHardwareUsage
+   :show-inheritance:
+   
+   
+   .. automethod:: __init__
+   
+      
+   
+   .. HACK -- the point here is that we don't want this to appear in the output, but the autosummary should still generate the pages.
+      .. autosummary::
+         :toctree:
+      
+         CallbackPrintHardwareUsage.__call__
+         CallbackPrintHardwareUsage.__eq__
+         CallbackPrintHardwareUsage.reset
+   
+
+    
+   .. HACK -- the point here is that we don't want this to appear in the output, but the autosummary should still generate the pages.
+      .. autosummary::
+         :toctree:
+      
+   
+   

@@ -1,0 +1,44 @@
+﻿KullbackLeiblerCrossEntropyConvexConj
+================================================================================
+
+.. currentmodule:: odl.solvers.functional.default_functionals
+
+.. autoclass:: KullbackLeiblerCrossEntropyConvexConj
+   :show-inheritance:
+   
+   
+   .. automethod:: __init__
+   
+      
+   
+   .. HACK -- the point here is that we don't want this to appear in the output, but the autosummary should still generate the pages.
+      .. autosummary::
+         :toctree:
+      
+         KullbackLeiblerCrossEntropyConvexConj.__call__
+         KullbackLeiblerCrossEntropyConvexConj.__eq__
+         KullbackLeiblerCrossEntropyConvexConj._call
+         KullbackLeiblerCrossEntropyConvexConj.bregman
+         KullbackLeiblerCrossEntropyConvexConj.derivative
+         KullbackLeiblerCrossEntropyConvexConj.norm
+         KullbackLeiblerCrossEntropyConvexConj.translated
+   
+
+    
+   .. HACK -- the point here is that we don't want this to appear in the output, but the autosummary should still generate the pages.
+      .. autosummary::
+         :toctree:
+      
+         KullbackLeiblerCrossEntropyConvexConj.adjoint
+         KullbackLeiblerCrossEntropyConvexConj.convex_conj
+         KullbackLeiblerCrossEntropyConvexConj.domain
+         KullbackLeiblerCrossEntropyConvexConj.grad_lipschitz
+         KullbackLeiblerCrossEntropyConvexConj.gradient
+         KullbackLeiblerCrossEntropyConvexConj.inverse
+         KullbackLeiblerCrossEntropyConvexConj.is_functional
+         KullbackLeiblerCrossEntropyConvexConj.is_linear
+         KullbackLeiblerCrossEntropyConvexConj.prior
+         KullbackLeiblerCrossEntropyConvexConj.proximal
+         KullbackLeiblerCrossEntropyConvexConj.range
+   
+   

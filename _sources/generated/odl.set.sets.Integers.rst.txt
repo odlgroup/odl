@@ -1,0 +1,32 @@
+﻿Integers
+=====================
+
+.. currentmodule:: odl.set.sets
+
+.. autoclass:: Integers
+   :show-inheritance:
+   
+   
+   .. automethod:: __init__
+   
+      
+   
+   .. HACK -- the point here is that we don't want this to appear in the output, but the autosummary should still generate the pages.
+      .. autosummary::
+         :toctree:
+      
+         Integers.__contains__
+         Integers.__eq__
+         Integers.contains_all
+         Integers.contains_set
+         Integers.element
+   
+
+    
+   .. HACK -- the point here is that we don't want this to appear in the output, but the autosummary should still generate the pages.
+      .. autosummary::
+         :toctree:
+      
+         Integers.examples
+   
+   

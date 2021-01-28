@@ -1,0 +1,43 @@
+﻿IndicatorSimplex
+===========================================================
+
+.. currentmodule:: odl.solvers.functional.default_functionals
+
+.. autoclass:: IndicatorSimplex
+   :show-inheritance:
+   
+   
+   .. automethod:: __init__
+   
+      
+   
+   .. HACK -- the point here is that we don't want this to appear in the output, but the autosummary should still generate the pages.
+      .. autosummary::
+         :toctree:
+      
+         IndicatorSimplex.__call__
+         IndicatorSimplex.__eq__
+         IndicatorSimplex._call
+         IndicatorSimplex.bregman
+         IndicatorSimplex.derivative
+         IndicatorSimplex.norm
+         IndicatorSimplex.translated
+   
+
+    
+   .. HACK -- the point here is that we don't want this to appear in the output, but the autosummary should still generate the pages.
+      .. autosummary::
+         :toctree:
+      
+         IndicatorSimplex.adjoint
+         IndicatorSimplex.convex_conj
+         IndicatorSimplex.domain
+         IndicatorSimplex.grad_lipschitz
+         IndicatorSimplex.gradient
+         IndicatorSimplex.inverse
+         IndicatorSimplex.is_functional
+         IndicatorSimplex.is_linear
+         IndicatorSimplex.proximal
+         IndicatorSimplex.range
+   
+   

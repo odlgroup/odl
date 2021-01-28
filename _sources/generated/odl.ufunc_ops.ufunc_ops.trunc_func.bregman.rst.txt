@@ -1,0 +1,8 @@
+:orphan:
+
+trunc_func.bregman
+==========================================
+
+.. currentmodule:: odl.ufunc_ops.ufunc_ops
+
+.. automethod:: trunc_func.bregman

@@ -1,0 +1,8 @@
+:orphan:
+
+Huber.bregman
+========================================================
+
+.. currentmodule:: odl.solvers.functional.default_functionals
+
+.. automethod:: Huber.bregman

@@ -1,0 +1,6 @@
+ConeBeamGeometry.src_radius
+======================================================
+
+.. currentmodule:: odl.tomo.geometry.conebeam
+
+.. autoproperty:: ConeBeamGeometry.src_radius

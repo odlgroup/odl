@@ -1,0 +1,6 @@
+Parallel2dGeometry.params
+====================================================
+
+.. currentmodule:: odl.tomo.geometry.parallel
+
+.. autoproperty:: Parallel2dGeometry.params

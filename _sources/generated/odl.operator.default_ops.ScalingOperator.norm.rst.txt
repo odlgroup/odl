@@ -1,0 +1,8 @@
+:orphan:
+
+ScalingOperator.norm
+=============================================
+
+.. currentmodule:: odl.operator.default_ops
+
+.. automethod:: ScalingOperator.norm

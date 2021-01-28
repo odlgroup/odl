@@ -1,0 +1,6 @@
+ProductSpaceElement.parts
+==========================================
+
+.. currentmodule:: odl.space.pspace
+
+.. autoproperty:: ProductSpaceElement.parts

@@ -1,0 +1,40 @@
+﻿LinDeformFixedDisp
+========================================
+
+.. currentmodule:: odl.deform.linearized
+
+.. autoclass:: LinDeformFixedDisp
+   :show-inheritance:
+   
+   
+   .. automethod:: __init__
+   
+      
+   
+   .. HACK -- the point here is that we don't want this to appear in the output, but the autosummary should still generate the pages.
+      .. autosummary::
+         :toctree:
+      
+         LinDeformFixedDisp.__call__
+         LinDeformFixedDisp.__eq__
+         LinDeformFixedDisp._call
+         LinDeformFixedDisp.derivative
+         LinDeformFixedDisp.norm
+   
+
+    
+   .. HACK -- the point here is that we don't want this to appear in the output, but the autosummary should still generate the pages.
+      .. autosummary::
+         :toctree:
+      
+         LinDeformFixedDisp.adjoint
+         LinDeformFixedDisp.displacement
+         LinDeformFixedDisp.domain
+         LinDeformFixedDisp.interp
+         LinDeformFixedDisp.interp_byaxis
+         LinDeformFixedDisp.inverse
+         LinDeformFixedDisp.is_functional
+         LinDeformFixedDisp.is_linear
+         LinDeformFixedDisp.range
+   
+   

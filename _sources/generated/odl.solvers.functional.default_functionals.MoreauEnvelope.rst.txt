@@ -1,0 +1,45 @@
+﻿MoreauEnvelope
+=========================================================
+
+.. currentmodule:: odl.solvers.functional.default_functionals
+
+.. autoclass:: MoreauEnvelope
+   :show-inheritance:
+   
+   
+   .. automethod:: __init__
+   
+      
+   
+   .. HACK -- the point here is that we don't want this to appear in the output, but the autosummary should still generate the pages.
+      .. autosummary::
+         :toctree:
+      
+         MoreauEnvelope.__call__
+         MoreauEnvelope.__eq__
+         MoreauEnvelope._call
+         MoreauEnvelope.bregman
+         MoreauEnvelope.derivative
+         MoreauEnvelope.norm
+         MoreauEnvelope.translated
+   
+
+    
+   .. HACK -- the point here is that we don't want this to appear in the output, but the autosummary should still generate the pages.
+      .. autosummary::
+         :toctree:
+      
+         MoreauEnvelope.adjoint
+         MoreauEnvelope.convex_conj
+         MoreauEnvelope.domain
+         MoreauEnvelope.functional
+         MoreauEnvelope.grad_lipschitz
+         MoreauEnvelope.gradient
+         MoreauEnvelope.inverse
+         MoreauEnvelope.is_functional
+         MoreauEnvelope.is_linear
+         MoreauEnvelope.proximal
+         MoreauEnvelope.range
+         MoreauEnvelope.sigma
+   
+   

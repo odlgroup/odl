@@ -1,0 +1,8 @@
+:orphan:
+
+MatrixWeighting.dist
+========================================
+
+.. currentmodule:: odl.space.weighting
+
+.. automethod:: MatrixWeighting.dist

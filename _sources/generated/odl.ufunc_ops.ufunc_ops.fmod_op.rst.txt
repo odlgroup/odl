@@ -1,0 +1,37 @@
+﻿fmod_op
+===============================
+
+.. currentmodule:: odl.ufunc_ops.ufunc_ops
+
+.. autoclass:: fmod_op
+   :show-inheritance:
+   
+   
+   .. automethod:: __init__
+   
+      
+   
+   .. HACK -- the point here is that we don't want this to appear in the output, but the autosummary should still generate the pages.
+      .. autosummary::
+         :toctree:
+      
+         fmod_op.__call__
+         fmod_op.__eq__
+         fmod_op._call
+         fmod_op.derivative
+         fmod_op.norm
+   
+
+    
+   .. HACK -- the point here is that we don't want this to appear in the output, but the autosummary should still generate the pages.
+      .. autosummary::
+         :toctree:
+      
+         fmod_op.adjoint
+         fmod_op.domain
+         fmod_op.inverse
+         fmod_op.is_functional
+         fmod_op.is_linear
+         fmod_op.range
+   
+   

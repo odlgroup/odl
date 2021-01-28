@@ -1,0 +1,6 @@
+IntervalProd.max_pt
+==================================
+
+.. currentmodule:: odl.set.domain
+
+.. autoproperty:: IntervalProd.max_pt

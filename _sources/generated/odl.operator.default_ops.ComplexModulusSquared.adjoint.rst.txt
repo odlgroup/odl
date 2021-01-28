@@ -1,0 +1,6 @@
+ComplexModulusSquared.adjoint
+======================================================
+
+.. currentmodule:: odl.operator.default_ops
+
+.. autoproperty:: ComplexModulusSquared.adjoint

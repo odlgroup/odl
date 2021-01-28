@@ -1,0 +1,6 @@
+﻿astra_versions_supporting
+=======================================================
+
+.. currentmodule:: odl.tomo.backends.astra_setup
+
+.. autofunction:: astra_versions_supporting

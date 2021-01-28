@@ -1,0 +1,103 @@
+﻿ProductSpaceUfuncs
+==================================
+
+.. currentmodule:: odl.util.ufuncs
+
+.. autoclass:: ProductSpaceUfuncs
+   :show-inheritance:
+   
+   
+   .. automethod:: __init__
+   
+      
+   
+   .. HACK -- the point here is that we don't want this to appear in the output, but the autosummary should still generate the pages.
+      .. autosummary::
+         :toctree:
+      
+         ProductSpaceUfuncs.__eq__
+         ProductSpaceUfuncs.absolute
+         ProductSpaceUfuncs.add
+         ProductSpaceUfuncs.arccos
+         ProductSpaceUfuncs.arccosh
+         ProductSpaceUfuncs.arcsin
+         ProductSpaceUfuncs.arcsinh
+         ProductSpaceUfuncs.arctan
+         ProductSpaceUfuncs.arctan2
+         ProductSpaceUfuncs.arctanh
+         ProductSpaceUfuncs.bitwise_and
+         ProductSpaceUfuncs.bitwise_or
+         ProductSpaceUfuncs.bitwise_xor
+         ProductSpaceUfuncs.ceil
+         ProductSpaceUfuncs.conj
+         ProductSpaceUfuncs.copysign
+         ProductSpaceUfuncs.cos
+         ProductSpaceUfuncs.cosh
+         ProductSpaceUfuncs.deg2rad
+         ProductSpaceUfuncs.divide
+         ProductSpaceUfuncs.equal
+         ProductSpaceUfuncs.exp
+         ProductSpaceUfuncs.exp2
+         ProductSpaceUfuncs.expm1
+         ProductSpaceUfuncs.floor
+         ProductSpaceUfuncs.floor_divide
+         ProductSpaceUfuncs.fmax
+         ProductSpaceUfuncs.fmin
+         ProductSpaceUfuncs.fmod
+         ProductSpaceUfuncs.greater
+         ProductSpaceUfuncs.greater_equal
+         ProductSpaceUfuncs.hypot
+         ProductSpaceUfuncs.invert
+         ProductSpaceUfuncs.isfinite
+         ProductSpaceUfuncs.isinf
+         ProductSpaceUfuncs.isnan
+         ProductSpaceUfuncs.left_shift
+         ProductSpaceUfuncs.less
+         ProductSpaceUfuncs.less_equal
+         ProductSpaceUfuncs.log
+         ProductSpaceUfuncs.log10
+         ProductSpaceUfuncs.log1p
+         ProductSpaceUfuncs.log2
+         ProductSpaceUfuncs.logaddexp
+         ProductSpaceUfuncs.logaddexp2
+         ProductSpaceUfuncs.logical_and
+         ProductSpaceUfuncs.logical_not
+         ProductSpaceUfuncs.logical_or
+         ProductSpaceUfuncs.logical_xor
+         ProductSpaceUfuncs.max
+         ProductSpaceUfuncs.maximum
+         ProductSpaceUfuncs.min
+         ProductSpaceUfuncs.minimum
+         ProductSpaceUfuncs.mod
+         ProductSpaceUfuncs.modf
+         ProductSpaceUfuncs.multiply
+         ProductSpaceUfuncs.negative
+         ProductSpaceUfuncs.not_equal
+         ProductSpaceUfuncs.power
+         ProductSpaceUfuncs.prod
+         ProductSpaceUfuncs.rad2deg
+         ProductSpaceUfuncs.reciprocal
+         ProductSpaceUfuncs.remainder
+         ProductSpaceUfuncs.right_shift
+         ProductSpaceUfuncs.rint
+         ProductSpaceUfuncs.sign
+         ProductSpaceUfuncs.signbit
+         ProductSpaceUfuncs.sin
+         ProductSpaceUfuncs.sinh
+         ProductSpaceUfuncs.sqrt
+         ProductSpaceUfuncs.square
+         ProductSpaceUfuncs.subtract
+         ProductSpaceUfuncs.sum
+         ProductSpaceUfuncs.tan
+         ProductSpaceUfuncs.tanh
+         ProductSpaceUfuncs.true_divide
+         ProductSpaceUfuncs.trunc
+   
+
+    
+   .. HACK -- the point here is that we don't want this to appear in the output, but the autosummary should still generate the pages.
+      .. autosummary::
+         :toctree:
+      
+   
+   

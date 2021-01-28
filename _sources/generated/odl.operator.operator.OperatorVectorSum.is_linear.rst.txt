@@ -1,0 +1,6 @@
+OperatorVectorSum.is_linear
+=================================================
+
+.. currentmodule:: odl.operator.operator
+
+.. autoproperty:: OperatorVectorSum.is_linear

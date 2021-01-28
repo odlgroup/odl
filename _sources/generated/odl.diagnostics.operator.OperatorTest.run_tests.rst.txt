@@ -1,0 +1,8 @@
+:orphan:
+
+OperatorTest.run_tests
+===============================================
+
+.. currentmodule:: odl.diagnostics.operator
+
+.. automethod:: OperatorTest.run_tests

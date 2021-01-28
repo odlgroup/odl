@@ -1,0 +1,44 @@
+﻿ZeroFunctional
+=========================================================
+
+.. currentmodule:: odl.solvers.functional.default_functionals
+
+.. autoclass:: ZeroFunctional
+   :show-inheritance:
+   
+   
+   .. automethod:: __init__
+   
+      
+   
+   .. HACK -- the point here is that we don't want this to appear in the output, but the autosummary should still generate the pages.
+      .. autosummary::
+         :toctree:
+      
+         ZeroFunctional.__call__
+         ZeroFunctional.__eq__
+         ZeroFunctional._call
+         ZeroFunctional.bregman
+         ZeroFunctional.derivative
+         ZeroFunctional.norm
+         ZeroFunctional.translated
+   
+
+    
+   .. HACK -- the point here is that we don't want this to appear in the output, but the autosummary should still generate the pages.
+      .. autosummary::
+         :toctree:
+      
+         ZeroFunctional.adjoint
+         ZeroFunctional.constant
+         ZeroFunctional.convex_conj
+         ZeroFunctional.domain
+         ZeroFunctional.grad_lipschitz
+         ZeroFunctional.gradient
+         ZeroFunctional.inverse
+         ZeroFunctional.is_functional
+         ZeroFunctional.is_linear
+         ZeroFunctional.proximal
+         ZeroFunctional.range
+   
+   

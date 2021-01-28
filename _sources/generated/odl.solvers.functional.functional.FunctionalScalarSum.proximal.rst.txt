@@ -1,0 +1,6 @@
+FunctionalScalarSum.proximal
+==============================================================
+
+.. currentmodule:: odl.solvers.functional.functional
+
+.. autoproperty:: FunctionalScalarSum.proximal

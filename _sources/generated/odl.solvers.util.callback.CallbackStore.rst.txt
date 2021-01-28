@@ -1,0 +1,30 @@
+﻿CallbackStore
+=======================================
+
+.. currentmodule:: odl.solvers.util.callback
+
+.. autoclass:: CallbackStore
+   :show-inheritance:
+   
+   
+   .. automethod:: __init__
+   
+      
+   
+   .. HACK -- the point here is that we don't want this to appear in the output, but the autosummary should still generate the pages.
+      .. autosummary::
+         :toctree:
+      
+         CallbackStore.__call__
+         CallbackStore.__eq__
+         CallbackStore.__getitem__
+         CallbackStore.reset
+   
+
+    
+   .. HACK -- the point here is that we don't want this to appear in the output, but the autosummary should still generate the pages.
+      .. autosummary::
+         :toctree:
+      
+   
+   

@@ -1,0 +1,37 @@
+﻿absolute_op
+===================================
+
+.. currentmodule:: odl.ufunc_ops.ufunc_ops
+
+.. autoclass:: absolute_op
+   :show-inheritance:
+   
+   
+   .. automethod:: __init__
+   
+      
+   
+   .. HACK -- the point here is that we don't want this to appear in the output, but the autosummary should still generate the pages.
+      .. autosummary::
+         :toctree:
+      
+         absolute_op.__call__
+         absolute_op.__eq__
+         absolute_op._call
+         absolute_op.derivative
+         absolute_op.norm
+   
+
+    
+   .. HACK -- the point here is that we don't want this to appear in the output, but the autosummary should still generate the pages.
+      .. autosummary::
+         :toctree:
+      
+         absolute_op.adjoint
+         absolute_op.domain
+         absolute_op.inverse
+         absolute_op.is_functional
+         absolute_op.is_linear
+         absolute_op.range
+   
+   

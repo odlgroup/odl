@@ -1,0 +1,41 @@
+﻿BroadcastOperator
+=========================================
+
+.. currentmodule:: odl.operator.pspace_ops
+
+.. autoclass:: BroadcastOperator
+   :show-inheritance:
+   
+   
+   .. automethod:: __init__
+   
+      
+   
+   .. HACK -- the point here is that we don't want this to appear in the output, but the autosummary should still generate the pages.
+      .. autosummary::
+         :toctree:
+      
+         BroadcastOperator.__call__
+         BroadcastOperator.__eq__
+         BroadcastOperator.__getitem__
+         BroadcastOperator._call
+         BroadcastOperator.derivative
+         BroadcastOperator.norm
+   
+
+    
+   .. HACK -- the point here is that we don't want this to appear in the output, but the autosummary should still generate the pages.
+      .. autosummary::
+         :toctree:
+      
+         BroadcastOperator.adjoint
+         BroadcastOperator.domain
+         BroadcastOperator.inverse
+         BroadcastOperator.is_functional
+         BroadcastOperator.is_linear
+         BroadcastOperator.operators
+         BroadcastOperator.prod_op
+         BroadcastOperator.range
+         BroadcastOperator.size
+   
+   

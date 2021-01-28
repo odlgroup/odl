@@ -1,0 +1,6 @@
+PowerOperator.is_linear
+================================================
+
+.. currentmodule:: odl.operator.default_ops
+
+.. autoproperty:: PowerOperator.is_linear

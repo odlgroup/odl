@@ -1,0 +1,8 @@
+:orphan:
+
+FunctionalQuadraticPerturb.derivative
+=======================================================================
+
+.. currentmodule:: odl.solvers.functional.functional
+
+.. automethod:: FunctionalQuadraticPerturb.derivative

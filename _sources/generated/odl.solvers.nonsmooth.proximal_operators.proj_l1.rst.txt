@@ -1,0 +1,6 @@
+﻿proj_l1
+================================================
+
+.. currentmodule:: odl.solvers.nonsmooth.proximal_operators
+
+.. autofunction:: proj_l1

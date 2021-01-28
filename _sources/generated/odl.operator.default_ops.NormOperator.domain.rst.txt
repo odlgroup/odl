@@ -1,0 +1,6 @@
+NormOperator.domain
+============================================
+
+.. currentmodule:: odl.operator.default_ops
+
+.. autoproperty:: NormOperator.domain

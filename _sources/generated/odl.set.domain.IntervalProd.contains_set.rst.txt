@@ -1,0 +1,8 @@
+:orphan:
+
+IntervalProd.contains_set
+========================================
+
+.. currentmodule:: odl.set.domain
+
+.. automethod:: IntervalProd.contains_set

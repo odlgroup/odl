@@ -1,0 +1,6 @@
+RealPart.adjoint
+=========================================
+
+.. currentmodule:: odl.operator.default_ops
+
+.. autoproperty:: RealPart.adjoint

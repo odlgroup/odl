@@ -1,0 +1,6 @@
+﻿tensor_space
+==================================
+
+.. currentmodule:: odl.space.space_utils
+
+.. autofunction:: tensor_space

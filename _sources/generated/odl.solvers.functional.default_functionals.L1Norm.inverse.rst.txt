@@ -1,0 +1,6 @@
+L1Norm.inverse
+=========================================================
+
+.. currentmodule:: odl.solvers.functional.default_functionals
+
+.. autoproperty:: L1Norm.inverse

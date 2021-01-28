@@ -1,0 +1,27 @@
+parallel
+========
+
+Parallel beam geometries in 2 or 3 dimensions.
+
+.. currentmodule:: odl.tomo.geometry.parallel
+
+
+
+.. rubric:: Classes
+
+.. autosummary::
+   :toctree: generated/
+
+   ~odl.tomo.geometry.parallel.Parallel2dGeometry
+   ~odl.tomo.geometry.parallel.Parallel3dAxisGeometry
+   ~odl.tomo.geometry.parallel.Parallel3dEulerGeometry
+   ~odl.tomo.geometry.parallel.ParallelBeamGeometry
+
+
+.. rubric:: Functions
+
+.. autosummary::
+   :toctree: generated/
+
+   ~odl.tomo.geometry.parallel.parallel_beam_geometry
+

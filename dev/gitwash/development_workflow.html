@@ -1,0 +1,649 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>Development workflow &mdash; odl 1.0.0.dev0 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/custom.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+        <script src="../../_static/jquery.js"></script>
+        <script src="../../_static/underscore.js"></script>
+        <script src="../../_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="../../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="Maintainer workflow" href="maintainer_workflow.html" />
+    <link rel="prev" title="Configure Git" href="configure_git.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../index.html" class="icon icon-home"> odl
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                1.0.0.dev0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Getting Started</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../getting_started/getting_started.html">Getting Started</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Working with ODL</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../guide/guide.html">User’s guide – selected topics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../math/math.html">Mathematical Background</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Developer zone</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../dev.html">Contributing to ODL</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../dev.html#introduction">Introduction</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="../dev.html#contents">Contents</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="../extend.html">Extending ODL</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../document.html">How to document</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../testing.html">Testing in ODL</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../release.html">The ODL release process</a></li>
+<li class="toctree-l3 current"><a class="reference internal" href="index.html">Working with ODL source code</a><ul class="current">
+<li class="toctree-l4"><a class="reference internal" href="git_intro.html">Introduction</a></li>
+<li class="toctree-l4"><a class="reference internal" href="git_install.html">Install Git</a></li>
+<li class="toctree-l4"><a class="reference internal" href="following_latest.html">Following the latest source</a></li>
+<li class="toctree-l4"><a class="reference internal" href="patching.html">Making a patch</a></li>
+<li class="toctree-l4 current"><a class="reference internal" href="git_development.html">Git for development</a></li>
+<li class="toctree-l4"><a class="reference internal" href="git_resources.html">Git resources</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<p class="caption"><span class="caption-text">Useful facts</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../guide/faq.html">Frequently asked questions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../guide/glossary.html">Glossary</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../release_notes.html">Release Notes</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../refs.html">References</a></li>
+</ul>
+<p class="caption"><span class="caption-text">API Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../odl.html">odl</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">odl</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="../dev.html">Contributing to ODL</a> &raquo;</li>
+        
+          <li><a href="index.html">Working with ODL source code</a> &raquo;</li>
+        
+          <li><a href="git_development.html">Git for development</a> &raquo;</li>
+        
+      <li>Development workflow</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            <a href="../../_sources/dev/gitwash/development_workflow.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="development-workflow">
+<span id="id1"></span><h1>Development workflow<a class="headerlink" href="#development-workflow" title="Permalink to this headline">¶</a></h1>
+<p>You already have your own forked copy of the <a class="reference external" href="https://github.com/odlgroup/odl">ODL</a> repository by following <a class="reference internal" href="forking_hell.html#forking"><span class="std std-ref">Making your own copy (fork) of ODL</span></a>. You have
+<a class="reference internal" href="set_up_fork.html#set-up-fork"><span class="std std-ref">Set up your fork</span></a>. You have configured Git according to <a class="reference internal" href="configure_git.html#configure-git"><span class="std std-ref">Configure Git</span></a>.  Now you are ready
+for some real work.</p>
+<div class="section" id="workflow-summary">
+<h2>Workflow summary<a class="headerlink" href="#workflow-summary" title="Permalink to this headline">¶</a></h2>
+<p>In what follows we’ll refer to the upstream ODL <code class="docutils literal notranslate"><span class="pre">master</span></code> branch, as
+“trunk”.</p>
+<ul class="simple">
+<li><p>Don’t use your <code class="docutils literal notranslate"><span class="pre">master</span></code> branch for anything. Consider deleting it.</p></li>
+<li><p>When you are starting a new set of changes, fetch any changes from trunk,
+and start a new <em>feature branch</em> from that.</p></li>
+<li><p>Make a new branch for each separable set of changes — “one task, one
+branch” (see <a class="reference external" href="http://mail.scipy.org/pipermail/ipython-dev/2010-October/006746.html">IPython Git workflow</a>).</p></li>
+<li><p>Name your branch for the purpose of the changes - e.g.
+<code class="docutils literal notranslate"><span class="pre">issue-128__performance_tests</span></code> or <code class="docutils literal notranslate"><span class="pre">refactor_array_tests</span></code>.
+Use the <code class="docutils literal notranslate"><span class="pre">issue-&lt;number&gt;__</span></code> prefix for existing issues.</p></li>
+<li><p>If you are fixing a bug or implement a new feature, consider creating an issue on
+the <a class="reference external" href="http://github.com/odlgroup/odl/issues">ODL issue tracker</a> first.</p></li>
+<li><p><em>Never</em> merge trunk or any other branches into your feature branch while you are working.</p></li>
+<li><p>If you do find yourself merging from trunk, <a class="reference internal" href="#rebase-on-trunk"><span class="std std-ref">Rebase on trunk</span></a> instead.</p></li>
+<li><p>Ask on the <a class="reference external" href="mailto:odl&#37;&#52;&#48;math&#46;kth&#46;se">ODL mailing list</a> if you get stuck.</p></li>
+<li><p>Ask for code review!</p></li>
+</ul>
+<p>This way of working helps to keep the project well organized, with readable history.
+This in turn makes it easier for project maintainers (that might be you) to see
+what you’ve done, and why you did it.</p>
+<p>See <a class="reference external" href="http://www.mail-archive.com/dri-devel&#64;lists.sourceforge.net/msg39091.html">Linux Git workflow</a> and <a class="reference external" href="http://mail.scipy.org/pipermail/ipython-dev/2010-October/006746.html">IPython Git workflow</a> for some explanation.</p>
+</div>
+<div class="section" id="consider-deleting-your-master-branch">
+<h2>Consider deleting your master branch<a class="headerlink" href="#consider-deleting-your-master-branch" title="Permalink to this headline">¶</a></h2>
+<p>It may sound strange, but deleting your own <code class="docutils literal notranslate"><span class="pre">master</span></code> branch can help reduce
+confusion about which branch you are on.  See <a class="reference external" href="http://matthew-brett.github.com/pydagogue/gh_delete_master.html">deleting master on GitHub</a> for
+details.</p>
+</div>
+<div class="section" id="update-the-mirror-of-trunk">
+<span id="update-mirror-trunk"></span><h2>Update the mirror of trunk<a class="headerlink" href="#update-the-mirror-of-trunk" title="Permalink to this headline">¶</a></h2>
+<p>First make sure that <a class="reference internal" href="set_up_fork.html#linking-to-upstream"><span class="std std-ref">Linking your repository to the upstream repo</span></a> is done.</p>
+<p>From time to time you should fetch the upstream (trunk) changes from GitHub:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$ git fetch upstream
+</pre></div>
+</div>
+<p>This will pull down any commits you don’t have, and set the remote branches to
+point to the right commit.  For example, “trunk” is the branch referred to by
+(remote/branchname) <code class="docutils literal notranslate"><span class="pre">upstream/master</span></code> - and if there have been commits since
+you last checked, <code class="docutils literal notranslate"><span class="pre">upstream/master</span></code> will change after you do the fetch.</p>
+</div>
+<div class="section" id="make-a-new-feature-branch">
+<span id="make-feature-branch"></span><h2>Make a new feature branch<a class="headerlink" href="#make-a-new-feature-branch" title="Permalink to this headline">¶</a></h2>
+<p>When you are ready to make some changes to the code, you should start a new
+branch.  Branches that are for a collection of related edits are often called
+“feature branches”.</p>
+<p>Making an new branch for each set of related changes will make it easier for
+someone reviewing your branch to see what you are doing.</p>
+<p>Choose an informative name for the branch to remind yourself and the rest of us
+what the changes in the branch are for, for example <code class="docutils literal notranslate"><span class="pre">add-ability-to-fly</span></code> or
+<code class="docutils literal notranslate"><span class="pre">issue-42__fix_all_bugs</span></code>.</p>
+<p>Is your feature branch mirroring an issue on the <a class="reference external" href="http://github.com/odlgroup/odl/issues">ODL issue tracker</a>? Then prepend your branch
+name with the prefix <code class="docutils literal notranslate"><span class="pre">issue-&lt;number&gt;__</span></code>, where <code class="docutils literal notranslate"><span class="pre">&lt;number&gt;</span></code> is the ticket number of the issue
+you are going to work on.
+If there is no existing issue that corresponds to the code you’re about to write, consider
+creating a new one. In case you are fixing a bug or implementing a feature, it is best to get in
+contact with the maintainers as early as possible. Of course, if you are only playing around, you
+don’t need to create an issue and can name your branch however you like.</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>  <span class="c1"># Update the mirror of trunk</span>
+$ git fetch upstream
+  <span class="c1"># Make new feature branch starting at current trunk</span>
+$ git branch my-new-feature upstream/master
+$ git checkout my-new-feature
+</pre></div>
+</div>
+<p>Generally, you will want to keep your feature branches on your public GitHub
+fork of ODL. To do this, you <a class="reference external" href="http://schacon.github.com/git/git-push.html">git push</a> this new branch up to your GitHub repo.
+Generally (if you followed the instructions in these pages, and by default), Git will have a link
+to your GitHub repo, called <code class="docutils literal notranslate"><span class="pre">origin</span></code>. You push up to your own repo on GitHub with</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$ git push origin my-new-feature
+</pre></div>
+</div>
+<p>In git &gt;= 1.7 you can ensure that the link is correctly set by using the
+<code class="docutils literal notranslate"><span class="pre">--set-upstream</span></code> option:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$ git push --set-upstream origin my-new-feature
+</pre></div>
+</div>
+<p>From now on Git will know that <code class="docutils literal notranslate"><span class="pre">my-new-feature</span></code> is related to the <code class="docutils literal notranslate"><span class="pre">my-new-feature</span></code> branch in
+the GitHub repo.</p>
+</div>
+<div class="section" id="the-editing-workflow">
+<span id="edit-flow"></span><h2>The editing workflow<a class="headerlink" href="#the-editing-workflow" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="overview">
+<h3>Overview<a class="headerlink" href="#overview" title="Permalink to this headline">¶</a></h3>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>  <span class="c1"># hack hack</span>
+$ git add my_new_file
+$ git commit -m <span class="s2">&quot;BUG: fix all bugs&quot;</span>
+$ git push
+</pre></div>
+</div>
+</div>
+<div class="section" id="in-more-detail">
+<h3>In more detail<a class="headerlink" href="#in-more-detail" title="Permalink to this headline">¶</a></h3>
+<ol class="arabic">
+<li><p>Make some changes.</p></li>
+<li><p>See which files have changed with <code class="docutils literal notranslate"><span class="pre">git</span> <span class="pre">status</span></code> (see <a class="reference external" href="http://schacon.github.com/git/git-status.html">git status</a>).
+You’ll see a listing like this one:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">On</span> <span class="n">branch</span> <span class="n">my</span><span class="o">-</span><span class="n">new</span><span class="o">-</span><span class="n">feature</span>
+<span class="n">Changed</span> <span class="n">but</span> <span class="ow">not</span> <span class="n">updated</span><span class="p">:</span>
+  <span class="p">(</span><span class="n">use</span> <span class="s2">&quot;git add &lt;file&gt;...&quot;</span> <span class="n">to</span> <span class="n">update</span> <span class="n">what</span> <span class="n">will</span> <span class="n">be</span> <span class="n">committed</span><span class="p">)</span>
+  <span class="p">(</span><span class="n">use</span> <span class="s2">&quot;git checkout -- &lt;file&gt;...&quot;</span> <span class="n">to</span> <span class="n">discard</span> <span class="n">changes</span> <span class="ow">in</span> <span class="n">working</span> <span class="n">directory</span><span class="p">)</span>
+
+        <span class="n">modified</span><span class="p">:</span>   <span class="n">README</span>
+
+<span class="n">Untracked</span> <span class="n">files</span><span class="p">:</span>
+  <span class="p">(</span><span class="n">use</span> <span class="s2">&quot;git add &lt;file&gt;...&quot;</span> <span class="n">to</span> <span class="n">include</span> <span class="ow">in</span> <span class="n">what</span> <span class="n">will</span> <span class="n">be</span> <span class="n">committed</span><span class="p">)</span>
+
+        <span class="n">INSTALL</span>
+
+<span class="n">no</span> <span class="n">changes</span> <span class="n">added</span> <span class="n">to</span> <span class="n">commit</span> <span class="p">(</span><span class="n">use</span> <span class="s2">&quot;git add&quot;</span> <span class="ow">and</span><span class="o">/</span><span class="ow">or</span> <span class="s2">&quot;git commit -a&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</li>
+<li><p>Check what the actual changes are with <code class="docutils literal notranslate"><span class="pre">git</span> <span class="pre">diff</span></code> (see <a class="reference external" href="http://schacon.github.com/git/git-diff.html">git diff</a>).</p></li>
+<li><p>Add any new files to version control <code class="docutils literal notranslate"><span class="pre">git</span> <span class="pre">add</span> <span class="pre">new_file_name</span></code> (see <a class="reference external" href="http://schacon.github.com/git/git-add.html">git add</a>).</p></li>
+<li><p>To commit all modified files into the local copy of your repo, do
+<code class="docutils literal notranslate"><span class="pre">git</span> <span class="pre">commit</span> <span class="pre">-am</span> <span class="pre">&quot;A</span> <span class="pre">commit</span> <span class="pre">message&quot;</span></code>. Note the <code class="docutils literal notranslate"><span class="pre">-am</span></code> options to <code class="docutils literal notranslate"><span class="pre">commit</span></code>. The <code class="docutils literal notranslate"><span class="pre">m</span></code> flag
+just signals that you’re going to type <a class="reference internal" href="#commit-message"><span class="std std-ref">The commit message</span></a> on the command line.  The <code class="docutils literal notranslate"><span class="pre">a</span></code>
+flag — you can just take on faith — or see <a class="reference external" href="http://www.gitready.com/beginner/2009/01/18/the-staging-area.html">why the -a flag?</a> — and the
+helpful use-case description in the <a class="reference external" href="http://tomayko.com/writings/the-thing-about-git">tangled working copy problem</a>. The <a class="reference external" href="http://schacon.github.com/git/git-commit.html">git commit</a> manual
+page might also be useful.</p></li>
+<li><p>To push the changes up to your forked repo on GitHub, perform a <code class="docutils literal notranslate"><span class="pre">git</span> <span class="pre">push</span></code> (see <a class="reference external" href="http://schacon.github.com/git/git-push.html">git push</a>).</p></li>
+</ol>
+</div>
+<div class="section" id="the-commit-message">
+<span id="commit-message"></span><h3>The commit message<a class="headerlink" href="#the-commit-message" title="Permalink to this headline">¶</a></h3>
+<p>Bear in mind that the commit message will be part of the history of the repository,
+shown by typing <code class="docutils literal notranslate"><span class="pre">git</span> <span class="pre">log</span></code>, so good messages will make the history readable and searchable.
+Don’t see the commit message as an annoyance, but rather as an important part of
+your contribution.</p>
+<p>We appreciate if you follow the following style:</p>
+<ol class="arabic">
+<li><p>Start your commit with an <a class="reference external" href="http://www.numpy.org/devdocs/dev/gitwash/development_workflow.html#writing-the-commit-message">acronym</a>, e.g., <code class="docutils literal notranslate"><span class="pre">BUG</span></code>, <code class="docutils literal notranslate"><span class="pre">TST</span></code> or <code class="docutils literal notranslate"><span class="pre">STY</span></code> to
+indicate what kind of modification you make.</p></li>
+<li><p>Write a one-line summary of your modification no longer than 50 characters.
+If you have a hard time summarizing you changes, maybe you need to split up
+the commit into parts.</p>
+<p>Use imperative style, i.e. write <code class="docutils literal notranslate"><span class="pre">add</span> <span class="pre">super</span> <span class="pre">feature</span></code> or <code class="docutils literal notranslate"><span class="pre">fix</span> <span class="pre">horrific</span> <span class="pre">bug</span></code>
+rather than <code class="docutils literal notranslate"><span class="pre">added,</span> <span class="pre">fixed</span> <span class="pre">...</span></code>. This saves two characters for something else.</p>
+<p>Don’t use markdown. You can refer to issues by writing <code class="docutils literal notranslate"><span class="pre">#12</span></code>. You can even have GitHub
+automatically close an issue by writing <code class="docutils literal notranslate"><span class="pre">closes</span> <span class="pre">#12</span></code>. This happens once your commit has
+made its way into <code class="docutils literal notranslate"><span class="pre">master</span></code> (usually after merging the pull request).</p>
+</li>
+<li><p>(optional) Write an extended summary. Describe why these changes are
+necessary and what the new code does better than the old one.</p></li>
+</ol>
+</div>
+</div>
+<div class="section" id="ask-for-your-changes-to-be-reviewed-or-merged">
+<h2>Ask for your changes to be reviewed or merged<a class="headerlink" href="#ask-for-your-changes-to-be-reviewed-or-merged" title="Permalink to this headline">¶</a></h2>
+<p>When you are ready to ask for someone to review your code and consider a merge:</p>
+<ol class="arabic">
+<li><p>Go to the URL of your forked repo, say
+<code class="docutils literal notranslate"><span class="pre">http://github.com/your-user-name/odl</span></code>.</p></li>
+<li><p>Use the “Switch branches/tags” dropdown menu near the top left of the page to
+select the branch with your changes:</p>
+<img alt="../../_images/branch-dropdown.png" src="../../_images/branch-dropdown.png" />
+</li>
+<li><p>Click on the “New Pull Request” button:</p>
+<img alt="../../_images/new-pull-request-button.png" src="../../_images/new-pull-request-button.png" />
+<p>Enter a title for the set of changes, and some explanation of what you’ve
+done.  Say if there is anything you’d like particular attention for - like a
+complicated change or some code you are not happy with.</p>
+<p>If you don’t think your request is ready to be merged, just say so in your
+pull request message.  This is still a good way of getting some preliminary
+code review.</p>
+<p>See also: <a class="reference external" href="https://help.github.com/articles/using-pull-requests/">https://help.github.com/articles/using-pull-requests/</a></p>
+</li>
+</ol>
+</div>
+<div class="section" id="some-other-things-you-might-want-to-do">
+<h2>Some other things you might want to do<a class="headerlink" href="#some-other-things-you-might-want-to-do" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="delete-a-branch-on-github">
+<h3>Delete a branch on GitHub<a class="headerlink" href="#delete-a-branch-on-github" title="Permalink to this headline">¶</a></h3>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$ git checkout master
+  <span class="c1"># delete branch locally</span>
+$ git branch -D my-unwanted-branch
+  <span class="c1"># delete the remote branch on GitHub</span>
+$ git push origin :my-unwanted-branch
+</pre></div>
+</div>
+<p>Note the colon <code class="docutils literal notranslate"><span class="pre">:</span></code> before <code class="docutils literal notranslate"><span class="pre">test-branch</span></code>.</p>
+<p>See also: <a class="reference external" href="http://github.com/guides/remove-a-remote-branch">http://github.com/guides/remove-a-remote-branch</a></p>
+</div>
+<div class="section" id="several-people-sharing-a-single-repository">
+<h3>Several people sharing a single repository<a class="headerlink" href="#several-people-sharing-a-single-repository" title="Permalink to this headline">¶</a></h3>
+<p>If you want to work on some stuff with other people, where you are all
+committing into the same repository, or even the same branch, then just
+share it via GitHub.</p>
+<p>First fork ODL into your account, as from <a class="reference internal" href="forking_hell.html#forking"><span class="std std-ref">Making your own copy (fork) of ODL</span></a>.</p>
+<p>Then, go to your forked repository GitHub page, say <code class="docutils literal notranslate"><span class="pre">http://github.com/your-user-name/odl</span></code>.</p>
+<p>Click on “Settings” -&gt; “Collaborators” button, and invite other people the repo as a collaborator.
+Once they have accepted the invitation, they can do</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$ git clone git@githhub.com:your-user-name/odl.git
+</pre></div>
+</div>
+<p>Remember that links starting with <code class="docutils literal notranslate"><span class="pre">git&#64;</span></code> use the ssh protocol and are read-write; links starting
+with <code class="docutils literal notranslate"><span class="pre">https://</span></code> are read-only.</p>
+<p>Your collaborators can then commit directly into that repo with the usual</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$ git commit -am <span class="s2">&quot;ENH: improve code a lot&quot;</span>
+$ git push origin master  <span class="c1"># pushes directly into your repo</span>
+</pre></div>
+</div>
+<p>See also: <a class="reference external" href="https://help.github.com/articles/inviting-collaborators-to-a-personal-repository/">https://help.github.com/articles/inviting-collaborators-to-a-personal-repository/</a></p>
+</div>
+<div class="section" id="explore-your-repository">
+<h3>Explore your repository<a class="headerlink" href="#explore-your-repository" title="Permalink to this headline">¶</a></h3>
+<p>To see a graphical representation of the repository branches and commits, use a <a class="reference external" href="https://git-scm.com/downloads/guis">Git GUI</a> like
+<code class="docutils literal notranslate"><span class="pre">gitk</span></code> shipped with Git or <code class="docutils literal notranslate"><span class="pre">QGit</span></code> included in KDE:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$ gitk --all
+</pre></div>
+</div>
+<p>To see a linear list of commits for this branch, invoke</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$ git log
+</pre></div>
+</div>
+<p>You can also look at the <a class="reference external" href="http://github.com/blog/39-say-hello-to-the-network-graph-visualizer">Network graph visualizer</a> for your GitHub repo.</p>
+<p>Finally the <a class="reference internal" href="configure_git.html#fancy-log"><span class="std std-ref">Fancy log output</span></a> <code class="docutils literal notranslate"><span class="pre">fancylog</span></code> alias will give you a reasonable text-based graph of the
+repository.</p>
+</div>
+<div class="section" id="rebase-on-trunk">
+<span id="id2"></span><h3>Rebase on trunk<a class="headerlink" href="#rebase-on-trunk" title="Permalink to this headline">¶</a></h3>
+<p>Let’s say you thought of some work you’d like to do. You <a class="reference internal" href="#update-mirror-trunk"><span class="std std-ref">Update the mirror of trunk</span></a> and
+<a class="reference internal" href="#make-feature-branch"><span class="std std-ref">Make a new feature branch</span></a> called <code class="docutils literal notranslate"><span class="pre">cool-feature</span></code>. At this stage trunk is at some commit, let’s
+call it E. Now you make some new commits on your <code class="docutils literal notranslate"><span class="pre">cool-feature</span></code> branch, let’s call them A, B,
+C. Maybe your changes take a while, or you come back to them after a while. In the meantime, trunk
+has progressed from commit E to commit (say) G:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>      <span class="n">A</span><span class="o">---</span><span class="n">B</span><span class="o">---</span><span class="n">C</span> <span class="n">cool</span><span class="o">-</span><span class="n">feature</span>
+     <span class="o">/</span>
+<span class="n">D</span><span class="o">---</span><span class="n">E</span><span class="o">---</span><span class="n">F</span><span class="o">---</span><span class="n">G</span> <span class="n">trunk</span>
+</pre></div>
+</div>
+<p>Now you consider merging trunk into your feature branch, and you remember that this page sternly
+advises you not to do that, because the history will get messy. Most of the time you can just ask
+for a review, and not worry that trunk has got a little ahead. But sometimes, the changes in trunk
+might affect your changes, and you need to harmonize them. In this situation, you may prefer to do
+a rebase.</p>
+<p>Rebase takes your changes (A, B, C) and replays them as if they had been made to the current state
+of <code class="docutils literal notranslate"><span class="pre">trunk</span></code>. In other words, in this case, it takes the changes represented by A, B, C and replays
+them on top of G. After the rebase, your history will look like this:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>              <span class="n">A</span><span class="s1">&#39;--B&#39;</span><span class="o">--</span><span class="n">C</span><span class="s1">&#39; cool-feature</span>
+             <span class="o">/</span>
+<span class="n">D</span><span class="o">---</span><span class="n">E</span><span class="o">---</span><span class="n">F</span><span class="o">---</span><span class="n">G</span> <span class="n">trunk</span>
+</pre></div>
+</div>
+<p>See <a class="reference external" href="http://matthew-brett.github.com/pydagogue/rebase_without_tears.html">rebase without tears</a> for more detail.</p>
+<p>To do a rebase on trunk:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>  <span class="c1"># Update the mirror of trunk</span>
+$ git fetch upstream
+
+  <span class="c1"># go to the feature branch</span>
+$ git checkout cool-feature
+
+  <span class="c1"># make a backup in case you mess up</span>
+$ git branch tmp cool-feature
+
+  <span class="c1"># rebase cool-feature onto trunk</span>
+git rebase --onto upstream/master upstream/master cool-feature
+</pre></div>
+</div>
+<p>In this situation, where you are already on branch <code class="docutils literal notranslate"><span class="pre">cool-feature</span></code>, the last
+command can be written more succinctly as</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$ git rebase upstream/master
+</pre></div>
+</div>
+<p>When all looks good you can delete your backup branch:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$ git branch -D tmp
+</pre></div>
+</div>
+<p>If it doesn’t look good you may need to have a look at <a class="reference internal" href="#recovering-from-mess-up"><span class="std std-ref">Recovering from mess-ups</span></a>.</p>
+<p>If you have made changes to files that have also changed in trunk, this may generate merge conflicts
+that you need to resolve - see the <a class="reference external" href="http://schacon.github.com/git/git-rebase.html">git rebase</a> manual page for some instructions at the end of the
+“Description” section. There is some related help on merging in the Git user manual - see
+<a class="reference external" href="http://schacon.github.com/git/user-manual.html#resolving-a-merge">resolving a merge</a>.</p>
+</div>
+<div class="section" id="recovering-from-mess-ups">
+<span id="recovering-from-mess-up"></span><h3>Recovering from mess-ups<a class="headerlink" href="#recovering-from-mess-ups" title="Permalink to this headline">¶</a></h3>
+<p>Sometimes, you mess up merges or rebases. Luckily, in Git it is relatively straightforward to recover
+from such mistakes.</p>
+<p>If you mess up during a rebase:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$ git rebase --abort
+</pre></div>
+</div>
+<p>If you notice you messed up after the rebase:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>  <span class="c1"># reset branch back to the saved point</span>
+$ git reset --hard tmp
+</pre></div>
+</div>
+<p>If you forgot to make a backup branch:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>  <span class="c1"># look at the reflog of the branch</span>
+$ git reflog show cool-feature
+
+<span class="m">8630830</span> cool-feature@<span class="o">{</span><span class="m">0</span><span class="o">}</span>: commit: BUG: io: close file handles immediately
+278dd2a cool-feature@<span class="o">{</span><span class="m">1</span><span class="o">}</span>: rebase finished: refs/heads/my-feature-branch onto 11ee694744f2552d
+26aa21a cool-feature@<span class="o">{</span><span class="m">2</span><span class="o">}</span>: commit: BUG: lib: make seek_gzip_factory not leak gzip obj
+...
+
+
+  <span class="c1"># reset the branch to where it was before the botched rebase</span>
+$ git reset --hard cool-feature@<span class="o">{</span><span class="m">2</span><span class="o">}</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="rewriting-commit-history">
+<span id="id3"></span><h3>Rewriting commit history<a class="headerlink" href="#rewriting-commit-history" title="Permalink to this headline">¶</a></h3>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Do this only for your own feature branches.</p>
+</div>
+<p>There’s an embarrassing typo in a commit you made? Or perhaps the you made several false starts you
+would like the posterity not to see.</p>
+<p>This can be fixed via <em>interactive rebasing</em>.</p>
+<p>Suppose that the commit history looks like this:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$ git log --oneline
+eadc391 Fix some remaining bugs
+a815645 Modify it so that it works
+2dec1ac Fix a few bugs + disable
+13d7934 First implementation
+6ad92e5 * masked is now an instance of a new object, MaskedConstant
+29001ed Add pre-nep <span class="k">for</span> a copule of structured_array_extensions.
+...
+</pre></div>
+</div>
+<p>and <code class="docutils literal notranslate"><span class="pre">6ad92e5</span></code> is the last commit in the <code class="docutils literal notranslate"><span class="pre">cool-feature</span></code> branch. Suppose we
+want to make the following changes:</p>
+<ul class="simple">
+<li><p>Rewrite the commit message for <code class="docutils literal notranslate"><span class="pre">13d7934</span></code> to something more sensible.</p></li>
+<li><p>Combine the commits <code class="docutils literal notranslate"><span class="pre">2dec1ac</span></code>, <code class="docutils literal notranslate"><span class="pre">a815645</span></code>, <code class="docutils literal notranslate"><span class="pre">eadc391</span></code> into a single one.</p></li>
+</ul>
+<p>We do as follows:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>  <span class="c1"># make a backup of the current state</span>
+$ git branch tmp HEAD
+  <span class="c1"># interactive rebase</span>
+$ git rebase -i 6ad92e5
+</pre></div>
+</div>
+<p>This will open an editor with the following text in it:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">pick</span> <span class="mi">13</span><span class="n">d7934</span> <span class="n">First</span> <span class="n">implementation</span>
+<span class="n">pick</span> <span class="mi">2</span><span class="n">dec1ac</span> <span class="n">Fix</span> <span class="n">a</span> <span class="n">few</span> <span class="n">bugs</span> <span class="o">+</span> <span class="n">disable</span>
+<span class="n">pick</span> <span class="n">a815645</span> <span class="n">Modify</span> <span class="n">it</span> <span class="n">so</span> <span class="n">that</span> <span class="n">it</span> <span class="n">works</span>
+<span class="n">pick</span> <span class="n">eadc391</span> <span class="n">Fix</span> <span class="n">some</span> <span class="n">remaining</span> <span class="n">bugs</span>
+
+<span class="c1"># Rebase 6ad92e5..eadc391 onto 6ad92e5</span>
+<span class="c1">#</span>
+<span class="c1"># Commands:</span>
+<span class="c1">#  p, pick = use commit</span>
+<span class="c1">#  r, reword = use commit, but edit the commit message</span>
+<span class="c1">#  e, edit = use commit, but stop for amending</span>
+<span class="c1">#  s, squash = use commit, but meld into previous commit</span>
+<span class="c1">#  f, fixup = like &quot;squash&quot;, but discard this commit&#39;s log message</span>
+<span class="c1">#</span>
+<span class="c1"># If you remove a line here THAT COMMIT WILL BE LOST.</span>
+<span class="c1"># However, if you remove everything, the rebase will be aborted.</span>
+<span class="c1">#</span>
+</pre></div>
+</div>
+<p>To achieve what we want, we will make the following changes to it:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">r</span> <span class="mi">13</span><span class="n">d7934</span> <span class="n">First</span> <span class="n">implementation</span>
+<span class="n">pick</span> <span class="mi">2</span><span class="n">dec1ac</span> <span class="n">Fix</span> <span class="n">a</span> <span class="n">few</span> <span class="n">bugs</span> <span class="o">+</span> <span class="n">disable</span>
+<span class="n">f</span> <span class="n">a815645</span> <span class="n">Modify</span> <span class="n">it</span> <span class="n">so</span> <span class="n">that</span> <span class="n">it</span> <span class="n">works</span>
+<span class="n">f</span> <span class="n">eadc391</span> <span class="n">Fix</span> <span class="n">some</span> <span class="n">remaining</span> <span class="n">bugs</span>
+</pre></div>
+</div>
+<p>This means that (i) we want to edit the commit message for <code class="docutils literal notranslate"><span class="pre">13d7934</span></code>, and (ii) collapse the last
+three commits into one. Now we save and quit the editor.</p>
+<p>Git will then immediately bring up an editor for editing the commit
+message. After revising it, we get the output:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">[</span><span class="n">detached</span> <span class="n">HEAD</span> <span class="mi">721</span><span class="n">fc64</span><span class="p">]</span> <span class="n">FOO</span><span class="p">:</span> <span class="n">First</span> <span class="n">implementation</span>
+ <span class="mi">2</span> <span class="n">files</span> <span class="n">changed</span><span class="p">,</span> <span class="mi">199</span> <span class="n">insertions</span><span class="p">(</span><span class="o">+</span><span class="p">),</span> <span class="mi">66</span> <span class="n">deletions</span><span class="p">(</span><span class="o">-</span><span class="p">)</span>
+<span class="p">[</span><span class="n">detached</span> <span class="n">HEAD</span> <span class="mi">0</span><span class="n">f22701</span><span class="p">]</span> <span class="n">Fix</span> <span class="n">a</span> <span class="n">few</span> <span class="n">bugs</span> <span class="o">+</span> <span class="n">disable</span>
+ <span class="mi">1</span> <span class="n">files</span> <span class="n">changed</span><span class="p">,</span> <span class="mi">79</span> <span class="n">insertions</span><span class="p">(</span><span class="o">+</span><span class="p">),</span> <span class="mi">61</span> <span class="n">deletions</span><span class="p">(</span><span class="o">-</span><span class="p">)</span>
+<span class="n">Successfully</span> <span class="n">rebased</span> <span class="ow">and</span> <span class="n">updated</span> <span class="n">refs</span><span class="o">/</span><span class="n">heads</span><span class="o">/</span><span class="n">my</span><span class="o">-</span><span class="n">feature</span><span class="o">-</span><span class="n">branch</span><span class="o">.</span>
+</pre></div>
+</div>
+<p>and the history looks now like this:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="mi">0</span><span class="n">f22701</span> <span class="n">Fix</span> <span class="n">a</span> <span class="n">few</span> <span class="n">bugs</span> <span class="o">+</span> <span class="n">disable</span>
+<span class="mi">721</span><span class="n">fc64</span> <span class="n">ENH</span><span class="p">:</span> <span class="n">Sophisticated</span> <span class="n">feature</span>
+<span class="mi">6</span><span class="n">ad92e5</span> <span class="o">*</span> <span class="n">masked</span> <span class="ow">is</span> <span class="n">now</span> <span class="n">an</span> <span class="n">instance</span> <span class="n">of</span> <span class="n">a</span> <span class="n">new</span> <span class="nb">object</span><span class="p">,</span> <span class="n">MaskedConstant</span>
+</pre></div>
+</div>
+<p>If it went wrong, recovery is again possible as explained <a class="reference internal" href="#recovering-from-mess-up"><span class="std std-ref">above</span></a>.</p>
+</div>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+        <a href="maintainer_workflow.html" class="btn btn-neutral float-right" title="Maintainer workflow" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="configure_git.html" class="btn btn-neutral float-left" title="Configure Git" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &#169; Copyright 2014-2020 The ODL Contributors.
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

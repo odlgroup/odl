@@ -1,0 +1,6 @@
+﻿white_noise
+=============================
+
+.. currentmodule:: odl.phantom.noise
+
+.. autofunction:: white_noise

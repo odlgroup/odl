@@ -1,0 +1,8 @@
+:orphan:
+
+CartesianProduct.contains_set
+==========================================
+
+.. currentmodule:: odl.set.sets
+
+.. automethod:: CartesianProduct.contains_set

@@ -1,0 +1,6 @@
+rint_op.inverse
+=======================================
+
+.. currentmodule:: odl.ufunc_ops.ufunc_ops
+
+.. autoproperty:: rint_op.inverse

@@ -1,0 +1,8 @@
+:orphan:
+
+ProductSpaceUfuncs.logical_xor
+==============================================
+
+.. currentmodule:: odl.util.ufuncs
+
+.. automethod:: ProductSpaceUfuncs.logical_xor

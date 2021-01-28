@@ -1,0 +1,6 @@
+﻿skimage_radon_forward_projector
+===============================================================
+
+.. currentmodule:: odl.tomo.backends.skimage_radon
+
+.. autofunction:: skimage_radon_forward_projector

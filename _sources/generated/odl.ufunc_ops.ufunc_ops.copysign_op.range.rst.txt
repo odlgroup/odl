@@ -1,0 +1,6 @@
+copysign_op.range
+=========================================
+
+.. currentmodule:: odl.ufunc_ops.ufunc_ops
+
+.. autoproperty:: copysign_op.range

@@ -1,0 +1,6 @@
+RectPartition.set
+=====================================
+
+.. currentmodule:: odl.discr.partition
+
+.. autoproperty:: RectPartition.set

@@ -1,0 +1,6 @@
+Gradient.inverse
+===================================
+
+.. currentmodule:: odl.discr.diff_ops
+
+.. autoproperty:: Gradient.inverse

@@ -1,0 +1,43 @@
+﻿IndicatorGroupL1UnitBall
+===================================================================
+
+.. currentmodule:: odl.solvers.functional.default_functionals
+
+.. autoclass:: IndicatorGroupL1UnitBall
+   :show-inheritance:
+   
+   
+   .. automethod:: __init__
+   
+      
+   
+   .. HACK -- the point here is that we don't want this to appear in the output, but the autosummary should still generate the pages.
+      .. autosummary::
+         :toctree:
+      
+         IndicatorGroupL1UnitBall.__call__
+         IndicatorGroupL1UnitBall.__eq__
+         IndicatorGroupL1UnitBall._call
+         IndicatorGroupL1UnitBall.bregman
+         IndicatorGroupL1UnitBall.derivative
+         IndicatorGroupL1UnitBall.norm
+         IndicatorGroupL1UnitBall.translated
+   
+
+    
+   .. HACK -- the point here is that we don't want this to appear in the output, but the autosummary should still generate the pages.
+      .. autosummary::
+         :toctree:
+      
+         IndicatorGroupL1UnitBall.adjoint
+         IndicatorGroupL1UnitBall.convex_conj
+         IndicatorGroupL1UnitBall.domain
+         IndicatorGroupL1UnitBall.grad_lipschitz
+         IndicatorGroupL1UnitBall.gradient
+         IndicatorGroupL1UnitBall.inverse
+         IndicatorGroupL1UnitBall.is_functional
+         IndicatorGroupL1UnitBall.is_linear
+         IndicatorGroupL1UnitBall.proximal
+         IndicatorGroupL1UnitBall.range
+   
+   

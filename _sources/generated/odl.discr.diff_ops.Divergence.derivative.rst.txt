@@ -1,0 +1,8 @@
+:orphan:
+
+Divergence.derivative
+========================================
+
+.. currentmodule:: odl.discr.diff_ops
+
+.. automethod:: Divergence.derivative

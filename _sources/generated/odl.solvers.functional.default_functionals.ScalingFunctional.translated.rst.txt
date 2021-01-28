@@ -1,0 +1,8 @@
+:orphan:
+
+ScalingFunctional.translated
+=======================================================================
+
+.. currentmodule:: odl.solvers.functional.default_functionals
+
+.. automethod:: ScalingFunctional.translated

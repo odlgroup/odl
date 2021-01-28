@@ -1,0 +1,8 @@
+:orphan:
+
+DiscretizedSpace._dist
+============================================
+
+.. currentmodule:: odl.discr.discr_space
+
+.. automethod:: DiscretizedSpace._dist

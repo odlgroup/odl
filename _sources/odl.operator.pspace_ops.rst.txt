@@ -1,0 +1,22 @@
+pspace_ops
+==========
+
+Default operators defined on any `ProductSpace`.
+
+.. currentmodule:: odl.operator.pspace_ops
+
+
+
+.. rubric:: Classes
+
+.. autosummary::
+   :toctree: generated/
+
+   ~odl.operator.pspace_ops.BroadcastOperator
+   ~odl.operator.pspace_ops.ComponentProjection
+   ~odl.operator.pspace_ops.ComponentProjectionAdjoint
+   ~odl.operator.pspace_ops.DiagonalOperator
+   ~odl.operator.pspace_ops.ProductSpaceOperator
+   ~odl.operator.pspace_ops.ReductionOperator
+
+

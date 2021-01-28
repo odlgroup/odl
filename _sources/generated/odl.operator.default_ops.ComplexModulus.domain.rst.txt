@@ -1,0 +1,6 @@
+ComplexModulus.domain
+==============================================
+
+.. currentmodule:: odl.operator.default_ops
+
+.. autoproperty:: ComplexModulus.domain

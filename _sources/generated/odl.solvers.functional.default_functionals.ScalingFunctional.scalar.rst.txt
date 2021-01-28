@@ -1,0 +1,6 @@
+ScalingFunctional.scalar
+===================================================================
+
+.. currentmodule:: odl.solvers.functional.default_functionals
+
+.. autoproperty:: ScalingFunctional.scalar

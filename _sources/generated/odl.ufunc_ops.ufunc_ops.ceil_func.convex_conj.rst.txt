@@ -1,0 +1,6 @@
+ceil_func.convex_conj
+=============================================
+
+.. currentmodule:: odl.ufunc_ops.ufunc_ops
+
+.. autoproperty:: ceil_func.convex_conj

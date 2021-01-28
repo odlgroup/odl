@@ -1,0 +1,6 @@
+DiscretizedSpace.tspace_type
+==================================================
+
+.. currentmodule:: odl.discr.discr_space
+
+.. autoproperty:: DiscretizedSpace.tspace_type

@@ -1,0 +1,8 @@
+:orphan:
+
+TensorSpaceUfuncs.remainder
+===========================================
+
+.. currentmodule:: odl.util.ufuncs
+
+.. automethod:: TensorSpaceUfuncs.remainder

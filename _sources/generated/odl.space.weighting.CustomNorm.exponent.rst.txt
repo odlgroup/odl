@@ -1,0 +1,6 @@
+CustomNorm.exponent
+=======================================
+
+.. currentmodule:: odl.space.weighting
+
+.. autoproperty:: CustomNorm.exponent

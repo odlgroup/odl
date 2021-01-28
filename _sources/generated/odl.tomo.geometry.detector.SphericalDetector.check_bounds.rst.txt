@@ -1,0 +1,6 @@
+SphericalDetector.check_bounds
+=========================================================
+
+.. currentmodule:: odl.tomo.geometry.detector
+
+.. autoproperty:: SphericalDetector.check_bounds

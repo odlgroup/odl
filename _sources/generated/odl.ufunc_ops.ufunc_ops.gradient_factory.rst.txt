@@ -1,0 +1,6 @@
+﻿gradient_factory
+========================================
+
+.. currentmodule:: odl.ufunc_ops.ufunc_ops
+
+.. autofunction:: gradient_factory

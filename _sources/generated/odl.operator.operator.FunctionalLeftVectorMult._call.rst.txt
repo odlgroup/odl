@@ -1,0 +1,8 @@
+:orphan:
+
+FunctionalLeftVectorMult._call
+====================================================
+
+.. currentmodule:: odl.operator.operator
+
+.. automethod:: FunctionalLeftVectorMult._call

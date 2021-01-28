@@ -1,0 +1,43 @@
+﻿square_func
+===================================
+
+.. currentmodule:: odl.ufunc_ops.ufunc_ops
+
+.. autoclass:: square_func
+   :show-inheritance:
+   
+   
+   .. automethod:: __init__
+   
+      
+   
+   .. HACK -- the point here is that we don't want this to appear in the output, but the autosummary should still generate the pages.
+      .. autosummary::
+         :toctree:
+      
+         square_func.__call__
+         square_func.__eq__
+         square_func._call
+         square_func.bregman
+         square_func.derivative
+         square_func.norm
+         square_func.translated
+   
+
+    
+   .. HACK -- the point here is that we don't want this to appear in the output, but the autosummary should still generate the pages.
+      .. autosummary::
+         :toctree:
+      
+         square_func.adjoint
+         square_func.convex_conj
+         square_func.domain
+         square_func.grad_lipschitz
+         square_func.gradient
+         square_func.inverse
+         square_func.is_functional
+         square_func.is_linear
+         square_func.proximal
+         square_func.range
+   
+   

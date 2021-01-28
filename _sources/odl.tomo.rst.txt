@@ -1,0 +1,21 @@
+tomo
+====
+
+Tomography-related operators and geometries.
+
+.. currentmodule:: odl.tomo
+
+
+.. rubric:: Modules
+
+.. toctree::
+   :maxdepth: 2
+
+   odl.tomo.analytic
+   odl.tomo.backends
+   odl.tomo.geometry
+   odl.tomo.operators
+   odl.tomo.util
+
+
+

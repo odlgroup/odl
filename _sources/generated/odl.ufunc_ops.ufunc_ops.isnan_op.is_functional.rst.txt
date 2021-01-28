@@ -1,0 +1,6 @@
+isnan_op.is_functional
+==============================================
+
+.. currentmodule:: odl.ufunc_ops.ufunc_ops
+
+.. autoproperty:: isnan_op.is_functional

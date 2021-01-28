@@ -1,0 +1,6 @@
+AstraCudaImpl.vol_id
+=================================================
+
+.. currentmodule:: odl.tomo.backends.astra_cuda
+
+.. autoattribute:: AstraCudaImpl.vol_id

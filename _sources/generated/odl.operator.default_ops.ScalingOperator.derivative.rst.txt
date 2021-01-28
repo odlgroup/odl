@@ -1,0 +1,8 @@
+:orphan:
+
+ScalingOperator.derivative
+===================================================
+
+.. currentmodule:: odl.operator.default_ops
+
+.. automethod:: ScalingOperator.derivative

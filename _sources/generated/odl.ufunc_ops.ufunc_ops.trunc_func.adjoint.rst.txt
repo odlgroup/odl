@@ -1,0 +1,6 @@
+trunc_func.adjoint
+==========================================
+
+.. currentmodule:: odl.ufunc_ops.ufunc_ops
+
+.. autoproperty:: trunc_func.adjoint

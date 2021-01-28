@@ -1,0 +1,8 @@
+:orphan:
+
+ArrayWeighting.inner
+========================================
+
+.. currentmodule:: odl.space.weighting
+
+.. automethod:: ArrayWeighting.inner

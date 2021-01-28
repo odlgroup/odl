@@ -1,0 +1,6 @@
+﻿warning_free_pause
+====================================
+
+.. currentmodule:: odl.util.graphics
+
+.. autofunction:: warning_free_pause

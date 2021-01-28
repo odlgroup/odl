@@ -1,0 +1,8 @@
+:orphan:
+
+MoreauEnvelope.derivative
+====================================================================
+
+.. currentmodule:: odl.solvers.functional.default_functionals
+
+.. automethod:: MoreauEnvelope.derivative

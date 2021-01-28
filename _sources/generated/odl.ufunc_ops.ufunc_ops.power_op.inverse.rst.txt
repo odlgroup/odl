@@ -1,0 +1,6 @@
+power_op.inverse
+========================================
+
+.. currentmodule:: odl.ufunc_ops.ufunc_ops
+
+.. autoproperty:: power_op.inverse

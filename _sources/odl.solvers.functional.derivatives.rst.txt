@@ -1,0 +1,18 @@
+derivatives
+===========
+
+Utilities for computing the gradient and Hessian of functionals.
+
+.. currentmodule:: odl.solvers.functional.derivatives
+
+
+
+.. rubric:: Classes
+
+.. autosummary::
+   :toctree: generated/
+
+   ~odl.solvers.functional.derivatives.NumericalDerivative
+   ~odl.solvers.functional.derivatives.NumericalGradient
+
+

@@ -1,0 +1,8 @@
+:orphan:
+
+OperatorTest.norm
+==========================================
+
+.. currentmodule:: odl.diagnostics.operator
+
+.. automethod:: OperatorTest.norm

@@ -1,0 +1,6 @@
+RectGrid.ndim
+============================
+
+.. currentmodule:: odl.discr.grid
+
+.. autoproperty:: RectGrid.ndim

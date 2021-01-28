@@ -1,0 +1,6 @@
+﻿normalized_index_expression
+==============================================
+
+.. currentmodule:: odl.util.normalize
+
+.. autofunction:: normalized_index_expression

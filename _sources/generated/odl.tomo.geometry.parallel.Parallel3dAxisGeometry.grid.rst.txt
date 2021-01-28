@@ -1,0 +1,6 @@
+Parallel3dAxisGeometry.grid
+======================================================
+
+.. currentmodule:: odl.tomo.geometry.parallel
+
+.. autoproperty:: Parallel3dAxisGeometry.grid

@@ -1,0 +1,6 @@
+MoreauEnvelope.proximal
+==================================================================
+
+.. currentmodule:: odl.solvers.functional.default_functionals
+
+.. autoproperty:: MoreauEnvelope.proximal

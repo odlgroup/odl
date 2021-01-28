@@ -1,0 +1,6 @@
+Parallel2dGeometry.translation
+=========================================================
+
+.. currentmodule:: odl.tomo.geometry.parallel
+
+.. autoproperty:: Parallel2dGeometry.translation

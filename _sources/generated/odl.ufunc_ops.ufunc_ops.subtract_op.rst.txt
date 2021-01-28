@@ -1,0 +1,37 @@
+﻿subtract_op
+===================================
+
+.. currentmodule:: odl.ufunc_ops.ufunc_ops
+
+.. autoclass:: subtract_op
+   :show-inheritance:
+   
+   
+   .. automethod:: __init__
+   
+      
+   
+   .. HACK -- the point here is that we don't want this to appear in the output, but the autosummary should still generate the pages.
+      .. autosummary::
+         :toctree:
+      
+         subtract_op.__call__
+         subtract_op.__eq__
+         subtract_op._call
+         subtract_op.derivative
+         subtract_op.norm
+   
+
+    
+   .. HACK -- the point here is that we don't want this to appear in the output, but the autosummary should still generate the pages.
+      .. autosummary::
+         :toctree:
+      
+         subtract_op.adjoint
+         subtract_op.domain
+         subtract_op.inverse
+         subtract_op.is_functional
+         subtract_op.is_linear
+         subtract_op.range
+   
+   

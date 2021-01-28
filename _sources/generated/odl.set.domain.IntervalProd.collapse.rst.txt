@@ -1,0 +1,8 @@
+:orphan:
+
+IntervalProd.collapse
+====================================
+
+.. currentmodule:: odl.set.domain
+
+.. automethod:: IntervalProd.collapse

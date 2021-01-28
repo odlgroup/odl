@@ -1,0 +1,6 @@
+﻿cuboid
+============================
+
+.. currentmodule:: odl.phantom.geometric
+
+.. autofunction:: cuboid

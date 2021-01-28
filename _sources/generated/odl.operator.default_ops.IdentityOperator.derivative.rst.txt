@@ -1,0 +1,8 @@
+:orphan:
+
+IdentityOperator.derivative
+====================================================
+
+.. currentmodule:: odl.operator.default_ops
+
+.. automethod:: IdentityOperator.derivative

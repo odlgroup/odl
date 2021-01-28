@@ -1,0 +1,10 @@
+util
+====
+
+Utilities for tomo backends.
+
+.. currentmodule:: odl.tomo.backends.util
+
+
+
+

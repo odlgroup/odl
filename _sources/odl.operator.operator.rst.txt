@@ -1,0 +1,30 @@
+operator
+========
+
+Abstract mathematical operators.
+
+.. currentmodule:: odl.operator.operator
+
+
+
+.. rubric:: Classes
+
+.. autosummary::
+   :toctree: generated/
+
+   ~odl.operator.operator.FunctionalLeftVectorMult
+   ~odl.operator.operator.OpDomainError
+   ~odl.operator.operator.OpNotImplementedError
+   ~odl.operator.operator.OpRangeError
+   ~odl.operator.operator.OpTypeError
+   ~odl.operator.operator.Operator
+   ~odl.operator.operator.OperatorComp
+   ~odl.operator.operator.OperatorLeftScalarMult
+   ~odl.operator.operator.OperatorLeftVectorMult
+   ~odl.operator.operator.OperatorPointwiseProduct
+   ~odl.operator.operator.OperatorRightScalarMult
+   ~odl.operator.operator.OperatorRightVectorMult
+   ~odl.operator.operator.OperatorSum
+   ~odl.operator.operator.OperatorVectorSum
+
+

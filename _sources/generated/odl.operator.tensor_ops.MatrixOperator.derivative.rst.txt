@@ -1,0 +1,8 @@
+:orphan:
+
+MatrixOperator.derivative
+=================================================
+
+.. currentmodule:: odl.operator.tensor_ops
+
+.. automethod:: MatrixOperator.derivative

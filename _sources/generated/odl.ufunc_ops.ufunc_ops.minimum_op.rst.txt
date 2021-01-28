@@ -1,0 +1,37 @@
+﻿minimum_op
+==================================
+
+.. currentmodule:: odl.ufunc_ops.ufunc_ops
+
+.. autoclass:: minimum_op
+   :show-inheritance:
+   
+   
+   .. automethod:: __init__
+   
+      
+   
+   .. HACK -- the point here is that we don't want this to appear in the output, but the autosummary should still generate the pages.
+      .. autosummary::
+         :toctree:
+      
+         minimum_op.__call__
+         minimum_op.__eq__
+         minimum_op._call
+         minimum_op.derivative
+         minimum_op.norm
+   
+
+    
+   .. HACK -- the point here is that we don't want this to appear in the output, but the autosummary should still generate the pages.
+      .. autosummary::
+         :toctree:
+      
+         minimum_op.adjoint
+         minimum_op.domain
+         minimum_op.inverse
+         minimum_op.is_functional
+         minimum_op.is_linear
+         minimum_op.range
+   
+   

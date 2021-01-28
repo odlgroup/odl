@@ -1,0 +1,6 @@
+﻿proximal_arg_scaling
+=============================================================
+
+.. currentmodule:: odl.solvers.nonsmooth.proximal_operators
+
+.. autofunction:: proximal_arg_scaling

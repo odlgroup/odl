@@ -1,0 +1,335 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>Installing ODL extensions &mdash; odl 1.0.0.dev0 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="First steps" href="first_steps.html" />
+    <link rel="prev" title="Installing ODL from source" href="installing_source.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../index.html" class="icon icon-home"> odl
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                1.0.0.dev0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Getting Started</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="getting_started.html">Getting Started</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="about_odl.html">About ODL</a></li>
+<li class="toctree-l2"><a class="reference internal" href="installing.html">Installing ODL</a></li>
+<li class="toctree-l2"><a class="reference internal" href="installing_conda.html">Installing ODL using conda</a></li>
+<li class="toctree-l2"><a class="reference internal" href="installing_pip.html">Installing ODL using pip</a></li>
+<li class="toctree-l2"><a class="reference internal" href="installing_source.html">Installing ODL from source</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Installing ODL extensions</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#compiled-extensions">Compiled extensions</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#astra-for-x-ray-tomography">ASTRA for X-ray tomography</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#cuda-backend-for-linear-arrays">CUDA backend for linear arrays</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#building-from-source">Building from source</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="first_steps.html">First steps</a></li>
+</ul>
+</li>
+</ul>
+<p class="caption"><span class="caption-text">Working with ODL</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../guide/guide.html">User’s guide – selected topics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../math/math.html">Mathematical Background</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Developer zone</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../dev/dev.html">Contributing to ODL</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Useful facts</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../guide/faq.html">Frequently asked questions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../guide/glossary.html">Glossary</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../release_notes.html">Release Notes</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../refs.html">References</a></li>
+</ul>
+<p class="caption"><span class="caption-text">API Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../odl.html">odl</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">odl</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="getting_started.html">Getting Started</a> &raquo;</li>
+        
+      <li>Installing ODL extensions</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            <a href="../_sources/getting_started/installing_extensions.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="installing-odl-extensions">
+<span id="id1"></span><h1>Installing ODL extensions<a class="headerlink" href="#installing-odl-extensions" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="compiled-extensions">
+<span id="installing-odl-extensions-compiled"></span><h2>Compiled extensions<a class="headerlink" href="#compiled-extensions" title="Permalink to this headline">¶</a></h2>
+<p>There are several compiled extensions to ODL.
+Some of them can be installed using <code class="docutils literal notranslate"><span class="pre">conda</span></code> or <a class="reference external" href="https://pip.pypa.io/en/stable/">pip</a>, others require manual compilation.
+This section assumes that you have a working installation of python and ODL.</p>
+</div>
+<div class="section" id="astra-for-x-ray-tomography">
+<span id="installing-odl-extensions-astra"></span><h2>ASTRA for X-ray tomography<a class="headerlink" href="#astra-for-x-ray-tomography" title="Permalink to this headline">¶</a></h2>
+<p>To calculate fast forward and backward projections for image reconstruction in X-ray tomography, install the <a class="reference external" href="https://github.com/astra-toolbox/astra-toolbox">ASTRA tomography toolbox</a>.
+ASTRA projectors are fully supported in ODL.</p>
+<p>Astra is most easily installed using conda:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$ conda install -c astra-toolbox astra-toolbox
+</pre></div>
+</div>
+<p>For further instructions, check <a class="reference external" href="https://github.com/astra-toolbox/astra-toolbox">the ASTRA GitHub page</a>.</p>
+</div>
+<div class="section" id="cuda-backend-for-linear-arrays">
+<h2>CUDA backend for linear arrays<a class="headerlink" href="#cuda-backend-for-linear-arrays" title="Permalink to this headline">¶</a></h2>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>This plugin is dysfunctional with ODL master since the API change introduced by <a class="reference external" href="https://github.com/odlgroup/odl/pull/1088">PR 1088</a>.
+It can be used with older versions of ODL (e.g., with the current release).
+The plugin will be replaced by CuPy in short (<a class="reference external" href="https://github.com/odlgroup/odl/pull/1231">PR 1231</a>).</p>
+</div>
+<p>The <a class="reference external" href="https://github.com/odlgroup/odlcuda">odlcuda</a> backend for fast array calculations on CUDA requires the <a class="reference external" href="https://developer.nvidia.com/cuda-toolkit">CUDA toolkit</a> (on Linux: use your distro package manager) and a CUDA capable graphics card with compute capability of at least 3.0.
+Search <a class="reference external" href="https://en.wikipedia.org/wiki/CUDA#GPUs_supported">this table</a> for your model.</p>
+<div class="section" id="building-from-source">
+<h3>Building from source<a class="headerlink" href="#building-from-source" title="Permalink to this headline">¶</a></h3>
+<p>You have two options of building <code class="docutils literal notranslate"><span class="pre">odlcuda</span></code> from source.
+For both, first clone the <code class="docutils literal notranslate"><span class="pre">odlcuda</span></code> GitHub repository and enter the new directory:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$ git clone https://github.com/odlgroup/odlcuda.git
+$ <span class="nb">cd</span> odlcuda
+</pre></div>
+</div>
+<ol class="arabic">
+<li><p><strong>Using conda build</strong></p>
+<p>This is the simpler option and should work on any Linux or MacOS system (we currently have no Windows build recipe, sorry).</p>
+<p>To build the conda recipe, you should be <strong>in the root conda environment</strong> (see <a class="reference internal" href="installing_conda.html#installing-odl-conda-installing-anaconda"><span class="std std-ref">Installing Anaconda</span></a> for details) and in the top-level directory of your <code class="docutils literal notranslate"><span class="pre">odlcuda</span></code> clone.
+You also need the <code class="docutils literal notranslate"><span class="pre">conda-build</span></code> package, which is installed by</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$ conda install conda-build
+</pre></div>
+</div>
+<p>Next, switch to the <code class="docutils literal notranslate"><span class="pre">conda-build</span></code> branch:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$ git checkout conda-build
+</pre></div>
+</div>
+<p>Finally, build the package using <code class="docutils literal notranslate"><span class="pre">conda</span> <span class="pre">build</span></code>.
+Currently, this requires you to manually provide the location of the CUDA toolkit and the compute capability of your graphics card using the environment variables <code class="docutils literal notranslate"><span class="pre">CUDA_ROOT</span></code> and <code class="docutils literal notranslate"><span class="pre">CUDA_COMPUTE</span></code>.
+(If you forget them, the build recipe will only issue a warning in the beginning but fail later on.)
+The <code class="docutils literal notranslate"><span class="pre">CUDA_ROOT</span></code> is given as path, e.g. <code class="docutils literal notranslate"><span class="pre">/usr/local/cuda</span></code>, and <code class="docutils literal notranslate"><span class="pre">CUDA_COMPUTE</span></code> as 2-digit number without dot, e.g. <code class="docutils literal notranslate"><span class="pre">30</span></code>.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>You can consult <a class="reference external" href="https://en.wikipedia.org/wiki/CUDA#GPUs_supported">this table</a> for the compute capability of your device.
+The minimum required is <code class="docutils literal notranslate"><span class="pre">30</span></code>, which corresponds to the “Kepler” generation.</p>
+</div>
+<p>Assuming the example configuration above, the build command to run is</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$ <span class="nv">CUDA_ROOT</span><span class="o">=</span>/usr/local/cuda <span class="nv">CUDA_COMPUTE</span><span class="o">=</span><span class="m">30</span> conda build ./conda
+</pre></div>
+</div>
+<p>This command builds <code class="docutils literal notranslate"><span class="pre">odlcuda</span></code> in a separate build conda environment and tries to import it and run some tests after the build has finished.
+If all goes well, you will get a message at the end that shows the path to the conda package.</p>
+<p>Finally, install this package file <strong>in your working conda environment</strong> (e.g. <code class="docutils literal notranslate"><span class="pre">source</span> <span class="pre">activate</span> <span class="pre">odl-py35</span></code>) by invoking e.g.</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$ conda install --use-local odlcuda
+</pre></div>
+</div>
+</li>
+<li><p><strong>Manually with CMake</strong></p>
+<p>This option requires more manual work but is known to work on all platforms.</p>
+<p>See <a class="reference external" href="https://github.com/odlgroup/odlcuda.git">here</a> for build instructions.
+You may want to use include and library paths (GCC, boost, …) of a conda enviroment and install the package in it.</p>
+</li>
+</ol>
+<p>A simple test if this build of <code class="docutils literal notranslate"><span class="pre">odlcuda</span></code> works, you can run</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$ python -c <span class="s2">&quot;import odl; odl.rn(3, impl=&#39;cuda&#39;).element()&quot;</span>
+</pre></div>
+</div>
+<p>If you get a <code class="docutils literal notranslate"><span class="pre">KeyError:</span> <span class="pre">'cuda'</span></code>, then something went wrong with the package installation since it cannot be imported.
+If the above command instead raises a <code class="docutils literal notranslate"><span class="pre">MemoryError</span></code> or similar, your graphics card is not properly configured, and you should solve that issue first.</p>
+</div>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+        <a href="first_steps.html" class="btn btn-neutral float-right" title="First steps" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="installing_source.html" class="btn btn-neutral float-left" title="Installing ODL from source" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &#169; Copyright 2014-2020 The ODL Contributors.
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

@@ -1,0 +1,6 @@
+PointwiseSum.is_functional
+==================================================
+
+.. currentmodule:: odl.operator.tensor_ops
+
+.. autoproperty:: PointwiseSum.is_functional

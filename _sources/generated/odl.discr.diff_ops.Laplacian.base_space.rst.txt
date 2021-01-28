@@ -1,0 +1,6 @@
+Laplacian.base_space
+=======================================
+
+.. currentmodule:: odl.discr.diff_ops
+
+.. autoproperty:: Laplacian.base_space

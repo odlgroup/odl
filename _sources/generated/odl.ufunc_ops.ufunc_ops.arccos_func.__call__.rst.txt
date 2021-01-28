@@ -1,0 +1,8 @@
+:orphan:
+
+arccos_func.__call__
+============================================
+
+.. currentmodule:: odl.ufunc_ops.ufunc_ops
+
+.. automethod:: arccos_func.__call__

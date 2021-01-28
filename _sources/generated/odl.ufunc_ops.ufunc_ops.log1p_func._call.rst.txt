@@ -1,0 +1,8 @@
+:orphan:
+
+log1p_func._call
+========================================
+
+.. currentmodule:: odl.ufunc_ops.ufunc_ops
+
+.. automethod:: log1p_func._call

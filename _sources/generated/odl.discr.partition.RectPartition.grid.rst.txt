@@ -1,0 +1,6 @@
+RectPartition.grid
+======================================
+
+.. currentmodule:: odl.discr.partition
+
+.. autoproperty:: RectPartition.grid

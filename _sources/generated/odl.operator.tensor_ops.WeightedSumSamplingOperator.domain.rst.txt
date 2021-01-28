@@ -1,0 +1,6 @@
+WeightedSumSamplingOperator.domain
+==========================================================
+
+.. currentmodule:: odl.operator.tensor_ops
+
+.. autoproperty:: WeightedSumSamplingOperator.domain

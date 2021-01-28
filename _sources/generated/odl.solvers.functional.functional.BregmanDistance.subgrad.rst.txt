@@ -1,0 +1,6 @@
+BregmanDistance.subgrad
+=========================================================
+
+.. currentmodule:: odl.solvers.functional.functional
+
+.. autoproperty:: BregmanDistance.subgrad

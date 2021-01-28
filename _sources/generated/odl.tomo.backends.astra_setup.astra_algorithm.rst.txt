@@ -1,0 +1,6 @@
+﻿astra_algorithm
+=============================================
+
+.. currentmodule:: odl.tomo.backends.astra_setup
+
+.. autofunction:: astra_algorithm

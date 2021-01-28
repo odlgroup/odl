@@ -1,0 +1,6 @@
+OperatorComp.is_linear
+============================================
+
+.. currentmodule:: odl.operator.operator
+
+.. autoproperty:: OperatorComp.is_linear

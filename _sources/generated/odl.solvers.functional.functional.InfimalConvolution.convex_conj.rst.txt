@@ -1,0 +1,6 @@
+InfimalConvolution.convex_conj
+================================================================
+
+.. currentmodule:: odl.solvers.functional.functional
+
+.. autoproperty:: InfimalConvolution.convex_conj

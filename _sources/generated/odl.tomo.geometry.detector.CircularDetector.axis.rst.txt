@@ -1,0 +1,6 @@
+CircularDetector.axis
+================================================
+
+.. currentmodule:: odl.tomo.geometry.detector
+
+.. autoproperty:: CircularDetector.axis

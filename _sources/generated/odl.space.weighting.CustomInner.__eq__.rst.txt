@@ -1,0 +1,8 @@
+:orphan:
+
+CustomInner.__eq__
+======================================
+
+.. currentmodule:: odl.space.weighting
+
+.. automethod:: CustomInner.__eq__

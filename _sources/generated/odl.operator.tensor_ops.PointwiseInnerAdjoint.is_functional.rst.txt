@@ -1,0 +1,6 @@
+PointwiseInnerAdjoint.is_functional
+===========================================================
+
+.. currentmodule:: odl.operator.tensor_ops
+
+.. autoproperty:: PointwiseInnerAdjoint.is_functional

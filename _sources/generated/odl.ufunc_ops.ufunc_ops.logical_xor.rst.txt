@@ -1,0 +1,6 @@
+﻿logical_xor
+===================================
+
+.. currentmodule:: odl.ufunc_ops.ufunc_ops
+
+.. autofunction:: logical_xor

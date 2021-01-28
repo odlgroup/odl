@@ -1,0 +1,41 @@
+astra_setup
+===========
+
+Helper functions to prepare ASTRA algorithms.
+
+This module contains utility functions to convert data structures from the
+ODL geometry representation to ASTRA's data structures, including:
+
+* volume geometries
+* projection geometries
+* create vectors from geometries
+* data arrays
+* projectors
+* algorithm configuration dictionaries
+
+`ASTRA documentation <http://www.astra-toolbox.com/>`_.
+
+`ASTRA on GitHub <https://github.com/astra-toolbox/>`_.
+
+
+.. currentmodule:: odl.tomo.backends.astra_setup
+
+
+
+
+.. rubric:: Functions
+
+.. autosummary::
+   :toctree: generated/
+
+   ~odl.tomo.backends.astra_setup.astra_algorithm
+   ~odl.tomo.backends.astra_setup.astra_conebeam_2d_geom_to_vec
+   ~odl.tomo.backends.astra_setup.astra_conebeam_3d_geom_to_vec
+   ~odl.tomo.backends.astra_setup.astra_data
+   ~odl.tomo.backends.astra_setup.astra_parallel_3d_geom_to_vec
+   ~odl.tomo.backends.astra_setup.astra_projection_geometry
+   ~odl.tomo.backends.astra_setup.astra_projector
+   ~odl.tomo.backends.astra_setup.astra_supports
+   ~odl.tomo.backends.astra_setup.astra_versions_supporting
+   ~odl.tomo.backends.astra_setup.astra_volume_geometry
+

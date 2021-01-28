@@ -1,0 +1,1135 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>odl.phantom.geometric &mdash; odl 1.0.0.dev0 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/custom.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../../" src="../../../_static/documentation_options.js"></script>
+        <script src="../../../_static/jquery.js"></script>
+        <script src="../../../_static/underscore.js"></script>
+        <script src="../../../_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="../../../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../../index.html" class="icon icon-home"> odl
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                1.0.0.dev0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Getting Started</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../getting_started/getting_started.html">Getting Started</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Working with ODL</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../guide/guide.html">User’s guide – selected topics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../math/math.html">Mathematical Background</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Developer zone</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../dev/dev.html">Contributing to ODL</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Useful facts</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../guide/faq.html">Frequently asked questions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../guide/glossary.html">Glossary</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../release_notes.html">Release Notes</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../refs.html">References</a></li>
+</ul>
+<p class="caption"><span class="caption-text">API Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../odl.html">odl</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">odl</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="../../index.html">Module code</a> &raquo;</li>
+        
+      <li>odl.phantom.geometric</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for odl.phantom.geometric</h1><div class="highlight"><pre>
+<span></span><span class="c1"># Copyright 2014-2020 The ODL contributors</span>
+<span class="c1">#</span>
+<span class="c1"># This file is part of ODL.</span>
+<span class="c1">#</span>
+<span class="c1"># This Source Code Form is subject to the terms of the Mozilla Public License,</span>
+<span class="c1"># v. 2.0. If a copy of the MPL was not distributed with this file, You can</span>
+<span class="c1"># obtain one at https://mozilla.org/MPL/2.0/.</span>
+
+<span class="sd">&quot;&quot;&quot;Phantoms given by simple geometric objects such as cubes or spheres.&quot;&quot;&quot;</span>
+
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">absolute_import</span><span class="p">,</span> <span class="n">division</span><span class="p">,</span> <span class="n">print_function</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+
+<span class="kn">from</span> <span class="nn">odl.discr.discr_space</span> <span class="kn">import</span> <span class="n">uniform_discr_fromdiscr</span>
+<span class="kn">from</span> <span class="nn">odl.util.numerics</span> <span class="kn">import</span> <span class="n">resize_array</span>
+
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">(</span>
+    <span class="s1">&#39;cuboid&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;defrise&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;ellipsoid_phantom&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;indicate_proj_axis&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;smooth_cuboid&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;tgv_phantom&#39;</span><span class="p">,</span>
+<span class="p">)</span>
+
+
+<div class="viewcode-block" id="cuboid"><a class="viewcode-back" href="../../../generated/odl.phantom.geometric.cuboid.html#odl.phantom.geometric.cuboid">[docs]</a><span class="k">def</span> <span class="nf">cuboid</span><span class="p">(</span><span class="n">space</span><span class="p">,</span> <span class="n">min_pt</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">max_pt</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Rectangular cuboid.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    space : `DiscretizedSpace`</span>
+<span class="sd">        Space in which the phantom should be created.</span>
+<span class="sd">    min_pt : array-like of shape ``(space.ndim,)``, optional</span>
+<span class="sd">        Lower left corner of the cuboid. If ``None`` is given, a quarter</span>
+<span class="sd">        of the extent from ``space.min_pt`` towards the inside is chosen.</span>
+<span class="sd">    max_pt : array-like of shape ``(space.ndim,)``, optional</span>
+<span class="sd">        Upper right corner of the cuboid. If ``None`` is given, ``min_pt``</span>
+<span class="sd">        plus half the extent is chosen.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    phantom : `DiscretizedSpaceElement`</span>
+<span class="sd">        The generated cuboid phantom in ``space``.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    If both ``min_pt`` and ``max_pt`` are omitted, the cuboid lies in the</span>
+<span class="sd">    middle of the space domain and extends halfway towards all sides:</span>
+
+<span class="sd">    &gt;&gt;&gt; space = odl.uniform_discr([0, 0], [1, 1], [4, 6])</span>
+<span class="sd">    &gt;&gt;&gt; odl.phantom.cuboid(space)</span>
+<span class="sd">    uniform_discr([ 0.,  0.], [ 1.,  1.], (4, 6)).element(</span>
+<span class="sd">        [[ 0.,  0.,  0.,  0.,  0.,  0.],</span>
+<span class="sd">         [ 0.,  1.,  1.,  1.,  1.,  0.],</span>
+<span class="sd">         [ 0.,  1.,  1.,  1.,  1.,  0.],</span>
+<span class="sd">         [ 0.,  0.,  0.,  0.,  0.,  0.]]</span>
+<span class="sd">    )</span>
+
+<span class="sd">    By specifying the corners, the cuboid can be arbitrarily placed and</span>
+<span class="sd">    scaled:</span>
+
+<span class="sd">    &gt;&gt;&gt; odl.phantom.cuboid(space, [0.25, 0], [0.75, 0.5])</span>
+<span class="sd">    uniform_discr([ 0.,  0.], [ 1.,  1.], (4, 6)).element(</span>
+<span class="sd">        [[ 0.,  0.,  0.,  0.,  0.,  0.],</span>
+<span class="sd">         [ 1.,  1.,  1.,  0.,  0.,  0.],</span>
+<span class="sd">         [ 1.,  1.,  1.,  0.,  0.,  0.],</span>
+<span class="sd">         [ 0.,  0.,  0.,  0.,  0.,  0.]]</span>
+<span class="sd">    )</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">dom_min_pt</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">space</span><span class="o">.</span><span class="n">domain</span><span class="o">.</span><span class="n">min</span><span class="p">())</span>
+    <span class="n">dom_max_pt</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">space</span><span class="o">.</span><span class="n">domain</span><span class="o">.</span><span class="n">max</span><span class="p">())</span>
+
+    <span class="k">if</span> <span class="n">min_pt</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">min_pt</span> <span class="o">=</span> <span class="n">dom_min_pt</span> <span class="o">*</span> <span class="mf">0.75</span> <span class="o">+</span> <span class="n">dom_max_pt</span> <span class="o">*</span> <span class="mf">0.25</span>
+    <span class="k">if</span> <span class="n">max_pt</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">max_pt</span> <span class="o">=</span> <span class="n">dom_min_pt</span> <span class="o">*</span> <span class="mf">0.25</span> <span class="o">+</span> <span class="n">dom_max_pt</span> <span class="o">*</span> <span class="mf">0.75</span>
+
+    <span class="n">min_pt</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">atleast_1d</span><span class="p">(</span><span class="n">min_pt</span><span class="p">)</span>
+    <span class="n">max_pt</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">atleast_1d</span><span class="p">(</span><span class="n">max_pt</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">min_pt</span><span class="o">.</span><span class="n">shape</span> <span class="o">!=</span> <span class="p">(</span><span class="n">space</span><span class="o">.</span><span class="n">ndim</span><span class="p">,):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;shape of `min_pt` must be </span><span class="si">{}</span><span class="s1">, got </span><span class="si">{}</span><span class="s1">&#39;</span>
+                         <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">((</span><span class="n">space</span><span class="o">.</span><span class="n">ndim</span><span class="p">,),</span> <span class="n">min_pt</span><span class="o">.</span><span class="n">shape</span><span class="p">))</span>
+    <span class="k">if</span> <span class="n">max_pt</span><span class="o">.</span><span class="n">shape</span> <span class="o">!=</span> <span class="p">(</span><span class="n">space</span><span class="o">.</span><span class="n">ndim</span><span class="p">,):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;shape of `max_pt` must be </span><span class="si">{}</span><span class="s1">, got </span><span class="si">{}</span><span class="s1">&#39;</span>
+                         <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">((</span><span class="n">space</span><span class="o">.</span><span class="n">ndim</span><span class="p">,),</span> <span class="n">max_pt</span><span class="o">.</span><span class="n">shape</span><span class="p">))</span>
+
+    <span class="k">def</span> <span class="nf">phantom</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="kc">True</span>
+
+        <span class="k">for</span> <span class="n">xi</span><span class="p">,</span> <span class="n">xmin</span><span class="p">,</span> <span class="n">xmax</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">min_pt</span><span class="p">,</span> <span class="n">max_pt</span><span class="p">):</span>
+            <span class="n">result</span> <span class="o">=</span> <span class="p">(</span><span class="n">result</span> <span class="o">&amp;</span>
+                      <span class="n">np</span><span class="o">.</span><span class="n">less_equal</span><span class="p">(</span><span class="n">xmin</span><span class="p">,</span> <span class="n">xi</span><span class="p">)</span> <span class="o">&amp;</span> <span class="n">np</span><span class="o">.</span><span class="n">less_equal</span><span class="p">(</span><span class="n">xi</span><span class="p">,</span> <span class="n">xmax</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">result</span>
+
+    <span class="k">return</span> <span class="n">space</span><span class="o">.</span><span class="n">element</span><span class="p">(</span><span class="n">phantom</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="defrise"><a class="viewcode-back" href="../../../generated/odl.phantom.geometric.defrise.html#odl.phantom.geometric.defrise">[docs]</a><span class="k">def</span> <span class="nf">defrise</span><span class="p">(</span><span class="n">space</span><span class="p">,</span> <span class="n">nellipses</span><span class="o">=</span><span class="mi">8</span><span class="p">,</span> <span class="n">alternating</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">min_pt</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">max_pt</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Phantom with regularily spaced ellipses.</span>
+
+<span class="sd">    This phantom is often used to verify cone-beam algorithms.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    space : `DiscretizedSpace`</span>
+<span class="sd">        Space in which the phantom should be created, must be 2- or</span>
+<span class="sd">        3-dimensional.</span>
+<span class="sd">    nellipses : int, optional</span>
+<span class="sd">        Number of ellipses. If more ellipses are used, each ellipse becomes</span>
+<span class="sd">        thinner.</span>
+<span class="sd">    alternating : bool, optional</span>
+<span class="sd">        True if the ellipses should have alternating densities (+1, -1),</span>
+<span class="sd">        otherwise all ellipses have value +1.</span>
+<span class="sd">    min_pt, max_pt : array-like, optional</span>
+<span class="sd">        If provided, use these vectors to determine the bounding box of the</span>
+<span class="sd">        phantom instead of ``space.min_pt`` and ``space.max_pt``.</span>
+<span class="sd">        It is currently required that ``min_pt &gt;= space.min_pt`` and</span>
+<span class="sd">        ``max_pt &lt;= space.max_pt``, i.e., shifting or scaling outside the</span>
+<span class="sd">        original space is not allowed.</span>
+
+<span class="sd">        Providing one of them results in a shift, e.g., for ``min_pt``::</span>
+
+<span class="sd">            new_min_pt = min_pt</span>
+<span class="sd">            new_max_pt = space.max_pt + (min_pt - space.min_pt)</span>
+
+<span class="sd">        Providing both results in a scaled version of the phantom.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    phantom : ``space`` element</span>
+<span class="sd">        The generated phantom in ``space``.</span>
+
+<span class="sd">    See Also</span>
+<span class="sd">    --------</span>
+<span class="sd">    odl.phantom.transmission.shepp_logan</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">ellipses</span> <span class="o">=</span> <span class="n">defrise_ellipses</span><span class="p">(</span><span class="n">space</span><span class="o">.</span><span class="n">ndim</span><span class="p">,</span> <span class="n">nellipses</span><span class="o">=</span><span class="n">nellipses</span><span class="p">,</span>
+                                <span class="n">alternating</span><span class="o">=</span><span class="n">alternating</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">ellipsoid_phantom</span><span class="p">(</span><span class="n">space</span><span class="p">,</span> <span class="n">ellipses</span><span class="p">,</span> <span class="n">min_pt</span><span class="p">,</span> <span class="n">max_pt</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="defrise_ellipses"><a class="viewcode-back" href="../../../generated/odl.phantom.geometric.defrise_ellipses.html#odl.phantom.geometric.defrise_ellipses">[docs]</a><span class="k">def</span> <span class="nf">defrise_ellipses</span><span class="p">(</span><span class="n">ndim</span><span class="p">,</span> <span class="n">nellipses</span><span class="o">=</span><span class="mi">8</span><span class="p">,</span> <span class="n">alternating</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Ellipses for the standard Defrise phantom in 2 or 3 dimensions.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    ndim : {2, 3}</span>
+<span class="sd">        Dimension of the space for the ellipses/ellipsoids.</span>
+<span class="sd">    nellipses : int, optional</span>
+<span class="sd">        Number of ellipses. If more ellipses are used, each ellipse becomes</span>
+<span class="sd">        thinner.</span>
+<span class="sd">    alternating : bool, optional</span>
+<span class="sd">        True if the ellipses should have alternating densities (+1, -1),</span>
+<span class="sd">        otherwise all ellipses have value +1.</span>
+
+<span class="sd">    See Also</span>
+<span class="sd">    --------</span>
+<span class="sd">    odl.phantom.geometric.ellipsoid_phantom :</span>
+<span class="sd">        Function for creating arbitrary ellipsoids phantoms</span>
+<span class="sd">    odl.phantom.transmission.shepp_logan_ellipsoids</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">ellipses</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">if</span> <span class="n">ndim</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">nellipses</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">alternating</span><span class="p">:</span>
+                <span class="n">value</span> <span class="o">=</span> <span class="p">(</span><span class="o">-</span><span class="mf">1.0</span> <span class="o">+</span> <span class="mf">2.0</span> <span class="o">*</span> <span class="p">(</span><span class="n">i</span> <span class="o">%</span> <span class="mi">2</span><span class="p">))</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">value</span> <span class="o">=</span> <span class="mf">1.0</span>
+
+            <span class="n">axis_1</span> <span class="o">=</span> <span class="mf">0.5</span>
+            <span class="n">axis_2</span> <span class="o">=</span> <span class="mf">0.5</span> <span class="o">/</span> <span class="p">(</span><span class="n">nellipses</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
+            <span class="n">center_x</span> <span class="o">=</span> <span class="mf">0.0</span>
+            <span class="n">center_y</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span> <span class="o">+</span> <span class="mf">2.0</span> <span class="o">/</span> <span class="p">(</span><span class="n">nellipses</span> <span class="o">+</span> <span class="mf">1.0</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
+            <span class="n">rotation</span> <span class="o">=</span> <span class="mi">0</span>
+            <span class="n">ellipses</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                <span class="p">[</span><span class="n">value</span><span class="p">,</span> <span class="n">axis_1</span><span class="p">,</span> <span class="n">axis_2</span><span class="p">,</span> <span class="n">center_x</span><span class="p">,</span> <span class="n">center_y</span><span class="p">,</span> <span class="n">rotation</span><span class="p">])</span>
+    <span class="k">elif</span> <span class="n">ndim</span> <span class="o">==</span> <span class="mi">3</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">nellipses</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">alternating</span><span class="p">:</span>
+                <span class="n">value</span> <span class="o">=</span> <span class="p">(</span><span class="o">-</span><span class="mf">1.0</span> <span class="o">+</span> <span class="mf">2.0</span> <span class="o">*</span> <span class="p">(</span><span class="n">i</span> <span class="o">%</span> <span class="mi">2</span><span class="p">))</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">value</span> <span class="o">=</span> <span class="mf">1.0</span>
+
+            <span class="n">axis_1</span> <span class="o">=</span> <span class="n">axis_2</span> <span class="o">=</span> <span class="mf">0.5</span>
+            <span class="n">axis_3</span> <span class="o">=</span> <span class="mf">0.5</span> <span class="o">/</span> <span class="p">(</span><span class="n">nellipses</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
+            <span class="n">center_x</span> <span class="o">=</span> <span class="n">center_y</span> <span class="o">=</span> <span class="mf">0.0</span>
+            <span class="n">center_z</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span> <span class="o">+</span> <span class="mf">2.0</span> <span class="o">/</span> <span class="p">(</span><span class="n">nellipses</span> <span class="o">+</span> <span class="mf">1.0</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
+            <span class="n">rotation_phi</span> <span class="o">=</span> <span class="n">rotation_theta</span> <span class="o">=</span> <span class="n">rotation_psi</span> <span class="o">=</span> <span class="mi">0</span>
+
+            <span class="n">ellipses</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                <span class="p">[</span><span class="n">value</span><span class="p">,</span> <span class="n">axis_1</span><span class="p">,</span> <span class="n">axis_2</span><span class="p">,</span> <span class="n">axis_3</span><span class="p">,</span>
+                 <span class="n">center_x</span><span class="p">,</span> <span class="n">center_y</span><span class="p">,</span> <span class="n">center_z</span><span class="p">,</span>
+                 <span class="n">rotation_phi</span><span class="p">,</span> <span class="n">rotation_theta</span><span class="p">,</span> <span class="n">rotation_psi</span><span class="p">])</span>
+
+    <span class="k">return</span> <span class="n">ellipses</span></div>
+
+
+<div class="viewcode-block" id="indicate_proj_axis"><a class="viewcode-back" href="../../../generated/odl.phantom.geometric.indicate_proj_axis.html#odl.phantom.geometric.indicate_proj_axis">[docs]</a><span class="k">def</span> <span class="nf">indicate_proj_axis</span><span class="p">(</span><span class="n">space</span><span class="p">,</span> <span class="n">scale_structures</span><span class="o">=</span><span class="mf">0.5</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Phantom indicating along which axis it is projected.</span>
+
+<span class="sd">    The number (n) of rectangles in a parallel-beam projection along a main</span>
+<span class="sd">    axis (0, 1, or 2) indicates the projection to be along the (n-1)the</span>
+<span class="sd">    dimension.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    space : `DiscretizedSpace`</span>
+<span class="sd">        Space in which the phantom should be created, must be 2- or</span>
+<span class="sd">        3-dimensional.</span>
+<span class="sd">    scale_structures : positive float in (0, 1], optional</span>
+<span class="sd">        Scales objects (cube, cuboids)</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    phantom : ``space`` element</span>
+<span class="sd">        Projection helper phantom in ``space``.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    Phantom in 2D space:</span>
+
+<span class="sd">    &gt;&gt;&gt; space = odl.uniform_discr([0, 0], [1, 1], shape=(8, 8))</span>
+<span class="sd">    &gt;&gt;&gt; phantom = indicate_proj_axis(space).asarray()</span>
+<span class="sd">    &gt;&gt;&gt; print(odl.util.array_str(phantom, nprint=10))</span>
+<span class="sd">    [[ 0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.],</span>
+<span class="sd">     [ 0.,  0.,  0.,  1.,  1.,  0.,  0.,  0.],</span>
+<span class="sd">     [ 0.,  0.,  0.,  1.,  1.,  0.,  0.,  0.],</span>
+<span class="sd">     [ 0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.],</span>
+<span class="sd">     [ 0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.],</span>
+<span class="sd">     [ 0.,  0.,  0.,  0.,  1.,  0.,  0.,  0.],</span>
+<span class="sd">     [ 0.,  0.,  0.,  1.,  0.,  0.,  0.,  0.],</span>
+<span class="sd">     [ 0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.]]</span>
+
+<span class="sd">    &gt;&gt;&gt; space = odl.uniform_discr([0] * 3, [1] * 3, [8, 8, 8])</span>
+<span class="sd">    &gt;&gt;&gt; phantom = odl.phantom.indicate_proj_axis(space).asarray()</span>
+<span class="sd">    &gt;&gt;&gt; axis_sum_0 = np.sum(phantom, axis=0)</span>
+<span class="sd">    &gt;&gt;&gt; print(odl.util.array_str(axis_sum_0, nprint=10))</span>
+<span class="sd">    [[ 0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.],</span>
+<span class="sd">     [ 0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.],</span>
+<span class="sd">     [ 0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.],</span>
+<span class="sd">     [ 0.,  0.,  0.,  3.,  3.,  0.,  0.,  0.],</span>
+<span class="sd">     [ 0.,  0.,  0.,  3.,  3.,  0.,  0.,  0.],</span>
+<span class="sd">     [ 0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.],</span>
+<span class="sd">     [ 0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.],</span>
+<span class="sd">     [ 0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.]]</span>
+<span class="sd">    &gt;&gt;&gt; axis_sum_1 = np.sum(phantom, axis=1)</span>
+<span class="sd">    &gt;&gt;&gt; print(odl.util.array_str(axis_sum_1, nprint=10))</span>
+<span class="sd">    [[ 0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.],</span>
+<span class="sd">     [ 0.,  0.,  0.,  2.,  2.,  0.,  0.,  0.],</span>
+<span class="sd">     [ 0.,  0.,  0.,  2.,  2.,  0.,  0.,  0.],</span>
+<span class="sd">     [ 0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.],</span>
+<span class="sd">     [ 0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.],</span>
+<span class="sd">     [ 0.,  0.,  0.,  1.,  1.,  0.,  0.,  0.],</span>
+<span class="sd">     [ 0.,  0.,  0.,  1.,  1.,  0.,  0.,  0.],</span>
+<span class="sd">     [ 0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.]]</span>
+<span class="sd">    &gt;&gt;&gt; axis_sum_2 = np.sum(phantom, axis=2)</span>
+<span class="sd">    &gt;&gt;&gt; print(odl.util.array_str(axis_sum_2, nprint=10))</span>
+<span class="sd">    [[ 0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.],</span>
+<span class="sd">     [ 0.,  0.,  0.,  2.,  2.,  0.,  0.,  0.],</span>
+<span class="sd">     [ 0.,  0.,  0.,  2.,  2.,  0.,  0.,  0.],</span>
+<span class="sd">     [ 0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.],</span>
+<span class="sd">     [ 0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.],</span>
+<span class="sd">     [ 0.,  0.,  0.,  0.,  2.,  0.,  0.,  0.],</span>
+<span class="sd">     [ 0.,  0.,  0.,  2.,  0.,  0.,  0.,  0.],</span>
+<span class="sd">     [ 0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.]]</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="mi">0</span> <span class="o">&lt;</span> <span class="n">scale_structures</span> <span class="o">&lt;=</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;`scale_structures` (</span><span class="si">{}</span><span class="s1">) is not in (0, 1]&#39;</span>
+                         <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">scale_structures</span><span class="p">))</span>
+
+    <span class="k">assert</span> <span class="n">space</span><span class="o">.</span><span class="n">ndim</span> <span class="ow">in</span> <span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span>
+
+    <span class="n">shape</span> <span class="o">=</span> <span class="n">space</span><span class="o">.</span><span class="n">shape</span>
+    <span class="n">phan</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">shape</span><span class="p">)</span>
+    <span class="n">shape</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">shape</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span>
+    <span class="n">cen</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="mf">0.5</span> <span class="o">*</span> <span class="n">shape</span><span class="p">)</span>
+    <span class="n">dx</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">floor</span><span class="p">(</span><span class="n">scale_structures</span> <span class="o">*</span> <span class="mf">0.25</span> <span class="o">*</span> <span class="n">shape</span><span class="p">)</span>
+    <span class="n">dx</span><span class="p">[</span><span class="n">dx</span> <span class="o">==</span> <span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span>
+
+    <span class="c1"># cube of size 2 * dx, offset in x axis, symmetric in others</span>
+    <span class="n">ix0</span> <span class="o">=</span> <span class="nb">int</span><span class="p">((</span><span class="n">cen</span> <span class="o">-</span> <span class="mi">3</span> <span class="o">*</span> <span class="n">dx</span><span class="p">)[</span><span class="mi">0</span><span class="p">])</span>
+    <span class="k">if</span> <span class="n">space</span><span class="o">.</span><span class="n">ndim</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
+        <span class="n">ix</span><span class="p">,</span> <span class="n">iy</span> <span class="o">=</span> <span class="p">(</span><span class="n">cen</span> <span class="o">-</span> <span class="mi">1</span> <span class="o">*</span> <span class="n">dx</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span>
+        <span class="n">phan</span><span class="p">[</span><span class="n">ix0</span><span class="p">:</span><span class="n">ix</span><span class="p">,</span> <span class="n">iy</span><span class="p">:</span><span class="o">-</span><span class="n">iy</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span>
+    <span class="k">elif</span> <span class="n">space</span><span class="o">.</span><span class="n">ndim</span> <span class="o">==</span> <span class="mi">3</span><span class="p">:</span>
+        <span class="n">ix</span><span class="p">,</span> <span class="n">iy</span><span class="p">,</span> <span class="n">iz</span> <span class="o">=</span> <span class="p">(</span><span class="n">cen</span> <span class="o">-</span> <span class="mi">1</span> <span class="o">*</span> <span class="n">dx</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span>
+        <span class="n">phan</span><span class="p">[</span><span class="n">ix0</span><span class="p">:</span><span class="n">ix</span><span class="p">,</span> <span class="n">iy</span><span class="p">:</span><span class="o">-</span><span class="n">iy</span><span class="p">,</span> <span class="n">iz</span><span class="p">:</span><span class="o">-</span><span class="n">iz</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span>
+
+    <span class="c1"># 1st cuboid of size (dx[0], dx[1], 2 * dx[2]), offset in x and y axes,</span>
+    <span class="c1"># symmetric in z axis</span>
+    <span class="n">ix0</span> <span class="o">=</span> <span class="nb">int</span><span class="p">((</span><span class="n">cen</span> <span class="o">+</span> <span class="mi">1</span> <span class="o">*</span> <span class="n">dx</span><span class="p">)[</span><span class="mi">1</span><span class="p">])</span>
+    <span class="n">ix1</span> <span class="o">=</span> <span class="nb">int</span><span class="p">((</span><span class="n">cen</span> <span class="o">+</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">dx</span><span class="p">)[</span><span class="mi">1</span><span class="p">])</span>
+    <span class="n">iy0</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">cen</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+    <span class="k">if</span> <span class="n">space</span><span class="o">.</span><span class="n">ndim</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
+        <span class="n">phan</span><span class="p">[</span><span class="n">ix0</span><span class="p">:</span><span class="n">ix1</span><span class="p">,</span> <span class="n">iy0</span><span class="p">:</span><span class="o">-</span><span class="n">iy</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span>
+    <span class="k">elif</span> <span class="n">space</span><span class="o">.</span><span class="n">ndim</span> <span class="o">==</span> <span class="mi">3</span><span class="p">:</span>
+        <span class="n">iz</span> <span class="o">=</span> <span class="nb">int</span><span class="p">((</span><span class="n">cen</span> <span class="o">-</span> <span class="n">dx</span><span class="p">)[</span><span class="mi">2</span><span class="p">])</span>
+        <span class="n">phan</span><span class="p">[</span><span class="n">ix0</span><span class="p">:</span><span class="n">ix1</span><span class="p">,</span> <span class="n">iy0</span><span class="p">:</span><span class="o">-</span><span class="n">iy</span><span class="p">,</span> <span class="n">iz</span><span class="p">:</span><span class="o">-</span><span class="n">iz</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span>
+
+    <span class="c1"># 2nd cuboid of (dx[0], dx[1], 2 * dx[2]) touching the first diagonally</span>
+    <span class="c1"># at a long edge; offset in x and y axes, symmetric in z axis</span>
+    <span class="n">ix0</span> <span class="o">=</span> <span class="nb">int</span><span class="p">((</span><span class="n">cen</span> <span class="o">+</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">dx</span><span class="p">)[</span><span class="mi">1</span><span class="p">])</span>
+    <span class="n">ix1</span> <span class="o">=</span> <span class="nb">int</span><span class="p">((</span><span class="n">cen</span> <span class="o">+</span> <span class="mi">3</span> <span class="o">*</span> <span class="n">dx</span><span class="p">)[</span><span class="mi">1</span><span class="p">])</span>
+    <span class="n">iy1</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">cen</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+    <span class="k">if</span> <span class="n">space</span><span class="o">.</span><span class="n">ndim</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
+        <span class="n">phan</span><span class="p">[</span><span class="n">ix0</span><span class="p">:</span><span class="n">ix1</span><span class="p">,</span> <span class="n">iy</span><span class="p">:</span><span class="n">iy1</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span>
+    <span class="k">elif</span> <span class="n">space</span><span class="o">.</span><span class="n">ndim</span> <span class="o">==</span> <span class="mi">3</span><span class="p">:</span>
+        <span class="n">iz</span> <span class="o">=</span> <span class="nb">int</span><span class="p">((</span><span class="n">cen</span> <span class="o">-</span> <span class="n">dx</span><span class="p">)[</span><span class="mi">2</span><span class="p">])</span>
+        <span class="n">phan</span><span class="p">[</span><span class="n">ix0</span><span class="p">:</span><span class="n">ix1</span><span class="p">,</span> <span class="n">iy</span><span class="p">:</span><span class="n">iy1</span><span class="p">,</span> <span class="n">iz</span><span class="p">:</span><span class="o">-</span><span class="n">iz</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span>
+
+    <span class="k">return</span> <span class="n">space</span><span class="o">.</span><span class="n">element</span><span class="p">(</span><span class="n">phan</span><span class="p">)</span></div>
+
+
+<span class="k">def</span> <span class="nf">_getshapes_2d</span><span class="p">(</span><span class="n">center</span><span class="p">,</span> <span class="n">max_radius</span><span class="p">,</span> <span class="n">shape</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Calculate indices and slices for the bounding box of a disk.&quot;&quot;&quot;</span>
+    <span class="n">index_mean</span> <span class="o">=</span> <span class="n">shape</span> <span class="o">*</span> <span class="n">center</span>
+    <span class="n">index_radius</span> <span class="o">=</span> <span class="n">max_radius</span> <span class="o">/</span> <span class="mf">2.0</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">shape</span><span class="p">)</span>
+
+    <span class="c1"># Avoid negative indices</span>
+    <span class="n">min_idx</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">maximum</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">floor</span><span class="p">(</span><span class="n">index_mean</span> <span class="o">-</span> <span class="n">index_radius</span><span class="p">),</span> <span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span>
+    <span class="n">max_idx</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ceil</span><span class="p">(</span><span class="n">index_mean</span> <span class="o">+</span> <span class="n">index_radius</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span>
+    <span class="n">idx</span> <span class="o">=</span> <span class="p">[</span><span class="nb">slice</span><span class="p">(</span><span class="n">minx</span><span class="p">,</span> <span class="n">maxx</span><span class="p">)</span> <span class="k">for</span> <span class="n">minx</span><span class="p">,</span> <span class="n">maxx</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">min_idx</span><span class="p">,</span> <span class="n">max_idx</span><span class="p">)]</span>
+    <span class="n">shapes</span> <span class="o">=</span> <span class="p">[(</span><span class="n">idx</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="nb">slice</span><span class="p">(</span><span class="kc">None</span><span class="p">)),</span>
+              <span class="p">(</span><span class="nb">slice</span><span class="p">(</span><span class="kc">None</span><span class="p">),</span> <span class="n">idx</span><span class="p">[</span><span class="mi">1</span><span class="p">])]</span>
+    <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">idx</span><span class="p">),</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">shapes</span><span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">_ellipse_phantom_2d</span><span class="p">(</span><span class="n">space</span><span class="p">,</span> <span class="n">ellipses</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Create a phantom of ellipses in 2d space.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    space : `DiscretizedSpace`</span>
+<span class="sd">        Uniformly discretized space in which the phantom should be generated.</span>
+<span class="sd">        If ``space.shape`` is 1 in an axis, a corresponding slice of the</span>
+<span class="sd">        phantom is created (instead of squashing the whole phantom into the</span>
+<span class="sd">        slice).</span>
+<span class="sd">    ellipses : list of lists</span>
+<span class="sd">        Each row should contain the entries ::</span>
+
+<span class="sd">            &#39;value&#39;,</span>
+<span class="sd">            &#39;axis_1&#39;, &#39;axis_2&#39;,</span>
+<span class="sd">            &#39;center_x&#39;, &#39;center_y&#39;,</span>
+<span class="sd">            &#39;rotation&#39;</span>
+
+<span class="sd">        The provided ellipses need to be specified relative to the</span>
+<span class="sd">        reference rectangle ``[-1, -1] x [1, 1]``. Angles are to be given</span>
+<span class="sd">        in radians.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    phantom : ``space`` element</span>
+<span class="sd">        2D ellipse phantom in ``space``.</span>
+
+<span class="sd">    See Also</span>
+<span class="sd">    --------</span>
+<span class="sd">    shepp_logan : The typical use-case for this function.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># Blank image</span>
+    <span class="n">p</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">space</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">space</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span>
+
+    <span class="n">minp</span> <span class="o">=</span> <span class="n">space</span><span class="o">.</span><span class="n">grid</span><span class="o">.</span><span class="n">min_pt</span>
+    <span class="n">maxp</span> <span class="o">=</span> <span class="n">space</span><span class="o">.</span><span class="n">grid</span><span class="o">.</span><span class="n">max_pt</span>
+
+    <span class="c1"># Create the pixel grid</span>
+    <span class="n">grid_in</span> <span class="o">=</span> <span class="n">space</span><span class="o">.</span><span class="n">grid</span><span class="o">.</span><span class="n">meshgrid</span>
+
+    <span class="c1"># move points to [-1, 1]</span>
+    <span class="n">grid</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">2</span><span class="p">):</span>
+        <span class="n">mean_i</span> <span class="o">=</span> <span class="p">(</span><span class="n">minp</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">+</span> <span class="n">maxp</span><span class="p">[</span><span class="n">i</span><span class="p">])</span> <span class="o">/</span> <span class="mf">2.0</span>
+        <span class="c1"># Where space.shape = 1, we have minp = maxp, so we set diff_i = 1</span>
+        <span class="c1"># to avoid division by zero. Effectively, this allows constructing</span>
+        <span class="c1"># a slice of a 2D phantom.</span>
+        <span class="n">diff_i</span> <span class="o">=</span> <span class="p">(</span><span class="n">maxp</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">-</span> <span class="n">minp</span><span class="p">[</span><span class="n">i</span><span class="p">])</span> <span class="o">/</span> <span class="mf">2.0</span> <span class="ow">or</span> <span class="mf">1.0</span>
+        <span class="n">grid</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">grid_in</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">-</span> <span class="n">mean_i</span><span class="p">)</span> <span class="o">/</span> <span class="n">diff_i</span><span class="p">)</span>
+
+    <span class="k">for</span> <span class="n">ellip</span> <span class="ow">in</span> <span class="n">ellipses</span><span class="p">:</span>
+        <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">ellip</span><span class="p">)</span> <span class="o">==</span> <span class="mi">6</span>
+
+        <span class="n">intensity</span> <span class="o">=</span> <span class="n">ellip</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">a_squared</span> <span class="o">=</span> <span class="n">ellip</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">**</span> <span class="mi">2</span>
+        <span class="n">b_squared</span> <span class="o">=</span> <span class="n">ellip</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">**</span> <span class="mi">2</span>
+        <span class="n">x0</span> <span class="o">=</span> <span class="n">ellip</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span>
+        <span class="n">y0</span> <span class="o">=</span> <span class="n">ellip</span><span class="p">[</span><span class="mi">4</span><span class="p">]</span>
+        <span class="n">theta</span> <span class="o">=</span> <span class="n">ellip</span><span class="p">[</span><span class="mi">5</span><span class="p">]</span>
+
+        <span class="n">scales</span> <span class="o">=</span> <span class="p">[</span><span class="mi">1</span> <span class="o">/</span> <span class="n">a_squared</span><span class="p">,</span> <span class="mi">1</span> <span class="o">/</span> <span class="n">b_squared</span><span class="p">]</span>
+        <span class="n">center</span> <span class="o">=</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">x0</span><span class="p">,</span> <span class="n">y0</span><span class="p">])</span> <span class="o">+</span> <span class="mf">1.0</span><span class="p">)</span> <span class="o">/</span> <span class="mf">2.0</span>
+
+        <span class="c1"># Create the offset x,y and z values for the grid</span>
+        <span class="k">if</span> <span class="n">theta</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="c1"># Rotate the points to the expected coordinate system.</span>
+            <span class="n">ctheta</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">theta</span><span class="p">)</span>
+            <span class="n">stheta</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">theta</span><span class="p">)</span>
+
+            <span class="n">mat</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([[</span><span class="n">ctheta</span><span class="p">,</span> <span class="n">stheta</span><span class="p">],</span>
+                            <span class="p">[</span><span class="o">-</span><span class="n">stheta</span><span class="p">,</span> <span class="n">ctheta</span><span class="p">]])</span>
+
+            <span class="c1"># Calculate the points that could possibly be inside the volume</span>
+            <span class="c1"># Since the points are rotated, we cannot do anything directional</span>
+            <span class="c1"># without more logic</span>
+            <span class="n">max_radius</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span>
+                <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">mat</span><span class="p">)</span><span class="o">.</span><span class="n">dot</span><span class="p">([</span><span class="n">a_squared</span><span class="p">,</span> <span class="n">b_squared</span><span class="p">]))</span>
+            <span class="n">idx</span><span class="p">,</span> <span class="n">shapes</span> <span class="o">=</span> <span class="n">_getshapes_2d</span><span class="p">(</span><span class="n">center</span><span class="p">,</span> <span class="n">max_radius</span><span class="p">,</span> <span class="n">space</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+
+            <span class="n">subgrid</span> <span class="o">=</span> <span class="p">[</span><span class="n">g</span><span class="p">[</span><span class="n">idi</span><span class="p">]</span> <span class="k">for</span> <span class="n">g</span><span class="p">,</span> <span class="n">idi</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">grid</span><span class="p">,</span> <span class="n">shapes</span><span class="p">)]</span>
+            <span class="n">offset_points</span> <span class="o">=</span> <span class="p">[</span><span class="n">vec</span> <span class="o">*</span> <span class="p">(</span><span class="n">xi</span> <span class="o">-</span> <span class="n">x0i</span><span class="p">)[</span><span class="o">...</span><span class="p">,</span> <span class="kc">None</span><span class="p">]</span>
+                             <span class="k">for</span> <span class="n">xi</span><span class="p">,</span> <span class="n">vec</span><span class="p">,</span> <span class="n">x0i</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">subgrid</span><span class="p">,</span>
+                                                     <span class="n">mat</span><span class="o">.</span><span class="n">T</span><span class="p">,</span>
+                                                     <span class="p">[</span><span class="n">x0</span><span class="p">,</span> <span class="n">y0</span><span class="p">])]</span>
+            <span class="n">rotated</span> <span class="o">=</span> <span class="n">offset_points</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="n">offset_points</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+            <span class="n">np</span><span class="o">.</span><span class="n">square</span><span class="p">(</span><span class="n">rotated</span><span class="p">,</span> <span class="n">out</span><span class="o">=</span><span class="n">rotated</span><span class="p">)</span>
+            <span class="n">radius</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">rotated</span><span class="p">,</span> <span class="n">scales</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># Calculate the points that could possibly be inside the volume</span>
+            <span class="n">max_radius</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">([</span><span class="n">a_squared</span><span class="p">,</span> <span class="n">b_squared</span><span class="p">])</span>
+            <span class="n">idx</span><span class="p">,</span> <span class="n">shapes</span> <span class="o">=</span> <span class="n">_getshapes_2d</span><span class="p">(</span><span class="n">center</span><span class="p">,</span> <span class="n">max_radius</span><span class="p">,</span> <span class="n">space</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+
+            <span class="n">subgrid</span> <span class="o">=</span> <span class="p">[</span><span class="n">g</span><span class="p">[</span><span class="n">idi</span><span class="p">]</span> <span class="k">for</span> <span class="n">g</span><span class="p">,</span> <span class="n">idi</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">grid</span><span class="p">,</span> <span class="n">shapes</span><span class="p">)]</span>
+            <span class="n">squared_dist</span> <span class="o">=</span> <span class="p">[</span><span class="n">ai</span> <span class="o">*</span> <span class="p">(</span><span class="n">xi</span> <span class="o">-</span> <span class="n">x0i</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span>
+                            <span class="k">for</span> <span class="n">xi</span><span class="p">,</span> <span class="n">ai</span><span class="p">,</span> <span class="n">x0i</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">subgrid</span><span class="p">,</span>
+                                                   <span class="n">scales</span><span class="p">,</span>
+                                                   <span class="p">[</span><span class="n">x0</span><span class="p">,</span> <span class="n">y0</span><span class="p">])]</span>
+
+            <span class="c1"># Parentheses to get best order for broadcasting</span>
+            <span class="n">radius</span> <span class="o">=</span> <span class="n">squared_dist</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="n">squared_dist</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+
+        <span class="c1"># Find the points within the ellipse</span>
+        <span class="n">inside</span> <span class="o">=</span> <span class="n">radius</span> <span class="o">&lt;=</span> <span class="mi">1</span>
+
+        <span class="c1"># Add the ellipse intensity to those points</span>
+        <span class="n">p</span><span class="p">[</span><span class="n">idx</span><span class="p">][</span><span class="n">inside</span><span class="p">]</span> <span class="o">+=</span> <span class="n">intensity</span>
+
+    <span class="k">return</span> <span class="n">space</span><span class="o">.</span><span class="n">element</span><span class="p">(</span><span class="n">p</span><span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">_getshapes_3d</span><span class="p">(</span><span class="n">center</span><span class="p">,</span> <span class="n">max_radius</span><span class="p">,</span> <span class="n">shape</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Calculate indices and slices for the bounding box of a ball.&quot;&quot;&quot;</span>
+    <span class="n">index_mean</span> <span class="o">=</span> <span class="n">shape</span> <span class="o">*</span> <span class="n">center</span>
+    <span class="n">index_radius</span> <span class="o">=</span> <span class="n">max_radius</span> <span class="o">/</span> <span class="mf">2.0</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">shape</span><span class="p">)</span>
+
+    <span class="n">min_idx</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">floor</span><span class="p">(</span><span class="n">index_mean</span> <span class="o">-</span> <span class="n">index_radius</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span>
+    <span class="n">min_idx</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">maximum</span><span class="p">(</span><span class="n">min_idx</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>  <span class="c1"># avoid negative indices</span>
+    <span class="n">max_idx</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ceil</span><span class="p">(</span><span class="n">index_mean</span> <span class="o">+</span> <span class="n">index_radius</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span>
+    <span class="n">idx</span> <span class="o">=</span> <span class="p">[</span><span class="nb">slice</span><span class="p">(</span><span class="n">minx</span><span class="p">,</span> <span class="n">maxx</span><span class="p">)</span> <span class="k">for</span> <span class="n">minx</span><span class="p">,</span> <span class="n">maxx</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">min_idx</span><span class="p">,</span> <span class="n">max_idx</span><span class="p">)]</span>
+    <span class="n">shapes</span> <span class="o">=</span> <span class="p">[(</span><span class="n">idx</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="nb">slice</span><span class="p">(</span><span class="kc">None</span><span class="p">),</span> <span class="nb">slice</span><span class="p">(</span><span class="kc">None</span><span class="p">)),</span>
+              <span class="p">(</span><span class="nb">slice</span><span class="p">(</span><span class="kc">None</span><span class="p">),</span> <span class="n">idx</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="nb">slice</span><span class="p">(</span><span class="kc">None</span><span class="p">)),</span>
+              <span class="p">(</span><span class="nb">slice</span><span class="p">(</span><span class="kc">None</span><span class="p">),</span> <span class="nb">slice</span><span class="p">(</span><span class="kc">None</span><span class="p">),</span> <span class="n">idx</span><span class="p">[</span><span class="mi">2</span><span class="p">])]</span>
+    <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">idx</span><span class="p">),</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">shapes</span><span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">_ellipsoid_phantom_3d</span><span class="p">(</span><span class="n">space</span><span class="p">,</span> <span class="n">ellipsoids</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Create an ellipsoid phantom in 3d space.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    space : `DiscretizedSpace`</span>
+<span class="sd">        Space in which the phantom should be generated. If ``space.shape`` is</span>
+<span class="sd">        1 in an axis, a corresponding slice of the phantom is created</span>
+<span class="sd">        (instead of squashing the whole phantom into the slice).</span>
+<span class="sd">    ellipsoids : list of lists</span>
+<span class="sd">        Each row should contain the entries ::</span>
+
+<span class="sd">            &#39;value&#39;,</span>
+<span class="sd">            &#39;axis_1&#39;, &#39;axis_2&#39;, &#39;axis_3&#39;,</span>
+<span class="sd">            &#39;center_x&#39;, &#39;center_y&#39;, &#39;center_z&#39;,</span>
+<span class="sd">            &#39;rotation_phi&#39;, &#39;rotation_theta&#39;, &#39;rotation_psi&#39;</span>
+
+<span class="sd">        The provided ellipsoids need to be specified relative to the</span>
+<span class="sd">        reference cube ``[-1, -1, -1] x [1, 1, 1]``. Angles are to be given</span>
+<span class="sd">        in radians.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    phantom : ``space`` element</span>
+<span class="sd">        3D ellipsoid phantom in ``space``.</span>
+
+<span class="sd">    See Also</span>
+<span class="sd">    --------</span>
+<span class="sd">    shepp_logan : The typical use-case for this function.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># Blank volume</span>
+    <span class="n">p</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">space</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">space</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span>
+
+    <span class="n">minp</span> <span class="o">=</span> <span class="n">space</span><span class="o">.</span><span class="n">grid</span><span class="o">.</span><span class="n">min_pt</span>
+    <span class="n">maxp</span> <span class="o">=</span> <span class="n">space</span><span class="o">.</span><span class="n">grid</span><span class="o">.</span><span class="n">max_pt</span>
+
+    <span class="c1"># Create the pixel grid</span>
+    <span class="n">grid_in</span> <span class="o">=</span> <span class="n">space</span><span class="o">.</span><span class="n">grid</span><span class="o">.</span><span class="n">meshgrid</span>
+
+    <span class="c1"># Move points to [-1, 1]</span>
+    <span class="n">grid</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">3</span><span class="p">):</span>
+        <span class="n">mean_i</span> <span class="o">=</span> <span class="p">(</span><span class="n">minp</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">+</span> <span class="n">maxp</span><span class="p">[</span><span class="n">i</span><span class="p">])</span> <span class="o">/</span> <span class="mf">2.0</span>
+        <span class="c1"># Where space.shape = 1, we have minp = maxp, so we set diff_i = 1</span>
+        <span class="c1"># to avoid division by zero. Effectively, this allows constructing</span>
+        <span class="c1"># a slice of a 3D phantom.</span>
+        <span class="n">diff_i</span> <span class="o">=</span> <span class="p">(</span><span class="n">maxp</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">-</span> <span class="n">minp</span><span class="p">[</span><span class="n">i</span><span class="p">])</span> <span class="o">/</span> <span class="mf">2.0</span> <span class="ow">or</span> <span class="mf">1.0</span>
+        <span class="n">grid</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">grid_in</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">-</span> <span class="n">mean_i</span><span class="p">)</span> <span class="o">/</span> <span class="n">diff_i</span><span class="p">)</span>
+
+    <span class="k">for</span> <span class="n">ellip</span> <span class="ow">in</span> <span class="n">ellipsoids</span><span class="p">:</span>
+        <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">ellip</span><span class="p">)</span> <span class="o">==</span> <span class="mi">10</span>
+
+        <span class="n">intensity</span> <span class="o">=</span> <span class="n">ellip</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">a_squared</span> <span class="o">=</span> <span class="n">ellip</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">**</span> <span class="mi">2</span>
+        <span class="n">b_squared</span> <span class="o">=</span> <span class="n">ellip</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">**</span> <span class="mi">2</span>
+        <span class="n">c_squared</span> <span class="o">=</span> <span class="n">ellip</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span> <span class="o">**</span> <span class="mi">2</span>
+        <span class="n">x0</span> <span class="o">=</span> <span class="n">ellip</span><span class="p">[</span><span class="mi">4</span><span class="p">]</span>
+        <span class="n">y0</span> <span class="o">=</span> <span class="n">ellip</span><span class="p">[</span><span class="mi">5</span><span class="p">]</span>
+        <span class="n">z0</span> <span class="o">=</span> <span class="n">ellip</span><span class="p">[</span><span class="mi">6</span><span class="p">]</span>
+        <span class="n">phi</span> <span class="o">=</span> <span class="n">ellip</span><span class="p">[</span><span class="mi">7</span><span class="p">]</span>
+        <span class="n">theta</span> <span class="o">=</span> <span class="n">ellip</span><span class="p">[</span><span class="mi">8</span><span class="p">]</span>
+        <span class="n">psi</span> <span class="o">=</span> <span class="n">ellip</span><span class="p">[</span><span class="mi">9</span><span class="p">]</span>
+
+        <span class="n">scales</span> <span class="o">=</span> <span class="p">[</span><span class="mi">1</span> <span class="o">/</span> <span class="n">a_squared</span><span class="p">,</span> <span class="mi">1</span> <span class="o">/</span> <span class="n">b_squared</span><span class="p">,</span> <span class="mi">1</span> <span class="o">/</span> <span class="n">c_squared</span><span class="p">]</span>
+        <span class="n">center</span> <span class="o">=</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">x0</span><span class="p">,</span> <span class="n">y0</span><span class="p">,</span> <span class="n">z0</span><span class="p">])</span> <span class="o">+</span> <span class="mf">1.0</span><span class="p">)</span> <span class="o">/</span> <span class="mf">2.0</span>
+
+        <span class="c1"># Create the offset x,y and z values for the grid</span>
+        <span class="k">if</span> <span class="nb">any</span><span class="p">([</span><span class="n">phi</span><span class="p">,</span> <span class="n">theta</span><span class="p">,</span> <span class="n">psi</span><span class="p">]):</span>
+            <span class="c1"># Rotate the points to the expected coordinate system.</span>
+            <span class="n">cphi</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">phi</span><span class="p">)</span>
+            <span class="n">sphi</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">phi</span><span class="p">)</span>
+            <span class="n">ctheta</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">theta</span><span class="p">)</span>
+            <span class="n">stheta</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">theta</span><span class="p">)</span>
+            <span class="n">cpsi</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">psi</span><span class="p">)</span>
+            <span class="n">spsi</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">psi</span><span class="p">)</span>
+
+            <span class="n">mat</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([[</span><span class="n">cpsi</span> <span class="o">*</span> <span class="n">cphi</span> <span class="o">-</span> <span class="n">ctheta</span> <span class="o">*</span> <span class="n">sphi</span> <span class="o">*</span> <span class="n">spsi</span><span class="p">,</span>
+                             <span class="n">cpsi</span> <span class="o">*</span> <span class="n">sphi</span> <span class="o">+</span> <span class="n">ctheta</span> <span class="o">*</span> <span class="n">cphi</span> <span class="o">*</span> <span class="n">spsi</span><span class="p">,</span>
+                             <span class="n">spsi</span> <span class="o">*</span> <span class="n">stheta</span><span class="p">],</span>
+                            <span class="p">[</span><span class="o">-</span><span class="n">spsi</span> <span class="o">*</span> <span class="n">cphi</span> <span class="o">-</span> <span class="n">ctheta</span> <span class="o">*</span> <span class="n">sphi</span> <span class="o">*</span> <span class="n">cpsi</span><span class="p">,</span>
+                             <span class="o">-</span><span class="n">spsi</span> <span class="o">*</span> <span class="n">sphi</span> <span class="o">+</span> <span class="n">ctheta</span> <span class="o">*</span> <span class="n">cphi</span> <span class="o">*</span> <span class="n">cpsi</span><span class="p">,</span>
+                             <span class="n">cpsi</span> <span class="o">*</span> <span class="n">stheta</span><span class="p">],</span>
+                            <span class="p">[</span><span class="n">stheta</span> <span class="o">*</span> <span class="n">sphi</span><span class="p">,</span>
+                             <span class="o">-</span><span class="n">stheta</span> <span class="o">*</span> <span class="n">cphi</span><span class="p">,</span>
+                             <span class="n">ctheta</span><span class="p">]])</span>
+
+            <span class="c1"># Calculate the points that could possibly be inside the volume</span>
+            <span class="c1"># Since the points are rotated, we cannot do anything directional</span>
+            <span class="c1"># without more logic</span>
+            <span class="n">max_radius</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span>
+                <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">mat</span><span class="p">)</span><span class="o">.</span><span class="n">dot</span><span class="p">([</span><span class="n">a_squared</span><span class="p">,</span> <span class="n">b_squared</span><span class="p">,</span> <span class="n">c_squared</span><span class="p">]))</span>
+            <span class="n">idx</span><span class="p">,</span> <span class="n">shapes</span> <span class="o">=</span> <span class="n">_getshapes_3d</span><span class="p">(</span><span class="n">center</span><span class="p">,</span> <span class="n">max_radius</span><span class="p">,</span> <span class="n">space</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+
+            <span class="n">subgrid</span> <span class="o">=</span> <span class="p">[</span><span class="n">g</span><span class="p">[</span><span class="n">idi</span><span class="p">]</span> <span class="k">for</span> <span class="n">g</span><span class="p">,</span> <span class="n">idi</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">grid</span><span class="p">,</span> <span class="n">shapes</span><span class="p">)]</span>
+            <span class="n">offset_points</span> <span class="o">=</span> <span class="p">[</span><span class="n">vec</span> <span class="o">*</span> <span class="p">(</span><span class="n">xi</span> <span class="o">-</span> <span class="n">x0i</span><span class="p">)[</span><span class="o">...</span><span class="p">,</span> <span class="kc">None</span><span class="p">]</span>
+                             <span class="k">for</span> <span class="n">xi</span><span class="p">,</span> <span class="n">vec</span><span class="p">,</span> <span class="n">x0i</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">subgrid</span><span class="p">,</span>
+                                                     <span class="n">mat</span><span class="o">.</span><span class="n">T</span><span class="p">,</span>
+                                                     <span class="p">[</span><span class="n">x0</span><span class="p">,</span> <span class="n">y0</span><span class="p">,</span> <span class="n">z0</span><span class="p">])]</span>
+            <span class="n">rotated</span> <span class="o">=</span> <span class="n">offset_points</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="n">offset_points</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="n">offset_points</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
+            <span class="n">np</span><span class="o">.</span><span class="n">square</span><span class="p">(</span><span class="n">rotated</span><span class="p">,</span> <span class="n">out</span><span class="o">=</span><span class="n">rotated</span><span class="p">)</span>
+            <span class="n">radius</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">rotated</span><span class="p">,</span> <span class="n">scales</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># Calculate the points that could possibly be inside the volume</span>
+            <span class="n">max_radius</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">([</span><span class="n">a_squared</span><span class="p">,</span> <span class="n">b_squared</span><span class="p">,</span> <span class="n">c_squared</span><span class="p">])</span>
+            <span class="n">idx</span><span class="p">,</span> <span class="n">shapes</span> <span class="o">=</span> <span class="n">_getshapes_3d</span><span class="p">(</span><span class="n">center</span><span class="p">,</span> <span class="n">max_radius</span><span class="p">,</span> <span class="n">space</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+
+            <span class="n">subgrid</span> <span class="o">=</span> <span class="p">[</span><span class="n">g</span><span class="p">[</span><span class="n">idi</span><span class="p">]</span> <span class="k">for</span> <span class="n">g</span><span class="p">,</span> <span class="n">idi</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">grid</span><span class="p">,</span> <span class="n">shapes</span><span class="p">)]</span>
+            <span class="n">squared_dist</span> <span class="o">=</span> <span class="p">[</span><span class="n">ai</span> <span class="o">*</span> <span class="p">(</span><span class="n">xi</span> <span class="o">-</span> <span class="n">x0i</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span>
+                            <span class="k">for</span> <span class="n">xi</span><span class="p">,</span> <span class="n">ai</span><span class="p">,</span> <span class="n">x0i</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">subgrid</span><span class="p">,</span>
+                                                   <span class="n">scales</span><span class="p">,</span>
+                                                   <span class="p">[</span><span class="n">x0</span><span class="p">,</span> <span class="n">y0</span><span class="p">,</span> <span class="n">z0</span><span class="p">])]</span>
+
+            <span class="c1"># Parentheses to get best order for broadcasting</span>
+            <span class="n">radius</span> <span class="o">=</span> <span class="n">squared_dist</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="p">(</span><span class="n">squared_dist</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="n">squared_dist</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span>
+
+        <span class="c1"># Find the points within the ellipse</span>
+        <span class="n">inside</span> <span class="o">=</span> <span class="n">radius</span> <span class="o">&lt;=</span> <span class="mi">1</span>
+
+        <span class="c1"># Add the ellipse intensity to those points</span>
+        <span class="n">p</span><span class="p">[</span><span class="n">idx</span><span class="p">][</span><span class="n">inside</span><span class="p">]</span> <span class="o">+=</span> <span class="n">intensity</span>
+
+    <span class="k">return</span> <span class="n">space</span><span class="o">.</span><span class="n">element</span><span class="p">(</span><span class="n">p</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="ellipsoid_phantom"><a class="viewcode-back" href="../../../generated/odl.phantom.geometric.ellipsoid_phantom.html#odl.phantom.geometric.ellipsoid_phantom">[docs]</a><span class="k">def</span> <span class="nf">ellipsoid_phantom</span><span class="p">(</span><span class="n">space</span><span class="p">,</span> <span class="n">ellipsoids</span><span class="p">,</span> <span class="n">min_pt</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">max_pt</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Return a phantom given by ellipsoids.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    space : `DiscretizedSpace`</span>
+<span class="sd">        Space in which the phantom should be created, must be 2- or</span>
+<span class="sd">        3-dimensional. If ``space.shape`` is 1 in an axis, a corresponding</span>
+<span class="sd">        slice of the phantom is created (instead of squashing the whole</span>
+<span class="sd">        phantom into the slice).</span>
+<span class="sd">    ellipsoids : sequence of sequences</span>
+<span class="sd">        If ``space`` is 2-dimensional, each row should contain the entries ::</span>
+
+<span class="sd">            &#39;value&#39;,</span>
+<span class="sd">            &#39;axis_1&#39;, &#39;axis_2&#39;,</span>
+<span class="sd">            &#39;center_x&#39;, &#39;center_y&#39;,</span>
+<span class="sd">            &#39;rotation&#39;</span>
+
+<span class="sd">        If ``space`` is 3-dimensional, each row should contain the entries ::</span>
+
+<span class="sd">            &#39;value&#39;,</span>
+<span class="sd">            &#39;axis_1&#39;, &#39;axis_2&#39;, &#39;axis_3&#39;,</span>
+<span class="sd">            &#39;center_x&#39;, &#39;center_y&#39;, &#39;center_z&#39;,</span>
+<span class="sd">            &#39;rotation_phi&#39;, &#39;rotation_theta&#39;, &#39;rotation_psi&#39;</span>
+
+<span class="sd">        The provided ellipsoids need to be specified relative to the</span>
+<span class="sd">        reference rectangle ``[-1, -1] x [1, 1]``, or analogously in 3d.</span>
+<span class="sd">        The angles are to be given in radians.</span>
+
+<span class="sd">    min_pt, max_pt : array-like, optional</span>
+<span class="sd">        If provided, use these vectors to determine the bounding box of the</span>
+<span class="sd">        phantom instead of ``space.min_pt`` and ``space.max_pt``.</span>
+<span class="sd">        It is currently required that ``min_pt &gt;= space.min_pt`` and</span>
+<span class="sd">        ``max_pt &lt;= space.max_pt``, i.e., shifting or scaling outside the</span>
+<span class="sd">        original space is not allowed.</span>
+
+<span class="sd">        Providing one of them results in a shift, e.g., for ``min_pt``::</span>
+
+<span class="sd">            new_min_pt = min_pt</span>
+<span class="sd">            new_max_pt = space.max_pt + (min_pt - space.min_pt)</span>
+
+<span class="sd">        Providing both results in a scaled version of the phantom.</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    The phantom is created by adding the values of each ellipse. The</span>
+<span class="sd">    ellipses are defined by a center point</span>
+<span class="sd">    ``(center_x, center_y, [center_z])``, the lengths of its principial</span>
+<span class="sd">    axes ``(axis_1, axis_2, [axis_2])``, and a rotation angle ``rotation``</span>
+<span class="sd">    in 2D or Euler angles ``(rotation_phi, rotation_theta, rotation_psi)``</span>
+<span class="sd">    in 3D.</span>
+
+<span class="sd">    This function is heavily optimized, achieving runtimes about 20 times</span>
+<span class="sd">    faster than &quot;trivial&quot; implementations. It is therefore recommended to use</span>
+<span class="sd">    it in all phantoms where applicable.</span>
+
+<span class="sd">    The main optimization is that it only considers a subset of all the</span>
+<span class="sd">    points when updating for each ellipse. It does this by first finding</span>
+<span class="sd">    a subset of points that could possibly be inside the ellipse. This</span>
+<span class="sd">    optimization is very good for &quot;spherical&quot; ellipsoids, but not so</span>
+<span class="sd">    much for elongated or rotated ones.</span>
+
+<span class="sd">    It also does calculations wherever possible on the meshgrid instead of</span>
+<span class="sd">    individual points.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    Create a circle with a smaller circle inside:</span>
+
+<span class="sd">    &gt;&gt;&gt; space = odl.uniform_discr([-1, -1], [1, 1], [5, 5])</span>
+<span class="sd">    &gt;&gt;&gt; ellipses = [[1.0, 1.0, 1.0, 0.0, 0.0, 0.0],</span>
+<span class="sd">    ...             [1.0, 0.6, 0.6, 0.0, 0.0, 0.0]]</span>
+<span class="sd">    &gt;&gt;&gt; print(ellipsoid_phantom(space, ellipses))</span>
+<span class="sd">    [[ 0.,  0.,  1.,  0.,  0.],</span>
+<span class="sd">     [ 0.,  1.,  2.,  1.,  0.],</span>
+<span class="sd">     [ 1.,  2.,  2.,  2.,  1.],</span>
+<span class="sd">     [ 0.,  1.,  2.,  1.,  0.],</span>
+<span class="sd">     [ 0.,  0.,  1.,  0.,  0.]]</span>
+
+<span class="sd">    See Also</span>
+<span class="sd">    --------</span>
+<span class="sd">    odl.phantom.transmission.shepp_logan : Classical Shepp-Logan phantom,</span>
+<span class="sd">        typically used for transmission imaging</span>
+<span class="sd">    odl.phantom.transmission.shepp_logan_ellipsoids : Ellipses for the</span>
+<span class="sd">        Shepp-Logan phantom</span>
+<span class="sd">    odl.phantom.geometric.defrise_ellipses : Ellipses for the</span>
+<span class="sd">        Defrise phantom</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">space</span><span class="o">.</span><span class="n">ndim</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
+        <span class="n">_phantom</span> <span class="o">=</span> <span class="n">_ellipse_phantom_2d</span>
+    <span class="k">elif</span> <span class="n">space</span><span class="o">.</span><span class="n">ndim</span> <span class="o">==</span> <span class="mi">3</span><span class="p">:</span>
+        <span class="n">_phantom</span> <span class="o">=</span> <span class="n">_ellipsoid_phantom_3d</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;dimension not 2 or 3, no phantom available&#39;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">min_pt</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">max_pt</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">_phantom</span><span class="p">(</span><span class="n">space</span><span class="p">,</span> <span class="n">ellipsoids</span><span class="p">)</span>
+
+    <span class="k">else</span><span class="p">:</span>
+        <span class="c1"># Generate a temporary space with given `min_pt` and `max_pt`</span>
+        <span class="c1"># (snapped to the cell grid), create the phantom in that space and</span>
+        <span class="c1"># resize to the target size for `space`.</span>
+        <span class="c1"># The snapped points are constructed by finding the index of</span>
+        <span class="c1"># `min/max_pt` in the space partition, indexing the partition with</span>
+        <span class="c1"># that index, yielding a single-cell partition, and then taking</span>
+        <span class="c1"># the lower-left/upper-right corner of that cell.</span>
+        <span class="k">if</span> <span class="n">min_pt</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">snapped_min_pt</span> <span class="o">=</span> <span class="n">space</span><span class="o">.</span><span class="n">min_pt</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">min_pt_cell</span> <span class="o">=</span> <span class="n">space</span><span class="o">.</span><span class="n">partition</span><span class="p">[</span><span class="n">space</span><span class="o">.</span><span class="n">partition</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">min_pt</span><span class="p">)]</span>
+            <span class="n">snapped_min_pt</span> <span class="o">=</span> <span class="n">min_pt_cell</span><span class="o">.</span><span class="n">min_pt</span>
+
+        <span class="k">if</span> <span class="n">max_pt</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">snapped_max_pt</span> <span class="o">=</span> <span class="n">space</span><span class="o">.</span><span class="n">max_pt</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">max_pt_cell</span> <span class="o">=</span> <span class="n">space</span><span class="o">.</span><span class="n">partition</span><span class="p">[</span><span class="n">space</span><span class="o">.</span><span class="n">partition</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">max_pt</span><span class="p">)]</span>
+            <span class="n">snapped_max_pt</span> <span class="o">=</span> <span class="n">max_pt_cell</span><span class="o">.</span><span class="n">max_pt</span>
+            <span class="c1"># Avoid snapping to the next cell where max_pt falls exactly on</span>
+            <span class="c1"># a boundary</span>
+            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">space</span><span class="o">.</span><span class="n">ndim</span><span class="p">):</span>
+                <span class="k">if</span> <span class="n">max_pt</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="ow">in</span> <span class="n">space</span><span class="o">.</span><span class="n">partition</span><span class="o">.</span><span class="n">cell_boundary_vecs</span><span class="p">[</span><span class="n">i</span><span class="p">]:</span>
+                    <span class="n">snapped_max_pt</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">max_pt</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+
+        <span class="n">tmp_space</span> <span class="o">=</span> <span class="n">uniform_discr_fromdiscr</span><span class="p">(</span>
+            <span class="n">space</span><span class="p">,</span> <span class="n">min_pt</span><span class="o">=</span><span class="n">snapped_min_pt</span><span class="p">,</span> <span class="n">max_pt</span><span class="o">=</span><span class="n">snapped_max_pt</span><span class="p">,</span>
+            <span class="n">cell_sides</span><span class="o">=</span><span class="n">space</span><span class="o">.</span><span class="n">cell_sides</span><span class="p">)</span>
+
+        <span class="n">tmp_phantom</span> <span class="o">=</span> <span class="n">_phantom</span><span class="p">(</span><span class="n">tmp_space</span><span class="p">,</span> <span class="n">ellipsoids</span><span class="p">)</span>
+        <span class="n">offset</span> <span class="o">=</span> <span class="n">space</span><span class="o">.</span><span class="n">partition</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">tmp_space</span><span class="o">.</span><span class="n">min_pt</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">space</span><span class="o">.</span><span class="n">element</span><span class="p">(</span>
+            <span class="n">resize_array</span><span class="p">(</span><span class="n">tmp_phantom</span><span class="p">,</span> <span class="n">space</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="n">offset</span><span class="p">))</span></div>
+
+
+<div class="viewcode-block" id="smooth_cuboid"><a class="viewcode-back" href="../../../generated/odl.phantom.geometric.smooth_cuboid.html#odl.phantom.geometric.smooth_cuboid">[docs]</a><span class="k">def</span> <span class="nf">smooth_cuboid</span><span class="p">(</span><span class="n">space</span><span class="p">,</span> <span class="n">min_pt</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">max_pt</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Cuboid with smooth variations.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    space : `DiscretizedSpace`</span>
+<span class="sd">        Discretized space in which the phantom is supposed to be created.</span>
+<span class="sd">    min_pt : array-like of shape ``(space.ndim,)``, optional</span>
+<span class="sd">        Lower left corner of the cuboid. If ``None`` is given, a quarter</span>
+<span class="sd">        of the extent from ``space.min_pt`` towards the inside is chosen.</span>
+<span class="sd">    max_pt : array-like of shape ``(space.ndim,)``, optional</span>
+<span class="sd">        Upper right corner of the cuboid. If ``None`` is given, ``min_pt``</span>
+<span class="sd">        plus half the extent is chosen.</span>
+<span class="sd">    axis : int or sequence of int</span>
+<span class="sd">        Dimension(s) along which the smooth variation should happen.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    phantom : ``space``-element</span>
+<span class="sd">        The generated cuboid phantom in ``space``. Values have range [0, 1].</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">dom_min_pt</span> <span class="o">=</span> <span class="n">space</span><span class="o">.</span><span class="n">domain</span><span class="o">.</span><span class="n">min</span><span class="p">()</span>
+    <span class="n">dom_max_pt</span> <span class="o">=</span> <span class="n">space</span><span class="o">.</span><span class="n">domain</span><span class="o">.</span><span class="n">max</span><span class="p">()</span>
+
+    <span class="k">if</span> <span class="n">min_pt</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">min_pt</span> <span class="o">=</span> <span class="n">dom_min_pt</span> <span class="o">*</span> <span class="mf">0.75</span> <span class="o">+</span> <span class="n">dom_max_pt</span> <span class="o">*</span> <span class="mf">0.25</span>
+    <span class="k">if</span> <span class="n">max_pt</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">max_pt</span> <span class="o">=</span> <span class="n">dom_min_pt</span> <span class="o">*</span> <span class="mf">0.25</span> <span class="o">+</span> <span class="n">dom_max_pt</span> <span class="o">*</span> <span class="mf">0.75</span>
+
+    <span class="n">min_pt</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">atleast_1d</span><span class="p">(</span><span class="n">min_pt</span><span class="p">)</span>
+    <span class="n">max_pt</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">atleast_1d</span><span class="p">(</span><span class="n">max_pt</span><span class="p">)</span>
+
+    <span class="n">axis</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">axis</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">int</span><span class="p">,</span> <span class="n">ndmin</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">min_pt</span><span class="o">.</span><span class="n">shape</span> <span class="o">!=</span> <span class="p">(</span><span class="n">space</span><span class="o">.</span><span class="n">ndim</span><span class="p">,):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;shape of `min_pt` must be </span><span class="si">{}</span><span class="s1">, got </span><span class="si">{}</span><span class="s1">&#39;</span>
+                         <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">((</span><span class="n">space</span><span class="o">.</span><span class="n">ndim</span><span class="p">,),</span> <span class="n">min_pt</span><span class="o">.</span><span class="n">shape</span><span class="p">))</span>
+    <span class="k">if</span> <span class="n">max_pt</span><span class="o">.</span><span class="n">shape</span> <span class="o">!=</span> <span class="p">(</span><span class="n">space</span><span class="o">.</span><span class="n">ndim</span><span class="p">,):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;shape of `max_pt` must be </span><span class="si">{}</span><span class="s1">, got </span><span class="si">{}</span><span class="s1">&#39;</span>
+                         <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">((</span><span class="n">space</span><span class="o">.</span><span class="n">ndim</span><span class="p">,),</span> <span class="n">max_pt</span><span class="o">.</span><span class="n">shape</span><span class="p">))</span>
+
+    <span class="n">sign</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">coord</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">space</span><span class="o">.</span><span class="n">meshgrid</span><span class="p">):</span>
+        <span class="n">sign</span> <span class="o">=</span> <span class="n">sign</span> <span class="o">|</span> <span class="p">(</span><span class="n">coord</span> <span class="o">&lt;</span> <span class="n">min_pt</span><span class="p">[</span><span class="n">i</span><span class="p">])</span> <span class="o">|</span> <span class="p">(</span><span class="n">coord</span> <span class="o">&gt;</span> <span class="n">max_pt</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
+
+    <span class="n">values</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">axis</span><span class="p">:</span>
+        <span class="n">coord</span> <span class="o">=</span> <span class="n">space</span><span class="o">.</span><span class="n">meshgrid</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+        <span class="n">extent</span> <span class="o">=</span> <span class="p">(</span><span class="n">dom_max_pt</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">-</span> <span class="n">dom_min_pt</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
+        <span class="n">values</span> <span class="o">=</span> <span class="n">values</span> <span class="o">+</span> <span class="mi">2</span> <span class="o">*</span> <span class="p">(</span><span class="n">coord</span> <span class="o">-</span> <span class="n">dom_min_pt</span><span class="p">[</span><span class="n">i</span><span class="p">])</span> <span class="o">/</span> <span class="n">extent</span> <span class="o">-</span> <span class="mi">1</span>
+
+    <span class="c1"># Properly scale using sign</span>
+    <span class="n">sign</span> <span class="o">=</span> <span class="p">(</span><span class="mi">3</span> <span class="o">*</span> <span class="n">sign</span> <span class="o">-</span> <span class="mi">2</span><span class="p">)</span> <span class="o">/</span> <span class="n">axis</span><span class="o">.</span><span class="n">size</span>
+
+    <span class="c1"># Fit in [0, 1]</span>
+    <span class="n">values</span> <span class="o">=</span> <span class="n">values</span> <span class="o">*</span> <span class="n">sign</span>
+    <span class="n">values</span> <span class="o">=</span> <span class="p">(</span><span class="n">values</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">values</span><span class="p">))</span> <span class="o">/</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">values</span><span class="p">)</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">values</span><span class="p">))</span>
+
+    <span class="k">return</span> <span class="n">space</span><span class="o">.</span><span class="n">element</span><span class="p">(</span><span class="n">values</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="tgv_phantom"><a class="viewcode-back" href="../../../generated/odl.phantom.geometric.tgv_phantom.html#odl.phantom.geometric.tgv_phantom">[docs]</a><span class="k">def</span> <span class="nf">tgv_phantom</span><span class="p">(</span><span class="n">space</span><span class="p">,</span> <span class="n">edge_smoothing</span><span class="o">=</span><span class="mf">0.2</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Piecewise affine phantom.</span>
+
+<span class="sd">    This phantom is taken from [Bre+2010] and includes both linearly varying</span>
+<span class="sd">    regions and sharp discontinuities. It is designed to work well with</span>
+<span class="sd">    Total Generalized Variation (TGV) type regularization.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    space : `DiscretizedSpace`, 2 dimensional</span>
+<span class="sd">        Discretized space in which the phantom is supposed to be created.</span>
+<span class="sd">        Needs to be two-dimensional.</span>
+<span class="sd">    edge_smoothing : nonnegative float, optional</span>
+<span class="sd">        Smoothing of the edges of the phantom, given as smoothing width in</span>
+<span class="sd">        units of minimum pixel size.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    phantom : ``space``-element</span>
+<span class="sd">        The generated phantom in ``space``. Values have range [0, 1].</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    The original phantom is given by a specific image. In this implementation,</span>
+<span class="sd">    we extracted the underlying parameters and the phantom thus works with</span>
+<span class="sd">    spaces of any shape. Due to this, small variations may occur when compared</span>
+<span class="sd">    to the original phantom.</span>
+
+<span class="sd">    References</span>
+<span class="sd">    ----------</span>
+<span class="sd">    [Bre+2010] K. Bredies, K. Kunisch, and T. Pock.</span>
+<span class="sd">    *Total Generalized Variation*. SIAM Journal on Imaging Sciences,</span>
+<span class="sd">    3(3):492-526, Jan. 2010</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">space</span><span class="o">.</span><span class="n">ndim</span> <span class="o">!=</span> <span class="mi">2</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;`space.ndim` must be 2, got </span><span class="si">{}</span><span class="s1">&#39;</span>
+                         <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">space</span><span class="o">.</span><span class="n">ndim</span><span class="p">))</span>
+
+    <span class="n">y</span><span class="p">,</span> <span class="n">x</span> <span class="o">=</span> <span class="n">space</span><span class="o">.</span><span class="n">meshgrid</span>
+
+    <span class="c1"># Use a smooth sigmoid to get some anti-aliasing across edges.</span>
+    <span class="n">scale</span> <span class="o">=</span> <span class="n">edge_smoothing</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">space</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">sigmoid</span><span class="p">(</span><span class="n">val</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">edge_smoothing</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">val</span> <span class="o">=</span> <span class="n">val</span> <span class="o">/</span> <span class="n">scale</span>
+            <span class="k">with</span> <span class="n">np</span><span class="o">.</span><span class="n">errstate</span><span class="p">(</span><span class="n">over</span><span class="o">=</span><span class="s2">&quot;ignore&quot;</span><span class="p">,</span> <span class="n">under</span><span class="o">=</span><span class="s2">&quot;ignore&quot;</span><span class="p">):</span>
+                <span class="k">return</span> <span class="mi">1</span> <span class="o">/</span> <span class="p">(</span><span class="mi">1</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="n">val</span><span class="p">))</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="p">(</span><span class="n">val</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">val</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span>
+
+    <span class="c1"># Normalize to [0, 1]</span>
+    <span class="n">x</span> <span class="o">=</span> <span class="p">(</span><span class="n">x</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">x</span><span class="p">))</span> <span class="o">/</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">x</span><span class="p">))</span>
+    <span class="n">y</span> <span class="o">=</span> <span class="p">(</span><span class="n">y</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">y</span><span class="p">))</span> <span class="o">/</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">y</span><span class="p">)</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">y</span><span class="p">))</span>
+
+    <span class="c1"># Background</span>
+    <span class="n">values</span> <span class="o">=</span> <span class="o">-</span><span class="p">(</span><span class="n">x</span> <span class="o">+</span> <span class="n">y</span><span class="p">)</span> <span class="o">/</span> <span class="mi">2</span>
+
+    <span class="c1"># Square-ish region</span>
+    <span class="n">indicator</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="n">space</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+    <span class="n">indicator</span> <span class="o">*=</span> <span class="n">sigmoid</span><span class="p">(</span><span class="o">-</span><span class="p">(</span><span class="mf">0.015199034981905914</span> <span class="o">*</span> <span class="n">x</span> <span class="o">-</span> <span class="n">y</span> <span class="o">+</span> <span class="mf">0.13896260554885403</span><span class="p">))</span>
+    <span class="n">indicator</span> <span class="o">*=</span> <span class="n">sigmoid</span><span class="p">((</span><span class="mf">0.3333333333333323</span> <span class="o">*</span> <span class="n">y</span> <span class="o">-</span> <span class="n">x</span> <span class="o">+</span> <span class="mf">0.598958333333334</span><span class="p">))</span>
+    <span class="n">indicator</span> <span class="o">*=</span> <span class="n">sigmoid</span><span class="p">((</span><span class="o">-</span><span class="mf">2.4193548387096726</span> <span class="o">*</span> <span class="n">y</span> <span class="o">-</span> <span class="n">x</span> <span class="o">+</span> <span class="mf">2.684979838709672</span><span class="p">))</span>
+
+    <span class="n">values</span> <span class="o">+=</span> <span class="n">indicator</span> <span class="o">*</span> <span class="mi">2</span> <span class="o">*</span> <span class="p">(</span><span class="n">x</span> <span class="o">+</span> <span class="n">y</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
+
+    <span class="c1"># Ellipse part</span>
+    <span class="n">x_c</span> <span class="o">=</span> <span class="n">x</span> <span class="o">-</span> <span class="mf">0.71606842360499456</span>
+    <span class="n">y_c</span> <span class="o">=</span> <span class="n">y</span> <span class="o">-</span> <span class="mf">0.18357884949910641</span>
+
+    <span class="n">width</span> <span class="o">=</span> <span class="mf">0.55677657235995637</span>
+    <span class="n">height</span> <span class="o">=</span> <span class="mf">0.37279391542283741</span>
+    <span class="n">phi</span> <span class="o">=</span> <span class="mf">0.62911754900697558</span>
+
+    <span class="n">x_c_rot</span> <span class="o">=</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">phi</span><span class="p">)</span> <span class="o">*</span> <span class="n">x_c</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">phi</span><span class="p">)</span> <span class="o">*</span> <span class="n">y_c</span><span class="p">)</span> <span class="o">/</span> <span class="n">width</span>
+    <span class="n">y_c_rot</span> <span class="o">=</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">phi</span><span class="p">)</span> <span class="o">*</span> <span class="n">x_c</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">phi</span><span class="p">)</span> <span class="o">*</span> <span class="n">y_c</span><span class="p">)</span> <span class="o">/</span> <span class="n">height</span>
+
+    <span class="n">indicator</span> <span class="o">=</span> <span class="n">sigmoid</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">x_c_rot</span> <span class="o">**</span> <span class="mi">2</span> <span class="o">+</span> <span class="n">y_c_rot</span> <span class="o">**</span> <span class="mi">2</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
+
+    <span class="n">values</span> <span class="o">=</span> <span class="n">indicator</span> <span class="o">*</span> <span class="n">values</span> <span class="o">+</span> <span class="mf">1.5</span> <span class="o">*</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">indicator</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="o">-</span><span class="n">x</span> <span class="o">-</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">y</span> <span class="o">+</span> <span class="mf">0.6</span><span class="p">)</span>
+
+    <span class="c1"># Normalize values</span>
+    <span class="n">values</span> <span class="o">=</span> <span class="p">(</span><span class="n">values</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">values</span><span class="p">))</span> <span class="o">/</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">values</span><span class="p">)</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">values</span><span class="p">))</span>
+
+    <span class="k">return</span> <span class="n">space</span><span class="o">.</span><span class="n">element</span><span class="p">(</span><span class="n">values</span><span class="p">)</span></div>
+
+
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s1">&#39;__main__&#39;</span><span class="p">:</span>
+    <span class="c1"># Show the phantoms</span>
+    <span class="kn">import</span> <span class="nn">odl</span>
+
+    <span class="c1"># cuboid 1D</span>
+    <span class="n">space</span> <span class="o">=</span> <span class="n">odl</span><span class="o">.</span><span class="n">uniform_discr</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">300</span><span class="p">)</span>
+    <span class="n">cuboid</span><span class="p">(</span><span class="n">space</span><span class="p">)</span><span class="o">.</span><span class="n">show</span><span class="p">(</span><span class="s1">&#39;cuboid 1d&#39;</span><span class="p">)</span>
+
+    <span class="c1"># cuboid 2D</span>
+    <span class="n">space</span> <span class="o">=</span> <span class="n">odl</span><span class="o">.</span><span class="n">uniform_discr</span><span class="p">([</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span> <span class="p">[</span><span class="mi">300</span><span class="p">,</span> <span class="mi">300</span><span class="p">])</span>
+    <span class="n">cuboid</span><span class="p">(</span><span class="n">space</span><span class="p">)</span><span class="o">.</span><span class="n">show</span><span class="p">(</span><span class="s1">&#39;cuboid 2d&#39;</span><span class="p">)</span>
+
+    <span class="c1"># smooth cuboid</span>
+    <span class="n">smooth_cuboid</span><span class="p">(</span><span class="n">space</span><span class="p">)</span><span class="o">.</span><span class="n">show</span><span class="p">(</span><span class="s1">&#39;smooth_cuboid x 2d&#39;</span><span class="p">)</span>
+    <span class="n">smooth_cuboid</span><span class="p">(</span><span class="n">space</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">])</span><span class="o">.</span><span class="n">show</span><span class="p">(</span><span class="s1">&#39;smooth_cuboid x-y 2d&#39;</span><span class="p">)</span>
+
+    <span class="c1"># TGV phantom</span>
+    <span class="n">tgv_phantom</span><span class="p">(</span><span class="n">space</span><span class="p">)</span><span class="o">.</span><span class="n">show</span><span class="p">(</span><span class="s1">&#39;tgv_phantom&#39;</span><span class="p">)</span>
+
+    <span class="c1"># cuboid 3D</span>
+    <span class="n">space</span> <span class="o">=</span> <span class="n">odl</span><span class="o">.</span><span class="n">uniform_discr</span><span class="p">([</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span> <span class="p">[</span><span class="mi">300</span><span class="p">,</span> <span class="mi">300</span><span class="p">,</span> <span class="mi">300</span><span class="p">])</span>
+    <span class="n">cuboid</span><span class="p">(</span><span class="n">space</span><span class="p">)</span><span class="o">.</span><span class="n">show</span><span class="p">(</span><span class="s1">&#39;cuboid 3d&#39;</span><span class="p">)</span>
+
+    <span class="c1"># Indicate proj axis 3D</span>
+    <span class="n">indicate_proj_axis</span><span class="p">(</span><span class="n">space</span><span class="p">)</span><span class="o">.</span><span class="n">show</span><span class="p">(</span><span class="s1">&#39;indicate_proj_axis 3d&#39;</span><span class="p">)</span>
+
+    <span class="c1"># ellipsoid phantom 2D</span>
+    <span class="n">space</span> <span class="o">=</span> <span class="n">odl</span><span class="o">.</span><span class="n">uniform_discr</span><span class="p">([</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span> <span class="p">[</span><span class="mi">300</span><span class="p">,</span> <span class="mi">300</span><span class="p">])</span>
+    <span class="n">ellipses</span> <span class="o">=</span> <span class="p">[[</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">],</span>
+                <span class="p">[</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">0.6</span><span class="p">,</span> <span class="mf">0.6</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">]]</span>
+    <span class="n">ellipsoid_phantom</span><span class="p">(</span><span class="n">space</span><span class="p">,</span> <span class="n">ellipses</span><span class="p">)</span><span class="o">.</span><span class="n">show</span><span class="p">(</span><span class="s1">&#39;ellipse phantom 2d&#39;</span><span class="p">)</span>
+
+    <span class="c1"># ellipsoid phantom 3D</span>
+    <span class="n">space</span> <span class="o">=</span> <span class="n">odl</span><span class="o">.</span><span class="n">uniform_discr</span><span class="p">([</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span> <span class="p">[</span><span class="mi">300</span><span class="p">,</span> <span class="mi">300</span><span class="p">,</span> <span class="mi">300</span><span class="p">])</span>
+    <span class="n">ellipsoids</span> <span class="o">=</span> <span class="p">[[</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">],</span>
+                  <span class="p">[</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">0.6</span><span class="p">,</span> <span class="mf">0.6</span><span class="p">,</span> <span class="mf">0.6</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">]]</span>
+    <span class="n">ellipsoid_phantom</span><span class="p">(</span><span class="n">space</span><span class="p">,</span> <span class="n">ellipsoids</span><span class="p">)</span><span class="o">.</span><span class="n">show</span><span class="p">(</span><span class="s1">&#39;ellipsoid phantom 3d&#39;</span><span class="p">)</span>
+
+    <span class="c1"># Defrise phantom 2D</span>
+    <span class="n">space</span> <span class="o">=</span> <span class="n">odl</span><span class="o">.</span><span class="n">uniform_discr</span><span class="p">([</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span> <span class="p">[</span><span class="mi">300</span><span class="p">,</span> <span class="mi">300</span><span class="p">])</span>
+    <span class="n">defrise</span><span class="p">(</span><span class="n">space</span><span class="p">)</span><span class="o">.</span><span class="n">show</span><span class="p">(</span><span class="s1">&#39;defrise 2D&#39;</span><span class="p">)</span>
+
+    <span class="c1"># Defrise phantom 2D</span>
+    <span class="n">space</span> <span class="o">=</span> <span class="n">odl</span><span class="o">.</span><span class="n">uniform_discr</span><span class="p">([</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span> <span class="p">[</span><span class="mi">300</span><span class="p">,</span> <span class="mi">300</span><span class="p">,</span> <span class="mi">300</span><span class="p">])</span>
+    <span class="n">defrise</span><span class="p">(</span><span class="n">space</span><span class="p">)</span><span class="o">.</span><span class="n">show</span><span class="p">(</span><span class="s1">&#39;defrise 3D&#39;</span><span class="p">,</span> <span class="n">coords</span><span class="o">=</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">])</span>
+
+    <span class="c1"># Run also the doctests</span>
+    <span class="kn">from</span> <span class="nn">odl.util.testutils</span> <span class="kn">import</span> <span class="n">run_doctests</span>
+    <span class="n">run_doctests</span><span class="p">()</span>
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &#169; Copyright 2014-2020 The ODL Contributors.
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

@@ -1,0 +1,6 @@
+﻿save_animation
+========================================
+
+.. currentmodule:: odl.solvers.util.callback
+
+.. autofunction:: save_animation

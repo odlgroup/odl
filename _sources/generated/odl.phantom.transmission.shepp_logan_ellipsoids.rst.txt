@@ -1,0 +1,6 @@
+﻿shepp_logan_ellipsoids
+===============================================
+
+.. currentmodule:: odl.phantom.transmission
+
+.. autofunction:: shepp_logan_ellipsoids

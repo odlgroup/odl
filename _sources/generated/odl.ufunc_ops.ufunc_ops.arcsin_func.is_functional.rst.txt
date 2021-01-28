@@ -1,0 +1,6 @@
+arcsin_func.is_functional
+=================================================
+
+.. currentmodule:: odl.ufunc_ops.ufunc_ops
+
+.. autoproperty:: arcsin_func.is_functional

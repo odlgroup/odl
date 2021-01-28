@@ -1,0 +1,6 @@
+﻿resize_array
+==============================
+
+.. currentmodule:: odl.util.numerics
+
+.. autofunction:: resize_array

@@ -1,0 +1,6 @@
+RectPartition.cell_sides
+============================================
+
+.. currentmodule:: odl.discr.partition
+
+.. autoproperty:: RectPartition.cell_sides

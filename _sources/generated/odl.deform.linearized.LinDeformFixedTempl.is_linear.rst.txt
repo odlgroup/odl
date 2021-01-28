@@ -1,0 +1,6 @@
+LinDeformFixedTempl.is_linear
+===================================================
+
+.. currentmodule:: odl.deform.linearized
+
+.. autoproperty:: LinDeformFixedTempl.is_linear

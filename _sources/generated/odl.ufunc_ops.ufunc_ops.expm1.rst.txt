@@ -1,0 +1,6 @@
+﻿expm1
+=============================
+
+.. currentmodule:: odl.ufunc_ops.ufunc_ops
+
+.. autofunction:: expm1

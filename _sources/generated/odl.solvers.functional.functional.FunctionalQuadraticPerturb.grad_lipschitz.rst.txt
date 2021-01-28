@@ -1,0 +1,6 @@
+FunctionalQuadraticPerturb.grad_lipschitz
+===========================================================================
+
+.. currentmodule:: odl.solvers.functional.functional
+
+.. autoproperty:: FunctionalQuadraticPerturb.grad_lipschitz

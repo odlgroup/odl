@@ -1,0 +1,18 @@
+graphics
+========
+
+Functions for graphical output.
+
+.. currentmodule:: odl.util.graphics
+
+
+
+
+.. rubric:: Functions
+
+.. autosummary::
+   :toctree: generated/
+
+   ~odl.util.graphics.show_discrete_data
+   ~odl.util.graphics.warning_free_pause
+

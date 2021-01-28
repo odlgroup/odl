@@ -1,0 +1,6 @@
+Parallel2dGeometry.det_axis_init
+===========================================================
+
+.. currentmodule:: odl.tomo.geometry.parallel
+
+.. autoproperty:: Parallel2dGeometry.det_axis_init

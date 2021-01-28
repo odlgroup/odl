@@ -1,0 +1,6 @@
+OperatorPointwiseProduct.is_linear
+========================================================
+
+.. currentmodule:: odl.operator.operator
+
+.. autoproperty:: OperatorPointwiseProduct.is_linear

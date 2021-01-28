@@ -1,0 +1,6 @@
+ProductSpaceElement.T
+======================================
+
+.. currentmodule:: odl.space.pspace
+
+.. autoproperty:: ProductSpaceElement.T

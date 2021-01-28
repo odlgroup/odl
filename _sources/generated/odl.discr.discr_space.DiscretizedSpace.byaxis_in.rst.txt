@@ -1,0 +1,6 @@
+DiscretizedSpace.byaxis_in
+================================================
+
+.. currentmodule:: odl.discr.discr_space
+
+.. autoproperty:: DiscretizedSpace.byaxis_in

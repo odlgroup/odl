@@ -1,0 +1,8 @@
+:orphan:
+
+DivergentBeamGeometry.rotation_matrix
+================================================================
+
+.. currentmodule:: odl.tomo.geometry.geometry
+
+.. automethod:: DivergentBeamGeometry.rotation_matrix

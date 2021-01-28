@@ -1,0 +1,8 @@
+:orphan:
+
+isnan_op._call
+======================================
+
+.. currentmodule:: odl.ufunc_ops.ufunc_ops
+
+.. automethod:: isnan_op._call

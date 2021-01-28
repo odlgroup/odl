@@ -1,0 +1,6 @@
+﻿run_from_ipython
+=================================
+
+.. currentmodule:: odl.util.utility
+
+.. autofunction:: run_from_ipython

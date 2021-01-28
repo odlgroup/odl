@@ -1,0 +1,8 @@
+:orphan:
+
+Tensor.assign
+====================================
+
+.. currentmodule:: odl.space.base_tensors
+
+.. automethod:: Tensor.assign

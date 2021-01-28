@@ -1,0 +1,8 @@
+:orphan:
+
+ProductSpaceUfuncs.hypot
+========================================
+
+.. currentmodule:: odl.util.ufuncs
+
+.. automethod:: ProductSpaceUfuncs.hypot

@@ -1,0 +1,8 @@
+:orphan:
+
+FlatteningOperator.norm
+===============================================
+
+.. currentmodule:: odl.operator.tensor_ops
+
+.. automethod:: FlatteningOperator.norm

@@ -1,0 +1,37 @@
+﻿sign_op
+===============================
+
+.. currentmodule:: odl.ufunc_ops.ufunc_ops
+
+.. autoclass:: sign_op
+   :show-inheritance:
+   
+   
+   .. automethod:: __init__
+   
+      
+   
+   .. HACK -- the point here is that we don't want this to appear in the output, but the autosummary should still generate the pages.
+      .. autosummary::
+         :toctree:
+      
+         sign_op.__call__
+         sign_op.__eq__
+         sign_op._call
+         sign_op.derivative
+         sign_op.norm
+   
+
+    
+   .. HACK -- the point here is that we don't want this to appear in the output, but the autosummary should still generate the pages.
+      .. autosummary::
+         :toctree:
+      
+         sign_op.adjoint
+         sign_op.domain
+         sign_op.inverse
+         sign_op.is_functional
+         sign_op.is_linear
+         sign_op.range
+   
+   

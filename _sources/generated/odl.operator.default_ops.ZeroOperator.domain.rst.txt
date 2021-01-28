@@ -1,0 +1,6 @@
+ZeroOperator.domain
+============================================
+
+.. currentmodule:: odl.operator.default_ops
+
+.. autoproperty:: ZeroOperator.domain

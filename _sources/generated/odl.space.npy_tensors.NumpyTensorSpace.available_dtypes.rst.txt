@@ -1,0 +1,8 @@
+:orphan:
+
+NumpyTensorSpace.available_dtypes
+=======================================================
+
+.. currentmodule:: odl.space.npy_tensors
+
+.. automethod:: NumpyTensorSpace.available_dtypes

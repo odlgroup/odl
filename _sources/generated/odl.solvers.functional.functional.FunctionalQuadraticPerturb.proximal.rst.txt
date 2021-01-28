@@ -1,0 +1,6 @@
+FunctionalQuadraticPerturb.proximal
+=====================================================================
+
+.. currentmodule:: odl.solvers.functional.functional
+
+.. autoproperty:: FunctionalQuadraticPerturb.proximal

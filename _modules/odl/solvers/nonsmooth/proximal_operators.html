@@ -1,0 +1,2224 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>odl.solvers.nonsmooth.proximal_operators &mdash; odl 1.0.0.dev0 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../../../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../../../../_static/custom.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../../../" src="../../../../_static/documentation_options.js"></script>
+        <script src="../../../../_static/jquery.js"></script>
+        <script src="../../../../_static/underscore.js"></script>
+        <script src="../../../../_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="../../../../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../../../index.html" class="icon icon-home"> odl
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                1.0.0.dev0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Getting Started</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../getting_started/getting_started.html">Getting Started</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Working with ODL</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../guide/guide.html">User’s guide – selected topics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../math/math.html">Mathematical Background</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Developer zone</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../dev/dev.html">Contributing to ODL</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Useful facts</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../guide/faq.html">Frequently asked questions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../guide/glossary.html">Glossary</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../release_notes.html">Release Notes</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../refs.html">References</a></li>
+</ul>
+<p class="caption"><span class="caption-text">API Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../odl.html">odl</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../../index.html">odl</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../../../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="../../../index.html">Module code</a> &raquo;</li>
+        
+      <li>odl.solvers.nonsmooth.proximal_operators</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for odl.solvers.nonsmooth.proximal_operators</h1><div class="highlight"><pre>
+<span></span><span class="c1"># Copyright 2014-2019 The ODL contributors</span>
+<span class="c1">#</span>
+<span class="c1"># This file is part of ODL.</span>
+<span class="c1">#</span>
+<span class="c1"># This Source Code Form is subject to the terms of the Mozilla Public License,</span>
+<span class="c1"># v. 2.0. If a copy of the MPL was not distributed with this file, You can</span>
+<span class="c1"># obtain one at https://mozilla.org/MPL/2.0/.</span>
+
+<span class="sd">&quot;&quot;&quot;Factory functions for creating proximal operators.</span>
+
+<span class="sd">Functions with ``convex_conj`` mean the proximal of the convex conjugate and</span>
+<span class="sd">are provided for convenience.</span>
+
+<span class="sd">For more details see :ref:`proximal_operators` and references therein. For</span>
+<span class="sd">more details on proximal operators including how to evaluate the proximal</span>
+<span class="sd">operator of a variety of functions see [PB2014].</span>
+
+<span class="sd">References</span>
+<span class="sd">----------</span>
+<span class="sd">[PB2014] Parikh, N, and Boyd, S. *Proximal Algorithms*.</span>
+<span class="sd">Foundations and Trends in Optimization, 1 (2014), pp 127-239.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">print_function</span><span class="p">,</span> <span class="n">division</span><span class="p">,</span> <span class="n">absolute_import</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+
+<span class="kn">from</span> <span class="nn">odl.operator</span> <span class="kn">import</span> <span class="p">(</span>
+    <span class="n">Operator</span><span class="p">,</span> <span class="n">IdentityOperator</span><span class="p">,</span> <span class="n">ConstantOperator</span><span class="p">,</span> <span class="n">DiagonalOperator</span><span class="p">,</span>
+    <span class="n">PointwiseNorm</span><span class="p">,</span> <span class="n">MultiplyOperator</span><span class="p">)</span>
+<span class="kn">from</span> <span class="nn">odl.space</span> <span class="kn">import</span> <span class="n">ProductSpace</span>
+<span class="kn">from</span> <span class="nn">odl.set.space</span> <span class="kn">import</span> <span class="n">LinearSpaceElement</span>
+
+
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;combine_proximals&#39;</span><span class="p">,</span> <span class="s1">&#39;proximal_convex_conj&#39;</span><span class="p">,</span> <span class="s1">&#39;proximal_translation&#39;</span><span class="p">,</span>
+           <span class="s1">&#39;proximal_arg_scaling&#39;</span><span class="p">,</span> <span class="s1">&#39;proximal_quadratic_perturbation&#39;</span><span class="p">,</span>
+           <span class="s1">&#39;proximal_composition&#39;</span><span class="p">,</span> <span class="s1">&#39;proximal_const_func&#39;</span><span class="p">,</span>
+           <span class="s1">&#39;proximal_box_constraint&#39;</span><span class="p">,</span> <span class="s1">&#39;proximal_nonnegativity&#39;</span><span class="p">,</span>
+           <span class="s1">&#39;proximal_l1&#39;</span><span class="p">,</span> <span class="s1">&#39;proximal_convex_conj_l1&#39;</span><span class="p">,</span>
+           <span class="s1">&#39;proximal_l2&#39;</span><span class="p">,</span> <span class="s1">&#39;proximal_convex_conj_l2&#39;</span><span class="p">,</span>
+           <span class="s1">&#39;proximal_linfty&#39;</span><span class="p">,</span> <span class="s1">&#39;proximal_convex_conj_linfty&#39;</span><span class="p">,</span>
+           <span class="s1">&#39;proj_simplex&#39;</span><span class="p">,</span> <span class="s1">&#39;proj_l1&#39;</span><span class="p">,</span>
+           <span class="s1">&#39;proximal_l2_squared&#39;</span><span class="p">,</span> <span class="s1">&#39;proximal_convex_conj_l2_squared&#39;</span><span class="p">,</span>
+           <span class="s1">&#39;proximal_l1_l2&#39;</span><span class="p">,</span> <span class="s1">&#39;proximal_convex_conj_l1_l2&#39;</span><span class="p">,</span>
+           <span class="s1">&#39;proximal_convex_conj_kl&#39;</span><span class="p">,</span> <span class="s1">&#39;proximal_convex_conj_kl_cross_entropy&#39;</span><span class="p">,</span>
+           <span class="s1">&#39;proximal_huber&#39;</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="combine_proximals"><a class="viewcode-back" href="../../../../generated/odl.solvers.nonsmooth.proximal_operators.combine_proximals.html#odl.solvers.nonsmooth.proximal_operators.combine_proximals">[docs]</a><span class="k">def</span> <span class="nf">combine_proximals</span><span class="p">(</span><span class="o">*</span><span class="n">factory_list</span><span class="p">):</span>
+    <span class="sa">r</span><span class="sd">&quot;&quot;&quot;Combine proximal operators into a diagonal product space operator.</span>
+
+<span class="sd">    This assumes the functional to be separable across variables in order to</span>
+<span class="sd">    make use of the separable sum property of proximal operators.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    factory_list : sequence of callables</span>
+<span class="sd">        Proximal operator factories to be combined.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    diag_op : function</span>
+<span class="sd">        Returns a diagonal product space operator factory to be initialized</span>
+<span class="sd">        with the same step size parameter</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    That two functionals :math:`F` and :math:`G` are separable across variables</span>
+<span class="sd">    means that :math:`F((x, y)) = F(x)` and :math:`G((x, y)) = G(y)`, and in</span>
+<span class="sd">    this case the proximal operator of the sum is given by</span>
+
+<span class="sd">    .. math::</span>
+<span class="sd">        \mathrm{prox}_{\sigma (F(x) + G(y))}(x, y) =</span>
+<span class="sd">        (\mathrm{prox}_{\sigma F}(x), \mathrm{prox}_{\sigma G}(y)).</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">diag_op_factory</span><span class="p">(</span><span class="n">sigma</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Diagonal matrix of operators.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        sigma : positive float or sequence of positive floats</span>
+<span class="sd">            Step size parameter(s), if a sequence, the length must match</span>
+<span class="sd">            the length of the ``factory_list``.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        diag_op : `DiagonalOperator`</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">isscalar</span><span class="p">(</span><span class="n">sigma</span><span class="p">):</span>
+            <span class="n">sigma</span> <span class="o">=</span> <span class="p">[</span><span class="n">sigma</span><span class="p">]</span> <span class="o">*</span> <span class="nb">len</span><span class="p">(</span><span class="n">factory_list</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">DiagonalOperator</span><span class="p">(</span>
+            <span class="o">*</span><span class="p">[</span><span class="n">factory</span><span class="p">(</span><span class="n">sigmai</span><span class="p">)</span>
+              <span class="k">for</span> <span class="n">sigmai</span><span class="p">,</span> <span class="n">factory</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">sigma</span><span class="p">,</span> <span class="n">factory_list</span><span class="p">)])</span>
+
+    <span class="k">return</span> <span class="n">diag_op_factory</span></div>
+
+
+<div class="viewcode-block" id="proximal_convex_conj"><a class="viewcode-back" href="../../../../generated/odl.solvers.nonsmooth.proximal_operators.proximal_convex_conj.html#odl.solvers.nonsmooth.proximal_operators.proximal_convex_conj">[docs]</a><span class="k">def</span> <span class="nf">proximal_convex_conj</span><span class="p">(</span><span class="n">prox_factory</span><span class="p">):</span>
+    <span class="sa">r</span><span class="sd">&quot;&quot;&quot;Calculate the proximal of the dual using Moreau decomposition.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    prox_factory : callable</span>
+<span class="sd">        A factory function that, when called with a step size, returns the</span>
+<span class="sd">        proximal operator of ``F``</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    prox_factory : function</span>
+<span class="sd">        Factory for the proximal operator to be initialized</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    The Moreau identity states that for any convex function :math:`F` with</span>
+<span class="sd">    convex conjugate :math:`F^*`, the proximals satisfy</span>
+
+<span class="sd">    .. math::</span>
+<span class="sd">        \mathrm{prox}_{\sigma F^*}(x) +\sigma \,</span>
+<span class="sd">        \mathrm{prox}_{F / \sigma}(x / \sigma) = x</span>
+
+<span class="sd">    where :math:`\sigma` is a scalar step size. Using this, the proximal of</span>
+<span class="sd">    the convex conjugate is given by</span>
+
+<span class="sd">    .. math::</span>
+<span class="sd">        \mathrm{prox}_{\sigma F^*}(x) =</span>
+<span class="sd">        x - \sigma \, \mathrm{prox}_{F / \sigma}(x / \sigma)</span>
+
+<span class="sd">    Note that since :math:`(F^*)^* = F`, this can be used to get the proximal</span>
+<span class="sd">    of the original function from the proximal of the convex conjugate.</span>
+
+<span class="sd">    For reference on the Moreau identity, see [CP2011c].</span>
+
+<span class="sd">    References</span>
+<span class="sd">    ----------</span>
+<span class="sd">    [CP2011c] Combettes, P L, and Pesquet, J-C. *Proximal splitting</span>
+<span class="sd">    methods in signal processing.* In:  Bauschke, H H, Burachik, R S,</span>
+<span class="sd">    Combettes, P L, Elser, V, Luke, D R, and Wolkowicz, H. Fixed-point</span>
+<span class="sd">    algorithms for inverse problems in science and engineering, Springer,</span>
+<span class="sd">    2011.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">convex_conj_prox_factory</span><span class="p">(</span><span class="n">sigma</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Create proximal for the dual with a given sigma.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        sigma : positive float or array-like</span>
+<span class="sd">            Step size parameter. Can be a pointwise positive space element or</span>
+<span class="sd">            a sequence of positive floats if `prox_factory` supports that.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        proximal : `Operator`</span>
+<span class="sd">            The proximal operator of ``s * F^*`` where ``s`` is the step size</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="c1"># Get the underlying space. At the same time, check if the given</span>
+        <span class="c1"># prox_factory accepts stepsize objects of the type given by sigma.</span>
+        <span class="n">space</span> <span class="o">=</span> <span class="n">prox_factory</span><span class="p">(</span><span class="n">sigma</span><span class="p">)</span><span class="o">.</span><span class="n">domain</span>
+
+        <span class="n">mult_inner</span> <span class="o">=</span> <span class="n">MultiplyOperator</span><span class="p">(</span><span class="mf">1.0</span> <span class="o">/</span> <span class="n">sigma</span><span class="p">,</span> <span class="n">domain</span><span class="o">=</span><span class="n">space</span><span class="p">,</span> <span class="nb">range</span><span class="o">=</span><span class="n">space</span><span class="p">)</span>
+        <span class="n">mult_outer</span> <span class="o">=</span> <span class="n">MultiplyOperator</span><span class="p">(</span><span class="n">sigma</span><span class="p">,</span> <span class="n">domain</span><span class="o">=</span><span class="n">space</span><span class="p">,</span> <span class="nb">range</span><span class="o">=</span><span class="n">space</span><span class="p">)</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="p">(</span><span class="n">IdentityOperator</span><span class="p">(</span><span class="n">space</span><span class="p">)</span> <span class="o">-</span>
+                  <span class="n">mult_outer</span> <span class="o">*</span> <span class="n">prox_factory</span><span class="p">(</span><span class="mf">1.0</span> <span class="o">/</span> <span class="n">sigma</span><span class="p">)</span> <span class="o">*</span> <span class="n">mult_inner</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">result</span>
+
+    <span class="k">return</span> <span class="n">convex_conj_prox_factory</span></div>
+
+
+<div class="viewcode-block" id="proximal_translation"><a class="viewcode-back" href="../../../../generated/odl.solvers.nonsmooth.proximal_operators.proximal_translation.html#odl.solvers.nonsmooth.proximal_operators.proximal_translation">[docs]</a><span class="k">def</span> <span class="nf">proximal_translation</span><span class="p">(</span><span class="n">prox_factory</span><span class="p">,</span> <span class="n">y</span><span class="p">):</span>
+    <span class="sa">r</span><span class="sd">&quot;&quot;&quot;Calculate the proximal of the translated function F(x - y).</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    prox_factory : callable</span>
+<span class="sd">        A factory function that, when called with a step size, returns the</span>
+<span class="sd">        proximal operator of ``F``.</span>
+<span class="sd">    y : Element in domain of ``F``.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    prox_factory : function</span>
+<span class="sd">        Factory for the proximal operator to be initialized</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    Given a functional :math:`F`, this is calculated according to the rule</span>
+
+<span class="sd">    .. math::</span>
+<span class="sd">        \mathrm{prox}_{\sigma F( \cdot - y)}(x) =</span>
+<span class="sd">        y + \mathrm{prox}_{\sigma F}(x - y)</span>
+
+<span class="sd">    where :math:`y` is the translation, and :math:`\sigma` is the step size.</span>
+
+<span class="sd">    For reference on the identity used, see [CP2011c].</span>
+
+<span class="sd">    References</span>
+<span class="sd">    ----------</span>
+<span class="sd">    [CP2011c] Combettes, P L, and Pesquet, J-C. *Proximal splitting</span>
+<span class="sd">    methods in signal processing.* In:  Bauschke, H H, Burachik, R S,</span>
+<span class="sd">    Combettes, P L, Elser, V, Luke, D R, and Wolkowicz, H. Fixed-point</span>
+<span class="sd">    algorithms for inverse problems in science and engineering, Springer,</span>
+<span class="sd">    2011.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">translation_prox_factory</span><span class="p">(</span><span class="n">sigma</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Create proximal for the translation with a given sigma.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        sigma : positive float</span>
+<span class="sd">            Step size parameter</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        proximal : `Operator`</span>
+<span class="sd">            The proximal operator of ``s * F( . - y)`` where ``s`` is the</span>
+<span class="sd">            step size</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="p">(</span><span class="n">ConstantOperator</span><span class="p">(</span><span class="n">y</span><span class="p">)</span> <span class="o">+</span> <span class="n">prox_factory</span><span class="p">(</span><span class="n">sigma</span><span class="p">)</span> <span class="o">*</span>
+                <span class="p">(</span><span class="n">IdentityOperator</span><span class="p">(</span><span class="n">y</span><span class="o">.</span><span class="n">space</span><span class="p">)</span> <span class="o">-</span> <span class="n">ConstantOperator</span><span class="p">(</span><span class="n">y</span><span class="p">)))</span>
+
+    <span class="k">return</span> <span class="n">translation_prox_factory</span></div>
+
+
+<div class="viewcode-block" id="proximal_arg_scaling"><a class="viewcode-back" href="../../../../generated/odl.solvers.nonsmooth.proximal_operators.proximal_arg_scaling.html#odl.solvers.nonsmooth.proximal_operators.proximal_arg_scaling">[docs]</a><span class="k">def</span> <span class="nf">proximal_arg_scaling</span><span class="p">(</span><span class="n">prox_factory</span><span class="p">,</span> <span class="n">scaling</span><span class="p">):</span>
+    <span class="sa">r</span><span class="sd">&quot;&quot;&quot;Calculate the proximal of function F(x * scaling).</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    prox_factory : callable</span>
+<span class="sd">        A factory function that, when called with a step size, returns the</span>
+<span class="sd">        proximal operator of ``F``</span>
+<span class="sd">    scaling : float or sequence of floats or space element</span>
+<span class="sd">        Scaling parameter. The permissible types depent on the stepsizes</span>
+<span class="sd">        accepted by prox_factory. It may not contain any nonzero imaginary</span>
+<span class="sd">        parts. If it is a scalar, it may be zero, in which case the</span>
+<span class="sd">        resulting proxmial operator is the identity. If not a scalar,</span>
+<span class="sd">        it may not contain any zero components.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    prox_factory : function</span>
+<span class="sd">        Factory for the proximal operator to be initialized</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    Given a functional :math:`F`, and scaling factor :math:`\alpha` this is</span>
+<span class="sd">    calculated according to the rule</span>
+
+<span class="sd">    .. math::</span>
+<span class="sd">        \mathrm{prox}_{\sigma F(\alpha \, \cdot)}(x) =</span>
+<span class="sd">        \frac{1}{\alpha}</span>
+<span class="sd">        \mathrm{prox}_{\sigma \alpha^2 F(\cdot) }(\alpha x)</span>
+
+<span class="sd">    where :math:`\sigma` is the step size.</span>
+
+<span class="sd">    For reference on the identity used, see [CP2011c].</span>
+
+<span class="sd">    References</span>
+<span class="sd">    ----------</span>
+<span class="sd">    [CP2011c] Combettes, P L, and Pesquet, J-C. *Proximal splitting</span>
+<span class="sd">    methods in signal processing.* In:  Bauschke, H H, Burachik, R S,</span>
+<span class="sd">    Combettes, P L, Elser, V, Luke, D R, and Wolkowicz, H. Fixed-point</span>
+<span class="sd">    algorithms for inverse problems in science and engineering, Springer,</span>
+<span class="sd">    2011.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="c1"># To begin, we could check for two things:</span>
+    <span class="c1"># * Currently, we do not support complex scaling. We could therefore catch</span>
+    <span class="c1">#   nonempty imaginary parts.</span>
+    <span class="c1"># * If some components of scaling are zero, then the following routine will</span>
+    <span class="c1">#   crash with a division-by-zero error. The correct solution would be to</span>
+    <span class="c1">#   just keep these components and do the following computations only for</span>
+    <span class="c1">#   the others.</span>
+    <span class="c1"># Since these checks are computationally expensive, we do not execute them</span>
+    <span class="c1"># unconditionally, but only if the scaling factor is a scalar:</span>
+    <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">isscalar</span><span class="p">(</span><span class="n">scaling</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">scaling</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">proximal_const_func</span><span class="p">(</span><span class="n">prox_factory</span><span class="p">(</span><span class="mf">1.0</span><span class="p">)</span><span class="o">.</span><span class="n">domain</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">scaling</span><span class="o">.</span><span class="n">imag</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Complex scaling not supported.&quot;</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">scaling</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">scaling</span><span class="o">.</span><span class="n">real</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">scaling</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">scaling</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">arg_scaling_prox_factory</span><span class="p">(</span><span class="n">sigma</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Create proximal for the translation with a given sigma.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        sigma : positive float</span>
+<span class="sd">            Step size parameter</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        proximal : `Operator`</span>
+<span class="sd">            The proximal operator of ``sigma * F( . * a)`` where ``sigma`` is</span>
+<span class="sd">            the step size</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">scaling_square</span> <span class="o">=</span> <span class="n">scaling</span> <span class="o">*</span> <span class="n">scaling</span>
+        <span class="n">prox</span> <span class="o">=</span> <span class="n">prox_factory</span><span class="p">(</span><span class="n">sigma</span> <span class="o">*</span> <span class="n">scaling_square</span><span class="p">)</span>
+        <span class="n">space</span> <span class="o">=</span> <span class="n">prox</span><span class="o">.</span><span class="n">domain</span>
+        <span class="n">mult_inner</span> <span class="o">=</span> <span class="n">MultiplyOperator</span><span class="p">(</span><span class="n">scaling</span><span class="p">,</span> <span class="n">domain</span><span class="o">=</span><span class="n">space</span><span class="p">,</span> <span class="nb">range</span><span class="o">=</span><span class="n">space</span><span class="p">)</span>
+        <span class="n">mult_outer</span> <span class="o">=</span> <span class="n">MultiplyOperator</span><span class="p">(</span><span class="mi">1</span> <span class="o">/</span> <span class="n">scaling</span><span class="p">,</span> <span class="n">domain</span><span class="o">=</span><span class="n">space</span><span class="p">,</span> <span class="nb">range</span><span class="o">=</span><span class="n">space</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">mult_outer</span> <span class="o">*</span> <span class="n">prox</span> <span class="o">*</span> <span class="n">mult_inner</span>
+
+    <span class="k">return</span> <span class="n">arg_scaling_prox_factory</span></div>
+
+
+<div class="viewcode-block" id="proximal_quadratic_perturbation"><a class="viewcode-back" href="../../../../generated/odl.solvers.nonsmooth.proximal_operators.proximal_quadratic_perturbation.html#odl.solvers.nonsmooth.proximal_operators.proximal_quadratic_perturbation">[docs]</a><span class="k">def</span> <span class="nf">proximal_quadratic_perturbation</span><span class="p">(</span><span class="n">prox_factory</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">u</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="sa">r</span><span class="sd">&quot;&quot;&quot;Calculate the proximal of function F(x) + a * \|x\|^2 + &lt;u,x&gt;.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    prox_factory : callable</span>
+<span class="sd">        A factory function that, when called with a step size, returns the</span>
+<span class="sd">        proximal operator of ``F``</span>
+<span class="sd">    a : non-negative float</span>
+<span class="sd">        Scaling of the quadratic term</span>
+<span class="sd">    u : Element in domain of F, optional</span>
+<span class="sd">        Defines the linear functional. For ``None``, the zero element</span>
+<span class="sd">        is taken.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    prox_factory : function</span>
+<span class="sd">        Factory for the proximal operator to be initialized</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    Given a functional :math:`F`, this is calculated according to the rule</span>
+
+<span class="sd">    .. math::</span>
+<span class="sd">        \mathrm{prox}_{\sigma \left(F( \cdot ) + a \| \cdot \|^2 +</span>
+<span class="sd">        &lt;u, \cdot &gt;\right)}(x) =</span>
+<span class="sd">        c \; \mathrm{prox}_{\sigma F( \cdot \, c)}((x - \sigma u) c)</span>
+
+<span class="sd">    where :math:`c` is the constant</span>
+
+<span class="sd">    .. math::</span>
+<span class="sd">        c = \frac{1}{\sqrt{2 \sigma a + 1}},</span>
+
+<span class="sd">    :math:`a` is the scaling parameter belonging to the quadratic term,</span>
+<span class="sd">    :math:`u` is the space element defining the linear functional, and</span>
+<span class="sd">    :math:`\sigma` is the step size.</span>
+
+<span class="sd">    For reference on the identity used, see [CP2011c]. Note that this identity</span>
+<span class="sd">    is not the exact one given in the reference, but was recalculated for</span>
+<span class="sd">    arbitrary step lengths.</span>
+
+<span class="sd">    References</span>
+<span class="sd">    ----------</span>
+<span class="sd">    [CP2011c] Combettes, P L, and Pesquet, J-C. *Proximal splitting</span>
+<span class="sd">    methods in signal processing.* In:  Bauschke, H H, Burachik, R S,</span>
+<span class="sd">    Combettes, P L, Elser, V, Luke, D R, and Wolkowicz, H. Fixed-point</span>
+<span class="sd">    algorithms for inverse problems in science and engineering, Springer,</span>
+<span class="sd">    2011.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">a</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">a</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">a</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;scaling parameter muts be non-negative, got </span><span class="si">{}</span><span class="s1">&#39;</span>
+                         <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">a</span><span class="p">))</span>
+
+    <span class="k">if</span> <span class="n">u</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">u</span><span class="p">,</span> <span class="n">LinearSpaceElement</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;`u` must be `None` or a `LinearSpaceElement` &#39;</span>
+                        <span class="s1">&#39;instance, got </span><span class="si">{!r}</span><span class="s1">.&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">u</span><span class="p">))</span>
+
+    <span class="k">def</span> <span class="nf">quadratic_perturbation_prox_factory</span><span class="p">(</span><span class="n">sigma</span><span class="p">):</span>
+        <span class="sa">r</span><span class="sd">&quot;&quot;&quot;Create proximal for the quadratic perturbation with a given sigma.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        sigma : positive float</span>
+<span class="sd">            Step size parameter</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        proximal : `Operator`</span>
+<span class="sd">            The proximal operator of ``sigma * (F(x) + a * \|x\|^2 + &lt;u,x&gt;)``,</span>
+<span class="sd">            where ``sigma`` is the step size</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">isscalar</span><span class="p">(</span><span class="n">sigma</span><span class="p">):</span>
+            <span class="n">sigma</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">sigma</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">sigma</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">sigma</span><span class="p">)</span>
+
+        <span class="n">const</span> <span class="o">=</span> <span class="mf">1.0</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">sigma</span> <span class="o">*</span> <span class="mf">2.0</span> <span class="o">*</span> <span class="n">a</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="n">prox</span> <span class="o">=</span> <span class="n">proximal_arg_scaling</span><span class="p">(</span><span class="n">prox_factory</span><span class="p">,</span> <span class="n">const</span><span class="p">)(</span><span class="n">sigma</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">u</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="p">(</span><span class="n">MultiplyOperator</span><span class="p">(</span><span class="n">const</span><span class="p">,</span> <span class="n">domain</span><span class="o">=</span><span class="n">u</span><span class="o">.</span><span class="n">space</span><span class="p">,</span> <span class="nb">range</span><span class="o">=</span><span class="n">u</span><span class="o">.</span><span class="n">space</span><span class="p">)</span> <span class="o">*</span>
+                    <span class="n">prox</span> <span class="o">*</span>
+                    <span class="p">(</span><span class="n">MultiplyOperator</span><span class="p">(</span><span class="n">const</span><span class="p">,</span> <span class="n">domain</span><span class="o">=</span><span class="n">u</span><span class="o">.</span><span class="n">space</span><span class="p">,</span> <span class="nb">range</span><span class="o">=</span><span class="n">u</span><span class="o">.</span><span class="n">space</span><span class="p">)</span> <span class="o">-</span>
+                     <span class="n">sigma</span> <span class="o">*</span> <span class="n">const</span> <span class="o">*</span> <span class="n">u</span><span class="p">))</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">space</span> <span class="o">=</span> <span class="n">prox</span><span class="o">.</span><span class="n">domain</span>
+            <span class="k">return</span> <span class="p">(</span><span class="n">MultiplyOperator</span><span class="p">(</span><span class="n">const</span><span class="p">,</span> <span class="n">domain</span><span class="o">=</span><span class="n">space</span><span class="p">,</span> <span class="nb">range</span><span class="o">=</span><span class="n">space</span><span class="p">)</span> <span class="o">*</span>
+                    <span class="n">prox</span> <span class="o">*</span> <span class="n">MultiplyOperator</span><span class="p">(</span><span class="n">const</span><span class="p">,</span> <span class="n">domain</span><span class="o">=</span><span class="n">space</span><span class="p">,</span> <span class="nb">range</span><span class="o">=</span><span class="n">space</span><span class="p">))</span>
+
+    <span class="k">return</span> <span class="n">quadratic_perturbation_prox_factory</span></div>
+
+
+<div class="viewcode-block" id="proximal_composition"><a class="viewcode-back" href="../../../../generated/odl.solvers.nonsmooth.proximal_operators.proximal_composition.html#odl.solvers.nonsmooth.proximal_operators.proximal_composition">[docs]</a><span class="k">def</span> <span class="nf">proximal_composition</span><span class="p">(</span><span class="n">proximal</span><span class="p">,</span> <span class="n">operator</span><span class="p">,</span> <span class="n">mu</span><span class="p">):</span>
+    <span class="sa">r</span><span class="sd">&quot;&quot;&quot;Proximal operator factory of functional composed with unitary operator.</span>
+
+<span class="sd">    For a functional ``F`` and a linear unitary `Operator` ``L`` this is the</span>
+<span class="sd">    factory for the proximal operator of ``F * L``.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    proximal : callable</span>
+<span class="sd">        A factory function that, when called with a step size returns the</span>
+<span class="sd">        proximal operator of ``F``</span>
+<span class="sd">    operator : `Operator`</span>
+<span class="sd">        The operator to compose the functional with</span>
+<span class="sd">    mu : ``operator.field`` element</span>
+<span class="sd">        Scalar such that ``(operator.adjoint * operator)(x) = mu * x``</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    prox_factory : function</span>
+<span class="sd">        Factory for the proximal operator to be initialized</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    Given a linear operator :math:`L` with the property that for a scalar</span>
+<span class="sd">    :math:`\mu`</span>
+
+<span class="sd">    .. math::</span>
+<span class="sd">        L^*(L(x)) = \mu * x</span>
+
+<span class="sd">    and a convex function :math:`F`, the following identity holds</span>
+
+<span class="sd">    .. math::</span>
+<span class="sd">        \mathrm{prox}_{\sigma F \circ L}(x) = x + \frac{1}{\mu}</span>
+<span class="sd">        L^* \left( \mathrm{prox}_{\mu \sigma F}(Lx) - Lx \right)</span>
+
+<span class="sd">    This factory function implements this functionality.</span>
+
+<span class="sd">    There is no simple formula for more general operators.</span>
+
+<span class="sd">    The function cannot verify that the operator is unitary, the user needs</span>
+<span class="sd">    to verify this.</span>
+
+<span class="sd">    For reference on the identity used, see [CP2011c].</span>
+
+<span class="sd">    References</span>
+<span class="sd">    ----------</span>
+<span class="sd">    [CP2011c] Combettes, P L, and Pesquet, J-C. *Proximal splitting</span>
+<span class="sd">    methods in signal processing.* In:  Bauschke, H H, Burachik, R S,</span>
+<span class="sd">    Combettes, P L, Elser, V, Luke, D R, and Wolkowicz, H. Fixed-point</span>
+<span class="sd">    algorithms for inverse problems in science and engineering, Springer,</span>
+<span class="sd">    2011.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">proximal_composition_factory</span><span class="p">(</span><span class="n">sigma</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Create proximal for the dual with a given sigma</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        sigma : positive float</span>
+<span class="sd">            Step size parameter</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        proximal : `Operator`</span>
+<span class="sd">            The proximal operator of ``prox[sigma * F * L](x)``</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">Id</span> <span class="o">=</span> <span class="n">IdentityOperator</span><span class="p">(</span><span class="n">operator</span><span class="o">.</span><span class="n">domain</span><span class="p">)</span>
+        <span class="n">Ir</span> <span class="o">=</span> <span class="n">IdentityOperator</span><span class="p">(</span><span class="n">operator</span><span class="o">.</span><span class="n">range</span><span class="p">)</span>
+        <span class="n">prox_muf</span> <span class="o">=</span> <span class="n">proximal</span><span class="p">(</span><span class="n">mu</span> <span class="o">*</span> <span class="n">sigma</span><span class="p">)</span>
+        <span class="k">return</span> <span class="p">(</span><span class="n">Id</span> <span class="o">+</span>
+                <span class="p">(</span><span class="mf">1.0</span> <span class="o">/</span> <span class="n">mu</span><span class="p">)</span> <span class="o">*</span> <span class="n">operator</span><span class="o">.</span><span class="n">adjoint</span> <span class="o">*</span> <span class="p">((</span><span class="n">prox_muf</span> <span class="o">-</span> <span class="n">Ir</span><span class="p">)</span> <span class="o">*</span> <span class="n">operator</span><span class="p">))</span>
+
+    <span class="k">return</span> <span class="n">proximal_composition_factory</span></div>
+
+
+<div class="viewcode-block" id="proximal_const_func"><a class="viewcode-back" href="../../../../generated/odl.solvers.nonsmooth.proximal_operators.proximal_const_func.html#odl.solvers.nonsmooth.proximal_operators.proximal_const_func">[docs]</a><span class="k">def</span> <span class="nf">proximal_const_func</span><span class="p">(</span><span class="n">space</span><span class="p">):</span>
+    <span class="sa">r</span><span class="sd">&quot;&quot;&quot;Proximal operator factory of the constant functional.</span>
+
+<span class="sd">    Function to initialize the proximal operator of the constant functional</span>
+<span class="sd">    defined on ``space``.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    space : `LinearSpace`</span>
+<span class="sd">        Domain of the functional G=constant</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    prox_factory : function</span>
+<span class="sd">        Factory for the proximal operator to be initialized</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    The constant functional :math:`G` is defind as :math:`G(x) = constant`</span>
+<span class="sd">    for all values of :math:`x`. The proximal operator of this functional is</span>
+<span class="sd">    the identity operator</span>
+
+<span class="sd">    .. math::</span>
+<span class="sd">        \mathrm{prox}_{\sigma G}(x) = x</span>
+
+<span class="sd">    Note that it is independent of :math:`\sigma`.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">identity_factory</span><span class="p">(</span><span class="n">sigma</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return an instance of the proximal operator.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        sigma : positive float</span>
+<span class="sd">            Unused step size parameter. Introduced to provide a unified</span>
+<span class="sd">            interface.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        id : `IdentityOperator`</span>
+<span class="sd">            The proximal operator instance of G = 0 which is the</span>
+<span class="sd">            identity operator</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">IdentityOperator</span><span class="p">(</span><span class="n">space</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">identity_factory</span></div>
+
+
+<div class="viewcode-block" id="proximal_box_constraint"><a class="viewcode-back" href="../../../../generated/odl.solvers.nonsmooth.proximal_operators.proximal_box_constraint.html#odl.solvers.nonsmooth.proximal_operators.proximal_box_constraint">[docs]</a><span class="k">def</span> <span class="nf">proximal_box_constraint</span><span class="p">(</span><span class="n">space</span><span class="p">,</span> <span class="n">lower</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">upper</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="sa">r</span><span class="sd">&quot;&quot;&quot;Proximal operator factory for ``G(x) = ind(a &lt;= x &lt;= b)``.</span>
+
+<span class="sd">    If P is the set of elements with a &lt;= x &lt;= b, the indicator function of</span>
+<span class="sd">    which is defined as::</span>
+
+<span class="sd">        ind(a &lt;= x &lt;= b) = {0 if x in P, infinity if x is not in P}</span>
+
+<span class="sd">    with x being an element in ``space``.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    space : `LinearSpace`</span>
+<span class="sd">        Domain of the functional G(x)</span>
+<span class="sd">    lower : ``space.field`` element or ``space`` `element-like`, optional</span>
+<span class="sd">        The lower bound.</span>
+<span class="sd">        Default: ``None``, interpreted as -infinity</span>
+<span class="sd">    upper : ``space.field`` element or ``space`` `element-like`, optional</span>
+<span class="sd">        The upper bound.</span>
+<span class="sd">        Default: ``None``, interpreted as +infinity</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    prox_factory : function</span>
+<span class="sd">        Factory for the proximal operator to be initialized</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    If :math:`P` is an interval :math:`[a,b]`, the indicator function is</span>
+<span class="sd">    defined as</span>
+
+<span class="sd">    .. math::</span>
+<span class="sd">        I_{P}(x) = \begin{cases}</span>
+<span class="sd">        0 &amp; \text{if } x \in P, \\</span>
+<span class="sd">        \infty &amp; \text{if } x \not \in P</span>
+<span class="sd">        \end{cases}</span>
+
+<span class="sd">    For a step size :math:`\sigma`, the proximal operator of</span>
+<span class="sd">    :math:`\sigma I_{P}` is given by the projection onto the interval</span>
+
+<span class="sd">    .. math::</span>
+<span class="sd">         \mathrm{prox}_{\sigma I_{P}}(x) = \begin{cases}</span>
+<span class="sd">         a &amp; \text{if } x &lt; a, \\</span>
+<span class="sd">         x &amp; \text{if } x \in [a,b], \\</span>
+<span class="sd">         b &amp; \text{if } x &gt; b.</span>
+<span class="sd">         \end{cases}</span>
+
+<span class="sd">    The proximal operator is independent of :math:`\sigma` and invariant under</span>
+<span class="sd">    a positive rescaling of :math:`I_{P}(x)`, since that leaves the indicator</span>
+<span class="sd">    function unchanged.</span>
+
+<span class="sd">    For spaces of the form :math:`R^n`, the definition extends naturally</span>
+<span class="sd">    in each component.</span>
+
+<span class="sd">    See Also</span>
+<span class="sd">    --------</span>
+<span class="sd">    proximal_nonnegativity : Special case with ``lower=0, upper=infty``</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># Convert element-likes if needed, also does some space checking</span>
+    <span class="k">if</span> <span class="n">lower</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">lower</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">space</span> <span class="ow">and</span> <span class="n">lower</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">space</span><span class="o">.</span><span class="n">field</span><span class="p">:</span>
+        <span class="n">lower</span> <span class="o">=</span> <span class="n">space</span><span class="o">.</span><span class="n">element</span><span class="p">(</span><span class="n">lower</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">upper</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">upper</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">space</span> <span class="ow">and</span> <span class="n">upper</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">space</span><span class="o">.</span><span class="n">field</span><span class="p">:</span>
+        <span class="n">upper</span> <span class="o">=</span> <span class="n">space</span><span class="o">.</span><span class="n">element</span><span class="p">(</span><span class="n">upper</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">lower</span> <span class="ow">in</span> <span class="n">space</span><span class="o">.</span><span class="n">field</span> <span class="ow">and</span> <span class="n">upper</span> <span class="ow">in</span> <span class="n">space</span><span class="o">.</span><span class="n">field</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">lower</span> <span class="o">&gt;</span> <span class="n">upper</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;invalid values, `lower` (</span><span class="si">{}</span><span class="s1">) &gt; `upper` (</span><span class="si">{}</span><span class="s1">)&#39;</span>
+                             <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">lower</span><span class="p">,</span> <span class="n">upper</span><span class="p">))</span>
+
+    <span class="k">class</span> <span class="nc">ProxOpBoxConstraint</span><span class="p">(</span><span class="n">Operator</span><span class="p">):</span>
+
+        <span class="sd">&quot;&quot;&quot;Proximal operator for G(x) = ind(a &lt;= x &lt;= b).&quot;&quot;&quot;</span>
+
+        <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">sigma</span><span class="p">):</span>
+            <span class="sd">&quot;&quot;&quot;Initialize a new instance.</span>
+
+<span class="sd">            Parameters</span>
+<span class="sd">            ----------</span>
+<span class="sd">            sigma : positive float</span>
+<span class="sd">                Step size parameter, not used.</span>
+<span class="sd">            &quot;&quot;&quot;</span>
+            <span class="nb">super</span><span class="p">(</span><span class="n">ProxOpBoxConstraint</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span>
+                <span class="n">domain</span><span class="o">=</span><span class="n">space</span><span class="p">,</span> <span class="nb">range</span><span class="o">=</span><span class="n">space</span><span class="p">,</span> <span class="n">linear</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+
+        <span class="k">def</span> <span class="nf">_call</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">out</span><span class="p">):</span>
+            <span class="sd">&quot;&quot;&quot;Apply the operator to ``x`` and store the result in ``out``.&quot;&quot;&quot;</span>
+            <span class="k">if</span> <span class="n">lower</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">upper</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">x</span><span class="o">.</span><span class="n">ufuncs</span><span class="o">.</span><span class="n">maximum</span><span class="p">(</span><span class="n">lower</span><span class="p">,</span> <span class="n">out</span><span class="o">=</span><span class="n">out</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="n">lower</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">upper</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">x</span><span class="o">.</span><span class="n">ufuncs</span><span class="o">.</span><span class="n">minimum</span><span class="p">(</span><span class="n">upper</span><span class="p">,</span> <span class="n">out</span><span class="o">=</span><span class="n">out</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="n">lower</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">upper</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">x</span><span class="o">.</span><span class="n">ufuncs</span><span class="o">.</span><span class="n">maximum</span><span class="p">(</span><span class="n">lower</span><span class="p">,</span> <span class="n">out</span><span class="o">=</span><span class="n">out</span><span class="p">)</span>
+                <span class="n">out</span><span class="o">.</span><span class="n">ufuncs</span><span class="o">.</span><span class="n">minimum</span><span class="p">(</span><span class="n">upper</span><span class="p">,</span> <span class="n">out</span><span class="o">=</span><span class="n">out</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">out</span><span class="o">.</span><span class="n">assign</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">ProxOpBoxConstraint</span></div>
+
+
+<div class="viewcode-block" id="proximal_nonnegativity"><a class="viewcode-back" href="../../../../generated/odl.solvers.nonsmooth.proximal_operators.proximal_nonnegativity.html#odl.solvers.nonsmooth.proximal_operators.proximal_nonnegativity">[docs]</a><span class="k">def</span> <span class="nf">proximal_nonnegativity</span><span class="p">(</span><span class="n">space</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Function to create the proximal operator of ``G(x) = ind(x &gt;= 0)``.</span>
+
+<span class="sd">    Function for the proximal operator of the functional ``G(x)=ind(x &gt;= 0)``</span>
+<span class="sd">    to be initialized.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    space : `LinearSpace`</span>
+<span class="sd">        Domain of the functional G(x)</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    prox_factory : function</span>
+<span class="sd">        Factory for the proximal operator to be initialized</span>
+
+<span class="sd">    See Also</span>
+<span class="sd">    --------</span>
+<span class="sd">    proximal_box_constraint</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">proximal_box_constraint</span><span class="p">(</span><span class="n">space</span><span class="p">,</span> <span class="n">lower</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="proximal_convex_conj_l2"><a class="viewcode-back" href="../../../../generated/odl.solvers.nonsmooth.proximal_operators.proximal_convex_conj_l2.html#odl.solvers.nonsmooth.proximal_operators.proximal_convex_conj_l2">[docs]</a><span class="k">def</span> <span class="nf">proximal_convex_conj_l2</span><span class="p">(</span><span class="n">space</span><span class="p">,</span> <span class="n">lam</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">g</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="sa">r</span><span class="sd">&quot;&quot;&quot;Proximal operator factory of the convex conj of the l2-norm/distance.</span>
+
+<span class="sd">    Function for the proximal operator of the convex conjugate of the</span>
+<span class="sd">    functional F where F is the l2-norm (or distance to g, if given)::</span>
+
+<span class="sd">        F(x) =  lam ||x - g||_2</span>
+
+<span class="sd">    with x and g elements in ``space``, scaling factor lam, and given data g.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    space : `LinearSpace`</span>
+<span class="sd">        Domain of F(x). Needs to be a Hilbert space.</span>
+<span class="sd">        That is, have an inner product (`LinearSpace.inner`).</span>
+<span class="sd">    lam : positive float, optional</span>
+<span class="sd">        Scaling factor or regularization parameter.</span>
+<span class="sd">    g : ``space`` element, optional</span>
+<span class="sd">        An element in ``space``. Default: ``space.zero``.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    prox_factory : function</span>
+<span class="sd">        Factory for the proximal operator to be initialized</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    Most problems are forumlated for the squared norm/distance, in that case</span>
+<span class="sd">    use the `proximal_convex_conj_l2_squared` instead.</span>
+
+<span class="sd">    The :math:`L_2`-norm/distance :math:`F` is given by is given by</span>
+
+<span class="sd">    .. math::</span>
+<span class="sd">        F(x) = \lambda \|x - g\|_2</span>
+
+<span class="sd">    The convex conjugate :math:`F^*` of :math:`F` is given by</span>
+
+<span class="sd">    .. math::</span>
+<span class="sd">        F^*(y) = \begin{cases}</span>
+<span class="sd">        0 &amp; \text{if } \|y-g\|_2 \leq \lambda, \\</span>
+<span class="sd">        \infty &amp; \text{else.}</span>
+<span class="sd">        \end{cases}</span>
+
+<span class="sd">    For a step size :math:`\sigma`, the proximal operator of</span>
+<span class="sd">    :math:`\sigma F^*` is given by the projection onto the set of :math:`y`</span>
+<span class="sd">    satisfying :math:`\|y-g\|_2 \leq \lambda`, i.e., by</span>
+
+<span class="sd">    .. math::</span>
+<span class="sd">        \mathrm{prox}_{\sigma F^*}(y) = \begin{cases}</span>
+<span class="sd">        \lambda \frac{y - g}{\|y - g\|}</span>
+<span class="sd">        &amp; \text{if } \|y-g\|_2 &gt; \lambda, \\</span>
+<span class="sd">        y &amp; \text{if } \|y-g\|_2 \leq \lambda</span>
+<span class="sd">        \end{cases}</span>
+
+<span class="sd">    Note that the expression is independent of :math:`\sigma`.</span>
+
+<span class="sd">    See Also</span>
+<span class="sd">    --------</span>
+<span class="sd">    proximal_l2 : proximal without convex conjugate</span>
+<span class="sd">    proximal_convex_conj_l2_squared : proximal for squared norm/distance</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">prox_l2</span> <span class="o">=</span> <span class="n">proximal_l2</span><span class="p">(</span><span class="n">space</span><span class="p">,</span> <span class="n">lam</span><span class="o">=</span><span class="n">lam</span><span class="p">,</span> <span class="n">g</span><span class="o">=</span><span class="n">g</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">proximal_convex_conj</span><span class="p">(</span><span class="n">prox_l2</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="proximal_l2"><a class="viewcode-back" href="../../../../generated/odl.solvers.nonsmooth.proximal_operators.proximal_l2.html#odl.solvers.nonsmooth.proximal_operators.proximal_l2">[docs]</a><span class="k">def</span> <span class="nf">proximal_l2</span><span class="p">(</span><span class="n">space</span><span class="p">,</span> <span class="n">lam</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">g</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="sa">r</span><span class="sd">&quot;&quot;&quot;Proximal operator factory of the l2-norm/distance.</span>
+
+<span class="sd">    Function for the proximal operator of the functional ``F`` where ``F``</span>
+<span class="sd">    is the l2-norm (or distance to g, if given)::</span>
+
+<span class="sd">        ``F(x) =  lam ||x - g||_2``</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    space : `LinearSpace`</span>
+<span class="sd">        Domain of F(x). Needs to be a Hilbert space.</span>
+<span class="sd">        That is, have an inner product (`LinearSpace.inner`).</span>
+<span class="sd">    lam : positive float, optional</span>
+<span class="sd">        Scaling factor or regularization parameter.</span>
+<span class="sd">    g : ``space`` element, optional</span>
+<span class="sd">        An element in ``space``. Default: ``space.zero``.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    prox_factory : callable</span>
+<span class="sd">        Factory for the proximal operator to be initialized.</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    Most problems are forumlated for the squared norm/distance, in that case</span>
+<span class="sd">    use `proximal_l2_squared` instead.</span>
+
+<span class="sd">    The :math:`L_2`-norm/distance :math:`F` is given by</span>
+
+<span class="sd">    .. math::</span>
+<span class="sd">        F(x) = \lambda \|x - g\|_2</span>
+
+<span class="sd">    For a step size :math:`\sigma`, the proximal operator of :math:`\sigma F`</span>
+<span class="sd">    is given by</span>
+
+<span class="sd">    .. math::</span>
+<span class="sd">        \mathrm{prox}_{\sigma F}(y) = \begin{cases}</span>
+<span class="sd">        \frac{1 - c}{\|y-g\|} \cdot y  + c \cdot g</span>
+<span class="sd">        &amp; \text{if } c &lt; g, \\</span>
+<span class="sd">        g &amp; \text{else},</span>
+<span class="sd">        \end{cases}</span>
+
+<span class="sd">    where :math:`c = \sigma \frac{\lambda}{\|y - g\|_2}`.</span>
+
+<span class="sd">    See Also</span>
+<span class="sd">    --------</span>
+<span class="sd">    proximal_l2_squared : proximal for squared norm/distance</span>
+<span class="sd">    proximal_convex_conj_l2 : proximal for convex conjugate</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">lam</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">lam</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">g</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">g</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">space</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">{!r}</span><span class="s1"> is not an element of </span><span class="si">{!r}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">g</span><span class="p">,</span> <span class="n">space</span><span class="p">))</span>
+
+    <span class="k">class</span> <span class="nc">ProximalL2</span><span class="p">(</span><span class="n">Operator</span><span class="p">):</span>
+
+        <span class="sd">&quot;&quot;&quot;Proximal operator of the l2-norm/distance.&quot;&quot;&quot;</span>
+
+        <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">sigma</span><span class="p">):</span>
+            <span class="sd">&quot;&quot;&quot;Initialize a new instance.</span>
+
+<span class="sd">            Parameters</span>
+<span class="sd">            ----------</span>
+<span class="sd">            sigma : positive float</span>
+<span class="sd">                Step size parameter</span>
+<span class="sd">            &quot;&quot;&quot;</span>
+            <span class="nb">super</span><span class="p">(</span><span class="n">ProximalL2</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span>
+                <span class="n">domain</span><span class="o">=</span><span class="n">space</span><span class="p">,</span> <span class="nb">range</span><span class="o">=</span><span class="n">space</span><span class="p">,</span> <span class="n">linear</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">sigma</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">sigma</span><span class="p">)</span>
+
+        <span class="k">def</span> <span class="nf">_call</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">out</span><span class="p">):</span>
+            <span class="sd">&quot;&quot;&quot;Apply the operator to ``x`` and stores the result in ``out``.&quot;&quot;&quot;</span>
+            <span class="n">dtype</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">domain</span><span class="p">,</span> <span class="s1">&#39;dtype&#39;</span><span class="p">,</span> <span class="nb">float</span><span class="p">)</span>
+            <span class="n">eps</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">finfo</span><span class="p">(</span><span class="n">dtype</span><span class="p">)</span><span class="o">.</span><span class="n">resolution</span> <span class="o">*</span> <span class="mi">10</span>
+
+            <span class="k">if</span> <span class="n">g</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">x_norm</span> <span class="o">=</span> <span class="n">x</span><span class="o">.</span><span class="n">norm</span><span class="p">()</span> <span class="o">*</span> <span class="p">(</span><span class="mi">1</span> <span class="o">+</span> <span class="n">eps</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">x_norm</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                    <span class="n">step</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">sigma</span> <span class="o">*</span> <span class="n">lam</span> <span class="o">/</span> <span class="n">x_norm</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">step</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">infty</span>
+
+                <span class="k">if</span> <span class="n">step</span> <span class="o">&lt;</span> <span class="mf">1.0</span><span class="p">:</span>
+                    <span class="n">out</span><span class="o">.</span><span class="n">lincomb</span><span class="p">(</span><span class="mf">1.0</span> <span class="o">-</span> <span class="n">step</span><span class="p">,</span> <span class="n">x</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">out</span><span class="o">.</span><span class="n">set_zero</span><span class="p">()</span>
+
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">x_norm</span> <span class="o">=</span> <span class="p">(</span><span class="n">x</span> <span class="o">-</span> <span class="n">g</span><span class="p">)</span><span class="o">.</span><span class="n">norm</span><span class="p">()</span> <span class="o">*</span> <span class="p">(</span><span class="mi">1</span> <span class="o">+</span> <span class="n">eps</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">x_norm</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                    <span class="n">step</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">sigma</span> <span class="o">*</span> <span class="n">lam</span> <span class="o">/</span> <span class="n">x_norm</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">step</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">infty</span>
+
+                <span class="k">if</span> <span class="n">step</span> <span class="o">&lt;</span> <span class="mf">1.0</span><span class="p">:</span>
+                    <span class="n">out</span><span class="o">.</span><span class="n">lincomb</span><span class="p">(</span><span class="mf">1.0</span> <span class="o">-</span> <span class="n">step</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">step</span><span class="p">,</span> <span class="n">g</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">out</span><span class="o">.</span><span class="n">assign</span><span class="p">(</span><span class="n">g</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">ProximalL2</span></div>
+
+
+<div class="viewcode-block" id="proximal_convex_conj_l2_squared"><a class="viewcode-back" href="../../../../generated/odl.solvers.nonsmooth.proximal_operators.proximal_convex_conj_l2_squared.html#odl.solvers.nonsmooth.proximal_operators.proximal_convex_conj_l2_squared">[docs]</a><span class="k">def</span> <span class="nf">proximal_convex_conj_l2_squared</span><span class="p">(</span><span class="n">space</span><span class="p">,</span> <span class="n">lam</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">g</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="sa">r</span><span class="sd">&quot;&quot;&quot;Proximal operator factory of the convex conj of the squared l2-dist</span>
+
+<span class="sd">    Function for the proximal operator of the convex conjugate of the</span>
+<span class="sd">    functional F where F is the l2-norm (or distance to g, if given)::</span>
+
+<span class="sd">        F(x) =  lam ||x - g||_2^2</span>
+
+<span class="sd">    with x and g elements in ``space``, scaling factor lam, and given data g.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    space : `LinearSpace`</span>
+<span class="sd">        Domain of F(x). Needs to be a Hilbert space.</span>
+<span class="sd">        That is, have an inner product (`LinearSpace.inner`).</span>
+<span class="sd">    lam : positive float, optional</span>
+<span class="sd">        Scaling factor or regularization parameter.</span>
+<span class="sd">    g : ``space`` element, optional</span>
+<span class="sd">        An element in ``space``. Default: ``space.zero``.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    prox_factory : function</span>
+<span class="sd">        Factory for the proximal operator to be initialized</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    The squared :math:`L_2`-norm/distance :math:`F` is given by</span>
+
+<span class="sd">    .. math::</span>
+<span class="sd">        F(x) =  \lambda \|x - g\|_2^2.</span>
+
+<span class="sd">    The convex conjugate :math:`F^*` of :math:`F` is given by</span>
+
+<span class="sd">    .. math::</span>
+<span class="sd">        F^*(y) = \frac{1}{4\lambda} \left( \|</span>
+<span class="sd">        y\|_2^2 + \langle y, g \rangle \right)</span>
+
+<span class="sd">    For a step size :math:`\sigma`, the proximal operator of</span>
+<span class="sd">    :math:`\sigma F^*` is given by</span>
+
+<span class="sd">    .. math::</span>
+<span class="sd">        \mathrm{prox}_{\sigma F^*}(y) = \frac{y - \sigma g}{1 +</span>
+<span class="sd">        \sigma/(2 \lambda)}</span>
+
+<span class="sd">    See Also</span>
+<span class="sd">    --------</span>
+<span class="sd">    proximal_convex_conj_l2 : proximal without square</span>
+<span class="sd">    proximal_l2_squared : proximal without convex conjugate</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">lam</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">lam</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">g</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">g</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">space</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">{!r}</span><span class="s1"> is not an element of </span><span class="si">{!r}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">g</span><span class="p">,</span> <span class="n">space</span><span class="p">))</span>
+
+    <span class="k">class</span> <span class="nc">ProximalConvexConjL2Squared</span><span class="p">(</span><span class="n">Operator</span><span class="p">):</span>
+
+        <span class="sd">&quot;&quot;&quot;Proximal operator of the convex conj of the squared l2-norm/dist.&quot;&quot;&quot;</span>
+
+        <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">sigma</span><span class="p">):</span>
+            <span class="sd">&quot;&quot;&quot;Initialize a new instance.</span>
+
+<span class="sd">            Parameters</span>
+<span class="sd">            ----------</span>
+<span class="sd">            sigma : positive float or pointwise positive space.element</span>
+<span class="sd">                Step size parameter. If scalar, it contains a global stepsize,</span>
+<span class="sd">                otherwise the space.element defines a stepsize for each point.</span>
+<span class="sd">            &quot;&quot;&quot;</span>
+            <span class="nb">super</span><span class="p">(</span><span class="n">ProximalConvexConjL2Squared</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span>
+                <span class="n">domain</span><span class="o">=</span><span class="n">space</span><span class="p">,</span> <span class="nb">range</span><span class="o">=</span><span class="n">space</span><span class="p">,</span> <span class="n">linear</span><span class="o">=</span><span class="n">g</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">isscalar</span><span class="p">(</span><span class="n">sigma</span><span class="p">):</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">sigma</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">sigma</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">sigma</span> <span class="o">=</span> <span class="n">space</span><span class="o">.</span><span class="n">element</span><span class="p">(</span><span class="n">sigma</span><span class="p">)</span>
+
+        <span class="k">def</span> <span class="nf">_call</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">out</span><span class="p">):</span>
+            <span class="sd">&quot;&quot;&quot;Apply the operator to ``x`` and store the result in ``out``&quot;&quot;&quot;</span>
+            <span class="c1"># (x - sig*g) / (1 + sig/(2 lam))</span>
+            <span class="n">sig</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">sigma</span>
+            <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">isscalar</span><span class="p">(</span><span class="n">sig</span><span class="p">):</span>
+                <span class="k">if</span> <span class="n">g</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="n">out</span><span class="o">.</span><span class="n">lincomb</span><span class="p">(</span><span class="mi">1</span> <span class="o">/</span> <span class="p">(</span><span class="mi">1</span> <span class="o">+</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="n">sig</span> <span class="o">/</span> <span class="n">lam</span><span class="p">),</span> <span class="n">x</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">out</span><span class="o">.</span><span class="n">lincomb</span><span class="p">(</span><span class="mi">1</span> <span class="o">/</span> <span class="p">(</span><span class="mi">1</span> <span class="o">+</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="n">sig</span> <span class="o">/</span> <span class="n">lam</span><span class="p">),</span> <span class="n">x</span><span class="p">,</span>
+                                <span class="o">-</span><span class="n">sig</span> <span class="o">/</span> <span class="p">(</span><span class="mi">1</span> <span class="o">+</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="n">sig</span> <span class="o">/</span> <span class="n">lam</span><span class="p">),</span> <span class="n">g</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="n">sig</span> <span class="ow">in</span> <span class="n">space</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">g</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="n">x</span><span class="o">.</span><span class="n">divide</span><span class="p">(</span><span class="mi">1</span> <span class="o">+</span> <span class="mf">0.5</span> <span class="o">/</span> <span class="n">lam</span> <span class="o">*</span> <span class="n">sig</span><span class="p">,</span> <span class="n">out</span><span class="o">=</span><span class="n">out</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="n">x</span> <span class="ow">is</span> <span class="n">out</span><span class="p">:</span>
+                        <span class="c1"># Can&#39;t write to `out` since old `x` is still needed</span>
+                        <span class="n">tmp</span> <span class="o">=</span> <span class="n">sig</span><span class="o">.</span><span class="n">multiply</span><span class="p">(</span><span class="n">g</span><span class="p">)</span>
+                        <span class="n">out</span><span class="o">.</span><span class="n">lincomb</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="n">tmp</span><span class="p">)</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="n">sig</span><span class="o">.</span><span class="n">multiply</span><span class="p">(</span><span class="n">g</span><span class="p">,</span> <span class="n">out</span><span class="o">=</span><span class="n">out</span><span class="p">)</span>
+                        <span class="n">out</span><span class="o">.</span><span class="n">lincomb</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="n">out</span><span class="p">)</span>
+                    <span class="n">out</span><span class="o">.</span><span class="n">divide</span><span class="p">(</span><span class="mi">1</span> <span class="o">+</span> <span class="mf">0.5</span> <span class="o">/</span> <span class="n">lam</span> <span class="o">*</span> <span class="n">sig</span><span class="p">,</span> <span class="n">out</span><span class="o">=</span><span class="n">out</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>
+                    <span class="s1">&#39;`sigma` is neither a scalar nor a space element.&#39;</span>
+                <span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">ProximalConvexConjL2Squared</span></div>
+
+
+<div class="viewcode-block" id="proximal_l2_squared"><a class="viewcode-back" href="../../../../generated/odl.solvers.nonsmooth.proximal_operators.proximal_l2_squared.html#odl.solvers.nonsmooth.proximal_operators.proximal_l2_squared">[docs]</a><span class="k">def</span> <span class="nf">proximal_l2_squared</span><span class="p">(</span><span class="n">space</span><span class="p">,</span> <span class="n">lam</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">g</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="sa">r</span><span class="sd">&quot;&quot;&quot;Proximal operator factory of the squared l2-norm/distance.</span>
+
+<span class="sd">    Function for the proximal operator of the convex conjugate of the</span>
+<span class="sd">    functional F where F is the l2-norm (or distance to g, if given)::</span>
+
+<span class="sd">        F(x) =  lam ||x - g||_2^2</span>
+
+<span class="sd">    with x and g elements in ``space``, scaling factor lam, and given data g.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    space : `LinearSpace`</span>
+<span class="sd">        Domain of F(x). Needs to be a Hilbert space.</span>
+<span class="sd">        That is, have an inner product (`LinearSpace.inner`).</span>
+<span class="sd">    lam : positive float, optional</span>
+<span class="sd">        Scaling factor or regularization parameter.</span>
+<span class="sd">    g : ``space`` element, optional</span>
+<span class="sd">        An element in ``space``. Default: ``space.zero``.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    prox_factory : function</span>
+<span class="sd">        Factory for the proximal operator to be initialized</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    The squared :math:`L_2`-norm/distance :math:`F` is given by</span>
+
+<span class="sd">    .. math::</span>
+<span class="sd">        F(x) =  \lambda \|x - g\|_2^2.</span>
+
+<span class="sd">    For a step size :math:`\sigma`, the proximal operator of :math:`\sigma F`</span>
+<span class="sd">    is given by</span>
+
+<span class="sd">    .. math::</span>
+<span class="sd">        \mathrm{prox}_{\sigma F}(x) = \frac{x + 2 \sigma \lambda g}</span>
+<span class="sd">        {1 + 2 \sigma \lambda}.</span>
+
+<span class="sd">    See Also</span>
+<span class="sd">    --------</span>
+<span class="sd">    proximal_l2 : proximal without square</span>
+<span class="sd">    proximal_convex_conj_l2_squared : proximal for convex conjugate</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">class</span> <span class="nc">ProximalL2Squared</span><span class="p">(</span><span class="n">Operator</span><span class="p">):</span>
+
+        <span class="sd">&quot;&quot;&quot;Proximal operator of the squared l2-norm/dist.&quot;&quot;&quot;</span>
+
+        <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">sigma</span><span class="p">):</span>
+            <span class="sd">&quot;&quot;&quot;Initialize a new instance.</span>
+
+<span class="sd">            Parameters</span>
+<span class="sd">            ----------</span>
+<span class="sd">            sigma : positive float or pointwise positive space.element</span>
+<span class="sd">                Step size parameter. If scalar, it contains a global stepsize,</span>
+<span class="sd">                otherwise the space.element defines a stepsize for each point.</span>
+<span class="sd">            &quot;&quot;&quot;</span>
+            <span class="nb">super</span><span class="p">(</span><span class="n">ProximalL2Squared</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span>
+                <span class="n">domain</span><span class="o">=</span><span class="n">space</span><span class="p">,</span> <span class="nb">range</span><span class="o">=</span><span class="n">space</span><span class="p">,</span> <span class="n">linear</span><span class="o">=</span><span class="n">g</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">isscalar</span><span class="p">(</span><span class="n">sigma</span><span class="p">):</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">sigma</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">sigma</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">sigma</span> <span class="o">=</span> <span class="n">space</span><span class="o">.</span><span class="n">element</span><span class="p">(</span><span class="n">sigma</span><span class="p">)</span>
+
+        <span class="k">def</span> <span class="nf">_call</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">out</span><span class="p">):</span>
+            <span class="sd">&quot;&quot;&quot;Apply the operator to ``x`` and store the result in ``out``&quot;&quot;&quot;</span>
+            <span class="c1"># (x + 2*sig*lam*g) / (1 + 2*sig*lam))</span>
+            <span class="n">sig</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">sigma</span>
+            <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">isscalar</span><span class="p">(</span><span class="n">sig</span><span class="p">):</span>
+                <span class="k">if</span> <span class="n">g</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="n">out</span><span class="o">.</span><span class="n">lincomb</span><span class="p">(</span><span class="mi">1</span> <span class="o">/</span> <span class="p">(</span><span class="mi">1</span> <span class="o">+</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">sig</span> <span class="o">*</span> <span class="n">lam</span><span class="p">),</span> <span class="n">x</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">out</span><span class="o">.</span><span class="n">lincomb</span><span class="p">(</span><span class="mi">1</span> <span class="o">/</span> <span class="p">(</span><span class="mi">1</span> <span class="o">+</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">sig</span> <span class="o">*</span> <span class="n">lam</span><span class="p">),</span> <span class="n">x</span><span class="p">,</span>
+                                <span class="mi">2</span> <span class="o">*</span> <span class="n">sig</span> <span class="o">*</span> <span class="n">lam</span> <span class="o">/</span> <span class="p">(</span><span class="mi">1</span> <span class="o">+</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">sig</span> <span class="o">*</span> <span class="n">lam</span><span class="p">),</span> <span class="n">g</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>   <span class="c1"># sig in space</span>
+                <span class="k">if</span> <span class="n">g</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="n">x</span><span class="o">.</span><span class="n">divide</span><span class="p">(</span><span class="mi">1</span> <span class="o">+</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">sig</span> <span class="o">*</span> <span class="n">lam</span><span class="p">,</span> <span class="n">out</span><span class="o">=</span><span class="n">out</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="n">x</span> <span class="ow">is</span> <span class="n">out</span><span class="p">:</span>
+                        <span class="c1"># Can&#39;t write to `out` since old `x` is still needed</span>
+                        <span class="n">tmp</span> <span class="o">=</span> <span class="n">sig</span><span class="o">.</span><span class="n">multiply</span><span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">lam</span> <span class="o">*</span> <span class="n">g</span><span class="p">)</span>
+                        <span class="n">out</span><span class="o">.</span><span class="n">lincomb</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">tmp</span><span class="p">)</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="n">sig</span><span class="o">.</span><span class="n">multiply</span><span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">lam</span> <span class="o">*</span> <span class="n">g</span><span class="p">,</span> <span class="n">out</span><span class="o">=</span><span class="n">out</span><span class="p">)</span>
+                        <span class="n">out</span><span class="o">.</span><span class="n">lincomb</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">out</span><span class="p">)</span>
+                    <span class="n">out</span><span class="o">.</span><span class="n">divide</span><span class="p">(</span><span class="mi">1</span> <span class="o">+</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">sig</span> <span class="o">*</span> <span class="n">lam</span><span class="p">,</span> <span class="n">out</span><span class="o">=</span><span class="n">out</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">ProximalL2Squared</span></div>
+
+
+<div class="viewcode-block" id="proximal_convex_conj_l1"><a class="viewcode-back" href="../../../../generated/odl.solvers.nonsmooth.proximal_operators.proximal_convex_conj_l1.html#odl.solvers.nonsmooth.proximal_operators.proximal_convex_conj_l1">[docs]</a><span class="k">def</span> <span class="nf">proximal_convex_conj_l1</span><span class="p">(</span><span class="n">space</span><span class="p">,</span> <span class="n">lam</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">g</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="sa">r</span><span class="sd">&quot;&quot;&quot;Proximal operator factory of the L1 norm/distance convex conjugate.</span>
+
+<span class="sd">    Implements the proximal operator of the convex conjugate of the</span>
+<span class="sd">    functional ::</span>
+
+<span class="sd">        F(x) = lam ||x - g||_1</span>
+
+<span class="sd">    with ``x`` and ``g`` elements in ``space``, and scaling factor ``lam``.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    space : `LinearSpace` or `ProductSpace` of `LinearSpace` spaces</span>
+<span class="sd">        Domain of the functional F</span>
+<span class="sd">    lam : positive float, optional</span>
+<span class="sd">        Scaling factor or regularization parameter.</span>
+<span class="sd">    g : ``space`` element, optional</span>
+<span class="sd">        Element to which the L1 distance is taken.</span>
+<span class="sd">        Default: ``space.zero``.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    prox_factory : function</span>
+<span class="sd">        Factory for the proximal operator to be initialized.</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    The convex conjugate :math:`F^*` of the functional</span>
+
+<span class="sd">    .. math::</span>
+<span class="sd">        F(x) = \lambda \|x - g\|_1.</span>
+
+<span class="sd">    is in the case of scalar-valued functions given by</span>
+
+<span class="sd">    .. math::</span>
+<span class="sd">        F^*(y) = \iota_{B_\infty} \big( \lambda^{-1}\, y \big) +</span>
+<span class="sd">        \left\langle \lambda^{-1}\, y,\: g \right\rangle,</span>
+
+<span class="sd">    where :math:`\iota_{B_\infty}` is the indicator function of the</span>
+<span class="sd">    unit ball with respect to :math:`\|\cdot\|_\infty`.</span>
+<span class="sd">    For vector-valued functions, the convex conjugate is</span>
+
+<span class="sd">    .. math::</span>
+<span class="sd">        F^*(y) = \sum_{k=1}^d F^*(y_k)</span>
+
+<span class="sd">    due to separability of the (non-isotropic) 1-norm.</span>
+
+<span class="sd">    For a step size :math:`\sigma`, the proximal operator of</span>
+<span class="sd">    :math:`\sigma F^*` is given by</span>
+
+<span class="sd">    .. math::</span>
+<span class="sd">        \mathrm{prox}_{\sigma F^*}(y) = \frac{\lambda (y - \sigma g)}{</span>
+<span class="sd">        \max(\lambda, |y - \sigma g|)}</span>
+
+<span class="sd">    Here, all operations are to be read pointwise.</span>
+
+<span class="sd">    For vector-valued :math:`x` and :math:`g`, the (non-isotropic) proximal</span>
+<span class="sd">    operator is the component-wise scalar proximal:</span>
+
+<span class="sd">    .. math::</span>
+<span class="sd">        \mathrm{prox}_{\sigma F^*}(x) = \left(</span>
+<span class="sd">            \mathrm{prox}_{\sigma F^*}(x_1), \dots,</span>
+<span class="sd">            \mathrm{prox}_{\sigma F^*}(x_d)</span>
+<span class="sd">            \right),</span>
+
+<span class="sd">    where :math:`d` is the number of components of :math:`x`.</span>
+
+<span class="sd">    See Also</span>
+<span class="sd">    --------</span>
+<span class="sd">    proximal_convex_conj_l1_l2 : isotropic variant for vector-valued functions</span>
+<span class="sd">    proximal_l1 : proximal without convex conjugate</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># Fix for rounding errors</span>
+    <span class="n">dtype</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">space</span><span class="p">,</span> <span class="s1">&#39;dtype&#39;</span><span class="p">,</span> <span class="nb">float</span><span class="p">)</span>
+    <span class="n">eps</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">finfo</span><span class="p">(</span><span class="n">dtype</span><span class="p">)</span><span class="o">.</span><span class="n">resolution</span> <span class="o">*</span> <span class="mi">10</span>
+    <span class="n">lam</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">lam</span> <span class="o">*</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">eps</span><span class="p">))</span>
+
+    <span class="k">if</span> <span class="n">g</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">g</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">space</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">{!r}</span><span class="s1"> is not an element of </span><span class="si">{!r}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">g</span><span class="p">,</span> <span class="n">space</span><span class="p">))</span>
+
+    <span class="k">class</span> <span class="nc">ProximalConvexConjL1</span><span class="p">(</span><span class="n">Operator</span><span class="p">):</span>
+
+        <span class="sd">&quot;&quot;&quot;Proximal operator of the L1 norm/distance convex conjugate.&quot;&quot;&quot;</span>
+
+        <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">sigma</span><span class="p">):</span>
+            <span class="sd">&quot;&quot;&quot;Initialize a new instance.</span>
+
+<span class="sd">            Parameters</span>
+<span class="sd">            ----------</span>
+<span class="sd">            sigma : positive float or pointwise positive space.element</span>
+<span class="sd">                Step size parameter. If scalar, it contains a global stepsize,</span>
+<span class="sd">                otherwise the space.element defines a stepsize for each point.</span>
+<span class="sd">            &quot;&quot;&quot;</span>
+            <span class="nb">super</span><span class="p">(</span><span class="n">ProximalConvexConjL1</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span>
+                <span class="n">domain</span><span class="o">=</span><span class="n">space</span><span class="p">,</span> <span class="nb">range</span><span class="o">=</span><span class="n">space</span><span class="p">,</span> <span class="n">linear</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">isscalar</span><span class="p">(</span><span class="n">sigma</span><span class="p">):</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">sigma</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">sigma</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">sigma</span> <span class="o">=</span> <span class="n">space</span><span class="o">.</span><span class="n">element</span><span class="p">(</span><span class="n">sigma</span><span class="p">)</span>
+
+        <span class="k">def</span> <span class="nf">_call</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">out</span><span class="p">):</span>
+            <span class="sd">&quot;&quot;&quot;Return ``self(x, out=out)``.&quot;&quot;&quot;</span>
+            <span class="c1"># lam * (x - sig * g) / max(lam, |x - sig * g|)</span>
+
+            <span class="c1"># diff = x - sig * g</span>
+            <span class="k">if</span> <span class="n">g</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">diff</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">domain</span><span class="o">.</span><span class="n">element</span><span class="p">()</span>
+                <span class="n">diff</span><span class="o">.</span><span class="n">lincomb</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="o">-</span><span class="bp">self</span><span class="o">.</span><span class="n">sigma</span><span class="p">,</span> <span class="n">g</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">x</span> <span class="ow">is</span> <span class="n">out</span><span class="p">:</span>
+                    <span class="c1"># Handle aliased `x` and `out`</span>
+                    <span class="c1"># This is necessary since we write to both `diff` and</span>
+                    <span class="c1"># `out`.</span>
+                    <span class="n">diff</span> <span class="o">=</span> <span class="n">x</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">diff</span> <span class="o">=</span> <span class="n">x</span>
+
+            <span class="c1"># out = max( |x-sig*g|, lam ) / lam</span>
+            <span class="n">diff</span><span class="o">.</span><span class="n">ufuncs</span><span class="o">.</span><span class="n">absolute</span><span class="p">(</span><span class="n">out</span><span class="o">=</span><span class="n">out</span><span class="p">)</span>
+            <span class="n">out</span><span class="o">.</span><span class="n">ufuncs</span><span class="o">.</span><span class="n">maximum</span><span class="p">(</span><span class="n">lam</span><span class="p">,</span> <span class="n">out</span><span class="o">=</span><span class="n">out</span><span class="p">)</span>
+            <span class="n">out</span> <span class="o">/=</span> <span class="n">lam</span>
+
+            <span class="c1"># out = diff / ...</span>
+            <span class="n">diff</span><span class="o">.</span><span class="n">divide</span><span class="p">(</span><span class="n">out</span><span class="p">,</span> <span class="n">out</span><span class="o">=</span><span class="n">out</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">ProximalConvexConjL1</span></div>
+
+
+<div class="viewcode-block" id="proximal_convex_conj_l1_l2"><a class="viewcode-back" href="../../../../generated/odl.solvers.nonsmooth.proximal_operators.proximal_convex_conj_l1_l2.html#odl.solvers.nonsmooth.proximal_operators.proximal_convex_conj_l1_l2">[docs]</a><span class="k">def</span> <span class="nf">proximal_convex_conj_l1_l2</span><span class="p">(</span><span class="n">space</span><span class="p">,</span> <span class="n">lam</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">g</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="sa">r</span><span class="sd">&quot;&quot;&quot;Proximal operator factory of the L1-L2 norm/distance convex conjugate.</span>
+
+<span class="sd">    Implements the proximal operator of the convex conjugate of the</span>
+<span class="sd">    functional ::</span>
+
+<span class="sd">        F(x) = lam || |x - g|_2 ||_1</span>
+
+<span class="sd">    with ``x`` and ``g`` elements in ``space``, and scaling factor ``lam``.</span>
+<span class="sd">    Here, ``|.|_2`` is the pointwise Euclidean norm of a vector-valued</span>
+<span class="sd">    function.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    space : `LinearSpace` or `ProductSpace` of `LinearSpace` spaces</span>
+<span class="sd">        Domain of the functional F</span>
+<span class="sd">    lam : positive float, optional</span>
+<span class="sd">        Scaling factor or regularization parameter.</span>
+<span class="sd">    g : ``space`` element, optional</span>
+<span class="sd">        Element to which the L1 distance is taken.</span>
+<span class="sd">        Default: ``space.zero``.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    prox_factory : function</span>
+<span class="sd">        Factory for the proximal operator to be initialized.</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    The convex conjugate :math:`F^*` of the functional</span>
+
+<span class="sd">    .. math::</span>
+<span class="sd">        F(x) = \lambda \| |x - g|_2 \|_1.</span>
+
+<span class="sd">    is given by</span>
+
+<span class="sd">    .. math::</span>
+<span class="sd">        F^*(y) = \iota_{B_\infty} \big( \lambda^{-1}\, |y|_2 \big) +</span>
+<span class="sd">        \left\langle \lambda^{-1}\, y,\: g \right\rangle,</span>
+
+<span class="sd">    where :math:`\iota_{B_\infty}` is the indicator function of the</span>
+<span class="sd">    unit ball with respect to :math:`\|\cdot\|_\infty`.</span>
+
+<span class="sd">    For a step size :math:`\sigma`, the proximal operator of</span>
+<span class="sd">    :math:`\sigma F^*` is given by</span>
+
+<span class="sd">    .. math::</span>
+<span class="sd">        \mathrm{prox}_{\sigma F^*}(y) = \frac{\lambda (y - \sigma g)}{</span>
+<span class="sd">        \max(\lambda, |y - \sigma g|_2)}</span>
+
+<span class="sd">    Here, all operations are to be read pointwise.</span>
+
+<span class="sd">    See Also</span>
+<span class="sd">    --------</span>
+<span class="sd">    proximal_convex_conj_l1 : Scalar or non-isotropic vectorial variant</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># Fix for rounding errors</span>
+    <span class="n">dtype</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">space</span><span class="p">,</span> <span class="s1">&#39;dtype&#39;</span><span class="p">,</span> <span class="nb">float</span><span class="p">)</span>
+    <span class="n">eps</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">finfo</span><span class="p">(</span><span class="n">dtype</span><span class="p">)</span><span class="o">.</span><span class="n">resolution</span> <span class="o">*</span> <span class="mi">10</span>
+    <span class="n">lam</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">lam</span> <span class="o">*</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">eps</span><span class="p">))</span>
+
+    <span class="k">if</span> <span class="n">g</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">g</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">space</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">{!r}</span><span class="s1"> is not an element of </span><span class="si">{!r}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">g</span><span class="p">,</span> <span class="n">space</span><span class="p">))</span>
+
+    <span class="k">class</span> <span class="nc">ProximalConvexConjL1L2</span><span class="p">(</span><span class="n">Operator</span><span class="p">):</span>
+
+        <span class="sd">&quot;&quot;&quot;Proximal operator of the convex conj of the l1-norm/distance.&quot;&quot;&quot;</span>
+
+        <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">sigma</span><span class="p">):</span>
+            <span class="sd">&quot;&quot;&quot;Initialize a new instance.</span>
+
+<span class="sd">            Parameters</span>
+<span class="sd">            ----------</span>
+<span class="sd">            sigma : positive float</span>
+<span class="sd">                Step size parameter</span>
+<span class="sd">            &quot;&quot;&quot;</span>
+            <span class="nb">super</span><span class="p">(</span><span class="n">ProximalConvexConjL1L2</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span>
+                <span class="n">domain</span><span class="o">=</span><span class="n">space</span><span class="p">,</span> <span class="nb">range</span><span class="o">=</span><span class="n">space</span><span class="p">,</span> <span class="n">linear</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">sigma</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">sigma</span><span class="p">)</span>
+
+        <span class="k">def</span> <span class="nf">_call</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">out</span><span class="p">):</span>
+            <span class="sd">&quot;&quot;&quot;Return ``self(x, out=out)``.&quot;&quot;&quot;</span>
+            <span class="c1"># lam * (x - sig * g) / max(lam, |x - sig * g|)</span>
+
+            <span class="c1"># diff = x - sig * g</span>
+            <span class="k">if</span> <span class="n">g</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">diff</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">domain</span><span class="o">.</span><span class="n">element</span><span class="p">()</span>
+                <span class="n">diff</span><span class="o">.</span><span class="n">lincomb</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="o">-</span><span class="bp">self</span><span class="o">.</span><span class="n">sigma</span><span class="p">,</span> <span class="n">g</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">diff</span> <span class="o">=</span> <span class="n">x</span>
+
+            <span class="c1"># denom = max( |x-sig*g|_2, lam ) / lam  (|.|_2 pointwise)</span>
+            <span class="n">pwnorm</span> <span class="o">=</span> <span class="n">PointwiseNorm</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">domain</span><span class="p">,</span> <span class="n">exponent</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+            <span class="n">denom</span> <span class="o">=</span> <span class="n">pwnorm</span><span class="p">(</span><span class="n">diff</span><span class="p">)</span>
+            <span class="n">denom</span><span class="o">.</span><span class="n">ufuncs</span><span class="o">.</span><span class="n">maximum</span><span class="p">(</span><span class="n">lam</span><span class="p">,</span> <span class="n">out</span><span class="o">=</span><span class="n">denom</span><span class="p">)</span>
+            <span class="n">denom</span> <span class="o">/=</span> <span class="n">lam</span>
+
+            <span class="c1"># Pointwise division</span>
+            <span class="k">for</span> <span class="n">out_i</span><span class="p">,</span> <span class="n">diff_i</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">out</span><span class="p">,</span> <span class="n">diff</span><span class="p">):</span>
+                <span class="n">diff_i</span><span class="o">.</span><span class="n">divide</span><span class="p">(</span><span class="n">denom</span><span class="p">,</span> <span class="n">out</span><span class="o">=</span><span class="n">out_i</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">ProximalConvexConjL1L2</span></div>
+
+
+<div class="viewcode-block" id="proximal_l1"><a class="viewcode-back" href="../../../../generated/odl.solvers.nonsmooth.proximal_operators.proximal_l1.html#odl.solvers.nonsmooth.proximal_operators.proximal_l1">[docs]</a><span class="k">def</span> <span class="nf">proximal_l1</span><span class="p">(</span><span class="n">space</span><span class="p">,</span> <span class="n">lam</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">g</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="sa">r</span><span class="sd">&quot;&quot;&quot;Proximal operator factory of the L1 norm/distance.</span>
+
+<span class="sd">    Implements the proximal operator of the functional ::</span>
+
+<span class="sd">        F(x) = lam ||x - g||_1</span>
+
+<span class="sd">    with ``x`` and ``g`` elements in ``space``, and scaling factor ``lam``.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    space : `LinearSpace` or `ProductSpace`</span>
+<span class="sd">        Domain of the functional.</span>
+<span class="sd">    lam : positive float, optional</span>
+<span class="sd">        Scaling factor or regularization parameter.</span>
+<span class="sd">    g : ``space`` element, optional</span>
+<span class="sd">        Element to which the L1 distance is taken.</span>
+<span class="sd">        Default: ``space.zero``.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    prox_factory : function</span>
+<span class="sd">        Factory for the proximal operator to be initialized</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    For the functional</span>
+
+<span class="sd">    .. math::</span>
+<span class="sd">        F(x) = \lambda \|x - g\|_1,</span>
+
+<span class="sd">    and a step size :math:`\sigma`, the proximal operator of</span>
+<span class="sd">    :math:`\sigma F` is given as the &quot;soft-shrinkage&quot; operator</span>
+
+<span class="sd">    .. math::</span>
+<span class="sd">        \mathrm{prox}_{\sigma F}(x) =</span>
+<span class="sd">        \begin{cases}</span>
+<span class="sd">            g, &amp; \text{where } |x - g| \leq \sigma\lambda, \\</span>
+<span class="sd">            x - \sigma\lambda \mathrm{sign}(x - g), &amp; \text{elsewhere.}</span>
+<span class="sd">        \end{cases}</span>
+
+<span class="sd">    Here, all operations are to be read pointwise.</span>
+
+<span class="sd">    For vector-valued :math:`x` and :math:`g`, the (non-isotropic) proximal</span>
+<span class="sd">    operator is the component-wise scalar proximal:</span>
+
+<span class="sd">    .. math::</span>
+<span class="sd">        \mathrm{prox}_{\sigma F}(x) = \left(</span>
+<span class="sd">            \mathrm{prox}_{\sigma F}(x_1), \dots,</span>
+<span class="sd">            \mathrm{prox}_{\sigma F}(x_d)</span>
+<span class="sd">            \right),</span>
+
+<span class="sd">    where :math:`d` is the number of components of :math:`x`.</span>
+
+<span class="sd">    See Also</span>
+<span class="sd">    --------</span>
+<span class="sd">    proximal_convex_conj_l1 : proximal for convex conjugate</span>
+<span class="sd">    proximal_l1_l2 : isotropic variant of the group L1 norm proximal</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">lam</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">lam</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">g</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">g</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">space</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">{!r}</span><span class="s1"> is not an element of </span><span class="si">{!r}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">g</span><span class="p">,</span> <span class="n">space</span><span class="p">))</span>
+
+    <span class="k">class</span> <span class="nc">ProximalL1</span><span class="p">(</span><span class="n">Operator</span><span class="p">):</span>
+
+        <span class="sd">&quot;&quot;&quot;Proximal operator of the L1 norm/distance.&quot;&quot;&quot;</span>
+
+        <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">sigma</span><span class="p">):</span>
+            <span class="sd">&quot;&quot;&quot;Initialize a new instance.</span>
+
+<span class="sd">            Parameters</span>
+<span class="sd">            ----------</span>
+<span class="sd">            sigma : positive float or pointwise positive space.element</span>
+<span class="sd">                Step size parameter. If scalar, it contains a global stepsize,</span>
+<span class="sd">                otherwise the space.element defines a stepsize for each point.</span>
+<span class="sd">            &quot;&quot;&quot;</span>
+            <span class="nb">super</span><span class="p">(</span><span class="n">ProximalL1</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span>
+                <span class="n">domain</span><span class="o">=</span><span class="n">space</span><span class="p">,</span> <span class="nb">range</span><span class="o">=</span><span class="n">space</span><span class="p">,</span> <span class="n">linear</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">isscalar</span><span class="p">(</span><span class="n">sigma</span><span class="p">):</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">sigma</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">sigma</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">sigma</span> <span class="o">=</span> <span class="n">space</span><span class="o">.</span><span class="n">element</span><span class="p">(</span><span class="n">sigma</span><span class="p">)</span>
+
+        <span class="k">def</span> <span class="nf">_call</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">out</span><span class="p">):</span>
+            <span class="sd">&quot;&quot;&quot;Return ``self(x, out=out)``.&quot;&quot;&quot;</span>
+            <span class="c1"># diff = x - g</span>
+            <span class="k">if</span> <span class="n">g</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">diff</span> <span class="o">=</span> <span class="n">x</span> <span class="o">-</span> <span class="n">g</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">x</span> <span class="ow">is</span> <span class="n">out</span><span class="p">:</span>
+                    <span class="c1"># Handle aliased `x` and `out` (original `x` needed later)</span>
+                    <span class="n">diff</span> <span class="o">=</span> <span class="n">x</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">diff</span> <span class="o">=</span> <span class="n">x</span>
+
+            <span class="c1"># We write the operator as</span>
+            <span class="c1"># x - (x - g) / max(|x - g| / sig*lam, 1)</span>
+            <span class="n">denom</span> <span class="o">=</span> <span class="n">diff</span><span class="o">.</span><span class="n">ufuncs</span><span class="o">.</span><span class="n">absolute</span><span class="p">()</span>
+            <span class="n">denom</span> <span class="o">/=</span> <span class="bp">self</span><span class="o">.</span><span class="n">sigma</span> <span class="o">*</span> <span class="n">lam</span>
+            <span class="n">denom</span><span class="o">.</span><span class="n">ufuncs</span><span class="o">.</span><span class="n">maximum</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">out</span><span class="o">=</span><span class="n">denom</span><span class="p">)</span>
+
+            <span class="c1"># out = (x - g) / denom</span>
+            <span class="n">diff</span><span class="o">.</span><span class="n">ufuncs</span><span class="o">.</span><span class="n">divide</span><span class="p">(</span><span class="n">denom</span><span class="p">,</span> <span class="n">out</span><span class="o">=</span><span class="n">out</span><span class="p">)</span>
+
+            <span class="c1"># out = x - ...</span>
+            <span class="n">out</span><span class="o">.</span><span class="n">lincomb</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="n">out</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">ProximalL1</span></div>
+
+
+<div class="viewcode-block" id="proximal_l1_l2"><a class="viewcode-back" href="../../../../generated/odl.solvers.nonsmooth.proximal_operators.proximal_l1_l2.html#odl.solvers.nonsmooth.proximal_operators.proximal_l1_l2">[docs]</a><span class="k">def</span> <span class="nf">proximal_l1_l2</span><span class="p">(</span><span class="n">space</span><span class="p">,</span> <span class="n">lam</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">g</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="sa">r</span><span class="sd">&quot;&quot;&quot;Proximal operator factory of the group-L1-L2 norm/distance.</span>
+
+<span class="sd">    Implements the proximal operator of the functional ::</span>
+
+<span class="sd">        F(x) = lam || |x - g|_2 ||_1</span>
+
+<span class="sd">    with ``x`` and ``g`` elements in ``space``, and scaling factor ``lam``.</span>
+<span class="sd">    Here, ``|.|_2`` is the pointwise Euclidean norm of a vector-valued</span>
+<span class="sd">    function.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    space : `LinearSpace` or `ProductSpace`</span>
+<span class="sd">        Domain of the functional.</span>
+<span class="sd">    lam : positive float, optional</span>
+<span class="sd">        Scaling factor or regularization parameter.</span>
+<span class="sd">    g : ``space`` element, optional</span>
+<span class="sd">        Element to which the L1-L2 distance is taken.</span>
+<span class="sd">        Default: ``space.zero``.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    prox_factory : function</span>
+<span class="sd">        Factory for the proximal operator to be initialized</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    For the functional</span>
+
+<span class="sd">    .. math::</span>
+<span class="sd">        F(x) = \lambda \| |x - g|_2 \|_1,</span>
+
+<span class="sd">    and a step size :math:`\sigma`, the proximal operator of</span>
+<span class="sd">    :math:`\sigma F` is given as the &quot;soft-shrinkage&quot; operator</span>
+
+<span class="sd">    .. math::</span>
+<span class="sd">        \mathrm{prox}_{\sigma F}(x) =</span>
+<span class="sd">        \begin{cases}</span>
+<span class="sd">            g, &amp; \text{where } |x - g|_2 \leq \sigma\lambda, \\</span>
+<span class="sd">            x - \sigma\lambda \frac{x - g}{|x - g|_2}, &amp; \text{elsewhere.}</span>
+<span class="sd">        \end{cases}</span>
+
+<span class="sd">    Here, all operations are to be read pointwise.</span>
+
+<span class="sd">    See Also</span>
+<span class="sd">    --------</span>
+<span class="sd">    proximal_l1 : Scalar or non-isotropic vectorial variant</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">lam</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">lam</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">g</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">g</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">space</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">{!r}</span><span class="s1"> is not an element of </span><span class="si">{!r}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">g</span><span class="p">,</span> <span class="n">space</span><span class="p">))</span>
+
+    <span class="k">class</span> <span class="nc">ProximalL1L2</span><span class="p">(</span><span class="n">Operator</span><span class="p">):</span>
+
+        <span class="sd">&quot;&quot;&quot;Proximal operator of the group-L1-L2 norm/distance.&quot;&quot;&quot;</span>
+
+        <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">sigma</span><span class="p">):</span>
+            <span class="sd">&quot;&quot;&quot;Initialize a new instance.</span>
+
+<span class="sd">            Parameters</span>
+<span class="sd">            ----------</span>
+<span class="sd">            sigma : positive float</span>
+<span class="sd">                Step size parameter.</span>
+<span class="sd">            &quot;&quot;&quot;</span>
+            <span class="nb">super</span><span class="p">(</span><span class="n">ProximalL1L2</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span>
+                <span class="n">domain</span><span class="o">=</span><span class="n">space</span><span class="p">,</span> <span class="nb">range</span><span class="o">=</span><span class="n">space</span><span class="p">,</span> <span class="n">linear</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">sigma</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">sigma</span><span class="p">)</span>
+
+        <span class="k">def</span> <span class="nf">_call</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">out</span><span class="p">):</span>
+            <span class="sd">&quot;&quot;&quot;Return ``self(x, out=out)``.&quot;&quot;&quot;</span>
+            <span class="c1"># diff = x - g</span>
+            <span class="k">if</span> <span class="n">g</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">diff</span> <span class="o">=</span> <span class="n">x</span> <span class="o">-</span> <span class="n">g</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">x</span> <span class="ow">is</span> <span class="n">out</span><span class="p">:</span>
+                    <span class="c1"># Handle aliased `x` and `out` (original `x` needed later)</span>
+                    <span class="n">diff</span> <span class="o">=</span> <span class="n">x</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">diff</span> <span class="o">=</span> <span class="n">x</span>
+
+            <span class="c1"># We write the operator as</span>
+            <span class="c1"># x - (x - g) / max(|x - g|_2 / sig*lam, 1)</span>
+            <span class="n">pwnorm</span> <span class="o">=</span> <span class="n">PointwiseNorm</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">domain</span><span class="p">,</span> <span class="n">exponent</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+            <span class="n">denom</span> <span class="o">=</span> <span class="n">pwnorm</span><span class="p">(</span><span class="n">diff</span><span class="p">)</span>
+            <span class="n">denom</span> <span class="o">/=</span> <span class="bp">self</span><span class="o">.</span><span class="n">sigma</span> <span class="o">*</span> <span class="n">lam</span>
+            <span class="n">denom</span><span class="o">.</span><span class="n">ufuncs</span><span class="o">.</span><span class="n">maximum</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">out</span><span class="o">=</span><span class="n">denom</span><span class="p">)</span>
+
+            <span class="c1"># out = (x - g) / denom</span>
+            <span class="k">for</span> <span class="n">out_i</span><span class="p">,</span> <span class="n">diff_i</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">out</span><span class="p">,</span> <span class="n">diff</span><span class="p">):</span>
+                <span class="n">diff_i</span><span class="o">.</span><span class="n">divide</span><span class="p">(</span><span class="n">denom</span><span class="p">,</span> <span class="n">out</span><span class="o">=</span><span class="n">out_i</span><span class="p">)</span>
+
+            <span class="c1"># out = x - ...</span>
+            <span class="n">out</span><span class="o">.</span><span class="n">lincomb</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="n">out</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">ProximalL1L2</span></div>
+
+
+<div class="viewcode-block" id="proximal_linfty"><a class="viewcode-back" href="../../../../generated/odl.solvers.nonsmooth.proximal_operators.proximal_linfty.html#odl.solvers.nonsmooth.proximal_operators.proximal_linfty">[docs]</a><span class="k">def</span> <span class="nf">proximal_linfty</span><span class="p">(</span><span class="n">space</span><span class="p">):</span>
+    <span class="sa">r</span><span class="sd">&quot;&quot;&quot;Proximal operator factory of the ``l_\infty``-norm.</span>
+
+<span class="sd">    Function for the proximal operator of the functional ``F`` where ``F``</span>
+<span class="sd">    is the ``l_\infty``-norm::</span>
+
+<span class="sd">        ``F(x) =  \sup_i |x_i|``</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    space : `LinearSpace`</span>
+<span class="sd">        Domain of ``F``.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    prox_factory : callable</span>
+<span class="sd">        Factory for the proximal operator to be initialized.</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    The proximal is computed by the Moreau identity and a projection onto an</span>
+<span class="sd">    l1-ball [PB2014].</span>
+
+<span class="sd">    See Also</span>
+<span class="sd">    --------</span>
+<span class="sd">    proj_l1 : projection onto l1-ball</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">class</span> <span class="nc">ProximalLInfty</span><span class="p">(</span><span class="n">Operator</span><span class="p">):</span>
+
+        <span class="sd">&quot;&quot;&quot;Proximal operator of the linf-norm.&quot;&quot;&quot;</span>
+
+        <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">sigma</span><span class="p">):</span>
+            <span class="sd">&quot;&quot;&quot;Initialize a new instance.</span>
+
+<span class="sd">            Parameters</span>
+<span class="sd">            ----------</span>
+<span class="sd">            sigma : positive float</span>
+<span class="sd">                Step size parameter</span>
+<span class="sd">            &quot;&quot;&quot;</span>
+            <span class="nb">super</span><span class="p">(</span><span class="n">ProximalLInfty</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span>
+                <span class="n">domain</span><span class="o">=</span><span class="n">space</span><span class="p">,</span> <span class="nb">range</span><span class="o">=</span><span class="n">space</span><span class="p">,</span> <span class="n">linear</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">sigma</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">sigma</span><span class="p">)</span>
+
+        <span class="k">def</span> <span class="nf">_call</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">out</span><span class="p">):</span>
+            <span class="sd">&quot;&quot;&quot;Return ``self(x)``.&quot;&quot;&quot;</span>
+
+            <span class="n">radius</span> <span class="o">=</span> <span class="mi">1</span>
+
+            <span class="k">if</span> <span class="n">x</span> <span class="ow">is</span> <span class="n">out</span><span class="p">:</span>
+                <span class="n">x</span> <span class="o">=</span> <span class="n">x</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+
+            <span class="n">proj_l1</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">radius</span><span class="p">,</span> <span class="n">out</span><span class="p">)</span>
+            <span class="n">out</span><span class="o">.</span><span class="n">lincomb</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="n">out</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">x</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">ProximalLInfty</span></div>
+
+
+<div class="viewcode-block" id="proximal_convex_conj_linfty"><a class="viewcode-back" href="../../../../generated/odl.solvers.nonsmooth.proximal_operators.proximal_convex_conj_linfty.html#odl.solvers.nonsmooth.proximal_operators.proximal_convex_conj_linfty">[docs]</a><span class="k">def</span> <span class="nf">proximal_convex_conj_linfty</span><span class="p">(</span><span class="n">space</span><span class="p">):</span>
+    <span class="sa">r</span><span class="sd">&quot;&quot;&quot;Proximal operator factory of the Linfty norm/distance convex conjugate.</span>
+
+<span class="sd">    Implements the proximal operator of the convex conjugate of the</span>
+<span class="sd">    functional ::</span>
+
+<span class="sd">        F(x) = \|x\|_\infty</span>
+
+<span class="sd">    with ``x`` in ``space``.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    space : `LinearSpace` or `ProductSpace` of `LinearSpace` spaces</span>
+<span class="sd">        Domain of the functional F</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    prox_factory : function</span>
+<span class="sd">        Factory for the proximal operator to be initialized.</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    The convex conjugate :math:`F^*` of the functional</span>
+
+<span class="sd">    .. math::</span>
+<span class="sd">        F(x) = \|x\|_\infty.</span>
+
+<span class="sd">    is in the case of scalar-valued functions given by the indicator function</span>
+<span class="sd">    of the unit 1-norm ball</span>
+
+<span class="sd">    .. math::</span>
+<span class="sd">        F^*(y) = \iota_{B_1} \big( y \big).</span>
+
+<span class="sd">    See Also</span>
+<span class="sd">    --------</span>
+<span class="sd">    proj_l1 : orthogonal projection onto balls in the 1-norm</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">class</span> <span class="nc">ProximalConvexConjLinfty</span><span class="p">(</span><span class="n">Operator</span><span class="p">):</span>
+
+        <span class="sd">&quot;&quot;&quot;Proximal operator of the Linfty norm/distance convex conjugate.&quot;&quot;&quot;</span>
+
+        <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">sigma</span><span class="p">):</span>
+            <span class="sd">&quot;&quot;&quot;Initialize a new instance.</span>
+
+<span class="sd">            Parameters</span>
+<span class="sd">            ----------</span>
+<span class="sd">            sigma : positive float or pointwise positive space.element</span>
+<span class="sd">                Step size parameter. If scalar, it contains a global stepsize,</span>
+<span class="sd">                otherwise the space.element defines a stepsize for each point.</span>
+<span class="sd">            &quot;&quot;&quot;</span>
+            <span class="nb">super</span><span class="p">(</span><span class="n">ProximalConvexConjLinfty</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span>
+                <span class="n">domain</span><span class="o">=</span><span class="n">space</span><span class="p">,</span> <span class="nb">range</span><span class="o">=</span><span class="n">space</span><span class="p">,</span> <span class="n">linear</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+
+        <span class="k">def</span> <span class="nf">_call</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">out</span><span class="p">):</span>
+            <span class="sd">&quot;&quot;&quot;Return ``self(x, out=out)``.&quot;&quot;&quot;</span>
+            <span class="n">proj_l1</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">radius</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">out</span><span class="o">=</span><span class="n">out</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">ProximalConvexConjLinfty</span></div>
+
+
+<div class="viewcode-block" id="proj_l1"><a class="viewcode-back" href="../../../../generated/odl.solvers.nonsmooth.proximal_operators.proj_l1.html#odl.solvers.nonsmooth.proximal_operators.proj_l1">[docs]</a><span class="k">def</span> <span class="nf">proj_l1</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">radius</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">out</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="sa">r</span><span class="sd">&quot;&quot;&quot;Projection onto l1-ball.</span>
+
+<span class="sd">    Projection onto::</span>
+
+<span class="sd">        ``{ x \in X | ||x||_1 \leq r}``</span>
+
+<span class="sd">    with ``r`` being the radius.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    space : `LinearSpace`</span>
+<span class="sd">        Space / domain ``X``.</span>
+<span class="sd">    radius : positive float, optional</span>
+<span class="sd">        Radius ``r`` of the ball.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    prox_factory : callable</span>
+<span class="sd">        Factory for the proximal operator to be initialized.</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    The projection onto an l1-ball can be computed by projection onto a</span>
+<span class="sd">    simplex, see [D+2008] for details.</span>
+
+<span class="sd">    References</span>
+<span class="sd">    ----------</span>
+<span class="sd">    [D+2008] Duchi, J., Shalev-Shwartz, S., Singer, Y., and Chandra, T.</span>
+<span class="sd">    *Efficient Projections onto the L1-ball for Learning in High dimensions*.</span>
+<span class="sd">    ICML 2008, pp. 272-279. http://doi.org/10.1145/1390156.1390191</span>
+
+<span class="sd">    See Also</span>
+<span class="sd">    --------</span>
+<span class="sd">    proximal_linfty : proximal for l-infinity norm</span>
+<span class="sd">    proj_simplex : projection onto simplex</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">if</span> <span class="n">out</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">out</span> <span class="o">=</span> <span class="n">x</span><span class="o">.</span><span class="n">space</span><span class="o">.</span><span class="n">element</span><span class="p">()</span>
+
+    <span class="n">u</span> <span class="o">=</span> <span class="n">x</span><span class="o">.</span><span class="n">ufuncs</span><span class="o">.</span><span class="n">absolute</span><span class="p">()</span>
+    <span class="n">v</span> <span class="o">=</span> <span class="n">x</span><span class="o">.</span><span class="n">ufuncs</span><span class="o">.</span><span class="n">sign</span><span class="p">()</span>
+    <span class="n">proj_simplex</span><span class="p">(</span><span class="n">u</span><span class="p">,</span> <span class="n">radius</span><span class="p">,</span> <span class="n">out</span><span class="p">)</span>
+    <span class="n">out</span> <span class="o">*=</span> <span class="n">v</span>
+
+    <span class="k">return</span> <span class="n">out</span></div>
+
+
+<div class="viewcode-block" id="proj_simplex"><a class="viewcode-back" href="../../../../generated/odl.solvers.nonsmooth.proximal_operators.proj_simplex.html#odl.solvers.nonsmooth.proximal_operators.proj_simplex">[docs]</a><span class="k">def</span> <span class="nf">proj_simplex</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">diameter</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">out</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="sa">r</span><span class="sd">&quot;&quot;&quot;Projection onto simplex.</span>
+
+<span class="sd">    Projection onto::</span>
+
+<span class="sd">        ``{ x \in X | x_i \geq 0, \sum_i x_i = r}``</span>
+
+<span class="sd">    with :math:`r` being the diameter. It is computed by the formula proposed</span>
+<span class="sd">    in [D+2008].</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    space : `LinearSpace`</span>
+<span class="sd">        Space / domain ``X``.</span>
+<span class="sd">    diameter : positive float, optional</span>
+<span class="sd">        Diameter of the simplex.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    prox_factory : callable</span>
+<span class="sd">        Factory for the proximal operator to be initialized.</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    The projection onto a simplex is not of closed-form but can be solved by a</span>
+<span class="sd">    non-iterative algorithm, see [D+2008] for details.</span>
+
+<span class="sd">    References</span>
+<span class="sd">    ----------</span>
+<span class="sd">    [D+2008] Duchi, J., Shalev-Shwartz, S., Singer, Y., and Chandra, T.</span>
+<span class="sd">    *Efficient Projections onto the L1-ball for Learning in High dimensions*.</span>
+<span class="sd">    ICML 2008, pp. 272-279. http://doi.org/10.1145/1390156.1390191</span>
+
+<span class="sd">    See Also</span>
+<span class="sd">    --------</span>
+<span class="sd">    proj_l1 : projection onto l1-norm ball</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">out</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">out</span> <span class="o">=</span> <span class="n">x</span><span class="o">.</span><span class="n">space</span><span class="o">.</span><span class="n">element</span><span class="p">()</span>
+
+    <span class="c1"># sort values in descending order</span>
+    <span class="n">x_sor</span> <span class="o">=</span> <span class="n">x</span><span class="o">.</span><span class="n">asarray</span><span class="p">()</span><span class="o">.</span><span class="n">flatten</span><span class="p">()</span>
+    <span class="n">x_sor</span><span class="o">.</span><span class="n">sort</span><span class="p">()</span>
+    <span class="n">x_sor</span> <span class="o">=</span> <span class="n">x_sor</span><span class="p">[::</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+
+    <span class="c1"># find critical index</span>
+    <span class="n">j</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">x</span><span class="o">.</span><span class="n">size</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
+    <span class="n">x_avrg</span> <span class="o">=</span> <span class="p">(</span><span class="mi">1</span> <span class="o">/</span> <span class="n">j</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">cumsum</span><span class="p">(</span><span class="n">x_sor</span><span class="p">)</span> <span class="o">-</span> <span class="n">diameter</span><span class="p">)</span>
+    <span class="n">crit</span> <span class="o">=</span> <span class="n">x_sor</span> <span class="o">-</span> <span class="n">x_avrg</span>
+    <span class="n">i</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">argwhere</span><span class="p">(</span><span class="n">crit</span> <span class="o">&gt;=</span> <span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">flatten</span><span class="p">()</span><span class="o">.</span><span class="n">max</span><span class="p">()</span>
+
+    <span class="c1"># output is a shifted and thresholded version of the input</span>
+    <span class="n">out</span><span class="p">[:]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">maximum</span><span class="p">(</span><span class="n">x</span> <span class="o">-</span> <span class="n">x_avrg</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="mi">0</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">out</span></div>
+
+
+<div class="viewcode-block" id="proximal_convex_conj_kl"><a class="viewcode-back" href="../../../../generated/odl.solvers.nonsmooth.proximal_operators.proximal_convex_conj_kl.html#odl.solvers.nonsmooth.proximal_operators.proximal_convex_conj_kl">[docs]</a><span class="k">def</span> <span class="nf">proximal_convex_conj_kl</span><span class="p">(</span><span class="n">space</span><span class="p">,</span> <span class="n">lam</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">g</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="sa">r</span><span class="sd">&quot;&quot;&quot;Proximal operator factory of the convex conjugate of the KL divergence.</span>
+
+<span class="sd">    Function returning the proximal operator of the convex conjugate of the</span>
+<span class="sd">    functional F where F is the entropy-type Kullback-Leibler (KL) divergence::</span>
+
+<span class="sd">        F(x) = sum_i (x_i - g_i + g_i ln(g_i) - g_i ln(pos(x_i))) + ind_P(x)</span>
+
+<span class="sd">    with ``x`` and ``g`` elements in the linear space ``X``, and ``g``</span>
+<span class="sd">    non-negative. Here, ``pos`` denotes the nonnegative part, and ``ind_P`` is</span>
+<span class="sd">    the indicator function for nonnegativity.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    space : `TensorSpace`</span>
+<span class="sd">        Space X which is the domain of the functional F</span>
+<span class="sd">    lam : positive float, optional</span>
+<span class="sd">        Scaling factor.</span>
+<span class="sd">    g : ``space`` element, optional</span>
+<span class="sd">        Data term, positive. If None it is take as the one-element.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    prox_factory : function</span>
+<span class="sd">        Factory for the proximal operator to be initialized.</span>
+
+<span class="sd">    See Also</span>
+<span class="sd">    --------</span>
+<span class="sd">    proximal_convex_conj_kl_cross_entropy : proximal for releated functional</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    The functional is given by the expression</span>
+
+<span class="sd">    .. math::</span>
+<span class="sd">        F(x) = \sum_i (x_i - g_i + g_i \ln(g_i) - g_i \ln(pos(x_i))) +</span>
+<span class="sd">        I_{x \geq 0}(x)</span>
+
+<span class="sd">    The indicator function :math:`I_{x \geq 0}(x)` is used to restrict the</span>
+<span class="sd">    domain of :math:`F` such that :math:`F` is defined over whole space</span>
+<span class="sd">    :math:`X`. The non-negativity thresholding :math:`pos` is used to define</span>
+<span class="sd">    :math:`F` in the real numbers.</span>
+
+<span class="sd">    Note that the functional is not well-defined without a prior g. Hence, if g</span>
+<span class="sd">    is omitted this will be interpreted as if g is equal to the one-element.</span>
+
+<span class="sd">    The convex conjugate :math:`F^*` of :math:`F` is</span>
+
+<span class="sd">    .. math::</span>
+<span class="sd">        F^*(p) = \sum_i (-g_i \ln(\text{pos}({1_X}_i - p_i))) +</span>
+<span class="sd">        I_{1_X - p \geq 0}(p)</span>
+
+<span class="sd">    where :math:`p` is the variable dual to :math:`x`, and :math:`1_X` is an</span>
+<span class="sd">    element of the space :math:`X` with all components set to 1.</span>
+
+<span class="sd">    The proximal operator of the convex conjugate of F is</span>
+
+<span class="sd">    .. math::</span>
+<span class="sd">        \mathrm{prox}_{\sigma (\lambda F)^*}(x) =</span>
+<span class="sd">        \frac{\lambda 1_X + x - \sqrt{(x -  \lambda 1_X)^2 +</span>
+<span class="sd">        4 \lambda \sigma g}}{2}</span>
+
+<span class="sd">    where :math:`\sigma` is the step size-like parameter, and :math:`\lambda`</span>
+<span class="sd">    is the weighting in front of the function :math:`F`.</span>
+
+<span class="sd">    KL based objectives are common in MLEM optimization problems and are often</span>
+<span class="sd">    used when data noise governed by a multivariate Poisson probability</span>
+<span class="sd">    distribution is significant.</span>
+
+<span class="sd">    The intermediate image estimates can have negative values even though</span>
+<span class="sd">    the converged solution will be non-negative. Non-negative intermediate</span>
+<span class="sd">    image estimates can be enforced by adding an indicator function ind_P</span>
+<span class="sd">    the primal objective.</span>
+
+<span class="sd">    This functional :math:`F`, described above, is related to the</span>
+<span class="sd">    Kullback-Leibler cross entropy functional. The KL cross entropy is the one</span>
+<span class="sd">    described in `this Wikipedia article</span>
+<span class="sd">    &lt;https://en.wikipedia.org/wiki/Kullback%E2%80%93Leibler_divergence&gt;`_, and</span>
+<span class="sd">    the functional :math:`F` is obtained by switching place of the prior and</span>
+<span class="sd">    the varialbe in the KL cross entropy functional. See the See Also section.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">lam</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">lam</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">g</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">g</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">space</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">{}</span><span class="s1"> is not an element of </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">g</span><span class="p">,</span> <span class="n">space</span><span class="p">))</span>
+
+    <span class="k">class</span> <span class="nc">ProximalConvexConjKL</span><span class="p">(</span><span class="n">Operator</span><span class="p">):</span>
+
+        <span class="sd">&quot;&quot;&quot;Proximal operator of the convex conjugate of the KL divergence.&quot;&quot;&quot;</span>
+
+        <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">sigma</span><span class="p">):</span>
+            <span class="sd">&quot;&quot;&quot;Initialize a new instance.</span>
+
+<span class="sd">            Parameters</span>
+<span class="sd">            ----------</span>
+<span class="sd">            sigma : positive float</span>
+<span class="sd">            &quot;&quot;&quot;</span>
+            <span class="nb">super</span><span class="p">(</span><span class="n">ProximalConvexConjKL</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span>
+                <span class="n">domain</span><span class="o">=</span><span class="n">space</span><span class="p">,</span> <span class="nb">range</span><span class="o">=</span><span class="n">space</span><span class="p">,</span> <span class="n">linear</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">sigma</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">sigma</span><span class="p">)</span>
+
+        <span class="k">def</span> <span class="nf">_call</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">out</span><span class="p">):</span>
+            <span class="sd">&quot;&quot;&quot;Return ``self(x, out=out)``.&quot;&quot;&quot;</span>
+            <span class="c1"># (x + lam - sqrt((x - lam)^2 + 4*lam*sig*g)) / 2</span>
+
+            <span class="c1"># out = (x - lam)^2</span>
+            <span class="k">if</span> <span class="n">x</span> <span class="ow">is</span> <span class="n">out</span><span class="p">:</span>
+                <span class="c1"># Handle aliased `x` and `out` (need original `x` later on)</span>
+                <span class="n">x</span> <span class="o">=</span> <span class="n">x</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">out</span><span class="o">.</span><span class="n">assign</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+            <span class="n">out</span> <span class="o">-=</span> <span class="n">lam</span>
+            <span class="n">out</span><span class="o">.</span><span class="n">ufuncs</span><span class="o">.</span><span class="n">square</span><span class="p">(</span><span class="n">out</span><span class="o">=</span><span class="n">out</span><span class="p">)</span>
+
+            <span class="c1"># out = ... + 4*lam*sigma*g</span>
+            <span class="c1"># If g is None, it is taken as the one element</span>
+            <span class="k">if</span> <span class="n">g</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">out</span> <span class="o">+=</span> <span class="mf">4.0</span> <span class="o">*</span> <span class="n">lam</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">sigma</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">out</span><span class="o">.</span><span class="n">lincomb</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">out</span><span class="p">,</span> <span class="mf">4.0</span> <span class="o">*</span> <span class="n">lam</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">sigma</span><span class="p">,</span> <span class="n">g</span><span class="p">)</span>
+
+            <span class="c1"># out = x - sqrt(...) + lam</span>
+            <span class="n">out</span><span class="o">.</span><span class="n">ufuncs</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">out</span><span class="o">=</span><span class="n">out</span><span class="p">)</span>
+            <span class="n">out</span><span class="o">.</span><span class="n">lincomb</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="n">out</span><span class="p">)</span>
+            <span class="n">out</span> <span class="o">+=</span> <span class="n">lam</span>
+
+            <span class="c1"># out = 1/2 * ...</span>
+            <span class="n">out</span> <span class="o">/=</span> <span class="mi">2</span>
+
+    <span class="k">return</span> <span class="n">ProximalConvexConjKL</span></div>
+
+
+<div class="viewcode-block" id="proximal_convex_conj_kl_cross_entropy"><a class="viewcode-back" href="../../../../generated/odl.solvers.nonsmooth.proximal_operators.proximal_convex_conj_kl_cross_entropy.html#odl.solvers.nonsmooth.proximal_operators.proximal_convex_conj_kl_cross_entropy">[docs]</a><span class="k">def</span> <span class="nf">proximal_convex_conj_kl_cross_entropy</span><span class="p">(</span><span class="n">space</span><span class="p">,</span> <span class="n">lam</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">g</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="sa">r</span><span class="sd">&quot;&quot;&quot;Proximal factory of the convex conj of cross entropy KL divergence.</span>
+
+<span class="sd">    Function returning the proximal factory of the convex conjugate of the</span>
+<span class="sd">    functional F, where F is the cross entropy Kullback-Leibler (KL)</span>
+<span class="sd">    divergence given by::</span>
+
+<span class="sd">        F(x) = sum_i (x_i ln(pos(x_i)) - x_i ln(g_i) + g_i - x_i) + ind_P(x)</span>
+
+<span class="sd">    with ``x`` and ``g`` in the linear space ``X``, and ``g`` non-negative.</span>
+<span class="sd">    Here, ``pos`` denotes the nonnegative part, and ``ind_P`` is the indicator</span>
+<span class="sd">    function for nonnegativity.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    space : `TensorSpace`</span>
+<span class="sd">        Space X which is the domain of the functional F</span>
+<span class="sd">    lam : positive float, optional</span>
+<span class="sd">        Scaling factor.</span>
+<span class="sd">    g : ``space`` element, optional</span>
+<span class="sd">        Data term, positive. If None it is take as the one-element.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    prox_factory : function</span>
+<span class="sd">        Factory for the proximal operator to be initialized.</span>
+
+<span class="sd">    See Also</span>
+<span class="sd">    --------</span>
+<span class="sd">    proximal_convex_conj_kl : proximal for related functional</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    The functional is given by the expression</span>
+
+<span class="sd">    .. math::</span>
+<span class="sd">        F(x) = \sum_i (x_i \ln(pos(x_i)) - x_i \ln(g_i) + g_i - x_i) +</span>
+<span class="sd">        I_{x \geq 0}(x)</span>
+
+<span class="sd">    The indicator function :math:`I_{x \geq 0}(x)` is used to restrict the</span>
+<span class="sd">    domain of :math:`F` such that :math:`F` is defined over whole space</span>
+<span class="sd">    :math:`X`. The non-negativity thresholding :math:`pos` is used to define</span>
+<span class="sd">    :math:`F` in the real numbers.</span>
+
+<span class="sd">    Note that the functional is not well-defined without a prior g. Hence, if g</span>
+<span class="sd">    is omitted this will be interpreted as if g is equal to the one-element.</span>
+
+<span class="sd">    The convex conjugate :math:`F^*` of :math:`F` is</span>
+
+<span class="sd">    .. math::</span>
+<span class="sd">        F^*(p) = \sum_i g_i (exp(p_i) - 1)</span>
+
+<span class="sd">    where :math:`p` is the variable dual to :math:`x`.</span>
+
+<span class="sd">    The proximal operator of the convex conjugate of :math:`F` is</span>
+
+<span class="sd">    .. math::</span>
+<span class="sd">        \mathrm{prox}_{\sigma (\lambda F)^*}(x) = x - \lambda</span>
+<span class="sd">        W(\frac{\sigma}{\lambda} g e^{x/\lambda})</span>
+
+<span class="sd">    where :math:`\sigma` is the step size-like parameter, :math:`\lambda` is</span>
+<span class="sd">    the weighting in front of the function :math:`F`, and :math:`W` is the</span>
+<span class="sd">    Lambert W function (see, for example, the</span>
+<span class="sd">    `Wikipedia article &lt;https://en.wikipedia.org/wiki/Lambert_W_function&gt;`_).</span>
+
+<span class="sd">    For real-valued input x, the Lambert :math:`W` function is defined only for</span>
+<span class="sd">    :math:`x \geq -1/e`, and it has two branches for values</span>
+<span class="sd">    :math:`-1/e \leq x &lt; 0`. However, for inteneded use-cases, where</span>
+<span class="sd">    :math:`\lambda` and :math:`g` are positive, the argument of :math:`W`</span>
+<span class="sd">    will always be positive.</span>
+
+<span class="sd">    `Wikipedia article on Kullback Leibler divergence</span>
+<span class="sd">    &lt;https://en.wikipedia.org/wiki/Kullback%E2%80%93Leibler_divergence&gt;`_.</span>
+<span class="sd">    For further information about the functional, see for example `this article</span>
+<span class="sd">    &lt;http://ieeexplore.ieee.org/document/1056144/?arnumber=1056144&gt;`_.</span>
+
+<span class="sd">    The KL cross entropy functional :math:`F`, described above, is related to</span>
+<span class="sd">    another functional functional also know as KL divergence. This functional</span>
+<span class="sd">    is often used as data discrepancy term in inverse problems, when data is</span>
+<span class="sd">    corrupted with Poisson noise. This functional is obtained by changing place</span>
+<span class="sd">    of the prior and the variable. See the See Also section.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">lam</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">lam</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">g</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">g</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">space</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">{}</span><span class="s1"> is not an element of </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">g</span><span class="p">,</span> <span class="n">space</span><span class="p">))</span>
+
+    <span class="k">class</span> <span class="nc">ProximalConvexConjKLCrossEntropy</span><span class="p">(</span><span class="n">Operator</span><span class="p">):</span>
+
+        <span class="sd">&quot;&quot;&quot;Proximal operator of conjugate of cross entropy KL divergence.&quot;&quot;&quot;</span>
+
+        <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">sigma</span><span class="p">):</span>
+            <span class="sd">&quot;&quot;&quot;Initialize a new instance.</span>
+
+<span class="sd">            Parameters</span>
+<span class="sd">            ----------</span>
+<span class="sd">            sigma : positive float</span>
+<span class="sd">            &quot;&quot;&quot;</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">sigma</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">sigma</span><span class="p">)</span>
+            <span class="nb">super</span><span class="p">(</span><span class="n">ProximalConvexConjKLCrossEntropy</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span>
+                <span class="n">domain</span><span class="o">=</span><span class="n">space</span><span class="p">,</span> <span class="nb">range</span><span class="o">=</span><span class="n">space</span><span class="p">,</span> <span class="n">linear</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+
+        <span class="k">def</span> <span class="nf">_call</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">out</span><span class="p">):</span>
+            <span class="sd">&quot;&quot;&quot;Return ``self(x, out=out)``.&quot;&quot;&quot;</span>
+            <span class="c1"># Lazy import to improve `import odl` time</span>
+            <span class="kn">import</span> <span class="nn">scipy.special</span>
+
+            <span class="k">if</span> <span class="n">g</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="c1"># If g is None, it is taken as the one element</span>
+                <span class="c1"># Different branches of lambertw is not an issue, see Notes</span>
+                <span class="n">lambw</span> <span class="o">=</span> <span class="n">scipy</span><span class="o">.</span><span class="n">special</span><span class="o">.</span><span class="n">lambertw</span><span class="p">(</span>
+                    <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">sigma</span> <span class="o">/</span> <span class="n">lam</span><span class="p">)</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="n">x</span> <span class="o">/</span> <span class="n">lam</span><span class="p">))</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="c1"># Different branches of lambertw is not an issue, see Notes</span>
+                <span class="n">lambw</span> <span class="o">=</span> <span class="n">scipy</span><span class="o">.</span><span class="n">special</span><span class="o">.</span><span class="n">lambertw</span><span class="p">(</span>
+                    <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">sigma</span> <span class="o">/</span> <span class="n">lam</span><span class="p">)</span> <span class="o">*</span> <span class="n">g</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="n">x</span> <span class="o">/</span> <span class="n">lam</span><span class="p">))</span>
+
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">issubsctype</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">domain</span><span class="o">.</span><span class="n">dtype</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">complexfloating</span><span class="p">):</span>
+                <span class="n">lambw</span> <span class="o">=</span> <span class="n">lambw</span><span class="o">.</span><span class="n">real</span>
+
+            <span class="n">lambw</span> <span class="o">=</span> <span class="n">x</span><span class="o">.</span><span class="n">space</span><span class="o">.</span><span class="n">element</span><span class="p">(</span><span class="n">lambw</span><span class="p">)</span>
+
+            <span class="n">out</span><span class="o">.</span><span class="n">lincomb</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="o">-</span><span class="n">lam</span><span class="p">,</span> <span class="n">lambw</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">ProximalConvexConjKLCrossEntropy</span></div>
+
+
+<div class="viewcode-block" id="proximal_huber"><a class="viewcode-back" href="../../../../generated/odl.solvers.nonsmooth.proximal_operators.proximal_huber.html#odl.solvers.nonsmooth.proximal_operators.proximal_huber">[docs]</a><span class="k">def</span> <span class="nf">proximal_huber</span><span class="p">(</span><span class="n">space</span><span class="p">,</span> <span class="n">gamma</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Proximal factory of the Huber norm.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    space : `TensorSpace`</span>
+<span class="sd">        The domain of the functional</span>
+<span class="sd">    gamma : float</span>
+<span class="sd">        The smoothing parameter of the Huber norm functional.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    prox_factory : function</span>
+<span class="sd">        Factory for the proximal operator to be initialized.</span>
+
+<span class="sd">    See Also</span>
+<span class="sd">    --------</span>
+<span class="sd">    odl.solvers.default_functionals.Huber : the Huber norm functional</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    The proximal operator is given by given by the proximal operator of</span>
+<span class="sd">    ``1/(2*gamma) * L2 norm`` in points that are ``&lt;= gamma``, and by the</span>
+<span class="sd">    proximal operator of the l1 norm in points that are ``&gt; gamma``.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">gamma</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">gamma</span><span class="p">)</span>
+
+    <span class="k">class</span> <span class="nc">ProximalHuber</span><span class="p">(</span><span class="n">Operator</span><span class="p">):</span>
+
+        <span class="sd">&quot;&quot;&quot;Proximal operator of Huber norm.&quot;&quot;&quot;</span>
+
+        <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">sigma</span><span class="p">):</span>
+            <span class="sd">&quot;&quot;&quot;Initialize a new instance.</span>
+
+<span class="sd">            Parameters</span>
+<span class="sd">            ----------</span>
+<span class="sd">            sigma : positive float</span>
+<span class="sd">            &quot;&quot;&quot;</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">sigma</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">sigma</span><span class="p">)</span>
+            <span class="nb">super</span><span class="p">(</span><span class="n">ProximalHuber</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">domain</span><span class="o">=</span><span class="n">space</span><span class="p">,</span> <span class="nb">range</span><span class="o">=</span><span class="n">space</span><span class="p">,</span>
+                                                <span class="n">linear</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+
+        <span class="k">def</span> <span class="nf">_call</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">out</span><span class="p">):</span>
+            <span class="sd">&quot;&quot;&quot;Return ``self(x, out=out)``.&quot;&quot;&quot;</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">domain</span><span class="p">,</span> <span class="n">ProductSpace</span><span class="p">):</span>
+                <span class="n">norm</span> <span class="o">=</span> <span class="n">PointwiseNorm</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">domain</span><span class="p">,</span> <span class="mi">2</span><span class="p">)(</span><span class="n">x</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">norm</span> <span class="o">=</span> <span class="n">x</span><span class="o">.</span><span class="n">ufuncs</span><span class="o">.</span><span class="n">absolute</span><span class="p">()</span>
+
+            <span class="n">mask</span> <span class="o">=</span> <span class="n">norm</span><span class="o">.</span><span class="n">ufuncs</span><span class="o">.</span><span class="n">less_equal</span><span class="p">(</span><span class="n">gamma</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">sigma</span><span class="p">)</span>
+            <span class="n">out</span><span class="p">[</span><span class="n">mask</span><span class="p">]</span> <span class="o">=</span> <span class="n">gamma</span> <span class="o">/</span> <span class="p">(</span><span class="n">gamma</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">sigma</span><span class="p">)</span> <span class="o">*</span> <span class="n">x</span><span class="p">[</span><span class="n">mask</span><span class="p">]</span>
+
+            <span class="n">mask</span><span class="o">.</span><span class="n">ufuncs</span><span class="o">.</span><span class="n">logical_not</span><span class="p">(</span><span class="n">out</span><span class="o">=</span><span class="n">mask</span><span class="p">)</span>
+            <span class="n">sign_x</span> <span class="o">=</span> <span class="n">x</span><span class="o">.</span><span class="n">ufuncs</span><span class="o">.</span><span class="n">sign</span><span class="p">()</span>
+            <span class="n">out</span><span class="p">[</span><span class="n">mask</span><span class="p">]</span> <span class="o">=</span> <span class="n">x</span><span class="p">[</span><span class="n">mask</span><span class="p">]</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">sigma</span> <span class="o">*</span> <span class="n">sign_x</span><span class="p">[</span><span class="n">mask</span><span class="p">]</span>
+
+            <span class="k">return</span> <span class="n">out</span>
+
+    <span class="k">return</span> <span class="n">ProximalHuber</span></div>
+
+
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s1">&#39;__main__&#39;</span><span class="p">:</span>
+    <span class="kn">from</span> <span class="nn">odl.util.testutils</span> <span class="kn">import</span> <span class="n">run_doctests</span>
+    <span class="n">run_doctests</span><span class="p">()</span>
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &#169; Copyright 2014-2020 The ODL Contributors.
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

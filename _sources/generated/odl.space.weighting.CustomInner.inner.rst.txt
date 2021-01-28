@@ -1,0 +1,6 @@
+CustomInner.inner
+=====================================
+
+.. currentmodule:: odl.space.weighting
+
+.. autoproperty:: CustomInner.inner

@@ -1,0 +1,8 @@
+:orphan:
+
+DiagonalOperator.derivative
+===================================================
+
+.. currentmodule:: odl.operator.pspace_ops
+
+.. automethod:: DiagonalOperator.derivative

@@ -1,0 +1,8 @@
+:orphan:
+
+IndicatorBox.bregman
+===============================================================
+
+.. currentmodule:: odl.solvers.functional.default_functionals
+
+.. automethod:: IndicatorBox.bregman

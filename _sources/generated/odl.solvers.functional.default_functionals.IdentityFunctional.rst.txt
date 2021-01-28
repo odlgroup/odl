@@ -1,0 +1,44 @@
+﻿IdentityFunctional
+=============================================================
+
+.. currentmodule:: odl.solvers.functional.default_functionals
+
+.. autoclass:: IdentityFunctional
+   :show-inheritance:
+   
+   
+   .. automethod:: __init__
+   
+      
+   
+   .. HACK -- the point here is that we don't want this to appear in the output, but the autosummary should still generate the pages.
+      .. autosummary::
+         :toctree:
+      
+         IdentityFunctional.__call__
+         IdentityFunctional.__eq__
+         IdentityFunctional._call
+         IdentityFunctional.bregman
+         IdentityFunctional.derivative
+         IdentityFunctional.norm
+         IdentityFunctional.translated
+   
+
+    
+   .. HACK -- the point here is that we don't want this to appear in the output, but the autosummary should still generate the pages.
+      .. autosummary::
+         :toctree:
+      
+         IdentityFunctional.adjoint
+         IdentityFunctional.convex_conj
+         IdentityFunctional.domain
+         IdentityFunctional.grad_lipschitz
+         IdentityFunctional.gradient
+         IdentityFunctional.inverse
+         IdentityFunctional.is_functional
+         IdentityFunctional.is_linear
+         IdentityFunctional.proximal
+         IdentityFunctional.range
+         IdentityFunctional.scalar
+   
+   

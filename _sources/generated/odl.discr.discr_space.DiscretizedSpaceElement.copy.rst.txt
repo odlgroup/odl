@@ -1,0 +1,8 @@
+:orphan:
+
+DiscretizedSpaceElement.copy
+==================================================
+
+.. currentmodule:: odl.discr.discr_space
+
+.. automethod:: DiscretizedSpaceElement.copy

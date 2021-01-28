@@ -1,0 +1,8 @@
+:orphan:
+
+ProductSpaceElement.dist
+=========================================
+
+.. currentmodule:: odl.space.pspace
+
+.. automethod:: ProductSpaceElement.dist

@@ -1,0 +1,6 @@
+NumpyTensorSpaceCustomNorm.exponent
+=========================================================
+
+.. currentmodule:: odl.space.npy_tensors
+
+.. autoproperty:: NumpyTensorSpaceCustomNorm.exponent

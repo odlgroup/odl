@@ -1,0 +1,6 @@
+FunctionalLeftScalarMult.convex_conj
+======================================================================
+
+.. currentmodule:: odl.solvers.functional.functional
+
+.. autoproperty:: FunctionalLeftScalarMult.convex_conj

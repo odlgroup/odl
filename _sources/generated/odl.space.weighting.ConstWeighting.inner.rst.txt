@@ -1,0 +1,8 @@
+:orphan:
+
+ConstWeighting.inner
+========================================
+
+.. currentmodule:: odl.space.weighting
+
+.. automethod:: ConstWeighting.inner

@@ -1,0 +1,6 @@
+KullbackLeibler.grad_lipschitz
+=========================================================================
+
+.. currentmodule:: odl.solvers.functional.default_functionals
+
+.. autoproperty:: KullbackLeibler.grad_lipschitz

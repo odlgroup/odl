@@ -1,0 +1,8 @@
+:orphan:
+
+UniversalSet.element
+=================================
+
+.. currentmodule:: odl.set.sets
+
+.. automethod:: UniversalSet.element

@@ -1,0 +1,6 @@
+FunctionalLeftScalarMult.grad_lipschitz
+=========================================================================
+
+.. currentmodule:: odl.solvers.functional.functional
+
+.. autoproperty:: FunctionalLeftScalarMult.grad_lipschitz

@@ -1,0 +1,6 @@
+Parallel2dGeometry.grid
+==================================================
+
+.. currentmodule:: odl.tomo.geometry.parallel
+
+.. autoproperty:: Parallel2dGeometry.grid

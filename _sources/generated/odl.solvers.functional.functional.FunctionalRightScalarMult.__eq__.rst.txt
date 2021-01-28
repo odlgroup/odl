@@ -1,0 +1,8 @@
+:orphan:
+
+FunctionalRightScalarMult.__eq__
+==================================================================
+
+.. currentmodule:: odl.solvers.functional.functional
+
+.. automethod:: FunctionalRightScalarMult.__eq__

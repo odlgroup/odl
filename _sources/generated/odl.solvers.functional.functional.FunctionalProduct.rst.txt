@@ -1,0 +1,45 @@
+﻿FunctionalProduct
+===================================================
+
+.. currentmodule:: odl.solvers.functional.functional
+
+.. autoclass:: FunctionalProduct
+   :show-inheritance:
+   
+   
+   .. automethod:: __init__
+   
+      
+   
+   .. HACK -- the point here is that we don't want this to appear in the output, but the autosummary should still generate the pages.
+      .. autosummary::
+         :toctree:
+      
+         FunctionalProduct.__call__
+         FunctionalProduct.__eq__
+         FunctionalProduct._call
+         FunctionalProduct.bregman
+         FunctionalProduct.derivative
+         FunctionalProduct.norm
+         FunctionalProduct.translated
+   
+
+    
+   .. HACK -- the point here is that we don't want this to appear in the output, but the autosummary should still generate the pages.
+      .. autosummary::
+         :toctree:
+      
+         FunctionalProduct.adjoint
+         FunctionalProduct.convex_conj
+         FunctionalProduct.domain
+         FunctionalProduct.grad_lipschitz
+         FunctionalProduct.gradient
+         FunctionalProduct.inverse
+         FunctionalProduct.is_functional
+         FunctionalProduct.is_linear
+         FunctionalProduct.left
+         FunctionalProduct.proximal
+         FunctionalProduct.range
+         FunctionalProduct.right
+   
+   

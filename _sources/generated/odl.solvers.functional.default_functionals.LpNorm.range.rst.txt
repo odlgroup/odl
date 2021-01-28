@@ -1,0 +1,6 @@
+LpNorm.range
+=======================================================
+
+.. currentmodule:: odl.solvers.functional.default_functionals
+
+.. autoproperty:: LpNorm.range

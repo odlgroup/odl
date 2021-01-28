@@ -1,0 +1,6 @@
+Parallel3dEulerGeometry.detector
+===========================================================
+
+.. currentmodule:: odl.tomo.geometry.parallel
+
+.. autoproperty:: Parallel3dEulerGeometry.detector

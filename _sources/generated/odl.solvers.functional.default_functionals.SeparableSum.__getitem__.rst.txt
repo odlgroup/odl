@@ -1,0 +1,8 @@
+:orphan:
+
+SeparableSum.__getitem__
+===================================================================
+
+.. currentmodule:: odl.solvers.functional.default_functionals
+
+.. automethod:: SeparableSum.__getitem__

@@ -1,0 +1,8 @@
+:orphan:
+
+TensorSpace.one
+======================================
+
+.. currentmodule:: odl.space.base_tensors
+
+.. automethod:: TensorSpace.one

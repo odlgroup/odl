@@ -1,0 +1,6 @@
+multiply_op.adjoint
+===========================================
+
+.. currentmodule:: odl.ufunc_ops.ufunc_ops
+
+.. autoproperty:: multiply_op.adjoint

@@ -1,0 +1,6 @@
+NumpyTensorSpace.default_order
+====================================================
+
+.. currentmodule:: odl.space.npy_tensors
+
+.. autoproperty:: NumpyTensorSpace.default_order

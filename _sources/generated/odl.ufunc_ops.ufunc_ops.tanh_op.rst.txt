@@ -1,0 +1,37 @@
+﻿tanh_op
+===============================
+
+.. currentmodule:: odl.ufunc_ops.ufunc_ops
+
+.. autoclass:: tanh_op
+   :show-inheritance:
+   
+   
+   .. automethod:: __init__
+   
+      
+   
+   .. HACK -- the point here is that we don't want this to appear in the output, but the autosummary should still generate the pages.
+      .. autosummary::
+         :toctree:
+      
+         tanh_op.__call__
+         tanh_op.__eq__
+         tanh_op._call
+         tanh_op.derivative
+         tanh_op.norm
+   
+
+    
+   .. HACK -- the point here is that we don't want this to appear in the output, but the autosummary should still generate the pages.
+      .. autosummary::
+         :toctree:
+      
+         tanh_op.adjoint
+         tanh_op.domain
+         tanh_op.inverse
+         tanh_op.is_functional
+         tanh_op.is_linear
+         tanh_op.range
+   
+   

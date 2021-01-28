@@ -1,0 +1,43 @@
+﻿tan_func
+================================
+
+.. currentmodule:: odl.ufunc_ops.ufunc_ops
+
+.. autoclass:: tan_func
+   :show-inheritance:
+   
+   
+   .. automethod:: __init__
+   
+      
+   
+   .. HACK -- the point here is that we don't want this to appear in the output, but the autosummary should still generate the pages.
+      .. autosummary::
+         :toctree:
+      
+         tan_func.__call__
+         tan_func.__eq__
+         tan_func._call
+         tan_func.bregman
+         tan_func.derivative
+         tan_func.norm
+         tan_func.translated
+   
+
+    
+   .. HACK -- the point here is that we don't want this to appear in the output, but the autosummary should still generate the pages.
+      .. autosummary::
+         :toctree:
+      
+         tan_func.adjoint
+         tan_func.convex_conj
+         tan_func.domain
+         tan_func.grad_lipschitz
+         tan_func.gradient
+         tan_func.inverse
+         tan_func.is_functional
+         tan_func.is_linear
+         tan_func.proximal
+         tan_func.range
+   
+   

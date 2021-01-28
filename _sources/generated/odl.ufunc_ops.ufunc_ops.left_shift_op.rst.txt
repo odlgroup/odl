@@ -1,0 +1,37 @@
+﻿left_shift_op
+=====================================
+
+.. currentmodule:: odl.ufunc_ops.ufunc_ops
+
+.. autoclass:: left_shift_op
+   :show-inheritance:
+   
+   
+   .. automethod:: __init__
+   
+      
+   
+   .. HACK -- the point here is that we don't want this to appear in the output, but the autosummary should still generate the pages.
+      .. autosummary::
+         :toctree:
+      
+         left_shift_op.__call__
+         left_shift_op.__eq__
+         left_shift_op._call
+         left_shift_op.derivative
+         left_shift_op.norm
+   
+
+    
+   .. HACK -- the point here is that we don't want this to appear in the output, but the autosummary should still generate the pages.
+      .. autosummary::
+         :toctree:
+      
+         left_shift_op.adjoint
+         left_shift_op.domain
+         left_shift_op.inverse
+         left_shift_op.is_functional
+         left_shift_op.is_linear
+         left_shift_op.range
+   
+   

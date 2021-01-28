@@ -1,0 +1,6 @@
+SphericalDetector.ndim
+=================================================
+
+.. currentmodule:: odl.tomo.geometry.detector
+
+.. autoproperty:: SphericalDetector.ndim

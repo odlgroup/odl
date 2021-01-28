@@ -1,0 +1,8 @@
+:orphan:
+
+arcsin_func._call
+=========================================
+
+.. currentmodule:: odl.ufunc_ops.ufunc_ops
+
+.. automethod:: arcsin_func._call

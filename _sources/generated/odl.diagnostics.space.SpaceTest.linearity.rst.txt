@@ -1,0 +1,8 @@
+:orphan:
+
+SpaceTest.linearity
+=========================================
+
+.. currentmodule:: odl.diagnostics.space
+
+.. automethod:: SpaceTest.linearity

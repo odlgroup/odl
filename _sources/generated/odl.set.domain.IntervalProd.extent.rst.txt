@@ -1,0 +1,6 @@
+IntervalProd.extent
+==================================
+
+.. currentmodule:: odl.set.domain
+
+.. autoproperty:: IntervalProd.extent

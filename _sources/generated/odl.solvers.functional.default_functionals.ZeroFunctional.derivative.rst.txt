@@ -1,0 +1,8 @@
+:orphan:
+
+ZeroFunctional.derivative
+====================================================================
+
+.. currentmodule:: odl.solvers.functional.default_functionals
+
+.. automethod:: ZeroFunctional.derivative

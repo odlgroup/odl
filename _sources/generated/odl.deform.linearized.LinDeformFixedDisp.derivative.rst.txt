@@ -1,0 +1,8 @@
+:orphan:
+
+LinDeformFixedDisp.derivative
+===================================================
+
+.. currentmodule:: odl.deform.linearized
+
+.. automethod:: LinDeformFixedDisp.derivative

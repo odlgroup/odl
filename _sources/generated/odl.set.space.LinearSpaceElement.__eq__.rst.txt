@@ -1,0 +1,8 @@
+:orphan:
+
+LinearSpaceElement.__eq__
+=======================================
+
+.. currentmodule:: odl.set.space
+
+.. automethod:: LinearSpaceElement.__eq__

@@ -1,0 +1,6 @@
+SetUnion.examples
+==============================
+
+.. currentmodule:: odl.set.sets
+
+.. autoproperty:: SetUnion.examples

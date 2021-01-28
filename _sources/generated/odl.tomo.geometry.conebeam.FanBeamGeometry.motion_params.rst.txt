@@ -1,0 +1,6 @@
+FanBeamGeometry.motion_params
+========================================================
+
+.. currentmodule:: odl.tomo.geometry.conebeam
+
+.. autoproperty:: FanBeamGeometry.motion_params

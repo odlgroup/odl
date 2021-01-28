@@ -1,0 +1,6 @@
+FunctionalProduct.range
+=========================================================
+
+.. currentmodule:: odl.solvers.functional.functional
+
+.. autoproperty:: FunctionalProduct.range

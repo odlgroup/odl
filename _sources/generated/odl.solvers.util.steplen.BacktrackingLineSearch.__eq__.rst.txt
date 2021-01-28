@@ -1,0 +1,8 @@
+:orphan:
+
+BacktrackingLineSearch.__eq__
+======================================================
+
+.. currentmodule:: odl.solvers.util.steplen
+
+.. automethod:: BacktrackingLineSearch.__eq__

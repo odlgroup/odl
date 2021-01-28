@@ -1,0 +1,6 @@
+LinDeformFixedDisp.displacement
+=====================================================
+
+.. currentmodule:: odl.deform.linearized
+
+.. autoproperty:: LinDeformFixedDisp.displacement

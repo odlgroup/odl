@@ -1,0 +1,6 @@
+AstraCpuImpl.vol_space
+==================================================
+
+.. currentmodule:: odl.tomo.backends.astra_cpu
+
+.. autoproperty:: AstraCpuImpl.vol_space

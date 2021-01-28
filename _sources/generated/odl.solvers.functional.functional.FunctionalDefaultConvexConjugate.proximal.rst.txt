@@ -1,0 +1,6 @@
+FunctionalDefaultConvexConjugate.proximal
+===========================================================================
+
+.. currentmodule:: odl.solvers.functional.functional
+
+.. autoproperty:: FunctionalDefaultConvexConjugate.proximal

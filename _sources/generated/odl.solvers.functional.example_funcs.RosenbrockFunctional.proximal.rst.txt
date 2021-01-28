@@ -1,0 +1,6 @@
+RosenbrockFunctional.proximal
+==================================================================
+
+.. currentmodule:: odl.solvers.functional.example_funcs
+
+.. autoproperty:: RosenbrockFunctional.proximal

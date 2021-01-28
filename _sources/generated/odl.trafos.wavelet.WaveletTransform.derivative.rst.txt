@@ -1,0 +1,8 @@
+:orphan:
+
+WaveletTransform.derivative
+==============================================
+
+.. currentmodule:: odl.trafos.wavelet
+
+.. automethod:: WaveletTransform.derivative

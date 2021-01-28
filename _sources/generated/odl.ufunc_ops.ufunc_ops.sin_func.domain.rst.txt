@@ -1,0 +1,6 @@
+sin_func.domain
+=======================================
+
+.. currentmodule:: odl.ufunc_ops.ufunc_ops
+
+.. autoproperty:: sin_func.domain

@@ -1,0 +1,6 @@
+ComplexEmbedding.domain
+================================================
+
+.. currentmodule:: odl.operator.default_ops
+
+.. autoproperty:: ComplexEmbedding.domain

@@ -1,0 +1,6 @@
+ComplexModulusSquared.range
+====================================================
+
+.. currentmodule:: odl.operator.default_ops
+
+.. autoproperty:: ComplexModulusSquared.range

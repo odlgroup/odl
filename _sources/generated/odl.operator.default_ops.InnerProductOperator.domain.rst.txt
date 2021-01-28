@@ -1,0 +1,6 @@
+InnerProductOperator.domain
+====================================================
+
+.. currentmodule:: odl.operator.default_ops
+
+.. autoproperty:: InnerProductOperator.domain

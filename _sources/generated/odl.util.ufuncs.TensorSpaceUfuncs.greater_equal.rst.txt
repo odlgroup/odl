@@ -1,0 +1,8 @@
+:orphan:
+
+TensorSpaceUfuncs.greater_equal
+===============================================
+
+.. currentmodule:: odl.util.ufuncs
+
+.. automethod:: TensorSpaceUfuncs.greater_equal

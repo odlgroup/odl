@@ -1,0 +1,6 @@
+TensorSpace.ndim
+=======================================
+
+.. currentmodule:: odl.space.base_tensors
+
+.. autoproperty:: TensorSpace.ndim

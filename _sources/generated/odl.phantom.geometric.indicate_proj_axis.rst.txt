@@ -1,0 +1,6 @@
+﻿indicate_proj_axis
+========================================
+
+.. currentmodule:: odl.phantom.geometric
+
+.. autofunction:: indicate_proj_axis

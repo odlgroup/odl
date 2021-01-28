@@ -1,0 +1,6 @@
+PointwiseNorm.range
+===========================================
+
+.. currentmodule:: odl.operator.tensor_ops
+
+.. autoproperty:: PointwiseNorm.range

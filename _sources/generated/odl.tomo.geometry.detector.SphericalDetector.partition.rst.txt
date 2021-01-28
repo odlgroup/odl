@@ -1,0 +1,6 @@
+SphericalDetector.partition
+======================================================
+
+.. currentmodule:: odl.tomo.geometry.detector
+
+.. autoproperty:: SphericalDetector.partition

@@ -1,0 +1,6 @@
+SetUnion.sets
+==========================
+
+.. currentmodule:: odl.set.sets
+
+.. autoproperty:: SetUnion.sets

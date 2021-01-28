@@ -1,0 +1,8 @@
+:orphan:
+
+SpaceTest.contains
+========================================
+
+.. currentmodule:: odl.diagnostics.space
+
+.. automethod:: SpaceTest.contains

@@ -1,0 +1,8 @@
+:orphan:
+
+Tensor.asarray
+=====================================
+
+.. currentmodule:: odl.space.base_tensors
+
+.. automethod:: Tensor.asarray

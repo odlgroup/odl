@@ -1,0 +1,8 @@
+:orphan:
+
+FunctionalDefaultConvexConjugate.translated
+=============================================================================
+
+.. currentmodule:: odl.solvers.functional.functional
+
+.. automethod:: FunctionalDefaultConvexConjugate.translated

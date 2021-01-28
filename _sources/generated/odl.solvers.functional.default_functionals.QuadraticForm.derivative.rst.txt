@@ -1,0 +1,8 @@
+:orphan:
+
+QuadraticForm.derivative
+===================================================================
+
+.. currentmodule:: odl.solvers.functional.default_functionals
+
+.. automethod:: QuadraticForm.derivative

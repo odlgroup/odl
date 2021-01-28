@@ -1,0 +1,6 @@
+WeightedSumSamplingOperator.adjoint
+===========================================================
+
+.. currentmodule:: odl.operator.tensor_ops
+
+.. autoproperty:: WeightedSumSamplingOperator.adjoint

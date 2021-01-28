@@ -1,0 +1,6 @@
+ImagPart.range
+=======================================
+
+.. currentmodule:: odl.operator.default_ops
+
+.. autoproperty:: ImagPart.range

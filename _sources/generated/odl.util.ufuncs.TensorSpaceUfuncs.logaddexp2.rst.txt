@@ -1,0 +1,8 @@
+:orphan:
+
+TensorSpaceUfuncs.logaddexp2
+============================================
+
+.. currentmodule:: odl.util.ufuncs
+
+.. automethod:: TensorSpaceUfuncs.logaddexp2

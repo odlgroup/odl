@@ -1,0 +1,8 @@
+:orphan:
+
+arccosh_op.norm
+=======================================
+
+.. currentmodule:: odl.ufunc_ops.ufunc_ops
+
+.. automethod:: arccosh_op.norm

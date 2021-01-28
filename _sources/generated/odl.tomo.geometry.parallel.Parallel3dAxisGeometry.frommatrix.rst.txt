@@ -1,0 +1,8 @@
+:orphan:
+
+Parallel3dAxisGeometry.frommatrix
+============================================================
+
+.. currentmodule:: odl.tomo.geometry.parallel
+
+.. automethod:: Parallel3dAxisGeometry.frommatrix

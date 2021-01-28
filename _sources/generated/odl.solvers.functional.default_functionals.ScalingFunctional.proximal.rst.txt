@@ -1,0 +1,6 @@
+ScalingFunctional.proximal
+=====================================================================
+
+.. currentmodule:: odl.solvers.functional.default_functionals
+
+.. autoproperty:: ScalingFunctional.proximal

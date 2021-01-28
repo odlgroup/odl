@@ -1,0 +1,69 @@
+﻿NumpyTensorSpace
+======================================
+
+.. currentmodule:: odl.space.npy_tensors
+
+.. autoclass:: NumpyTensorSpace
+   :show-inheritance:
+   
+   
+   .. automethod:: __init__
+   
+      
+   
+   .. HACK -- the point here is that we don't want this to appear in the output, but the autosummary should still generate the pages.
+      .. autosummary::
+         :toctree:
+      
+         NumpyTensorSpace.__contains__
+         NumpyTensorSpace.__eq__
+         NumpyTensorSpace._dist
+         NumpyTensorSpace._divide
+         NumpyTensorSpace._inner
+         NumpyTensorSpace._lincomb
+         NumpyTensorSpace._multiply
+         NumpyTensorSpace._norm
+         NumpyTensorSpace.astype
+         NumpyTensorSpace.available_dtypes
+         NumpyTensorSpace.contains_all
+         NumpyTensorSpace.contains_set
+         NumpyTensorSpace.default_dtype
+         NumpyTensorSpace.dist
+         NumpyTensorSpace.divide
+         NumpyTensorSpace.element
+         NumpyTensorSpace.inner
+         NumpyTensorSpace.lincomb
+         NumpyTensorSpace.multiply
+         NumpyTensorSpace.norm
+         NumpyTensorSpace.one
+         NumpyTensorSpace.zero
+   
+
+    
+   .. HACK -- the point here is that we don't want this to appear in the output, but the autosummary should still generate the pages.
+      .. autosummary::
+         :toctree:
+      
+         NumpyTensorSpace.byaxis
+         NumpyTensorSpace.complex_dtype
+         NumpyTensorSpace.complex_space
+         NumpyTensorSpace.default_order
+         NumpyTensorSpace.dtype
+         NumpyTensorSpace.element_type
+         NumpyTensorSpace.examples
+         NumpyTensorSpace.exponent
+         NumpyTensorSpace.field
+         NumpyTensorSpace.impl
+         NumpyTensorSpace.is_complex
+         NumpyTensorSpace.is_real
+         NumpyTensorSpace.is_weighted
+         NumpyTensorSpace.itemsize
+         NumpyTensorSpace.nbytes
+         NumpyTensorSpace.ndim
+         NumpyTensorSpace.real_dtype
+         NumpyTensorSpace.real_space
+         NumpyTensorSpace.shape
+         NumpyTensorSpace.size
+         NumpyTensorSpace.weighting
+   
+   

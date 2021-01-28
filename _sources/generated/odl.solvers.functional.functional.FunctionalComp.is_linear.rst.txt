@@ -1,0 +1,6 @@
+FunctionalComp.is_linear
+==========================================================
+
+.. currentmodule:: odl.solvers.functional.functional
+
+.. autoproperty:: FunctionalComp.is_linear

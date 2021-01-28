@@ -1,0 +1,8 @@
+:orphan:
+
+right_shift_op._call
+============================================
+
+.. currentmodule:: odl.ufunc_ops.ufunc_ops
+
+.. automethod:: right_shift_op._call

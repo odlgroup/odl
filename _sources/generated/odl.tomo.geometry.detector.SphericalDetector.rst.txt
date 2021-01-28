@@ -1,0 +1,43 @@
+﻿SphericalDetector
+============================================
+
+.. currentmodule:: odl.tomo.geometry.detector
+
+.. autoclass:: SphericalDetector
+   :show-inheritance:
+   
+   
+   .. automethod:: __init__
+   
+      
+   
+   .. HACK -- the point here is that we don't want this to appear in the output, but the autosummary should still generate the pages.
+      .. autosummary::
+         :toctree:
+      
+         SphericalDetector.__eq__
+         SphericalDetector.surface
+         SphericalDetector.surface_deriv
+         SphericalDetector.surface_measure
+         SphericalDetector.surface_normal
+   
+
+    
+   .. HACK -- the point here is that we don't want this to appear in the output, but the autosummary should still generate the pages.
+      .. autosummary::
+         :toctree:
+      
+         SphericalDetector.axes
+         SphericalDetector.check_bounds
+         SphericalDetector.grid
+         SphericalDetector.ndim
+         SphericalDetector.params
+         SphericalDetector.partition
+         SphericalDetector.radius
+         SphericalDetector.rotation_matrix
+         SphericalDetector.shape
+         SphericalDetector.size
+         SphericalDetector.space_ndim
+         SphericalDetector.translation
+   
+   

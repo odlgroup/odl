@@ -1,0 +1,6 @@
+﻿bitwise_or
+==================================
+
+.. currentmodule:: odl.ufunc_ops.ufunc_ops
+
+.. autofunction:: bitwise_or

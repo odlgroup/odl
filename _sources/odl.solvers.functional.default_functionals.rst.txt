@@ -1,0 +1,42 @@
+default_functionals
+===================
+
+Default functionals defined on any space similar to R^n or L^2.
+
+.. currentmodule:: odl.solvers.functional.default_functionals
+
+
+
+.. rubric:: Classes
+
+.. autosummary::
+   :toctree: generated/
+
+   ~odl.solvers.functional.default_functionals.ConstantFunctional
+   ~odl.solvers.functional.default_functionals.GroupL1Norm
+   ~odl.solvers.functional.default_functionals.Huber
+   ~odl.solvers.functional.default_functionals.IdentityFunctional
+   ~odl.solvers.functional.default_functionals.IndicatorBox
+   ~odl.solvers.functional.default_functionals.IndicatorGroupL1UnitBall
+   ~odl.solvers.functional.default_functionals.IndicatorLpUnitBall
+   ~odl.solvers.functional.default_functionals.IndicatorNonnegativity
+   ~odl.solvers.functional.default_functionals.IndicatorNuclearNormUnitBall
+   ~odl.solvers.functional.default_functionals.IndicatorSimplex
+   ~odl.solvers.functional.default_functionals.IndicatorSumConstraint
+   ~odl.solvers.functional.default_functionals.IndicatorZero
+   ~odl.solvers.functional.default_functionals.KullbackLeibler
+   ~odl.solvers.functional.default_functionals.KullbackLeiblerConvexConj
+   ~odl.solvers.functional.default_functionals.KullbackLeiblerCrossEntropy
+   ~odl.solvers.functional.default_functionals.KullbackLeiblerCrossEntropyConvexConj
+   ~odl.solvers.functional.default_functionals.L1Norm
+   ~odl.solvers.functional.default_functionals.L2Norm
+   ~odl.solvers.functional.default_functionals.L2NormSquared
+   ~odl.solvers.functional.default_functionals.LpNorm
+   ~odl.solvers.functional.default_functionals.MoreauEnvelope
+   ~odl.solvers.functional.default_functionals.NuclearNorm
+   ~odl.solvers.functional.default_functionals.QuadraticForm
+   ~odl.solvers.functional.default_functionals.ScalingFunctional
+   ~odl.solvers.functional.default_functionals.SeparableSum
+   ~odl.solvers.functional.default_functionals.ZeroFunctional
+
+

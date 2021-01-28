@@ -1,0 +1,8 @@
+:orphan:
+
+ProductSpaceUfuncs.fmin
+=======================================
+
+.. currentmodule:: odl.util.ufuncs
+
+.. automethod:: ProductSpaceUfuncs.fmin

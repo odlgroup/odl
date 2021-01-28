@@ -1,0 +1,47 @@
+﻿FunctionalQuadraticPerturb
+============================================================
+
+.. currentmodule:: odl.solvers.functional.functional
+
+.. autoclass:: FunctionalQuadraticPerturb
+   :show-inheritance:
+   
+   
+   .. automethod:: __init__
+   
+      
+   
+   .. HACK -- the point here is that we don't want this to appear in the output, but the autosummary should still generate the pages.
+      .. autosummary::
+         :toctree:
+      
+         FunctionalQuadraticPerturb.__call__
+         FunctionalQuadraticPerturb.__eq__
+         FunctionalQuadraticPerturb._call
+         FunctionalQuadraticPerturb.bregman
+         FunctionalQuadraticPerturb.derivative
+         FunctionalQuadraticPerturb.norm
+         FunctionalQuadraticPerturb.translated
+   
+
+    
+   .. HACK -- the point here is that we don't want this to appear in the output, but the autosummary should still generate the pages.
+      .. autosummary::
+         :toctree:
+      
+         FunctionalQuadraticPerturb.adjoint
+         FunctionalQuadraticPerturb.constant
+         FunctionalQuadraticPerturb.convex_conj
+         FunctionalQuadraticPerturb.domain
+         FunctionalQuadraticPerturb.functional
+         FunctionalQuadraticPerturb.grad_lipschitz
+         FunctionalQuadraticPerturb.gradient
+         FunctionalQuadraticPerturb.inverse
+         FunctionalQuadraticPerturb.is_functional
+         FunctionalQuadraticPerturb.is_linear
+         FunctionalQuadraticPerturb.linear_term
+         FunctionalQuadraticPerturb.proximal
+         FunctionalQuadraticPerturb.quadratic_coeff
+         FunctionalQuadraticPerturb.range
+   
+   

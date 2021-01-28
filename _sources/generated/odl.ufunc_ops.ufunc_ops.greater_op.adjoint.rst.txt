@@ -1,0 +1,6 @@
+greater_op.adjoint
+==========================================
+
+.. currentmodule:: odl.ufunc_ops.ufunc_ops
+
+.. autoproperty:: greater_op.adjoint

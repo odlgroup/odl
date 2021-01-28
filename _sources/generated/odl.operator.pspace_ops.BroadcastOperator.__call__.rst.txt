@@ -1,0 +1,8 @@
+:orphan:
+
+BroadcastOperator.__call__
+==================================================
+
+.. currentmodule:: odl.operator.pspace_ops
+
+.. automethod:: BroadcastOperator.__call__

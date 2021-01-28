@@ -1,0 +1,8 @@
+:orphan:
+
+ProductSpaceUfuncs.fmax
+=======================================
+
+.. currentmodule:: odl.util.ufuncs
+
+.. automethod:: ProductSpaceUfuncs.fmax

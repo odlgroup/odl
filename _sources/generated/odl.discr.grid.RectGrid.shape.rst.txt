@@ -1,0 +1,6 @@
+RectGrid.shape
+=============================
+
+.. currentmodule:: odl.discr.grid
+
+.. autoproperty:: RectGrid.shape

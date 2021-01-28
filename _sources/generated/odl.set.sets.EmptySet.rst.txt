@@ -1,0 +1,32 @@
+﻿EmptySet
+=====================
+
+.. currentmodule:: odl.set.sets
+
+.. autoclass:: EmptySet
+   :show-inheritance:
+   
+   
+   .. automethod:: __init__
+   
+      
+   
+   .. HACK -- the point here is that we don't want this to appear in the output, but the autosummary should still generate the pages.
+      .. autosummary::
+         :toctree:
+      
+         EmptySet.__contains__
+         EmptySet.__eq__
+         EmptySet.contains_all
+         EmptySet.contains_set
+         EmptySet.element
+   
+
+    
+   .. HACK -- the point here is that we don't want this to appear in the output, but the autosummary should still generate the pages.
+      .. autosummary::
+         :toctree:
+      
+         EmptySet.examples
+   
+   

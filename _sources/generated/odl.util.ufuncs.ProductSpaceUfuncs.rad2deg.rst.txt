@@ -1,0 +1,8 @@
+:orphan:
+
+ProductSpaceUfuncs.rad2deg
+==========================================
+
+.. currentmodule:: odl.util.ufuncs
+
+.. automethod:: ProductSpaceUfuncs.rad2deg

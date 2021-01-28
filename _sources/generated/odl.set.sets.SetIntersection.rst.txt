@@ -1,0 +1,34 @@
+﻿SetIntersection
+============================
+
+.. currentmodule:: odl.set.sets
+
+.. autoclass:: SetIntersection
+   :show-inheritance:
+   
+   
+   .. automethod:: __init__
+   
+      
+   
+   .. HACK -- the point here is that we don't want this to appear in the output, but the autosummary should still generate the pages.
+      .. autosummary::
+         :toctree:
+      
+         SetIntersection.__contains__
+         SetIntersection.__eq__
+         SetIntersection.__getitem__
+         SetIntersection.contains_all
+         SetIntersection.contains_set
+         SetIntersection.element
+   
+
+    
+   .. HACK -- the point here is that we don't want this to appear in the output, but the autosummary should still generate the pages.
+      .. autosummary::
+         :toctree:
+      
+         SetIntersection.examples
+         SetIntersection.sets
+   
+   

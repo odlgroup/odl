@@ -1,0 +1,43 @@
+﻿sin_func
+================================
+
+.. currentmodule:: odl.ufunc_ops.ufunc_ops
+
+.. autoclass:: sin_func
+   :show-inheritance:
+   
+   
+   .. automethod:: __init__
+   
+      
+   
+   .. HACK -- the point here is that we don't want this to appear in the output, but the autosummary should still generate the pages.
+      .. autosummary::
+         :toctree:
+      
+         sin_func.__call__
+         sin_func.__eq__
+         sin_func._call
+         sin_func.bregman
+         sin_func.derivative
+         sin_func.norm
+         sin_func.translated
+   
+
+    
+   .. HACK -- the point here is that we don't want this to appear in the output, but the autosummary should still generate the pages.
+      .. autosummary::
+         :toctree:
+      
+         sin_func.adjoint
+         sin_func.convex_conj
+         sin_func.domain
+         sin_func.grad_lipschitz
+         sin_func.gradient
+         sin_func.inverse
+         sin_func.is_functional
+         sin_func.is_linear
+         sin_func.proximal
+         sin_func.range
+   
+   

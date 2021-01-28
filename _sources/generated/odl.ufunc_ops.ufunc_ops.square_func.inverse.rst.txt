@@ -1,0 +1,6 @@
+square_func.inverse
+===========================================
+
+.. currentmodule:: odl.ufunc_ops.ufunc_ops
+
+.. autoproperty:: square_func.inverse

@@ -1,0 +1,6 @@
+﻿unique
+=======================
+
+.. currentmodule:: odl.util.utility
+
+.. autofunction:: unique

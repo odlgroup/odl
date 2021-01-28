@@ -1,0 +1,6 @@
+WaveletTransformBase.adjoint
+===============================================
+
+.. currentmodule:: odl.trafos.wavelet
+
+.. autoproperty:: WaveletTransformBase.adjoint

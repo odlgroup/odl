@@ -1,0 +1,6 @@
+FanBeamGeometry.det_params
+=====================================================
+
+.. currentmodule:: odl.tomo.geometry.conebeam
+
+.. autoproperty:: FanBeamGeometry.det_params

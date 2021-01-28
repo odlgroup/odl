@@ -1,0 +1,6 @@
+RectGrid.examples
+================================
+
+.. currentmodule:: odl.discr.grid
+
+.. autoproperty:: RectGrid.examples

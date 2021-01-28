@@ -1,0 +1,6 @@
+logical_xor_op.is_linear
+================================================
+
+.. currentmodule:: odl.ufunc_ops.ufunc_ops
+
+.. autoproperty:: logical_xor_op.is_linear

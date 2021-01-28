@@ -1,0 +1,8 @@
+:orphan:
+
+TensorSpaceUfuncs.power
+=======================================
+
+.. currentmodule:: odl.util.ufuncs
+
+.. automethod:: TensorSpaceUfuncs.power

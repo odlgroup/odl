@@ -1,0 +1,8 @@
+:orphan:
+
+RectGrid.corners
+===============================
+
+.. currentmodule:: odl.discr.grid
+
+.. automethod:: RectGrid.corners

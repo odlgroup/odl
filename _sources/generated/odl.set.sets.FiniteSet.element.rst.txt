@@ -1,0 +1,8 @@
+:orphan:
+
+FiniteSet.element
+==============================
+
+.. currentmodule:: odl.set.sets
+
+.. automethod:: FiniteSet.element

@@ -1,0 +1,458 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>odl.solvers.nonsmooth.alternating_dual_updates &mdash; odl 1.0.0.dev0 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../../../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../../../../_static/custom.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../../../" src="../../../../_static/documentation_options.js"></script>
+        <script src="../../../../_static/jquery.js"></script>
+        <script src="../../../../_static/underscore.js"></script>
+        <script src="../../../../_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="../../../../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../../../index.html" class="icon icon-home"> odl
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                1.0.0.dev0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Getting Started</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../getting_started/getting_started.html">Getting Started</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Working with ODL</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../guide/guide.html">User’s guide – selected topics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../math/math.html">Mathematical Background</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Developer zone</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../dev/dev.html">Contributing to ODL</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Useful facts</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../guide/faq.html">Frequently asked questions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../guide/glossary.html">Glossary</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../release_notes.html">Release Notes</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../refs.html">References</a></li>
+</ul>
+<p class="caption"><span class="caption-text">API Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../odl.html">odl</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../../index.html">odl</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../../../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="../../../index.html">Module code</a> &raquo;</li>
+        
+      <li>odl.solvers.nonsmooth.alternating_dual_updates</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for odl.solvers.nonsmooth.alternating_dual_updates</h1><div class="highlight"><pre>
+<span></span><span class="c1"># Copyright 2014-2019 The ODL contributors</span>
+<span class="c1">#</span>
+<span class="c1"># This file is part of ODL.</span>
+<span class="c1">#</span>
+<span class="c1"># This Source Code Form is subject to the terms of the Mozilla Public License,</span>
+<span class="c1"># v. 2.0. If a copy of the MPL was not distributed with this file, You can</span>
+<span class="c1"># obtain one at https://mozilla.org/MPL/2.0/.</span>
+
+<span class="sd">&quot;&quot;&quot;Alternating dual (AD) update algorithm studied by McGaffin and Fessler.</span>
+
+<span class="sd">The alternating dual upgrade method solves structured convex optimization</span>
+<span class="sd">problems by successively updating dual variables which are associated with</span>
+<span class="sd">each of the components.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">print_function</span><span class="p">,</span> <span class="n">division</span><span class="p">,</span> <span class="n">absolute_import</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;adupdates&#39;</span><span class="p">,)</span>
+
+
+<div class="viewcode-block" id="adupdates"><a class="viewcode-back" href="../../../../generated/odl.solvers.nonsmooth.alternating_dual_updates.adupdates.html#odl.solvers.nonsmooth.alternating_dual_updates.adupdates">[docs]</a><span class="k">def</span> <span class="nf">adupdates</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">g</span><span class="p">,</span> <span class="n">L</span><span class="p">,</span> <span class="n">stepsize</span><span class="p">,</span> <span class="n">inner_stepsizes</span><span class="p">,</span> <span class="n">niter</span><span class="p">,</span> <span class="n">random</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+              <span class="n">callback</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">callback_loop</span><span class="o">=</span><span class="s1">&#39;outer&#39;</span><span class="p">):</span>
+    <span class="sa">r</span><span class="sd">&quot;&quot;&quot;Alternating Dual updates method.</span>
+
+<span class="sd">    The Alternating Dual (AD) updates method of McGaffin and Fessler `[MF2015]</span>
+<span class="sd">    &lt;http://ieeexplore.ieee.org/document/7271047/&gt;`_ is designed to solve an</span>
+<span class="sd">    optimization problem of the form ::</span>
+
+<span class="sd">        min_x [ sum_i g_i(L_i x) ]</span>
+
+<span class="sd">    where ``g_i`` are proper, convex and lower semicontinuous functions and</span>
+<span class="sd">    ``L_i`` are linear `Operator` s.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    g : sequence of `Functional` s</span>
+<span class="sd">        All functions need to provide a `Functional.convex_conj` with a</span>
+<span class="sd">        `Functional.proximal` factory.</span>
+<span class="sd">    L : sequence of `Operator` s</span>
+<span class="sd">        Length of ``L`` must equal the length of ``g``.</span>
+<span class="sd">    x : `LinearSpaceElement`</span>
+<span class="sd">        Initial point, updated in-place.</span>
+<span class="sd">    stepsize : positive float</span>
+<span class="sd">        The stepsize for the outer (proximal point) iteration. The theory</span>
+<span class="sd">        guarantees convergence for any positive real number, but the</span>
+<span class="sd">        performance might depend on the choice of a good stepsize.</span>
+<span class="sd">    inner_stepsizes : sequence of stepsizes</span>
+<span class="sd">        Parameters determining the stepsizes for the inner iterations. Must be</span>
+<span class="sd">        matched with the norms of ``L``, and convergence is guaranteed if the</span>
+<span class="sd">        ``inner_stepsizes`` are small enough. See the Notes section for</span>
+<span class="sd">        details.</span>
+<span class="sd">    niter : int</span>
+<span class="sd">        Number of (outer) iterations.</span>
+<span class="sd">    random : bool, optional</span>
+<span class="sd">        If `True`, the order of the dual upgdates is chosen randomly,</span>
+<span class="sd">        otherwise the order provided by the lists ``g``, ``L`` and</span>
+<span class="sd">        ``inner_stepsizes`` is used.</span>
+<span class="sd">    callback : callable, optional</span>
+<span class="sd">        Function called with the current iterate after each iteration.</span>
+<span class="sd">    callback_loop : {&#39;inner&#39;, &#39;outer&#39;}, optional</span>
+<span class="sd">       If &#39;inner&#39;, the ``callback`` function is called after each inner</span>
+<span class="sd">       iteration, i.e., after each dual update. If &#39;outer&#39;, the ``callback``</span>
+<span class="sd">       function is called after each outer iteration, i.e., after each primal</span>
+<span class="sd">       update.</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    The algorithm as implemented here is described in the article [MF2015],</span>
+<span class="sd">    where it is applied to a tomography problem. It solves the problem</span>
+
+<span class="sd">    .. math::</span>
+<span class="sd">        \min_x \sum_{i=1}^m g_i(L_i x),</span>
+
+<span class="sd">    where :math:`g_i` are proper, convex and lower semicontinuous functions</span>
+<span class="sd">    and :math:`L_i` are linear, continuous operators for</span>
+<span class="sd">    :math:`i = 1, \ldots, m`. In an outer iteration, the solution is found</span>
+<span class="sd">    iteratively by an iteration</span>
+
+<span class="sd">    .. math::</span>
+<span class="sd">        x_{n+1} = \mathrm{arg\,min}_x \sum_{i=1}^m g_i(L_i x)</span>
+<span class="sd">            + \frac{\mu}{2} \|x - x_n\|^2</span>
+
+<span class="sd">    with some ``stepsize`` parameter :math:`\mu &gt; 0` according to the proximal</span>
+<span class="sd">    point algorithm. In the inner iteration, dual variables are introduced for</span>
+<span class="sd">    each of the components of the sum. The Lagrangian of the problem is given</span>
+<span class="sd">    by</span>
+
+<span class="sd">    .. math::</span>
+<span class="sd">        S_n(x; v_1, \ldots, v_m) = \sum_{i=1}^m (\langle v_i, L_i x \rangle</span>
+<span class="sd">            - g_i^*(v_i)) + \frac{\mu}{2} \|x - x_n\|^2.</span>
+
+<span class="sd">    Given the dual variables, the new primal variable :math:`x_{n+1}`</span>
+<span class="sd">    can be calculated by directly minimizing :math:`S_n` with respect to</span>
+<span class="sd">    :math:`x`. This corresponds to the formula</span>
+
+<span class="sd">    .. math::</span>
+<span class="sd">         x_{n+1} = x_n - \frac{1}{\mu} \sum_{i=1}^m L_i^* v_i.</span>
+
+<span class="sd">    The dual updates are executed according to the following rule:</span>
+
+<span class="sd">    .. math::</span>
+<span class="sd">        v_i^+ = \mathrm{Prox}^{\mu M_i^{-1}}_{g_i^*}</span>
+<span class="sd">            (v_i + \mu M_i^{-1} L_i x_{n+1}),</span>
+
+<span class="sd">    where :math:`x_{n+1}` is given by the formula above and  :math:`M_i` is a</span>
+<span class="sd">    diagonal matrix with positive diagonal entries such that</span>
+<span class="sd">    :math:`M_i - L_i L_i^*` is positive semidefinite. The variable</span>
+<span class="sd">    ``inner_stepsizes`` is chosen as a stepsize to the `Functional.proximal` to</span>
+<span class="sd">    the `Functional.convex_conj` of each of the ``g`` s after multiplying with</span>
+<span class="sd">    ``stepsize``. The ``inner_stepsizes`` contain the elements of</span>
+<span class="sd">    :math:`M_i^{-1}` in one of the following ways:</span>
+
+<span class="sd">    * Setting ``inner_stepsizes[i]`` a positive float :math:`\gamma`</span>
+<span class="sd">      corresponds to the choice :math:`M_i^{-1} = \gamma \mathrm{Id}`.</span>
+<span class="sd">    * Assume that ``g_i`` is a `SeparableSum`, then setting</span>
+<span class="sd">      ``inner_stepsizes[i]`` a list :math:`(\gamma_1, \ldots, \gamma_k)` of</span>
+<span class="sd">      positive floats corresponds to the choice of a block-diagonal matrix</span>
+<span class="sd">      :math:`M_i^{-1}`, where each block corresponds to one of the space</span>
+<span class="sd">      components and equals :math:`\gamma_i \mathrm{Id}`.</span>
+<span class="sd">    * Assume that ``g_i`` is an `L1Norm` or an `L2NormSquared`, then setting</span>
+<span class="sd">      ``inner_stepsizes[i]`` a ``g_i.domain.element`` :math:`z` corresponds to</span>
+<span class="sd">      the choice :math:`M_i^{-1} = \mathrm{diag}(z)`.</span>
+
+<span class="sd">    References</span>
+<span class="sd">    ----------</span>
+<span class="sd">    [MF2015] McGaffin, M G, and Fessler, J A. *Alternating dual updates</span>
+<span class="sd">    algorithm for X-ray CT reconstruction on the GPU*. IEEE Transactions</span>
+<span class="sd">    on Computational Imaging, 1.3 (2015), pp 186--199.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># Check the lenghts of the lists (= number of dual variables)</span>
+    <span class="n">length</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">g</span><span class="p">)</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">L</span><span class="p">)</span> <span class="o">!=</span> <span class="n">length</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;`len(L)` should equal `len(g)`, but </span><span class="si">{}</span><span class="s1"> != </span><span class="si">{}</span><span class="s1">&#39;</span>
+                         <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">L</span><span class="p">),</span> <span class="n">length</span><span class="p">))</span>
+
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">inner_stepsizes</span><span class="p">)</span> <span class="o">!=</span> <span class="n">length</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;len(`inner_stepsizes`) should equal `len(g)`, &#39;</span>
+                         <span class="s1">&#39; but </span><span class="si">{}</span><span class="s1"> != </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">inner_stepsizes</span><span class="p">),</span> <span class="n">length</span><span class="p">))</span>
+
+    <span class="c1"># Check if operators have a common domain</span>
+    <span class="c1"># (the space of the primal variable):</span>
+    <span class="n">domain</span> <span class="o">=</span> <span class="n">L</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">domain</span>
+    <span class="k">if</span> <span class="nb">any</span><span class="p">(</span><span class="n">opi</span><span class="o">.</span><span class="n">domain</span> <span class="o">!=</span> <span class="n">domain</span> <span class="k">for</span> <span class="n">opi</span> <span class="ow">in</span> <span class="n">L</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;domains of `L` are not all equal&#39;</span><span class="p">)</span>
+
+    <span class="c1"># Check if range of the operators equals domain of the functionals</span>
+    <span class="n">ranges</span> <span class="o">=</span> <span class="p">[</span><span class="n">opi</span><span class="o">.</span><span class="n">range</span> <span class="k">for</span> <span class="n">opi</span> <span class="ow">in</span> <span class="n">L</span><span class="p">]</span>
+    <span class="k">if</span> <span class="nb">any</span><span class="p">(</span><span class="n">L</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">range</span> <span class="o">!=</span> <span class="n">g</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">domain</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">length</span><span class="p">)):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;L[i].range` should equal `g.domain`&#39;</span><span class="p">)</span>
+
+    <span class="c1"># Normalize string</span>
+    <span class="n">callback_loop</span><span class="p">,</span> <span class="n">callback_loop_in</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">callback_loop</span><span class="p">)</span><span class="o">.</span><span class="n">lower</span><span class="p">(),</span> <span class="n">callback_loop</span>
+    <span class="k">if</span> <span class="n">callback_loop</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">(</span><span class="s1">&#39;inner&#39;</span><span class="p">,</span> <span class="s1">&#39;outer&#39;</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;`callback_loop` </span><span class="si">{!r}</span><span class="s1"> not understood&#39;</span>
+                         <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">callback_loop_in</span><span class="p">))</span>
+
+    <span class="c1"># Initialization of the dual variables</span>
+    <span class="n">duals</span> <span class="o">=</span> <span class="p">[</span><span class="n">space</span><span class="o">.</span><span class="n">zero</span><span class="p">()</span> <span class="k">for</span> <span class="n">space</span> <span class="ow">in</span> <span class="n">ranges</span><span class="p">]</span>
+
+    <span class="c1"># Reusable elements in the ranges, one per type of space</span>
+    <span class="n">unique_ranges</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">ranges</span><span class="p">)</span>
+    <span class="n">tmp_rans</span> <span class="o">=</span> <span class="p">{</span><span class="n">ran</span><span class="p">:</span> <span class="n">ran</span><span class="o">.</span><span class="n">element</span><span class="p">()</span> <span class="k">for</span> <span class="n">ran</span> <span class="ow">in</span> <span class="n">unique_ranges</span><span class="p">}</span>
+
+    <span class="c1"># Prepare the proximal operators. Since the stepsize does not vary over</span>
+    <span class="c1"># the iterations, we always use the same proximal operator.</span>
+    <span class="n">proxs</span> <span class="o">=</span> <span class="p">[</span><span class="n">func</span><span class="o">.</span><span class="n">convex_conj</span><span class="o">.</span><span class="n">proximal</span><span class="p">(</span><span class="n">stepsize</span> <span class="o">*</span> <span class="n">inner_ss</span>
+                                       <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">isscalar</span><span class="p">(</span><span class="n">inner_ss</span><span class="p">)</span>
+                                       <span class="k">else</span> <span class="n">stepsize</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">inner_ss</span><span class="p">))</span>
+             <span class="k">for</span> <span class="p">(</span><span class="n">func</span><span class="p">,</span> <span class="n">inner_ss</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">g</span><span class="p">,</span> <span class="n">inner_stepsizes</span><span class="p">)]</span>
+
+    <span class="c1"># Iteratively find a solution</span>
+    <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">niter</span><span class="p">):</span>
+        <span class="c1"># Update x = x - 1/stepsize * sum([ops[i].adjoint(duals[i])</span>
+        <span class="c1"># for i in range(length)])</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">length</span><span class="p">):</span>
+            <span class="n">x</span> <span class="o">-=</span> <span class="p">(</span><span class="mf">1.0</span> <span class="o">/</span> <span class="n">stepsize</span><span class="p">)</span> <span class="o">*</span> <span class="n">L</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">adjoint</span><span class="p">(</span><span class="n">duals</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
+
+        <span class="k">if</span> <span class="n">random</span><span class="p">:</span>
+            <span class="n">rng</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">permutation</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="n">length</span><span class="p">))</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">rng</span> <span class="o">=</span> <span class="nb">range</span><span class="p">(</span><span class="n">length</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="n">rng</span><span class="p">:</span>
+            <span class="n">step</span> <span class="o">=</span> <span class="p">(</span><span class="n">stepsize</span> <span class="o">*</span> <span class="n">inner_stepsizes</span><span class="p">[</span><span class="n">j</span><span class="p">]</span>
+                    <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">isscalar</span><span class="p">(</span><span class="n">inner_stepsizes</span><span class="p">[</span><span class="n">j</span><span class="p">])</span>
+                    <span class="k">else</span> <span class="n">stepsize</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">inner_stepsizes</span><span class="p">[</span><span class="n">j</span><span class="p">]))</span>
+            <span class="n">arg</span> <span class="o">=</span> <span class="n">duals</span><span class="p">[</span><span class="n">j</span><span class="p">]</span> <span class="o">+</span> <span class="n">step</span> <span class="o">*</span> <span class="n">L</span><span class="p">[</span><span class="n">j</span><span class="p">](</span><span class="n">x</span><span class="p">)</span>
+            <span class="n">tmp_ran</span> <span class="o">=</span> <span class="n">tmp_rans</span><span class="p">[</span><span class="n">L</span><span class="p">[</span><span class="n">j</span><span class="p">]</span><span class="o">.</span><span class="n">range</span><span class="p">]</span>
+            <span class="n">proxs</span><span class="p">[</span><span class="n">j</span><span class="p">](</span><span class="n">arg</span><span class="p">,</span> <span class="n">out</span><span class="o">=</span><span class="n">tmp_ran</span><span class="p">)</span>
+            <span class="n">x</span> <span class="o">-=</span> <span class="mf">1.0</span> <span class="o">/</span> <span class="n">stepsize</span> <span class="o">*</span> <span class="n">L</span><span class="p">[</span><span class="n">j</span><span class="p">]</span><span class="o">.</span><span class="n">adjoint</span><span class="p">(</span><span class="n">tmp_ran</span> <span class="o">-</span> <span class="n">duals</span><span class="p">[</span><span class="n">j</span><span class="p">])</span>
+            <span class="n">duals</span><span class="p">[</span><span class="n">j</span><span class="p">]</span><span class="o">.</span><span class="n">assign</span><span class="p">(</span><span class="n">tmp_ran</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="n">callback</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">callback_loop</span> <span class="o">==</span> <span class="s1">&#39;inner&#39;</span><span class="p">:</span>
+                <span class="n">callback</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">callback</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">callback_loop</span> <span class="o">==</span> <span class="s1">&#39;outer&#39;</span><span class="p">:</span>
+            <span class="n">callback</span><span class="p">(</span><span class="n">x</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="adupdates_simple"><a class="viewcode-back" href="../../../../generated/odl.solvers.nonsmooth.alternating_dual_updates.adupdates_simple.html#odl.solvers.nonsmooth.alternating_dual_updates.adupdates_simple">[docs]</a><span class="k">def</span> <span class="nf">adupdates_simple</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">g</span><span class="p">,</span> <span class="n">L</span><span class="p">,</span> <span class="n">stepsize</span><span class="p">,</span> <span class="n">inner_stepsizes</span><span class="p">,</span> <span class="n">niter</span><span class="p">,</span>
+                     <span class="n">random</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Non-optimized version of ``adupdates``.</span>
+<span class="sd">    This function is intended for debugging. It makes a lot of copies and</span>
+<span class="sd">    performs no error checking.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># Initializations</span>
+    <span class="n">length</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">g</span><span class="p">)</span>
+    <span class="n">ranges</span> <span class="o">=</span> <span class="p">[</span><span class="n">Li</span><span class="o">.</span><span class="n">range</span> <span class="k">for</span> <span class="n">Li</span> <span class="ow">in</span> <span class="n">L</span><span class="p">]</span>
+    <span class="n">duals</span> <span class="o">=</span> <span class="p">[</span><span class="n">space</span><span class="o">.</span><span class="n">zero</span><span class="p">()</span> <span class="k">for</span> <span class="n">space</span> <span class="ow">in</span> <span class="n">ranges</span><span class="p">]</span>
+
+    <span class="c1"># Iteratively find a solution</span>
+    <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">niter</span><span class="p">):</span>
+        <span class="c1"># Update x = x - 1/stepsize * sum([ops[i].adjoint(duals[i])</span>
+        <span class="c1"># for i in range(length)])</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">length</span><span class="p">):</span>
+            <span class="n">x</span> <span class="o">-=</span> <span class="p">(</span><span class="mf">1.0</span> <span class="o">/</span> <span class="n">stepsize</span><span class="p">)</span> <span class="o">*</span> <span class="n">L</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">adjoint</span><span class="p">(</span><span class="n">duals</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
+
+        <span class="n">rng</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">permutation</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="n">length</span><span class="p">))</span> <span class="k">if</span> <span class="n">random</span> <span class="k">else</span> <span class="nb">range</span><span class="p">(</span><span class="n">length</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="n">rng</span><span class="p">:</span>
+            <span class="n">dual_tmp</span> <span class="o">=</span> <span class="n">ranges</span><span class="p">[</span><span class="n">j</span><span class="p">]</span><span class="o">.</span><span class="n">element</span><span class="p">()</span>
+            <span class="n">dual_tmp</span> <span class="o">=</span> <span class="p">(</span><span class="n">g</span><span class="p">[</span><span class="n">j</span><span class="p">]</span><span class="o">.</span><span class="n">convex_conj</span><span class="o">.</span><span class="n">proximal</span>
+                        <span class="p">(</span><span class="n">stepsize</span> <span class="o">*</span> <span class="n">inner_stepsizes</span><span class="p">[</span><span class="n">j</span><span class="p">]</span>
+                         <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">isscalar</span><span class="p">(</span><span class="n">inner_stepsizes</span><span class="p">[</span><span class="n">j</span><span class="p">])</span>
+                         <span class="k">else</span> <span class="n">stepsize</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">inner_stepsizes</span><span class="p">[</span><span class="n">j</span><span class="p">]))</span>
+                        <span class="p">(</span><span class="n">duals</span><span class="p">[</span><span class="n">j</span><span class="p">]</span> <span class="o">+</span> <span class="n">stepsize</span> <span class="o">*</span> <span class="n">inner_stepsizes</span><span class="p">[</span><span class="n">j</span><span class="p">]</span> <span class="o">*</span> <span class="n">L</span><span class="p">[</span><span class="n">j</span><span class="p">](</span><span class="n">x</span><span class="p">)</span>
+                         <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">isscalar</span><span class="p">(</span><span class="n">inner_stepsizes</span><span class="p">[</span><span class="n">j</span><span class="p">])</span>
+                         <span class="k">else</span> <span class="n">duals</span><span class="p">[</span><span class="n">j</span><span class="p">]</span> <span class="o">+</span> <span class="n">stepsize</span> <span class="o">*</span>
+                         <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">inner_stepsizes</span><span class="p">[</span><span class="n">j</span><span class="p">])</span> <span class="o">*</span> <span class="n">L</span><span class="p">[</span><span class="n">j</span><span class="p">](</span><span class="n">x</span><span class="p">)))</span>
+            <span class="n">x</span> <span class="o">-=</span> <span class="mf">1.0</span> <span class="o">/</span> <span class="n">stepsize</span> <span class="o">*</span> <span class="n">L</span><span class="p">[</span><span class="n">j</span><span class="p">]</span><span class="o">.</span><span class="n">adjoint</span><span class="p">(</span><span class="n">dual_tmp</span> <span class="o">-</span> <span class="n">duals</span><span class="p">[</span><span class="n">j</span><span class="p">])</span>
+            <span class="n">duals</span><span class="p">[</span><span class="n">j</span><span class="p">]</span><span class="o">.</span><span class="n">assign</span><span class="p">(</span><span class="n">dual_tmp</span><span class="p">)</span></div>
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &#169; Copyright 2014-2020 The ODL Contributors.
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

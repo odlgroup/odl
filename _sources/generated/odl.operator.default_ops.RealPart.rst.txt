@@ -1,0 +1,37 @@
+﻿RealPart
+=================================
+
+.. currentmodule:: odl.operator.default_ops
+
+.. autoclass:: RealPart
+   :show-inheritance:
+   
+   
+   .. automethod:: __init__
+   
+      
+   
+   .. HACK -- the point here is that we don't want this to appear in the output, but the autosummary should still generate the pages.
+      .. autosummary::
+         :toctree:
+      
+         RealPart.__call__
+         RealPart.__eq__
+         RealPart._call
+         RealPart.derivative
+         RealPart.norm
+   
+
+    
+   .. HACK -- the point here is that we don't want this to appear in the output, but the autosummary should still generate the pages.
+      .. autosummary::
+         :toctree:
+      
+         RealPart.adjoint
+         RealPart.domain
+         RealPart.inverse
+         RealPart.is_functional
+         RealPart.is_linear
+         RealPart.range
+   
+   

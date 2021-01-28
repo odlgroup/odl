@@ -1,0 +1,6 @@
+cosh_func.grad_lipschitz
+================================================
+
+.. currentmodule:: odl.ufunc_ops.ufunc_ops
+
+.. autoproperty:: cosh_func.grad_lipschitz

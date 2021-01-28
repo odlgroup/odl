@@ -1,0 +1,37 @@
+﻿not_equal_op
+====================================
+
+.. currentmodule:: odl.ufunc_ops.ufunc_ops
+
+.. autoclass:: not_equal_op
+   :show-inheritance:
+   
+   
+   .. automethod:: __init__
+   
+      
+   
+   .. HACK -- the point here is that we don't want this to appear in the output, but the autosummary should still generate the pages.
+      .. autosummary::
+         :toctree:
+      
+         not_equal_op.__call__
+         not_equal_op.__eq__
+         not_equal_op._call
+         not_equal_op.derivative
+         not_equal_op.norm
+   
+
+    
+   .. HACK -- the point here is that we don't want this to appear in the output, but the autosummary should still generate the pages.
+      .. autosummary::
+         :toctree:
+      
+         not_equal_op.adjoint
+         not_equal_op.domain
+         not_equal_op.inverse
+         not_equal_op.is_functional
+         not_equal_op.is_linear
+         not_equal_op.range
+   
+   

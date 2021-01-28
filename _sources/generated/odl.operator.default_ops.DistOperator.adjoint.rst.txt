@@ -1,0 +1,6 @@
+DistOperator.adjoint
+=============================================
+
+.. currentmodule:: odl.operator.default_ops
+
+.. autoproperty:: DistOperator.adjoint

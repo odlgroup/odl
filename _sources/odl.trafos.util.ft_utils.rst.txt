@@ -1,0 +1,21 @@
+ft_utils
+========
+
+Utility functions for Fourier transforms on regularly sampled data.
+
+.. currentmodule:: odl.trafos.util.ft_utils
+
+
+
+
+.. rubric:: Functions
+
+.. autosummary::
+   :toctree: generated/
+
+   ~odl.trafos.util.ft_utils.dft_postprocess_data
+   ~odl.trafos.util.ft_utils.dft_preprocess_data
+   ~odl.trafos.util.ft_utils.realspace_grid
+   ~odl.trafos.util.ft_utils.reciprocal_grid
+   ~odl.trafos.util.ft_utils.reciprocal_space
+

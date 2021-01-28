@@ -1,0 +1,43 @@
+﻿DiscreteFourierTransform
+===========================================
+
+.. currentmodule:: odl.trafos.fourier
+
+.. autoclass:: DiscreteFourierTransform
+   :show-inheritance:
+   
+   
+   .. automethod:: __init__
+   
+      
+   
+   .. HACK -- the point here is that we don't want this to appear in the output, but the autosummary should still generate the pages.
+      .. autosummary::
+         :toctree:
+      
+         DiscreteFourierTransform.__call__
+         DiscreteFourierTransform.__eq__
+         DiscreteFourierTransform._call
+         DiscreteFourierTransform.clear_fftw_plan
+         DiscreteFourierTransform.derivative
+         DiscreteFourierTransform.init_fftw_plan
+         DiscreteFourierTransform.norm
+   
+
+    
+   .. HACK -- the point here is that we don't want this to appear in the output, but the autosummary should still generate the pages.
+      .. autosummary::
+         :toctree:
+      
+         DiscreteFourierTransform.adjoint
+         DiscreteFourierTransform.axes
+         DiscreteFourierTransform.domain
+         DiscreteFourierTransform.halfcomplex
+         DiscreteFourierTransform.impl
+         DiscreteFourierTransform.inverse
+         DiscreteFourierTransform.is_functional
+         DiscreteFourierTransform.is_linear
+         DiscreteFourierTransform.range
+         DiscreteFourierTransform.sign
+   
+   

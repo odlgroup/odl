@@ -1,0 +1,6 @@
+CircularDetector.ndim
+================================================
+
+.. currentmodule:: odl.tomo.geometry.detector
+
+.. autoproperty:: CircularDetector.ndim

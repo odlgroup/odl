@@ -1,0 +1,8 @@
+:orphan:
+
+ConeBeamGeometry.det_axes
+====================================================
+
+.. currentmodule:: odl.tomo.geometry.conebeam
+
+.. automethod:: ConeBeamGeometry.det_axes

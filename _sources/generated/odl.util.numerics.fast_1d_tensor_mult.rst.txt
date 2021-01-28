@@ -1,0 +1,6 @@
+﻿fast_1d_tensor_mult
+=====================================
+
+.. currentmodule:: odl.util.numerics
+
+.. autofunction:: fast_1d_tensor_mult

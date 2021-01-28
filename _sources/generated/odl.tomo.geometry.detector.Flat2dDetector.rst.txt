@@ -1,0 +1,40 @@
+﻿Flat2dDetector
+=========================================
+
+.. currentmodule:: odl.tomo.geometry.detector
+
+.. autoclass:: Flat2dDetector
+   :show-inheritance:
+   
+   
+   .. automethod:: __init__
+   
+      
+   
+   .. HACK -- the point here is that we don't want this to appear in the output, but the autosummary should still generate the pages.
+      .. autosummary::
+         :toctree:
+      
+         Flat2dDetector.__eq__
+         Flat2dDetector.surface
+         Flat2dDetector.surface_deriv
+         Flat2dDetector.surface_measure
+         Flat2dDetector.surface_normal
+   
+
+    
+   .. HACK -- the point here is that we don't want this to appear in the output, but the autosummary should still generate the pages.
+      .. autosummary::
+         :toctree:
+      
+         Flat2dDetector.axes
+         Flat2dDetector.check_bounds
+         Flat2dDetector.grid
+         Flat2dDetector.ndim
+         Flat2dDetector.params
+         Flat2dDetector.partition
+         Flat2dDetector.shape
+         Flat2dDetector.size
+         Flat2dDetector.space_ndim
+   
+   

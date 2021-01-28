@@ -1,0 +1,6 @@
+ProductSpaceConstWeighting.impl
+================================================
+
+.. currentmodule:: odl.space.pspace
+
+.. autoproperty:: ProductSpaceConstWeighting.impl

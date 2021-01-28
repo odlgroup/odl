@@ -1,0 +1,8 @@
+:orphan:
+
+NumpyTensorSpace.inner
+============================================
+
+.. currentmodule:: odl.space.npy_tensors
+
+.. automethod:: NumpyTensorSpace.inner

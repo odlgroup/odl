@@ -1,0 +1,6 @@
+ceil_op.is_linear
+=========================================
+
+.. currentmodule:: odl.ufunc_ops.ufunc_ops
+
+.. autoproperty:: ceil_op.is_linear

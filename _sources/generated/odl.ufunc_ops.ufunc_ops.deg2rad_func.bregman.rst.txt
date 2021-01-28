@@ -1,0 +1,8 @@
+:orphan:
+
+deg2rad_func.bregman
+============================================
+
+.. currentmodule:: odl.ufunc_ops.ufunc_ops
+
+.. automethod:: deg2rad_func.bregman

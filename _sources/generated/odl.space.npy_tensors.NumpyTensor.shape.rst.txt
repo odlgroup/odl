@@ -1,0 +1,6 @@
+NumpyTensor.shape
+=======================================
+
+.. currentmodule:: odl.space.npy_tensors
+
+.. autoproperty:: NumpyTensor.shape

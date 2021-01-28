@@ -1,0 +1,6 @@
+NumericalGradient.inverse
+============================================================
+
+.. currentmodule:: odl.solvers.functional.derivatives
+
+.. autoproperty:: NumericalGradient.inverse

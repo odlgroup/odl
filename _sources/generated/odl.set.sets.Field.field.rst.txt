@@ -1,0 +1,6 @@
+Field.field
+========================
+
+.. currentmodule:: odl.set.sets
+
+.. autoproperty:: Field.field

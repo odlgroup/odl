@@ -1,0 +1,8 @@
+:orphan:
+
+TensorSpaceUfuncs.arccosh
+=========================================
+
+.. currentmodule:: odl.util.ufuncs
+
+.. automethod:: TensorSpaceUfuncs.arccosh

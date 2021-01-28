@@ -1,0 +1,6 @@
+LinDeformFixedTempl.inverse
+=================================================
+
+.. currentmodule:: odl.deform.linearized
+
+.. autoproperty:: LinDeformFixedTempl.inverse

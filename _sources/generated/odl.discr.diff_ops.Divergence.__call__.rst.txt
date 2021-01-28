@@ -1,0 +1,8 @@
+:orphan:
+
+Divergence.__call__
+======================================
+
+.. currentmodule:: odl.discr.diff_ops
+
+.. automethod:: Divergence.__call__

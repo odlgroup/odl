@@ -1,0 +1,6 @@
+RectPartition.boundary_cell_fractions
+=========================================================
+
+.. currentmodule:: odl.discr.partition
+
+.. autoproperty:: RectPartition.boundary_cell_fractions

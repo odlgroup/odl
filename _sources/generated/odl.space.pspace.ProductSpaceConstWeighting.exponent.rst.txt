@@ -1,0 +1,6 @@
+ProductSpaceConstWeighting.exponent
+====================================================
+
+.. currentmodule:: odl.space.pspace
+
+.. autoproperty:: ProductSpaceConstWeighting.exponent

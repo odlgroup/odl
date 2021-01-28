@@ -1,0 +1,6 @@
+PowerOperator.adjoint
+==============================================
+
+.. currentmodule:: odl.operator.default_ops
+
+.. autoproperty:: PowerOperator.adjoint

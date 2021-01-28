@@ -1,0 +1,8 @@
+:orphan:
+
+LinearSpaceElement.lincomb
+========================================
+
+.. currentmodule:: odl.set.space
+
+.. automethod:: LinearSpaceElement.lincomb

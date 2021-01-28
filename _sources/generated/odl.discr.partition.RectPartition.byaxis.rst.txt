@@ -1,0 +1,6 @@
+RectPartition.byaxis
+========================================
+
+.. currentmodule:: odl.discr.partition
+
+.. autoproperty:: RectPartition.byaxis

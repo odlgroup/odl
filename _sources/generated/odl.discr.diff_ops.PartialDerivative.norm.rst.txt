@@ -1,0 +1,8 @@
+:orphan:
+
+PartialDerivative.norm
+=========================================
+
+.. currentmodule:: odl.discr.diff_ops
+
+.. automethod:: PartialDerivative.norm

@@ -1,0 +1,6 @@
+RectPartition.extent
+========================================
+
+.. currentmodule:: odl.discr.partition
+
+.. autoproperty:: RectPartition.extent

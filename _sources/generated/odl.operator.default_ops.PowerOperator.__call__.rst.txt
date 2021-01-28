@@ -1,0 +1,8 @@
+:orphan:
+
+PowerOperator.__call__
+===============================================
+
+.. currentmodule:: odl.operator.default_ops
+
+.. automethod:: PowerOperator.__call__

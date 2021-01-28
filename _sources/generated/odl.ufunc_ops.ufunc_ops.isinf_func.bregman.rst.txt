@@ -1,0 +1,8 @@
+:orphan:
+
+isinf_func.bregman
+==========================================
+
+.. currentmodule:: odl.ufunc_ops.ufunc_ops
+
+.. automethod:: isinf_func.bregman

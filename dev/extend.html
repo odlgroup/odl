@@ -1,0 +1,280 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>Extending ODL &mdash; odl 1.0.0.dev0 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="How to document" href="document.html" />
+    <link rel="prev" title="Contributing to ODL" href="dev.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../index.html" class="icon icon-home"> odl
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                1.0.0.dev0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Getting Started</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../getting_started/getting_started.html">Getting Started</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Working with ODL</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../guide/guide.html">User’s guide – selected topics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../math/math.html">Mathematical Background</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Developer zone</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="dev.html">Contributing to ODL</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="dev.html#introduction">Introduction</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="dev.html#contents">Contents</a><ul class="current">
+<li class="toctree-l3 current"><a class="current reference internal" href="#">Extending ODL</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#adding-tensor-spaces">Adding Tensor spaces</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="document.html">How to document</a></li>
+<li class="toctree-l3"><a class="reference internal" href="testing.html">Testing in ODL</a></li>
+<li class="toctree-l3"><a class="reference internal" href="release.html">The ODL release process</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gitwash/index.html">Working with ODL source code</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<p class="caption"><span class="caption-text">Useful facts</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../guide/faq.html">Frequently asked questions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../guide/glossary.html">Glossary</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../release_notes.html">Release Notes</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../refs.html">References</a></li>
+</ul>
+<p class="caption"><span class="caption-text">API Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../odl.html">odl</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">odl</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="dev.html">Contributing to ODL</a> &raquo;</li>
+        
+      <li>Extending ODL</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            <a href="../_sources/dev/extend.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="extending-odl">
+<span id="dev-extend"></span><h1>Extending ODL<a class="headerlink" href="#extending-odl" title="Permalink to this headline">¶</a></h1>
+<p>ODL is written to be easy to extend with new functionality and classes, and new content is welcome.
+With that said, not everything fits inside the main library, and some ideas are better realized as <em>extension packages</em>, i.e., packages that use the core ODL library and extend it with experimental features.
+This lowers the requirement on code maturity, completeness of documentation, unit tests etc. on your side and allows the core library to stay slim and develop faster.</p>
+<p>There are several ways to extend ODL, some of which are listed below.</p>
+<div class="section" id="adding-tensor-spaces">
+<h2>Adding Tensor spaces<a class="headerlink" href="#adding-tensor-spaces" title="Permalink to this headline">¶</a></h2>
+<p>The abstract <a class="reference internal" href="../generated/odl.space.base_tensors.TensorSpace.html#odl.space.base_tensors.TensorSpace" title="odl.space.base_tensors.TensorSpace"><code class="xref any py py-class docutils literal notranslate"><span class="pre">TensorSpace</span></code></a> is the workhorse of the ODL space machinery.
+It is used in the discrete <img class="math" src="../_images/math/30bed23294785f7c557f4ddf93b9d2cd0f95a49b.png" alt="R^n"/> case, as well as data representation for discretized function spaces such as <img class="math" src="../_images/math/b5a1959a5e8abb42b88959c8b6780d7c155be0f8.png" alt="L^2([0, 1])"/> in the <a class="reference internal" href="../generated/odl.discr.discr_space.DiscretizedSpace.html#odl.discr.discr_space.DiscretizedSpace" title="odl.discr.discr_space.DiscretizedSpace"><code class="xref any py py-class docutils literal notranslate"><span class="pre">DiscretizedSpace</span></code></a> class.
+They are in general created through the <a class="reference internal" href="../generated/odl.space.space_utils.rn.html#odl.space.space_utils.rn" title="odl.space.space_utils.rn"><code class="xref any py py-func docutils literal notranslate"><span class="pre">rn</span></code></a> and <a class="reference internal" href="../generated/odl.discr.discr_space.uniform_discr.html#odl.discr.discr_space.uniform_discr" title="odl.discr.discr_space.uniform_discr"><code class="xref any py py-func docutils literal notranslate"><span class="pre">uniform_discr</span></code></a> functions which take an <code class="docutils literal notranslate"><span class="pre">impl</span></code> parameter, allowing users to select the backend for array storage and computations.</p>
+<p>In the core ODL package, there is only a single backend available: <a class="reference internal" href="../generated/odl.space.npy_tensors.NumpyTensorSpace.html#odl.space.npy_tensors.NumpyTensorSpace" title="odl.space.npy_tensors.NumpyTensorSpace"><code class="xref any py py-class docutils literal notranslate"><span class="pre">NumpyTensorSpace</span></code></a>, given by <code class="docutils literal notranslate"><span class="pre">impl='numpy'</span></code>, which is the default choice.</p>
+<p>As an advanced user, you may need to add additional spaces of this type that can be used inside ODL, perhaps to add <a class="reference external" href="https://en.wikipedia.org/wiki/Message_Passing_Interface">MPI</a> support.
+There are a few steps to do this:</p>
+<ul>
+<li><p>Create a new library with a <code class="docutils literal notranslate"><span class="pre">setuptools</span></code> installer in the form of a <code class="docutils literal notranslate"><span class="pre">setup.py</span></code> file.</p></li>
+<li><p>Add the spaces that you want to add to the library.
+The spaces need to inherit from <a class="reference internal" href="../generated/odl.space.base_tensors.TensorSpace.html#odl.space.base_tensors.TensorSpace" title="odl.space.base_tensors.TensorSpace"><code class="xref any py py-class docutils literal notranslate"><span class="pre">TensorSpace</span></code></a> and implement all of its abstract methods.
+See the documentation for further information on the specific methods that need to be implemented.</p></li>
+<li><p>Add the methods <code class="docutils literal notranslate"><span class="pre">tensor_space_impl()</span></code> and <code class="docutils literal notranslate"><span class="pre">tensor_space_impl_names()</span></code> to a file <code class="docutils literal notranslate"><span class="pre">odl_plugin.py</span></code> in your library.
+The former should return a <code class="docutils literal notranslate"><span class="pre">dict</span></code> mapping implementation names to tensor space classes, the latter the names only.</p></li>
+<li><p>Add the following to your library’s <code class="docutils literal notranslate"><span class="pre">setup.py</span></code> in the call of the <code class="docutils literal notranslate"><span class="pre">setup</span></code> function:</p>
+<blockquote>
+<div><p>entry_points={‘odl.space’: [‘mylib = mylib.odl_plugin’]</p>
+</div></blockquote>
+<p>Replace <code class="docutils literal notranslate"><span class="pre">mylib</span></code> with the name of your plugin.</p>
+</li>
+</ul>
+<p>For a blueprint of all these steps, check out the implementation of the <a class="reference external" href="https://github.com/odlgroup/odlcuda">odlcuda</a> plugin.</p>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+        <a href="document.html" class="btn btn-neutral float-right" title="How to document" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="dev.html" class="btn btn-neutral float-left" title="Contributing to ODL" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &#169; Copyright 2014-2020 The ODL Contributors.
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

@@ -1,0 +1,6 @@
+﻿uniform_partition_fromgrid
+==============================================
+
+.. currentmodule:: odl.discr.partition
+
+.. autofunction:: uniform_partition_fromgrid

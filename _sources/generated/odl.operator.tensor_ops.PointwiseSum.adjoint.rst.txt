@@ -1,0 +1,6 @@
+PointwiseSum.adjoint
+============================================
+
+.. currentmodule:: odl.operator.tensor_ops
+
+.. autoproperty:: PointwiseSum.adjoint

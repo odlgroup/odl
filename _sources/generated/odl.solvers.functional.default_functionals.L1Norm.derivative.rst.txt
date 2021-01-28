@@ -1,0 +1,8 @@
+:orphan:
+
+L1Norm.derivative
+============================================================
+
+.. currentmodule:: odl.solvers.functional.default_functionals
+
+.. automethod:: L1Norm.derivative

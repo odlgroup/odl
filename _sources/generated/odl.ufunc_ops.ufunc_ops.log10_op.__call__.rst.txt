@@ -1,0 +1,8 @@
+:orphan:
+
+log10_op.__call__
+=========================================
+
+.. currentmodule:: odl.ufunc_ops.ufunc_ops
+
+.. automethod:: log10_op.__call__

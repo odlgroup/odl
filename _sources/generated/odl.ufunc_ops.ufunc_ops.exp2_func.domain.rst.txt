@@ -1,0 +1,6 @@
+exp2_func.domain
+========================================
+
+.. currentmodule:: odl.ufunc_ops.ufunc_ops
+
+.. autoproperty:: exp2_func.domain

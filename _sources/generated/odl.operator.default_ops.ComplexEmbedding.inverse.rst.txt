@@ -1,0 +1,6 @@
+ComplexEmbedding.inverse
+=================================================
+
+.. currentmodule:: odl.operator.default_ops
+
+.. autoproperty:: ComplexEmbedding.inverse

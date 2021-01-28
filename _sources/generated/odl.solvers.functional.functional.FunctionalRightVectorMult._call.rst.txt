@@ -1,0 +1,8 @@
+:orphan:
+
+FunctionalRightVectorMult._call
+=================================================================
+
+.. currentmodule:: odl.solvers.functional.functional
+
+.. automethod:: FunctionalRightVectorMult._call

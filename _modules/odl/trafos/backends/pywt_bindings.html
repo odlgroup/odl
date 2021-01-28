@@ -1,0 +1,380 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>odl.trafos.backends.pywt_bindings &mdash; odl 1.0.0.dev0 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../../../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../../../../_static/custom.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../../../" src="../../../../_static/documentation_options.js"></script>
+        <script src="../../../../_static/jquery.js"></script>
+        <script src="../../../../_static/underscore.js"></script>
+        <script src="../../../../_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="../../../../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../../../index.html" class="icon icon-home"> odl
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                1.0.0.dev0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Getting Started</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../getting_started/getting_started.html">Getting Started</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Working with ODL</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../guide/guide.html">User’s guide – selected topics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../math/math.html">Mathematical Background</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Developer zone</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../dev/dev.html">Contributing to ODL</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Useful facts</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../guide/faq.html">Frequently asked questions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../guide/glossary.html">Glossary</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../release_notes.html">Release Notes</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../refs.html">References</a></li>
+</ul>
+<p class="caption"><span class="caption-text">API Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../odl.html">odl</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../../index.html">odl</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../../../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="../../../index.html">Module code</a> &raquo;</li>
+        
+      <li>odl.trafos.backends.pywt_bindings</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for odl.trafos.backends.pywt_bindings</h1><div class="highlight"><pre>
+<span></span><span class="c1"># Copyright 2014-2017 The ODL contributors</span>
+<span class="c1">#</span>
+<span class="c1"># This file is part of ODL.</span>
+<span class="c1">#</span>
+<span class="c1"># This Source Code Form is subject to the terms of the Mozilla Public License,</span>
+<span class="c1"># v. 2.0. If a copy of the MPL was not distributed with this file, You can</span>
+<span class="c1"># obtain one at https://mozilla.org/MPL/2.0/.</span>
+
+<span class="sd">&quot;&quot;&quot;Bindings to the PyWavelets backend for wavelet transforms.</span>
+
+<span class="sd">`PyWavelets &lt;https://pywavelets.readthedocs.io/&gt;`_ is a Python library</span>
+<span class="sd">for wavelet transforms in arbitrary dimensions, featuring a large number</span>
+<span class="sd">of built-in wavelet filters.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">print_function</span><span class="p">,</span> <span class="n">division</span><span class="p">,</span> <span class="n">absolute_import</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+
+<span class="k">try</span><span class="p">:</span>
+    <span class="kn">import</span> <span class="nn">pywt</span>
+    <span class="n">PYWT_AVAILABLE</span> <span class="o">=</span> <span class="kc">True</span>
+<span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
+    <span class="n">PYWT_AVAILABLE</span> <span class="o">=</span> <span class="kc">False</span>
+
+
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;PAD_MODES_ODL2PYWT&#39;</span><span class="p">,</span> <span class="s1">&#39;PYWT_SUPPORTED_MODES&#39;</span><span class="p">,</span> <span class="s1">&#39;PYWT_AVAILABLE&#39;</span><span class="p">,</span>
+           <span class="s1">&#39;pywt_wavelet&#39;</span><span class="p">,</span> <span class="s1">&#39;pywt_pad_mode&#39;</span><span class="p">,</span> <span class="s1">&#39;precompute_raveled_slices&#39;</span><span class="p">)</span>
+
+
+<span class="c1"># A clear illustration of all of these padding modes is available at:</span>
+<span class="c1"># https://pywavelets.readthedocs.io/en/latest/ref/signal-extension-modes.html</span>
+<span class="n">PAD_MODES_ODL2PYWT</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;constant&#39;</span><span class="p">:</span> <span class="s1">&#39;zero&#39;</span><span class="p">,</span>
+                      <span class="s1">&#39;periodic&#39;</span><span class="p">:</span> <span class="s1">&#39;periodic&#39;</span><span class="p">,</span>
+                      <span class="s1">&#39;symmetric&#39;</span><span class="p">:</span> <span class="s1">&#39;symmetric&#39;</span><span class="p">,</span>
+                      <span class="s1">&#39;order0&#39;</span><span class="p">:</span> <span class="s1">&#39;constant&#39;</span><span class="p">,</span>
+                      <span class="s1">&#39;order1&#39;</span><span class="p">:</span> <span class="s1">&#39;smooth&#39;</span><span class="p">,</span>
+                      <span class="s1">&#39;pywt_periodic&#39;</span><span class="p">:</span> <span class="s1">&#39;periodization&#39;</span><span class="p">,</span>
+                      <span class="s1">&#39;reflect&#39;</span><span class="p">:</span> <span class="s1">&#39;reflect&#39;</span><span class="p">,</span>
+                      <span class="s1">&#39;antireflect&#39;</span><span class="p">:</span> <span class="s1">&#39;antireflect&#39;</span><span class="p">,</span>
+                      <span class="s1">&#39;antisymmetric&#39;</span><span class="p">:</span> <span class="s1">&#39;antisymmetric&#39;</span><span class="p">,</span>
+                      <span class="p">}</span>
+<span class="n">PYWT_SUPPORTED_MODES</span> <span class="o">=</span> <span class="n">PAD_MODES_ODL2PYWT</span><span class="o">.</span><span class="n">values</span><span class="p">()</span>
+
+
+<div class="viewcode-block" id="pywt_wavelet"><a class="viewcode-back" href="../../../../generated/odl.trafos.backends.pywt_bindings.pywt_wavelet.html#odl.trafos.backends.pywt_bindings.pywt_wavelet">[docs]</a><span class="k">def</span> <span class="nf">pywt_wavelet</span><span class="p">(</span><span class="n">wavelet</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Convert ``wavelet`` to a `pywt.Wavelet` instance.&quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">wavelet</span><span class="p">,</span> <span class="n">pywt</span><span class="o">.</span><span class="n">Wavelet</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">wavelet</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">pywt</span><span class="o">.</span><span class="n">Wavelet</span><span class="p">(</span><span class="n">wavelet</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="pywt_pad_mode"><a class="viewcode-back" href="../../../../generated/odl.trafos.backends.pywt_bindings.pywt_pad_mode.html#odl.trafos.backends.pywt_bindings.pywt_pad_mode">[docs]</a><span class="k">def</span> <span class="nf">pywt_pad_mode</span><span class="p">(</span><span class="n">pad_mode</span><span class="p">,</span> <span class="n">pad_const</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Convert ODL-style padding mode to pywt-style padding mode.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    pad_mode : str</span>
+<span class="sd">        The ODL padding mode to use at the boundaries.</span>
+<span class="sd">    pad_const : float, optional</span>
+<span class="sd">        Value to use outside the signal boundaries when ``pad_mode`` is</span>
+<span class="sd">        &#39;constant&#39;. Only a value of 0. is supported by PyWavelets</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    pad_mode_pywt : str</span>
+<span class="sd">        The corresponding name of the requested padding mode in PyWavelets.</span>
+<span class="sd">        See `signal extension modes`_.</span>
+
+<span class="sd">    References</span>
+<span class="sd">    ----------</span>
+<span class="sd">    .. _signal extension modes:</span>
+<span class="sd">       https://pywavelets.readthedocs.io/en/latest/ref/signal-extension-modes.html</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">pad_mode</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">pad_mode</span><span class="p">)</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
+    <span class="k">if</span> <span class="n">pad_mode</span> <span class="o">==</span> <span class="s1">&#39;constant&#39;</span> <span class="ow">and</span> <span class="n">pad_const</span> <span class="o">!=</span> <span class="mf">0.0</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;constant padding with constant != 0 not supported &#39;</span>
+                         <span class="s1">&#39;for `pywt` back-end&#39;</span><span class="p">)</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">PAD_MODES_ODL2PYWT</span><span class="p">[</span><span class="n">pad_mode</span><span class="p">]</span>
+    <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;`pad_mode` &#39;</span><span class="si">{}</span><span class="s2">&#39; not understood&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">pad_mode</span><span class="p">))</span></div>
+
+
+<div class="viewcode-block" id="precompute_raveled_slices"><a class="viewcode-back" href="../../../../generated/odl.trafos.backends.pywt_bindings.precompute_raveled_slices.html#odl.trafos.backends.pywt_bindings.precompute_raveled_slices">[docs]</a><span class="k">def</span> <span class="nf">precompute_raveled_slices</span><span class="p">(</span><span class="n">coeff_shapes</span><span class="p">,</span> <span class="n">axes</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Return slices and shapes for raveled multilevel wavelet coefficients.</span>
+
+<span class="sd">    The output is equivalent to the ``coeff_slices`` output of</span>
+<span class="sd">    `pywt.ravel_coeffs`, but this function does not require computing a</span>
+<span class="sd">    wavelet transform first.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    coeff_shapes : array-like</span>
+<span class="sd">        A list of multilevel wavelet coefficient shapes as returned by</span>
+<span class="sd">        `pywt.wavedecn_shapes`.</span>
+<span class="sd">    axes : sequence of ints, optional</span>
+<span class="sd">        Axes over which the DWT that created ``coeffs`` was performed. The</span>
+<span class="sd">        default value of None corresponds to all axes.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    coeff_slices : list</span>
+<span class="sd">        List of slices corresponding to each coefficient. As a 2D example,</span>
+<span class="sd">        ``coeff_arr[coeff_slices[1][&#39;dd&#39;]]`` would extract the first level</span>
+<span class="sd">        detail coefficients from ``coeff_arr``.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    &gt;&gt;&gt; import pywt</span>
+<span class="sd">    &gt;&gt;&gt; data_shape = (64, 64)</span>
+<span class="sd">    &gt;&gt;&gt; coeff_shapes = pywt.wavedecn_shapes(data_shape, wavelet=&#39;db2&#39;, level=3,</span>
+<span class="sd">    ...                                     mode=&#39;periodization&#39;)</span>
+<span class="sd">    &gt;&gt;&gt; coeff_slices = precompute_raveled_slices(coeff_shapes)</span>
+<span class="sd">    &gt;&gt;&gt; print(coeff_slices[0])  # approximation coefficients</span>
+<span class="sd">    slice(None, 64, None)</span>
+<span class="sd">    &gt;&gt;&gt; d1_coeffs = coeff_slices[-1]  # first level detail coefficients</span>
+<span class="sd">    &gt;&gt;&gt; (d1_coeffs[&#39;ad&#39;], d1_coeffs[&#39;da&#39;], d1_coeffs[&#39;dd&#39;])</span>
+<span class="sd">    (slice(1024, 2048, None), slice(2048, 3072, None), slice(3072, 4096, None))</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># initialize with the approximation coefficients.</span>
+    <span class="n">a_shape</span> <span class="o">=</span> <span class="n">coeff_shapes</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">a_size</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">prod</span><span class="p">(</span><span class="n">a_shape</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">coeff_shapes</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="c1"># only a single approximation coefficient array was found</span>
+        <span class="k">return</span> <span class="p">[</span><span class="nb">slice</span><span class="p">(</span><span class="n">a_size</span><span class="p">),</span> <span class="p">]</span>
+
+    <span class="n">a_slice</span> <span class="o">=</span> <span class="nb">slice</span><span class="p">(</span><span class="n">a_size</span><span class="p">)</span>
+
+    <span class="c1"># initialize list of coefficient slices</span>
+    <span class="n">coeff_slices</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">coeff_slices</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">a_slice</span><span class="p">)</span>
+
+    <span class="c1"># loop over the detail cofficients, embedding them in coeff_arr</span>
+    <span class="n">details_list</span> <span class="o">=</span> <span class="n">coeff_shapes</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span>
+    <span class="n">offset</span> <span class="o">=</span> <span class="n">a_size</span>
+    <span class="k">for</span> <span class="n">shape_dict</span> <span class="ow">in</span> <span class="n">details_list</span><span class="p">:</span>
+        <span class="c1"># new dictionaries for detail coefficient slices and shapes</span>
+        <span class="n">coeff_slices</span><span class="o">.</span><span class="n">append</span><span class="p">({})</span>
+        <span class="n">keys</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">shape_dict</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
+        <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">keys</span><span class="p">:</span>
+            <span class="n">shape</span> <span class="o">=</span> <span class="n">shape_dict</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
+            <span class="n">size</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">prod</span><span class="p">(</span><span class="n">shape</span><span class="p">)</span>
+            <span class="n">sl</span> <span class="o">=</span> <span class="nb">slice</span><span class="p">(</span><span class="n">offset</span><span class="p">,</span> <span class="n">offset</span> <span class="o">+</span> <span class="n">size</span><span class="p">)</span>
+            <span class="n">offset</span> <span class="o">+=</span> <span class="n">size</span>
+            <span class="n">coeff_slices</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">][</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">sl</span>
+    <span class="k">return</span> <span class="n">coeff_slices</span></div>
+
+
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s1">&#39;__main__&#39;</span><span class="p">:</span>
+    <span class="kn">from</span> <span class="nn">odl.util.testutils</span> <span class="kn">import</span> <span class="n">run_doctests</span>
+    <span class="n">run_doctests</span><span class="p">(</span><span class="n">skip_if</span><span class="o">=</span><span class="ow">not</span> <span class="n">PYWT_AVAILABLE</span><span class="p">)</span>
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &#169; Copyright 2014-2020 The ODL Contributors.
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

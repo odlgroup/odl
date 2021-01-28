@@ -1,0 +1,37 @@
+﻿sin_op
+==============================
+
+.. currentmodule:: odl.ufunc_ops.ufunc_ops
+
+.. autoclass:: sin_op
+   :show-inheritance:
+   
+   
+   .. automethod:: __init__
+   
+      
+   
+   .. HACK -- the point here is that we don't want this to appear in the output, but the autosummary should still generate the pages.
+      .. autosummary::
+         :toctree:
+      
+         sin_op.__call__
+         sin_op.__eq__
+         sin_op._call
+         sin_op.derivative
+         sin_op.norm
+   
+
+    
+   .. HACK -- the point here is that we don't want this to appear in the output, but the autosummary should still generate the pages.
+      .. autosummary::
+         :toctree:
+      
+         sin_op.adjoint
+         sin_op.domain
+         sin_op.inverse
+         sin_op.is_functional
+         sin_op.is_linear
+         sin_op.range
+   
+   

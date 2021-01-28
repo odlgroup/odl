@@ -1,0 +1,8 @@
+:orphan:
+
+FourierTransformInverse.create_temporaries
+=============================================================
+
+.. currentmodule:: odl.trafos.fourier
+
+.. automethod:: FourierTransformInverse.create_temporaries

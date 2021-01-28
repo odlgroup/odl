@@ -1,0 +1,8 @@
+:orphan:
+
+ScalingFunctional.__eq__
+===================================================================
+
+.. currentmodule:: odl.solvers.functional.default_functionals
+
+.. automethod:: ScalingFunctional.__eq__

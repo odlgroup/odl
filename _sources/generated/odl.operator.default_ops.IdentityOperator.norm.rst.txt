@@ -1,0 +1,8 @@
+:orphan:
+
+IdentityOperator.norm
+==============================================
+
+.. currentmodule:: odl.operator.default_ops
+
+.. automethod:: IdentityOperator.norm

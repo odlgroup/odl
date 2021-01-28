@@ -1,0 +1,6 @@
+IdentityFunctional.convex_conj
+=========================================================================
+
+.. currentmodule:: odl.solvers.functional.default_functionals
+
+.. autoproperty:: IdentityFunctional.convex_conj

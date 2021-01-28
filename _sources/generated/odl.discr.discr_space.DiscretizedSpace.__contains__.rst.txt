@@ -1,0 +1,8 @@
+:orphan:
+
+DiscretizedSpace.__contains__
+===================================================
+
+.. currentmodule:: odl.discr.discr_space
+
+.. automethod:: DiscretizedSpace.__contains__

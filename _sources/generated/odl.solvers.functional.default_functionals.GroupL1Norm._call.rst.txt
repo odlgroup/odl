@@ -1,0 +1,8 @@
+:orphan:
+
+GroupL1Norm._call
+============================================================
+
+.. currentmodule:: odl.solvers.functional.default_functionals
+
+.. automethod:: GroupL1Norm._call

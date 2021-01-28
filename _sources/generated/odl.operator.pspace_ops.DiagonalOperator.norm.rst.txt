@@ -1,0 +1,8 @@
+:orphan:
+
+DiagonalOperator.norm
+=============================================
+
+.. currentmodule:: odl.operator.pspace_ops
+
+.. automethod:: DiagonalOperator.norm

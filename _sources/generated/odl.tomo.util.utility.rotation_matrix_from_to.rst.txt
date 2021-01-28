@@ -1,0 +1,6 @@
+﻿rotation_matrix_from_to
+=============================================
+
+.. currentmodule:: odl.tomo.util.utility
+
+.. autofunction:: rotation_matrix_from_to

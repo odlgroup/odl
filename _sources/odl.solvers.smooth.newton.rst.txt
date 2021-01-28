@@ -1,0 +1,19 @@
+newton
+======
+
+(Quasi-)Newton schemes to find zeros of functionals.
+
+.. currentmodule:: odl.solvers.smooth.newton
+
+
+
+
+.. rubric:: Functions
+
+.. autosummary::
+   :toctree: generated/
+
+   ~odl.solvers.smooth.newton.bfgs_method
+   ~odl.solvers.smooth.newton.broydens_method
+   ~odl.solvers.smooth.newton.newtons_method
+

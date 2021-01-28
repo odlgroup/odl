@@ -1,0 +1,6 @@
+QuadraticForm.range
+==============================================================
+
+.. currentmodule:: odl.solvers.functional.default_functionals
+
+.. autoproperty:: QuadraticForm.range

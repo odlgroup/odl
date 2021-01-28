@@ -1,0 +1,6 @@
+IndicatorZero.is_linear
+==================================================================
+
+.. currentmodule:: odl.solvers.functional.default_functionals
+
+.. autoproperty:: IndicatorZero.is_linear

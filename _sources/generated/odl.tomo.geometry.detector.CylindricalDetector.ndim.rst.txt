@@ -1,0 +1,6 @@
+CylindricalDetector.ndim
+===================================================
+
+.. currentmodule:: odl.tomo.geometry.detector
+
+.. autoproperty:: CylindricalDetector.ndim

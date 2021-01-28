@@ -1,0 +1,6 @@
+Tensor.impl
+==================================
+
+.. currentmodule:: odl.space.base_tensors
+
+.. autoproperty:: Tensor.impl

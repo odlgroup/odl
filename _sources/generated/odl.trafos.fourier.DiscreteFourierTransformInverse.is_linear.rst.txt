@@ -1,0 +1,6 @@
+DiscreteFourierTransformInverse.is_linear
+============================================================
+
+.. currentmodule:: odl.trafos.fourier
+
+.. autoproperty:: DiscreteFourierTransformInverse.is_linear

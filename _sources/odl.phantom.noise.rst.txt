@@ -1,0 +1,20 @@
+noise
+=====
+
+Functions to create noise samples of different distributions.
+
+.. currentmodule:: odl.phantom.noise
+
+
+
+
+.. rubric:: Functions
+
+.. autosummary::
+   :toctree: generated/
+
+   ~odl.phantom.noise.poisson_noise
+   ~odl.phantom.noise.salt_pepper_noise
+   ~odl.phantom.noise.uniform_noise
+   ~odl.phantom.noise.white_noise
+

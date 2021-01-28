@@ -1,0 +1,6 @@
+LinDeformFixedDisp.is_linear
+==================================================
+
+.. currentmodule:: odl.deform.linearized
+
+.. autoproperty:: LinDeformFixedDisp.is_linear

@@ -1,0 +1,6 @@
+reciprocal_op.is_linear
+===============================================
+
+.. currentmodule:: odl.ufunc_ops.ufunc_ops
+
+.. autoproperty:: reciprocal_op.is_linear

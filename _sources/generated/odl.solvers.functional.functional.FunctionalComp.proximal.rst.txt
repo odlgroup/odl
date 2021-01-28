@@ -1,0 +1,6 @@
+FunctionalComp.proximal
+=========================================================
+
+.. currentmodule:: odl.solvers.functional.functional
+
+.. autoproperty:: FunctionalComp.proximal

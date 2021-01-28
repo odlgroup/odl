@@ -1,0 +1,8 @@
+:orphan:
+
+OperatorRightVectorMult._call
+===================================================
+
+.. currentmodule:: odl.operator.operator
+
+.. automethod:: OperatorRightVectorMult._call

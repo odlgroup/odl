@@ -1,0 +1,6 @@
+﻿deg2rad
+===============================
+
+.. currentmodule:: odl.ufunc_ops.ufunc_ops
+
+.. autofunction:: deg2rad

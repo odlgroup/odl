@@ -1,0 +1,18 @@
+gradient
+========
+
+Gradient-based optimization schemes.
+
+.. currentmodule:: odl.solvers.smooth.gradient
+
+
+
+
+.. rubric:: Functions
+
+.. autosummary::
+   :toctree: generated/
+
+   ~odl.solvers.smooth.gradient.adam
+   ~odl.solvers.smooth.gradient.steepest_descent
+

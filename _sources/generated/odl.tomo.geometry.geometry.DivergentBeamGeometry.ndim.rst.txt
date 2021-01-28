@@ -1,0 +1,6 @@
+DivergentBeamGeometry.ndim
+=====================================================
+
+.. currentmodule:: odl.tomo.geometry.geometry
+
+.. autoproperty:: DivergentBeamGeometry.ndim

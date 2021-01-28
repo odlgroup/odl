@@ -1,0 +1,18 @@
+admm
+====
+
+Alternating Direction method of Multipliers (ADMM) method variants.
+
+.. currentmodule:: odl.solvers.nonsmooth.admm
+
+
+
+
+.. rubric:: Functions
+
+.. autosummary::
+   :toctree: generated/
+
+   ~odl.solvers.nonsmooth.admm.admm_linearized
+   ~odl.solvers.nonsmooth.admm.admm_linearized_simple
+

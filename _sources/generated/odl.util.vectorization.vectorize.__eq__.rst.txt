@@ -1,0 +1,8 @@
+:orphan:
+
+vectorize.__eq__
+=======================================
+
+.. currentmodule:: odl.util.vectorization
+
+.. automethod:: vectorize.__eq__

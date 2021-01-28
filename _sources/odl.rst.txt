@@ -1,0 +1,33 @@
+odl
+===
+
+ODL (Operator Discretization Library).
+
+ODL is a Python library for fast prototyping focusing on (but not
+restricted to) inverse problems.
+
+
+.. currentmodule:: odl
+
+
+.. rubric:: Modules
+
+.. toctree::
+   :maxdepth: 2
+
+   odl.contrib
+   odl.deform
+   odl.diagnostics
+   odl.discr
+   odl.operator
+   odl.phantom
+   odl.set
+   odl.solvers
+   odl.space
+   odl.tomo
+   odl.trafos
+   odl.ufunc_ops
+   odl.util
+
+
+

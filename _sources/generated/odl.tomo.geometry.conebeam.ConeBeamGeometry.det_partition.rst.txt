@@ -1,0 +1,6 @@
+ConeBeamGeometry.det_partition
+=========================================================
+
+.. currentmodule:: odl.tomo.geometry.conebeam
+
+.. autoproperty:: ConeBeamGeometry.det_partition

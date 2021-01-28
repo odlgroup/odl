@@ -1,0 +1,8 @@
+:orphan:
+
+logaddexp2_op.__call__
+==============================================
+
+.. currentmodule:: odl.ufunc_ops.ufunc_ops
+
+.. automethod:: logaddexp2_op.__call__

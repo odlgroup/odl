@@ -1,0 +1,39 @@
+﻿OperatorLeftScalarMult
+============================================
+
+.. currentmodule:: odl.operator.operator
+
+.. autoclass:: OperatorLeftScalarMult
+   :show-inheritance:
+   
+   
+   .. automethod:: __init__
+   
+      
+   
+   .. HACK -- the point here is that we don't want this to appear in the output, but the autosummary should still generate the pages.
+      .. autosummary::
+         :toctree:
+      
+         OperatorLeftScalarMult.__call__
+         OperatorLeftScalarMult.__eq__
+         OperatorLeftScalarMult._call
+         OperatorLeftScalarMult.derivative
+         OperatorLeftScalarMult.norm
+   
+
+    
+   .. HACK -- the point here is that we don't want this to appear in the output, but the autosummary should still generate the pages.
+      .. autosummary::
+         :toctree:
+      
+         OperatorLeftScalarMult.adjoint
+         OperatorLeftScalarMult.domain
+         OperatorLeftScalarMult.inverse
+         OperatorLeftScalarMult.is_functional
+         OperatorLeftScalarMult.is_linear
+         OperatorLeftScalarMult.operator
+         OperatorLeftScalarMult.range
+         OperatorLeftScalarMult.scalar
+   
+   

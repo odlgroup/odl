@@ -1,0 +1,41 @@
+﻿PointwiseNorm
+=====================================
+
+.. currentmodule:: odl.operator.tensor_ops
+
+.. autoclass:: PointwiseNorm
+   :show-inheritance:
+   
+   
+   .. automethod:: __init__
+   
+      
+   
+   .. HACK -- the point here is that we don't want this to appear in the output, but the autosummary should still generate the pages.
+      .. autosummary::
+         :toctree:
+      
+         PointwiseNorm.__call__
+         PointwiseNorm.__eq__
+         PointwiseNorm._call
+         PointwiseNorm.derivative
+         PointwiseNorm.norm
+   
+
+    
+   .. HACK -- the point here is that we don't want this to appear in the output, but the autosummary should still generate the pages.
+      .. autosummary::
+         :toctree:
+      
+         PointwiseNorm.adjoint
+         PointwiseNorm.base_space
+         PointwiseNorm.domain
+         PointwiseNorm.exponent
+         PointwiseNorm.inverse
+         PointwiseNorm.is_functional
+         PointwiseNorm.is_linear
+         PointwiseNorm.is_weighted
+         PointwiseNorm.range
+         PointwiseNorm.weights
+   
+   

@@ -1,0 +1,6 @@
+RealPart.inverse
+=========================================
+
+.. currentmodule:: odl.operator.default_ops
+
+.. autoproperty:: RealPart.inverse

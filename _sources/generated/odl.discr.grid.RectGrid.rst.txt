@@ -1,0 +1,58 @@
+﻿RectGrid
+=======================
+
+.. currentmodule:: odl.discr.grid
+
+.. autoclass:: RectGrid
+   :show-inheritance:
+   
+   
+   .. automethod:: __init__
+   
+      
+   
+   .. HACK -- the point here is that we don't want this to appear in the output, but the autosummary should still generate the pages.
+      .. autosummary::
+         :toctree:
+      
+         RectGrid.__contains__
+         RectGrid.__eq__
+         RectGrid.__getitem__
+         RectGrid.append
+         RectGrid.approx_contains
+         RectGrid.approx_equals
+         RectGrid.contains_all
+         RectGrid.contains_set
+         RectGrid.convex_hull
+         RectGrid.corner_grid
+         RectGrid.corners
+         RectGrid.element
+         RectGrid.insert
+         RectGrid.is_subgrid
+         RectGrid.max
+         RectGrid.min
+         RectGrid.points
+         RectGrid.squeeze
+   
+
+    
+   .. HACK -- the point here is that we don't want this to appear in the output, but the autosummary should still generate the pages.
+      .. autosummary::
+         :toctree:
+      
+         RectGrid.coord_vectors
+         RectGrid.examples
+         RectGrid.extent
+         RectGrid.is_uniform
+         RectGrid.is_uniform_byaxis
+         RectGrid.max_pt
+         RectGrid.meshgrid
+         RectGrid.mid_pt
+         RectGrid.min_pt
+         RectGrid.ndim
+         RectGrid.nondegen_byaxis
+         RectGrid.shape
+         RectGrid.size
+         RectGrid.stride
+   
+   

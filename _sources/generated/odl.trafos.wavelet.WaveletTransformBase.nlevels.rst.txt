@@ -1,0 +1,6 @@
+WaveletTransformBase.nlevels
+===============================================
+
+.. currentmodule:: odl.trafos.wavelet
+
+.. autoproperty:: WaveletTransformBase.nlevels

@@ -1,0 +1,8 @@
+:orphan:
+
+RectGrid.contains_set
+====================================
+
+.. currentmodule:: odl.discr.grid
+
+.. automethod:: RectGrid.contains_set

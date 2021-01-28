@@ -1,0 +1,8 @@
+:orphan:
+
+AstraCudaImpl.create_ids
+=====================================================
+
+.. currentmodule:: odl.tomo.backends.astra_cuda
+
+.. automethod:: AstraCudaImpl.create_ids

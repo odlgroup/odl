@@ -1,0 +1,6 @@
+OperatorComp.is_functional
+================================================
+
+.. currentmodule:: odl.operator.operator
+
+.. autoproperty:: OperatorComp.is_functional

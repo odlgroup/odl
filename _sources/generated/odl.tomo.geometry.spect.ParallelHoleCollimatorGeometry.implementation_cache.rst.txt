@@ -1,0 +1,6 @@
+ParallelHoleCollimatorGeometry.implementation_cache
+===========================================================================
+
+.. currentmodule:: odl.tomo.geometry.spect
+
+.. autoproperty:: ParallelHoleCollimatorGeometry.implementation_cache

@@ -1,0 +1,6 @@
+ResizingOperator.pad_mode
+=============================================
+
+.. currentmodule:: odl.discr.discr_ops
+
+.. autoproperty:: ResizingOperator.pad_mode

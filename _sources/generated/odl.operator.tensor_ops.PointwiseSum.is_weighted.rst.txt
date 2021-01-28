@@ -1,0 +1,6 @@
+PointwiseSum.is_weighted
+================================================
+
+.. currentmodule:: odl.operator.tensor_ops
+
+.. autoproperty:: PointwiseSum.is_weighted

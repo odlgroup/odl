@@ -1,0 +1,8 @@
+:orphan:
+
+OperatorVectorSum.derivative
+==================================================
+
+.. currentmodule:: odl.operator.operator
+
+.. automethod:: OperatorVectorSum.derivative

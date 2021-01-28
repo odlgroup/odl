@@ -1,0 +1,8 @@
+:orphan:
+
+RectGrid.max
+===========================
+
+.. currentmodule:: odl.discr.grid
+
+.. automethod:: RectGrid.max

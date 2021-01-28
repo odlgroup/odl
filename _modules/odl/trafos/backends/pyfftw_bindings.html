@@ -1,0 +1,530 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>odl.trafos.backends.pyfftw_bindings &mdash; odl 1.0.0.dev0 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../../../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../../../../_static/custom.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../../../" src="../../../../_static/documentation_options.js"></script>
+        <script src="../../../../_static/jquery.js"></script>
+        <script src="../../../../_static/underscore.js"></script>
+        <script src="../../../../_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="../../../../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../../../index.html" class="icon icon-home"> odl
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                1.0.0.dev0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Getting Started</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../getting_started/getting_started.html">Getting Started</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Working with ODL</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../guide/guide.html">User’s guide – selected topics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../math/math.html">Mathematical Background</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Developer zone</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../dev/dev.html">Contributing to ODL</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Useful facts</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../guide/faq.html">Frequently asked questions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../guide/glossary.html">Glossary</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../release_notes.html">Release Notes</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../refs.html">References</a></li>
+</ul>
+<p class="caption"><span class="caption-text">API Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../odl.html">odl</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../../index.html">odl</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../../../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="../../../index.html">Module code</a> &raquo;</li>
+        
+      <li>odl.trafos.backends.pyfftw_bindings</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for odl.trafos.backends.pyfftw_bindings</h1><div class="highlight"><pre>
+<span></span><span class="c1"># Copyright 2014-2020 The ODL contributors</span>
+<span class="c1">#</span>
+<span class="c1"># This file is part of ODL.</span>
+<span class="c1">#</span>
+<span class="c1"># This Source Code Form is subject to the terms of the Mozilla Public License,</span>
+<span class="c1"># v. 2.0. If a copy of the MPL was not distributed with this file, You can</span>
+<span class="c1"># obtain one at https://mozilla.org/MPL/2.0/.</span>
+
+<span class="sd">&quot;&quot;&quot;Bindings to the ``pyFFTW`` back-end for Fourier transforms.</span>
+
+<span class="sd">The `pyFFTW &lt;https://pyfftw.readthedocs.io&gt;`_  package is a Python</span>
+<span class="sd">wrapper around the well-known `FFTW &lt;http://fftw.org/&gt;`_ library for fast</span>
+<span class="sd">Fourier transforms.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">print_function</span><span class="p">,</span> <span class="n">division</span><span class="p">,</span> <span class="n">absolute_import</span>
+<span class="kn">from</span> <span class="nn">multiprocessing</span> <span class="kn">import</span> <span class="n">cpu_count</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">packaging.version</span> <span class="kn">import</span> <span class="n">parse</span> <span class="k">as</span> <span class="n">parse_version</span>
+<span class="kn">import</span> <span class="nn">warnings</span>
+
+<span class="k">try</span><span class="p">:</span>
+    <span class="kn">import</span> <span class="nn">pyfftw</span>
+    <span class="n">PYFFTW_AVAILABLE</span> <span class="o">=</span> <span class="kc">True</span>
+<span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
+    <span class="n">PYFFTW_AVAILABLE</span> <span class="o">=</span> <span class="kc">False</span>
+<span class="k">else</span><span class="p">:</span>
+    <span class="k">if</span> <span class="n">parse_version</span><span class="p">(</span><span class="n">pyfftw</span><span class="o">.</span><span class="n">__version__</span><span class="p">)</span> <span class="o">&lt;</span> <span class="n">parse_version</span><span class="p">(</span><span class="s1">&#39;0.10.3&#39;</span><span class="p">):</span>
+        <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s1">&#39;PyFFTW &lt; 0.10.3 is known to cause problems with some &#39;</span>
+                      <span class="s1">&#39;ODL functionality, see issue #1002.&#39;</span><span class="p">,</span>
+                      <span class="ne">RuntimeWarning</span><span class="p">)</span>
+
+<span class="kn">from</span> <span class="nn">odl.util</span> <span class="kn">import</span> <span class="p">(</span>
+    <span class="n">is_real_dtype</span><span class="p">,</span> <span class="n">dtype_repr</span><span class="p">,</span> <span class="n">complex_dtype</span><span class="p">,</span> <span class="n">normalized_axes_tuple</span><span class="p">)</span>
+
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;pyfftw_call&#39;</span><span class="p">,</span> <span class="s1">&#39;PYFFTW_AVAILABLE&#39;</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="pyfftw_call"><a class="viewcode-back" href="../../../../generated/odl.trafos.backends.pyfftw_bindings.pyfftw_call.html#odl.trafos.backends.pyfftw_bindings.pyfftw_call">[docs]</a><span class="k">def</span> <span class="nf">pyfftw_call</span><span class="p">(</span><span class="n">array_in</span><span class="p">,</span> <span class="n">array_out</span><span class="p">,</span> <span class="n">direction</span><span class="o">=</span><span class="s1">&#39;forward&#39;</span><span class="p">,</span> <span class="n">axes</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                <span class="n">halfcomplex</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Calculate the DFT with pyfftw.</span>
+
+<span class="sd">    The discrete Fourier (forward) transform calcuates the sum::</span>
+
+<span class="sd">        f_hat[k] = sum_j( f[j] * exp(-2*pi*1j * j*k/N) )</span>
+
+<span class="sd">    where the summation is taken over all indices</span>
+<span class="sd">    ``j = (j[0], ..., j[d-1])`` in the range ``0 &lt;= j &lt; N``</span>
+<span class="sd">    (component-wise), with ``N`` being the shape of the input array.</span>
+
+<span class="sd">    The output indices ``k`` lie in the same range, except</span>
+<span class="sd">    for half-complex transforms, where the last axis ``i`` in ``axes``</span>
+<span class="sd">    is shortened to ``0 &lt;= k[i] &lt; floor(N[i]/2) + 1``.</span>
+
+<span class="sd">    In the backward transform, sign of the the exponential argument</span>
+<span class="sd">    is flipped.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    array_in : `numpy.ndarray`</span>
+<span class="sd">        Array to be transformed</span>
+<span class="sd">    array_out : `numpy.ndarray`</span>
+<span class="sd">        Output array storing the transformed values, may be aliased</span>
+<span class="sd">        with ``array_in``.</span>
+<span class="sd">    direction : {&#39;forward&#39;, &#39;backward&#39;}, optional</span>
+<span class="sd">        Direction of the transform</span>
+<span class="sd">    axes : int or sequence of ints, optional</span>
+<span class="sd">        Dimensions along which to take the transform. ``None`` means</span>
+<span class="sd">        using all axes and is equivalent to ``np.arange(ndim)``.</span>
+<span class="sd">    halfcomplex : bool, optional</span>
+<span class="sd">        If ``True``, calculate only the negative frequency part along the</span>
+<span class="sd">        last axis. If ``False``, calculate the full complex FFT.</span>
+<span class="sd">        This option can only be used with real input data.</span>
+
+<span class="sd">    Other Parameters</span>
+<span class="sd">    ----------------</span>
+<span class="sd">    fftw_plan : ``pyfftw.FFTW``, optional</span>
+<span class="sd">        Use this plan instead of calculating a new one. If specified,</span>
+<span class="sd">        the options ``planning_effort``, ``planning_timelimit`` and</span>
+<span class="sd">        ``threads`` have no effect.</span>
+<span class="sd">    planning_effort : str, optional</span>
+<span class="sd">        Flag for the amount of effort put into finding an optimal</span>
+<span class="sd">        FFTW plan. See the `FFTW doc on planner flags</span>
+<span class="sd">        &lt;http://www.fftw.org/fftw3_doc/Planner-Flags.html&gt;`_.</span>
+<span class="sd">        Available options: {&#39;estimate&#39;, &#39;measure&#39;, &#39;patient&#39;, &#39;exhaustive&#39;}</span>
+<span class="sd">        Default: &#39;estimate&#39;</span>
+<span class="sd">    planning_timelimit : float or ``None``, optional</span>
+<span class="sd">        Limit planning time to roughly this many seconds.</span>
+<span class="sd">        Default: ``None`` (no limit)</span>
+<span class="sd">    threads : int, optional</span>
+<span class="sd">        Number of threads to use.</span>
+<span class="sd">        Default: Number of CPUs if the number of data points is larger</span>
+<span class="sd">        than 4096, else 1.</span>
+<span class="sd">    normalise_idft : bool, optional</span>
+<span class="sd">        If ``True``, the result of the backward transform is divided by</span>
+<span class="sd">        ``1 / N``, where ``N`` is the total number of points in</span>
+<span class="sd">        ``array_in[axes]``. This ensures that the IDFT is the true</span>
+<span class="sd">        inverse of the forward DFT.</span>
+<span class="sd">        Default: ``False``</span>
+<span class="sd">    import_wisdom : filename or file handle, optional</span>
+<span class="sd">        File to load FFTW wisdom from. If the file does not exist,</span>
+<span class="sd">        it is ignored.</span>
+<span class="sd">    export_wisdom : filename or file handle, optional</span>
+<span class="sd">        File to append the accumulated FFTW wisdom to</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    fftw_plan : ``pyfftw.FFTW``</span>
+<span class="sd">        The plan object created from the input arguments. It can be</span>
+<span class="sd">        reused for transforms of the same size with the same data types.</span>
+<span class="sd">        Note that reuse only gives a speedup if the initial plan</span>
+<span class="sd">        used a planner flag other than ``&#39;estimate&#39;``.</span>
+<span class="sd">        If ``fftw_plan`` was specified, the returned object is a</span>
+<span class="sd">        reference to it.</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    * The planning and direction flags can also be specified as</span>
+<span class="sd">      capitalized and prepended by ``&#39;FFTW_&#39;``, i.e. in the original</span>
+<span class="sd">      FFTW form.</span>
+<span class="sd">    * For a ``halfcomplex`` forward transform, the arrays must fulfill</span>
+<span class="sd">      ``array_out.shape[axes[-1]] == array_in.shape[axes[-1]] // 2 + 1``,</span>
+<span class="sd">      and vice versa for backward transforms.</span>
+<span class="sd">    * All planning schemes except ``&#39;estimate&#39;`` require an internal copy</span>
+<span class="sd">      of the input array but are often several times faster after the</span>
+<span class="sd">      first call (measuring results are cached). Typically,</span>
+<span class="sd">      &#39;measure&#39; is a good compromise. If you cannot afford the copy,</span>
+<span class="sd">      use ``&#39;estimate&#39;``.</span>
+<span class="sd">    * If a plan is provided via the ``fftw_plan`` parameter, no copy</span>
+<span class="sd">      is needed internally.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="kn">import</span> <span class="nn">pickle</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">array_in</span><span class="o">.</span><span class="n">flags</span><span class="o">.</span><span class="n">aligned</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;input array not aligned&#39;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">array_out</span><span class="o">.</span><span class="n">flags</span><span class="o">.</span><span class="n">aligned</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;output array not aligned&#39;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">axes</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">axes</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="n">array_in</span><span class="o">.</span><span class="n">ndim</span><span class="p">))</span>
+
+    <span class="n">axes</span> <span class="o">=</span> <span class="n">normalized_axes_tuple</span><span class="p">(</span><span class="n">axes</span><span class="p">,</span> <span class="n">array_in</span><span class="o">.</span><span class="n">ndim</span><span class="p">)</span>
+
+    <span class="n">direction</span> <span class="o">=</span> <span class="n">_flag_pyfftw_to_odl</span><span class="p">(</span><span class="n">direction</span><span class="p">)</span>
+    <span class="n">fftw_plan_in</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;fftw_plan&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+    <span class="n">planning_effort</span> <span class="o">=</span> <span class="n">_flag_pyfftw_to_odl</span><span class="p">(</span>
+        <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;planning_effort&#39;</span><span class="p">,</span> <span class="s1">&#39;estimate&#39;</span><span class="p">)</span>
+    <span class="p">)</span>
+    <span class="n">planning_timelimit</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;planning_timelimit&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+    <span class="n">threads</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;threads&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+    <span class="n">normalise_idft</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;normalise_idft&#39;</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
+    <span class="n">wimport</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;import_wisdom&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">)</span>
+    <span class="n">wexport</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;export_wisdom&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">)</span>
+
+    <span class="c1"># Cast input to complex if necessary</span>
+    <span class="n">array_in_copied</span> <span class="o">=</span> <span class="kc">False</span>
+    <span class="k">if</span> <span class="n">is_real_dtype</span><span class="p">(</span><span class="n">array_in</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">halfcomplex</span><span class="p">:</span>
+        <span class="c1"># Need to cast array_in to complex dtype</span>
+        <span class="n">array_in</span> <span class="o">=</span> <span class="n">array_in</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">complex_dtype</span><span class="p">(</span><span class="n">array_in</span><span class="o">.</span><span class="n">dtype</span><span class="p">))</span>
+        <span class="n">array_in_copied</span> <span class="o">=</span> <span class="kc">True</span>
+
+    <span class="c1"># Do consistency checks on the arguments</span>
+    <span class="n">_pyfftw_check_args</span><span class="p">(</span><span class="n">array_in</span><span class="p">,</span> <span class="n">array_out</span><span class="p">,</span> <span class="n">axes</span><span class="p">,</span> <span class="n">halfcomplex</span><span class="p">,</span> <span class="n">direction</span><span class="p">)</span>
+
+    <span class="c1"># Import wisdom if possible</span>
+    <span class="k">if</span> <span class="n">wimport</span><span class="p">:</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">wimport</span><span class="p">,</span> <span class="s1">&#39;rb&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">wfile</span><span class="p">:</span>
+                <span class="n">wisdom</span> <span class="o">=</span> <span class="n">pickle</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">wfile</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">IOError</span><span class="p">:</span>
+            <span class="n">wisdom</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">except</span> <span class="ne">TypeError</span><span class="p">:</span>  <span class="c1"># Got file handle</span>
+            <span class="n">wisdom</span> <span class="o">=</span> <span class="n">pickle</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">wimport</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">wisdom</span><span class="p">:</span>
+            <span class="n">pyfftw</span><span class="o">.</span><span class="n">import_wisdom</span><span class="p">(</span><span class="n">wisdom</span><span class="p">)</span>
+
+    <span class="c1"># Copy input array if it hasn&#39;t been done yet and the planner is likely</span>
+    <span class="c1"># to destroy it. If we already have a plan, we don&#39;t have to worry.</span>
+    <span class="n">planner_destroys</span> <span class="o">=</span> <span class="n">_pyfftw_destroys_input</span><span class="p">(</span>
+        <span class="p">[</span><span class="n">planning_effort</span><span class="p">],</span> <span class="n">direction</span><span class="p">,</span> <span class="n">halfcomplex</span><span class="p">,</span> <span class="n">array_in</span><span class="o">.</span><span class="n">ndim</span><span class="p">)</span>
+    <span class="n">must_copy_array_in</span> <span class="o">=</span> <span class="n">fftw_plan_in</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">planner_destroys</span>
+
+    <span class="k">if</span> <span class="n">must_copy_array_in</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">array_in_copied</span><span class="p">:</span>
+        <span class="n">plan_arr_in</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty_like</span><span class="p">(</span><span class="n">array_in</span><span class="p">)</span>
+        <span class="n">flags</span> <span class="o">=</span> <span class="p">[</span><span class="n">_flag_odl_to_pyfftw</span><span class="p">(</span><span class="n">planning_effort</span><span class="p">),</span> <span class="s1">&#39;FFTW_DESTROY_INPUT&#39;</span><span class="p">]</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">plan_arr_in</span> <span class="o">=</span> <span class="n">array_in</span>
+        <span class="n">flags</span> <span class="o">=</span> <span class="p">[</span><span class="n">_flag_odl_to_pyfftw</span><span class="p">(</span><span class="n">planning_effort</span><span class="p">)]</span>
+
+    <span class="k">if</span> <span class="n">fftw_plan_in</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">threads</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">plan_arr_in</span><span class="o">.</span><span class="n">size</span> <span class="o">&lt;=</span> <span class="mi">4096</span><span class="p">:</span>  <span class="c1"># Trade-off wrt threading overhead</span>
+                <span class="n">threads</span> <span class="o">=</span> <span class="mi">1</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">threads</span> <span class="o">=</span> <span class="n">cpu_count</span><span class="p">()</span>
+
+        <span class="n">fftw_plan</span> <span class="o">=</span> <span class="n">pyfftw</span><span class="o">.</span><span class="n">FFTW</span><span class="p">(</span>
+            <span class="n">plan_arr_in</span><span class="p">,</span> <span class="n">array_out</span><span class="p">,</span> <span class="n">direction</span><span class="o">=</span><span class="n">_flag_odl_to_pyfftw</span><span class="p">(</span><span class="n">direction</span><span class="p">),</span>
+            <span class="n">flags</span><span class="o">=</span><span class="n">flags</span><span class="p">,</span> <span class="n">planning_timelimit</span><span class="o">=</span><span class="n">planning_timelimit</span><span class="p">,</span>
+            <span class="n">threads</span><span class="o">=</span><span class="n">threads</span><span class="p">,</span> <span class="n">axes</span><span class="o">=</span><span class="n">axes</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">fftw_plan</span> <span class="o">=</span> <span class="n">fftw_plan_in</span>
+
+    <span class="n">fftw_plan</span><span class="p">(</span><span class="n">array_in</span><span class="p">,</span> <span class="n">array_out</span><span class="p">,</span> <span class="n">normalise_idft</span><span class="o">=</span><span class="n">normalise_idft</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">wexport</span><span class="p">:</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">wexport</span><span class="p">,</span> <span class="s1">&#39;ab&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">wfile</span><span class="p">:</span>
+                <span class="n">pickle</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span><span class="n">pyfftw</span><span class="o">.</span><span class="n">export_wisdom</span><span class="p">(),</span> <span class="n">wfile</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">TypeError</span><span class="p">:</span>  <span class="c1"># Got file handle</span>
+            <span class="n">pickle</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span><span class="n">pyfftw</span><span class="o">.</span><span class="n">export_wisdom</span><span class="p">(),</span> <span class="n">wexport</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">fftw_plan</span></div>
+
+
+<span class="k">def</span> <span class="nf">_flag_pyfftw_to_odl</span><span class="p">(</span><span class="n">flag</span><span class="p">):</span>
+    <span class="k">return</span> <span class="n">flag</span><span class="o">.</span><span class="n">lstrip</span><span class="p">(</span><span class="s1">&#39;FFTW_&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
+
+
+<span class="k">def</span> <span class="nf">_flag_odl_to_pyfftw</span><span class="p">(</span><span class="n">flag</span><span class="p">):</span>
+    <span class="k">return</span> <span class="s1">&#39;FFTW_&#39;</span> <span class="o">+</span> <span class="n">flag</span><span class="o">.</span><span class="n">upper</span><span class="p">()</span>
+
+
+<span class="k">def</span> <span class="nf">_pyfftw_destroys_input</span><span class="p">(</span><span class="n">flags</span><span class="p">,</span> <span class="n">direction</span><span class="p">,</span> <span class="n">halfcomplex</span><span class="p">,</span> <span class="n">ndim</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Return ``True`` if FFTW destroys an input array, ``False`` otherwise.&quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="nb">any</span><span class="p">(</span><span class="n">flag</span> <span class="ow">in</span> <span class="n">flags</span> <span class="ow">or</span> <span class="n">_flag_pyfftw_to_odl</span><span class="p">(</span><span class="n">flag</span><span class="p">)</span> <span class="ow">in</span> <span class="n">flags</span>
+           <span class="k">for</span> <span class="n">flag</span> <span class="ow">in</span> <span class="p">(</span><span class="s1">&#39;FFTW_MEASURE&#39;</span><span class="p">,</span> <span class="s1">&#39;FFTW_PATIENT&#39;</span><span class="p">,</span> <span class="s1">&#39;FFTW_EXHAUSTIVE&#39;</span><span class="p">,</span>
+                        <span class="s1">&#39;FFTW_DESTROY_INPUT&#39;</span><span class="p">)):</span>
+        <span class="k">return</span> <span class="kc">True</span>
+    <span class="k">elif</span> <span class="p">(</span><span class="n">direction</span> <span class="ow">in</span> <span class="p">(</span><span class="s1">&#39;backward&#39;</span><span class="p">,</span> <span class="s1">&#39;FFTW_BACKWARD&#39;</span><span class="p">)</span> <span class="ow">and</span> <span class="n">halfcomplex</span> <span class="ow">and</span>
+          <span class="n">ndim</span> <span class="o">!=</span> <span class="mi">1</span><span class="p">):</span>
+        <span class="k">return</span> <span class="kc">True</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">False</span>
+
+
+<span class="k">def</span> <span class="nf">_pyfftw_check_args</span><span class="p">(</span><span class="n">arr_in</span><span class="p">,</span> <span class="n">arr_out</span><span class="p">,</span> <span class="n">axes</span><span class="p">,</span> <span class="n">halfcomplex</span><span class="p">,</span> <span class="n">direction</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Raise an error if anything is not ok with in and out.&quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">axes</span><span class="p">))</span> <span class="o">!=</span> <span class="nb">len</span><span class="p">(</span><span class="n">axes</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;duplicate axes are not allowed&#39;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">direction</span> <span class="o">==</span> <span class="s1">&#39;forward&#39;</span><span class="p">:</span>
+        <span class="n">out_shape</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">arr_in</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">halfcomplex</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">out_shape</span><span class="p">[</span><span class="n">axes</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]]</span> <span class="o">=</span> <span class="n">arr_in</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="n">axes</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]]</span> <span class="o">//</span> <span class="mi">2</span> <span class="o">+</span> <span class="mi">1</span>
+            <span class="k">except</span> <span class="ne">IndexError</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">IndexError</span><span class="p">(</span><span class="s1">&#39;axis index </span><span class="si">{}</span><span class="s1"> out of range for array &#39;</span>
+                                 <span class="s1">&#39;with </span><span class="si">{}</span><span class="s1"> axes&#39;</span>
+                                 <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">axes</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="n">arr_in</span><span class="o">.</span><span class="n">ndim</span><span class="p">))</span>
+
+        <span class="k">if</span> <span class="n">arr_out</span><span class="o">.</span><span class="n">shape</span> <span class="o">!=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">out_shape</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;expected output shape </span><span class="si">{}</span><span class="s1">, got </span><span class="si">{}</span><span class="s1">&#39;</span>
+                             <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">tuple</span><span class="p">(</span><span class="n">out_shape</span><span class="p">),</span> <span class="n">arr_out</span><span class="o">.</span><span class="n">shape</span><span class="p">))</span>
+
+        <span class="k">if</span> <span class="n">is_real_dtype</span><span class="p">(</span><span class="n">arr_in</span><span class="o">.</span><span class="n">dtype</span><span class="p">):</span>
+            <span class="n">out_dtype</span> <span class="o">=</span> <span class="n">complex_dtype</span><span class="p">(</span><span class="n">arr_in</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">halfcomplex</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;cannot combine halfcomplex forward transform &#39;</span>
+                             <span class="s1">&#39;with complex input&#39;</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">out_dtype</span> <span class="o">=</span> <span class="n">arr_in</span><span class="o">.</span><span class="n">dtype</span>
+
+        <span class="k">if</span> <span class="n">arr_out</span><span class="o">.</span><span class="n">dtype</span> <span class="o">!=</span> <span class="n">out_dtype</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;expected output dtype </span><span class="si">{}</span><span class="s1">, got </span><span class="si">{}</span><span class="s1">&#39;</span>
+                             <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">dtype_repr</span><span class="p">(</span><span class="n">out_dtype</span><span class="p">),</span>
+                                       <span class="n">dtype_repr</span><span class="p">(</span><span class="n">arr_out</span><span class="o">.</span><span class="n">dtype</span><span class="p">)))</span>
+
+    <span class="k">elif</span> <span class="n">direction</span> <span class="o">==</span> <span class="s1">&#39;backward&#39;</span><span class="p">:</span>
+        <span class="n">in_shape</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">arr_out</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">halfcomplex</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">in_shape</span><span class="p">[</span><span class="n">axes</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]]</span> <span class="o">=</span> <span class="n">arr_out</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="n">axes</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]]</span> <span class="o">//</span> <span class="mi">2</span> <span class="o">+</span> <span class="mi">1</span>
+            <span class="k">except</span> <span class="ne">IndexError</span> <span class="k">as</span> <span class="n">err</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">IndexError</span><span class="p">(</span><span class="s1">&#39;axis index </span><span class="si">{}</span><span class="s1"> out of range for array &#39;</span>
+                                 <span class="s1">&#39;with </span><span class="si">{}</span><span class="s1"> axes&#39;</span>
+                                 <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">axes</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="n">arr_out</span><span class="o">.</span><span class="n">ndim</span><span class="p">))</span>
+
+        <span class="k">if</span> <span class="n">arr_in</span><span class="o">.</span><span class="n">shape</span> <span class="o">!=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">in_shape</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;expected input shape </span><span class="si">{}</span><span class="s1">, got </span><span class="si">{}</span><span class="s1">&#39;</span>
+                             <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">tuple</span><span class="p">(</span><span class="n">in_shape</span><span class="p">),</span> <span class="n">arr_in</span><span class="o">.</span><span class="n">shape</span><span class="p">))</span>
+
+        <span class="k">if</span> <span class="n">is_real_dtype</span><span class="p">(</span><span class="n">arr_out</span><span class="o">.</span><span class="n">dtype</span><span class="p">):</span>
+            <span class="n">in_dtype</span> <span class="o">=</span> <span class="n">complex_dtype</span><span class="p">(</span><span class="n">arr_out</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">halfcomplex</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;cannot combine halfcomplex backward transform &#39;</span>
+                             <span class="s1">&#39;with complex output&#39;</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">in_dtype</span> <span class="o">=</span> <span class="n">arr_out</span><span class="o">.</span><span class="n">dtype</span>
+
+        <span class="k">if</span> <span class="n">arr_in</span><span class="o">.</span><span class="n">dtype</span> <span class="o">!=</span> <span class="n">in_dtype</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;expected input dtype </span><span class="si">{}</span><span class="s1">, got </span><span class="si">{}</span><span class="s1">&#39;</span>
+                             <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">dtype_repr</span><span class="p">(</span><span class="n">in_dtype</span><span class="p">),</span>
+                                       <span class="n">dtype_repr</span><span class="p">(</span><span class="n">arr_in</span><span class="o">.</span><span class="n">dtype</span><span class="p">)))</span>
+
+    <span class="k">else</span><span class="p">:</span>  <span class="c1"># Shouldn&#39;t happen</span>
+        <span class="k">raise</span> <span class="ne">RuntimeError</span>
+
+
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s1">&#39;__main__&#39;</span><span class="p">:</span>
+    <span class="kn">from</span> <span class="nn">odl.util.testutils</span> <span class="kn">import</span> <span class="n">run_doctests</span>
+    <span class="n">run_doctests</span><span class="p">(</span><span class="n">skip_if</span><span class="o">=</span><span class="ow">not</span> <span class="n">PYFFTW_AVAILABLE</span><span class="p">)</span>
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &#169; Copyright 2014-2020 The ODL Contributors.
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

@@ -1,0 +1,6 @@
+RayTransform.inverse
+=================================================
+
+.. currentmodule:: odl.tomo.operators.ray_trafo
+
+.. autoproperty:: RayTransform.inverse

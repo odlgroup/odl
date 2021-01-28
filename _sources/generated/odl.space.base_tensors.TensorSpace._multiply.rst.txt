@@ -1,0 +1,8 @@
+:orphan:
+
+TensorSpace._multiply
+============================================
+
+.. currentmodule:: odl.space.base_tensors
+
+.. automethod:: TensorSpace._multiply

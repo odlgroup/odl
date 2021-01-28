@@ -1,0 +1,6 @@
+Set.examples
+=========================
+
+.. currentmodule:: odl.set.sets
+
+.. autoproperty:: Set.examples

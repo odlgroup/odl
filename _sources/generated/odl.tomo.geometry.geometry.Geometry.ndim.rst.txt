@@ -1,0 +1,6 @@
+Geometry.ndim
+========================================
+
+.. currentmodule:: odl.tomo.geometry.geometry
+
+.. autoproperty:: Geometry.ndim

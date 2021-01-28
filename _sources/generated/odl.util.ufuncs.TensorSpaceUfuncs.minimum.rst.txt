@@ -1,0 +1,8 @@
+:orphan:
+
+TensorSpaceUfuncs.minimum
+=========================================
+
+.. currentmodule:: odl.util.ufuncs
+
+.. automethod:: TensorSpaceUfuncs.minimum

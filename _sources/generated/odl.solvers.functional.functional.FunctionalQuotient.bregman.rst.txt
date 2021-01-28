@@ -1,0 +1,8 @@
+:orphan:
+
+FunctionalQuotient.bregman
+============================================================
+
+.. currentmodule:: odl.solvers.functional.functional
+
+.. automethod:: FunctionalQuotient.bregman

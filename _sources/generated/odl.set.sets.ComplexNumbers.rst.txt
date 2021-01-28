@@ -1,0 +1,33 @@
+﻿ComplexNumbers
+===========================
+
+.. currentmodule:: odl.set.sets
+
+.. autoclass:: ComplexNumbers
+   :show-inheritance:
+   
+   
+   .. automethod:: __init__
+   
+      
+   
+   .. HACK -- the point here is that we don't want this to appear in the output, but the autosummary should still generate the pages.
+      .. autosummary::
+         :toctree:
+      
+         ComplexNumbers.__contains__
+         ComplexNumbers.__eq__
+         ComplexNumbers.contains_all
+         ComplexNumbers.contains_set
+         ComplexNumbers.element
+   
+
+    
+   .. HACK -- the point here is that we don't want this to appear in the output, but the autosummary should still generate the pages.
+      .. autosummary::
+         :toctree:
+      
+         ComplexNumbers.examples
+         ComplexNumbers.field
+   
+   

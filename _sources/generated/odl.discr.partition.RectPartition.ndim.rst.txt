@@ -1,0 +1,6 @@
+RectPartition.ndim
+======================================
+
+.. currentmodule:: odl.discr.partition
+
+.. autoproperty:: RectPartition.ndim

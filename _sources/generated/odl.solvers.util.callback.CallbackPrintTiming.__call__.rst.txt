@@ -1,0 +1,8 @@
+:orphan:
+
+CallbackPrintTiming.__call__
+======================================================
+
+.. currentmodule:: odl.solvers.util.callback
+
+.. automethod:: CallbackPrintTiming.__call__

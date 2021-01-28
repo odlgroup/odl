@@ -1,0 +1,43 @@
+﻿RosenbrockFunctional
+=========================================================
+
+.. currentmodule:: odl.solvers.functional.example_funcs
+
+.. autoclass:: RosenbrockFunctional
+   :show-inheritance:
+   
+   
+   .. automethod:: __init__
+   
+      
+   
+   .. HACK -- the point here is that we don't want this to appear in the output, but the autosummary should still generate the pages.
+      .. autosummary::
+         :toctree:
+      
+         RosenbrockFunctional.__call__
+         RosenbrockFunctional.__eq__
+         RosenbrockFunctional._call
+         RosenbrockFunctional.bregman
+         RosenbrockFunctional.derivative
+         RosenbrockFunctional.norm
+         RosenbrockFunctional.translated
+   
+
+    
+   .. HACK -- the point here is that we don't want this to appear in the output, but the autosummary should still generate the pages.
+      .. autosummary::
+         :toctree:
+      
+         RosenbrockFunctional.adjoint
+         RosenbrockFunctional.convex_conj
+         RosenbrockFunctional.domain
+         RosenbrockFunctional.grad_lipschitz
+         RosenbrockFunctional.gradient
+         RosenbrockFunctional.inverse
+         RosenbrockFunctional.is_functional
+         RosenbrockFunctional.is_linear
+         RosenbrockFunctional.proximal
+         RosenbrockFunctional.range
+   
+   

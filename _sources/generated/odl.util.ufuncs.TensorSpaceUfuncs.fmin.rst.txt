@@ -1,0 +1,8 @@
+:orphan:
+
+TensorSpaceUfuncs.fmin
+======================================
+
+.. currentmodule:: odl.util.ufuncs
+
+.. automethod:: TensorSpaceUfuncs.fmin

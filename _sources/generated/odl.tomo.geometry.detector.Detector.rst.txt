@@ -1,0 +1,39 @@
+﻿Detector
+===================================
+
+.. currentmodule:: odl.tomo.geometry.detector
+
+.. autoclass:: Detector
+   :show-inheritance:
+   
+   
+   .. automethod:: __init__
+   
+      
+   
+   .. HACK -- the point here is that we don't want this to appear in the output, but the autosummary should still generate the pages.
+      .. autosummary::
+         :toctree:
+      
+         Detector.__eq__
+         Detector.surface
+         Detector.surface_deriv
+         Detector.surface_measure
+         Detector.surface_normal
+   
+
+    
+   .. HACK -- the point here is that we don't want this to appear in the output, but the autosummary should still generate the pages.
+      .. autosummary::
+         :toctree:
+      
+         Detector.check_bounds
+         Detector.grid
+         Detector.ndim
+         Detector.params
+         Detector.partition
+         Detector.shape
+         Detector.size
+         Detector.space_ndim
+   
+   

@@ -1,0 +1,8 @@
+:orphan:
+
+AxisOrientedGeometry.rotation_matrix
+===============================================================
+
+.. currentmodule:: odl.tomo.geometry.geometry
+
+.. automethod:: AxisOrientedGeometry.rotation_matrix

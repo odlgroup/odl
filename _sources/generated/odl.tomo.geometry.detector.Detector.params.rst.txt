@@ -1,0 +1,6 @@
+Detector.params
+==========================================
+
+.. currentmodule:: odl.tomo.geometry.detector
+
+.. autoproperty:: Detector.params

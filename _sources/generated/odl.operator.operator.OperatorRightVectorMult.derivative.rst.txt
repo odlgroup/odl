@@ -1,0 +1,8 @@
+:orphan:
+
+OperatorRightVectorMult.derivative
+========================================================
+
+.. currentmodule:: odl.operator.operator
+
+.. automethod:: OperatorRightVectorMult.derivative

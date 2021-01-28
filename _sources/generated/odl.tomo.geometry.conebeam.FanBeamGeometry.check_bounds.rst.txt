@@ -1,0 +1,6 @@
+FanBeamGeometry.check_bounds
+=======================================================
+
+.. currentmodule:: odl.tomo.geometry.conebeam
+
+.. autoproperty:: FanBeamGeometry.check_bounds

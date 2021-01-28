@@ -1,0 +1,6 @@
+L2Norm.domain
+========================================================
+
+.. currentmodule:: odl.solvers.functional.default_functionals
+
+.. autoproperty:: L2Norm.domain

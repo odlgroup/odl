@@ -1,0 +1,6 @@
+﻿astra_cpu_forward_projector
+=======================================================
+
+.. currentmodule:: odl.tomo.backends.astra_cpu
+
+.. autofunction:: astra_cpu_forward_projector

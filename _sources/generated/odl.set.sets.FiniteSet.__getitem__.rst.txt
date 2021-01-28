@@ -1,0 +1,8 @@
+:orphan:
+
+FiniteSet.__getitem__
+==================================
+
+.. currentmodule:: odl.set.sets
+
+.. automethod:: FiniteSet.__getitem__

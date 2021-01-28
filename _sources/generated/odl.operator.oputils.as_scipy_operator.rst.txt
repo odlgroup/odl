@@ -1,0 +1,6 @@
+﻿as_scipy_operator
+======================================
+
+.. currentmodule:: odl.operator.oputils
+
+.. autofunction:: as_scipy_operator

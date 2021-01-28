@@ -1,0 +1,8 @@
+:orphan:
+
+NumpyTensorSpaceCustomDist.inner
+======================================================
+
+.. currentmodule:: odl.space.npy_tensors
+
+.. automethod:: NumpyTensorSpaceCustomDist.inner

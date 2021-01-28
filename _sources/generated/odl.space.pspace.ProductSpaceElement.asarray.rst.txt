@@ -1,0 +1,8 @@
+:orphan:
+
+ProductSpaceElement.asarray
+============================================
+
+.. currentmodule:: odl.space.pspace
+
+.. automethod:: ProductSpaceElement.asarray

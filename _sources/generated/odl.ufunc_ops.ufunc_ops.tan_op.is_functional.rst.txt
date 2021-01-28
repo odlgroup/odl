@@ -1,0 +1,6 @@
+tan_op.is_functional
+============================================
+
+.. currentmodule:: odl.ufunc_ops.ufunc_ops
+
+.. autoproperty:: tan_op.is_functional

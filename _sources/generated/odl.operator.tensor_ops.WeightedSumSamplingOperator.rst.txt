@@ -1,0 +1,39 @@
+﻿WeightedSumSamplingOperator
+===================================================
+
+.. currentmodule:: odl.operator.tensor_ops
+
+.. autoclass:: WeightedSumSamplingOperator
+   :show-inheritance:
+   
+   
+   .. automethod:: __init__
+   
+      
+   
+   .. HACK -- the point here is that we don't want this to appear in the output, but the autosummary should still generate the pages.
+      .. autosummary::
+         :toctree:
+      
+         WeightedSumSamplingOperator.__call__
+         WeightedSumSamplingOperator.__eq__
+         WeightedSumSamplingOperator._call
+         WeightedSumSamplingOperator.derivative
+         WeightedSumSamplingOperator.norm
+   
+
+    
+   .. HACK -- the point here is that we don't want this to appear in the output, but the autosummary should still generate the pages.
+      .. autosummary::
+         :toctree:
+      
+         WeightedSumSamplingOperator.adjoint
+         WeightedSumSamplingOperator.domain
+         WeightedSumSamplingOperator.inverse
+         WeightedSumSamplingOperator.is_functional
+         WeightedSumSamplingOperator.is_linear
+         WeightedSumSamplingOperator.range
+         WeightedSumSamplingOperator.sampling_points
+         WeightedSumSamplingOperator.variant
+   
+   

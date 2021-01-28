@@ -1,0 +1,39 @@
+﻿FunctionalLeftVectorMult
+==============================================
+
+.. currentmodule:: odl.operator.operator
+
+.. autoclass:: FunctionalLeftVectorMult
+   :show-inheritance:
+   
+   
+   .. automethod:: __init__
+   
+      
+   
+   .. HACK -- the point here is that we don't want this to appear in the output, but the autosummary should still generate the pages.
+      .. autosummary::
+         :toctree:
+      
+         FunctionalLeftVectorMult.__call__
+         FunctionalLeftVectorMult.__eq__
+         FunctionalLeftVectorMult._call
+         FunctionalLeftVectorMult.derivative
+         FunctionalLeftVectorMult.norm
+   
+
+    
+   .. HACK -- the point here is that we don't want this to appear in the output, but the autosummary should still generate the pages.
+      .. autosummary::
+         :toctree:
+      
+         FunctionalLeftVectorMult.adjoint
+         FunctionalLeftVectorMult.domain
+         FunctionalLeftVectorMult.functional
+         FunctionalLeftVectorMult.inverse
+         FunctionalLeftVectorMult.is_functional
+         FunctionalLeftVectorMult.is_linear
+         FunctionalLeftVectorMult.range
+         FunctionalLeftVectorMult.vector
+   
+   

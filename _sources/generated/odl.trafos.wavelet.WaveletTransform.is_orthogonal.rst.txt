@@ -1,0 +1,6 @@
+WaveletTransform.is_orthogonal
+=================================================
+
+.. currentmodule:: odl.trafos.wavelet
+
+.. autoproperty:: WaveletTransform.is_orthogonal

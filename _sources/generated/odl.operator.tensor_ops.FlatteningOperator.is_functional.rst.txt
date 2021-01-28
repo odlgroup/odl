@@ -1,0 +1,6 @@
+FlatteningOperator.is_functional
+========================================================
+
+.. currentmodule:: odl.operator.tensor_ops
+
+.. autoproperty:: FlatteningOperator.is_functional

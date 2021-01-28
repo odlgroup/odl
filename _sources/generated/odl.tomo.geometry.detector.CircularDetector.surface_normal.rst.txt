@@ -1,0 +1,8 @@
+:orphan:
+
+CircularDetector.surface_normal
+==========================================================
+
+.. currentmodule:: odl.tomo.geometry.detector
+
+.. automethod:: CircularDetector.surface_normal

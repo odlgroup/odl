@@ -1,0 +1,6 @@
+﻿perpendicular_vector
+==========================================
+
+.. currentmodule:: odl.tomo.util.utility
+
+.. autofunction:: perpendicular_vector

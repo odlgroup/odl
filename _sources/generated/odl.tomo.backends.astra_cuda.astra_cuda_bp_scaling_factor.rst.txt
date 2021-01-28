@@ -1,0 +1,6 @@
+﻿astra_cuda_bp_scaling_factor
+=========================================================
+
+.. currentmodule:: odl.tomo.backends.astra_cuda
+
+.. autofunction:: astra_cuda_bp_scaling_factor

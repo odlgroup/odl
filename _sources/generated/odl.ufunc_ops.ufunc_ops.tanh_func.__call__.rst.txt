@@ -1,0 +1,8 @@
+:orphan:
+
+tanh_func.__call__
+==========================================
+
+.. currentmodule:: odl.ufunc_ops.ufunc_ops
+
+.. automethod:: tanh_func.__call__

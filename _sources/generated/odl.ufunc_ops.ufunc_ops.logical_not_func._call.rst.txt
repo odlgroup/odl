@@ -1,0 +1,8 @@
+:orphan:
+
+logical_not_func._call
+==============================================
+
+.. currentmodule:: odl.ufunc_ops.ufunc_ops
+
+.. automethod:: logical_not_func._call

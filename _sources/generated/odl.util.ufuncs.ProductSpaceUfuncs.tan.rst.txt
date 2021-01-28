@@ -1,0 +1,8 @@
+:orphan:
+
+ProductSpaceUfuncs.tan
+======================================
+
+.. currentmodule:: odl.util.ufuncs
+
+.. automethod:: ProductSpaceUfuncs.tan

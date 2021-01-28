@@ -1,0 +1,8 @@
+:orphan:
+
+Geometry.det_point_position
+======================================================
+
+.. currentmodule:: odl.tomo.geometry.geometry
+
+.. automethod:: Geometry.det_point_position

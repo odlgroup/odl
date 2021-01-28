@@ -1,0 +1,6 @@
+ComplexModulus.range
+=============================================
+
+.. currentmodule:: odl.operator.default_ops
+
+.. autoproperty:: ComplexModulus.range

@@ -1,0 +1,6 @@
+FunctionalRightVectorMult.inverse
+===================================================================
+
+.. currentmodule:: odl.solvers.functional.functional
+
+.. autoproperty:: FunctionalRightVectorMult.inverse

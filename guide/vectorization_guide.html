@@ -1,0 +1,335 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>Vectorized functions &mdash; odl 1.0.0.dev0 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Tomographic acquisition geometries" href="geometry_guide.html" />
+    <link rel="prev" title="Using ODL with NumPy and SciPy" href="numpy_guide.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../index.html" class="icon icon-home"> odl
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                1.0.0.dev0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Getting Started</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../getting_started/getting_started.html">Getting Started</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Working with ODL</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="guide.html">User’s guide – selected topics</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="operator_guide.html">Operators</a></li>
+<li class="toctree-l2"><a class="reference internal" href="linearspace_guide.html">Linear spaces</a></li>
+<li class="toctree-l2"><a class="reference internal" href="numpy_guide.html">Using ODL with NumPy and SciPy</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Vectorized functions</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#what-is-vectorization">What is vectorization?</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#how-to-use-numpy-s-ufuncs">How to use Numpy’s ufuncs?</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#usage-in-odl">Usage in ODL</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#further-reading">Further reading</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="geometry_guide.html">Tomographic acquisition geometries</a></li>
+<li class="toctree-l2"><a class="reference internal" href="functional_guide.html">Functional</a></li>
+<li class="toctree-l2"><a class="reference internal" href="proximal_lang_guide.html">Using ODL with ProxImaL</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pdhg_guide.html">Primal-Dual Hybrid Gradient algorithm</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../math/math.html">Mathematical Background</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Developer zone</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../dev/dev.html">Contributing to ODL</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Useful facts</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="faq.html">Frequently asked questions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="glossary.html">Glossary</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../release_notes.html">Release Notes</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../refs.html">References</a></li>
+</ul>
+<p class="caption"><span class="caption-text">API Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../odl.html">odl</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">odl</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="guide.html">User’s guide – selected topics</a> &raquo;</li>
+        
+      <li>Vectorized functions</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            <a href="../_sources/guide/vectorization_guide.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="vectorized-functions">
+<span id="vectorization-in-depth"></span><h1>Vectorized functions<a class="headerlink" href="#vectorized-functions" title="Permalink to this headline">¶</a></h1>
+<p>This section is intended as a small guideline on how to write functions which work with the
+vectorization machinery by Numpy which is used internally in ODL.</p>
+<div class="section" id="what-is-vectorization">
+<h2>What is vectorization?<a class="headerlink" href="#what-is-vectorization" title="Permalink to this headline">¶</a></h2>
+<p>In general, <a class="reference internal" href="glossary.html#term-vectorization"><span class="xref std std-term">vectorization</span></a> means that a function can be evaluated on a whole array of values
+at once instead of looping over individual entries. This is very important for performance in an
+interpreted language like python, since loops are usually very slow compared to compiled languages.</p>
+<p>Technically, vectorization in Numpy works through the <a class="reference external" href="http://docs.scipy.org/doc/numpy/reference/ufuncs.html">Universal functions (ufunc)</a> interface. It
+is fast because all loops over data are implemented in C, and the resulting implementations are
+exposed to Python for each function individually.</p>
+</div>
+<div class="section" id="how-to-use-numpy-s-ufuncs">
+<h2>How to use Numpy’s ufuncs?<a class="headerlink" href="#how-to-use-numpy-s-ufuncs" title="Permalink to this headline">¶</a></h2>
+<p>The easiest way to write fast custom mathematical functions in Python is to use the
+<a class="reference external" href="http://docs.scipy.org/doc/numpy/reference/ufuncs.html#available-ufuncs">available ufuncs</a> and compose them to a new function:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">gaussian</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
+    <span class="c1"># Negation, powers and scaling are vectorized, of course.</span>
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="n">x</span> <span class="o">**</span> <span class="mi">2</span> <span class="o">/</span> <span class="mi">2</span><span class="p">)</span>
+
+<span class="k">def</span> <span class="nf">step</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
+    <span class="c1"># np.where checks the condition in the first argument and</span>
+    <span class="c1"># returns the second for `True`, otherwise the third. The</span>
+    <span class="c1"># last two arguments can be arrays, too.</span>
+    <span class="c1"># Note that also the comparison operation is vectorized.</span>
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>This should cover a very large range of useful functions already (basic arithmetic is vectorized,
+too!). An even larger list of <a class="reference external" href="http://docs.scipy.org/doc/scipy/reference/special.html">special functions</a> are available in the Scipy package.</p>
+</div>
+<div class="section" id="usage-in-odl">
+<h2>Usage in ODL<a class="headerlink" href="#usage-in-odl" title="Permalink to this headline">¶</a></h2>
+<p>Python functions are in most cases used as input to a discretization process. For example, we may
+want to discretize a two-dimensional Gaussian function:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="k">def</span> <span class="nf">gaussian2</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
+<span class="gp">... </span>    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">**</span> <span class="mi">2</span> <span class="o">+</span> <span class="n">x</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">**</span> <span class="mi">2</span><span class="p">)</span> <span class="o">/</span> <span class="mi">2</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>on the rectangle [-5, 5] x [-5, 5] with 100 pixels in each
+dimension. The code for this is simply</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="c1"># Note that the minimum and maxiumum coordinates are given as</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># vectors, not one interval at a time.</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">discr</span> <span class="o">=</span> <span class="n">odl</span><span class="o">.</span><span class="n">uniform_discr</span><span class="p">([</span><span class="o">-</span><span class="mi">5</span><span class="p">,</span> <span class="o">-</span><span class="mi">5</span><span class="p">],</span> <span class="p">[</span><span class="mi">5</span><span class="p">,</span> <span class="mi">5</span><span class="p">],</span> <span class="p">(</span><span class="mi">100</span><span class="p">,</span> <span class="mi">100</span><span class="p">))</span>
+
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># This creates an element in the discretized space ``discr``</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">gaussian_discr</span> <span class="o">=</span> <span class="n">discr</span><span class="o">.</span><span class="n">element</span><span class="p">(</span><span class="n">gaussian2</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>What happens behind the scenes is that <code class="docutils literal notranslate"><span class="pre">discr</span></code> creates a <a class="reference internal" href="glossary.html#term-discretization"><span class="xref std std-term">discretization</span></a> object which
+has a built-in method <code class="docutils literal notranslate"><span class="pre">element</span></code> to turn continuous functions into discrete arrays by evaluating
+them at a set of grid points. In the example above, this grid is a uniform sampling of the rectangle
+by 100 points per dimension.</p>
+<p>To make this process fast, <code class="docutils literal notranslate"><span class="pre">element</span></code> assumes that the function is written in a way that not only
+supports vectorization, but also guarantees that the output has the correct shape. The function
+receives a <a class="reference internal" href="glossary.html#term-meshgrid"><span class="xref std std-term">meshgrid</span></a> tuple as input, in the above case consisting of two vectors:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">mesh</span> <span class="o">=</span> <span class="n">discr</span><span class="o">.</span><span class="n">meshgrid</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mesh</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span>
+<span class="go">(100, 1)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mesh</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span>
+<span class="go">(1, 100)</span>
+</pre></div>
+</div>
+<p>When inserted into the function, the final shape of the output is determined by Numpy’s
+<a class="reference external" href="http://docs.scipy.org/doc/numpy/user/basics.broadcasting.html">broadcasting rules</a>. For the Gaussian function, Numpy will conclude that the output shape must
+be <code class="docutils literal notranslate"><span class="pre">(100,</span> <span class="pre">100)</span></code> since the arrays in <code class="docutils literal notranslate"><span class="pre">mesh</span></code> are added after squaring. This size is the same
+as expected by the discretization.</p>
+<p>If a function does not use all components of the input, ODL tries to broadcast the result to the shape of the discretized space:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="k">def</span> <span class="nf">gaussian_const_x0</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
+<span class="gp">... </span>    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="n">x</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">**</span> <span class="mi">2</span> <span class="o">/</span> <span class="mi">2</span><span class="p">)</span>  <span class="c1"># no x[0] -&gt; broadcasting</span>
+
+<span class="gp">&gt;&gt;&gt; </span><span class="n">gaussian_const_x0</span><span class="p">(</span><span class="n">mesh</span><span class="p">)</span><span class="o">.</span><span class="n">shape</span>
+<span class="go">(1, 100)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">discr</span><span class="o">.</span><span class="n">element</span><span class="p">(</span><span class="n">gaussian_const_x0</span><span class="p">)</span><span class="o">.</span><span class="n">shape</span>
+<span class="go">(100, 100)</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="further-reading">
+<h2>Further reading<a class="headerlink" href="#further-reading" title="Permalink to this headline">¶</a></h2>
+<p><a class="reference external" href="http://www.scipy-lectures.org/intro/numpy/index.html">Scipy Lecture notes on Numpy</a></p>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+        <a href="geometry_guide.html" class="btn btn-neutral float-right" title="Tomographic acquisition geometries" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="numpy_guide.html" class="btn btn-neutral float-left" title="Using ODL with NumPy and SciPy" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &#169; Copyright 2014-2020 The ODL Contributors.
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

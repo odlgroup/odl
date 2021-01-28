@@ -1,0 +1,6 @@
+﻿is_rotation_matrix
+========================================
+
+.. currentmodule:: odl.tomo.util.utility
+
+.. autofunction:: is_rotation_matrix

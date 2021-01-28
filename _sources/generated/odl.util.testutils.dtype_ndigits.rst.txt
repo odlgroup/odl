@@ -1,0 +1,6 @@
+﻿dtype_ndigits
+================================
+
+.. currentmodule:: odl.util.testutils
+
+.. autofunction:: dtype_ndigits

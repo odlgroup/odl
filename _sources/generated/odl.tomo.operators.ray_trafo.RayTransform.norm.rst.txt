@@ -1,0 +1,8 @@
+:orphan:
+
+RayTransform.norm
+==============================================
+
+.. currentmodule:: odl.tomo.operators.ray_trafo
+
+.. automethod:: RayTransform.norm

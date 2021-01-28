@@ -1,0 +1,8 @@
+:orphan:
+
+SkImageImpl.call_backward
+=========================================================
+
+.. currentmodule:: odl.tomo.backends.skimage_radon
+
+.. automethod:: SkImageImpl.call_backward

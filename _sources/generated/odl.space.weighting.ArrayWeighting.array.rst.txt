@@ -1,0 +1,6 @@
+ArrayWeighting.array
+========================================
+
+.. currentmodule:: odl.space.weighting
+
+.. autoproperty:: ArrayWeighting.array

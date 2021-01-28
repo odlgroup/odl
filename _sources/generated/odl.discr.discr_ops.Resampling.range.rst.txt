@@ -1,0 +1,6 @@
+Resampling.range
+====================================
+
+.. currentmodule:: odl.discr.discr_ops
+
+.. autoproperty:: Resampling.range

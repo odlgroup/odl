@@ -1,0 +1,332 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>Contributing to ODL &mdash; odl 1.0.0.dev0 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Extending ODL" href="extend.html" />
+    <link rel="prev" title="Proximal Operators" href="../math/solvers/nonsmooth/proximal_operators.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../index.html" class="icon icon-home"> odl
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                1.0.0.dev0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Getting Started</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../getting_started/getting_started.html">Getting Started</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Working with ODL</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../guide/guide.html">User’s guide – selected topics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../math/math.html">Mathematical Background</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Developer zone</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Contributing to ODL</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#introduction">Introduction</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#contents">Contents</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="extend.html">Extending ODL</a></li>
+<li class="toctree-l3"><a class="reference internal" href="document.html">How to document</a></li>
+<li class="toctree-l3"><a class="reference internal" href="testing.html">Testing in ODL</a></li>
+<li class="toctree-l3"><a class="reference internal" href="release.html">The ODL release process</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gitwash/index.html">Working with ODL source code</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<p class="caption"><span class="caption-text">Useful facts</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../guide/faq.html">Frequently asked questions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../guide/glossary.html">Glossary</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../release_notes.html">Release Notes</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../refs.html">References</a></li>
+</ul>
+<p class="caption"><span class="caption-text">API Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../odl.html">odl</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">odl</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+      <li>Contributing to ODL</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            <a href="../_sources/dev/dev.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="contributing-to-odl">
+<span id="contributing"></span><h1>Contributing to ODL<a class="headerlink" href="#contributing-to-odl" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="introduction">
+<h2>Introduction<a class="headerlink" href="#introduction" title="Permalink to this headline">¶</a></h2>
+<p>Great that you want to help making ODL better!
+There are basically two ways how you can contribute: as a user or as a developer.</p>
+<p>The best way to make contributions as a user is to play around with the software, try to use it for your purposes and get back to us if you encounter problems or miss features.
+When this happens, take a look at our <a class="reference external" href="https://github.com/odlgroup/odl/issues">issue tracker</a>, and if there is no existing issue dealing with your problem, create a new one.
+Don’t be shy – use the issue tracker to ask questions, too.</p>
+<p>If you are a developer and want to contribute code, you may want to read through the subsequent instructions.
+If you are experienced with Git, you may want to skip directly to <a class="reference internal" href="gitwash/development_workflow.html#development-workflow"><span class="std std-ref">the development workflow section</span></a>.</p>
+<p>In order to properly follow the ODL style, we recommend that you read the <a class="reference internal" href="document.html#dev-document"><span class="std std-ref">How to document</span></a> and <a class="reference internal" href="testing.html#dev-testing"><span class="std std-ref">Testing in ODL</span></a> sections.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>This documentation is intended for contributions to core ODL.
+For experimental contributions or extensions that would be too specialized for core ODL, we have the <a class="reference external" href="https://github.com/odlgroup/odl/tree/master/odl/contrib">odl/contrib</a> directory that offers a “fast lane” with a more relaxed code quality and consistency policy.</p>
+</div>
+</div>
+<div class="section" id="contents">
+<h2>Contents<a class="headerlink" href="#contents" title="Permalink to this headline">¶</a></h2>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="extend.html">Extending ODL</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="extend.html#adding-tensor-spaces">Adding Tensor spaces</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="document.html">How to document</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="document.html#some-short-tips">Some short tips</a></li>
+<li class="toctree-l2"><a class="reference internal" href="document.html#quick-summary-of-pep257">Quick summary of PEP257</a></li>
+<li class="toctree-l2"><a class="reference internal" href="document.html#advanced">Advanced</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="document.html#re-generating-the-doc">Re-generating the doc</a></li>
+<li class="toctree-l3"><a class="reference internal" href="document.html#modifications-to-numpydoc">Modifications to numpydoc</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="testing.html">Testing in ODL</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="testing.html#unit-tests">Unit tests</a></li>
+<li class="toctree-l2"><a class="reference internal" href="testing.html#large-scale">Large-scale</a></li>
+<li class="toctree-l2"><a class="reference internal" href="testing.html#doctests">Doctests</a></li>
+<li class="toctree-l2"><a class="reference internal" href="testing.html#examples">Examples</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="release.html">The ODL release process</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="release.html#agree-on-a-release-schedule">1. Agree on a release schedule</a></li>
+<li class="toctree-l2"><a class="reference internal" href="release.html#make-sure-tests-succeed-and-docs-are-built-properly">2. Make sure tests succeed and docs are built properly</a></li>
+<li class="toctree-l2"><a class="reference internal" href="release.html#make-a-release-branch-off-of-master">3. Make a release branch off of <code class="docutils literal notranslate"><span class="pre">master</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="release.html#bump-the-master-branch-to-the-next-development-version">4. Bump the <code class="docutils literal notranslate"><span class="pre">master</span></code> branch to the next development version</a></li>
+<li class="toctree-l2"><a class="reference internal" href="release.html#compile-and-publish-the-release">5. Compile and publish the release</a></li>
+<li class="toctree-l2"><a class="reference internal" href="release.html#create-packages-for-pypi-and-conda">6. Create packages for PyPI and Conda</a></li>
+<li class="toctree-l2"><a class="reference internal" href="release.html#test-installing-the-pypi-packages-and-check-them">7. Test installing the PyPI packages and check them</a></li>
+<li class="toctree-l2"><a class="reference internal" href="release.html#upload-the-packages-to-the-official-locations">8. Upload the packages to the official locations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="release.html#done">Done!</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="gitwash/index.html">Working with ODL source code</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="gitwash/git_intro.html">Introduction</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gitwash/git_install.html">Install Git</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gitwash/following_latest.html">Following the latest source</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="gitwash/following_latest.html#get-a-local-copy-of-the-code">Get a local copy of the code</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gitwash/following_latest.html#updating-the-code">Updating the code</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="gitwash/patching.html">Making a patch</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="gitwash/patching.html#making-patches">Making patches</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gitwash/patching.html#moving-from-patching-to-development">Moving from patching to development</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="gitwash/git_development.html">Git for development</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="gitwash/forking_hell.html">Making your own copy (fork) of ODL</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gitwash/set_up_fork.html">Set up your fork</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gitwash/configure_git.html">Configure Git</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gitwash/development_workflow.html">Development workflow</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gitwash/maintainer_workflow.html">Maintainer workflow</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="gitwash/git_resources.html">Git resources</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="gitwash/git_resources.html#tutorials-and-summaries">Tutorials and summaries</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gitwash/git_resources.html#advanced-git-workflow">Advanced Git workflow</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gitwash/git_resources.html#manual-pages-online">Manual pages online</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</div>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+        <a href="extend.html" class="btn btn-neutral float-right" title="Extending ODL" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="../math/solvers/nonsmooth/proximal_operators.html" class="btn btn-neutral float-left" title="Proximal Operators" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &#169; Copyright 2014-2020 The ODL Contributors.
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

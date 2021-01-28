@@ -1,0 +1,8 @@
+:orphan:
+
+WaveletTransformBase.scales
+==============================================
+
+.. currentmodule:: odl.trafos.wavelet
+
+.. automethod:: WaveletTransformBase.scales

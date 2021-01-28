@@ -1,0 +1,39 @@
+﻿OperatorPointwiseProduct
+==============================================
+
+.. currentmodule:: odl.operator.operator
+
+.. autoclass:: OperatorPointwiseProduct
+   :show-inheritance:
+   
+   
+   .. automethod:: __init__
+   
+      
+   
+   .. HACK -- the point here is that we don't want this to appear in the output, but the autosummary should still generate the pages.
+      .. autosummary::
+         :toctree:
+      
+         OperatorPointwiseProduct.__call__
+         OperatorPointwiseProduct.__eq__
+         OperatorPointwiseProduct._call
+         OperatorPointwiseProduct.derivative
+         OperatorPointwiseProduct.norm
+   
+
+    
+   .. HACK -- the point here is that we don't want this to appear in the output, but the autosummary should still generate the pages.
+      .. autosummary::
+         :toctree:
+      
+         OperatorPointwiseProduct.adjoint
+         OperatorPointwiseProduct.domain
+         OperatorPointwiseProduct.inverse
+         OperatorPointwiseProduct.is_functional
+         OperatorPointwiseProduct.is_linear
+         OperatorPointwiseProduct.left
+         OperatorPointwiseProduct.range
+         OperatorPointwiseProduct.right
+   
+   

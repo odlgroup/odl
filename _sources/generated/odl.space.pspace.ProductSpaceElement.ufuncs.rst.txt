@@ -1,0 +1,6 @@
+ProductSpaceElement.ufuncs
+===========================================
+
+.. currentmodule:: odl.space.pspace
+
+.. autoproperty:: ProductSpaceElement.ufuncs

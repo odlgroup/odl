@@ -1,0 +1,8 @@
+:orphan:
+
+Strings.contains_set
+=================================
+
+.. currentmodule:: odl.set.sets
+
+.. automethod:: Strings.contains_set

@@ -1,0 +1,6 @@
+﻿proximal_gradient
+=================================================================
+
+.. currentmodule:: odl.solvers.nonsmooth.proximal_gradient_solvers
+
+.. autofunction:: proximal_gradient

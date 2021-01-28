@@ -1,0 +1,6 @@
+﻿find_min_signature
+==========================================
+
+.. currentmodule:: odl.ufunc_ops.ufunc_ops
+
+.. autofunction:: find_min_signature

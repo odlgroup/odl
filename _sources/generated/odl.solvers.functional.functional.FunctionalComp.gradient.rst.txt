@@ -1,0 +1,6 @@
+FunctionalComp.gradient
+=========================================================
+
+.. currentmodule:: odl.solvers.functional.functional
+
+.. autoproperty:: FunctionalComp.gradient

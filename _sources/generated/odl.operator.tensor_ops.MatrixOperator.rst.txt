@@ -1,0 +1,39 @@
+﻿MatrixOperator
+======================================
+
+.. currentmodule:: odl.operator.tensor_ops
+
+.. autoclass:: MatrixOperator
+   :show-inheritance:
+   
+   
+   .. automethod:: __init__
+   
+      
+   
+   .. HACK -- the point here is that we don't want this to appear in the output, but the autosummary should still generate the pages.
+      .. autosummary::
+         :toctree:
+      
+         MatrixOperator.__call__
+         MatrixOperator.__eq__
+         MatrixOperator._call
+         MatrixOperator.derivative
+         MatrixOperator.norm
+   
+
+    
+   .. HACK -- the point here is that we don't want this to appear in the output, but the autosummary should still generate the pages.
+      .. autosummary::
+         :toctree:
+      
+         MatrixOperator.adjoint
+         MatrixOperator.axis
+         MatrixOperator.domain
+         MatrixOperator.inverse
+         MatrixOperator.is_functional
+         MatrixOperator.is_linear
+         MatrixOperator.matrix
+         MatrixOperator.range
+   
+   

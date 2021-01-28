@@ -1,0 +1,8 @@
+:orphan:
+
+CallbackSaveToDisk.reset
+==================================================
+
+.. currentmodule:: odl.solvers.util.callback
+
+.. automethod:: CallbackSaveToDisk.reset

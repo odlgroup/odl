@@ -1,0 +1,6 @@
+FunctionalRightVectorMult.vector
+==================================================================
+
+.. currentmodule:: odl.solvers.functional.functional
+
+.. autoproperty:: FunctionalRightVectorMult.vector

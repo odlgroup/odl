@@ -1,0 +1,8 @@
+:orphan:
+
+NormOperator.derivative
+================================================
+
+.. currentmodule:: odl.operator.default_ops
+
+.. automethod:: NormOperator.derivative

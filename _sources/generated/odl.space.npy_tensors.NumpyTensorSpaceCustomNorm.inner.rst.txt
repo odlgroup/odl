@@ -1,0 +1,8 @@
+:orphan:
+
+NumpyTensorSpaceCustomNorm.inner
+======================================================
+
+.. currentmodule:: odl.space.npy_tensors
+
+.. automethod:: NumpyTensorSpaceCustomNorm.inner

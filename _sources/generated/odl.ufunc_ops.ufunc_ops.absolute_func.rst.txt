@@ -1,0 +1,43 @@
+﻿absolute_func
+=====================================
+
+.. currentmodule:: odl.ufunc_ops.ufunc_ops
+
+.. autoclass:: absolute_func
+   :show-inheritance:
+   
+   
+   .. automethod:: __init__
+   
+      
+   
+   .. HACK -- the point here is that we don't want this to appear in the output, but the autosummary should still generate the pages.
+      .. autosummary::
+         :toctree:
+      
+         absolute_func.__call__
+         absolute_func.__eq__
+         absolute_func._call
+         absolute_func.bregman
+         absolute_func.derivative
+         absolute_func.norm
+         absolute_func.translated
+   
+
+    
+   .. HACK -- the point here is that we don't want this to appear in the output, but the autosummary should still generate the pages.
+      .. autosummary::
+         :toctree:
+      
+         absolute_func.adjoint
+         absolute_func.convex_conj
+         absolute_func.domain
+         absolute_func.grad_lipschitz
+         absolute_func.gradient
+         absolute_func.inverse
+         absolute_func.is_functional
+         absolute_func.is_linear
+         absolute_func.proximal
+         absolute_func.range
+   
+   

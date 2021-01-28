@@ -1,0 +1,6 @@
+﻿realspace_grid
+=======================================
+
+.. currentmodule:: odl.trafos.util.ft_utils
+
+.. autofunction:: realspace_grid

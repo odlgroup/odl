@@ -1,0 +1,6 @@
+NuclearNorm.inverse
+==============================================================
+
+.. currentmodule:: odl.solvers.functional.default_functionals
+
+.. autoproperty:: NuclearNorm.inverse

@@ -1,0 +1,8 @@
+:orphan:
+
+BroadcastOperator.norm
+==============================================
+
+.. currentmodule:: odl.operator.pspace_ops
+
+.. automethod:: BroadcastOperator.norm

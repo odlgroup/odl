@@ -1,0 +1,6 @@
+PartialDerivative.adjoint
+============================================
+
+.. currentmodule:: odl.discr.diff_ops
+
+.. autoproperty:: PartialDerivative.adjoint

@@ -1,0 +1,6 @@
+PointwiseNorm.is_linear
+===============================================
+
+.. currentmodule:: odl.operator.tensor_ops
+
+.. autoproperty:: PointwiseNorm.is_linear

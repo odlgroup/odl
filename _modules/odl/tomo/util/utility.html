@@ -1,0 +1,903 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>odl.tomo.util.utility &mdash; odl 1.0.0.dev0 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../../../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../../../../_static/custom.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../../../" src="../../../../_static/documentation_options.js"></script>
+        <script src="../../../../_static/jquery.js"></script>
+        <script src="../../../../_static/underscore.js"></script>
+        <script src="../../../../_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="../../../../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../../../index.html" class="icon icon-home"> odl
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                1.0.0.dev0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Getting Started</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../getting_started/getting_started.html">Getting Started</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Working with ODL</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../guide/guide.html">User’s guide – selected topics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../math/math.html">Mathematical Background</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Developer zone</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../dev/dev.html">Contributing to ODL</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Useful facts</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../guide/faq.html">Frequently asked questions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../guide/glossary.html">Glossary</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../release_notes.html">Release Notes</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../refs.html">References</a></li>
+</ul>
+<p class="caption"><span class="caption-text">API Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../odl.html">odl</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../../index.html">odl</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../../../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="../../../index.html">Module code</a> &raquo;</li>
+        
+      <li>odl.tomo.util.utility</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for odl.tomo.util.utility</h1><div class="highlight"><pre>
+<span></span><span class="c1"># Copyright 2014-2019 The ODL contributors</span>
+<span class="c1">#</span>
+<span class="c1"># This file is part of ODL.</span>
+<span class="c1">#</span>
+<span class="c1"># This Source Code Form is subject to the terms of the Mozilla Public License,</span>
+<span class="c1"># v. 2.0. If a copy of the MPL was not distributed with this file, You can</span>
+<span class="c1"># obtain one at https://mozilla.org/MPL/2.0/.</span>
+
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">print_function</span><span class="p">,</span> <span class="n">division</span><span class="p">,</span> <span class="n">absolute_import</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;euler_matrix&#39;</span><span class="p">,</span> <span class="s1">&#39;axis_rotation&#39;</span><span class="p">,</span> <span class="s1">&#39;axis_rotation_matrix&#39;</span><span class="p">,</span>
+           <span class="s1">&#39;rotation_matrix_from_to&#39;</span><span class="p">,</span> <span class="s1">&#39;transform_system&#39;</span><span class="p">,</span>
+           <span class="s1">&#39;perpendicular_vector&#39;</span><span class="p">,</span> <span class="s1">&#39;is_inside_bounds&#39;</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="euler_matrix"><a class="viewcode-back" href="../../../../generated/odl.tomo.util.utility.euler_matrix.html#odl.tomo.util.utility.euler_matrix">[docs]</a><span class="k">def</span> <span class="nf">euler_matrix</span><span class="p">(</span><span class="n">phi</span><span class="p">,</span> <span class="n">theta</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">psi</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Rotation matrix in 2 and 3 dimensions.</span>
+
+<span class="sd">    Its rows represent the canonical unit vectors as seen from the</span>
+<span class="sd">    rotated system while the columns are the rotated unit vectors as</span>
+<span class="sd">    seen from the canonical system.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    phi : float or `array-like`</span>
+<span class="sd">        Either 2D counter-clockwise rotation angle (in radians) or first</span>
+<span class="sd">        Euler angle.</span>
+<span class="sd">    theta, psi : float or `array-like`, optional</span>
+<span class="sd">        Second and third Euler angles in radians. If both are ``None``, a</span>
+<span class="sd">        2D rotation matrix is computed. Otherwise a 3D rotation is computed,</span>
+<span class="sd">        where the default ``None`` is equivalent to ``0.0``.</span>
+<span class="sd">        The rotation is performed in &quot;ZXZ&quot; rotation order, see the</span>
+<span class="sd">        Wikipedia article `Euler angles`_.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    mat : `numpy.ndarray`</span>
+<span class="sd">        Rotation matrix corresponding to the given angles. The</span>
+<span class="sd">        returned array has shape ``(ndim, ndim)`` if all angles represent</span>
+<span class="sd">        single parameters, with ``ndim == 2`` for ``phi`` only and</span>
+<span class="sd">        ``ndim == 3`` for 2 or 3 Euler angles.</span>
+<span class="sd">        If any of the angle parameters is an array, the shape of the</span>
+<span class="sd">        returned array is ``broadcast(phi, theta, psi).shape + (ndim, ndim)``.</span>
+
+<span class="sd">    References</span>
+<span class="sd">    ----------</span>
+<span class="sd">    .. _Euler angles:</span>
+<span class="sd">        https://en.wikipedia.org/wiki/Euler_angles#Rotation_matrix</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">theta</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">psi</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">squeeze_out</span> <span class="o">=</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">shape</span><span class="p">(</span><span class="n">phi</span><span class="p">)</span> <span class="o">==</span> <span class="p">())</span>
+        <span class="n">ndim</span> <span class="o">=</span> <span class="mi">2</span>
+        <span class="n">phi</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">phi</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">,</span> <span class="n">copy</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">ndmin</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+        <span class="n">theta</span> <span class="o">=</span> <span class="n">psi</span> <span class="o">=</span> <span class="mf">0.0</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="c1"># `None` broadcasts like a scalar</span>
+        <span class="n">squeeze_out</span> <span class="o">=</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">broadcast</span><span class="p">(</span><span class="n">phi</span><span class="p">,</span> <span class="n">theta</span><span class="p">,</span> <span class="n">psi</span><span class="p">)</span><span class="o">.</span><span class="n">shape</span> <span class="o">==</span> <span class="p">())</span>
+        <span class="n">ndim</span> <span class="o">=</span> <span class="mi">3</span>
+        <span class="n">phi</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">phi</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">,</span> <span class="n">copy</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">ndmin</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">theta</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">theta</span> <span class="o">=</span> <span class="mf">0.0</span>
+        <span class="k">if</span> <span class="n">psi</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">psi</span> <span class="o">=</span> <span class="mf">0.0</span>
+        <span class="n">theta</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">theta</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">,</span> <span class="n">copy</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">ndmin</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+        <span class="n">psi</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">psi</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">,</span> <span class="n">copy</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">ndmin</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+        <span class="n">ndim</span> <span class="o">=</span> <span class="mi">3</span>
+
+    <span class="n">cph</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">phi</span><span class="p">)</span>
+    <span class="n">sph</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">phi</span><span class="p">)</span>
+    <span class="n">cth</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">theta</span><span class="p">)</span>
+    <span class="n">sth</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">theta</span><span class="p">)</span>
+    <span class="n">cps</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">psi</span><span class="p">)</span>
+    <span class="n">sps</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">psi</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">ndim</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
+        <span class="n">mat</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([[</span><span class="n">cph</span><span class="p">,</span> <span class="o">-</span><span class="n">sph</span><span class="p">],</span>
+                        <span class="p">[</span><span class="n">sph</span><span class="p">,</span> <span class="n">cph</span><span class="p">]])</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">mat</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span>
+            <span class="p">[</span><span class="n">cph</span> <span class="o">*</span> <span class="n">cps</span> <span class="o">-</span> <span class="n">sph</span> <span class="o">*</span> <span class="n">cth</span> <span class="o">*</span> <span class="n">sps</span><span class="p">,</span>
+             <span class="o">-</span><span class="n">cph</span> <span class="o">*</span> <span class="n">sps</span> <span class="o">-</span> <span class="n">sph</span> <span class="o">*</span> <span class="n">cth</span> <span class="o">*</span> <span class="n">cps</span><span class="p">,</span>
+             <span class="n">sph</span> <span class="o">*</span> <span class="n">sth</span><span class="p">],</span>
+            <span class="p">[</span><span class="n">sph</span> <span class="o">*</span> <span class="n">cps</span> <span class="o">+</span> <span class="n">cph</span> <span class="o">*</span> <span class="n">cth</span> <span class="o">*</span> <span class="n">sps</span><span class="p">,</span>
+             <span class="o">-</span><span class="n">sph</span> <span class="o">*</span> <span class="n">sps</span> <span class="o">+</span> <span class="n">cph</span> <span class="o">*</span> <span class="n">cth</span> <span class="o">*</span> <span class="n">cps</span><span class="p">,</span>
+             <span class="o">-</span><span class="n">cph</span> <span class="o">*</span> <span class="n">sth</span><span class="p">],</span>
+            <span class="p">[</span><span class="n">sth</span> <span class="o">*</span> <span class="n">sps</span> <span class="o">+</span> <span class="mi">0</span> <span class="o">*</span> <span class="n">cph</span><span class="p">,</span>
+             <span class="n">sth</span> <span class="o">*</span> <span class="n">cps</span> <span class="o">+</span> <span class="mi">0</span> <span class="o">*</span> <span class="n">cph</span><span class="p">,</span>
+             <span class="n">cth</span> <span class="o">+</span> <span class="mi">0</span> <span class="o">*</span> <span class="p">(</span><span class="n">cph</span> <span class="o">+</span> <span class="n">cps</span><span class="p">)]])</span>  <span class="c1"># Make sure all components broadcast</span>
+
+    <span class="k">if</span> <span class="n">squeeze_out</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">mat</span><span class="o">.</span><span class="n">squeeze</span><span class="p">()</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="c1"># Move the `(ndim, ndim)` axes to the end</span>
+        <span class="n">extra_dims</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">broadcast</span><span class="p">(</span><span class="n">phi</span><span class="p">,</span> <span class="n">theta</span><span class="p">,</span> <span class="n">psi</span><span class="p">)</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+        <span class="n">newaxes</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">2</span> <span class="o">+</span> <span class="n">extra_dims</span><span class="p">))</span> <span class="o">+</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">transpose</span><span class="p">(</span><span class="n">mat</span><span class="p">,</span> <span class="n">newaxes</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="axis_rotation"><a class="viewcode-back" href="../../../../generated/odl.tomo.util.utility.axis_rotation.html#odl.tomo.util.utility.axis_rotation">[docs]</a><span class="k">def</span> <span class="nf">axis_rotation</span><span class="p">(</span><span class="n">axis</span><span class="p">,</span> <span class="n">angle</span><span class="p">,</span> <span class="n">vectors</span><span class="p">,</span> <span class="n">axis_shift</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">)):</span>
+    <span class="sd">&quot;&quot;&quot;Rotate a vector or an array of vectors around an axis in 3d.</span>
+
+<span class="sd">    The rotation is computed by `Rodrigues&#39; rotation formula`_.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    axis : `array-like`, shape ``(3,)``</span>
+<span class="sd">        Rotation axis, assumed to be a unit vector.</span>
+<span class="sd">    angle : float</span>
+<span class="sd">        Angle of the counter-clockwise rotation.</span>
+<span class="sd">    vectors : `array-like`, shape ``(3,)`` or ``(N, 3)``</span>
+<span class="sd">        The vector(s) to be rotated.</span>
+<span class="sd">    axis_shift : `array_like`, shape ``(3,)``, optional</span>
+<span class="sd">        Shift the rotation center by this vector. Note that only shifts</span>
+<span class="sd">        perpendicular to ``axis`` matter.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    rot_vec : `numpy.ndarray`</span>
+<span class="sd">        The rotated vector(s).</span>
+
+<span class="sd">    References</span>
+<span class="sd">    ----------</span>
+<span class="sd">    .. _Rodrigues&#39; rotation formula:</span>
+<span class="sd">        https://en.wikipedia.org/wiki/Rodrigues&#39;_rotation_formula</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    Rotating around the third coordinate axis by and angle of 90 degrees:</span>
+
+<span class="sd">    &gt;&gt;&gt; axis = (0, 0, 1)</span>
+<span class="sd">    &gt;&gt;&gt; rot1 = axis_rotation(axis, angle=np.pi / 2, vectors=(1, 0, 0))</span>
+<span class="sd">    &gt;&gt;&gt; np.allclose(rot1, (0, 1, 0))</span>
+<span class="sd">    True</span>
+<span class="sd">    &gt;&gt;&gt; rot2 = axis_rotation(axis, angle=np.pi / 2, vectors=(0, 1, 0))</span>
+<span class="sd">    &gt;&gt;&gt; np.allclose(rot2, (-1, 0, 0))</span>
+<span class="sd">    True</span>
+
+<span class="sd">    The rotation can be performed with shifted rotation center. A shift</span>
+<span class="sd">    along the axis does not matter:</span>
+
+<span class="sd">    &gt;&gt;&gt; rot3 = axis_rotation(axis, angle=np.pi / 2, vectors=(1, 0, 0),</span>
+<span class="sd">    ...                      axis_shift=(0, 0, 2))</span>
+<span class="sd">    &gt;&gt;&gt; np.allclose(rot3, (0, 1, 0))</span>
+<span class="sd">    True</span>
+
+<span class="sd">    The distance between the rotation center and the vector to be rotated</span>
+<span class="sd">    determines the radius of the rotation circle:</span>
+
+<span class="sd">    &gt;&gt;&gt; # Rotation center in the point to be rotated, should do nothing</span>
+<span class="sd">    &gt;&gt;&gt; rot4 = axis_rotation(axis, angle=np.pi / 2, vectors=(1, 0, 0),</span>
+<span class="sd">    ...                      axis_shift=(1, 0, 0))</span>
+<span class="sd">    &gt;&gt;&gt; np.allclose(rot4, (1, 0, 0))</span>
+<span class="sd">    True</span>
+<span class="sd">    &gt;&gt;&gt; # Distance 2, thus rotates to (0, 2, 0) in the shifted system,</span>
+<span class="sd">    &gt;&gt;&gt; # resulting in (-1, 2, 0) from shifting back after rotating</span>
+<span class="sd">    &gt;&gt;&gt; rot5 = axis_rotation(axis, angle=np.pi / 2, vectors=(1, 0, 0),</span>
+<span class="sd">    ...                      axis_shift=(-1, 0, 0))</span>
+<span class="sd">    &gt;&gt;&gt; np.allclose(rot5, (-1, 2, 0))</span>
+<span class="sd">    True</span>
+
+<span class="sd">    Rotation of multiple vectors can be done in bulk:</span>
+
+<span class="sd">    &gt;&gt;&gt; vectors = [[1, 0, 0], [0, 1, 0]]</span>
+<span class="sd">    &gt;&gt;&gt; rot = axis_rotation(axis, angle=np.pi / 2, vectors=vectors)</span>
+<span class="sd">    &gt;&gt;&gt; np.allclose(rot[0], (0, 1, 0))</span>
+<span class="sd">    True</span>
+<span class="sd">    &gt;&gt;&gt; np.allclose(rot[1], (-1, 0, 0))</span>
+<span class="sd">    True</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">rot_matrix</span> <span class="o">=</span> <span class="n">axis_rotation_matrix</span><span class="p">(</span><span class="n">axis</span><span class="p">,</span> <span class="n">angle</span><span class="p">)</span>
+    <span class="n">vectors</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">vectors</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">vectors</span><span class="o">.</span><span class="n">shape</span> <span class="o">==</span> <span class="p">(</span><span class="mi">3</span><span class="p">,):</span>
+        <span class="n">vectors</span> <span class="o">=</span> <span class="n">vectors</span><span class="p">[</span><span class="kc">None</span><span class="p">,</span> <span class="p">:]</span>
+    <span class="k">elif</span> <span class="n">vectors</span><span class="o">.</span><span class="n">ndim</span> <span class="o">==</span> <span class="mi">2</span> <span class="ow">and</span> <span class="n">vectors</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="mi">3</span><span class="p">:</span>
+        <span class="k">pass</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;`vectors` must have shape (3,) or (N, 3), got array &#39;</span>
+                         <span class="s1">&#39;with shape </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">vectors</span><span class="o">.</span><span class="n">shape</span><span class="p">))</span>
+
+    <span class="c1"># Get `axis_shift` part that is perpendicular to `axis`</span>
+    <span class="n">axis_shift</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">axis_shift</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
+    <span class="n">axis</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">axis</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
+    <span class="n">axis_shift</span> <span class="o">=</span> <span class="n">axis_shift</span> <span class="o">-</span> <span class="n">axis</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">axis_shift</span><span class="p">)</span> <span class="o">*</span> <span class="n">axis</span>
+
+    <span class="c1"># Shift vectors with the negative of the axis shift to move the rotation</span>
+    <span class="c1"># center to the origin. Then rotate and shift back.</span>
+    <span class="n">centered_vecs</span> <span class="o">=</span> <span class="n">vectors</span> <span class="o">-</span> <span class="n">axis_shift</span><span class="p">[</span><span class="kc">None</span><span class="p">,</span> <span class="p">:]</span>
+    <span class="c1"># Need to transpose the vectors to make the axis of length 3 come first</span>
+    <span class="n">rot_vecs</span> <span class="o">=</span> <span class="n">rot_matrix</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">centered_vecs</span><span class="o">.</span><span class="n">T</span><span class="p">)</span><span class="o">.</span><span class="n">T</span>
+    <span class="k">return</span> <span class="n">axis_shift</span><span class="p">[</span><span class="kc">None</span><span class="p">,</span> <span class="p">:]</span> <span class="o">+</span> <span class="n">rot_vecs</span></div>
+
+
+<div class="viewcode-block" id="axis_rotation_matrix"><a class="viewcode-back" href="../../../../generated/odl.tomo.util.utility.axis_rotation_matrix.html#odl.tomo.util.utility.axis_rotation_matrix">[docs]</a><span class="k">def</span> <span class="nf">axis_rotation_matrix</span><span class="p">(</span><span class="n">axis</span><span class="p">,</span> <span class="n">angle</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Matrix of the rotation around an axis in 3d.</span>
+
+<span class="sd">    The matrix is computed according to `Rodriguez&#39; rotation formula`_.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    axis : `array-like`, shape ``(3,)``</span>
+<span class="sd">        Rotation axis, assumed to be a unit vector.</span>
+<span class="sd">    angle : float or `array-like`</span>
+<span class="sd">        Angle(s) of counter-clockwise rotation.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    mat : `numpy.ndarray`, shape ``(3, 3)``</span>
+<span class="sd">        The axis rotation matrix.</span>
+
+<span class="sd">    References</span>
+<span class="sd">    ----------</span>
+<span class="sd">    .. _Rodriguez&#39; rotation formula:</span>
+<span class="sd">        https://en.wikipedia.org/wiki/Rodrigues&#39;_rotation_formula</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">scalar_out</span> <span class="o">=</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">shape</span><span class="p">(</span><span class="n">angle</span><span class="p">)</span> <span class="o">==</span> <span class="p">())</span>
+    <span class="n">axis</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">axis</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">axis</span><span class="o">.</span><span class="n">shape</span> <span class="o">!=</span> <span class="p">(</span><span class="mi">3</span><span class="p">,):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;`axis` shape must be (3,), got </span><span class="si">{}</span><span class="s1">&#39;</span>
+                         <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">axis</span><span class="o">.</span><span class="n">shape</span><span class="p">))</span>
+
+    <span class="n">angle</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">angle</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">,</span> <span class="n">copy</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">ndmin</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+
+    <span class="n">cross_mat</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([[</span><span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="n">axis</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span> <span class="n">axis</span><span class="p">[</span><span class="mi">1</span><span class="p">]],</span>
+                          <span class="p">[</span><span class="n">axis</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span> <span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="n">axis</span><span class="p">[</span><span class="mi">0</span><span class="p">]],</span>
+                          <span class="p">[</span><span class="o">-</span><span class="n">axis</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">axis</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="mi">0</span><span class="p">]])</span>
+    <span class="n">dy_mat</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">outer</span><span class="p">(</span><span class="n">axis</span><span class="p">,</span> <span class="n">axis</span><span class="p">)</span>
+    <span class="n">id_mat</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
+    <span class="n">cos_ang</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">angle</span><span class="p">)</span>
+    <span class="n">sin_ang</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">angle</span><span class="p">)</span>
+
+    <span class="c1"># Add extra dimensions for broadcasting</span>
+    <span class="n">extra_dims</span> <span class="o">=</span> <span class="n">cos_ang</span><span class="o">.</span><span class="n">ndim</span>
+    <span class="n">mat_slc</span> <span class="o">=</span> <span class="p">(</span><span class="kc">None</span><span class="p">,)</span> <span class="o">*</span> <span class="n">extra_dims</span> <span class="o">+</span> <span class="p">(</span><span class="nb">slice</span><span class="p">(</span><span class="kc">None</span><span class="p">),</span> <span class="nb">slice</span><span class="p">(</span><span class="kc">None</span><span class="p">))</span>
+    <span class="n">ang_slc</span> <span class="o">=</span> <span class="p">(</span><span class="nb">slice</span><span class="p">(</span><span class="kc">None</span><span class="p">),)</span> <span class="o">*</span> <span class="n">extra_dims</span> <span class="o">+</span> <span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+    <span class="c1"># Matrices will have shape (1, ..., 1, ndim, ndim)</span>
+    <span class="n">cross_mat</span> <span class="o">=</span> <span class="n">cross_mat</span><span class="p">[</span><span class="n">mat_slc</span><span class="p">]</span>
+    <span class="n">dy_mat</span> <span class="o">=</span> <span class="n">dy_mat</span><span class="p">[</span><span class="n">mat_slc</span><span class="p">]</span>
+    <span class="n">id_mat</span> <span class="o">=</span> <span class="n">id_mat</span><span class="p">[</span><span class="n">mat_slc</span><span class="p">]</span>
+    <span class="c1"># Angle arrays will have shape (..., 1, 1)</span>
+    <span class="n">cos_ang</span> <span class="o">=</span> <span class="n">cos_ang</span><span class="p">[</span><span class="n">ang_slc</span><span class="p">]</span>
+    <span class="n">sin_ang</span> <span class="o">=</span> <span class="n">sin_ang</span><span class="p">[</span><span class="n">ang_slc</span><span class="p">]</span>
+
+    <span class="n">axis_mat</span> <span class="o">=</span> <span class="n">cos_ang</span> <span class="o">*</span> <span class="n">id_mat</span> <span class="o">+</span> <span class="p">(</span><span class="mf">1.</span> <span class="o">-</span> <span class="n">cos_ang</span><span class="p">)</span> <span class="o">*</span> <span class="n">dy_mat</span> <span class="o">+</span> <span class="n">sin_ang</span> <span class="o">*</span> <span class="n">cross_mat</span>
+    <span class="k">if</span> <span class="n">scalar_out</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">axis_mat</span><span class="o">.</span><span class="n">squeeze</span><span class="p">()</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">axis_mat</span></div>
+
+
+<div class="viewcode-block" id="rotation_matrix_from_to"><a class="viewcode-back" href="../../../../generated/odl.tomo.util.utility.rotation_matrix_from_to.html#odl.tomo.util.utility.rotation_matrix_from_to">[docs]</a><span class="k">def</span> <span class="nf">rotation_matrix_from_to</span><span class="p">(</span><span class="n">from_vec</span><span class="p">,</span> <span class="n">to_vec</span><span class="p">):</span>
+    <span class="sa">r</span><span class="sd">&quot;&quot;&quot;Return a matrix that rotates ``from_vec`` to ``to_vec`` in 2d or 3d.</span>
+
+<span class="sd">    Since a rotation from one vector to another in 3 dimensions has</span>
+<span class="sd">    (at least) one degree of freedom, this function makes deliberate but</span>
+<span class="sd">    still arbitrary choices to fix these free parameters. See Notes for</span>
+<span class="sd">    details. For the applied formula in 3d, see `this Wikipedia page</span>
+<span class="sd">    about Rodrigues&#39; rotation formula</span>
+<span class="sd">    &lt;https://en.wikipedia.org/wiki/Rodrigues&#39;_rotation_formula&gt;`_.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    from_vec, to_vec : `array-like`, shape ``(2,)`` or ``(3,)``</span>
+<span class="sd">        Vectors between which the returned matrix rotates. They should not</span>
+<span class="sd">        be very close to zero or collinear.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    matrix : `numpy.ndarray`, shape ``(2, 2)`` or ``(3, 3)``</span>
+<span class="sd">        A matrix rotating ``from_vec`` to ``to_vec``. Note that the</span>
+<span class="sd">        matrix does *not* include scaling, i.e. it is not guaranteed</span>
+<span class="sd">        that ``matrix.dot(from_vec) == to_vec``.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    In two dimensions, rotation is simple:</span>
+
+<span class="sd">    &gt;&gt;&gt; from_vec, to_vec = [1, 0], [1, 1]</span>
+<span class="sd">    &gt;&gt;&gt; mat = rotation_matrix_from_to(from_vec, to_vec)</span>
+<span class="sd">    &gt;&gt;&gt; to_vec_normalized = np.divide(to_vec, np.linalg.norm(to_vec))</span>
+<span class="sd">    &gt;&gt;&gt; np.allclose(mat.dot([1, 0]), to_vec_normalized)</span>
+<span class="sd">    True</span>
+<span class="sd">    &gt;&gt;&gt; from_vec, to_vec = [1, 0], [-1, 1]</span>
+<span class="sd">    &gt;&gt;&gt; mat = rotation_matrix_from_to(from_vec, to_vec)</span>
+<span class="sd">    &gt;&gt;&gt; to_vec_normalized = np.divide(to_vec, np.linalg.norm(to_vec))</span>
+<span class="sd">    &gt;&gt;&gt; np.allclose(mat.dot([1, 0]), to_vec_normalized)</span>
+<span class="sd">    True</span>
+
+<span class="sd">    Rotation in 3d by less than ``pi``:</span>
+
+<span class="sd">    &gt;&gt;&gt; from_vec, to_vec = [1, 0, 0], [-1, 1, 0]</span>
+<span class="sd">    &gt;&gt;&gt; mat = rotation_matrix_from_to(from_vec, to_vec)</span>
+<span class="sd">    &gt;&gt;&gt; to_vec_normalized = np.divide(to_vec, np.linalg.norm(to_vec))</span>
+<span class="sd">    &gt;&gt;&gt; np.allclose(mat.dot([1, 0, 0]), to_vec_normalized)</span>
+<span class="sd">    True</span>
+
+<span class="sd">    Rotation by more than ``pi``:</span>
+
+<span class="sd">    &gt;&gt;&gt; from_vec, to_vec = [1, 0, 0], [-1, -1, 0]</span>
+<span class="sd">    &gt;&gt;&gt; mat = rotation_matrix_from_to(from_vec, to_vec)</span>
+<span class="sd">    &gt;&gt;&gt; to_vec_normalized = np.divide(to_vec, np.linalg.norm(to_vec))</span>
+<span class="sd">    &gt;&gt;&gt; np.allclose(mat.dot([1, 0, 0]), to_vec_normalized)</span>
+<span class="sd">    True</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    In 3d, the matrix corresponds to a rotation around the normal vector</span>
+<span class="sd">    :math:`\hat n = \hat u \times \hat v`, where :math:`\hat u` and</span>
+<span class="sd">    :math:`\hat v` are the normalized versions of :math:`u`, the</span>
+<span class="sd">    vector from which to rotate, and :math:`v`, the vector to which</span>
+<span class="sd">    should be rotated.</span>
+
+<span class="sd">    The rotation angle is determined as</span>
+<span class="sd">    :math:`\alpha = \pm \arccos(\langle \hat u, \hat v \rangle)`.</span>
+<span class="sd">    Its sign corresponds to the sign of</span>
+<span class="sd">    :math:`\langle \hat b, \hat v\rangle`, where</span>
+<span class="sd">    :math:`\hat b = \hat n \times \hat u` is the binormal vector.</span>
+
+<span class="sd">    In the case that :math:`\hat u` and :math:`\hat v` are collinear,</span>
+<span class="sd">    a perpendicular vector is chosen as :math:`\hat n = (1, 0, 0)` if</span>
+<span class="sd">    :math:`v_1 = v_2 = 0`, else :math:`\hat n = (-v_2, v_1, v_3)`.</span>
+<span class="sd">    The angle in this case is :math:`\alpha = 0` if</span>
+<span class="sd">    :math:`\langle \hat u, \hat v \rangle &gt; 0`, otherwise</span>
+<span class="sd">    :math:`\alpha = \pi`.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">from_vec</span><span class="p">,</span> <span class="n">from_vec_in</span> <span class="o">=</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">from_vec</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">,</span> <span class="n">copy</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span>
+                             <span class="n">from_vec</span><span class="p">)</span>
+    <span class="n">to_vec</span><span class="p">,</span> <span class="n">to_vec_in</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">to_vec</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">,</span> <span class="n">copy</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span> <span class="n">to_vec</span>
+
+    <span class="k">if</span> <span class="n">from_vec</span><span class="o">.</span><span class="n">shape</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">((</span><span class="mi">2</span><span class="p">,),</span> <span class="p">(</span><span class="mi">3</span><span class="p">,)):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;`from_vec.shape` must be (2,) or (3,), got </span><span class="si">{}</span><span class="s1">&#39;</span>
+                         <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">from_vec</span><span class="o">.</span><span class="n">shape</span><span class="p">))</span>
+    <span class="k">if</span> <span class="n">to_vec</span><span class="o">.</span><span class="n">shape</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">((</span><span class="mi">2</span><span class="p">,),</span> <span class="p">(</span><span class="mi">3</span><span class="p">,)):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;`to_vec.shape` must be (2,) or (3,), got </span><span class="si">{}</span><span class="s1">&#39;</span>
+                         <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">to_vec</span><span class="o">.</span><span class="n">shape</span><span class="p">))</span>
+    <span class="k">if</span> <span class="n">from_vec</span><span class="o">.</span><span class="n">shape</span> <span class="o">!=</span> <span class="n">to_vec</span><span class="o">.</span><span class="n">shape</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;`from_vec.shape` and `to_vec.shape` not equal: &#39;</span>
+                         <span class="s1">&#39;</span><span class="si">{}</span><span class="s1"> != </span><span class="si">{}</span><span class="s1">&#39;</span>
+                         <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">from_vec</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="n">to_vec</span><span class="o">.</span><span class="n">shape</span><span class="p">))</span>
+
+    <span class="n">ndim</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">from_vec</span><span class="p">)</span>
+
+    <span class="c1"># Normalize vectors</span>
+    <span class="n">from_vec_norm</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">from_vec</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">from_vec_norm</span> <span class="o">&lt;</span> <span class="mf">1e-10</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;`from_vec` </span><span class="si">{}</span><span class="s1"> too close to zero&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">from_vec_in</span><span class="p">))</span>
+    <span class="n">from_vec</span> <span class="o">/=</span> <span class="n">from_vec_norm</span>
+    <span class="n">to_vec_norm</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">to_vec</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">to_vec_norm</span> <span class="o">&lt;</span> <span class="mf">1e-10</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;`to_vec` </span><span class="si">{}</span><span class="s1"> too close to zero&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">to_vec_in</span><span class="p">))</span>
+    <span class="n">to_vec</span> <span class="o">/=</span> <span class="n">to_vec_norm</span>
+
+    <span class="k">if</span> <span class="n">ndim</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
+        <span class="n">dot</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">from_vec</span><span class="p">,</span> <span class="n">to_vec</span><span class="p">)</span>
+        <span class="n">from_rot</span> <span class="o">=</span> <span class="p">(</span><span class="o">-</span><span class="n">from_vec</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">from_vec</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+        <span class="k">if</span> <span class="n">dot</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">angle</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span> <span class="o">/</span> <span class="mi">2</span> <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">from_rot</span><span class="p">,</span> <span class="n">to_vec</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="k">else</span> <span class="o">-</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span> <span class="o">/</span> <span class="mi">2</span>
+        <span class="k">elif</span> <span class="n">np</span><span class="o">.</span><span class="n">array_equal</span><span class="p">(</span><span class="n">to_vec</span><span class="p">,</span> <span class="o">-</span><span class="n">from_vec</span><span class="p">):</span>
+            <span class="n">angle</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">angle</span> <span class="o">=</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sign</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">from_rot</span><span class="p">,</span> <span class="n">to_vec</span><span class="p">))</span> <span class="o">*</span>
+                     <span class="n">np</span><span class="o">.</span><span class="n">arccos</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">from_vec</span><span class="p">,</span> <span class="n">to_vec</span><span class="p">)))</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([[</span><span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">angle</span><span class="p">),</span> <span class="o">-</span><span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">angle</span><span class="p">)],</span>
+                         <span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">angle</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">angle</span><span class="p">)]])</span>
+
+    <span class="k">elif</span> <span class="n">ndim</span> <span class="o">==</span> <span class="mi">3</span><span class="p">:</span>
+        <span class="c1"># Determine normal</span>
+        <span class="n">normal</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">cross</span><span class="p">(</span><span class="n">from_vec</span><span class="p">,</span> <span class="n">to_vec</span><span class="p">)</span>
+        <span class="n">normal_norm</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">normal</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">normal_norm</span> <span class="o">&lt;</span> <span class="mf">1e-10</span><span class="p">:</span>
+            <span class="c1"># Collinear vectors, use perpendicular vector and angle = 0 or pi</span>
+            <span class="n">normal</span> <span class="o">=</span> <span class="n">perpendicular_vector</span><span class="p">(</span><span class="n">from_vec</span><span class="p">)</span>
+            <span class="n">angle</span> <span class="o">=</span> <span class="mi">0</span> <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">from_vec</span><span class="p">,</span> <span class="n">to_vec</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="k">else</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span>
+            <span class="k">return</span> <span class="n">axis_rotation_matrix</span><span class="p">(</span><span class="n">normal</span><span class="p">,</span> <span class="n">angle</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># Usual case, determine binormal and sign of rotation angle</span>
+            <span class="n">normal</span> <span class="o">/=</span> <span class="n">normal_norm</span>
+            <span class="n">binormal</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">cross</span><span class="p">(</span><span class="n">normal</span><span class="p">,</span> <span class="n">from_vec</span><span class="p">)</span>
+            <span class="n">angle</span> <span class="o">=</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sign</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">binormal</span><span class="p">,</span> <span class="n">to_vec</span><span class="p">))</span> <span class="o">*</span>
+                     <span class="n">np</span><span class="o">.</span><span class="n">arccos</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">from_vec</span><span class="p">,</span> <span class="n">to_vec</span><span class="p">)))</span>
+            <span class="k">return</span> <span class="n">axis_rotation_matrix</span><span class="p">(</span><span class="n">normal</span><span class="p">,</span> <span class="n">angle</span><span class="p">)</span>
+
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s1">&#39;bad ndim&#39;</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="transform_system"><a class="viewcode-back" href="../../../../generated/odl.tomo.util.utility.transform_system.html#odl.tomo.util.utility.transform_system">[docs]</a><span class="k">def</span> <span class="nf">transform_system</span><span class="p">(</span><span class="n">principal_vec</span><span class="p">,</span> <span class="n">principal_default</span><span class="p">,</span> <span class="n">other_vecs</span><span class="p">,</span>
+                     <span class="n">matrix</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Transform vectors with either ``matrix`` or based on ``principal_vec``.</span>
+
+<span class="sd">    The logic of this function is as follows:</span>
+
+<span class="sd">    - If ``matrix`` is not ``None``, transform ``principal_vec`` and</span>
+<span class="sd">      all vectors in ``other_vecs`` by ``matrix``, ignoring</span>
+<span class="sd">      ``principal_default``.</span>
+<span class="sd">    - If ``matrix`` is ``None``, compute the rotation matrix from</span>
+<span class="sd">      ``principal_default`` to ``principal_vec``, not including the</span>
+<span class="sd">      dilation. Apply that rotation to all vectors in ``other_vecs``.</span>
+
+<span class="sd">    **Note:** All vectors must have the same shape and match the shape</span>
+<span class="sd">    of ``matrix`` if given.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    principal_vec : `array-like`, shape ``(ndim,)``</span>
+<span class="sd">        Vector that defines the transformation if ``matrix`` is not</span>
+<span class="sd">        provided.</span>
+<span class="sd">    principal_default : `array-like`, shape ``(ndim,)``</span>
+<span class="sd">        Default value for ``principal_vec``. The deviation from this</span>
+<span class="sd">        determines the transformation.</span>
+<span class="sd">        If ``matrix`` is given, this has no effect.</span>
+<span class="sd">    other_vecs : sequence of ``None`` or `array-like`&#39;s with shape ``(ndim,)``</span>
+<span class="sd">        The other vectors that should be transformed. ``None`` entries</span>
+<span class="sd">        are just appended as-is.</span>
+<span class="sd">    matrix : `array-like`, shape ``(ndim, ndim)``, optional</span>
+<span class="sd">        Explicit transformation matrix to be applied to the vectors.</span>
+<span class="sd">        It is allowed to include a constant scaling but shouldn&#39;t have</span>
+<span class="sd">        strongly varying directional scaling (bad condition).</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    transformed_vecs : tuple of `numpy.ndarray`, shape ``(ndim,)``</span>
+<span class="sd">        The transformed vectors. The first entry is (the transformed)</span>
+<span class="sd">        ``principal_vec``, followed by the transformed ``other_vecs``.</span>
+<span class="sd">        Thus the length of the tuple is ``len(other_vecs) + 1``.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">transformed_vecs</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">principal_vec</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">principal_vec</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
+    <span class="n">ndim</span> <span class="o">=</span> <span class="n">principal_vec</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+    <span class="k">if</span> <span class="n">matrix</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="c1"># Separate into dilation and rotation. The dilation is only used</span>
+        <span class="c1"># for comparison, not in the final matrix.</span>
+        <span class="n">principal_default</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">principal_default</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
+
+        <span class="n">pr_norm</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">principal_vec</span><span class="p">)</span>
+        <span class="n">pr_default_norm</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">principal_default</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">pr_default_norm</span> <span class="o">==</span> <span class="mf">0.0</span> <span class="ow">and</span> <span class="n">pr_norm</span> <span class="o">!=</span> <span class="mf">0.0</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;no transformation from </span><span class="si">{}</span><span class="s1"> to </span><span class="si">{}</span><span class="s1">&#39;</span>
+                             <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">principal_default</span><span class="p">,</span> <span class="n">principal_vec</span><span class="p">))</span>
+        <span class="k">elif</span> <span class="n">pr_norm</span> <span class="o">==</span> <span class="mf">0.0</span> <span class="ow">and</span> <span class="n">pr_default_norm</span> <span class="o">!=</span> <span class="mf">0.0</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;transformation from </span><span class="si">{}</span><span class="s1"> to </span><span class="si">{}</span><span class="s1"> is singular&#39;</span>
+                             <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">principal_default</span><span class="p">,</span> <span class="n">principal_vec</span><span class="p">))</span>
+        <span class="k">elif</span> <span class="n">pr_norm</span> <span class="o">==</span> <span class="mf">0.0</span> <span class="ow">and</span> <span class="n">pr_default_norm</span> <span class="o">==</span> <span class="mf">0.0</span><span class="p">:</span>
+            <span class="n">dilation</span> <span class="o">=</span> <span class="mf">1.0</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">dilation</span> <span class="o">=</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">principal_vec</span><span class="p">)</span> <span class="o">/</span>
+                        <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">principal_default</span><span class="p">))</span>
+
+        <span class="c1"># Determine the rotation part</span>
+        <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">allclose</span><span class="p">(</span><span class="n">principal_vec</span><span class="p">,</span> <span class="n">dilation</span> <span class="o">*</span> <span class="n">principal_default</span><span class="p">):</span>
+            <span class="c1"># Dilation only</span>
+            <span class="n">matrix</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="n">ndim</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">matrix</span> <span class="o">=</span> <span class="n">rotation_matrix_from_to</span><span class="p">(</span><span class="n">principal_default</span><span class="p">,</span> <span class="n">principal_vec</span><span class="p">)</span>
+
+        <span class="c1"># This one goes straight in</span>
+        <span class="n">transformed_vecs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">principal_vec</span><span class="p">)</span>
+
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">matrix</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">matrix</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">matrix</span><span class="o">.</span><span class="n">shape</span> <span class="o">!=</span> <span class="p">(</span><span class="n">ndim</span><span class="p">,</span> <span class="n">ndim</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;matrix shape must be </span><span class="si">{}</span><span class="s1">, got </span><span class="si">{}</span><span class="s1">&#39;</span>
+                             <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">((</span><span class="n">ndim</span><span class="p">,</span> <span class="n">ndim</span><span class="p">),</span> <span class="n">matrix</span><span class="o">.</span><span class="n">shape</span><span class="p">))</span>
+
+        <span class="c1"># Check matrix condition</span>
+        <span class="n">svals</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">svd</span><span class="p">(</span><span class="n">matrix</span><span class="p">,</span> <span class="n">compute_uv</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+        <span class="n">condition</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">inf</span> <span class="k">if</span> <span class="mf">0.0</span> <span class="ow">in</span> <span class="n">svals</span> <span class="k">else</span> <span class="n">svals</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">/</span> <span class="n">svals</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">condition</span> <span class="o">&gt;</span> <span class="mf">1e6</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">LinAlgError</span><span class="p">(</span>
+                <span class="s1">&#39;matrix is badly conditioned: condition number is </span><span class="si">{}</span><span class="s1">&#39;</span>
+                <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">condition</span><span class="p">))</span>
+
+        <span class="n">transformed_vecs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">matrix</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">principal_vec</span><span class="p">))</span>
+
+    <span class="k">for</span> <span class="n">vec</span> <span class="ow">in</span> <span class="n">other_vecs</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">vec</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">transformed_vecs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="kc">None</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">transformed_vecs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">matrix</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">vec</span><span class="p">))</span>
+
+    <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">transformed_vecs</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="is_rotation_matrix"><a class="viewcode-back" href="../../../../generated/odl.tomo.util.utility.is_rotation_matrix.html#odl.tomo.util.utility.is_rotation_matrix">[docs]</a><span class="k">def</span> <span class="nf">is_rotation_matrix</span><span class="p">(</span><span class="n">mat</span><span class="p">,</span> <span class="n">show_diff</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+    <span class="kn">from</span> <span class="nn">scipy.linalg</span> <span class="kn">import</span> <span class="n">det</span><span class="p">,</span> <span class="n">norm</span>
+
+    <span class="n">dim</span> <span class="o">=</span> <span class="n">mat</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="k">if</span> <span class="n">dim</span> <span class="o">!=</span> <span class="n">mat</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]:</span>
+        <span class="k">return</span> <span class="kc">False</span>
+
+    <span class="n">determ</span> <span class="o">=</span> <span class="n">det</span><span class="p">(</span><span class="n">mat</span><span class="p">)</span>
+    <span class="n">right_handed</span> <span class="o">=</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">determ</span> <span class="o">-</span> <span class="mf">1.</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mf">1E-10</span><span class="p">)</span>
+    <span class="n">orthonorm_diff</span> <span class="o">=</span> <span class="n">mat</span> <span class="o">*</span> <span class="n">mat</span><span class="o">.</span><span class="n">T</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="n">dim</span><span class="p">)</span>
+    <span class="n">diff_norm</span> <span class="o">=</span> <span class="n">norm</span><span class="p">(</span><span class="n">orthonorm_diff</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+    <span class="n">orthonormal</span> <span class="o">=</span> <span class="p">(</span><span class="n">diff_norm</span> <span class="o">&lt;</span> <span class="mf">1E-10</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">right_handed</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">orthonormal</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">show_diff</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;matrix S:</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">,</span> <span class="n">mat</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;det(S): &#39;</span><span class="p">,</span> <span class="n">determ</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;S*S.T - eye:</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">,</span> <span class="n">orthonorm_diff</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;2-norm of difference: &#39;</span><span class="p">,</span> <span class="n">diff_norm</span><span class="p">)</span>
+        <span class="k">return</span> <span class="kc">False</span>
+    <span class="k">return</span> <span class="kc">True</span></div>
+
+
+<div class="viewcode-block" id="angles_from_matrix"><a class="viewcode-back" href="../../../../generated/odl.tomo.util.utility.angles_from_matrix.html#odl.tomo.util.utility.angles_from_matrix">[docs]</a><span class="k">def</span> <span class="nf">angles_from_matrix</span><span class="p">(</span><span class="n">rot_matrix</span><span class="p">):</span>
+    <span class="k">if</span> <span class="n">rot_matrix</span><span class="o">.</span><span class="n">shape</span> <span class="o">==</span> <span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">):</span>
+        <span class="n">theta</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">atan2</span><span class="p">(</span><span class="n">rot_matrix</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="n">rot_matrix</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">])</span>
+        <span class="k">return</span> <span class="n">theta</span><span class="p">,</span>
+    <span class="k">elif</span> <span class="n">rot_matrix</span><span class="o">.</span><span class="n">shape</span> <span class="o">==</span> <span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">3</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">rot_matrix</span><span class="p">[</span><span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">]</span> <span class="o">==</span> <span class="mf">1.</span><span class="p">:</span>  <span class="c1"># cannot use last row and column</span>
+            <span class="n">theta</span> <span class="o">=</span> <span class="mf">0.</span>
+            <span class="c1"># upper-left block is 2d rotation for phi + psi, so one needs</span>
+            <span class="c1"># to be fixed</span>
+            <span class="n">psi</span> <span class="o">=</span> <span class="mf">0.</span>
+            <span class="n">phi</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">atan2</span><span class="p">(</span><span class="n">rot_matrix</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="n">rot_matrix</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">])</span>
+            <span class="k">if</span> <span class="n">phi</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="n">phi</span> <span class="o">+=</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span>  <span class="c1"># in [0, 2pi)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">phi</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">atan2</span><span class="p">(</span><span class="n">rot_matrix</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">2</span><span class="p">],</span> <span class="o">-</span><span class="n">rot_matrix</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">])</span>
+            <span class="n">psi</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">atan2</span><span class="p">(</span><span class="n">rot_matrix</span><span class="p">[</span><span class="mi">2</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="n">rot_matrix</span><span class="p">[</span><span class="mi">2</span><span class="p">,</span> <span class="mi">1</span><span class="p">])</span>
+            <span class="n">theta</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">acos</span><span class="p">(</span><span class="n">rot_matrix</span><span class="p">[</span><span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">])</span>
+
+            <span class="k">if</span> <span class="n">phi</span> <span class="o">&lt;</span> <span class="mf">0.</span> <span class="ow">or</span> <span class="n">psi</span> <span class="o">&lt;</span> <span class="mf">0.</span><span class="p">:</span>
+                <span class="n">phi</span> <span class="o">+=</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span>
+                <span class="n">psi</span> <span class="o">+=</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span>
+                <span class="n">theta</span> <span class="o">=</span> <span class="o">-</span><span class="n">theta</span>
+
+        <span class="k">return</span> <span class="n">phi</span><span class="p">,</span> <span class="n">theta</span><span class="p">,</span> <span class="n">psi</span>
+
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;shape of `rot_matrix` must be (2, 2) or (3, 3), &#39;</span>
+                         <span class="s1">&#39;got </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">rot_matrix</span><span class="o">.</span><span class="n">shape</span><span class="p">))</span></div>
+
+
+<div class="viewcode-block" id="to_lab_sys"><a class="viewcode-back" href="../../../../generated/odl.tomo.util.utility.to_lab_sys.html#odl.tomo.util.utility.to_lab_sys">[docs]</a><span class="k">def</span> <span class="nf">to_lab_sys</span><span class="p">(</span><span class="n">vec_in_local_coords</span><span class="p">,</span> <span class="n">local_sys</span><span class="p">):</span>
+    <span class="n">vec_in_local_coords</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">vec_in_local_coords</span><span class="p">)</span>
+    <span class="n">trafo_matrix</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">matrix</span><span class="p">(</span><span class="n">local_sys</span><span class="p">)</span><span class="o">.</span><span class="n">T</span>
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">trafo_matrix</span><span class="p">,</span> <span class="n">vec_in_local_coords</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="to_local_sys"><a class="viewcode-back" href="../../../../generated/odl.tomo.util.utility.to_local_sys.html#odl.tomo.util.utility.to_local_sys">[docs]</a><span class="k">def</span> <span class="nf">to_local_sys</span><span class="p">(</span><span class="n">vec_in_lab_coords</span><span class="p">,</span> <span class="n">local_sys</span><span class="p">):</span>
+    <span class="n">vec_in_lab_coords</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">vec_in_lab_coords</span><span class="p">)</span>
+    <span class="n">trafo_matrix</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">matrix</span><span class="p">(</span><span class="n">local_sys</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">trafo_matrix</span><span class="p">,</span> <span class="n">vec_in_lab_coords</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="perpendicular_vector"><a class="viewcode-back" href="../../../../generated/odl.tomo.util.utility.perpendicular_vector.html#odl.tomo.util.utility.perpendicular_vector">[docs]</a><span class="k">def</span> <span class="nf">perpendicular_vector</span><span class="p">(</span><span class="n">vec</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Return a vector perpendicular to ``vec``.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    vec : `array-like`</span>
+<span class="sd">        Vector(s) of arbitrary length. The axis along the vector components</span>
+<span class="sd">        must come last.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    perp_vec : `numpy.ndarray`</span>
+<span class="sd">        Array of same shape as ``vec`` such that ``dot(vec, perp_vec) == 0``</span>
+<span class="sd">        (along the last axis if there are multiple vectors).</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    Works in 2d:</span>
+
+<span class="sd">    &gt;&gt;&gt; perpendicular_vector([0, 1])</span>
+<span class="sd">    array([-1.,  0.])</span>
+<span class="sd">    &gt;&gt;&gt; np.allclose(perpendicular_vector([1, 0]), [0, 1])  # would print -0</span>
+<span class="sd">    True</span>
+
+<span class="sd">    And in 3d:</span>
+
+<span class="sd">    &gt;&gt;&gt; perpendicular_vector([0, 1, 0])</span>
+<span class="sd">    array([-1.,  0.,  0.])</span>
+<span class="sd">    &gt;&gt;&gt; perpendicular_vector([0, 0, 1])</span>
+<span class="sd">    array([ 1.,  0.,  0.])</span>
+<span class="sd">    &gt;&gt;&gt; np.allclose(perpendicular_vector([1, 0, 0]), [0, 1, 0])</span>
+<span class="sd">    True</span>
+
+<span class="sd">    The function is vectorized, i.e., it can be called with multiple</span>
+<span class="sd">    vectors at once (additional axes being added to the left):</span>
+
+<span class="sd">    &gt;&gt;&gt; perpendicular_vector([[0, 1, 0],</span>
+<span class="sd">    ...                       [0, 0, 1]])  # 2 vectors</span>
+<span class="sd">    array([[-1.,  0.,  0.],</span>
+<span class="sd">           [ 1.,  0.,  0.]])</span>
+<span class="sd">    &gt;&gt;&gt; vecs = np.zeros((2, 3, 3))</span>
+<span class="sd">    &gt;&gt;&gt; vecs[..., 1] = 1  # (2, 3) array of vectors (0, 1, 0)</span>
+<span class="sd">    &gt;&gt;&gt; perpendicular_vector(vecs)</span>
+<span class="sd">    array([[[-1.,  0.,  0.],</span>
+<span class="sd">            [-1.,  0.,  0.],</span>
+<span class="sd">            [-1.,  0.,  0.]],</span>
+<span class="sd">    &lt;BLANKLINE&gt;</span>
+<span class="sd">           [[-1.,  0.,  0.],</span>
+<span class="sd">            [-1.,  0.,  0.],</span>
+<span class="sd">            [-1.,  0.,  0.]]])</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">squeeze_out</span> <span class="o">=</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">ndim</span><span class="p">(</span><span class="n">vec</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">)</span>
+    <span class="n">vec</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">vec</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">,</span> <span class="n">copy</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">ndmin</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">any</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">all</span><span class="p">(</span><span class="n">vec</span> <span class="o">==</span> <span class="mi">0</span><span class="p">,</span> <span class="n">axis</span><span class="o">=-</span><span class="mi">1</span><span class="p">)):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;zero vector&#39;</span><span class="p">)</span>
+
+    <span class="n">result</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">vec</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+    <span class="n">cond</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">any</span><span class="p">(</span><span class="n">vec</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="p">:</span><span class="mi">2</span><span class="p">]</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">,</span> <span class="n">axis</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span>
+    <span class="n">result</span><span class="p">[</span><span class="n">cond</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="o">-</span><span class="n">vec</span><span class="p">[</span><span class="n">cond</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span>
+    <span class="n">result</span><span class="p">[</span><span class="n">cond</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">vec</span><span class="p">[</span><span class="n">cond</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span>
+    <span class="n">result</span><span class="p">[</span><span class="o">~</span><span class="n">cond</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span>
+    <span class="n">result</span> <span class="o">/=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">result</span><span class="p">,</span> <span class="n">axis</span><span class="o">=-</span><span class="mi">1</span><span class="p">,</span> <span class="n">keepdims</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">squeeze_out</span><span class="p">:</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="n">result</span><span class="o">.</span><span class="n">squeeze</span><span class="p">()</span>
+
+    <span class="k">return</span> <span class="n">result</span></div>
+
+
+<div class="viewcode-block" id="is_inside_bounds"><a class="viewcode-back" href="../../../../generated/odl.tomo.util.utility.is_inside_bounds.html#odl.tomo.util.utility.is_inside_bounds">[docs]</a><span class="k">def</span> <span class="nf">is_inside_bounds</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">params</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Return ``True`` if ``value`` is contained in ``params``.</span>
+
+<span class="sd">    This method supports broadcasting in the sense that for</span>
+<span class="sd">    ``params.ndim &gt;= 2``, if more than one value is given, the inputs</span>
+<span class="sd">    are broadcast against each other.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    value : `array-like`</span>
+<span class="sd">        Value(s) to be checked. For several inputs, the final bool</span>
+<span class="sd">        tells whether all inputs pass the check or not.</span>
+<span class="sd">    params : `IntervalProd`</span>
+<span class="sd">        Set in which the value is / the values are supposed to lie.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    is_inside_bounds : bool</span>
+<span class="sd">        ``True`` is all values lie in ``params``, ``False`` otherwise.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    Check a single point:</span>
+
+<span class="sd">    &gt;&gt;&gt; params = odl.IntervalProd([0, 0], [1, 2])</span>
+<span class="sd">    &gt;&gt;&gt; is_inside_bounds([0, 0], params)</span>
+<span class="sd">    True</span>
+<span class="sd">    &gt;&gt;&gt; is_inside_bounds([0, -1], params)</span>
+<span class="sd">    False</span>
+
+<span class="sd">    Using broadcasting:</span>
+
+<span class="sd">    &gt;&gt;&gt; pts_ax0 = np.array([0, 0, 1, 0, 1])[:, None]</span>
+<span class="sd">    &gt;&gt;&gt; pts_ax1 = np.array([2, 0, 1])[None, :]</span>
+<span class="sd">    &gt;&gt;&gt; is_inside_bounds([pts_ax0, pts_ax1], params)</span>
+<span class="sd">    True</span>
+<span class="sd">    &gt;&gt;&gt; pts_ax1 = np.array([-2, 1])[None, :]</span>
+<span class="sd">    &gt;&gt;&gt; is_inside_bounds([pts_ax0, pts_ax1], params)</span>
+<span class="sd">    False</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">params</span><span class="p">:</span>
+        <span class="c1"># Single parameter</span>
+        <span class="k">return</span> <span class="kc">True</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">params</span><span class="o">.</span><span class="n">ndim</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">params</span><span class="o">.</span><span class="n">contains_all</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">ravel</span><span class="p">(</span><span class="n">value</span><span class="p">))</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># Flesh out and flatten to check bounds</span>
+            <span class="n">bcast_value</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">broadcast_arrays</span><span class="p">(</span><span class="o">*</span><span class="n">value</span><span class="p">)</span>
+            <span class="n">stacked_value</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">vstack</span><span class="p">(</span><span class="n">bcast_value</span><span class="p">)</span>
+            <span class="n">flat_value</span> <span class="o">=</span> <span class="n">stacked_value</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">params</span><span class="o">.</span><span class="n">ndim</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">params</span><span class="o">.</span><span class="n">contains_all</span><span class="p">(</span><span class="n">flat_value</span><span class="p">)</span></div>
+
+
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s1">&#39;__main__&#39;</span><span class="p">:</span>
+    <span class="kn">from</span> <span class="nn">odl.util.testutils</span> <span class="kn">import</span> <span class="n">run_doctests</span>
+    <span class="n">run_doctests</span><span class="p">()</span>
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &#169; Copyright 2014-2020 The ODL Contributors.
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

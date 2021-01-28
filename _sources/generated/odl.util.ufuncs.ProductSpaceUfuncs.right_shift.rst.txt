@@ -1,0 +1,8 @@
+:orphan:
+
+ProductSpaceUfuncs.right_shift
+==============================================
+
+.. currentmodule:: odl.util.ufuncs
+
+.. automethod:: ProductSpaceUfuncs.right_shift

@@ -1,0 +1,6 @@
+NumpyTensor.ndim
+======================================
+
+.. currentmodule:: odl.space.npy_tensors
+
+.. autoproperty:: NumpyTensor.ndim

@@ -1,0 +1,6 @@
+NormOperator.range
+===========================================
+
+.. currentmodule:: odl.operator.default_ops
+
+.. autoproperty:: NormOperator.range

@@ -1,0 +1,8 @@
+:orphan:
+
+Integers.element
+=============================
+
+.. currentmodule:: odl.set.sets
+
+.. automethod:: Integers.element

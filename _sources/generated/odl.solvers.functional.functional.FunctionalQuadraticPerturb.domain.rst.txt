@@ -1,0 +1,6 @@
+FunctionalQuadraticPerturb.domain
+===================================================================
+
+.. currentmodule:: odl.solvers.functional.functional
+
+.. autoproperty:: FunctionalQuadraticPerturb.domain

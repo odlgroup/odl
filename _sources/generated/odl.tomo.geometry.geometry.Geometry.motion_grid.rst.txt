@@ -1,0 +1,6 @@
+Geometry.motion_grid
+===============================================
+
+.. currentmodule:: odl.tomo.geometry.geometry
+
+.. autoproperty:: Geometry.motion_grid

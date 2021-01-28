@@ -1,0 +1,6 @@
+FunctionalSum.adjoint
+=======================================================
+
+.. currentmodule:: odl.solvers.functional.functional
+
+.. autoproperty:: FunctionalSum.adjoint

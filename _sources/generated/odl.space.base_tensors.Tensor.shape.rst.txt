@@ -1,0 +1,6 @@
+Tensor.shape
+===================================
+
+.. currentmodule:: odl.space.base_tensors
+
+.. autoproperty:: Tensor.shape

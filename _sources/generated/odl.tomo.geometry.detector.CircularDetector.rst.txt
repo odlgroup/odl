@@ -1,0 +1,43 @@
+﻿CircularDetector
+===========================================
+
+.. currentmodule:: odl.tomo.geometry.detector
+
+.. autoclass:: CircularDetector
+   :show-inheritance:
+   
+   
+   .. automethod:: __init__
+   
+      
+   
+   .. HACK -- the point here is that we don't want this to appear in the output, but the autosummary should still generate the pages.
+      .. autosummary::
+         :toctree:
+      
+         CircularDetector.__eq__
+         CircularDetector.surface
+         CircularDetector.surface_deriv
+         CircularDetector.surface_measure
+         CircularDetector.surface_normal
+   
+
+    
+   .. HACK -- the point here is that we don't want this to appear in the output, but the autosummary should still generate the pages.
+      .. autosummary::
+         :toctree:
+      
+         CircularDetector.axis
+         CircularDetector.check_bounds
+         CircularDetector.grid
+         CircularDetector.ndim
+         CircularDetector.params
+         CircularDetector.partition
+         CircularDetector.radius
+         CircularDetector.rotation_matrix
+         CircularDetector.shape
+         CircularDetector.size
+         CircularDetector.space_ndim
+         CircularDetector.translation
+   
+   

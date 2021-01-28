@@ -1,0 +1,6 @@
+FunctionalScalarSum.is_linear
+===============================================================
+
+.. currentmodule:: odl.solvers.functional.functional
+
+.. autoproperty:: FunctionalScalarSum.is_linear

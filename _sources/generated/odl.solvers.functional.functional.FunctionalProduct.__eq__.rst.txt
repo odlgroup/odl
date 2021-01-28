@@ -1,0 +1,8 @@
+:orphan:
+
+FunctionalProduct.__eq__
+==========================================================
+
+.. currentmodule:: odl.solvers.functional.functional
+
+.. automethod:: FunctionalProduct.__eq__

@@ -1,0 +1,6 @@
+Functional.domain
+===================================================
+
+.. currentmodule:: odl.solvers.functional.functional
+
+.. autoproperty:: Functional.domain

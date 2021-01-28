@@ -1,0 +1,24 @@
+nonsmooth
+=========
+
+Solvers for non-smooth optimization problems.
+
+.. currentmodule:: odl.solvers.nonsmooth
+
+
+.. rubric:: Modules
+
+.. toctree::
+   :maxdepth: 2
+
+   odl.solvers.nonsmooth.admm
+   odl.solvers.nonsmooth.alternating_dual_updates
+   odl.solvers.nonsmooth.difference_convex
+   odl.solvers.nonsmooth.douglas_rachford
+   odl.solvers.nonsmooth.forward_backward
+   odl.solvers.nonsmooth.primal_dual_hybrid_gradient
+   odl.solvers.nonsmooth.proximal_gradient_solvers
+   odl.solvers.nonsmooth.proximal_operators
+
+
+

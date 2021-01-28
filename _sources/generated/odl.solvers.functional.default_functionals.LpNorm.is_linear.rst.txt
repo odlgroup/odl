@@ -1,0 +1,6 @@
+LpNorm.is_linear
+===========================================================
+
+.. currentmodule:: odl.solvers.functional.default_functionals
+
+.. autoproperty:: LpNorm.is_linear

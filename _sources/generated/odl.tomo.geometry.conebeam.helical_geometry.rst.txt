@@ -1,0 +1,6 @@
+﻿helical_geometry
+===========================================
+
+.. currentmodule:: odl.tomo.geometry.conebeam
+
+.. autofunction:: helical_geometry

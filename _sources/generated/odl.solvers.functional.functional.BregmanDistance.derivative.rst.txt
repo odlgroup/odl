@@ -1,0 +1,8 @@
+:orphan:
+
+BregmanDistance.derivative
+============================================================
+
+.. currentmodule:: odl.solvers.functional.functional
+
+.. automethod:: BregmanDistance.derivative

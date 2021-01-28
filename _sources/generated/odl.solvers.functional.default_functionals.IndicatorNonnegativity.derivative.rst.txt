@@ -1,0 +1,8 @@
+:orphan:
+
+IndicatorNonnegativity.derivative
+============================================================================
+
+.. currentmodule:: odl.solvers.functional.default_functionals
+
+.. automethod:: IndicatorNonnegativity.derivative

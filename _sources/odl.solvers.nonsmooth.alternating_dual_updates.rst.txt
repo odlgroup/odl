@@ -1,0 +1,23 @@
+alternating_dual_updates
+========================
+
+Alternating dual (AD) update algorithm studied by McGaffin and Fessler.
+
+The alternating dual upgrade method solves structured convex optimization
+problems by successively updating dual variables which are associated with
+each of the components.
+
+
+.. currentmodule:: odl.solvers.nonsmooth.alternating_dual_updates
+
+
+
+
+.. rubric:: Functions
+
+.. autosummary::
+   :toctree: generated/
+
+   ~odl.solvers.nonsmooth.alternating_dual_updates.adupdates
+   ~odl.solvers.nonsmooth.alternating_dual_updates.adupdates_simple
+

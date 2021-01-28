@@ -1,0 +1,6 @@
+DiagonalOperator.shape
+==============================================
+
+.. currentmodule:: odl.operator.pspace_ops
+
+.. autoproperty:: DiagonalOperator.shape

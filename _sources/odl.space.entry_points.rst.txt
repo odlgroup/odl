@@ -1,0 +1,30 @@
+entry_points
+============
+
+Entry points for adding more spaces to ODL using external packages.
+
+External packages can add an implementation of `TensorSpace` by hooking
+into the setuptools entry point ``'odl.space'`` and exposing the methods
+``tensor_space_impl`` and ``tensor_space_impl_names``.
+
+This is used with functions such as `rn`, `cn`, `tensor_space` or
+`uniform_discr` in order to allow arbitrary implementations.
+
+See Also
+--------
+NumpyTensorSpace : Numpy-based implementation of `TensorSpace`
+
+
+.. currentmodule:: odl.space.entry_points
+
+
+
+
+.. rubric:: Functions
+
+.. autosummary::
+   :toctree: generated/
+
+   ~odl.space.entry_points.tensor_space_impl
+   ~odl.space.entry_points.tensor_space_impl_names
+

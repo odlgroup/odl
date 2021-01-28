@@ -1,0 +1,8 @@
+:orphan:
+
+Tensor.dist
+==================================
+
+.. currentmodule:: odl.space.base_tensors
+
+.. automethod:: Tensor.dist

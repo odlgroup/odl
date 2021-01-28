@@ -1,0 +1,6 @@
+ComponentProjectionAdjoint.is_functional
+================================================================
+
+.. currentmodule:: odl.operator.pspace_ops
+
+.. autoproperty:: ComponentProjectionAdjoint.is_functional

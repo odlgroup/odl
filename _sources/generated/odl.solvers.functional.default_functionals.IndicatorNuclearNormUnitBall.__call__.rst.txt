@@ -1,0 +1,8 @@
+:orphan:
+
+IndicatorNuclearNormUnitBall.__call__
+================================================================================
+
+.. currentmodule:: odl.solvers.functional.default_functionals
+
+.. automethod:: IndicatorNuclearNormUnitBall.__call__

@@ -1,0 +1,6 @@
+DiscreteFourierTransform.halfcomplex
+=======================================================
+
+.. currentmodule:: odl.trafos.fourier
+
+.. autoproperty:: DiscreteFourierTransform.halfcomplex

@@ -1,0 +1,6 @@
+NumericalDerivative.inverse
+==============================================================
+
+.. currentmodule:: odl.solvers.functional.derivatives
+
+.. autoproperty:: NumericalDerivative.inverse

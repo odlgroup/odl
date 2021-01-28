@@ -1,0 +1,6 @@
+﻿astra_conebeam_3d_geom_to_vec
+===========================================================
+
+.. currentmodule:: odl.tomo.backends.astra_setup
+
+.. autofunction:: astra_conebeam_3d_geom_to_vec

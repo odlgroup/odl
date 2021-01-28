@@ -1,0 +1,47 @@
+﻿LinearSpace
+=========================
+
+.. currentmodule:: odl.set.space
+
+.. autoclass:: LinearSpace
+   :show-inheritance:
+   
+   
+   .. automethod:: __init__
+   
+      
+   
+   .. HACK -- the point here is that we don't want this to appear in the output, but the autosummary should still generate the pages.
+      .. autosummary::
+         :toctree:
+      
+         LinearSpace.__contains__
+         LinearSpace.__eq__
+         LinearSpace._dist
+         LinearSpace._inner
+         LinearSpace._lincomb
+         LinearSpace._multiply
+         LinearSpace._norm
+         LinearSpace.contains_all
+         LinearSpace.contains_set
+         LinearSpace.dist
+         LinearSpace.divide
+         LinearSpace.element
+         LinearSpace.inner
+         LinearSpace.lincomb
+         LinearSpace.multiply
+         LinearSpace.norm
+         LinearSpace.one
+         LinearSpace.zero
+   
+
+    
+   .. HACK -- the point here is that we don't want this to appear in the output, but the autosummary should still generate the pages.
+      .. autosummary::
+         :toctree:
+      
+         LinearSpace.element_type
+         LinearSpace.examples
+         LinearSpace.field
+   
+   

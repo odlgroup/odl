@@ -1,0 +1,1194 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>odl.util.numerics &mdash; odl 1.0.0.dev0 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/custom.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../../" src="../../../_static/documentation_options.js"></script>
+        <script src="../../../_static/jquery.js"></script>
+        <script src="../../../_static/underscore.js"></script>
+        <script src="../../../_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="../../../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../../index.html" class="icon icon-home"> odl
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                1.0.0.dev0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Getting Started</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../getting_started/getting_started.html">Getting Started</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Working with ODL</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../guide/guide.html">User’s guide – selected topics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../math/math.html">Mathematical Background</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Developer zone</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../dev/dev.html">Contributing to ODL</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Useful facts</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../guide/faq.html">Frequently asked questions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../guide/glossary.html">Glossary</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../release_notes.html">Release Notes</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../refs.html">References</a></li>
+</ul>
+<p class="caption"><span class="caption-text">API Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../odl.html">odl</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">odl</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="../../index.html">Module code</a> &raquo;</li>
+        
+      <li>odl.util.numerics</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for odl.util.numerics</h1><div class="highlight"><pre>
+<span></span><span class="c1"># Copyright 2014-2020 The ODL contributors</span>
+<span class="c1">#</span>
+<span class="c1"># This file is part of ODL.</span>
+<span class="c1">#</span>
+<span class="c1"># This Source Code Form is subject to the terms of the Mozilla Public License,</span>
+<span class="c1"># v. 2.0. If a copy of the MPL was not distributed with this file, You can</span>
+<span class="c1"># obtain one at https://mozilla.org/MPL/2.0/.</span>
+
+<span class="sd">&quot;&quot;&quot;Numerical helper functions for convenience or speed.&quot;&quot;&quot;</span>
+
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">absolute_import</span><span class="p">,</span> <span class="n">division</span><span class="p">,</span> <span class="n">print_function</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">odl.util.normalize</span> <span class="kn">import</span> <span class="n">normalized_scalar_param_list</span><span class="p">,</span> <span class="n">safe_int_conv</span>
+
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">(</span>
+    <span class="s1">&#39;apply_on_boundary&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;fast_1d_tensor_mult&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;resize_array&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;zscore&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;binning&#39;</span><span class="p">,</span>
+<span class="p">)</span>
+
+
+<span class="n">_SUPPORTED_RESIZE_PAD_MODES</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;constant&#39;</span><span class="p">,</span> <span class="s1">&#39;symmetric&#39;</span><span class="p">,</span> <span class="s1">&#39;periodic&#39;</span><span class="p">,</span>
+                               <span class="s1">&#39;order0&#39;</span><span class="p">,</span> <span class="s1">&#39;order1&#39;</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="apply_on_boundary"><a class="viewcode-back" href="../../../generated/odl.util.numerics.apply_on_boundary.html#odl.util.numerics.apply_on_boundary">[docs]</a><span class="k">def</span> <span class="nf">apply_on_boundary</span><span class="p">(</span><span class="n">array</span><span class="p">,</span> <span class="n">func</span><span class="p">,</span> <span class="n">only_once</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">which_boundaries</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                      <span class="n">axis_order</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">out</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Apply a function of the boundary of an n-dimensional array.</span>
+
+<span class="sd">    All other values are preserved as-is.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    array : `array-like`</span>
+<span class="sd">        Modify the boundary of this array</span>
+<span class="sd">    func : callable or sequence of callables</span>
+<span class="sd">        If a single function is given, assign</span>
+<span class="sd">        ``array[slice] = func(array[slice])`` on the boundary slices,</span>
+<span class="sd">        e.g. use ``lamda x: x / 2`` to divide values by 2.</span>
+<span class="sd">        A sequence of functions is applied per axis separately. It</span>
+<span class="sd">        must have length ``array.ndim`` and may consist of one function</span>
+<span class="sd">        or a 2-tuple of functions per axis.</span>
+<span class="sd">        ``None`` entries in a sequence cause the axis (side) to be</span>
+<span class="sd">        skipped.</span>
+<span class="sd">    only_once : bool, optional</span>
+<span class="sd">        If ``True``, ensure that each boundary point appears in exactly</span>
+<span class="sd">        one slice. If ``func`` is a list of functions, the</span>
+<span class="sd">        ``axis_order`` determines which functions are applied to nodes</span>
+<span class="sd">        which appear in multiple slices, according to the principle</span>
+<span class="sd">        &quot;first-come, first-served&quot;.</span>
+<span class="sd">    which_boundaries : sequence, optional</span>
+<span class="sd">        If provided, this sequence determines per axis whether to</span>
+<span class="sd">        apply the function at the boundaries in each axis. The entry</span>
+<span class="sd">        in each axis may consist in a single bool or a 2-tuple of</span>
+<span class="sd">        bool. In the latter case, the first tuple entry decides for</span>
+<span class="sd">        the left, the second for the right boundary. The length of the</span>
+<span class="sd">        sequence must be ``array.ndim``. ``None`` is interpreted as</span>
+<span class="sd">        &quot;all boundaries&quot;.</span>
+<span class="sd">    axis_order : sequence of ints, optional</span>
+<span class="sd">        Permutation of ``range(array.ndim)`` defining the order in which</span>
+<span class="sd">        to process the axes. If combined with ``only_once`` and a</span>
+<span class="sd">        function list, this determines which function is evaluated in</span>
+<span class="sd">        the points that are potentially processed multiple times.</span>
+<span class="sd">    out : `numpy.ndarray`, optional</span>
+<span class="sd">        Location in which to store the result, can be the same as ``array``.</span>
+<span class="sd">        Default: copy of ``array``</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    &gt;&gt;&gt; arr = np.ones((3, 3))</span>
+<span class="sd">    &gt;&gt;&gt; apply_on_boundary(arr, lambda x: x / 2)</span>
+<span class="sd">    array([[ 0.5,  0.5,  0.5],</span>
+<span class="sd">           [ 0.5,  1. ,  0.5],</span>
+<span class="sd">           [ 0.5,  0.5,  0.5]])</span>
+
+<span class="sd">    If called with ``only_once=False``, the function is applied repeatedly:</span>
+
+<span class="sd">    &gt;&gt;&gt; apply_on_boundary(arr, lambda x: x / 2, only_once=False)</span>
+<span class="sd">    array([[ 0.25,  0.5 ,  0.25],</span>
+<span class="sd">           [ 0.5 ,  1.  ,  0.5 ],</span>
+<span class="sd">           [ 0.25,  0.5 ,  0.25]])</span>
+
+<span class="sd">    &gt;&gt;&gt; apply_on_boundary(arr, lambda x: x / 2, only_once=True,</span>
+<span class="sd">    ...                   which_boundaries=((True, False), True))</span>
+<span class="sd">    array([[ 0.5,  0.5,  0.5],</span>
+<span class="sd">           [ 0.5,  1. ,  0.5],</span>
+<span class="sd">           [ 0.5,  1. ,  0.5]])</span>
+
+<span class="sd">    Use the ``out`` parameter to store the result in an existing array:</span>
+
+<span class="sd">    &gt;&gt;&gt; out = np.empty_like(arr)</span>
+<span class="sd">    &gt;&gt;&gt; result = apply_on_boundary(arr, lambda x: x / 2, out=out)</span>
+<span class="sd">    &gt;&gt;&gt; result</span>
+<span class="sd">    array([[ 0.5,  0.5,  0.5],</span>
+<span class="sd">           [ 0.5,  1. ,  0.5],</span>
+<span class="sd">           [ 0.5,  0.5,  0.5]])</span>
+<span class="sd">    &gt;&gt;&gt; result is out</span>
+<span class="sd">    True</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">array</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">array</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">callable</span><span class="p">(</span><span class="n">func</span><span class="p">):</span>
+        <span class="n">func</span> <span class="o">=</span> <span class="p">[</span><span class="n">func</span><span class="p">]</span> <span class="o">*</span> <span class="n">array</span><span class="o">.</span><span class="n">ndim</span>
+    <span class="k">elif</span> <span class="nb">len</span><span class="p">(</span><span class="n">func</span><span class="p">)</span> <span class="o">!=</span> <span class="n">array</span><span class="o">.</span><span class="n">ndim</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;sequence of functions has length </span><span class="si">{}</span><span class="s1">, expected </span><span class="si">{}</span><span class="s1">&#39;</span>
+                         <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">func</span><span class="p">),</span> <span class="n">array</span><span class="o">.</span><span class="n">ndim</span><span class="p">))</span>
+
+    <span class="k">if</span> <span class="n">which_boundaries</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">which_boundaries</span> <span class="o">=</span> <span class="p">([(</span><span class="kc">True</span><span class="p">,</span> <span class="kc">True</span><span class="p">)]</span> <span class="o">*</span> <span class="n">array</span><span class="o">.</span><span class="n">ndim</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="nb">len</span><span class="p">(</span><span class="n">which_boundaries</span><span class="p">)</span> <span class="o">!=</span> <span class="n">array</span><span class="o">.</span><span class="n">ndim</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;`which_boundaries` has length </span><span class="si">{}</span><span class="s1">, expected </span><span class="si">{}</span><span class="s1">&#39;</span>
+                         <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">which_boundaries</span><span class="p">),</span> <span class="n">array</span><span class="o">.</span><span class="n">ndim</span><span class="p">))</span>
+
+    <span class="k">if</span> <span class="n">axis_order</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">axis_order</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="n">array</span><span class="o">.</span><span class="n">ndim</span><span class="p">))</span>
+    <span class="k">elif</span> <span class="nb">len</span><span class="p">(</span><span class="n">axis_order</span><span class="p">)</span> <span class="o">!=</span> <span class="n">array</span><span class="o">.</span><span class="n">ndim</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;`axis_order` has length </span><span class="si">{}</span><span class="s1">, expected </span><span class="si">{}</span><span class="s1">&#39;</span>
+                         <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">axis_order</span><span class="p">),</span> <span class="n">array</span><span class="o">.</span><span class="n">ndim</span><span class="p">))</span>
+
+    <span class="k">if</span> <span class="n">out</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">out</span> <span class="o">=</span> <span class="n">array</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">out</span><span class="p">[:]</span> <span class="o">=</span> <span class="n">array</span>  <span class="c1"># Self assignment is free, in case out is array</span>
+
+    <span class="c1"># The &#39;only_once&#39; functionality is implemented by storing for each axis</span>
+    <span class="c1"># if the left and right boundaries have been processed. This information</span>
+    <span class="c1"># is stored in a list of slices which is reused for the next axis in the</span>
+    <span class="c1"># list.</span>
+    <span class="n">slices</span> <span class="o">=</span> <span class="p">[</span><span class="nb">slice</span><span class="p">(</span><span class="kc">None</span><span class="p">)]</span> <span class="o">*</span> <span class="n">array</span><span class="o">.</span><span class="n">ndim</span>
+    <span class="k">for</span> <span class="n">ax</span><span class="p">,</span> <span class="n">function</span><span class="p">,</span> <span class="n">which</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">axis_order</span><span class="p">,</span> <span class="n">func</span><span class="p">,</span> <span class="n">which_boundaries</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">only_once</span><span class="p">:</span>
+            <span class="n">slc_l</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">slices</span><span class="p">)</span>  <span class="c1"># Make a copy; copy() exists in Py3 only</span>
+            <span class="n">slc_r</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">slices</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">slc_l</span> <span class="o">=</span> <span class="p">[</span><span class="nb">slice</span><span class="p">(</span><span class="kc">None</span><span class="p">)]</span> <span class="o">*</span> <span class="n">array</span><span class="o">.</span><span class="n">ndim</span>
+            <span class="n">slc_r</span> <span class="o">=</span> <span class="p">[</span><span class="nb">slice</span><span class="p">(</span><span class="kc">None</span><span class="p">)]</span> <span class="o">*</span> <span class="n">array</span><span class="o">.</span><span class="n">ndim</span>
+
+        <span class="c1"># slc_l and slc_r select left and right boundary, resp, in this axis.</span>
+        <span class="n">slc_l</span><span class="p">[</span><span class="n">ax</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="n">slc_r</span><span class="p">[</span><span class="n">ax</span><span class="p">]</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span>
+
+        <span class="n">slc_l</span><span class="p">,</span> <span class="n">slc_r</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">slc_l</span><span class="p">),</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">slc_r</span><span class="p">)</span>
+
+        <span class="k">try</span><span class="p">:</span>
+            <span class="c1"># Tuple of functions in this axis</span>
+            <span class="n">func_l</span><span class="p">,</span> <span class="n">func_r</span> <span class="o">=</span> <span class="n">function</span>
+        <span class="k">except</span> <span class="ne">TypeError</span><span class="p">:</span>
+            <span class="c1"># Single function</span>
+            <span class="n">func_l</span> <span class="o">=</span> <span class="n">func_r</span> <span class="o">=</span> <span class="n">function</span>
+
+        <span class="k">try</span><span class="p">:</span>
+            <span class="c1"># Tuple of bool</span>
+            <span class="n">mod_left</span><span class="p">,</span> <span class="n">mod_right</span> <span class="o">=</span> <span class="n">which</span>
+        <span class="k">except</span> <span class="ne">TypeError</span><span class="p">:</span>
+            <span class="c1"># Single bool</span>
+            <span class="n">mod_left</span> <span class="o">=</span> <span class="n">mod_right</span> <span class="o">=</span> <span class="n">which</span>
+
+        <span class="k">if</span> <span class="n">mod_left</span> <span class="ow">and</span> <span class="n">func_l</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">out</span><span class="p">[</span><span class="n">slc_l</span><span class="p">]</span> <span class="o">=</span> <span class="n">func_l</span><span class="p">(</span><span class="n">out</span><span class="p">[</span><span class="n">slc_l</span><span class="p">])</span>
+            <span class="n">start</span> <span class="o">=</span> <span class="mi">1</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">start</span> <span class="o">=</span> <span class="kc">None</span>
+
+        <span class="k">if</span> <span class="n">mod_right</span> <span class="ow">and</span> <span class="n">func_r</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">out</span><span class="p">[</span><span class="n">slc_r</span><span class="p">]</span> <span class="o">=</span> <span class="n">func_r</span><span class="p">(</span><span class="n">out</span><span class="p">[</span><span class="n">slc_r</span><span class="p">])</span>
+            <span class="n">end</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">end</span> <span class="o">=</span> <span class="kc">None</span>
+
+        <span class="c1"># Write the information for the processed axis into the slice list.</span>
+        <span class="c1"># Start and end include the boundary if it was processed.</span>
+        <span class="n">slices</span><span class="p">[</span><span class="n">ax</span><span class="p">]</span> <span class="o">=</span> <span class="nb">slice</span><span class="p">(</span><span class="n">start</span><span class="p">,</span> <span class="n">end</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">out</span></div>
+
+
+<div class="viewcode-block" id="fast_1d_tensor_mult"><a class="viewcode-back" href="../../../generated/odl.util.numerics.fast_1d_tensor_mult.html#odl.util.numerics.fast_1d_tensor_mult">[docs]</a><span class="k">def</span> <span class="nf">fast_1d_tensor_mult</span><span class="p">(</span><span class="n">ndarr</span><span class="p">,</span> <span class="n">onedim_arrs</span><span class="p">,</span> <span class="n">axes</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">out</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Fast multiplication of an n-dim array with an outer product.</span>
+
+<span class="sd">    This method implements the multiplication of an n-dimensional array</span>
+<span class="sd">    with an outer product of one-dimensional arrays, e.g.::</span>
+
+<span class="sd">        a = np.ones((10, 10, 10))</span>
+<span class="sd">        x = np.random.rand(10)</span>
+<span class="sd">        a *= x[:, None, None] * x[None, :, None] * x[None, None, :]</span>
+
+<span class="sd">    Basically, there are two ways to do such an operation:</span>
+
+<span class="sd">    1. First calculate the factor on the right-hand side and do one</span>
+<span class="sd">       &quot;big&quot; multiplication; or</span>
+<span class="sd">    2. Multiply by one factor at a time.</span>
+
+<span class="sd">    The procedure of building up the large factor in the first method</span>
+<span class="sd">    is relatively cheap if the number of 1d arrays is smaller than the</span>
+<span class="sd">    number of dimensions. For exactly n vectors, the second method is</span>
+<span class="sd">    faster, although it loops of the array ``a`` n times.</span>
+
+<span class="sd">    This implementation combines the two ideas into a hybrid scheme:</span>
+
+<span class="sd">    - If there are less 1d arrays than dimensions, choose 1.</span>
+<span class="sd">    - Otherwise, calculate the factor array for n-1 arrays</span>
+<span class="sd">      and multiply it to the large array. Finally, multiply with the</span>
+<span class="sd">      last 1d array.</span>
+
+<span class="sd">    The advantage of this approach is that it is memory-friendly and</span>
+<span class="sd">    loops over the big array only twice.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    ndarr : `array-like`</span>
+<span class="sd">        Array to multiply to</span>
+<span class="sd">    onedim_arrs : sequence of `array-like`&#39;s</span>
+<span class="sd">        One-dimensional arrays to be multiplied with ``ndarr``. The</span>
+<span class="sd">        sequence may not be longer than ``ndarr.ndim``.</span>
+<span class="sd">    axes : sequence of ints, optional</span>
+<span class="sd">        Take the 1d transform along these axes. ``None`` corresponds to</span>
+<span class="sd">        the last ``len(onedim_arrs)`` axes, in ascending order.</span>
+<span class="sd">    out : `numpy.ndarray`, optional</span>
+<span class="sd">        Array in which the result is stored</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    out : `numpy.ndarray`</span>
+<span class="sd">        Result of the modification. If ``out`` was given, the returned</span>
+<span class="sd">        object is a reference to it.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">out</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">out</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">ndarr</span><span class="p">,</span> <span class="n">copy</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">out</span><span class="p">[:]</span> <span class="o">=</span> <span class="n">ndarr</span>  <span class="c1"># Self-assignment is free if out is ndarr</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">onedim_arrs</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;no 1d arrays given&#39;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">axes</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">axes</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="n">out</span><span class="o">.</span><span class="n">ndim</span> <span class="o">-</span> <span class="nb">len</span><span class="p">(</span><span class="n">onedim_arrs</span><span class="p">),</span> <span class="n">out</span><span class="o">.</span><span class="n">ndim</span><span class="p">))</span>
+        <span class="n">axes_in</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="k">elif</span> <span class="nb">len</span><span class="p">(</span><span class="n">axes</span><span class="p">)</span> <span class="o">!=</span> <span class="nb">len</span><span class="p">(</span><span class="n">onedim_arrs</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;there are </span><span class="si">{}</span><span class="s1"> 1d arrays, but </span><span class="si">{}</span><span class="s1"> axes entries&#39;</span>
+                         <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">onedim_arrs</span><span class="p">),</span> <span class="nb">len</span><span class="p">(</span><span class="n">axes</span><span class="p">)))</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="c1"># Make axes positive</span>
+        <span class="n">axes</span><span class="p">,</span> <span class="n">axes_in</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">axes</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">int</span><span class="p">),</span> <span class="n">axes</span>
+        <span class="n">axes</span><span class="p">[</span><span class="n">axes</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">]</span> <span class="o">+=</span> <span class="n">out</span><span class="o">.</span><span class="n">ndim</span>
+        <span class="n">axes</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">axes</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">all</span><span class="p">(</span><span class="mi">0</span> <span class="o">&lt;=</span> <span class="n">ai</span> <span class="o">&lt;</span> <span class="n">out</span><span class="o">.</span><span class="n">ndim</span> <span class="k">for</span> <span class="n">ai</span> <span class="ow">in</span> <span class="n">axes</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;`axes` </span><span class="si">{}</span><span class="s1"> out of bounds for </span><span class="si">{}</span><span class="s1"> dimensions&#39;</span>
+                         <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">axes_in</span><span class="p">,</span> <span class="n">out</span><span class="o">.</span><span class="n">ndim</span><span class="p">))</span>
+
+    <span class="c1"># Make scalars 1d arrays and squeezable arrays 1d</span>
+    <span class="n">alist</span> <span class="o">=</span> <span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">atleast_1d</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">a</span><span class="p">)</span><span class="o">.</span><span class="n">squeeze</span><span class="p">())</span> <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="n">onedim_arrs</span><span class="p">]</span>
+    <span class="k">if</span> <span class="nb">any</span><span class="p">(</span><span class="n">a</span><span class="o">.</span><span class="n">ndim</span> <span class="o">!=</span> <span class="mi">1</span> <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="n">alist</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;only 1d arrays allowed&#39;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">axes</span><span class="p">)</span> <span class="o">&lt;</span> <span class="n">out</span><span class="o">.</span><span class="n">ndim</span><span class="p">:</span>
+        <span class="c1"># Make big factor array (start with 0d)</span>
+        <span class="n">factor</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="mf">1.0</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">ax</span><span class="p">,</span> <span class="n">arr</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">axes</span><span class="p">,</span> <span class="n">alist</span><span class="p">):</span>
+            <span class="c1"># Meshgrid-style slice</span>
+            <span class="n">slc</span> <span class="o">=</span> <span class="p">[</span><span class="kc">None</span><span class="p">]</span> <span class="o">*</span> <span class="n">out</span><span class="o">.</span><span class="n">ndim</span>
+            <span class="n">slc</span><span class="p">[</span><span class="n">ax</span><span class="p">]</span> <span class="o">=</span> <span class="nb">slice</span><span class="p">(</span><span class="kc">None</span><span class="p">)</span>
+            <span class="n">factor</span> <span class="o">=</span> <span class="n">factor</span> <span class="o">*</span> <span class="n">arr</span><span class="p">[</span><span class="nb">tuple</span><span class="p">(</span><span class="n">slc</span><span class="p">)]</span>
+
+        <span class="n">out</span> <span class="o">*=</span> <span class="n">factor</span>
+
+    <span class="k">else</span><span class="p">:</span>
+        <span class="c1"># Hybrid approach</span>
+
+        <span class="c1"># Get the axis to spare for the final multiplication, the one</span>
+        <span class="c1"># with the largest stride.</span>
+        <span class="n">last_ax</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">argmax</span><span class="p">(</span><span class="n">out</span><span class="o">.</span><span class="n">strides</span><span class="p">)</span>
+        <span class="n">last_arr</span> <span class="o">=</span> <span class="n">alist</span><span class="p">[</span><span class="n">axes</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">last_ax</span><span class="p">)]</span>
+
+        <span class="c1"># Build the semi-big array and multiply</span>
+        <span class="n">factor</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="mf">1.0</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">ax</span><span class="p">,</span> <span class="n">arr</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">axes</span><span class="p">,</span> <span class="n">alist</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">ax</span> <span class="o">==</span> <span class="n">last_ax</span><span class="p">:</span>
+                <span class="k">continue</span>
+
+            <span class="n">slc</span> <span class="o">=</span> <span class="p">[</span><span class="kc">None</span><span class="p">]</span> <span class="o">*</span> <span class="n">out</span><span class="o">.</span><span class="n">ndim</span>
+            <span class="n">slc</span><span class="p">[</span><span class="n">ax</span><span class="p">]</span> <span class="o">=</span> <span class="nb">slice</span><span class="p">(</span><span class="kc">None</span><span class="p">)</span>
+            <span class="n">factor</span> <span class="o">=</span> <span class="n">factor</span> <span class="o">*</span> <span class="n">arr</span><span class="p">[</span><span class="nb">tuple</span><span class="p">(</span><span class="n">slc</span><span class="p">)]</span>
+
+        <span class="n">out</span> <span class="o">*=</span> <span class="n">factor</span>
+
+        <span class="c1"># Finally multiply by the remaining 1d array</span>
+        <span class="n">slc</span> <span class="o">=</span> <span class="p">[</span><span class="kc">None</span><span class="p">]</span> <span class="o">*</span> <span class="n">out</span><span class="o">.</span><span class="n">ndim</span>
+        <span class="n">slc</span><span class="p">[</span><span class="n">last_ax</span><span class="p">]</span> <span class="o">=</span> <span class="nb">slice</span><span class="p">(</span><span class="kc">None</span><span class="p">)</span>
+        <span class="n">out</span> <span class="o">*=</span> <span class="n">last_arr</span><span class="p">[</span><span class="nb">tuple</span><span class="p">(</span><span class="n">slc</span><span class="p">)]</span>
+
+    <span class="k">return</span> <span class="n">out</span></div>
+
+
+<div class="viewcode-block" id="resize_array"><a class="viewcode-back" href="../../../generated/odl.util.numerics.resize_array.html#odl.util.numerics.resize_array">[docs]</a><span class="k">def</span> <span class="nf">resize_array</span><span class="p">(</span><span class="n">arr</span><span class="p">,</span> <span class="n">newshp</span><span class="p">,</span> <span class="n">offset</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">pad_mode</span><span class="o">=</span><span class="s1">&#39;constant&#39;</span><span class="p">,</span> <span class="n">pad_const</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+                 <span class="n">direction</span><span class="o">=</span><span class="s1">&#39;forward&#39;</span><span class="p">,</span> <span class="n">out</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Return the resized version of ``arr`` with shape ``newshp``.</span>
+
+<span class="sd">    In axes where ``newshp &gt; arr.shape``, padding is applied according</span>
+<span class="sd">    to the supplied options.</span>
+<span class="sd">    Where ``newshp &lt; arr.shape``, the array is cropped to the new</span>
+<span class="sd">    size.</span>
+
+<span class="sd">    See `the online documentation</span>
+<span class="sd">    &lt;https://odlgroup.github.io/odl/math/resizing_ops.html&gt;`_</span>
+<span class="sd">    on resizing operators for mathematical details.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    arr : `array-like`</span>
+<span class="sd">        Array to be resized.</span>
+<span class="sd">    newshp : sequence of ints</span>
+<span class="sd">        Desired shape of the output array.</span>
+<span class="sd">    offset : sequence of ints, optional</span>
+<span class="sd">        Specifies how many entries are added to/removed from the &quot;left&quot;</span>
+<span class="sd">        side (corresponding to low indices) of ``arr``.</span>
+<span class="sd">    pad_mode : string, optional</span>
+<span class="sd">        Method to be used to fill in missing values in an enlarged array.</span>
+
+<span class="sd">        ``&#39;constant&#39;``: Fill with ``pad_const``.</span>
+
+<span class="sd">        ``&#39;symmetric&#39;``: Reflect at the boundaries, not doubling the</span>
+<span class="sd">        outmost values. This requires left and right padding sizes</span>
+<span class="sd">        to be strictly smaller than the original array shape.</span>
+
+<span class="sd">        ``&#39;periodic&#39;``: Fill in values from the other side, keeping</span>
+<span class="sd">        the order. This requires left and right padding sizes to be</span>
+<span class="sd">        at most as large as the original array shape.</span>
+
+<span class="sd">        ``&#39;order0&#39;``: Extend constantly with the outmost values</span>
+<span class="sd">        (ensures continuity).</span>
+
+<span class="sd">        ``&#39;order1&#39;``: Extend with constant slope (ensures continuity of</span>
+<span class="sd">        the first derivative). This requires at least 2 values along</span>
+<span class="sd">        each axis where padding is applied.</span>
+
+<span class="sd">    pad_const : scalar, optional</span>
+<span class="sd">        Value to be used in the ``&#39;constant&#39;`` padding mode.</span>
+<span class="sd">    direction : {&#39;forward&#39;, &#39;adjoint&#39;}</span>
+<span class="sd">        Determines which variant of the resizing is applied.</span>
+
+<span class="sd">        &#39;forward&#39; : in axes where ``out`` is larger than ``arr``,</span>
+<span class="sd">        apply padding. Otherwise, restrict to the smaller size.</span>
+
+<span class="sd">        &#39;adjoint&#39; : in axes where ``out`` is larger than ``arr``,</span>
+<span class="sd">        apply zero-padding. Otherwise, restrict to the smaller size</span>
+<span class="sd">        and add the outside contributions according to ``pad_mode``.</span>
+
+<span class="sd">    out : `numpy.ndarray`, optional</span>
+<span class="sd">        Array to write the result to. Must have shape ``newshp`` and</span>
+<span class="sd">        be able to hold the data type of the input array.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    resized : `numpy.ndarray`</span>
+<span class="sd">        Resized array created according to the above rules. If ``out``</span>
+<span class="sd">        was given, the returned object is a reference to it.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    The input can be shrunk by simply providing a smaller size.</span>
+<span class="sd">    By default, values are removed from the right. When enlarging,</span>
+<span class="sd">    zero-padding is applied by default, and the zeros are added to</span>
+<span class="sd">    the right side. That behavior can be changed with the ``offset``</span>
+<span class="sd">    parameter:</span>
+
+<span class="sd">    &gt;&gt;&gt; from odl.util.numerics import resize_array</span>
+<span class="sd">    &gt;&gt;&gt; resize_array([1, 2, 3], (1,))</span>
+<span class="sd">    array([1])</span>
+<span class="sd">    &gt;&gt;&gt; resize_array([1, 2, 3], (1,), offset=2)</span>
+<span class="sd">    array([3])</span>
+<span class="sd">    &gt;&gt;&gt; resize_array([1, 2, 3], (6,))</span>
+<span class="sd">    array([1, 2, 3, 0, 0, 0])</span>
+<span class="sd">    &gt;&gt;&gt; resize_array([1, 2, 3], (7,), offset=2)</span>
+<span class="sd">    array([0, 0, 1, 2, 3, 0, 0])</span>
+
+<span class="sd">    The padding constant can be changed, as well as the padding</span>
+<span class="sd">    mode:</span>
+
+<span class="sd">    &gt;&gt;&gt; resize_array([1, 2, 3], (7,), pad_const=-1, offset=2)</span>
+<span class="sd">    array([-1, -1,  1,  2,  3, -1, -1])</span>
+<span class="sd">    &gt;&gt;&gt; resize_array([1, 2, 3], (7,), pad_mode=&#39;periodic&#39;, offset=2)</span>
+<span class="sd">    array([2, 3, 1, 2, 3, 1, 2])</span>
+<span class="sd">    &gt;&gt;&gt; resize_array([1, 2, 3], (7,), pad_mode=&#39;symmetric&#39;, offset=2)</span>
+<span class="sd">    array([3, 2, 1, 2, 3, 2, 1])</span>
+<span class="sd">    &gt;&gt;&gt; resize_array([1, 2, 3], (7,), pad_mode=&#39;order0&#39;, offset=2)</span>
+<span class="sd">    array([1, 1, 1, 2, 3, 3, 3])</span>
+<span class="sd">    &gt;&gt;&gt; resize_array([1, 2, 3], (7,), pad_mode=&#39;order1&#39;, offset=2)</span>
+<span class="sd">    array([-1,  0,  1,  2,  3,  4,  5])</span>
+
+<span class="sd">    Everything works for arbitrary number of dimensions:</span>
+
+<span class="sd">    &gt;&gt;&gt; # Take the middle two columns and extend rows symmetrically</span>
+<span class="sd">    &gt;&gt;&gt; resize_array([[1, 2, 3, 4],</span>
+<span class="sd">    ...               [5, 6, 7, 8],</span>
+<span class="sd">    ...               [9, 10, 11, 12]],</span>
+<span class="sd">    ...               (5, 2), pad_mode=&#39;symmetric&#39;, offset=[1, 1])</span>
+<span class="sd">    array([[ 6,  7],</span>
+<span class="sd">           [ 2,  3],</span>
+<span class="sd">           [ 6,  7],</span>
+<span class="sd">           [10, 11],</span>
+<span class="sd">           [ 6,  7]])</span>
+<span class="sd">    &gt;&gt;&gt; # Take the rightmost two columns and extend rows symmetrically</span>
+<span class="sd">    &gt;&gt;&gt; # downwards</span>
+<span class="sd">    &gt;&gt;&gt; resize_array([[1, 2, 3, 4],</span>
+<span class="sd">    ...               [5, 6, 7, 8],</span>
+<span class="sd">    ...               [9, 10, 11, 12]], (5, 2), pad_mode=&#39;symmetric&#39;,</span>
+<span class="sd">    ...              offset=[0, 2])</span>
+<span class="sd">    array([[ 3,  4],</span>
+<span class="sd">           [ 7,  8],</span>
+<span class="sd">           [11, 12],</span>
+<span class="sd">           [ 7,  8],</span>
+<span class="sd">           [ 3,  4]])</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># Handle arrays and shapes</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">newshp</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">newshp</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">TypeError</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;`newshp` must be a sequence, got </span><span class="si">{!r}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">newshp</span><span class="p">))</span>
+
+    <span class="k">if</span> <span class="n">out</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">out</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;`out` must be a `numpy.ndarray` instance, got &#39;</span>
+                            <span class="s1">&#39;</span><span class="si">{!r}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">out</span><span class="p">))</span>
+        <span class="k">if</span> <span class="n">out</span><span class="o">.</span><span class="n">shape</span> <span class="o">!=</span> <span class="n">newshp</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;`out` must have shape </span><span class="si">{}</span><span class="s1">, got </span><span class="si">{}</span><span class="s1">&#39;</span>
+                             <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">newshp</span><span class="p">,</span> <span class="n">out</span><span class="o">.</span><span class="n">shape</span><span class="p">))</span>
+
+        <span class="n">order</span> <span class="o">=</span> <span class="s1">&#39;C&#39;</span> <span class="k">if</span> <span class="n">out</span><span class="o">.</span><span class="n">flags</span><span class="o">.</span><span class="n">c_contiguous</span> <span class="k">else</span> <span class="s1">&#39;F&#39;</span>
+        <span class="n">arr</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">arr</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">out</span><span class="o">.</span><span class="n">dtype</span><span class="p">,</span> <span class="n">order</span><span class="o">=</span><span class="n">order</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">arr</span><span class="o">.</span><span class="n">ndim</span> <span class="o">!=</span> <span class="n">out</span><span class="o">.</span><span class="n">ndim</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;number of axes of `arr` and `out` do not match &#39;</span>
+                             <span class="s1">&#39;(</span><span class="si">{}</span><span class="s1"> != </span><span class="si">{}</span><span class="s1">)&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">arr</span><span class="o">.</span><span class="n">ndim</span><span class="p">,</span> <span class="n">out</span><span class="o">.</span><span class="n">ndim</span><span class="p">))</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">arr</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">arr</span><span class="p">)</span>
+        <span class="n">order</span> <span class="o">=</span> <span class="s1">&#39;C&#39;</span> <span class="k">if</span> <span class="n">arr</span><span class="o">.</span><span class="n">flags</span><span class="o">.</span><span class="n">c_contiguous</span> <span class="k">else</span> <span class="s1">&#39;F&#39;</span>
+        <span class="n">out</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">(</span><span class="n">newshp</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">arr</span><span class="o">.</span><span class="n">dtype</span><span class="p">,</span> <span class="n">order</span><span class="o">=</span><span class="n">order</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">newshp</span><span class="p">)</span> <span class="o">!=</span> <span class="n">arr</span><span class="o">.</span><span class="n">ndim</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;number of axes of `arr` and `len(newshp)` do &#39;</span>
+                             <span class="s1">&#39;not match (</span><span class="si">{}</span><span class="s1"> != </span><span class="si">{}</span><span class="s1">)&#39;</span>
+                             <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">arr</span><span class="o">.</span><span class="n">ndim</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">newshp</span><span class="p">)))</span>
+
+    <span class="c1"># Handle offset</span>
+    <span class="k">if</span> <span class="n">offset</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">offset</span> <span class="o">=</span> <span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="n">out</span><span class="o">.</span><span class="n">ndim</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">offset</span> <span class="o">=</span> <span class="n">normalized_scalar_param_list</span><span class="p">(</span>
+            <span class="n">offset</span><span class="p">,</span> <span class="n">out</span><span class="o">.</span><span class="n">ndim</span><span class="p">,</span> <span class="n">param_conv</span><span class="o">=</span><span class="n">safe_int_conv</span><span class="p">,</span> <span class="n">keep_none</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+
+    <span class="c1"># Handle padding</span>
+    <span class="n">pad_mode</span><span class="p">,</span> <span class="n">pad_mode_in</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">pad_mode</span><span class="p">)</span><span class="o">.</span><span class="n">lower</span><span class="p">(),</span> <span class="n">pad_mode</span>
+    <span class="k">if</span> <span class="n">pad_mode</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">_SUPPORTED_RESIZE_PAD_MODES</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;`pad_mode` &#39;</span><span class="si">{}</span><span class="s2">&#39; not understood&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">pad_mode_in</span><span class="p">))</span>
+
+    <span class="k">if</span> <span class="p">(</span><span class="n">pad_mode</span> <span class="o">==</span> <span class="s1">&#39;constant&#39;</span> <span class="ow">and</span>
+        <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">can_cast</span><span class="p">(</span><span class="n">pad_const</span><span class="p">,</span> <span class="n">out</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span> <span class="ow">and</span>
+        <span class="nb">any</span><span class="p">(</span><span class="n">n_new</span> <span class="o">&gt;</span> <span class="n">n_orig</span>
+            <span class="k">for</span> <span class="n">n_orig</span><span class="p">,</span> <span class="n">n_new</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">arr</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="n">out</span><span class="o">.</span><span class="n">shape</span><span class="p">))):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;`pad_const` </span><span class="si">{}</span><span class="s1"> cannot be safely cast to the data &#39;</span>
+                         <span class="s1">&#39;type </span><span class="si">{}</span><span class="s1"> of the output array&#39;</span>
+                         <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">pad_const</span><span class="p">,</span> <span class="n">out</span><span class="o">.</span><span class="n">dtype</span><span class="p">))</span>
+
+    <span class="c1"># Handle direction</span>
+    <span class="n">direction</span><span class="p">,</span> <span class="n">direction_in</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">direction</span><span class="p">)</span><span class="o">.</span><span class="n">lower</span><span class="p">(),</span> <span class="n">direction</span>
+    <span class="k">if</span> <span class="n">direction</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">(</span><span class="s1">&#39;forward&#39;</span><span class="p">,</span> <span class="s1">&#39;adjoint&#39;</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;`direction` &#39;</span><span class="si">{}</span><span class="s2">&#39; not understood&quot;</span>
+                         <span class="s2">&quot;&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">direction_in</span><span class="p">))</span>
+
+    <span class="k">if</span> <span class="n">direction</span> <span class="o">==</span> <span class="s1">&#39;adjoint&#39;</span> <span class="ow">and</span> <span class="n">pad_mode</span> <span class="o">==</span> <span class="s1">&#39;constant&#39;</span> <span class="ow">and</span> <span class="n">pad_const</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;`pad_const` must be 0 for &#39;adjoint&#39; direction, &quot;</span>
+                         <span class="s2">&quot;got </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">pad_const</span><span class="p">))</span>
+
+    <span class="k">if</span> <span class="n">direction</span> <span class="o">==</span> <span class="s1">&#39;forward&#39;</span> <span class="ow">and</span> <span class="n">pad_mode</span> <span class="o">==</span> <span class="s1">&#39;constant&#39;</span> <span class="ow">and</span> <span class="n">pad_const</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="n">out</span><span class="o">.</span><span class="n">fill</span><span class="p">(</span><span class="n">pad_const</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">out</span><span class="o">.</span><span class="n">fill</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+
+    <span class="c1"># Perform the resizing</span>
+    <span class="k">if</span> <span class="n">direction</span> <span class="o">==</span> <span class="s1">&#39;forward&#39;</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">pad_mode</span> <span class="o">==</span> <span class="s1">&#39;constant&#39;</span><span class="p">:</span>
+            <span class="c1"># Constant padding does not require the helper function</span>
+            <span class="n">_assign_intersection</span><span class="p">(</span><span class="n">out</span><span class="p">,</span> <span class="n">arr</span><span class="p">,</span> <span class="n">offset</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># First copy the inner part and use it for padding</span>
+            <span class="n">_assign_intersection</span><span class="p">(</span><span class="n">out</span><span class="p">,</span> <span class="n">arr</span><span class="p">,</span> <span class="n">offset</span><span class="p">)</span>
+            <span class="n">_apply_padding</span><span class="p">(</span><span class="n">out</span><span class="p">,</span> <span class="n">arr</span><span class="p">,</span> <span class="n">offset</span><span class="p">,</span> <span class="n">pad_mode</span><span class="p">,</span> <span class="s1">&#39;forward&#39;</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">pad_mode</span> <span class="o">==</span> <span class="s1">&#39;constant&#39;</span><span class="p">:</span>
+            <span class="c1"># Skip the padding helper</span>
+            <span class="n">_assign_intersection</span><span class="p">(</span><span class="n">out</span><span class="p">,</span> <span class="n">arr</span><span class="p">,</span> <span class="n">offset</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># Apply adjoint padding to a copy of the input and copy the inner</span>
+            <span class="c1"># part when finished</span>
+            <span class="n">tmp</span> <span class="o">=</span> <span class="n">arr</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+            <span class="n">_apply_padding</span><span class="p">(</span><span class="n">tmp</span><span class="p">,</span> <span class="n">out</span><span class="p">,</span> <span class="n">offset</span><span class="p">,</span> <span class="n">pad_mode</span><span class="p">,</span> <span class="s1">&#39;adjoint&#39;</span><span class="p">)</span>
+            <span class="n">_assign_intersection</span><span class="p">(</span><span class="n">out</span><span class="p">,</span> <span class="n">tmp</span><span class="p">,</span> <span class="n">offset</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">out</span></div>
+
+
+<span class="k">def</span> <span class="nf">_intersection_slice_tuples</span><span class="p">(</span><span class="n">lhs_arr</span><span class="p">,</span> <span class="n">rhs_arr</span><span class="p">,</span> <span class="n">offset</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Return tuples to yield the intersecting part of both given arrays.</span>
+
+<span class="sd">    The returned slices ``lhs_slc`` and ``rhs_slc`` are such that</span>
+<span class="sd">    ``lhs_arr[lhs_slc]`` and ``rhs_arr[rhs_slc]`` have the same shape.</span>
+<span class="sd">    The ``offset`` parameter determines how much is skipped/added on the</span>
+<span class="sd">    &quot;left&quot; side (small indices).</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">lhs_slc</span><span class="p">,</span> <span class="n">rhs_slc</span> <span class="o">=</span> <span class="p">[],</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">istart</span><span class="p">,</span> <span class="n">n_lhs</span><span class="p">,</span> <span class="n">n_rhs</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">offset</span><span class="p">,</span> <span class="n">lhs_arr</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="n">rhs_arr</span><span class="o">.</span><span class="n">shape</span><span class="p">):</span>
+
+        <span class="c1"># Slice for the inner part in the larger array corresponding to the</span>
+        <span class="c1"># small one, offset by the given amount</span>
+        <span class="n">istop</span> <span class="o">=</span> <span class="n">istart</span> <span class="o">+</span> <span class="nb">min</span><span class="p">(</span><span class="n">n_lhs</span><span class="p">,</span> <span class="n">n_rhs</span><span class="p">)</span>
+        <span class="n">inner_slc</span> <span class="o">=</span> <span class="nb">slice</span><span class="p">(</span><span class="n">istart</span><span class="p">,</span> <span class="n">istop</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">n_lhs</span> <span class="o">&gt;</span> <span class="n">n_rhs</span><span class="p">:</span>
+            <span class="c1"># Extension</span>
+            <span class="n">lhs_slc</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">inner_slc</span><span class="p">)</span>
+            <span class="n">rhs_slc</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">slice</span><span class="p">(</span><span class="kc">None</span><span class="p">))</span>
+        <span class="k">elif</span> <span class="n">n_lhs</span> <span class="o">&lt;</span> <span class="n">n_rhs</span><span class="p">:</span>
+            <span class="c1"># Restriction</span>
+            <span class="n">lhs_slc</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">slice</span><span class="p">(</span><span class="kc">None</span><span class="p">))</span>
+            <span class="n">rhs_slc</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">inner_slc</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># Same size, so full slices for both</span>
+            <span class="n">lhs_slc</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">slice</span><span class="p">(</span><span class="kc">None</span><span class="p">))</span>
+            <span class="n">rhs_slc</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">slice</span><span class="p">(</span><span class="kc">None</span><span class="p">))</span>
+
+    <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">lhs_slc</span><span class="p">),</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">rhs_slc</span><span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">_assign_intersection</span><span class="p">(</span><span class="n">lhs_arr</span><span class="p">,</span> <span class="n">rhs_arr</span><span class="p">,</span> <span class="n">offset</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Assign the intersecting region from ``rhs_arr`` to ``lhs_arr``.&quot;&quot;&quot;</span>
+    <span class="n">lhs_slc</span><span class="p">,</span> <span class="n">rhs_slc</span> <span class="o">=</span> <span class="n">_intersection_slice_tuples</span><span class="p">(</span><span class="n">lhs_arr</span><span class="p">,</span> <span class="n">rhs_arr</span><span class="p">,</span> <span class="n">offset</span><span class="p">)</span>
+    <span class="n">lhs_arr</span><span class="p">[</span><span class="n">lhs_slc</span><span class="p">]</span> <span class="o">=</span> <span class="n">rhs_arr</span><span class="p">[</span><span class="n">rhs_slc</span><span class="p">]</span>
+
+
+<span class="k">def</span> <span class="nf">_padding_slices_outer</span><span class="p">(</span><span class="n">lhs_arr</span><span class="p">,</span> <span class="n">rhs_arr</span><span class="p">,</span> <span class="n">axis</span><span class="p">,</span> <span class="n">offset</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Return slices into the outer array part where padding is applied.</span>
+
+<span class="sd">    When padding is performed, these slices yield the outer (excess) part</span>
+<span class="sd">    of the larger array that is to be filled with values. Slices for</span>
+<span class="sd">    both sides of the arrays in a given ``axis`` are returned.</span>
+
+<span class="sd">    The same slices are used also in the adjoint padding correction,</span>
+<span class="sd">    however in a different way.</span>
+
+<span class="sd">    See `the online documentation</span>
+<span class="sd">    &lt;https://odlgroup.github.io/odl/math/resizing_ops.html&gt;`_</span>
+<span class="sd">    on resizing operators for details.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">istart_inner</span> <span class="o">=</span> <span class="n">offset</span><span class="p">[</span><span class="n">axis</span><span class="p">]</span>
+    <span class="n">istop_inner</span> <span class="o">=</span> <span class="n">istart_inner</span> <span class="o">+</span> <span class="nb">min</span><span class="p">(</span><span class="n">lhs_arr</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="n">axis</span><span class="p">],</span> <span class="n">rhs_arr</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="n">axis</span><span class="p">])</span>
+    <span class="k">return</span> <span class="nb">slice</span><span class="p">(</span><span class="n">istart_inner</span><span class="p">),</span> <span class="nb">slice</span><span class="p">(</span><span class="n">istop_inner</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">_padding_slices_inner</span><span class="p">(</span><span class="n">lhs_arr</span><span class="p">,</span> <span class="n">rhs_arr</span><span class="p">,</span> <span class="n">axis</span><span class="p">,</span> <span class="n">offset</span><span class="p">,</span> <span class="n">pad_mode</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Return slices into the inner array part for a given ``pad_mode``.</span>
+
+<span class="sd">    When performing padding, these slices yield the values from the inner</span>
+<span class="sd">    part of a larger array that are to be assigned to the excess part</span>
+<span class="sd">    of the same array. Slices for both sides (&quot;left&quot;, &quot;right&quot;) of</span>
+<span class="sd">    the arrays in a given ``axis`` are returned.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># Calculate the start and stop indices for the inner part</span>
+    <span class="n">istart_inner</span> <span class="o">=</span> <span class="n">offset</span><span class="p">[</span><span class="n">axis</span><span class="p">]</span>
+    <span class="n">n_large</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">lhs_arr</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="n">axis</span><span class="p">],</span> <span class="n">rhs_arr</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="n">axis</span><span class="p">])</span>
+    <span class="n">n_small</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">lhs_arr</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="n">axis</span><span class="p">],</span> <span class="n">rhs_arr</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="n">axis</span><span class="p">])</span>
+    <span class="n">istop_inner</span> <span class="o">=</span> <span class="n">istart_inner</span> <span class="o">+</span> <span class="n">n_small</span>
+    <span class="c1"># Number of values padded to left and right</span>
+    <span class="n">n_pad_l</span> <span class="o">=</span> <span class="n">istart_inner</span>
+    <span class="n">n_pad_r</span> <span class="o">=</span> <span class="n">n_large</span> <span class="o">-</span> <span class="n">istop_inner</span>
+
+    <span class="k">if</span> <span class="n">pad_mode</span> <span class="o">==</span> <span class="s1">&#39;periodic&#39;</span><span class="p">:</span>
+        <span class="c1"># left: n_pad_l forward, ending at istop_inner - 1</span>
+        <span class="n">pad_slc_l</span> <span class="o">=</span> <span class="nb">slice</span><span class="p">(</span><span class="n">istop_inner</span> <span class="o">-</span> <span class="n">n_pad_l</span><span class="p">,</span> <span class="n">istop_inner</span><span class="p">)</span>
+        <span class="c1"># right: n_pad_r forward, starting at istart_inner</span>
+        <span class="n">pad_slc_r</span> <span class="o">=</span> <span class="nb">slice</span><span class="p">(</span><span class="n">istart_inner</span><span class="p">,</span> <span class="n">istart_inner</span> <span class="o">+</span> <span class="n">n_pad_r</span><span class="p">)</span>
+
+    <span class="k">elif</span> <span class="n">pad_mode</span> <span class="o">==</span> <span class="s1">&#39;symmetric&#39;</span><span class="p">:</span>
+        <span class="c1"># left: n_pad_l backward, ending at istart_inner + 1</span>
+        <span class="n">pad_slc_l</span> <span class="o">=</span> <span class="nb">slice</span><span class="p">(</span><span class="n">istart_inner</span> <span class="o">+</span> <span class="n">n_pad_l</span><span class="p">,</span> <span class="n">istart_inner</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+        <span class="c1"># right: n_pad_r backward, starting at istop_inner - 2</span>
+        <span class="c1"># For the corner case that the stopping index is -1, we need to</span>
+        <span class="c1"># replace it with None, since -1 as stopping index is equivalent</span>
+        <span class="c1"># to the last index, which is not what we want (0 as last index).</span>
+        <span class="n">istop_r</span> <span class="o">=</span> <span class="n">istop_inner</span> <span class="o">-</span> <span class="mi">2</span> <span class="o">-</span> <span class="n">n_pad_r</span>
+        <span class="k">if</span> <span class="n">istop_r</span> <span class="o">==</span> <span class="o">-</span><span class="mi">1</span><span class="p">:</span>
+            <span class="n">istop_r</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="n">pad_slc_r</span> <span class="o">=</span> <span class="nb">slice</span><span class="p">(</span><span class="n">istop_inner</span> <span class="o">-</span> <span class="mi">2</span><span class="p">,</span> <span class="n">istop_r</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+
+    <span class="k">elif</span> <span class="n">pad_mode</span> <span class="ow">in</span> <span class="p">(</span><span class="s1">&#39;order0&#39;</span><span class="p">,</span> <span class="s1">&#39;order1&#39;</span><span class="p">):</span>
+        <span class="c1"># left: only the first entry, using a slice to avoid squeezing</span>
+        <span class="n">pad_slc_l</span> <span class="o">=</span> <span class="nb">slice</span><span class="p">(</span><span class="n">istart_inner</span><span class="p">,</span> <span class="n">istart_inner</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="c1"># right: only last entry</span>
+        <span class="n">pad_slc_r</span> <span class="o">=</span> <span class="nb">slice</span><span class="p">(</span><span class="n">istop_inner</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="n">istop_inner</span><span class="p">)</span>
+
+    <span class="k">else</span><span class="p">:</span>
+        <span class="c1"># Slices are not used, returning trivial ones. The function should not</span>
+        <span class="c1"># be used for other modes anyway.</span>
+        <span class="n">pad_slc_l</span><span class="p">,</span> <span class="n">pad_slc_r</span> <span class="o">=</span> <span class="nb">slice</span><span class="p">(</span><span class="mi">0</span><span class="p">),</span> <span class="nb">slice</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">pad_slc_l</span><span class="p">,</span> <span class="n">pad_slc_r</span>
+
+
+<span class="k">def</span> <span class="nf">_apply_padding</span><span class="p">(</span><span class="n">lhs_arr</span><span class="p">,</span> <span class="n">rhs_arr</span><span class="p">,</span> <span class="n">offset</span><span class="p">,</span> <span class="n">pad_mode</span><span class="p">,</span> <span class="n">direction</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Apply padding to ``lhs_arr`` according to ``pad_mode``.</span>
+
+<span class="sd">    This helper assigns the values in the excess parts (if existent)</span>
+<span class="sd">    of ``lhs_arr`` according to the provided padding mode.</span>
+
+<span class="sd">    This applies to the following values for ``pad_mode``:</span>
+<span class="sd">    ``periodic``, ``symmetric``, ``order0``, ``order1``</span>
+
+<span class="sd">    See `the online documentation</span>
+<span class="sd">    &lt;https://odlgroup.github.io/odl/math/resizing_ops.html&gt;`_</span>
+<span class="sd">    on resizing operators for details.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">pad_mode</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">(</span><span class="s1">&#39;periodic&#39;</span><span class="p">,</span> <span class="s1">&#39;symmetric&#39;</span><span class="p">,</span> <span class="s1">&#39;order0&#39;</span><span class="p">,</span> <span class="s1">&#39;order1&#39;</span><span class="p">):</span>
+        <span class="k">return</span>
+
+    <span class="n">full_slc</span> <span class="o">=</span> <span class="p">[</span><span class="nb">slice</span><span class="p">(</span><span class="kc">None</span><span class="p">)]</span> <span class="o">*</span> <span class="n">lhs_arr</span><span class="o">.</span><span class="n">ndim</span>
+    <span class="n">intersec_slc</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">_intersection_slice_tuples</span><span class="p">(</span><span class="n">lhs_arr</span><span class="p">,</span> <span class="n">rhs_arr</span><span class="p">,</span> <span class="n">offset</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">direction</span> <span class="o">==</span> <span class="s1">&#39;forward&#39;</span><span class="p">:</span>
+        <span class="n">working_slc</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">intersec_slc</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">working_slc</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">full_slc</span><span class="p">)</span>
+
+    <span class="c1"># TODO: order axes according to padding size for optimization (largest</span>
+    <span class="c1"># last)? Axis strides could be important, too.</span>
+    <span class="k">for</span> <span class="n">axis</span><span class="p">,</span> <span class="p">(</span><span class="n">n_lhs</span><span class="p">,</span> <span class="n">n_rhs</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="n">lhs_arr</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="n">rhs_arr</span><span class="o">.</span><span class="n">shape</span><span class="p">)):</span>
+
+        <span class="k">if</span> <span class="n">n_lhs</span> <span class="o">&lt;=</span> <span class="n">n_rhs</span><span class="p">:</span>
+            <span class="k">continue</span>  <span class="c1"># restriction, nothing to do</span>
+
+        <span class="n">n_pad_l</span> <span class="o">=</span> <span class="n">offset</span><span class="p">[</span><span class="n">axis</span><span class="p">]</span>
+        <span class="n">n_pad_r</span> <span class="o">=</span> <span class="n">n_lhs</span> <span class="o">-</span> <span class="n">n_rhs</span> <span class="o">-</span> <span class="n">n_pad_l</span>
+
+        <span class="c1"># Error scenarios with illegal lengths</span>
+        <span class="k">if</span> <span class="n">pad_mode</span> <span class="o">==</span> <span class="s1">&#39;order0&#39;</span> <span class="ow">and</span> <span class="n">n_rhs</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;in axis </span><span class="si">{}</span><span class="s1">: the smaller array must have size &#39;</span>
+                             <span class="s1">&#39;&gt;= 1 for order 0 padding, got 0&#39;</span>
+                             <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">axis</span><span class="p">))</span>
+
+        <span class="k">if</span> <span class="n">pad_mode</span> <span class="o">==</span> <span class="s1">&#39;order1&#39;</span> <span class="ow">and</span> <span class="n">n_rhs</span> <span class="o">&lt;</span> <span class="mi">2</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;in axis </span><span class="si">{}</span><span class="s1">: the smaller array must have size &#39;</span>
+                             <span class="s1">&#39;&gt;= 2 for order 1 padding, got </span><span class="si">{}</span><span class="s1">&#39;</span>
+                             <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">axis</span><span class="p">,</span> <span class="n">n_rhs</span><span class="p">))</span>
+
+        <span class="k">for</span> <span class="n">lr</span><span class="p">,</span> <span class="n">pad_len</span> <span class="ow">in</span> <span class="p">[(</span><span class="s1">&#39;left&#39;</span><span class="p">,</span> <span class="n">n_pad_l</span><span class="p">),</span> <span class="p">(</span><span class="s1">&#39;right&#39;</span><span class="p">,</span> <span class="n">n_pad_r</span><span class="p">)]:</span>
+            <span class="k">if</span> <span class="n">pad_mode</span> <span class="o">==</span> <span class="s1">&#39;periodic&#39;</span> <span class="ow">and</span> <span class="n">pad_len</span> <span class="o">&gt;</span> <span class="n">n_rhs</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;in axis </span><span class="si">{}</span><span class="s1">: </span><span class="si">{}</span><span class="s1"> padding length </span><span class="si">{}</span><span class="s1"> exceeds &#39;</span>
+                                 <span class="s1">&#39;the size </span><span class="si">{}</span><span class="s1"> of the smaller array; this is &#39;</span>
+                                 <span class="s1">&#39;not allowed for periodic padding&#39;</span>
+                                 <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">axis</span><span class="p">,</span> <span class="n">lr</span><span class="p">,</span> <span class="n">pad_len</span><span class="p">,</span> <span class="n">n_rhs</span><span class="p">))</span>
+
+            <span class="k">elif</span> <span class="n">pad_mode</span> <span class="o">==</span> <span class="s1">&#39;symmetric&#39;</span> <span class="ow">and</span> <span class="n">pad_len</span> <span class="o">&gt;=</span> <span class="n">n_rhs</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;in axis </span><span class="si">{}</span><span class="s1">: </span><span class="si">{}</span><span class="s1"> padding length </span><span class="si">{}</span><span class="s1"> is larger &#39;</span>
+                                 <span class="s1">&#39;or equal to the size </span><span class="si">{}</span><span class="s1"> of the smaller &#39;</span>
+                                 <span class="s1">&#39;array; this is not allowed for symmetric &#39;</span>
+                                 <span class="s1">&#39;padding&#39;</span>
+                                 <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">axis</span><span class="p">,</span> <span class="n">lr</span><span class="p">,</span> <span class="n">pad_len</span><span class="p">,</span> <span class="n">n_rhs</span><span class="p">))</span>
+
+        <span class="c1"># Slice tuples used to index LHS and RHS for left and right padding,</span>
+        <span class="c1"># respectively; we make 4 copies of `working_slc` as lists</span>
+        <span class="n">lhs_slc_l</span><span class="p">,</span> <span class="n">lhs_slc_r</span><span class="p">,</span> <span class="n">rhs_slc_l</span><span class="p">,</span> <span class="n">rhs_slc_r</span> <span class="o">=</span> <span class="nb">map</span><span class="p">(</span>
+            <span class="nb">list</span><span class="p">,</span> <span class="p">[</span><span class="n">working_slc</span><span class="p">]</span> <span class="o">*</span> <span class="mi">4</span><span class="p">)</span>
+
+        <span class="c1"># We&#39;re always using the outer (excess) parts involved in padding</span>
+        <span class="c1"># on the LHS of the assignment, so we set them here.</span>
+        <span class="n">pad_slc_outer_l</span><span class="p">,</span> <span class="n">pad_slc_outer_r</span> <span class="o">=</span> <span class="n">_padding_slices_outer</span><span class="p">(</span>
+            <span class="n">lhs_arr</span><span class="p">,</span> <span class="n">rhs_arr</span><span class="p">,</span> <span class="n">axis</span><span class="p">,</span> <span class="n">offset</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">direction</span> <span class="o">==</span> <span class="s1">&#39;forward&#39;</span><span class="p">:</span>
+            <span class="n">lhs_slc_l</span><span class="p">[</span><span class="n">axis</span><span class="p">]</span> <span class="o">=</span> <span class="n">pad_slc_outer_l</span>
+            <span class="n">lhs_slc_r</span><span class="p">[</span><span class="n">axis</span><span class="p">]</span> <span class="o">=</span> <span class="n">pad_slc_outer_r</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">rhs_slc_l</span><span class="p">[</span><span class="n">axis</span><span class="p">]</span> <span class="o">=</span> <span class="n">pad_slc_outer_l</span>
+            <span class="n">rhs_slc_r</span><span class="p">[</span><span class="n">axis</span><span class="p">]</span> <span class="o">=</span> <span class="n">pad_slc_outer_r</span>
+
+        <span class="k">if</span> <span class="n">pad_mode</span> <span class="ow">in</span> <span class="p">(</span><span class="s1">&#39;periodic&#39;</span><span class="p">,</span> <span class="s1">&#39;symmetric&#39;</span><span class="p">):</span>
+            <span class="n">pad_slc_inner_l</span><span class="p">,</span> <span class="n">pad_slc_inner_r</span> <span class="o">=</span> <span class="n">_padding_slices_inner</span><span class="p">(</span>
+                <span class="n">lhs_arr</span><span class="p">,</span> <span class="n">rhs_arr</span><span class="p">,</span> <span class="n">axis</span><span class="p">,</span> <span class="n">offset</span><span class="p">,</span> <span class="n">pad_mode</span><span class="p">)</span>
+
+            <span class="c1"># Using `lhs_arr` on both sides of the assignment such that the</span>
+            <span class="c1"># shapes match and the &quot;corner&quot; blocks are properly assigned</span>
+            <span class="c1"># or used in the addition for the adjoint, respectively.</span>
+            <span class="k">if</span> <span class="n">direction</span> <span class="o">==</span> <span class="s1">&#39;forward&#39;</span><span class="p">:</span>
+                <span class="n">rhs_slc_l</span><span class="p">[</span><span class="n">axis</span><span class="p">]</span> <span class="o">=</span> <span class="n">pad_slc_inner_l</span>
+                <span class="n">rhs_slc_r</span><span class="p">[</span><span class="n">axis</span><span class="p">]</span> <span class="o">=</span> <span class="n">pad_slc_inner_r</span>
+                <span class="n">lhs_slc_l</span><span class="p">,</span> <span class="n">rhs_slc_l</span><span class="p">,</span> <span class="n">lhs_slc_r</span><span class="p">,</span> <span class="n">rhs_slc_r</span> <span class="o">=</span> <span class="nb">map</span><span class="p">(</span>
+                    <span class="nb">tuple</span><span class="p">,</span> <span class="p">[</span><span class="n">lhs_slc_l</span><span class="p">,</span> <span class="n">rhs_slc_l</span><span class="p">,</span> <span class="n">lhs_slc_r</span><span class="p">,</span> <span class="n">rhs_slc_r</span><span class="p">])</span>
+
+                <span class="n">lhs_arr</span><span class="p">[</span><span class="n">lhs_slc_l</span><span class="p">]</span> <span class="o">=</span> <span class="n">lhs_arr</span><span class="p">[</span><span class="n">rhs_slc_l</span><span class="p">]</span>
+                <span class="n">lhs_arr</span><span class="p">[</span><span class="n">lhs_slc_r</span><span class="p">]</span> <span class="o">=</span> <span class="n">lhs_arr</span><span class="p">[</span><span class="n">rhs_slc_r</span><span class="p">]</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">lhs_slc_l</span><span class="p">[</span><span class="n">axis</span><span class="p">]</span> <span class="o">=</span> <span class="n">pad_slc_inner_l</span>
+                <span class="n">lhs_slc_r</span><span class="p">[</span><span class="n">axis</span><span class="p">]</span> <span class="o">=</span> <span class="n">pad_slc_inner_r</span>
+                <span class="n">lhs_slc_l</span><span class="p">,</span> <span class="n">rhs_slc_l</span><span class="p">,</span> <span class="n">lhs_slc_r</span><span class="p">,</span> <span class="n">rhs_slc_r</span> <span class="o">=</span> <span class="nb">map</span><span class="p">(</span>
+                    <span class="nb">tuple</span><span class="p">,</span> <span class="p">[</span><span class="n">lhs_slc_l</span><span class="p">,</span> <span class="n">rhs_slc_l</span><span class="p">,</span> <span class="n">lhs_slc_r</span><span class="p">,</span> <span class="n">rhs_slc_r</span><span class="p">])</span>
+
+                <span class="n">lhs_arr</span><span class="p">[</span><span class="n">lhs_slc_l</span><span class="p">]</span> <span class="o">+=</span> <span class="n">lhs_arr</span><span class="p">[</span><span class="n">rhs_slc_l</span><span class="p">]</span>
+                <span class="n">lhs_arr</span><span class="p">[</span><span class="n">lhs_slc_r</span><span class="p">]</span> <span class="o">+=</span> <span class="n">lhs_arr</span><span class="p">[</span><span class="n">rhs_slc_r</span><span class="p">]</span>
+
+        <span class="k">elif</span> <span class="n">pad_mode</span> <span class="o">==</span> <span class="s1">&#39;order0&#39;</span><span class="p">:</span>
+            <span class="c1"># The `_padding_slices_inner` helper returns the slices for the</span>
+            <span class="c1"># boundary values.</span>
+            <span class="n">left_slc</span><span class="p">,</span> <span class="n">right_slc</span> <span class="o">=</span> <span class="n">_padding_slices_inner</span><span class="p">(</span>
+                <span class="n">lhs_arr</span><span class="p">,</span> <span class="n">rhs_arr</span><span class="p">,</span> <span class="n">axis</span><span class="p">,</span> <span class="n">offset</span><span class="p">,</span> <span class="n">pad_mode</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="n">direction</span> <span class="o">==</span> <span class="s1">&#39;forward&#39;</span><span class="p">:</span>
+                <span class="n">rhs_slc_l</span><span class="p">[</span><span class="n">axis</span><span class="p">]</span> <span class="o">=</span> <span class="n">left_slc</span>
+                <span class="n">rhs_slc_r</span><span class="p">[</span><span class="n">axis</span><span class="p">]</span> <span class="o">=</span> <span class="n">right_slc</span>
+                <span class="n">lhs_slc_l</span><span class="p">,</span> <span class="n">rhs_slc_l</span><span class="p">,</span> <span class="n">lhs_slc_r</span><span class="p">,</span> <span class="n">rhs_slc_r</span> <span class="o">=</span> <span class="nb">map</span><span class="p">(</span>
+                    <span class="nb">tuple</span><span class="p">,</span> <span class="p">[</span><span class="n">lhs_slc_l</span><span class="p">,</span> <span class="n">rhs_slc_l</span><span class="p">,</span> <span class="n">lhs_slc_r</span><span class="p">,</span> <span class="n">rhs_slc_r</span><span class="p">])</span>
+
+                <span class="n">lhs_arr</span><span class="p">[</span><span class="n">lhs_slc_l</span><span class="p">]</span> <span class="o">=</span> <span class="n">lhs_arr</span><span class="p">[</span><span class="n">rhs_slc_l</span><span class="p">]</span>
+                <span class="n">lhs_arr</span><span class="p">[</span><span class="n">lhs_slc_r</span><span class="p">]</span> <span class="o">=</span> <span class="n">lhs_arr</span><span class="p">[</span><span class="n">rhs_slc_r</span><span class="p">]</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">lhs_slc_l</span><span class="p">[</span><span class="n">axis</span><span class="p">]</span> <span class="o">=</span> <span class="n">left_slc</span>
+                <span class="n">lhs_slc_r</span><span class="p">[</span><span class="n">axis</span><span class="p">]</span> <span class="o">=</span> <span class="n">right_slc</span>
+                <span class="n">lhs_slc_l</span><span class="p">,</span> <span class="n">rhs_slc_l</span><span class="p">,</span> <span class="n">lhs_slc_r</span><span class="p">,</span> <span class="n">rhs_slc_r</span> <span class="o">=</span> <span class="nb">map</span><span class="p">(</span>
+                    <span class="nb">tuple</span><span class="p">,</span> <span class="p">[</span><span class="n">lhs_slc_l</span><span class="p">,</span> <span class="n">rhs_slc_l</span><span class="p">,</span> <span class="n">lhs_slc_r</span><span class="p">,</span> <span class="n">rhs_slc_r</span><span class="p">])</span>
+
+                <span class="n">lhs_arr</span><span class="p">[</span><span class="n">lhs_slc_l</span><span class="p">]</span> <span class="o">+=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span>
+                    <span class="n">lhs_arr</span><span class="p">[</span><span class="n">rhs_slc_l</span><span class="p">],</span>
+                    <span class="n">axis</span><span class="o">=</span><span class="n">axis</span><span class="p">,</span> <span class="n">keepdims</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">lhs_arr</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span>
+                <span class="n">lhs_arr</span><span class="p">[</span><span class="n">lhs_slc_r</span><span class="p">]</span> <span class="o">+=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span>
+                    <span class="n">lhs_arr</span><span class="p">[</span><span class="n">rhs_slc_r</span><span class="p">],</span>
+                    <span class="n">axis</span><span class="o">=</span><span class="n">axis</span><span class="p">,</span> <span class="n">keepdims</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">lhs_arr</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span>
+
+        <span class="k">elif</span> <span class="n">pad_mode</span> <span class="o">==</span> <span class="s1">&#39;order1&#39;</span><span class="p">:</span>
+            <span class="c1"># Some extra work necessary: need to compute the derivative at</span>
+            <span class="c1"># the boundary and use that to continue with constant derivative.</span>
+
+            <span class="c1"># Slice for broadcasting of a 1D array along `axis`</span>
+            <span class="n">bcast_slc</span> <span class="o">=</span> <span class="p">[</span><span class="kc">None</span><span class="p">]</span> <span class="o">*</span> <span class="n">lhs_arr</span><span class="o">.</span><span class="n">ndim</span>
+            <span class="n">bcast_slc</span><span class="p">[</span><span class="n">axis</span><span class="p">]</span> <span class="o">=</span> <span class="nb">slice</span><span class="p">(</span><span class="kc">None</span><span class="p">)</span>
+            <span class="n">bcast_slc</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">bcast_slc</span><span class="p">)</span>
+
+            <span class="c1"># Slices for the boundary in `axis`</span>
+            <span class="n">left_slc</span><span class="p">,</span> <span class="n">right_slc</span> <span class="o">=</span> <span class="n">_padding_slices_inner</span><span class="p">(</span>
+                <span class="n">lhs_arr</span><span class="p">,</span> <span class="n">rhs_arr</span><span class="p">,</span> <span class="n">axis</span><span class="p">,</span> <span class="n">offset</span><span class="p">,</span> <span class="n">pad_mode</span><span class="p">)</span>
+
+            <span class="c1"># Create slice tuples for indexing of the boundary values</span>
+            <span class="n">bdry_slc_l</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">working_slc</span><span class="p">)</span>
+            <span class="n">bdry_slc_l</span><span class="p">[</span><span class="n">axis</span><span class="p">]</span> <span class="o">=</span> <span class="n">left_slc</span>
+            <span class="n">bdry_slc_l</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">bdry_slc_l</span><span class="p">)</span>
+            <span class="n">bdry_slc_r</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">working_slc</span><span class="p">)</span>
+            <span class="n">bdry_slc_r</span><span class="p">[</span><span class="n">axis</span><span class="p">]</span> <span class="o">=</span> <span class="n">right_slc</span>
+            <span class="n">bdry_slc_r</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">bdry_slc_r</span><span class="p">)</span>
+
+            <span class="c1"># For the slope at the boundary, we need two neighboring points.</span>
+            <span class="c1"># We create the corresponding slices from the boundary slices.</span>
+            <span class="n">slope_slc_l</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">working_slc</span><span class="p">)</span>
+            <span class="n">slope_slc_l</span><span class="p">[</span><span class="n">axis</span><span class="p">]</span> <span class="o">=</span> <span class="nb">slice</span><span class="p">(</span><span class="n">left_slc</span><span class="o">.</span><span class="n">start</span><span class="p">,</span> <span class="n">left_slc</span><span class="o">.</span><span class="n">stop</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
+            <span class="n">slope_slc_l</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">slope_slc_l</span><span class="p">)</span>
+            <span class="n">slope_slc_r</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">working_slc</span><span class="p">)</span>
+            <span class="n">slope_slc_r</span><span class="p">[</span><span class="n">axis</span><span class="p">]</span> <span class="o">=</span> <span class="nb">slice</span><span class="p">(</span><span class="n">right_slc</span><span class="o">.</span><span class="n">start</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="n">right_slc</span><span class="o">.</span><span class="n">stop</span><span class="p">)</span>
+            <span class="n">slope_slc_r</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">slope_slc_r</span><span class="p">)</span>
+
+            <span class="c1"># The `np.arange`s, broadcast along `axis`, are used to create the</span>
+            <span class="c1"># constant-slope continuation (forward) or to calculate the</span>
+            <span class="c1"># first order moments (adjoint).</span>
+            <span class="n">arange_l</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="o">-</span><span class="n">n_pad_l</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span>
+                                 <span class="n">dtype</span><span class="o">=</span><span class="n">lhs_arr</span><span class="o">.</span><span class="n">dtype</span><span class="p">)[</span><span class="n">bcast_slc</span><span class="p">]</span>
+            <span class="n">arange_r</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">n_pad_r</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span>
+                                 <span class="n">dtype</span><span class="o">=</span><span class="n">lhs_arr</span><span class="o">.</span><span class="n">dtype</span><span class="p">)[</span><span class="n">bcast_slc</span><span class="p">]</span>
+
+            <span class="n">lhs_slc_l</span><span class="p">,</span> <span class="n">rhs_slc_l</span><span class="p">,</span> <span class="n">lhs_slc_r</span><span class="p">,</span> <span class="n">rhs_slc_r</span> <span class="o">=</span> <span class="nb">map</span><span class="p">(</span>
+                <span class="nb">tuple</span><span class="p">,</span> <span class="p">[</span><span class="n">lhs_slc_l</span><span class="p">,</span> <span class="n">rhs_slc_l</span><span class="p">,</span> <span class="n">lhs_slc_r</span><span class="p">,</span> <span class="n">rhs_slc_r</span><span class="p">])</span>
+
+            <span class="k">if</span> <span class="n">direction</span> <span class="o">==</span> <span class="s1">&#39;forward&#39;</span><span class="p">:</span>
+                <span class="c1"># Take first order difference to get the derivative</span>
+                <span class="c1"># along `axis`.</span>
+                <span class="n">slope_l</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">diff</span><span class="p">(</span><span class="n">lhs_arr</span><span class="p">[</span><span class="n">slope_slc_l</span><span class="p">],</span> <span class="n">n</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="n">axis</span><span class="p">)</span>
+                <span class="n">slope_r</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">diff</span><span class="p">(</span><span class="n">lhs_arr</span><span class="p">[</span><span class="n">slope_slc_r</span><span class="p">],</span> <span class="n">n</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="n">axis</span><span class="p">)</span>
+
+                <span class="c1"># Finally assign the constant slope values</span>
+                <span class="n">lhs_arr</span><span class="p">[</span><span class="n">lhs_slc_l</span><span class="p">]</span> <span class="o">=</span> <span class="n">lhs_arr</span><span class="p">[</span><span class="n">bdry_slc_l</span><span class="p">]</span> <span class="o">+</span> <span class="n">arange_l</span> <span class="o">*</span> <span class="n">slope_l</span>
+                <span class="n">lhs_arr</span><span class="p">[</span><span class="n">lhs_slc_r</span><span class="p">]</span> <span class="o">=</span> <span class="n">lhs_arr</span><span class="p">[</span><span class="n">bdry_slc_r</span><span class="p">]</span> <span class="o">+</span> <span class="n">arange_r</span> <span class="o">*</span> <span class="n">slope_r</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="c1"># Same as in &#39;order0&#39;</span>
+                <span class="n">lhs_arr</span><span class="p">[</span><span class="n">bdry_slc_l</span><span class="p">]</span> <span class="o">+=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">lhs_arr</span><span class="p">[</span><span class="n">rhs_slc_l</span><span class="p">],</span>
+                                              <span class="n">axis</span><span class="o">=</span><span class="n">axis</span><span class="p">,</span> <span class="n">keepdims</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                                              <span class="n">dtype</span><span class="o">=</span><span class="n">lhs_arr</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span>
+                <span class="n">lhs_arr</span><span class="p">[</span><span class="n">bdry_slc_r</span><span class="p">]</span> <span class="o">+=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">lhs_arr</span><span class="p">[</span><span class="n">rhs_slc_r</span><span class="p">],</span>
+                                              <span class="n">axis</span><span class="o">=</span><span class="n">axis</span><span class="p">,</span> <span class="n">keepdims</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                                              <span class="n">dtype</span><span class="o">=</span><span class="n">lhs_arr</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span>
+
+                <span class="c1"># Calculate the order 1 moments</span>
+                <span class="n">moment1_l</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">arange_l</span> <span class="o">*</span> <span class="n">lhs_arr</span><span class="p">[</span><span class="n">rhs_slc_l</span><span class="p">],</span>
+                                   <span class="n">axis</span><span class="o">=</span><span class="n">axis</span><span class="p">,</span> <span class="n">keepdims</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                                   <span class="n">dtype</span><span class="o">=</span><span class="n">lhs_arr</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span>
+                <span class="n">moment1_r</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">arange_r</span> <span class="o">*</span> <span class="n">lhs_arr</span><span class="p">[</span><span class="n">rhs_slc_r</span><span class="p">],</span>
+                                   <span class="n">axis</span><span class="o">=</span><span class="n">axis</span><span class="p">,</span> <span class="n">keepdims</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                                   <span class="n">dtype</span><span class="o">=</span><span class="n">lhs_arr</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span>
+
+                <span class="c1"># Add moment1 at the &quot;width-2 boundary layers&quot;, with the sign</span>
+                <span class="c1"># corresponding to the sign in the derivative calculation</span>
+                <span class="c1"># of the forward padding.</span>
+                <span class="n">sign</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">])[</span><span class="n">bcast_slc</span><span class="p">]</span>
+                <span class="n">lhs_arr</span><span class="p">[</span><span class="n">slope_slc_l</span><span class="p">]</span> <span class="o">+=</span> <span class="n">moment1_l</span> <span class="o">*</span> <span class="n">sign</span>
+                <span class="n">lhs_arr</span><span class="p">[</span><span class="n">slope_slc_r</span><span class="p">]</span> <span class="o">+=</span> <span class="n">moment1_r</span> <span class="o">*</span> <span class="n">sign</span>
+
+        <span class="k">if</span> <span class="n">direction</span> <span class="o">==</span> <span class="s1">&#39;forward&#39;</span><span class="p">:</span>
+            <span class="n">working_slc</span><span class="p">[</span><span class="n">axis</span><span class="p">]</span> <span class="o">=</span> <span class="n">full_slc</span><span class="p">[</span><span class="n">axis</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">working_slc</span><span class="p">[</span><span class="n">axis</span><span class="p">]</span> <span class="o">=</span> <span class="n">intersec_slc</span><span class="p">[</span><span class="n">axis</span><span class="p">]</span>
+
+
+<div class="viewcode-block" id="zscore"><a class="viewcode-back" href="../../../generated/odl.util.numerics.zscore.html#odl.util.numerics.zscore">[docs]</a><span class="k">def</span> <span class="nf">zscore</span><span class="p">(</span><span class="n">arr</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Return arr normalized with mean 0 and unit variance.</span>
+
+<span class="sd">    If the input has 0 variance, the result will also have 0 variance.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    arr : array-like</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    zscore : array-like</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    Compute the z score for a small array:</span>
+
+<span class="sd">    &gt;&gt;&gt; result = zscore([1, 0])</span>
+<span class="sd">    &gt;&gt;&gt; result</span>
+<span class="sd">    array([ 1., -1.])</span>
+<span class="sd">    &gt;&gt;&gt; np.mean(result)</span>
+<span class="sd">    0.0</span>
+<span class="sd">    &gt;&gt;&gt; np.std(result)</span>
+<span class="sd">    1.0</span>
+
+<span class="sd">    Does not re-scale in case the input is constant (has 0 variance):</span>
+
+<span class="sd">    &gt;&gt;&gt; zscore([1, 1])</span>
+<span class="sd">    array([ 0., 0.])</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">arr</span> <span class="o">=</span> <span class="n">arr</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">arr</span><span class="p">)</span>
+    <span class="n">std</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">std</span><span class="p">(</span><span class="n">arr</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">std</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="n">arr</span> <span class="o">/=</span> <span class="n">std</span>
+    <span class="k">return</span> <span class="n">arr</span></div>
+
+
+<div class="viewcode-block" id="binning"><a class="viewcode-back" href="../../../generated/odl.util.numerics.binning.html#odl.util.numerics.binning">[docs]</a><span class="k">def</span> <span class="nf">binning</span><span class="p">(</span><span class="n">arr</span><span class="p">,</span> <span class="n">bin_size</span><span class="p">,</span> <span class="n">reduction</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Bin an array by a factor.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    arr : `array-like`</span>
+<span class="sd">        The array that should be binned.</span>
+<span class="sd">    bin_size : positive int or sequence</span>
+<span class="sd">        Size or per-axis sizes of the bins.</span>
+<span class="sd">    reduction: callable, optional</span>
+<span class="sd">        Function used to perform the binning by reduction over temporary</span>
+<span class="sd">        axes of size ``bin_size``. It is called as ::</span>
+
+<span class="sd">            reduction(reshaped_arr, axis=reduction_axes)</span>
+
+<span class="sd">        hence it must support this signature. The function is expected to</span>
+<span class="sd">        collapse ``reduction_axes``.</span>
+
+<span class="sd">        Default: `numpy.sum`</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    binned_arr : numpy.ndarray</span>
+<span class="sd">        Array of shape ``n[i] // b[i]`` in axis ``i``, where ``n`` refers</span>
+<span class="sd">        to the original shape and ``b`` to the bin sizes.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    Binning by the same factor in all axes can be done with an integer</span>
+<span class="sd">    ``bin_size``:</span>
+
+<span class="sd">    &gt;&gt;&gt; arr = np.arange(24).reshape((4, 6))</span>
+<span class="sd">    &gt;&gt;&gt; arr</span>
+<span class="sd">    array([[ 0,  1,  2,  3,  4,  5],</span>
+<span class="sd">           [ 6,  7,  8,  9, 10, 11],</span>
+<span class="sd">           [12, 13, 14, 15, 16, 17],</span>
+<span class="sd">           [18, 19, 20, 21, 22, 23]])</span>
+<span class="sd">    &gt;&gt;&gt; binning(arr, bin_size=2)</span>
+<span class="sd">    array([[14, 22, 30],</span>
+<span class="sd">           [62, 70, 78]])</span>
+
+<span class="sd">    If a sequence is given, the bin sizes are specific for each axis:</span>
+
+<span class="sd">    &gt;&gt;&gt; binning(arr, bin_size=(2, 3))</span>
+<span class="sd">    array([[ 24,  42],</span>
+<span class="sd">           [ 96, 114]])</span>
+
+<span class="sd">    Instead of the default `numpy.sum`, other functions that accept an</span>
+<span class="sd">    array as first argument and an ``axis`` keyword argument can be used for</span>
+<span class="sd">    reduction. For instance, `numpy.max`, resulting in &quot;max pooling&quot;:</span>
+
+<span class="sd">    &gt;&gt;&gt; binning(arr, bin_size=2, reduction=np.max)</span>
+<span class="sd">    array([[ 7,  9, 11],</span>
+<span class="sd">           [19, 21, 23]])</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">arr</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">arr</span><span class="p">)</span>
+    <span class="n">d</span> <span class="o">=</span> <span class="n">arr</span><span class="o">.</span><span class="n">ndim</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">bin_sizes</span> <span class="o">=</span> <span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="n">bin_size</span><span class="p">)]</span> <span class="o">*</span> <span class="n">d</span>
+    <span class="k">except</span> <span class="ne">TypeError</span><span class="p">:</span>
+        <span class="n">bin_sizes</span> <span class="o">=</span> <span class="n">bin_size</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">all</span><span class="p">(</span><span class="n">b</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="k">for</span> <span class="n">b</span> <span class="ow">in</span> <span class="n">bin_sizes</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;expected positive `bin_size`, got </span><span class="si">{}</span><span class="s1">&#39;</span>
+                         <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">bin_size</span><span class="p">))</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">bin_sizes</span><span class="p">)</span> <span class="o">!=</span> <span class="n">d</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+            <span class="s1">&#39;`len(bin_sizes)` must be equal to `arr.ndim`, but </span><span class="si">{}</span><span class="s1"> != </span><span class="si">{}</span><span class="s1">&#39;</span>
+            <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">bin_sizes</span><span class="p">),</span> <span class="n">d</span><span class="p">)</span>
+        <span class="p">)</span>
+    <span class="k">if</span> <span class="nb">any</span><span class="p">(</span><span class="n">b</span> <span class="o">&gt;</span> <span class="n">n</span> <span class="k">for</span> <span class="n">n</span><span class="p">,</span> <span class="n">b</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">arr</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="n">bin_sizes</span><span class="p">)):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+            <span class="s1">&#39;`bin_size` </span><span class="si">{}</span><span class="s1"> may not exceed array shape </span><span class="si">{}</span><span class="s1"> in any axis&#39;</span>
+            <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">bin_size</span><span class="p">,</span> <span class="n">arr</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+        <span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">all</span><span class="p">(</span><span class="n">n</span> <span class="o">%</span> <span class="n">b</span> <span class="o">==</span> <span class="mi">0</span> <span class="k">for</span> <span class="n">n</span><span class="p">,</span> <span class="n">b</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">arr</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="n">bin_sizes</span><span class="p">)):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+            <span class="s1">&#39;`bin_size` must divide `arr.shape` evenly, but `</span><span class="si">{}</span><span class="s1"> / </span><span class="si">{}</span><span class="s1">` has a &#39;</span>
+            <span class="s1">&#39;remainder of </span><span class="si">{}</span><span class="s1">&#39;</span>
+            <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                <span class="n">arr</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="n">bin_size</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">remainder</span><span class="p">(</span><span class="n">arr</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="n">bin_sizes</span><span class="p">))</span>
+            <span class="p">)</span>
+        <span class="p">)</span>
+
+    <span class="n">red_shp</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">red_axes</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">ax</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="k">for</span> <span class="n">n</span><span class="p">,</span> <span class="n">b</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">arr</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="n">bin_sizes</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">b</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="c1"># Optimization for &quot;no binning&quot;</span>
+            <span class="n">red_shp</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">n</span><span class="p">)</span>
+            <span class="n">ax</span> <span class="o">+=</span> <span class="mi">1</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">red_shp</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">n</span> <span class="o">//</span> <span class="n">b</span><span class="p">)</span>
+            <span class="n">red_shp</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">b</span><span class="p">)</span>
+            <span class="n">red_axes</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">ax</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
+            <span class="n">ax</span> <span class="o">+=</span> <span class="mi">2</span>
+
+    <span class="n">red_axes</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">red_axes</span><span class="p">)</span>
+
+    <span class="n">reshaped_arr</span> <span class="o">=</span> <span class="n">arr</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">red_shp</span><span class="p">)</span>
+    <span class="n">red_arr</span> <span class="o">=</span> <span class="n">reduction</span><span class="p">(</span><span class="n">reshaped_arr</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="n">red_axes</span><span class="p">)</span>
+
+    <span class="n">out_shp</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">n</span> <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">n</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">red_shp</span><span class="p">)</span> <span class="k">if</span> <span class="n">i</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">red_axes</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">red_arr</span><span class="o">.</span><span class="n">shape</span> <span class="o">!=</span> <span class="n">out_shp</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;`reduction` does not produce the expected shape &#39;</span>
+                         <span class="s1">&#39;</span><span class="si">{}</span><span class="s1"> from `arr.shape = </span><span class="si">{}</span><span class="s1">` and `bin_size = </span><span class="si">{}</span><span class="s1">`&#39;</span>
+                         <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">out_shp</span><span class="p">,</span> <span class="n">arr</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="n">bin_size</span><span class="p">))</span>
+
+    <span class="k">return</span> <span class="n">red_arr</span></div>
+
+
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s1">&#39;__main__&#39;</span><span class="p">:</span>
+    <span class="kn">from</span> <span class="nn">odl.util.testutils</span> <span class="kn">import</span> <span class="n">run_doctests</span>
+    <span class="n">run_doctests</span><span class="p">()</span>
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &#169; Copyright 2014-2020 The ODL Contributors.
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

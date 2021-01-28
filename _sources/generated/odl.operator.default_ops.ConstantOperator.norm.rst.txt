@@ -1,0 +1,8 @@
+:orphan:
+
+ConstantOperator.norm
+==============================================
+
+.. currentmodule:: odl.operator.default_ops
+
+.. automethod:: ConstantOperator.norm

@@ -1,0 +1,8 @@
+:orphan:
+
+NumpyTensorSpace._multiply
+================================================
+
+.. currentmodule:: odl.space.npy_tensors
+
+.. automethod:: NumpyTensorSpace._multiply

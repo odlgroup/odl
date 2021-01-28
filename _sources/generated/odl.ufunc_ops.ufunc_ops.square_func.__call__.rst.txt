@@ -1,0 +1,8 @@
+:orphan:
+
+square_func.__call__
+============================================
+
+.. currentmodule:: odl.ufunc_ops.ufunc_ops
+
+.. automethod:: square_func.__call__

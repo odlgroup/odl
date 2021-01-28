@@ -1,0 +1,8 @@
+:orphan:
+
+TensorSpaceUfuncs.sqrt
+======================================
+
+.. currentmodule:: odl.util.ufuncs
+
+.. automethod:: TensorSpaceUfuncs.sqrt

@@ -1,0 +1,6 @@
+isinf_func.proximal
+===========================================
+
+.. currentmodule:: odl.ufunc_ops.ufunc_ops
+
+.. autoproperty:: isinf_func.proximal

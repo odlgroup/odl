@@ -1,0 +1,6 @@
+DiscretizedSpace.partition
+================================================
+
+.. currentmodule:: odl.discr.discr_space
+
+.. autoproperty:: DiscretizedSpace.partition

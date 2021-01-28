@@ -1,0 +1,6 @@
+GroupL1Norm.is_linear
+================================================================
+
+.. currentmodule:: odl.solvers.functional.default_functionals
+
+.. autoproperty:: GroupL1Norm.is_linear

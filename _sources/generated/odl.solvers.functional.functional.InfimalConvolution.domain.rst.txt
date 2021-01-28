@@ -1,0 +1,6 @@
+InfimalConvolution.domain
+===========================================================
+
+.. currentmodule:: odl.solvers.functional.functional
+
+.. autoproperty:: InfimalConvolution.domain

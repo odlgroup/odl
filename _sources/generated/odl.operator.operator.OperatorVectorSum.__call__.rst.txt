@@ -1,0 +1,8 @@
+:orphan:
+
+OperatorVectorSum.__call__
+================================================
+
+.. currentmodule:: odl.operator.operator
+
+.. automethod:: OperatorVectorSum.__call__

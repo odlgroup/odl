@@ -1,0 +1,8 @@
+:orphan:
+
+IdentityFunctional.derivative
+========================================================================
+
+.. currentmodule:: odl.solvers.functional.default_functionals
+
+.. automethod:: IdentityFunctional.derivative

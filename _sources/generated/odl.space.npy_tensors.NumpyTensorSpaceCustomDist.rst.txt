@@ -1,0 +1,34 @@
+﻿NumpyTensorSpaceCustomDist
+================================================
+
+.. currentmodule:: odl.space.npy_tensors
+
+.. autoclass:: NumpyTensorSpaceCustomDist
+   :show-inheritance:
+   
+   
+   .. automethod:: __init__
+   
+      
+   
+   .. HACK -- the point here is that we don't want this to appear in the output, but the autosummary should still generate the pages.
+      .. autosummary::
+         :toctree:
+      
+         NumpyTensorSpaceCustomDist.__eq__
+         NumpyTensorSpaceCustomDist.equiv
+         NumpyTensorSpaceCustomDist.inner
+         NumpyTensorSpaceCustomDist.norm
+   
+
+    
+   .. HACK -- the point here is that we don't want this to appear in the output, but the autosummary should still generate the pages.
+      .. autosummary::
+         :toctree:
+      
+         NumpyTensorSpaceCustomDist.dist
+         NumpyTensorSpaceCustomDist.exponent
+         NumpyTensorSpaceCustomDist.impl
+         NumpyTensorSpaceCustomDist.repr_part
+   
+   

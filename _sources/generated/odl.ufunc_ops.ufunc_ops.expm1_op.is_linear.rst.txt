@@ -1,0 +1,6 @@
+expm1_op.is_linear
+==========================================
+
+.. currentmodule:: odl.ufunc_ops.ufunc_ops
+
+.. autoproperty:: expm1_op.is_linear

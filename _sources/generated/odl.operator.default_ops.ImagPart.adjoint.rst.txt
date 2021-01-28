@@ -1,0 +1,6 @@
+ImagPart.adjoint
+=========================================
+
+.. currentmodule:: odl.operator.default_ops
+
+.. autoproperty:: ImagPart.adjoint

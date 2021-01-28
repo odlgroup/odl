@@ -1,0 +1,8 @@
+:orphan:
+
+copysign_op.derivative
+==============================================
+
+.. currentmodule:: odl.ufunc_ops.ufunc_ops
+
+.. automethod:: copysign_op.derivative

@@ -1,0 +1,1818 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>odl.tomo.geometry.parallel &mdash; odl 1.0.0.dev0 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../../../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../../../../_static/custom.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../../../" src="../../../../_static/documentation_options.js"></script>
+        <script src="../../../../_static/jquery.js"></script>
+        <script src="../../../../_static/underscore.js"></script>
+        <script src="../../../../_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="../../../../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../../../index.html" class="icon icon-home"> odl
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                1.0.0.dev0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Getting Started</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../getting_started/getting_started.html">Getting Started</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Working with ODL</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../guide/guide.html">User’s guide – selected topics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../math/math.html">Mathematical Background</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Developer zone</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../dev/dev.html">Contributing to ODL</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Useful facts</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../guide/faq.html">Frequently asked questions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../guide/glossary.html">Glossary</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../release_notes.html">Release Notes</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../refs.html">References</a></li>
+</ul>
+<p class="caption"><span class="caption-text">API Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../odl.html">odl</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../../index.html">odl</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../../../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="../../../index.html">Module code</a> &raquo;</li>
+        
+      <li>odl.tomo.geometry.parallel</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for odl.tomo.geometry.parallel</h1><div class="highlight"><pre>
+<span></span><span class="c1"># Copyright 2014-2020 The ODL contributors</span>
+<span class="c1">#</span>
+<span class="c1"># This file is part of ODL.</span>
+<span class="c1">#</span>
+<span class="c1"># This Source Code Form is subject to the terms of the Mozilla Public License,</span>
+<span class="c1"># v. 2.0. If a copy of the MPL was not distributed with this file, You can</span>
+<span class="c1"># obtain one at https://mozilla.org/MPL/2.0/.</span>
+
+<span class="sd">&quot;&quot;&quot;Parallel beam geometries in 2 or 3 dimensions.&quot;&quot;&quot;</span>
+
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">absolute_import</span><span class="p">,</span> <span class="n">division</span><span class="p">,</span> <span class="n">print_function</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+
+<span class="kn">from</span> <span class="nn">odl.discr</span> <span class="kn">import</span> <span class="n">uniform_partition</span>
+<span class="kn">from</span> <span class="nn">odl.tomo.geometry.detector</span> <span class="kn">import</span> <span class="n">Flat1dDetector</span><span class="p">,</span> <span class="n">Flat2dDetector</span>
+<span class="kn">from</span> <span class="nn">odl.tomo.geometry.geometry</span> <span class="kn">import</span> <span class="n">AxisOrientedGeometry</span><span class="p">,</span> <span class="n">Geometry</span>
+<span class="kn">from</span> <span class="nn">odl.tomo.util</span> <span class="kn">import</span> <span class="n">euler_matrix</span><span class="p">,</span> <span class="n">is_inside_bounds</span><span class="p">,</span> <span class="n">transform_system</span>
+<span class="kn">from</span> <span class="nn">odl.util</span> <span class="kn">import</span> <span class="n">array_str</span><span class="p">,</span> <span class="n">indent</span><span class="p">,</span> <span class="n">signature_string</span>
+
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;ParallelBeamGeometry&#39;</span><span class="p">,</span>
+           <span class="s1">&#39;Parallel2dGeometry&#39;</span><span class="p">,</span>
+           <span class="s1">&#39;Parallel3dEulerGeometry&#39;</span><span class="p">,</span> <span class="s1">&#39;Parallel3dAxisGeometry&#39;</span><span class="p">,</span>
+           <span class="s1">&#39;parallel_beam_geometry&#39;</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="ParallelBeamGeometry"><a class="viewcode-back" href="../../../../generated/odl.tomo.geometry.parallel.ParallelBeamGeometry.html#odl.tomo.geometry.parallel.ParallelBeamGeometry">[docs]</a><span class="k">class</span> <span class="nc">ParallelBeamGeometry</span><span class="p">(</span><span class="n">Geometry</span><span class="p">):</span>
+
+    <span class="sd">&quot;&quot;&quot;Abstract parallel beam geometry in 2 or 3 dimensions.</span>
+
+<span class="sd">    Parallel geometries are characterized by a virtual source at</span>
+<span class="sd">    infinity, such that a unit vector from a detector point towards</span>
+<span class="sd">    the source (`det_to_src`) is independent of the location on the</span>
+<span class="sd">    detector.</span>
+
+<span class="sd">    For details, check `the online docs</span>
+<span class="sd">    &lt;https://odlgroup.github.io/odl/guide/geometry_guide.html&gt;`_.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="ParallelBeamGeometry.__init__"><a class="viewcode-back" href="../../../../generated/odl.tomo.geometry.parallel.ParallelBeamGeometry.html#odl.tomo.geometry.parallel.ParallelBeamGeometry.__init__">[docs]</a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ndim</span><span class="p">,</span> <span class="n">apart</span><span class="p">,</span> <span class="n">detector</span><span class="p">,</span> <span class="n">det_pos_init</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Initialize a new instance.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        ndim : {2, 3}</span>
+<span class="sd">            Number of dimensions of this geometry, i.e. dimensionality</span>
+<span class="sd">            of the physical space in which this geometry is embedded.</span>
+<span class="sd">        apart : `RectPartition`</span>
+<span class="sd">            Partition of the angle set.</span>
+<span class="sd">        detector : `Detector`</span>
+<span class="sd">            The detector to use in this geometry.</span>
+<span class="sd">        det_pos_init : `array-like`</span>
+<span class="sd">            Initial position of the detector reference point.</span>
+<span class="sd">        kwargs :</span>
+<span class="sd">            Further parameters passed on to `Geometry`.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">ParallelBeamGeometry</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span>
+            <span class="n">ndim</span><span class="p">,</span> <span class="n">apart</span><span class="p">,</span> <span class="n">detector</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">ndim</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;`ndim` must be 2 or 3, got </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">ndim</span><span class="p">))</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">__det_pos_init</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">det_pos_init</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="s1">&#39;float64&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">det_pos_init</span><span class="o">.</span><span class="n">shape</span> <span class="o">!=</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ndim</span><span class="p">,):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;`det_pos_init` must have shape (</span><span class="si">{}</span><span class="s1">,), got </span><span class="si">{}</span><span class="s1">&#39;</span>
+                             <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ndim</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">det_pos_init</span><span class="o">.</span><span class="n">shape</span><span class="p">))</span></div>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">det_pos_init</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Initial position of the detector reference point.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__det_pos_init</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">angles</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;All angles of this geometry as an array.</span>
+
+<span class="sd">        If ``motion_params.ndim == 1``, the array has shape ``(N,)``,</span>
+<span class="sd">        where ``N`` is the number of angles.</span>
+<span class="sd">        Otherwise, the array shape is ``(ndim, N)``, where ``N`` is the</span>
+<span class="sd">        total number of angles, and ``ndim`` is ``motion_partitioin.ndim``.</span>
+
+<span class="sd">        The order of axes is chosen such that ``geometry.angles`` can be</span>
+<span class="sd">        used directly as input to any of the other methods of the</span>
+<span class="sd">        geometry.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">motion_partition</span><span class="o">.</span><span class="n">ndim</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">motion_grid</span><span class="o">.</span><span class="n">coord_vectors</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">motion_grid</span><span class="o">.</span><span class="n">points</span><span class="p">()</span><span class="o">.</span><span class="n">T</span>
+
+<div class="viewcode-block" id="ParallelBeamGeometry.det_refpoint"><a class="viewcode-back" href="../../../../generated/odl.tomo.geometry.parallel.ParallelBeamGeometry.det_refpoint.html#odl.tomo.geometry.parallel.ParallelBeamGeometry.det_refpoint">[docs]</a>    <span class="k">def</span> <span class="nf">det_refpoint</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">angle</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return the position(s) of the detector ref. point at ``angle``.</span>
+
+<span class="sd">        The reference point is given by a rotation of the initial</span>
+<span class="sd">        position by ``angle``.</span>
+
+<span class="sd">        For an angle (or a vector of angles) ``phi``, the detector position</span>
+<span class="sd">        is given by ::</span>
+
+<span class="sd">            det_ref(phi) = translation +</span>
+<span class="sd">                           rotation_matrix(phi) * (det_pos_init - translation)</span>
+
+<span class="sd">        where ``det_pos_init`` is the detector reference point at initial</span>
+<span class="sd">        state.</span>
+
+<span class="sd">        This default implementation assumes in the case of 2 or 3 motion</span>
+<span class="sd">        parameters that they are to be interpreted as Euler angles.</span>
+<span class="sd">        Subclasses with a deviating intended interpretation should override</span>
+<span class="sd">        this method.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        angle : `array-like` or sequence</span>
+<span class="sd">            One or several (Euler) angles in radians at which to</span>
+<span class="sd">            evaluate. If ``motion_params.ndim &gt;= 2``, a sequence of that</span>
+<span class="sd">            length must be provided.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        refpt : `numpy.ndarray`</span>
+<span class="sd">            Vector(s) pointing from the origin to the detector reference</span>
+<span class="sd">            point at ``angle``.</span>
+<span class="sd">            If ``angle`` is a single parameter, the returned array has</span>
+<span class="sd">            shape ``(ndim,)``, otherwise</span>
+
+<span class="sd">            - ``angle.shape + (ndim,)`` if `motion_params` is 1D,</span>
+<span class="sd">            - ``broadcast(*angle).shape + (ndim,)`` if `motion_params` is 2D</span>
+<span class="sd">              or 3D (Euler angles).</span>
+
+<span class="sd">        See Also</span>
+<span class="sd">        --------</span>
+<span class="sd">        rotation_matrix</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        --------</span>
+<span class="sd">        For 2d and default arguments, the detector starts at ``e_y`` and</span>
+<span class="sd">        rotates to ``-e_x`` at 90 degrees:</span>
+
+<span class="sd">        &gt;&gt;&gt; apart = odl.uniform_partition(0, np.pi, 10)</span>
+<span class="sd">        &gt;&gt;&gt; dpart = odl.uniform_partition(-1, 1, 20)</span>
+<span class="sd">        &gt;&gt;&gt; geom = Parallel2dGeometry(apart, dpart)</span>
+<span class="sd">        &gt;&gt;&gt; geom.det_refpoint(0)</span>
+<span class="sd">        array([ 0.,  1.])</span>
+<span class="sd">        &gt;&gt;&gt; np.allclose(geom.det_refpoint(np.pi / 2), [-1, 0])</span>
+<span class="sd">        True</span>
+
+<span class="sd">        The method is vectorized, i.e., it can be called with multiple</span>
+<span class="sd">        angles at once (or n-dimensional arrays of parameters):</span>
+
+<span class="sd">        &gt;&gt;&gt; points = geom.det_refpoint([0, np.pi])</span>
+<span class="sd">        &gt;&gt;&gt; np.allclose(points[0], [0, 1])</span>
+<span class="sd">        True</span>
+<span class="sd">        &gt;&gt;&gt; np.allclose(points[1], [0, -1])</span>
+<span class="sd">        True</span>
+<span class="sd">        &gt;&gt;&gt; geom.det_refpoint(np.zeros((4, 5))).shape</span>
+<span class="sd">        (4, 5, 2)</span>
+
+<span class="sd">        In 3d with single rotation axis ``e_z``, we have the same situation,</span>
+<span class="sd">        except that the vectors have a third component equal to 0:</span>
+
+<span class="sd">        &gt;&gt;&gt; apart = odl.uniform_partition(0, np.pi, 10)</span>
+<span class="sd">        &gt;&gt;&gt; dpart = odl.uniform_partition([-1, -1], [1, 1], (20, 20))</span>
+<span class="sd">        &gt;&gt;&gt; geom = Parallel3dAxisGeometry(apart, dpart)</span>
+<span class="sd">        &gt;&gt;&gt; geom.det_refpoint(0)</span>
+<span class="sd">        array([ 0.,  1.,  0.])</span>
+<span class="sd">        &gt;&gt;&gt; np.allclose(geom.det_refpoint(np.pi / 2), [-1, 0, 0])</span>
+<span class="sd">        True</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">motion_params</span><span class="o">.</span><span class="n">ndim</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">squeeze_out</span> <span class="o">=</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">shape</span><span class="p">(</span><span class="n">angle</span><span class="p">)</span> <span class="o">==</span> <span class="p">())</span>
+            <span class="n">angle</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">angle</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">,</span> <span class="n">copy</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">ndmin</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+            <span class="n">rot_matrix</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">rotation_matrix</span><span class="p">(</span><span class="n">angle</span><span class="p">)</span>
+            <span class="n">extra_dims</span> <span class="o">=</span> <span class="n">angle</span><span class="o">.</span><span class="n">ndim</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">motion_params</span><span class="o">.</span><span class="n">ndim</span> <span class="ow">in</span> <span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">):</span>
+            <span class="n">squeeze_out</span> <span class="o">=</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">broadcast</span><span class="p">(</span><span class="o">*</span><span class="n">angle</span><span class="p">)</span><span class="o">.</span><span class="n">shape</span> <span class="o">==</span> <span class="p">())</span>
+            <span class="n">angle</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">,</span> <span class="n">copy</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">ndmin</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+                          <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="n">angle</span><span class="p">)</span>
+            <span class="n">rot_matrix</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">rotation_matrix</span><span class="p">(</span><span class="n">angle</span><span class="p">)</span>
+            <span class="n">extra_dims</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">broadcast</span><span class="p">(</span><span class="o">*</span><span class="n">angle</span><span class="p">)</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span>
+                <span class="s1">&#39;no default implementation available for `det_refpoint` &#39;</span>
+                <span class="s1">&#39;with `motion_params.ndim == </span><span class="si">{}</span><span class="s1">`&#39;</span>
+                <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">motion_params</span><span class="o">.</span><span class="n">ndim</span><span class="p">))</span>
+
+        <span class="n">rot_part</span> <span class="o">=</span> <span class="n">rot_matrix</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">det_pos_init</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">translation</span><span class="p">)</span>
+
+        <span class="c1"># Broadcast along extra dimensions</span>
+        <span class="n">pt_slc</span> <span class="o">=</span> <span class="p">(</span><span class="kc">None</span><span class="p">,)</span> <span class="o">*</span> <span class="n">extra_dims</span> <span class="o">+</span> <span class="p">(</span><span class="nb">slice</span><span class="p">(</span><span class="kc">None</span><span class="p">),)</span>
+        <span class="n">refpoint</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">translation</span><span class="p">[</span><span class="n">pt_slc</span><span class="p">]</span> <span class="o">+</span> <span class="n">rot_part</span>
+        <span class="k">if</span> <span class="n">squeeze_out</span><span class="p">:</span>
+            <span class="n">refpoint</span> <span class="o">=</span> <span class="n">refpoint</span><span class="o">.</span><span class="n">squeeze</span><span class="p">()</span>
+
+        <span class="k">return</span> <span class="n">refpoint</span></div>
+
+<div class="viewcode-block" id="ParallelBeamGeometry.det_to_src"><a class="viewcode-back" href="../../../../generated/odl.tomo.geometry.parallel.ParallelBeamGeometry.det_to_src.html#odl.tomo.geometry.parallel.ParallelBeamGeometry.det_to_src">[docs]</a>    <span class="k">def</span> <span class="nf">det_to_src</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">angle</span><span class="p">,</span> <span class="n">dparam</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Direction from a detector location to the source.</span>
+
+<span class="sd">        The direction vector is computed as follows::</span>
+
+<span class="sd">            dir = rotation_matrix(angle).dot(detector.surface_normal(dparam))</span>
+
+<span class="sd">        Note that for flat detectors, ``surface_normal`` does not depend</span>
+<span class="sd">        on the parameter ``dparam``, hence this function is constant in</span>
+<span class="sd">        that variable.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        angle : `array-like` or sequence</span>
+<span class="sd">            One or several (Euler) angles in radians at which to</span>
+<span class="sd">            evaluate. If ``motion_params.ndim &gt;= 2``, a sequence of that</span>
+<span class="sd">            length must be provided.</span>
+<span class="sd">        dparam : `array-like` or sequence</span>
+<span class="sd">            Detector parameter(s) at which to evaluate. If</span>
+<span class="sd">            ``det_params.ndim &gt;= 2``, a sequence of that length must be</span>
+<span class="sd">            provided.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        det_to_src : `numpy.ndarray`</span>
+<span class="sd">            Vector(s) pointing from a detector point to the source (at</span>
+<span class="sd">            infinity).</span>
+<span class="sd">            The shape of the returned array is obtained from the</span>
+<span class="sd">            (broadcast) shapes of ``angle`` and ``dparam``, and</span>
+<span class="sd">            broadcasting is supported within both parameters and between</span>
+<span class="sd">            them. The precise definition of the shape is</span>
+<span class="sd">            ``broadcast(bcast_angle, bcast_dparam).shape + (ndim,)``,</span>
+<span class="sd">            where ``bcast_angle`` is</span>
+
+<span class="sd">            - ``angle`` if `motion_params` is 1D,</span>
+<span class="sd">            - ``broadcast(*angle)`` otherwise,</span>
+
+<span class="sd">            and ``bcast_dparam`` defined analogously.</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        --------</span>
+<span class="sd">        The method works with single parameter values, in which case</span>
+<span class="sd">        a single vector is returned:</span>
+
+<span class="sd">        &gt;&gt;&gt; apart = odl.uniform_partition(0, np.pi, 10)</span>
+<span class="sd">        &gt;&gt;&gt; dpart = odl.uniform_partition(-1, 1, 20)</span>
+<span class="sd">        &gt;&gt;&gt; geom = odl.tomo.Parallel2dGeometry(apart, dpart)</span>
+<span class="sd">        &gt;&gt;&gt; geom.det_to_src(0, 0)</span>
+<span class="sd">        array([ 0., -1.])</span>
+<span class="sd">        &gt;&gt;&gt; geom.det_to_src(0, 1)</span>
+<span class="sd">        array([ 0., -1.])</span>
+<span class="sd">        &gt;&gt;&gt; dir = geom.det_to_src(np.pi / 2, 0)</span>
+<span class="sd">        &gt;&gt;&gt; np.allclose(dir, [1, 0])</span>
+<span class="sd">        True</span>
+<span class="sd">        &gt;&gt;&gt; dir = geom.det_to_src(np.pi / 2, 1)</span>
+<span class="sd">        &gt;&gt;&gt; np.allclose(dir, [1, 0])</span>
+<span class="sd">        True</span>
+
+<span class="sd">        Both variables support vectorized calls, i.e., stacks of</span>
+<span class="sd">        parameters can be provided. The order of axes in the output (left</span>
+<span class="sd">        of the ``ndim`` axis for the vector dimension) corresponds to the</span>
+<span class="sd">        order of arguments:</span>
+
+<span class="sd">        &gt;&gt;&gt; dirs = geom.det_to_src(0, [-1, 0, 0.5, 1])</span>
+<span class="sd">        &gt;&gt;&gt; dirs</span>
+<span class="sd">        array([[ 0., -1.],</span>
+<span class="sd">               [ 0., -1.],</span>
+<span class="sd">               [ 0., -1.],</span>
+<span class="sd">               [ 0., -1.]])</span>
+<span class="sd">        &gt;&gt;&gt; dirs.shape  # (num_dparams, ndim)</span>
+<span class="sd">        (4, 2)</span>
+<span class="sd">        &gt;&gt;&gt; dirs = geom.det_to_src([0, np.pi / 2, np.pi], 0)</span>
+<span class="sd">        &gt;&gt;&gt; np.allclose(dirs, [[0, -1],</span>
+<span class="sd">        ...                    [1, 0],</span>
+<span class="sd">        ...                    [0, 1]])</span>
+<span class="sd">        True</span>
+<span class="sd">        &gt;&gt;&gt; dirs.shape  # (num_angles, ndim)</span>
+<span class="sd">        (3, 2)</span>
+<span class="sd">        &gt;&gt;&gt; # Providing 3 pairs of parameters, resulting in 3 vectors</span>
+<span class="sd">        &gt;&gt;&gt; dirs = geom.det_to_src([0, np.pi / 2, np.pi], [-1, 0, 1])</span>
+<span class="sd">        &gt;&gt;&gt; dirs[0]  # Corresponds to angle = 0, dparam = -1</span>
+<span class="sd">        array([ 0., -1.])</span>
+<span class="sd">        &gt;&gt;&gt; dirs.shape</span>
+<span class="sd">        (3, 2)</span>
+<span class="sd">        &gt;&gt;&gt; # Pairs of parameters arranged in arrays of same size</span>
+<span class="sd">        &gt;&gt;&gt; geom.det_to_src(np.zeros((4, 5)), np.zeros((4, 5))).shape</span>
+<span class="sd">        (4, 5, 2)</span>
+<span class="sd">        &gt;&gt;&gt; # &quot;Outer product&quot; type evaluation using broadcasting</span>
+<span class="sd">        &gt;&gt;&gt; geom.det_to_src(np.zeros((4, 1)), np.zeros((1, 5))).shape</span>
+<span class="sd">        (4, 5, 2)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># Always call the downstream methods with vectorized arguments</span>
+        <span class="c1"># to be able to reliably manipulate the final axes of the result</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">motion_params</span><span class="o">.</span><span class="n">ndim</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">squeeze_angle</span> <span class="o">=</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">shape</span><span class="p">(</span><span class="n">angle</span><span class="p">)</span> <span class="o">==</span> <span class="p">())</span>
+            <span class="n">angle</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">angle</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">,</span> <span class="n">copy</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">ndmin</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+            <span class="n">matrix</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">rotation_matrix</span><span class="p">(</span><span class="n">angle</span><span class="p">)</span>  <span class="c1"># shape (m, ndim, ndim)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">squeeze_angle</span> <span class="o">=</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">broadcast</span><span class="p">(</span><span class="o">*</span><span class="n">angle</span><span class="p">)</span><span class="o">.</span><span class="n">shape</span> <span class="o">==</span> <span class="p">())</span>
+            <span class="n">angle</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">,</span> <span class="n">copy</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">ndmin</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+                          <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="n">angle</span><span class="p">)</span>
+            <span class="n">matrix</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">rotation_matrix</span><span class="p">(</span><span class="n">angle</span><span class="p">)</span>  <span class="c1"># shape (m, ndim, ndim)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">det_params</span><span class="o">.</span><span class="n">ndim</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">squeeze_dparam</span> <span class="o">=</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">shape</span><span class="p">(</span><span class="n">dparam</span><span class="p">)</span> <span class="o">==</span> <span class="p">())</span>
+            <span class="n">dparam</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">dparam</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">,</span> <span class="n">copy</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">ndmin</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">squeeze_dparam</span> <span class="o">=</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">broadcast</span><span class="p">(</span><span class="o">*</span><span class="n">dparam</span><span class="p">)</span><span class="o">.</span><span class="n">shape</span> <span class="o">==</span> <span class="p">())</span>
+            <span class="n">dparam</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">,</span> <span class="n">copy</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">ndmin</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+                           <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">dparam</span><span class="p">)</span>
+
+        <span class="n">normal</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">detector</span><span class="o">.</span><span class="n">surface_normal</span><span class="p">(</span><span class="n">dparam</span><span class="p">)</span>  <span class="c1"># shape (d, ndim)</span>
+
+        <span class="c1"># Perform matrix-vector multiplication along the last axis of both</span>
+        <span class="c1"># `matrix` and `normal` while &quot;zipping&quot; all axes that do not</span>
+        <span class="c1"># participate in the matrix-vector product. In other words, the axes</span>
+        <span class="c1"># are labelled</span>
+        <span class="c1"># [0, 1, ..., r-1, r, r+1] for `matrix` and</span>
+        <span class="c1"># [0, 1, ..., r-1, r+1] for `normal`, and the output axes are set to</span>
+        <span class="c1"># [0, 1, ..., r-1, r]. This automatically supports broadcasting</span>
+        <span class="c1"># along the axes 0, ..., r-1.</span>
+        <span class="n">matrix_axes</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="n">matrix</span><span class="o">.</span><span class="n">ndim</span><span class="p">))</span>
+        <span class="n">normal_axes</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="n">matrix</span><span class="o">.</span><span class="n">ndim</span> <span class="o">-</span> <span class="mi">2</span><span class="p">))</span> <span class="o">+</span> <span class="p">[</span><span class="n">matrix_axes</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]]</span>
+        <span class="n">out_axes</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="n">matrix</span><span class="o">.</span><span class="n">ndim</span> <span class="o">-</span> <span class="mi">1</span><span class="p">))</span>
+        <span class="n">det_to_src</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">einsum</span><span class="p">(</span><span class="n">matrix</span><span class="p">,</span> <span class="n">matrix_axes</span><span class="p">,</span> <span class="n">normal</span><span class="p">,</span> <span class="n">normal_axes</span><span class="p">,</span>
+                               <span class="n">out_axes</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">squeeze_angle</span> <span class="ow">and</span> <span class="n">squeeze_dparam</span><span class="p">:</span>
+            <span class="n">det_to_src</span> <span class="o">=</span> <span class="n">det_to_src</span><span class="o">.</span><span class="n">squeeze</span><span class="p">()</span>
+
+        <span class="k">return</span> <span class="n">det_to_src</span></div></div>
+
+
+<div class="viewcode-block" id="Parallel2dGeometry"><a class="viewcode-back" href="../../../../generated/odl.tomo.geometry.parallel.Parallel2dGeometry.html#odl.tomo.geometry.parallel.Parallel2dGeometry">[docs]</a><span class="k">class</span> <span class="nc">Parallel2dGeometry</span><span class="p">(</span><span class="n">ParallelBeamGeometry</span><span class="p">):</span>
+
+    <span class="sd">&quot;&quot;&quot;Parallel beam geometry in 2d.</span>
+
+<span class="sd">    The motion parameter is the counter-clockwise rotation angle around</span>
+<span class="sd">    the origin, and the detector is a line detector.</span>
+
+<span class="sd">    In the standard configuration, the detector is perpendicular to the</span>
+<span class="sd">    ray direction, its reference point is initially at ``(0, 1)``, and</span>
+<span class="sd">    the initial detector axis is ``(1, 0)``.</span>
+
+<span class="sd">    For details, check `the online docs</span>
+<span class="sd">    &lt;https://odlgroup.github.io/odl/guide/geometry_guide.html&gt;`_.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">_default_config</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">det_pos_init</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span> <span class="n">det_axis_init</span><span class="o">=</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">))</span>
+
+<div class="viewcode-block" id="Parallel2dGeometry.__init__"><a class="viewcode-back" href="../../../../generated/odl.tomo.geometry.parallel.Parallel2dGeometry.html#odl.tomo.geometry.parallel.Parallel2dGeometry.__init__">[docs]</a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">apart</span><span class="p">,</span> <span class="n">dpart</span><span class="p">,</span> <span class="n">det_pos_init</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Initialize a new instance.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        apart : 1-dim. `RectPartition`</span>
+<span class="sd">            Partition of the angle interval.</span>
+<span class="sd">        dpart : 1-dim. `RectPartition`</span>
+<span class="sd">            Partition of the detector parameter interval.</span>
+<span class="sd">        det_pos_init : `array-like`, shape ``(2,)``, optional</span>
+<span class="sd">            Initial position of the detector reference point.</span>
+
+<span class="sd">        Other Parameters</span>
+<span class="sd">        ----------------</span>
+<span class="sd">        det_axis_init : `array-like` (shape ``(2,)``), optional</span>
+<span class="sd">            Initial axis defining the detector orientation. The default</span>
+<span class="sd">            depends on ``det_pos_init``, see Notes.</span>
+<span class="sd">        translation : `array-like`, shape ``(2,)``, optional</span>
+<span class="sd">            Global translation of the geometry. This is added last in any</span>
+<span class="sd">            method that computes an absolute vector, e.g., `det_refpoint`,</span>
+<span class="sd">            and also shifts the center of rotation.</span>
+<span class="sd">            Default: ``(0, 0)``</span>
+<span class="sd">        check_bounds : bool, optional</span>
+<span class="sd">            If ``True``, methods computing vectors check input arguments.</span>
+<span class="sd">            Checks are vectorized and add only a small overhead.</span>
+<span class="sd">            Default: ``True``</span>
+
+<span class="sd">        Notes</span>
+<span class="sd">        -----</span>
+<span class="sd">        In the default configuration, the initial detector reference point</span>
+<span class="sd">        is ``(0, 1)``, and the initial detector axis is ``(1, 0)``. If a</span>
+<span class="sd">        different ``det_pos_init`` is chosen, the new default axis is</span>
+<span class="sd">        given as a rotation of the original one by a matrix that transforms</span>
+<span class="sd">        ``(0, 1)`` to the new (normalized) ``det_pos_init``. This matrix</span>
+<span class="sd">        is calculated with the `rotation_matrix_from_to` function.</span>
+<span class="sd">        Expressed in code, we have ::</span>
+
+<span class="sd">            init_rot = rotation_matrix_from_to((0, 1), det_pos_init)</span>
+<span class="sd">            det_axis_init = init_rot.dot((1, 0))</span>
+
+<span class="sd">        If ``det_pos_init == (0, 0)``, no rotation is performed.</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        --------</span>
+<span class="sd">        Initialization with default parameters:</span>
+
+<span class="sd">        &gt;&gt;&gt; apart = odl.uniform_partition(0, np.pi, 10)</span>
+<span class="sd">        &gt;&gt;&gt; dpart = odl.uniform_partition(-1, 1, 20)</span>
+<span class="sd">        &gt;&gt;&gt; geom = Parallel2dGeometry(apart, dpart)</span>
+<span class="sd">        &gt;&gt;&gt; np.allclose(geom.det_refpoint(0), (0, 1))</span>
+<span class="sd">        True</span>
+<span class="sd">        &gt;&gt;&gt; np.allclose(geom.det_point_position(0, 1), (1, 1))</span>
+<span class="sd">        True</span>
+
+<span class="sd">        Checking the default orientation:</span>
+
+<span class="sd">        &gt;&gt;&gt; e_x, e_y = np.eye(2)  # standard unit vectors</span>
+<span class="sd">        &gt;&gt;&gt; np.allclose(geom.det_pos_init, e_y)</span>
+<span class="sd">        True</span>
+<span class="sd">        &gt;&gt;&gt; np.allclose(geom.det_axis_init, e_x)</span>
+<span class="sd">        True</span>
+
+<span class="sd">        Specifying an initial detector position by default rotates the</span>
+<span class="sd">        standard configuration to this position:</span>
+
+<span class="sd">        &gt;&gt;&gt; geom = Parallel2dGeometry(apart, dpart, det_pos_init=(-1, 0))</span>
+<span class="sd">        &gt;&gt;&gt; np.allclose(geom.det_pos_init, -e_x)</span>
+<span class="sd">        True</span>
+<span class="sd">        &gt;&gt;&gt; np.allclose(geom.det_axis_init, e_y)</span>
+<span class="sd">        True</span>
+<span class="sd">        &gt;&gt;&gt; geom = Parallel2dGeometry(apart, dpart, det_pos_init=(0, -1))</span>
+<span class="sd">        &gt;&gt;&gt; np.allclose(geom.det_pos_init, -e_y)</span>
+<span class="sd">        True</span>
+<span class="sd">        &gt;&gt;&gt; np.allclose(geom.det_axis_init, -e_x)</span>
+<span class="sd">        True</span>
+
+<span class="sd">        The initial detector axis can also be set explicitly:</span>
+
+<span class="sd">        &gt;&gt;&gt; geom = Parallel2dGeometry(</span>
+<span class="sd">        ...     apart, dpart, det_pos_init=(0, -1), det_axis_init=(1, 0))</span>
+<span class="sd">        &gt;&gt;&gt; np.allclose(geom.det_pos_init, -e_y)</span>
+<span class="sd">        True</span>
+<span class="sd">        &gt;&gt;&gt; np.allclose(geom.det_axis_init, e_x)</span>
+<span class="sd">        True</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">default_det_pos_init</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_default_config</span><span class="p">[</span><span class="s1">&#39;det_pos_init&#39;</span><span class="p">]</span>
+        <span class="n">default_det_axis_init</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_default_config</span><span class="p">[</span><span class="s1">&#39;det_axis_init&#39;</span><span class="p">]</span>
+
+        <span class="c1"># Handle the initial coordinate system. We need to assign `None` to</span>
+        <span class="c1"># the vectors first in order to signalize to the `transform_system`</span>
+        <span class="c1"># utility that they should be transformed from default since they</span>
+        <span class="c1"># were not explicitly given.</span>
+        <span class="n">det_axis_init</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;det_axis_init&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+
+        <span class="c1"># Store some stuff for repr</span>
+        <span class="k">if</span> <span class="n">det_pos_init</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_det_pos_init_arg</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">det_pos_init</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_det_pos_init_arg</span> <span class="o">=</span> <span class="kc">None</span>
+
+        <span class="k">if</span> <span class="n">det_axis_init</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_det_axis_init_arg</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">det_axis_init</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_det_axis_init_arg</span> <span class="o">=</span> <span class="kc">None</span>
+
+        <span class="c1"># Compute the transformed system and the transition matrix. We</span>
+        <span class="c1"># transform only those vectors that were not explicitly given.</span>
+        <span class="n">vecs_to_transform</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">if</span> <span class="n">det_axis_init</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">vecs_to_transform</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">default_det_axis_init</span><span class="p">)</span>
+
+        <span class="n">transformed_vecs</span> <span class="o">=</span> <span class="n">transform_system</span><span class="p">(</span>
+            <span class="n">det_pos_init</span><span class="p">,</span> <span class="n">default_det_pos_init</span><span class="p">,</span> <span class="n">vecs_to_transform</span><span class="p">)</span>
+        <span class="n">transformed_vecs</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">transformed_vecs</span><span class="p">)</span>
+
+        <span class="n">det_pos_init</span> <span class="o">=</span> <span class="n">transformed_vecs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">det_axis_init</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">det_axis_init</span> <span class="o">=</span> <span class="n">transformed_vecs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="n">transformed_vecs</span> <span class="o">==</span> <span class="p">[]</span>
+
+        <span class="c1"># Translate the absolute vectors by the given translation</span>
+        <span class="n">translation</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;translation&#39;</span><span class="p">,</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">)),</span>
+                                 <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
+        <span class="n">det_pos_init</span> <span class="o">+=</span> <span class="n">translation</span>
+
+        <span class="c1"># Initialize stuff. Normalization of the detector axis happens in</span>
+        <span class="c1"># the detector class. `check_bounds` is needed for both detector</span>
+        <span class="c1"># and geometry.</span>
+        <span class="n">check_bounds</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;check_bounds&#39;</span><span class="p">,</span> <span class="kc">True</span><span class="p">)</span>
+        <span class="n">detector</span> <span class="o">=</span> <span class="n">Flat1dDetector</span><span class="p">(</span><span class="n">dpart</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="n">det_axis_init</span><span class="p">,</span>
+                                  <span class="n">check_bounds</span><span class="o">=</span><span class="n">check_bounds</span><span class="p">)</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">Parallel2dGeometry</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span>
+            <span class="n">ndim</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">apart</span><span class="o">=</span><span class="n">apart</span><span class="p">,</span> <span class="n">detector</span><span class="o">=</span><span class="n">detector</span><span class="p">,</span>
+            <span class="n">det_pos_init</span><span class="o">=</span><span class="n">det_pos_init</span><span class="p">,</span> <span class="n">translation</span><span class="o">=</span><span class="n">translation</span><span class="p">,</span>
+            <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">motion_partition</span><span class="o">.</span><span class="n">ndim</span> <span class="o">!=</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;`apart` dimension </span><span class="si">{}</span><span class="s1">, expected 1&#39;</span>
+                             <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">motion_partition</span><span class="o">.</span><span class="n">ndim</span><span class="p">))</span></div>
+
+<div class="viewcode-block" id="Parallel2dGeometry.frommatrix"><a class="viewcode-back" href="../../../../generated/odl.tomo.geometry.parallel.Parallel2dGeometry.frommatrix.html#odl.tomo.geometry.parallel.Parallel2dGeometry.frommatrix">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">frommatrix</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">apart</span><span class="p">,</span> <span class="n">dpart</span><span class="p">,</span> <span class="n">init_matrix</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Create an instance of `Parallel2dGeometry` using a matrix.</span>
+
+<span class="sd">        This alternative constructor uses a matrix to rotate and</span>
+<span class="sd">        translate the default configuration. It is most useful when</span>
+<span class="sd">        the transformation to be applied is already given as a matrix.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        apart : 1-dim. `RectPartition`</span>
+<span class="sd">            Partition of the angle interval.</span>
+<span class="sd">        dpart : 1-dim. `RectPartition`</span>
+<span class="sd">            Partition of the detector parameter interval.</span>
+<span class="sd">        init_matrix : `array_like`, shape ``(2, 2)`` or ``(2, 3)``, optional</span>
+<span class="sd">            Transformation matrix whose left ``(2, 2)`` block is multiplied</span>
+<span class="sd">            with the default ``det_pos_init`` and ``det_axis_init`` to</span>
+<span class="sd">            determine the new vectors. If present, the third column acts</span>
+<span class="sd">            as a translation after the initial transformation.</span>
+<span class="sd">            The resulting ``det_axis_init`` will be normalized.</span>
+<span class="sd">        kwargs :</span>
+<span class="sd">            Further keyword arguments passed to the class constructor.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        geometry : `Parallel2dGeometry`</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        --------</span>
+<span class="sd">        Mirror the second unit vector, creating a left-handed system:</span>
+
+<span class="sd">        &gt;&gt;&gt; apart = odl.uniform_partition(0, np.pi, 10)</span>
+<span class="sd">        &gt;&gt;&gt; dpart = odl.uniform_partition(-1, 1, 20)</span>
+<span class="sd">        &gt;&gt;&gt; matrix = np.array([[1, 0],</span>
+<span class="sd">        ...                    [0, -1]])</span>
+<span class="sd">        &gt;&gt;&gt; geom = Parallel2dGeometry.frommatrix(apart, dpart, matrix)</span>
+<span class="sd">        &gt;&gt;&gt; e_x, e_y = np.eye(2)  # standard unit vectors</span>
+<span class="sd">        &gt;&gt;&gt; np.allclose(geom.det_pos_init, -e_y)</span>
+<span class="sd">        True</span>
+<span class="sd">        &gt;&gt;&gt; np.allclose(geom.det_axis_init, e_x)</span>
+<span class="sd">        True</span>
+<span class="sd">        &gt;&gt;&gt; np.allclose(geom.translation, (0, 0))</span>
+<span class="sd">        True</span>
+
+<span class="sd">        Adding a translation with a third matrix column:</span>
+
+<span class="sd">        &gt;&gt;&gt; matrix = np.array([[1, 0, 1],</span>
+<span class="sd">        ...                    [0, -1, 1]])</span>
+<span class="sd">        &gt;&gt;&gt; geom = Parallel2dGeometry.frommatrix(apart, dpart, matrix)</span>
+<span class="sd">        &gt;&gt;&gt; np.allclose(geom.translation, (1, 1))</span>
+<span class="sd">        True</span>
+<span class="sd">        &gt;&gt;&gt; np.allclose(geom.det_pos_init, -e_y + (1, 1))</span>
+<span class="sd">        True</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># Get transformation and translation parts from `init_matrix`</span>
+        <span class="n">init_matrix</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">init_matrix</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">init_matrix</span><span class="o">.</span><span class="n">shape</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">((</span><span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">),</span> <span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">)):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;`matrix` must have shape (2, 2) or (2, 3), &#39;</span>
+                             <span class="s1">&#39;got array with shape </span><span class="si">{}</span><span class="s1">&#39;</span>
+                             <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">init_matrix</span><span class="o">.</span><span class="n">shape</span><span class="p">))</span>
+        <span class="n">trafo_matrix</span> <span class="o">=</span> <span class="n">init_matrix</span><span class="p">[:,</span> <span class="p">:</span><span class="mi">2</span><span class="p">]</span>
+        <span class="n">translation</span> <span class="o">=</span> <span class="n">init_matrix</span><span class="p">[:,</span> <span class="mi">2</span><span class="p">:]</span><span class="o">.</span><span class="n">squeeze</span><span class="p">()</span>
+
+        <span class="c1"># Transform the default vectors</span>
+        <span class="n">default_det_pos_init</span> <span class="o">=</span> <span class="bp">cls</span><span class="o">.</span><span class="n">_default_config</span><span class="p">[</span><span class="s1">&#39;det_pos_init&#39;</span><span class="p">]</span>
+        <span class="n">default_det_axis_init</span> <span class="o">=</span> <span class="bp">cls</span><span class="o">.</span><span class="n">_default_config</span><span class="p">[</span><span class="s1">&#39;det_axis_init&#39;</span><span class="p">]</span>
+        <span class="n">vecs_to_transform</span> <span class="o">=</span> <span class="p">[</span><span class="n">default_det_axis_init</span><span class="p">]</span>
+        <span class="n">transformed_vecs</span> <span class="o">=</span> <span class="n">transform_system</span><span class="p">(</span>
+            <span class="n">default_det_pos_init</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="n">vecs_to_transform</span><span class="p">,</span> <span class="n">matrix</span><span class="o">=</span><span class="n">trafo_matrix</span><span class="p">)</span>
+
+        <span class="c1"># Use the standard constructor with these vectors</span>
+        <span class="n">det_pos</span><span class="p">,</span> <span class="n">det_axis</span> <span class="o">=</span> <span class="n">transformed_vecs</span>
+        <span class="k">if</span> <span class="n">translation</span><span class="o">.</span><span class="n">size</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">kwargs</span><span class="p">[</span><span class="s1">&#39;translation&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">translation</span>
+
+        <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span><span class="n">apart</span><span class="p">,</span> <span class="n">dpart</span><span class="p">,</span> <span class="n">det_pos</span><span class="p">,</span>
+                   <span class="n">det_axis_init</span><span class="o">=</span><span class="n">det_axis</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">det_axis_init</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Detector axis at angle 0.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">detector</span><span class="o">.</span><span class="n">axis</span>
+
+<div class="viewcode-block" id="Parallel2dGeometry.det_axis"><a class="viewcode-back" href="../../../../generated/odl.tomo.geometry.parallel.Parallel2dGeometry.det_axis.html#odl.tomo.geometry.parallel.Parallel2dGeometry.det_axis">[docs]</a>    <span class="k">def</span> <span class="nf">det_axis</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">angle</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return the detector axis (axes) at ``angle``.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        angle : float or `array-like`</span>
+<span class="sd">            Angle(s) in radians describing the counter-clockwise</span>
+<span class="sd">            rotation of the detector.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        axis : `numpy.ndarray`</span>
+<span class="sd">            Unit vector(s) along which the detector is aligned.</span>
+<span class="sd">            If ``angle`` is a single parameter, the returned array has</span>
+<span class="sd">            shape ``(2,)``, otherwise ``angle.shape + (2,)``.</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        --------</span>
+<span class="sd">        Calling the method with a single angle produces a single vector:</span>
+
+<span class="sd">        &gt;&gt;&gt; apart = odl.uniform_partition(0, np.pi, 10)</span>
+<span class="sd">        &gt;&gt;&gt; dpart = odl.uniform_partition(-1, 1, 20)</span>
+<span class="sd">        &gt;&gt;&gt; geom = Parallel2dGeometry(apart, dpart)</span>
+<span class="sd">        &gt;&gt;&gt; geom.det_axis(0)</span>
+<span class="sd">        array([ 1.,  0.])</span>
+<span class="sd">        &gt;&gt;&gt; np.allclose(geom.det_axis(np.pi / 2), [0, 1])</span>
+<span class="sd">        True</span>
+
+<span class="sd">        The method is vectorized, i.e., it can be called with multiple</span>
+<span class="sd">        angles at once (or n-dimensional arrays of parameters):</span>
+
+<span class="sd">        &gt;&gt;&gt; np.allclose(geom.det_axis([0, np.pi / 2]), [[1, 0],</span>
+<span class="sd">        ...                                             [0, 1]])</span>
+<span class="sd">        True</span>
+<span class="sd">        &gt;&gt;&gt; geom.det_axis(np.zeros((4, 5))).shape</span>
+<span class="sd">        (4, 5, 2)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">rotation_matrix</span><span class="p">(</span><span class="n">angle</span><span class="p">)</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">det_axis_init</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Parallel2dGeometry.rotation_matrix"><a class="viewcode-back" href="../../../../generated/odl.tomo.geometry.parallel.Parallel2dGeometry.rotation_matrix.html#odl.tomo.geometry.parallel.Parallel2dGeometry.rotation_matrix">[docs]</a>    <span class="k">def</span> <span class="nf">rotation_matrix</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">angle</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return the rotation matrix to the system state at ``angle``.</span>
+
+<span class="sd">        For an angle ``phi``, the matrix is given by ::</span>
+
+<span class="sd">            rot(phi) = [[cos(phi), -sin(phi)],</span>
+<span class="sd">                        [sin(phi), cos(phi)]]</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        angle : float or `array-like`</span>
+<span class="sd">            Angle(s) in radians describing the counter-clockwise</span>
+<span class="sd">            rotation of the detector.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        rot : `numpy.ndarray`</span>
+<span class="sd">            The rotation matrix (or matrices) mapping vectors at the</span>
+<span class="sd">            initial state to the ones in the state defined by ``angle``.</span>
+<span class="sd">            The rotation is extrinsic, i.e., defined in the &quot;world&quot;</span>
+<span class="sd">            coordinate system.</span>
+<span class="sd">            If ``angle`` is a single parameter, the returned array has</span>
+<span class="sd">            shape ``(2, 2)``, otherwise ``angle.ndim + (2, 2)``.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">squeeze_out</span> <span class="o">=</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">shape</span><span class="p">(</span><span class="n">angle</span><span class="p">)</span> <span class="o">==</span> <span class="p">())</span>
+        <span class="n">angle</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">angle</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">,</span> <span class="n">copy</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">ndmin</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+        <span class="k">if</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">check_bounds</span> <span class="ow">and</span>
+                <span class="ow">not</span> <span class="n">is_inside_bounds</span><span class="p">(</span><span class="n">angle</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">motion_params</span><span class="p">)):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;`angle` </span><span class="si">{}</span><span class="s1"> not in the valid range </span><span class="si">{}</span><span class="s1">&#39;</span>
+                             <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">angle</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">motion_params</span><span class="p">))</span>
+
+        <span class="k">if</span> <span class="n">squeeze_out</span><span class="p">:</span>
+            <span class="n">matrix</span> <span class="o">=</span> <span class="n">euler_matrix</span><span class="p">(</span><span class="n">angle</span><span class="p">)</span><span class="o">.</span><span class="n">squeeze</span><span class="p">()</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">matrix</span> <span class="o">=</span> <span class="n">euler_matrix</span><span class="p">(</span><span class="n">angle</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">matrix</span></div>
+
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return ``repr(self)``.&quot;&quot;&quot;</span>
+        <span class="n">posargs</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">motion_partition</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">det_partition</span><span class="p">]</span>
+        <span class="n">optargs</span> <span class="o">=</span> <span class="p">[]</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">allclose</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">det_pos_init</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">translation</span><span class="p">,</span>
+                           <span class="bp">self</span><span class="o">.</span><span class="n">_default_config</span><span class="p">[</span><span class="s1">&#39;det_pos_init&#39;</span><span class="p">]):</span>
+            <span class="n">optargs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                <span class="p">[</span><span class="s1">&#39;det_pos_init&#39;</span><span class="p">,</span> <span class="n">array_str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">det_pos_init</span><span class="p">),</span> <span class="s1">&#39;&#39;</span><span class="p">])</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_det_axis_init_arg</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">optargs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                <span class="p">[</span><span class="s1">&#39;det_axis_init&#39;</span><span class="p">,</span> <span class="n">array_str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_det_axis_init_arg</span><span class="p">),</span> <span class="s1">&#39;&#39;</span><span class="p">])</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">array_equal</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">translation</span><span class="p">,</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">)):</span>
+            <span class="n">optargs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                <span class="p">[</span><span class="s1">&#39;translation&#39;</span><span class="p">,</span> <span class="n">array_str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">translation</span><span class="p">),</span> <span class="s1">&#39;&#39;</span><span class="p">])</span>
+
+        <span class="n">sig_str</span> <span class="o">=</span> <span class="n">signature_string</span><span class="p">(</span><span class="n">posargs</span><span class="p">,</span> <span class="n">optargs</span><span class="p">,</span> <span class="n">sep</span><span class="o">=</span><span class="s1">&#39;,</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="s1">&#39;</span><span class="si">{}</span><span class="s1">(</span><span class="se">\n</span><span class="si">{}</span><span class="se">\n</span><span class="s1">)&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="p">,</span> <span class="n">indent</span><span class="p">(</span><span class="n">sig_str</span><span class="p">))</span>
+
+<div class="viewcode-block" id="Parallel2dGeometry.__getitem__"><a class="viewcode-back" href="../../../../generated/odl.tomo.geometry.parallel.Parallel2dGeometry.__getitem__.html#odl.tomo.geometry.parallel.Parallel2dGeometry.__getitem__">[docs]</a>    <span class="k">def</span> <span class="fm">__getitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">indices</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return self[slc]</span>
+
+<span class="sd">        This is defined by::</span>
+
+<span class="sd">            self[indices].partition == self.partition[indices]</span>
+
+<span class="sd">        where all other parameters are the same.</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        --------</span>
+<span class="sd">        &gt;&gt;&gt; apart = odl.uniform_partition(0, 4, 4)</span>
+<span class="sd">        &gt;&gt;&gt; dpart = odl.uniform_partition(-1, 1, 20)</span>
+<span class="sd">        &gt;&gt;&gt; geom = odl.tomo.Parallel2dGeometry(apart, dpart)</span>
+
+<span class="sd">        Extract sub-geometry with every second angle:</span>
+
+<span class="sd">        &gt;&gt;&gt; geom[::2]</span>
+<span class="sd">        Parallel2dGeometry(</span>
+<span class="sd">            nonuniform_partition(</span>
+<span class="sd">                [ 0.5,  2.5],</span>
+<span class="sd">                min_pt=0.0, max_pt=4.0</span>
+<span class="sd">            ),</span>
+<span class="sd">            uniform_partition(-1.0, 1.0, 20)</span>
+<span class="sd">        )</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">part</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">partition</span><span class="p">[</span><span class="n">indices</span><span class="p">]</span>
+        <span class="n">apart</span> <span class="o">=</span> <span class="n">part</span><span class="o">.</span><span class="n">byaxis</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">dpart</span> <span class="o">=</span> <span class="n">part</span><span class="o">.</span><span class="n">byaxis</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+
+        <span class="k">return</span> <span class="n">Parallel2dGeometry</span><span class="p">(</span><span class="n">apart</span><span class="p">,</span> <span class="n">dpart</span><span class="p">,</span>
+                                  <span class="n">det_pos_init</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">det_pos_init</span><span class="p">,</span>
+                                  <span class="n">det_axis_init</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_det_axis_init_arg</span><span class="p">,</span>
+                                  <span class="n">translation</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">translation</span><span class="p">)</span></div></div>
+
+
+<div class="viewcode-block" id="Parallel3dEulerGeometry"><a class="viewcode-back" href="../../../../generated/odl.tomo.geometry.parallel.Parallel3dEulerGeometry.html#odl.tomo.geometry.parallel.Parallel3dEulerGeometry">[docs]</a><span class="k">class</span> <span class="nc">Parallel3dEulerGeometry</span><span class="p">(</span><span class="n">ParallelBeamGeometry</span><span class="p">):</span>
+
+    <span class="sd">&quot;&quot;&quot;Parallel beam geometry in 3d.</span>
+
+<span class="sd">    The motion parameters are two or three Euler angles, and the detector</span>
+<span class="sd">    is flat and two-dimensional.</span>
+
+<span class="sd">    In the standard configuration, the detector reference point starts</span>
+<span class="sd">    at ``(0, 1, 0)``, and the initial detector axes are</span>
+<span class="sd">    ``[(1, 0, 0), (0, 0, 1)]``.</span>
+
+<span class="sd">    For details, check `the online docs</span>
+<span class="sd">    &lt;https://odlgroup.github.io/odl/guide/geometry_guide.html&gt;`_.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">_default_config</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">det_pos_init</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span>
+                           <span class="n">det_axes_init</span><span class="o">=</span><span class="p">((</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">)))</span>
+
+<div class="viewcode-block" id="Parallel3dEulerGeometry.__init__"><a class="viewcode-back" href="../../../../generated/odl.tomo.geometry.parallel.Parallel3dEulerGeometry.html#odl.tomo.geometry.parallel.Parallel3dEulerGeometry.__init__">[docs]</a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">apart</span><span class="p">,</span> <span class="n">dpart</span><span class="p">,</span> <span class="n">det_pos_init</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Initialize a new instance.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        apart : 2- or 3-dim. `RectPartition`</span>
+<span class="sd">            Partition of the angle parameter set.</span>
+<span class="sd">        dpart : 2-dim. `RectPartition`</span>
+<span class="sd">            Partition of the detector parameter set.</span>
+<span class="sd">        det_pos_init : `array-like`, shape ``(3,)``, optional</span>
+<span class="sd">            Initial position of the detector reference point.</span>
+
+<span class="sd">        Other Parameters</span>
+<span class="sd">        ----------------</span>
+<span class="sd">        det_axes_init : 2-tuple of `array-like`&#39;s (shape ``(3,)``), optional</span>
+<span class="sd">            Initial axes defining the detector orientation. The default</span>
+<span class="sd">            depends on ``det_pos_init``, see Notes.</span>
+<span class="sd">        translation : `array-like`, shape ``(3,)``, optional</span>
+<span class="sd">            Global translation of the geometry. This is added last in any</span>
+<span class="sd">            method that computes an absolute vector, e.g., `det_refpoint`,</span>
+<span class="sd">            and also shifts the center of rotation.</span>
+<span class="sd">            Default: ``(0, 0, 0)``</span>
+<span class="sd">        check_bounds : bool, optional</span>
+<span class="sd">            If ``True``, methods computing vectors check input arguments.</span>
+<span class="sd">            Checks are vectorized and add only a small overhead.</span>
+<span class="sd">            Default: ``True``</span>
+
+<span class="sd">        Notes</span>
+<span class="sd">        -----</span>
+<span class="sd">        In the default configuration, the initial detector reference point</span>
+<span class="sd">        is ``(0, 1, 0)``, and the initial detector axes are</span>
+<span class="sd">        ``[(1, 0, 0), (0, 0, 1)]``. If a different ``det_pos_init`` is</span>
+<span class="sd">        chosen, the new default axes are given as a rotation of the original</span>
+<span class="sd">        ones by a matrix that transforms ``(0, 1, 0)`` to the new</span>
+<span class="sd">        (normalized) ``det_pos_init``. This matrix is calculated with the</span>
+<span class="sd">        `rotation_matrix_from_to` function. Expressed in code, we have ::</span>
+
+<span class="sd">            init_rot = rotation_matrix_from_to((0, 1, 0), det_pos_init)</span>
+<span class="sd">            det_axes_init[0] = init_rot.dot((1, 0, 0))</span>
+<span class="sd">            det_axes_init[1] = init_rot.dot((0, 0, 1))</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        --------</span>
+<span class="sd">        Initialization with default parameters and 2 Euler angles:</span>
+
+<span class="sd">        &gt;&gt;&gt; apart = odl.uniform_partition([0, 0], [np.pi, 2 * np.pi],</span>
+<span class="sd">        ...                               (10, 20))</span>
+<span class="sd">        &gt;&gt;&gt; dpart = odl.uniform_partition([-1, -1], [1, 1], (20, 20))</span>
+<span class="sd">        &gt;&gt;&gt; geom = Parallel3dEulerGeometry(apart, dpart)</span>
+<span class="sd">        &gt;&gt;&gt; geom.det_refpoint([0, 0])</span>
+<span class="sd">        array([ 0.,  1.,  0.])</span>
+<span class="sd">        &gt;&gt;&gt; geom.det_point_position([0, 0], [-1, 1])</span>
+<span class="sd">        array([-1.,  1.,  1.])</span>
+
+<span class="sd">        Checking the default orientation:</span>
+
+<span class="sd">        &gt;&gt;&gt; e_x, e_y, e_z = np.eye(3)  # standard unit vectors</span>
+<span class="sd">        &gt;&gt;&gt; np.allclose(geom.det_pos_init, e_y)</span>
+<span class="sd">        True</span>
+<span class="sd">        &gt;&gt;&gt; np.allclose(geom.det_axes_init, (e_x, e_z))</span>
+<span class="sd">        True</span>
+
+<span class="sd">        Specifying an initial detector position by default rotates the</span>
+<span class="sd">        standard configuration to this position:</span>
+
+<span class="sd">        &gt;&gt;&gt; geom = Parallel3dEulerGeometry(apart, dpart,</span>
+<span class="sd">        ...                                det_pos_init=(1, 0, 0))</span>
+<span class="sd">        &gt;&gt;&gt; np.allclose(geom.det_pos_init, e_x)</span>
+<span class="sd">        True</span>
+<span class="sd">        &gt;&gt;&gt; np.allclose(geom.det_axes_init, (-e_y, e_z))</span>
+<span class="sd">        True</span>
+<span class="sd">        &gt;&gt;&gt; geom = Parallel3dEulerGeometry(apart, dpart,</span>
+<span class="sd">        ...                                det_pos_init=(0, 0, 1))</span>
+<span class="sd">        &gt;&gt;&gt; np.allclose(geom.det_pos_init, e_z)</span>
+<span class="sd">        True</span>
+<span class="sd">        &gt;&gt;&gt; np.allclose(geom.det_axes_init, (e_x, -e_y))</span>
+<span class="sd">        True</span>
+
+<span class="sd">        The initial detector axes can also be set explicitly:</span>
+
+<span class="sd">        &gt;&gt;&gt; geom = Parallel3dEulerGeometry(</span>
+<span class="sd">        ...     apart, dpart, det_pos_init=(-1, 0, 0),</span>
+<span class="sd">        ...     det_axes_init=((0, 1, 0), (0, 0, 1)))</span>
+<span class="sd">        &gt;&gt;&gt; np.allclose(geom.det_pos_init, -e_x)</span>
+<span class="sd">        True</span>
+<span class="sd">        &gt;&gt;&gt; np.allclose(geom.det_axes_init, (e_y, e_z))</span>
+<span class="sd">        True</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">default_det_pos_init</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_default_config</span><span class="p">[</span><span class="s1">&#39;det_pos_init&#39;</span><span class="p">]</span>
+        <span class="n">default_det_axes_init</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_default_config</span><span class="p">[</span><span class="s1">&#39;det_axes_init&#39;</span><span class="p">]</span>
+
+        <span class="c1"># Handle the initial coordinate system. We need to assign `None` to</span>
+        <span class="c1"># the vectors first in order to signalize to the `transform_system`</span>
+        <span class="c1"># utility that they should be transformed from default since they</span>
+        <span class="c1"># were not explicitly given.</span>
+        <span class="n">det_axes_init</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;det_axes_init&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+
+        <span class="c1"># Store some stuff for repr</span>
+        <span class="k">if</span> <span class="n">det_axes_init</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_det_axes_init_arg</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span>
+                <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span> <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="n">det_axes_init</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_det_axes_init_arg</span> <span class="o">=</span> <span class="kc">None</span>
+
+        <span class="c1"># Compute the transformed system and the transition matrix. We</span>
+        <span class="c1"># transform only those vectors that were not explicitly given.</span>
+        <span class="n">vecs_to_transform</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">if</span> <span class="n">det_axes_init</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">vecs_to_transform</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">default_det_axes_init</span><span class="p">)</span>
+
+        <span class="n">transformed_vecs</span> <span class="o">=</span> <span class="n">transform_system</span><span class="p">(</span>
+            <span class="n">det_pos_init</span><span class="p">,</span> <span class="n">default_det_pos_init</span><span class="p">,</span> <span class="n">vecs_to_transform</span><span class="p">)</span>
+        <span class="n">transformed_vecs</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">transformed_vecs</span><span class="p">)</span>
+
+        <span class="n">det_pos_init</span> <span class="o">=</span> <span class="n">transformed_vecs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">det_axes_init</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">det_axes_init</span> <span class="o">=</span> <span class="p">(</span><span class="n">transformed_vecs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="mi">0</span><span class="p">),</span> <span class="n">transformed_vecs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="mi">0</span><span class="p">))</span>
+        <span class="k">assert</span> <span class="n">transformed_vecs</span> <span class="o">==</span> <span class="p">[]</span>
+
+        <span class="c1"># Translate the absolute vectors by the given translation</span>
+        <span class="n">translation</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;translation&#39;</span><span class="p">,</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">)),</span>
+                                 <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
+        <span class="n">det_pos_init</span> <span class="o">+=</span> <span class="n">translation</span>
+
+        <span class="c1"># Initialize stuff. Normalization of the detector axis happens in</span>
+        <span class="c1"># the detector class. `check_bounds` is needed for both detector</span>
+        <span class="c1"># and geometry.</span>
+        <span class="n">check_bounds</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;check_bounds&#39;</span><span class="p">,</span> <span class="kc">True</span><span class="p">)</span>
+        <span class="n">detector</span> <span class="o">=</span> <span class="n">Flat2dDetector</span><span class="p">(</span><span class="n">dpart</span><span class="p">,</span> <span class="n">axes</span><span class="o">=</span><span class="n">det_axes_init</span><span class="p">,</span>
+                                  <span class="n">check_bounds</span><span class="o">=</span><span class="n">check_bounds</span><span class="p">)</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">Parallel3dEulerGeometry</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span>
+            <span class="n">ndim</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">apart</span><span class="o">=</span><span class="n">apart</span><span class="p">,</span> <span class="n">detector</span><span class="o">=</span><span class="n">detector</span><span class="p">,</span>
+            <span class="n">det_pos_init</span><span class="o">=</span><span class="n">det_pos_init</span><span class="p">,</span> <span class="n">translation</span><span class="o">=</span><span class="n">translation</span><span class="p">,</span>
+            <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">motion_partition</span><span class="o">.</span><span class="n">ndim</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;`apart` has dimension </span><span class="si">{}</span><span class="s1">, expected &#39;</span>
+                             <span class="s1">&#39;2 or 3&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">motion_partition</span><span class="o">.</span><span class="n">ndim</span><span class="p">))</span></div>
+
+<div class="viewcode-block" id="Parallel3dEulerGeometry.frommatrix"><a class="viewcode-back" href="../../../../generated/odl.tomo.geometry.parallel.Parallel3dEulerGeometry.frommatrix.html#odl.tomo.geometry.parallel.Parallel3dEulerGeometry.frommatrix">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">frommatrix</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">apart</span><span class="p">,</span> <span class="n">dpart</span><span class="p">,</span> <span class="n">init_matrix</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Create an instance of `Parallel3dEulerGeometry` using a matrix.</span>
+
+<span class="sd">        This alternative constructor uses a matrix to rotate and</span>
+<span class="sd">        translate the default configuration. It is most useful when</span>
+<span class="sd">        the transformation to be applied is already given as a matrix.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        apart : 2- or 3-dim. `RectPartition`</span>
+<span class="sd">            Partition of the parameter set consisting of 2 or 3</span>
+<span class="sd">            Euler angles.</span>
+<span class="sd">        dpart : 2-dim. `RectPartition`</span>
+<span class="sd">            Partition of the detector parameter set.</span>
+<span class="sd">        init_matrix : `array_like`, shape ``(3, 3)`` or ``(3, 4)``, optional</span>
+<span class="sd">            Transformation matrix whose left ``(3, 3)`` block is multiplied</span>
+<span class="sd">            with the default ``det_pos_init`` and ``det_axes_init`` to</span>
+<span class="sd">            determine the new vectors. If present, the fourth column acts</span>
+<span class="sd">            as a translation after the initial transformation.</span>
+<span class="sd">            The resulting ``det_axes_init`` will be normalized.</span>
+<span class="sd">        kwargs :</span>
+<span class="sd">            Further keyword arguments passed to the class constructor.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        geometry : `Parallel3dEulerGeometry`</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        --------</span>
+<span class="sd">        Map unit vectors ``e_x -&gt; e_z`` and ``e_z -&gt; -e_x``, keeping the</span>
+<span class="sd">        right-handedness:</span>
+
+<span class="sd">        &gt;&gt;&gt; apart = odl.uniform_partition([0, 0], [np.pi, 2 * np.pi],</span>
+<span class="sd">        ...                               (10, 20))</span>
+<span class="sd">        &gt;&gt;&gt; dpart = odl.uniform_partition([-1, -1], [1, 1], (20, 20))</span>
+<span class="sd">        &gt;&gt;&gt; matrix = np.array([[0, 0, -1],</span>
+<span class="sd">        ...                    [0, 1, 0],</span>
+<span class="sd">        ...                    [1, 0, 0]])</span>
+<span class="sd">        &gt;&gt;&gt; geom = Parallel3dEulerGeometry.frommatrix(</span>
+<span class="sd">        ...     apart, dpart, init_matrix=matrix)</span>
+<span class="sd">        &gt;&gt;&gt; geom.det_pos_init</span>
+<span class="sd">        array([ 0.,  1.,  0.])</span>
+<span class="sd">        &gt;&gt;&gt; geom.det_axes_init</span>
+<span class="sd">        array([[ 0.,  0.,  1.],</span>
+<span class="sd">               [-1.,  0.,  0.]])</span>
+
+<span class="sd">        Adding a translation with a fourth matrix column:</span>
+
+<span class="sd">        &gt;&gt;&gt; matrix = np.array([[0, 0, -1, 0],</span>
+<span class="sd">        ...                    [0, 1, 0, 1],</span>
+<span class="sd">        ...                    [1, 0, 0, 1]])</span>
+<span class="sd">        &gt;&gt;&gt; geom = Parallel3dEulerGeometry.frommatrix(apart, dpart, matrix)</span>
+<span class="sd">        &gt;&gt;&gt; geom.translation</span>
+<span class="sd">        array([ 0.,  1.,  1.])</span>
+<span class="sd">        &gt;&gt;&gt; geom.det_pos_init  # (0, 1, 0) + (0, 1, 1)</span>
+<span class="sd">        array([ 0.,  2.,  1.])</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># Get transformation and translation parts from `init_matrix`</span>
+        <span class="n">init_matrix</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">init_matrix</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">init_matrix</span><span class="o">.</span><span class="n">shape</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">((</span><span class="mi">3</span><span class="p">,</span> <span class="mi">3</span><span class="p">),</span> <span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">)):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;`matrix` must have shape (3, 3) or (3, 4), &#39;</span>
+                             <span class="s1">&#39;got array with shape </span><span class="si">{}</span><span class="s1">&#39;</span>
+                             <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">init_matrix</span><span class="o">.</span><span class="n">shape</span><span class="p">))</span>
+        <span class="n">trafo_matrix</span> <span class="o">=</span> <span class="n">init_matrix</span><span class="p">[:,</span> <span class="p">:</span><span class="mi">3</span><span class="p">]</span>
+        <span class="n">translation</span> <span class="o">=</span> <span class="n">init_matrix</span><span class="p">[:,</span> <span class="mi">3</span><span class="p">:]</span><span class="o">.</span><span class="n">squeeze</span><span class="p">()</span>
+
+        <span class="c1"># Transform the default vectors</span>
+        <span class="n">default_det_pos_init</span> <span class="o">=</span> <span class="bp">cls</span><span class="o">.</span><span class="n">_default_config</span><span class="p">[</span><span class="s1">&#39;det_pos_init&#39;</span><span class="p">]</span>
+        <span class="n">default_det_axes_init</span> <span class="o">=</span> <span class="bp">cls</span><span class="o">.</span><span class="n">_default_config</span><span class="p">[</span><span class="s1">&#39;det_axes_init&#39;</span><span class="p">]</span>
+        <span class="n">vecs_to_transform</span> <span class="o">=</span> <span class="n">default_det_axes_init</span>
+        <span class="n">transformed_vecs</span> <span class="o">=</span> <span class="n">transform_system</span><span class="p">(</span>
+            <span class="n">default_det_pos_init</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="n">vecs_to_transform</span><span class="p">,</span> <span class="n">matrix</span><span class="o">=</span><span class="n">trafo_matrix</span><span class="p">)</span>
+
+        <span class="c1"># Use the standard constructor with these vectors</span>
+        <span class="n">det_pos</span><span class="p">,</span> <span class="n">det_axis_0</span><span class="p">,</span> <span class="n">det_axis_1</span> <span class="o">=</span> <span class="n">transformed_vecs</span>
+        <span class="k">if</span> <span class="n">translation</span><span class="o">.</span><span class="n">size</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">kwargs</span><span class="p">[</span><span class="s1">&#39;translation&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">translation</span>
+
+        <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span><span class="n">apart</span><span class="p">,</span> <span class="n">dpart</span><span class="p">,</span> <span class="n">det_pos</span><span class="p">,</span>
+                   <span class="n">det_axes_init</span><span class="o">=</span><span class="p">[</span><span class="n">det_axis_0</span><span class="p">,</span> <span class="n">det_axis_1</span><span class="p">],</span>
+                   <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">det_axes_init</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Initial axes of the detector.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">detector</span><span class="o">.</span><span class="n">axes</span>
+
+<div class="viewcode-block" id="Parallel3dEulerGeometry.det_axes"><a class="viewcode-back" href="../../../../generated/odl.tomo.geometry.parallel.Parallel3dEulerGeometry.det_axes.html#odl.tomo.geometry.parallel.Parallel3dEulerGeometry.det_axes">[docs]</a>    <span class="k">def</span> <span class="nf">det_axes</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">angles</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return the detector axes tuple at ``angles``.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        angles : `array-like` or sequence</span>
+<span class="sd">            Euler angles in radians describing the rotation of the detector.</span>
+<span class="sd">            The length of the provided argument (along the first axis in</span>
+<span class="sd">            case of an array) must be equal to the number of Euler angles</span>
+<span class="sd">            in this geometry.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        axes : `numpy.ndarray`</span>
+<span class="sd">            Unit vector(s) along which the detector is aligned.</span>
+<span class="sd">            If ``angles`` is a single pair (or triplet) of Euler angles,</span>
+<span class="sd">            the returned array has shape ``(2, 3)``, otherwise</span>
+<span class="sd">            ``broadcast(*angles).shape + (2, 3)``.</span>
+
+<span class="sd">        Notes</span>
+<span class="sd">        -----</span>
+<span class="sd">        To get an array that enumerates the detector axes in the first</span>
+<span class="sd">        dimension, move the second-to-last axis to the first position:</span>
+
+<span class="sd">            axes = det_axes(angle)</span>
+<span class="sd">            axes_enumeration = np.moveaxis(deriv, -2, 0)</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        --------</span>
+<span class="sd">        Calling the method with a single set of angles produces a</span>
+<span class="sd">        ``(2, 3)`` array of vertically stacked vectors:</span>
+
+<span class="sd">        &gt;&gt;&gt; apart = odl.uniform_partition([0, 0], [np.pi, 2 * np.pi],</span>
+<span class="sd">        ...                               (10, 20))</span>
+<span class="sd">        &gt;&gt;&gt; dpart = odl.uniform_partition([-1, -1], [1, 1], (20, 20))</span>
+<span class="sd">        &gt;&gt;&gt; geom = Parallel3dEulerGeometry(apart, dpart)</span>
+<span class="sd">        &gt;&gt;&gt; geom.det_axes([0, 0])</span>
+<span class="sd">        array([[ 1.,  0.,  0.],</span>
+<span class="sd">               [ 0.,  0.,  1.]])</span>
+<span class="sd">        &gt;&gt;&gt; np.allclose(geom.det_axes([np.pi / 2, 0]), [[0, 1, 0],</span>
+<span class="sd">        ...                                             [0, 0, 1]])</span>
+<span class="sd">        True</span>
+
+<span class="sd">        The method is vectorized, i.e., it can be called with multiple</span>
+<span class="sd">        angle parameters at once. Each of the angle arrays can have</span>
+<span class="sd">        different shapes and will be broadcast against each other to</span>
+<span class="sd">        determine the final shape:</span>
+
+<span class="sd">        &gt;&gt;&gt; # The first axis enumerates the angles</span>
+<span class="sd">        &gt;&gt;&gt; np.allclose(geom.det_axes(([0, np.pi / 2], [0, 0])),</span>
+<span class="sd">        ...             [[[1, 0, 0],</span>
+<span class="sd">        ...               [0, 0, 1]],</span>
+<span class="sd">        ...              [[0, 1, 0],</span>
+<span class="sd">        ...               [0, 0, 1]]])</span>
+<span class="sd">        True</span>
+<span class="sd">        &gt;&gt;&gt; # Pairs of Euler angles in a (4, 5) array each</span>
+<span class="sd">        &gt;&gt;&gt; geom.det_axes((np.zeros((4, 5)), np.zeros((4, 5)))).shape</span>
+<span class="sd">        (4, 5, 2, 3)</span>
+<span class="sd">        &gt;&gt;&gt; # Using broadcasting for &quot;outer product&quot; type result</span>
+<span class="sd">        &gt;&gt;&gt; geom.det_axes((np.zeros((4, 1)), np.zeros((1, 5)))).shape</span>
+<span class="sd">        (4, 5, 2, 3)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># Transpose to take dot along axis 1</span>
+        <span class="n">axes</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">rotation_matrix</span><span class="p">(</span><span class="n">angles</span><span class="p">)</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">det_axes_init</span><span class="o">.</span><span class="n">T</span><span class="p">)</span>
+        <span class="c1"># `axes` has shape (a, 3, 2), need to roll the last dimensions</span>
+        <span class="c1"># to the second to last place</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">rollaxis</span><span class="p">(</span><span class="n">axes</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">2</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Parallel3dEulerGeometry.rotation_matrix"><a class="viewcode-back" href="../../../../generated/odl.tomo.geometry.parallel.Parallel3dEulerGeometry.rotation_matrix.html#odl.tomo.geometry.parallel.Parallel3dEulerGeometry.rotation_matrix">[docs]</a>    <span class="k">def</span> <span class="nf">rotation_matrix</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">angles</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return the rotation matrix to the system state at ``angles``.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        angles : `array-like` or sequence</span>
+<span class="sd">            Euler angles in radians describing the rotation of the detector.</span>
+<span class="sd">            The length of the provided argument (along the first axis in</span>
+<span class="sd">            case of an array) must be equal to the number of Euler angles</span>
+<span class="sd">            in this geometry.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        rot : `numpy.ndarray`</span>
+<span class="sd">            Rotation matrix (or matrices) mapping vectors at the</span>
+<span class="sd">            initial state to the ones in the state defined by ``angles``.</span>
+<span class="sd">            The rotation is extrinsic, i.e., defined in the &quot;world&quot;</span>
+<span class="sd">            coordinate system.</span>
+<span class="sd">            If ``angles`` is a single pair (or triplet) of Euler angles,</span>
+<span class="sd">            an array of shape ``(3, 3)`` representing a single matrix is</span>
+<span class="sd">            returned. Otherwise, the shape of the returned array is</span>
+<span class="sd">            ``broadcast(*angles).shape + (3, 3)``.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">squeeze_out</span> <span class="o">=</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">broadcast</span><span class="p">(</span><span class="o">*</span><span class="n">angles</span><span class="p">)</span><span class="o">.</span><span class="n">shape</span> <span class="o">==</span> <span class="p">())</span>
+        <span class="n">angles_in</span> <span class="o">=</span> <span class="n">angles</span>
+        <span class="n">angles</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">angle</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">,</span> <span class="n">copy</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">ndmin</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+                       <span class="k">for</span> <span class="n">angle</span> <span class="ow">in</span> <span class="n">angles</span><span class="p">)</span>
+        <span class="k">if</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">check_bounds</span> <span class="ow">and</span>
+                <span class="ow">not</span> <span class="n">is_inside_bounds</span><span class="p">(</span><span class="n">angles</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">motion_params</span><span class="p">)):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;`angles` </span><span class="si">{}</span><span class="s1"> not in the valid range &#39;</span>
+                             <span class="s1">&#39;</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">angles_in</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">motion_params</span><span class="p">))</span>
+
+        <span class="n">matrix</span> <span class="o">=</span> <span class="n">euler_matrix</span><span class="p">(</span><span class="o">*</span><span class="n">angles</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">squeeze_out</span><span class="p">:</span>
+            <span class="n">matrix</span> <span class="o">=</span> <span class="n">matrix</span><span class="o">.</span><span class="n">squeeze</span><span class="p">()</span>
+
+        <span class="k">return</span> <span class="n">matrix</span></div>
+
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return ``repr(self)``.&quot;&quot;&quot;</span>
+        <span class="n">posargs</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">motion_partition</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">det_partition</span><span class="p">]</span>
+        <span class="n">optargs</span> <span class="o">=</span> <span class="p">[]</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">allclose</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">det_pos_init</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">translation</span><span class="p">,</span>
+                           <span class="bp">self</span><span class="o">.</span><span class="n">_default_config</span><span class="p">[</span><span class="s1">&#39;det_pos_init&#39;</span><span class="p">]):</span>
+            <span class="n">optargs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                <span class="p">[</span><span class="s1">&#39;det_pos_init&#39;</span><span class="p">,</span> <span class="n">array_str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">det_pos_init</span><span class="p">),</span> <span class="s1">&#39;&#39;</span><span class="p">])</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_det_axes_init_arg</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">optargs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                <span class="p">[(</span><span class="s1">&#39;det_axes_init&#39;</span><span class="p">,</span>
+                  <span class="nb">tuple</span><span class="p">(</span><span class="n">array_str</span><span class="p">(</span><span class="n">a</span><span class="p">)</span> <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_det_axes_init_arg</span><span class="p">),</span>
+                  <span class="kc">None</span><span class="p">)])</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">array_equal</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">translation</span><span class="p">,</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">)):</span>
+            <span class="n">optargs</span><span class="o">.</span><span class="n">append</span><span class="p">([</span><span class="s1">&#39;translation&#39;</span><span class="p">,</span> <span class="n">array_str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">translation</span><span class="p">),</span> <span class="s1">&#39;&#39;</span><span class="p">])</span>
+
+        <span class="n">sig_str</span> <span class="o">=</span> <span class="n">signature_string</span><span class="p">(</span><span class="n">posargs</span><span class="p">,</span> <span class="n">optargs</span><span class="p">,</span> <span class="n">sep</span><span class="o">=</span><span class="s1">&#39;,</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="s1">&#39;</span><span class="si">{}</span><span class="s1">(</span><span class="se">\n</span><span class="si">{}</span><span class="se">\n</span><span class="s1">)&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="p">,</span> <span class="n">indent</span><span class="p">(</span><span class="n">sig_str</span><span class="p">))</span></div>
+
+
+<div class="viewcode-block" id="Parallel3dAxisGeometry"><a class="viewcode-back" href="../../../../generated/odl.tomo.geometry.parallel.Parallel3dAxisGeometry.html#odl.tomo.geometry.parallel.Parallel3dAxisGeometry">[docs]</a><span class="k">class</span> <span class="nc">Parallel3dAxisGeometry</span><span class="p">(</span><span class="n">ParallelBeamGeometry</span><span class="p">,</span> <span class="n">AxisOrientedGeometry</span><span class="p">):</span>
+
+    <span class="sd">&quot;&quot;&quot;Parallel beam geometry in 3d with single rotation axis.</span>
+
+<span class="sd">    The motion parameter is the rotation angle around the specified</span>
+<span class="sd">    axis, and the detector is a flat 2d detector perpendicular to the</span>
+<span class="sd">    ray direction.</span>
+
+<span class="sd">    In the standard configuration, the rotation axis is ``(0, 0, 1)``,</span>
+<span class="sd">    the detector reference point starts at ``(0, 1, 0)``, and the</span>
+<span class="sd">    initial detector axes are ``[(1, 0, 0), (0, 0, 1)]``.</span>
+
+<span class="sd">    For details, check `the online docs</span>
+<span class="sd">    &lt;https://odlgroup.github.io/odl/guide/geometry_guide.html&gt;`_.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">_default_config</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span>
+                           <span class="n">det_pos_init</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span>
+                           <span class="n">det_axes_init</span><span class="o">=</span><span class="p">((</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">)))</span>
+
+<div class="viewcode-block" id="Parallel3dAxisGeometry.__init__"><a class="viewcode-back" href="../../../../generated/odl.tomo.geometry.parallel.Parallel3dAxisGeometry.html#odl.tomo.geometry.parallel.Parallel3dAxisGeometry.__init__">[docs]</a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">apart</span><span class="p">,</span> <span class="n">dpart</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Initialize a new instance.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        apart : 1-dim. `RectPartition`</span>
+<span class="sd">            Partition of the angle interval.</span>
+<span class="sd">        dpart : 2-dim. `RectPartition`</span>
+<span class="sd">            Partition of the detector parameter rectangle.</span>
+<span class="sd">        axis : `array-like`, shape ``(3,)``, optional</span>
+<span class="sd">            Vector defining the fixed rotation axis of this geometry.</span>
+
+<span class="sd">        Other Parameters</span>
+<span class="sd">        ----------------</span>
+<span class="sd">        det_pos_init : `array-like`, shape ``(3,)``, optional</span>
+<span class="sd">            Initial position of the detector reference point.</span>
+<span class="sd">            The default depends on ``axis``, see Notes.</span>
+<span class="sd">        det_axes_init : 2-tuple of `array-like`&#39;s (shape ``(3,)``), optional</span>
+<span class="sd">            Initial axes defining the detector orientation. The default</span>
+<span class="sd">            depends on ``axis``, see Notes.</span>
+<span class="sd">        translation : `array-like`, shape ``(3,)``, optional</span>
+<span class="sd">            Global translation of the geometry. This is added last in any</span>
+<span class="sd">            method that computes an absolute vector, e.g., `det_refpoint`,</span>
+<span class="sd">            and also shifts the axis of rotation.</span>
+<span class="sd">            Default: ``(0, 0, 0)``</span>
+<span class="sd">        check_bounds : bool, optional</span>
+<span class="sd">            If ``True``, methods computing vectors check input arguments.</span>
+<span class="sd">            Checks are vectorized and add only a small overhead.</span>
+<span class="sd">            Default: ``True``</span>
+
+<span class="sd">        Notes</span>
+<span class="sd">        -----</span>
+<span class="sd">        In the default configuration, the rotation axis is ``(0, 0, 1)``,</span>
+<span class="sd">        the initial detector reference point position is ``(0, 1, 0)``,</span>
+<span class="sd">        and the default detector axes are ``[(1, 0, 0), (0, 0, 1)]``.</span>
+<span class="sd">        If a different ``axis`` is provided, the new default initial</span>
+<span class="sd">        position and the new default axes are the computed by rotating</span>
+<span class="sd">        the original ones by a matrix that transforms ``(0, 0, 1)`` to the</span>
+<span class="sd">        new (normalized) ``axis``. This matrix is calculated with the</span>
+<span class="sd">        `rotation_matrix_from_to` function. Expressed in code, we have ::</span>
+
+<span class="sd">            init_rot = rotation_matrix_from_to((0, 0, 1), axis)</span>
+<span class="sd">            det_pos_init = init_rot.dot((0, 1, 0))</span>
+<span class="sd">            det_axes_init[0] = init_rot.dot((1, 0, 0))</span>
+<span class="sd">            det_axes_init[1] = init_rot.dot((0, 0, 1))</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        --------</span>
+<span class="sd">        Initialization with default parameters:</span>
+
+<span class="sd">        &gt;&gt;&gt; apart = odl.uniform_partition(0, np.pi, 10)</span>
+<span class="sd">        &gt;&gt;&gt; dpart = odl.uniform_partition([-1, -1], [1, 1], (20, 20))</span>
+<span class="sd">        &gt;&gt;&gt; geom = Parallel3dAxisGeometry(apart, dpart)</span>
+<span class="sd">        &gt;&gt;&gt; geom.det_refpoint(0)</span>
+<span class="sd">        array([ 0.,  1.,  0.])</span>
+<span class="sd">        &gt;&gt;&gt; geom.det_point_position(0, [-1, 1])</span>
+<span class="sd">        array([-1.,  1.,  1.])</span>
+
+<span class="sd">        Checking the default orientation:</span>
+
+<span class="sd">        &gt;&gt;&gt; e_x, e_y, e_z = np.eye(3)  # standard unit vectors</span>
+<span class="sd">        &gt;&gt;&gt; np.allclose(geom.axis, e_z)</span>
+<span class="sd">        True</span>
+<span class="sd">        &gt;&gt;&gt; np.allclose(geom.det_pos_init, e_y)</span>
+<span class="sd">        True</span>
+<span class="sd">        &gt;&gt;&gt; np.allclose(geom.det_axes_init, (e_x, e_z))</span>
+<span class="sd">        True</span>
+
+<span class="sd">        Specifying an axis by default rotates the standard configuration</span>
+<span class="sd">        to this position:</span>
+
+<span class="sd">        &gt;&gt;&gt; geom = Parallel3dAxisGeometry(apart, dpart, axis=(0, 1, 0))</span>
+<span class="sd">        &gt;&gt;&gt; np.allclose(geom.axis, e_y)</span>
+<span class="sd">        True</span>
+<span class="sd">        &gt;&gt;&gt; np.allclose(geom.det_pos_init, -e_z)</span>
+<span class="sd">        True</span>
+<span class="sd">        &gt;&gt;&gt; np.allclose(geom.det_axes_init, (e_x, e_y))</span>
+<span class="sd">        True</span>
+<span class="sd">        &gt;&gt;&gt; geom = Parallel3dAxisGeometry(apart, dpart, axis=(1, 0, 0))</span>
+<span class="sd">        &gt;&gt;&gt; np.allclose(geom.axis, e_x)</span>
+<span class="sd">        True</span>
+<span class="sd">        &gt;&gt;&gt; np.allclose(geom.det_pos_init, e_y)</span>
+<span class="sd">        True</span>
+<span class="sd">        &gt;&gt;&gt; np.allclose(geom.det_axes_init, (-e_z, e_x))</span>
+<span class="sd">        True</span>
+
+<span class="sd">        The initial detector position and axes can also be set explicitly:</span>
+
+<span class="sd">        &gt;&gt;&gt; geom = Parallel3dAxisGeometry(</span>
+<span class="sd">        ...     apart, dpart, det_pos_init=(-1, 0, 0),</span>
+<span class="sd">        ...     det_axes_init=((0, 1, 0), (0, 0, 1)))</span>
+<span class="sd">        &gt;&gt;&gt; np.allclose(geom.axis, e_z)</span>
+<span class="sd">        True</span>
+<span class="sd">        &gt;&gt;&gt; np.allclose(geom.det_pos_init, -e_x)</span>
+<span class="sd">        True</span>
+<span class="sd">        &gt;&gt;&gt; np.allclose(geom.det_axes_init, (e_y, e_z))</span>
+<span class="sd">        True</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">default_axis</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_default_config</span><span class="p">[</span><span class="s1">&#39;axis&#39;</span><span class="p">]</span>
+        <span class="n">default_det_pos_init</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_default_config</span><span class="p">[</span><span class="s1">&#39;det_pos_init&#39;</span><span class="p">]</span>
+        <span class="n">default_det_axes_init</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_default_config</span><span class="p">[</span><span class="s1">&#39;det_axes_init&#39;</span><span class="p">]</span>
+
+        <span class="c1"># Handle initial coordinate system. We need to assign `None` to</span>
+        <span class="c1"># the vectors first since we want to check that `init_matrix`</span>
+        <span class="c1"># is not used together with those other parameters.</span>
+        <span class="n">det_pos_init</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;det_pos_init&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="n">det_axes_init</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;det_axes_init&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+
+        <span class="c1"># Store some stuff for repr</span>
+        <span class="k">if</span> <span class="n">det_pos_init</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_det_pos_init_arg</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">det_pos_init</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_det_pos_init_arg</span> <span class="o">=</span> <span class="kc">None</span>
+
+        <span class="k">if</span> <span class="n">det_axes_init</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_det_axes_init_arg</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span>
+                <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span> <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="n">det_axes_init</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_det_axes_init_arg</span> <span class="o">=</span> <span class="kc">None</span>
+
+        <span class="c1"># Compute the transformed system and the transition matrix. We</span>
+        <span class="c1"># transform only those vectors that were not explicitly given.</span>
+        <span class="n">vecs_to_transform</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">if</span> <span class="n">det_pos_init</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">vecs_to_transform</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">default_det_pos_init</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">det_axes_init</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">vecs_to_transform</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">default_det_axes_init</span><span class="p">)</span>
+
+        <span class="n">transformed_vecs</span> <span class="o">=</span> <span class="n">transform_system</span><span class="p">(</span>
+            <span class="n">axis</span><span class="p">,</span> <span class="n">default_axis</span><span class="p">,</span> <span class="n">vecs_to_transform</span><span class="p">)</span>
+        <span class="n">transformed_vecs</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">transformed_vecs</span><span class="p">)</span>
+
+        <span class="n">axis</span> <span class="o">=</span> <span class="n">transformed_vecs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">det_pos_init</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">det_pos_init</span> <span class="o">=</span> <span class="n">transformed_vecs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">det_axes_init</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">det_axes_init</span> <span class="o">=</span> <span class="p">(</span><span class="n">transformed_vecs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="mi">0</span><span class="p">),</span> <span class="n">transformed_vecs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="mi">0</span><span class="p">))</span>
+
+        <span class="k">assert</span> <span class="n">transformed_vecs</span> <span class="o">==</span> <span class="p">[]</span>
+
+        <span class="c1"># Translate the absolute vectors by the given translation</span>
+        <span class="n">translation</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;translation&#39;</span><span class="p">,</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">)),</span>
+                                 <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
+        <span class="n">det_pos_init</span> <span class="o">+=</span> <span class="n">translation</span>
+
+        <span class="c1"># Initialize stuff. Normalization of the detector axis happens in</span>
+        <span class="c1"># the detector class. `check_bounds` is needed for both detector</span>
+        <span class="c1"># and geometry.</span>
+        <span class="n">AxisOrientedGeometry</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">axis</span><span class="p">)</span>
+        <span class="n">check_bounds</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;check_bounds&#39;</span><span class="p">,</span> <span class="kc">True</span><span class="p">)</span>
+        <span class="n">detector</span> <span class="o">=</span> <span class="n">Flat2dDetector</span><span class="p">(</span><span class="n">dpart</span><span class="p">,</span> <span class="n">axes</span><span class="o">=</span><span class="n">det_axes_init</span><span class="p">,</span>
+                                  <span class="n">check_bounds</span><span class="o">=</span><span class="n">check_bounds</span><span class="p">)</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">Parallel3dAxisGeometry</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span>
+            <span class="n">ndim</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">apart</span><span class="o">=</span><span class="n">apart</span><span class="p">,</span> <span class="n">detector</span><span class="o">=</span><span class="n">detector</span><span class="p">,</span>
+            <span class="n">det_pos_init</span><span class="o">=</span><span class="n">det_pos_init</span><span class="p">,</span> <span class="n">translation</span><span class="o">=</span><span class="n">translation</span><span class="p">,</span>
+            <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">motion_partition</span><span class="o">.</span><span class="n">ndim</span> <span class="o">!=</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;`apart` has dimension </span><span class="si">{}</span><span class="s1">, expected 1&#39;</span>
+                             <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">motion_partition</span><span class="o">.</span><span class="n">ndim</span><span class="p">))</span></div>
+
+<div class="viewcode-block" id="Parallel3dAxisGeometry.frommatrix"><a class="viewcode-back" href="../../../../generated/odl.tomo.geometry.parallel.Parallel3dAxisGeometry.frommatrix.html#odl.tomo.geometry.parallel.Parallel3dAxisGeometry.frommatrix">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">frommatrix</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">apart</span><span class="p">,</span> <span class="n">dpart</span><span class="p">,</span> <span class="n">init_matrix</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Create an instance of `Parallel3dAxisGeometry` using a matrix.</span>
+
+<span class="sd">        This alternative constructor uses a matrix to rotate and</span>
+<span class="sd">        translate the default configuration. It is most useful when</span>
+<span class="sd">        the transformation to be applied is already given as a matrix.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        apart : 1-dim. `RectPartition`</span>
+<span class="sd">            Partition of the parameter interval.</span>
+<span class="sd">        dpart : 2-dim. `RectPartition`</span>
+<span class="sd">            Partition of the detector parameter set.</span>
+<span class="sd">        init_matrix : `array_like`, shape ``(3, 3)`` or ``(3, 4)``, optional</span>
+<span class="sd">            Transformation matrix whose left ``(3, 3)`` block is multiplied</span>
+<span class="sd">            with the default ``det_pos_init`` and ``det_axes_init`` to</span>
+<span class="sd">            determine the new vectors. If present, the fourth column acts</span>
+<span class="sd">            as a translation after the initial transformation.</span>
+<span class="sd">            The resulting ``det_axes_init`` will be normalized.</span>
+<span class="sd">        kwargs :</span>
+<span class="sd">            Further keyword arguments passed to the class constructor.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        geometry : `Parallel3dAxisGeometry`</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        --------</span>
+<span class="sd">        Map unit vectors ``e_y -&gt; e_z`` and ``e_z -&gt; -e_y``, keeping the</span>
+<span class="sd">        right-handedness:</span>
+
+<span class="sd">        &gt;&gt;&gt; apart = odl.uniform_partition(0, np.pi, 10)</span>
+<span class="sd">        &gt;&gt;&gt; dpart = odl.uniform_partition([-1, -1], [1, 1], (20, 20))</span>
+<span class="sd">        &gt;&gt;&gt; matrix = np.array([[1, 0, 0],</span>
+<span class="sd">        ...                    [0, 0, -1],</span>
+<span class="sd">        ...                    [0, 1, 0]])</span>
+<span class="sd">        &gt;&gt;&gt; geom = Parallel3dAxisGeometry.frommatrix(</span>
+<span class="sd">        ...     apart, dpart, init_matrix=matrix)</span>
+<span class="sd">        &gt;&gt;&gt; geom.axis</span>
+<span class="sd">        array([ 0., -1.,  0.])</span>
+<span class="sd">        &gt;&gt;&gt; geom.det_pos_init</span>
+<span class="sd">        array([ 0.,  0.,  1.])</span>
+<span class="sd">        &gt;&gt;&gt; geom.det_axes_init</span>
+<span class="sd">        array([[ 1.,  0.,  0.],</span>
+<span class="sd">               [ 0., -1.,  0.]])</span>
+
+<span class="sd">        Adding a translation with a fourth matrix column:</span>
+
+<span class="sd">        &gt;&gt;&gt; matrix = np.array([[0, 0, -1, 0],</span>
+<span class="sd">        ...                    [0, 1, 0, 1],</span>
+<span class="sd">        ...                    [1, 0, 0, 1]])</span>
+<span class="sd">        &gt;&gt;&gt; geom = Parallel3dAxisGeometry.frommatrix(apart, dpart, matrix)</span>
+<span class="sd">        &gt;&gt;&gt; geom.translation</span>
+<span class="sd">        array([ 0.,  1.,  1.])</span>
+<span class="sd">        &gt;&gt;&gt; geom.det_pos_init  # (0, 1, 0) + (0, 1, 1)</span>
+<span class="sd">        array([ 0.,  2.,  1.])</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># Get transformation and translation parts from `init_matrix`</span>
+        <span class="n">init_matrix</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">init_matrix</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">init_matrix</span><span class="o">.</span><span class="n">shape</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">((</span><span class="mi">3</span><span class="p">,</span> <span class="mi">3</span><span class="p">),</span> <span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">)):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;`matrix` must have shape (3, 3) or (3, 4), &#39;</span>
+                             <span class="s1">&#39;got array with shape </span><span class="si">{}</span><span class="s1">&#39;</span>
+                             <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">init_matrix</span><span class="o">.</span><span class="n">shape</span><span class="p">))</span>
+        <span class="n">trafo_matrix</span> <span class="o">=</span> <span class="n">init_matrix</span><span class="p">[:,</span> <span class="p">:</span><span class="mi">3</span><span class="p">]</span>
+        <span class="n">translation</span> <span class="o">=</span> <span class="n">init_matrix</span><span class="p">[:,</span> <span class="mi">3</span><span class="p">:]</span><span class="o">.</span><span class="n">squeeze</span><span class="p">()</span>
+
+        <span class="c1"># Transform the default vectors</span>
+        <span class="n">default_axis</span> <span class="o">=</span> <span class="bp">cls</span><span class="o">.</span><span class="n">_default_config</span><span class="p">[</span><span class="s1">&#39;axis&#39;</span><span class="p">]</span>
+        <span class="n">default_det_pos_init</span> <span class="o">=</span> <span class="bp">cls</span><span class="o">.</span><span class="n">_default_config</span><span class="p">[</span><span class="s1">&#39;det_pos_init&#39;</span><span class="p">]</span>
+        <span class="n">default_det_axes_init</span> <span class="o">=</span> <span class="bp">cls</span><span class="o">.</span><span class="n">_default_config</span><span class="p">[</span><span class="s1">&#39;det_axes_init&#39;</span><span class="p">]</span>
+        <span class="n">vecs_to_transform</span> <span class="o">=</span> <span class="p">(</span><span class="n">default_det_pos_init</span><span class="p">,)</span> <span class="o">+</span> <span class="n">default_det_axes_init</span>
+        <span class="n">transformed_vecs</span> <span class="o">=</span> <span class="n">transform_system</span><span class="p">(</span>
+            <span class="n">default_axis</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="n">vecs_to_transform</span><span class="p">,</span> <span class="n">matrix</span><span class="o">=</span><span class="n">trafo_matrix</span><span class="p">)</span>
+
+        <span class="c1"># Use the standard constructor with these vectors</span>
+        <span class="n">axis</span><span class="p">,</span> <span class="n">det_pos</span><span class="p">,</span> <span class="n">det_axis_0</span><span class="p">,</span> <span class="n">det_axis_1</span> <span class="o">=</span> <span class="n">transformed_vecs</span>
+        <span class="k">if</span> <span class="n">translation</span><span class="o">.</span><span class="n">size</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">kwargs</span><span class="p">[</span><span class="s1">&#39;translation&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">translation</span>
+
+        <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span><span class="n">apart</span><span class="p">,</span> <span class="n">dpart</span><span class="p">,</span> <span class="n">axis</span><span class="p">,</span>
+                   <span class="n">det_pos_init</span><span class="o">=</span><span class="n">det_pos</span><span class="p">,</span>
+                   <span class="n">det_axes_init</span><span class="o">=</span><span class="p">[</span><span class="n">det_axis_0</span><span class="p">,</span> <span class="n">det_axis_1</span><span class="p">],</span>
+                   <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">det_axes_init</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Initial axes of the detector.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">detector</span><span class="o">.</span><span class="n">axes</span>
+
+<div class="viewcode-block" id="Parallel3dAxisGeometry.det_axes"><a class="viewcode-back" href="../../../../generated/odl.tomo.geometry.parallel.Parallel3dAxisGeometry.det_axes.html#odl.tomo.geometry.parallel.Parallel3dAxisGeometry.det_axes">[docs]</a>    <span class="k">def</span> <span class="nf">det_axes</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">angle</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return the detector axes tuple at ``angle``.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        angle : float or `array-like`</span>
+<span class="sd">            Angle(s) in radians describing the counter-clockwise rotation</span>
+<span class="sd">            of the detector around `axis`.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        axes : `numpy.ndarray`</span>
+<span class="sd">            Unit vectors along which the detector is aligned.</span>
+<span class="sd">            If ``angle`` is a single parameter, the returned array has</span>
+<span class="sd">            shape ``(2, 3)``, otherwise</span>
+<span class="sd">            ``broadcast(*angle).shape + (2, 3)``.</span>
+
+<span class="sd">        Notes</span>
+<span class="sd">        -----</span>
+<span class="sd">        To get an array that enumerates the detector axes in the first</span>
+<span class="sd">        dimension, move the second-to-last axis to the first position:</span>
+
+<span class="sd">            axes = det_axes(angle)</span>
+<span class="sd">            axes_enumeration = np.moveaxis(deriv, -2, 0)</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        --------</span>
+<span class="sd">        Calling the method with a single angle produces a ``(2, 3)`` array</span>
+<span class="sd">        of vertically stacked vectors:</span>
+
+<span class="sd">        &gt;&gt;&gt; apart = odl.uniform_partition(0, np.pi, 10)</span>
+<span class="sd">        &gt;&gt;&gt; dpart = odl.uniform_partition([-1, -1], [1, 1], (20, 20))</span>
+<span class="sd">        &gt;&gt;&gt; geom = Parallel3dAxisGeometry(apart, dpart)</span>
+<span class="sd">        &gt;&gt;&gt; geom.det_axes(0)</span>
+<span class="sd">        array([[ 1.,  0.,  0.],</span>
+<span class="sd">               [ 0.,  0.,  1.]])</span>
+<span class="sd">        &gt;&gt;&gt; np.allclose(geom.det_axes(np.pi / 2), [[0, 1, 0],</span>
+<span class="sd">        ...                                        [0, 0, 1]])</span>
+<span class="sd">        True</span>
+
+<span class="sd">        The method is vectorized, i.e., it can be called with multiple</span>
+<span class="sd">        angles at once (or n-dimensional arrays of parameters):</span>
+
+<span class="sd">        &gt;&gt;&gt; np.allclose(geom.det_axes([0, np.pi / 2]),</span>
+<span class="sd">        ...             [[[1, 0, 0],</span>
+<span class="sd">        ...               [0, 0, 1]],</span>
+<span class="sd">        ...              [[0, 1, 0],</span>
+<span class="sd">        ...               [0, 0, 1]]])</span>
+<span class="sd">        True</span>
+<span class="sd">        &gt;&gt;&gt; geom.det_axes(np.zeros((4, 5))).shape</span>
+<span class="sd">        (4, 5, 2, 3)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># Transpose to take dot along axis 1</span>
+        <span class="n">axes</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">rotation_matrix</span><span class="p">(</span><span class="n">angle</span><span class="p">)</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">det_axes_init</span><span class="o">.</span><span class="n">T</span><span class="p">)</span>
+        <span class="c1"># `axes` has shape (a, 3, 2), need to roll the last dimensions</span>
+        <span class="c1"># to the second to last place</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">rollaxis</span><span class="p">(</span><span class="n">axes</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">2</span><span class="p">)</span></div>
+
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return ``repr(self)``.&quot;&quot;&quot;</span>
+        <span class="n">posargs</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">motion_partition</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">det_partition</span><span class="p">]</span>
+        <span class="n">optargs</span> <span class="o">=</span> <span class="p">[]</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">allclose</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">axis</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_default_config</span><span class="p">[</span><span class="s1">&#39;axis&#39;</span><span class="p">]):</span>
+            <span class="n">optargs</span><span class="o">.</span><span class="n">append</span><span class="p">([</span><span class="s1">&#39;axis&#39;</span><span class="p">,</span> <span class="n">array_str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">axis</span><span class="p">),</span> <span class="s1">&#39;&#39;</span><span class="p">])</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_det_pos_init_arg</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">optargs</span><span class="o">.</span><span class="n">append</span><span class="p">([</span><span class="s1">&#39;det_pos_init&#39;</span><span class="p">,</span>
+                            <span class="n">array_str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_det_pos_init_arg</span><span class="p">),</span>
+                            <span class="kc">None</span><span class="p">])</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_det_axes_init_arg</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">optargs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                <span class="p">[</span><span class="s1">&#39;det_axes_init&#39;</span><span class="p">,</span>
+                 <span class="nb">tuple</span><span class="p">(</span><span class="n">array_str</span><span class="p">(</span><span class="n">a</span><span class="p">)</span> <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_det_axes_init_arg</span><span class="p">),</span>
+                 <span class="kc">None</span><span class="p">])</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">array_equal</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">translation</span><span class="p">,</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">)):</span>
+            <span class="n">optargs</span><span class="o">.</span><span class="n">append</span><span class="p">([</span><span class="s1">&#39;translation&#39;</span><span class="p">,</span> <span class="n">array_str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">translation</span><span class="p">),</span> <span class="s1">&#39;&#39;</span><span class="p">])</span>
+
+        <span class="n">sig_str</span> <span class="o">=</span> <span class="n">signature_string</span><span class="p">(</span><span class="n">posargs</span><span class="p">,</span> <span class="n">optargs</span><span class="p">,</span> <span class="n">sep</span><span class="o">=</span><span class="s1">&#39;,</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="s1">&#39;</span><span class="si">{}</span><span class="s1">(</span><span class="se">\n</span><span class="si">{}</span><span class="se">\n</span><span class="s1">)&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="p">,</span> <span class="n">indent</span><span class="p">(</span><span class="n">sig_str</span><span class="p">))</span>
+
+<div class="viewcode-block" id="Parallel3dAxisGeometry.__getitem__"><a class="viewcode-back" href="../../../../generated/odl.tomo.geometry.parallel.Parallel3dAxisGeometry.__getitem__.html#odl.tomo.geometry.parallel.Parallel3dAxisGeometry.__getitem__">[docs]</a>    <span class="k">def</span> <span class="fm">__getitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">indices</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return self[indices].</span>
+
+<span class="sd">        This is defined by ::</span>
+
+<span class="sd">            self[indices].partition == self.partition[indices]</span>
+
+<span class="sd">        where all other parameters are the same.</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        --------</span>
+<span class="sd">        &gt;&gt;&gt; apart = odl.uniform_partition(0, 4, 4)</span>
+<span class="sd">        &gt;&gt;&gt; dpart = odl.uniform_partition([-1, -1], [1, 1], [20, 20])</span>
+<span class="sd">        &gt;&gt;&gt; geom = odl.tomo.Parallel3dAxisGeometry(apart, dpart)</span>
+
+<span class="sd">        Extract sub-geometry with every second angle:</span>
+
+<span class="sd">        &gt;&gt;&gt; geom[::2]</span>
+<span class="sd">        Parallel3dAxisGeometry(</span>
+<span class="sd">            nonuniform_partition(</span>
+<span class="sd">                [ 0.5,  2.5],</span>
+<span class="sd">                min_pt=0.0, max_pt=4.0</span>
+<span class="sd">            ),</span>
+<span class="sd">            uniform_partition([-1., -1.], [ 1.,  1.], (20, 20))</span>
+<span class="sd">        )</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">part</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">partition</span><span class="p">[</span><span class="n">indices</span><span class="p">]</span>
+        <span class="n">apart</span> <span class="o">=</span> <span class="n">part</span><span class="o">.</span><span class="n">byaxis</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">dpart</span> <span class="o">=</span> <span class="n">part</span><span class="o">.</span><span class="n">byaxis</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span>
+
+        <span class="k">return</span> <span class="n">Parallel3dAxisGeometry</span><span class="p">(</span><span class="n">apart</span><span class="p">,</span> <span class="n">dpart</span><span class="p">,</span>
+                                      <span class="n">axis</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">axis</span><span class="p">,</span>
+                                      <span class="n">det_pos_init</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_det_pos_init_arg</span><span class="p">,</span>
+                                      <span class="n">det_axes_init</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_det_axes_init_arg</span><span class="p">,</span>
+                                      <span class="n">translation</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">translation</span><span class="p">)</span></div>
+
+    <span class="c1"># Manually override the abstract method in `Geometry` since it&#39;s found</span>
+    <span class="c1"># first</span>
+    <span class="n">rotation_matrix</span> <span class="o">=</span> <span class="n">AxisOrientedGeometry</span><span class="o">.</span><span class="n">rotation_matrix</span></div>
+
+
+<div class="viewcode-block" id="parallel_beam_geometry"><a class="viewcode-back" href="../../../../generated/odl.tomo.geometry.parallel.parallel_beam_geometry.html#odl.tomo.geometry.parallel.parallel_beam_geometry">[docs]</a><span class="k">def</span> <span class="nf">parallel_beam_geometry</span><span class="p">(</span><span class="n">space</span><span class="p">,</span> <span class="n">num_angles</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">det_shape</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="sa">r</span><span class="sd">&quot;&quot;&quot;Create default parallel beam geometry from ``space``.</span>
+
+<span class="sd">    This is intended for simple test cases where users do not need the full</span>
+<span class="sd">    flexibility of the geometries, but simply want a geometry that works.</span>
+
+<span class="sd">    This default geometry gives a fully sampled sinogram according to the</span>
+<span class="sd">    Nyquist criterion, which in general results in a very large number of</span>
+<span class="sd">    samples. In particular, a ``space`` that is not centered at the origin</span>
+<span class="sd">    can result in very large detectors.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    space : `DiscretizedSpace`</span>
+<span class="sd">        Reconstruction space, the space of the volumetric data to be projected.</span>
+<span class="sd">        Needs to be 2d or 3d.</span>
+<span class="sd">    num_angles : int, optional</span>
+<span class="sd">        Number of angles.</span>
+<span class="sd">        Default: Enough to fully sample the data, see Notes.</span>
+<span class="sd">    det_shape : int or sequence of int, optional</span>
+<span class="sd">        Number of detector pixels.</span>
+<span class="sd">        Default: Enough to fully sample the data, see Notes.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    geometry : `ParallelBeamGeometry`</span>
+<span class="sd">        If ``space`` is 2d, return a `Parallel2dGeometry`.</span>
+<span class="sd">        If ``space`` is 3d, return a `Parallel3dAxisGeometry`.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    Create a parallel beam geometry from a 2d space:</span>
+
+<span class="sd">    &gt;&gt;&gt; space = odl.uniform_discr([-1, -1], [1, 1], (20, 20))</span>
+<span class="sd">    &gt;&gt;&gt; geometry = parallel_beam_geometry(space)</span>
+<span class="sd">    &gt;&gt;&gt; geometry.angles.size</span>
+<span class="sd">    45</span>
+<span class="sd">    &gt;&gt;&gt; geometry.detector.size</span>
+<span class="sd">    31</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    According to [NW2001]_, pages 72--74, a function</span>
+<span class="sd">    :math:`f : \mathbb{R}^2 \to \mathbb{R}` that has compact support</span>
+
+<span class="sd">    .. math::</span>
+<span class="sd">        \| x \| &gt; \rho  \implies f(x) = 0,</span>
+
+<span class="sd">    and is essentially bandlimited</span>
+
+<span class="sd">    .. math::</span>
+<span class="sd">       \| \xi \| &gt; \Omega \implies \hat{f}(\xi) \approx 0,</span>
+
+<span class="sd">    can be fully reconstructed from a parallel beam ray transform</span>
+<span class="sd">    if (1) the projection angles are sampled with a spacing of</span>
+<span class="sd">    :math:`\Delta \psi` such that</span>
+
+<span class="sd">    .. math::</span>
+<span class="sd">        \Delta \psi \leq \frac{\pi}{\rho \Omega},</span>
+
+<span class="sd">    and (2) the detector is sampled with an interval :math:`\Delta s`</span>
+<span class="sd">    that satisfies</span>
+
+<span class="sd">    .. math::</span>
+<span class="sd">        \Delta s \leq \frac{\pi}{\Omega}.</span>
+
+<span class="sd">    The geometry returned by this function satisfies these conditions exactly.</span>
+
+<span class="sd">    If the domain is 3-dimensional, the geometry is &quot;separable&quot;, in that each</span>
+<span class="sd">    slice along the z-dimension of the data is treated as independed 2d data.</span>
+
+<span class="sd">    References</span>
+<span class="sd">    ----------</span>
+<span class="sd">    .. [NW2001] Natterer, F and Wuebbeling, F.</span>
+<span class="sd">       *Mathematical Methods in Image Reconstruction*.</span>
+<span class="sd">       SIAM, 2001.</span>
+<span class="sd">       https://dx.doi.org/10.1137/1.9780898718324</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># Find maximum distance from rotation axis</span>
+    <span class="n">corners</span> <span class="o">=</span> <span class="n">space</span><span class="o">.</span><span class="n">domain</span><span class="o">.</span><span class="n">corners</span><span class="p">()[:,</span> <span class="p">:</span><span class="mi">2</span><span class="p">]</span>
+    <span class="n">rho</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">corners</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">))</span>
+
+    <span class="c1"># Find default values according to Nyquist criterion.</span>
+
+    <span class="c1"># We assume that the function is bandlimited by a wave along the x or y</span>
+    <span class="c1"># axis. The highest frequency we can measure is then a standing wave with</span>
+    <span class="c1"># period of twice the inter-node distance.</span>
+    <span class="n">min_side</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">space</span><span class="o">.</span><span class="n">partition</span><span class="o">.</span><span class="n">cell_sides</span><span class="p">[:</span><span class="mi">2</span><span class="p">])</span>
+    <span class="n">omega</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span> <span class="o">/</span> <span class="n">min_side</span>
+    <span class="n">num_px_horiz</span> <span class="o">=</span> <span class="mi">2</span> <span class="o">*</span> <span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">ceil</span><span class="p">(</span><span class="n">rho</span> <span class="o">*</span> <span class="n">omega</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="p">))</span> <span class="o">+</span> <span class="mi">1</span>
+
+    <span class="k">if</span> <span class="n">space</span><span class="o">.</span><span class="n">ndim</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
+        <span class="n">det_min_pt</span> <span class="o">=</span> <span class="o">-</span><span class="n">rho</span>
+        <span class="n">det_max_pt</span> <span class="o">=</span> <span class="n">rho</span>
+        <span class="k">if</span> <span class="n">det_shape</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">det_shape</span> <span class="o">=</span> <span class="n">num_px_horiz</span>
+    <span class="k">elif</span> <span class="n">space</span><span class="o">.</span><span class="n">ndim</span> <span class="o">==</span> <span class="mi">3</span><span class="p">:</span>
+        <span class="n">num_px_vert</span> <span class="o">=</span> <span class="n">space</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
+        <span class="n">min_h</span> <span class="o">=</span> <span class="n">space</span><span class="o">.</span><span class="n">domain</span><span class="o">.</span><span class="n">min_pt</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
+        <span class="n">max_h</span> <span class="o">=</span> <span class="n">space</span><span class="o">.</span><span class="n">domain</span><span class="o">.</span><span class="n">max_pt</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
+        <span class="n">det_min_pt</span> <span class="o">=</span> <span class="p">[</span><span class="o">-</span><span class="n">rho</span><span class="p">,</span> <span class="n">min_h</span><span class="p">]</span>
+        <span class="n">det_max_pt</span> <span class="o">=</span> <span class="p">[</span><span class="n">rho</span><span class="p">,</span> <span class="n">max_h</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">det_shape</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">det_shape</span> <span class="o">=</span> <span class="p">[</span><span class="n">num_px_horiz</span><span class="p">,</span> <span class="n">num_px_vert</span><span class="p">]</span>
+
+    <span class="k">if</span> <span class="n">num_angles</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">num_angles</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">ceil</span><span class="p">(</span><span class="n">omega</span> <span class="o">*</span> <span class="n">rho</span><span class="p">))</span>
+
+    <span class="n">angle_partition</span> <span class="o">=</span> <span class="n">uniform_partition</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="p">,</span> <span class="n">num_angles</span><span class="p">)</span>
+    <span class="n">det_partition</span> <span class="o">=</span> <span class="n">uniform_partition</span><span class="p">(</span><span class="n">det_min_pt</span><span class="p">,</span> <span class="n">det_max_pt</span><span class="p">,</span> <span class="n">det_shape</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">space</span><span class="o">.</span><span class="n">ndim</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">Parallel2dGeometry</span><span class="p">(</span><span class="n">angle_partition</span><span class="p">,</span> <span class="n">det_partition</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">space</span><span class="o">.</span><span class="n">ndim</span> <span class="o">==</span> <span class="mi">3</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">Parallel3dAxisGeometry</span><span class="p">(</span><span class="n">angle_partition</span><span class="p">,</span> <span class="n">det_partition</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;``space.ndim`` must be 2 or 3.&#39;</span><span class="p">)</span></div>
+
+
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s1">&#39;__main__&#39;</span><span class="p">:</span>
+    <span class="kn">from</span> <span class="nn">odl.util.testutils</span> <span class="kn">import</span> <span class="n">run_doctests</span>
+    <span class="n">run_doctests</span><span class="p">()</span>
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &#169; Copyright 2014-2020 The ODL Contributors.
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

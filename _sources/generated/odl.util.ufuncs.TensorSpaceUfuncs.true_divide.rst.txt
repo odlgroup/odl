@@ -1,0 +1,8 @@
+:orphan:
+
+TensorSpaceUfuncs.true_divide
+=============================================
+
+.. currentmodule:: odl.util.ufuncs
+
+.. automethod:: TensorSpaceUfuncs.true_divide

@@ -1,0 +1,6 @@
+﻿ufunc_class_factory
+===========================================
+
+.. currentmodule:: odl.ufunc_ops.ufunc_ops
+
+.. autofunction:: ufunc_class_factory

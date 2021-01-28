@@ -1,0 +1,8 @@
+:orphan:
+
+tanh_op.derivative
+==========================================
+
+.. currentmodule:: odl.ufunc_ops.ufunc_ops
+
+.. automethod:: tanh_op.derivative

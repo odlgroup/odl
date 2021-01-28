@@ -1,0 +1,6 @@
+CustomDist.impl
+===================================
+
+.. currentmodule:: odl.space.weighting
+
+.. autoproperty:: CustomDist.impl

@@ -1,0 +1,6 @@
+CustomDist.repr_part
+========================================
+
+.. currentmodule:: odl.space.weighting
+
+.. autoproperty:: CustomDist.repr_part

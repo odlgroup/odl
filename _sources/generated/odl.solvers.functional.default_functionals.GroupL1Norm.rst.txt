@@ -1,0 +1,43 @@
+﻿GroupL1Norm
+======================================================
+
+.. currentmodule:: odl.solvers.functional.default_functionals
+
+.. autoclass:: GroupL1Norm
+   :show-inheritance:
+   
+   
+   .. automethod:: __init__
+   
+      
+   
+   .. HACK -- the point here is that we don't want this to appear in the output, but the autosummary should still generate the pages.
+      .. autosummary::
+         :toctree:
+      
+         GroupL1Norm.__call__
+         GroupL1Norm.__eq__
+         GroupL1Norm._call
+         GroupL1Norm.bregman
+         GroupL1Norm.derivative
+         GroupL1Norm.norm
+         GroupL1Norm.translated
+   
+
+    
+   .. HACK -- the point here is that we don't want this to appear in the output, but the autosummary should still generate the pages.
+      .. autosummary::
+         :toctree:
+      
+         GroupL1Norm.adjoint
+         GroupL1Norm.convex_conj
+         GroupL1Norm.domain
+         GroupL1Norm.grad_lipschitz
+         GroupL1Norm.gradient
+         GroupL1Norm.inverse
+         GroupL1Norm.is_functional
+         GroupL1Norm.is_linear
+         GroupL1Norm.proximal
+         GroupL1Norm.range
+   
+   

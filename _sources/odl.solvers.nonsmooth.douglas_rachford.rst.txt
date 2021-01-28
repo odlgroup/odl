@@ -1,0 +1,18 @@
+douglas_rachford
+================
+
+Douglas-Rachford splitting algorithm for convex optimization.
+
+.. currentmodule:: odl.solvers.nonsmooth.douglas_rachford
+
+
+
+
+.. rubric:: Functions
+
+.. autosummary::
+   :toctree: generated/
+
+   ~odl.solvers.nonsmooth.douglas_rachford.douglas_rachford_pd
+   ~odl.solvers.nonsmooth.douglas_rachford.douglas_rachford_pd_stepsize
+

@@ -1,0 +1,6 @@
+ComponentProjectionAdjoint.range
+========================================================
+
+.. currentmodule:: odl.operator.pspace_ops
+
+.. autoproperty:: ComponentProjectionAdjoint.range

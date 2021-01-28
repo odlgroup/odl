@@ -1,0 +1,8 @@
+:orphan:
+
+Integers.__contains__
+==================================
+
+.. currentmodule:: odl.set.sets
+
+.. automethod:: Integers.__contains__

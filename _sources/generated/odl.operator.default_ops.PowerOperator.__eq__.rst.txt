@@ -1,0 +1,8 @@
+:orphan:
+
+PowerOperator.__eq__
+=============================================
+
+.. currentmodule:: odl.operator.default_ops
+
+.. automethod:: PowerOperator.__eq__

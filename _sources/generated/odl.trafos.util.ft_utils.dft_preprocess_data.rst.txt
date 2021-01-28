@@ -1,0 +1,6 @@
+﻿dft_preprocess_data
+============================================
+
+.. currentmodule:: odl.trafos.util.ft_utils
+
+.. autofunction:: dft_preprocess_data

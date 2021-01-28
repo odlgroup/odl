@@ -1,0 +1,8 @@
+:orphan:
+
+QuadraticForm.__eq__
+===============================================================
+
+.. currentmodule:: odl.solvers.functional.default_functionals
+
+.. automethod:: QuadraticForm.__eq__

@@ -1,0 +1,6 @@
+NuclearNorm.is_linear
+================================================================
+
+.. currentmodule:: odl.solvers.functional.default_functionals
+
+.. autoproperty:: NuclearNorm.is_linear

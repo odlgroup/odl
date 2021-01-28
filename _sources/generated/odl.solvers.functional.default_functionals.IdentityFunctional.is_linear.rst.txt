@@ -1,0 +1,6 @@
+IdentityFunctional.is_linear
+=======================================================================
+
+.. currentmodule:: odl.solvers.functional.default_functionals
+
+.. autoproperty:: IdentityFunctional.is_linear

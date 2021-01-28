@@ -1,0 +1,6 @@
+tan_func.convex_conj
+============================================
+
+.. currentmodule:: odl.ufunc_ops.ufunc_ops
+
+.. autoproperty:: tan_func.convex_conj

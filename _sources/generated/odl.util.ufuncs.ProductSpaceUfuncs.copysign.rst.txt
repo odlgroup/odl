@@ -1,0 +1,8 @@
+:orphan:
+
+ProductSpaceUfuncs.copysign
+===========================================
+
+.. currentmodule:: odl.util.ufuncs
+
+.. automethod:: ProductSpaceUfuncs.copysign

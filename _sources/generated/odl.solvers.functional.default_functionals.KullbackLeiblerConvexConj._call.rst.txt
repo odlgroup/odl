@@ -1,0 +1,8 @@
+:orphan:
+
+KullbackLeiblerConvexConj._call
+==========================================================================
+
+.. currentmodule:: odl.solvers.functional.default_functionals
+
+.. automethod:: KullbackLeiblerConvexConj._call

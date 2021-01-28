@@ -1,0 +1,8 @@
+:orphan:
+
+CallbackProgressBar.reset
+===================================================
+
+.. currentmodule:: odl.solvers.util.callback
+
+.. automethod:: CallbackProgressBar.reset

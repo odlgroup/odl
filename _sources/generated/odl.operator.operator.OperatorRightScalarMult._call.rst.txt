@@ -1,0 +1,8 @@
+:orphan:
+
+OperatorRightScalarMult._call
+===================================================
+
+.. currentmodule:: odl.operator.operator
+
+.. automethod:: OperatorRightScalarMult._call

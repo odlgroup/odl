@@ -1,0 +1,8 @@
+:orphan:
+
+FunctionalTranslation.__eq__
+==============================================================
+
+.. currentmodule:: odl.solvers.functional.functional
+
+.. automethod:: FunctionalTranslation.__eq__

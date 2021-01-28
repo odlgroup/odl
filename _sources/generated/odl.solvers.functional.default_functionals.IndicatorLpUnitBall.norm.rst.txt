@@ -1,0 +1,8 @@
+:orphan:
+
+IndicatorLpUnitBall.norm
+===================================================================
+
+.. currentmodule:: odl.solvers.functional.default_functionals
+
+.. automethod:: IndicatorLpUnitBall.norm

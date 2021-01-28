@@ -1,0 +1,8 @@
+:orphan:
+
+ProductSpaceElement.__setitem__
+================================================
+
+.. currentmodule:: odl.space.pspace
+
+.. automethod:: ProductSpaceElement.__setitem__

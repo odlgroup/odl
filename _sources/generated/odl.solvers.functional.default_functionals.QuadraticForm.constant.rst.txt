@@ -1,0 +1,6 @@
+QuadraticForm.constant
+=================================================================
+
+.. currentmodule:: odl.solvers.functional.default_functionals
+
+.. autoproperty:: QuadraticForm.constant

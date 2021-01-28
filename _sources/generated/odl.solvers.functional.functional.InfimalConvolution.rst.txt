@@ -1,0 +1,45 @@
+﻿InfimalConvolution
+====================================================
+
+.. currentmodule:: odl.solvers.functional.functional
+
+.. autoclass:: InfimalConvolution
+   :show-inheritance:
+   
+   
+   .. automethod:: __init__
+   
+      
+   
+   .. HACK -- the point here is that we don't want this to appear in the output, but the autosummary should still generate the pages.
+      .. autosummary::
+         :toctree:
+      
+         InfimalConvolution.__call__
+         InfimalConvolution.__eq__
+         InfimalConvolution._call
+         InfimalConvolution.bregman
+         InfimalConvolution.derivative
+         InfimalConvolution.norm
+         InfimalConvolution.translated
+   
+
+    
+   .. HACK -- the point here is that we don't want this to appear in the output, but the autosummary should still generate the pages.
+      .. autosummary::
+         :toctree:
+      
+         InfimalConvolution.adjoint
+         InfimalConvolution.convex_conj
+         InfimalConvolution.domain
+         InfimalConvolution.grad_lipschitz
+         InfimalConvolution.gradient
+         InfimalConvolution.inverse
+         InfimalConvolution.is_functional
+         InfimalConvolution.is_linear
+         InfimalConvolution.left
+         InfimalConvolution.proximal
+         InfimalConvolution.range
+         InfimalConvolution.right
+   
+   

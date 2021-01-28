@@ -1,0 +1,8 @@
+:orphan:
+
+FunctionalRightVectorMult.norm
+================================================================
+
+.. currentmodule:: odl.solvers.functional.functional
+
+.. automethod:: FunctionalRightVectorMult.norm

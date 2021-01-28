@@ -1,0 +1,6 @@
+WaveletTransformInverse.nlevels
+==================================================
+
+.. currentmodule:: odl.trafos.wavelet
+
+.. autoproperty:: WaveletTransformInverse.nlevels

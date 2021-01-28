@@ -1,0 +1,6 @@
+InnerProductOperator.vector
+====================================================
+
+.. currentmodule:: odl.operator.default_ops
+
+.. autoproperty:: InnerProductOperator.vector

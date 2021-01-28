@@ -1,0 +1,8 @@
+:orphan:
+
+ceil_func.bregman
+=========================================
+
+.. currentmodule:: odl.ufunc_ops.ufunc_ops
+
+.. automethod:: ceil_func.bregman

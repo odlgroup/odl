@@ -1,0 +1,17 @@
+spect
+=====
+
+Single-photon emission computed tomography (SPECT) geometry.
+
+.. currentmodule:: odl.tomo.geometry.spect
+
+
+
+.. rubric:: Classes
+
+.. autosummary::
+   :toctree: generated/
+
+   ~odl.tomo.geometry.spect.ParallelHoleCollimatorGeometry
+
+

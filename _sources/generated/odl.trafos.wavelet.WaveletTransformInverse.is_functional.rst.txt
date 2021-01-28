@@ -1,0 +1,6 @@
+WaveletTransformInverse.is_functional
+========================================================
+
+.. currentmodule:: odl.trafos.wavelet
+
+.. autoproperty:: WaveletTransformInverse.is_functional

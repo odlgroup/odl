@@ -1,0 +1,6 @@
+﻿bfgs_method
+=====================================
+
+.. currentmodule:: odl.solvers.smooth.newton
+
+.. autofunction:: bfgs_method

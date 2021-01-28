@@ -1,0 +1,6 @@
+﻿test
+=======================
+
+.. currentmodule:: odl.util.testutils
+
+.. autofunction:: test

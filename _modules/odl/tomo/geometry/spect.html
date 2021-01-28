@@ -1,0 +1,420 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>odl.tomo.geometry.spect &mdash; odl 1.0.0.dev0 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../../../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../../../../_static/custom.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../../../" src="../../../../_static/documentation_options.js"></script>
+        <script src="../../../../_static/jquery.js"></script>
+        <script src="../../../../_static/underscore.js"></script>
+        <script src="../../../../_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="../../../../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../../../index.html" class="icon icon-home"> odl
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                1.0.0.dev0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Getting Started</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../getting_started/getting_started.html">Getting Started</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Working with ODL</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../guide/guide.html">User’s guide – selected topics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../math/math.html">Mathematical Background</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Developer zone</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../dev/dev.html">Contributing to ODL</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Useful facts</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../guide/faq.html">Frequently asked questions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../guide/glossary.html">Glossary</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../release_notes.html">Release Notes</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../refs.html">References</a></li>
+</ul>
+<p class="caption"><span class="caption-text">API Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../odl.html">odl</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../../index.html">odl</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../../../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="../../../index.html">Module code</a> &raquo;</li>
+        
+      <li>odl.tomo.geometry.spect</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for odl.tomo.geometry.spect</h1><div class="highlight"><pre>
+<span></span><span class="c1"># Copyright 2014-2017 The ODL contributors</span>
+<span class="c1">#</span>
+<span class="c1"># This file is part of ODL.</span>
+<span class="c1">#</span>
+<span class="c1"># This Source Code Form is subject to the terms of the Mozilla Public License,</span>
+<span class="c1"># v. 2.0. If a copy of the MPL was not distributed with this file, You can</span>
+<span class="c1"># obtain one at https://mozilla.org/MPL/2.0/.</span>
+
+<span class="sd">&quot;&quot;&quot;Single-photon emission computed tomography (SPECT) geometry.&quot;&quot;&quot;</span>
+
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">print_function</span><span class="p">,</span> <span class="n">division</span><span class="p">,</span> <span class="n">absolute_import</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+
+<span class="kn">from</span> <span class="nn">odl.tomo.geometry.parallel</span> <span class="kn">import</span> <span class="n">Parallel3dAxisGeometry</span>
+<span class="kn">from</span> <span class="nn">odl.tomo.util.utility</span> <span class="kn">import</span> <span class="n">transform_system</span>
+<span class="kn">from</span> <span class="nn">odl.util</span> <span class="kn">import</span> <span class="n">signature_string</span><span class="p">,</span> <span class="n">indent</span><span class="p">,</span> <span class="n">array_str</span>
+
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;ParallelHoleCollimatorGeometry&#39;</span><span class="p">,</span> <span class="p">)</span>
+
+
+<div class="viewcode-block" id="ParallelHoleCollimatorGeometry"><a class="viewcode-back" href="../../../../generated/odl.tomo.geometry.spect.ParallelHoleCollimatorGeometry.html#odl.tomo.geometry.spect.ParallelHoleCollimatorGeometry">[docs]</a><span class="k">class</span> <span class="nc">ParallelHoleCollimatorGeometry</span><span class="p">(</span><span class="n">Parallel3dAxisGeometry</span><span class="p">):</span>
+
+    <span class="sd">&quot;&quot;&quot;Geometry for SPECT Parallel hole collimator.</span>
+
+<span class="sd">    For details, check `the online docs</span>
+<span class="sd">    &lt;https://odlgroup.github.io/odl/guide/geometry_guide.html&gt;`_.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="ParallelHoleCollimatorGeometry.__init__"><a class="viewcode-back" href="../../../../generated/odl.tomo.geometry.spect.ParallelHoleCollimatorGeometry.html#odl.tomo.geometry.spect.ParallelHoleCollimatorGeometry.__init__">[docs]</a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">apart</span><span class="p">,</span> <span class="n">dpart</span><span class="p">,</span> <span class="n">det_radius</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Initialize a new instance.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        apart : 1-dim. `RectPartition`</span>
+<span class="sd">            Partition of the angle interval.</span>
+<span class="sd">        dpart : 2-dim. `RectPartition`</span>
+<span class="sd">            Partition of the detector parameter rectangle.</span>
+<span class="sd">        det_radius : positive float</span>
+<span class="sd">            Radius of the circular detector orbit.</span>
+<span class="sd">        axis : `array-like`, shape ``(3,)``, optional</span>
+<span class="sd">            Vector defining the fixed rotation axis of this geometry.</span>
+
+<span class="sd">        Other Parameters</span>
+<span class="sd">        ----------------</span>
+<span class="sd">        orig_to_det_init : `array-like`, shape ``(3,)``, optional</span>
+<span class="sd">            Vector pointing towards the initial position of the detector</span>
+<span class="sd">            reference point. The default depends on ``axis``, see Notes.</span>
+<span class="sd">            The zero vector is not allowed.</span>
+<span class="sd">        det_axes_init : 2-tuple of `array-like`&#39;s (shape ``(3,)``), optional</span>
+<span class="sd">            Initial axes defining the detector orientation. The default</span>
+<span class="sd">            depends on ``axis``, see Notes.</span>
+<span class="sd">        translation : `array-like`, shape ``(3,)``, optional</span>
+<span class="sd">            Global translation of the geometry. This is added last in any</span>
+<span class="sd">            method that computes an absolute vector, e.g., `det_refpoint`,</span>
+<span class="sd">            and also shifts the axis of rotation.</span>
+<span class="sd">            Default: ``(0, 0, 0)``</span>
+<span class="sd">        check_bounds : bool, optional</span>
+<span class="sd">            If ``True``, methods perform sanity checks on provided input</span>
+<span class="sd">            parameters.</span>
+<span class="sd">            Default: ``True``</span>
+
+<span class="sd">        Notes</span>
+<span class="sd">        -----</span>
+<span class="sd">        In the default configuration, the rotation axis is ``(0, 0, 1)``,</span>
+<span class="sd">        the vector towards the initial detector reference point is</span>
+<span class="sd">        ``(0, 1, 0)``, and the default detector axes are</span>
+<span class="sd">        ``[(1, 0, 0), (0, 0, 1)]``.</span>
+<span class="sd">        If a different ``axis`` is provided, the new default initial</span>
+<span class="sd">        position and the new default axes are the computed by rotating</span>
+<span class="sd">        the original ones by a matrix that transforms ``(0, 0, 1)`` to the</span>
+<span class="sd">        new (normalized) ``axis``. This matrix is calculated with the</span>
+<span class="sd">        `rotation_matrix_from_to` function. Expressed in code, we have ::</span>
+
+<span class="sd">            init_rot = rotation_matrix_from_to((0, 0, 1), axis)</span>
+<span class="sd">            orig_to_det_init = init_rot.dot((0, 1, 0))</span>
+<span class="sd">            det_axes_init[0] = init_rot.dot((1, 0, 0))</span>
+<span class="sd">            det_axes_init[1] = init_rot.dot((0, 0, 1))</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__det_radius</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">det_radius</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">det_radius</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;`det_radius` must be positive, got </span><span class="si">{}</span><span class="s1">&#39;</span>
+                             <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">det_radius</span><span class="p">))</span>
+
+        <span class="n">orig_to_det_init</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;orig_to_det_init&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">orig_to_det_init</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">orig_to_det_init</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">orig_to_det_init</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
+            <span class="n">orig_to_det_norm</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">orig_to_det_init</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">orig_to_det_norm</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;`orig_to_det_init` cannot be zero&#39;</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">det_pos_init</span> <span class="o">=</span> <span class="p">(</span><span class="n">orig_to_det_init</span> <span class="o">/</span> <span class="n">orig_to_det_norm</span> <span class="o">*</span>
+                                <span class="bp">self</span><span class="o">.</span><span class="n">det_radius</span><span class="p">)</span>
+            <span class="n">kwargs</span><span class="p">[</span><span class="s1">&#39;det_pos_init&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">det_pos_init</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_orig_to_det_init_arg</span> <span class="o">=</span> <span class="n">orig_to_det_init</span>
+
+        <span class="nb">super</span><span class="p">(</span><span class="n">ParallelHoleCollimatorGeometry</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span>
+            <span class="n">apart</span><span class="p">,</span> <span class="n">dpart</span><span class="p">,</span> <span class="n">axis</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="ParallelHoleCollimatorGeometry.frommatrix"><a class="viewcode-back" href="../../../../generated/odl.tomo.geometry.spect.ParallelHoleCollimatorGeometry.frommatrix.html#odl.tomo.geometry.spect.ParallelHoleCollimatorGeometry.frommatrix">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">frommatrix</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">apart</span><span class="p">,</span> <span class="n">dpart</span><span class="p">,</span> <span class="n">det_radius</span><span class="p">,</span> <span class="n">init_matrix</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Create a `ParallelHoleCollimatorGeometry` using a matrix.</span>
+
+<span class="sd">        This alternative constructor uses a matrix to rotate and</span>
+<span class="sd">        translate the default configuration. It is most useful when</span>
+<span class="sd">        the transformation to be applied is already given as a matrix.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        apart : 1-dim. `RectPartition`</span>
+<span class="sd">            Partition of the parameter interval.</span>
+<span class="sd">        dpart : 2-dim. `RectPartition`</span>
+<span class="sd">            Partition of the detector parameter set.</span>
+<span class="sd">        det_radius : positive float</span>
+<span class="sd">            Radius of the circular detector orbit.</span>
+<span class="sd">        init_matrix : `array_like`, shape ``(3, 3)`` or ``(3, 4)``, optional</span>
+<span class="sd">            Transformation matrix whose left ``(3, 3)`` block is multiplied</span>
+<span class="sd">            with the default ``det_pos_init`` and ``det_axes_init`` to</span>
+<span class="sd">            determine the new vectors. If present, the fourth column acts</span>
+<span class="sd">            as a translation after the initial transformation.</span>
+<span class="sd">            The resulting ``det_axes_init`` will be normalized.</span>
+<span class="sd">        kwargs :</span>
+<span class="sd">            Further keyword arguments passed to the class constructor.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        geometry : `ParallelHoleCollimatorGeometry`</span>
+<span class="sd">            The resulting geometry.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># Get transformation and translation parts from `init_matrix`</span>
+        <span class="n">init_matrix</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">init_matrix</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">init_matrix</span><span class="o">.</span><span class="n">shape</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">((</span><span class="mi">3</span><span class="p">,</span> <span class="mi">3</span><span class="p">),</span> <span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">)):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;`matrix` must have shape (3, 3) or (3, 4), &#39;</span>
+                             <span class="s1">&#39;got array with shape </span><span class="si">{}</span><span class="s1">&#39;</span>
+                             <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">init_matrix</span><span class="o">.</span><span class="n">shape</span><span class="p">))</span>
+        <span class="n">trafo_matrix</span> <span class="o">=</span> <span class="n">init_matrix</span><span class="p">[:,</span> <span class="p">:</span><span class="mi">3</span><span class="p">]</span>
+        <span class="n">translation</span> <span class="o">=</span> <span class="n">init_matrix</span><span class="p">[:,</span> <span class="mi">3</span><span class="p">:]</span><span class="o">.</span><span class="n">squeeze</span><span class="p">()</span>
+
+        <span class="c1"># Transform the default vectors</span>
+        <span class="n">default_axis</span> <span class="o">=</span> <span class="bp">cls</span><span class="o">.</span><span class="n">_default_config</span><span class="p">[</span><span class="s1">&#39;axis&#39;</span><span class="p">]</span>
+        <span class="c1"># Normalized version, just in case</span>
+        <span class="n">default_orig_to_det_init</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="bp">cls</span><span class="o">.</span><span class="n">_default_config</span><span class="p">[</span><span class="s1">&#39;det_pos_init&#39;</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span> <span class="o">/</span>
+            <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="bp">cls</span><span class="o">.</span><span class="n">_default_config</span><span class="p">[</span><span class="s1">&#39;det_pos_init&#39;</span><span class="p">]))</span>
+        <span class="n">default_det_axes_init</span> <span class="o">=</span> <span class="bp">cls</span><span class="o">.</span><span class="n">_default_config</span><span class="p">[</span><span class="s1">&#39;det_axes_init&#39;</span><span class="p">]</span>
+        <span class="n">vecs_to_transform</span> <span class="o">=</span> <span class="p">((</span><span class="n">default_orig_to_det_init</span><span class="p">,)</span> <span class="o">+</span>
+                             <span class="n">default_det_axes_init</span><span class="p">)</span>
+        <span class="n">transformed_vecs</span> <span class="o">=</span> <span class="n">transform_system</span><span class="p">(</span>
+            <span class="n">default_axis</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="n">vecs_to_transform</span><span class="p">,</span> <span class="n">matrix</span><span class="o">=</span><span class="n">trafo_matrix</span><span class="p">)</span>
+
+        <span class="c1"># Use the standard constructor with these vectors</span>
+        <span class="n">axis</span><span class="p">,</span> <span class="n">orig_to_det</span><span class="p">,</span> <span class="n">det_axis_0</span><span class="p">,</span> <span class="n">det_axis_1</span> <span class="o">=</span> <span class="n">transformed_vecs</span>
+        <span class="k">if</span> <span class="n">translation</span><span class="o">.</span><span class="n">size</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">kwargs</span><span class="p">[</span><span class="s1">&#39;translation&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">translation</span>
+
+        <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span><span class="n">apart</span><span class="p">,</span> <span class="n">dpart</span><span class="p">,</span> <span class="n">det_radius</span><span class="p">,</span> <span class="n">axis</span><span class="p">,</span>
+                   <span class="n">orig_to_det_init</span><span class="o">=</span><span class="n">orig_to_det</span><span class="p">,</span>
+                   <span class="n">det_axes_init</span><span class="o">=</span><span class="p">[</span><span class="n">det_axis_0</span><span class="p">,</span> <span class="n">det_axis_1</span><span class="p">],</span>
+                   <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">det_radius</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Radius of the detector orbit.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__det_radius</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">orig_to_det_init</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Unit vector from rotation center to initial detector position.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">det_pos_init</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">det_pos_init</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return ``repr(self)``.&quot;&quot;&quot;</span>
+        <span class="n">posargs</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">motion_partition</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">det_partition</span><span class="p">]</span>
+        <span class="n">optargs</span> <span class="o">=</span> <span class="p">[(</span><span class="s1">&#39;det_radius&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">det_radius</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">)]</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">allclose</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">axis</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_default_config</span><span class="p">[</span><span class="s1">&#39;axis&#39;</span><span class="p">]):</span>
+            <span class="n">optargs</span><span class="o">.</span><span class="n">append</span><span class="p">([</span><span class="s1">&#39;axis&#39;</span><span class="p">,</span> <span class="n">array_str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">axis</span><span class="p">),</span> <span class="s1">&#39;&#39;</span><span class="p">])</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_orig_to_det_init_arg</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">optargs</span><span class="o">.</span><span class="n">append</span><span class="p">([</span><span class="s1">&#39;orig_to_det_init&#39;</span><span class="p">,</span>
+                            <span class="n">array_str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_orig_to_det_init_arg</span><span class="p">),</span>
+                            <span class="s1">&#39;&#39;</span><span class="p">])</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_det_axes_init_arg</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">optargs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                <span class="p">[</span><span class="s1">&#39;det_axes_init&#39;</span><span class="p">,</span>
+                 <span class="nb">tuple</span><span class="p">(</span><span class="n">array_str</span><span class="p">(</span><span class="n">a</span><span class="p">)</span> <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_det_axes_init_arg</span><span class="p">),</span>
+                 <span class="kc">None</span><span class="p">])</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">array_equal</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">translation</span><span class="p">,</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">)):</span>
+            <span class="n">optargs</span><span class="o">.</span><span class="n">append</span><span class="p">([</span><span class="s1">&#39;translation&#39;</span><span class="p">,</span> <span class="n">array_str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">translation</span><span class="p">),</span> <span class="s1">&#39;&#39;</span><span class="p">])</span>
+
+        <span class="n">sig_str</span> <span class="o">=</span> <span class="n">signature_string</span><span class="p">(</span><span class="n">posargs</span><span class="p">,</span> <span class="n">optargs</span><span class="p">,</span> <span class="n">sep</span><span class="o">=</span><span class="s1">&#39;,</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="s1">&#39;</span><span class="si">{}</span><span class="s1">(</span><span class="se">\n</span><span class="si">{}</span><span class="se">\n</span><span class="s1">)&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="p">,</span> <span class="n">indent</span><span class="p">(</span><span class="n">sig_str</span><span class="p">))</span></div>
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &#169; Copyright 2014-2020 The ODL Contributors.
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

@@ -1,0 +1,8 @@
+:orphan:
+
+LinCombOperator._call
+==============================================
+
+.. currentmodule:: odl.operator.default_ops
+
+.. automethod:: LinCombOperator._call

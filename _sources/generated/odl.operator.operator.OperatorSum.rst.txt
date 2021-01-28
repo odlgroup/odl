@@ -1,0 +1,39 @@
+﻿OperatorSum
+=================================
+
+.. currentmodule:: odl.operator.operator
+
+.. autoclass:: OperatorSum
+   :show-inheritance:
+   
+   
+   .. automethod:: __init__
+   
+      
+   
+   .. HACK -- the point here is that we don't want this to appear in the output, but the autosummary should still generate the pages.
+      .. autosummary::
+         :toctree:
+      
+         OperatorSum.__call__
+         OperatorSum.__eq__
+         OperatorSum._call
+         OperatorSum.derivative
+         OperatorSum.norm
+   
+
+    
+   .. HACK -- the point here is that we don't want this to appear in the output, but the autosummary should still generate the pages.
+      .. autosummary::
+         :toctree:
+      
+         OperatorSum.adjoint
+         OperatorSum.domain
+         OperatorSum.inverse
+         OperatorSum.is_functional
+         OperatorSum.is_linear
+         OperatorSum.left
+         OperatorSum.range
+         OperatorSum.right
+   
+   

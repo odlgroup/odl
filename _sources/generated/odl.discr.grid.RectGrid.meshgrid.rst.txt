@@ -1,0 +1,6 @@
+RectGrid.meshgrid
+================================
+
+.. currentmodule:: odl.discr.grid
+
+.. autoproperty:: RectGrid.meshgrid

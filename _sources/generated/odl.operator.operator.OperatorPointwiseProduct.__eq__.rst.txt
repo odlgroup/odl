@@ -1,0 +1,8 @@
+:orphan:
+
+OperatorPointwiseProduct.__eq__
+=====================================================
+
+.. currentmodule:: odl.operator.operator
+
+.. automethod:: OperatorPointwiseProduct.__eq__

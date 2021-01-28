@@ -1,0 +1,8 @@
+:orphan:
+
+TensorSpaceUfuncs.ceil
+======================================
+
+.. currentmodule:: odl.util.ufuncs
+
+.. automethod:: TensorSpaceUfuncs.ceil

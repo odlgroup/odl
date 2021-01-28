@@ -1,0 +1,44 @@
+﻿KullbackLeibler
+==========================================================
+
+.. currentmodule:: odl.solvers.functional.default_functionals
+
+.. autoclass:: KullbackLeibler
+   :show-inheritance:
+   
+   
+   .. automethod:: __init__
+   
+      
+   
+   .. HACK -- the point here is that we don't want this to appear in the output, but the autosummary should still generate the pages.
+      .. autosummary::
+         :toctree:
+      
+         KullbackLeibler.__call__
+         KullbackLeibler.__eq__
+         KullbackLeibler._call
+         KullbackLeibler.bregman
+         KullbackLeibler.derivative
+         KullbackLeibler.norm
+         KullbackLeibler.translated
+   
+
+    
+   .. HACK -- the point here is that we don't want this to appear in the output, but the autosummary should still generate the pages.
+      .. autosummary::
+         :toctree:
+      
+         KullbackLeibler.adjoint
+         KullbackLeibler.convex_conj
+         KullbackLeibler.domain
+         KullbackLeibler.grad_lipschitz
+         KullbackLeibler.gradient
+         KullbackLeibler.inverse
+         KullbackLeibler.is_functional
+         KullbackLeibler.is_linear
+         KullbackLeibler.prior
+         KullbackLeibler.proximal
+         KullbackLeibler.range
+   
+   

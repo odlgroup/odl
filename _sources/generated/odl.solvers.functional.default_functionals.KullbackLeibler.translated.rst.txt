@@ -1,0 +1,8 @@
+:orphan:
+
+KullbackLeibler.translated
+=====================================================================
+
+.. currentmodule:: odl.solvers.functional.default_functionals
+
+.. automethod:: KullbackLeibler.translated

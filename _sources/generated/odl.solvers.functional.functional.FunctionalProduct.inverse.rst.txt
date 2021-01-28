@@ -1,0 +1,6 @@
+FunctionalProduct.inverse
+===========================================================
+
+.. currentmodule:: odl.solvers.functional.functional
+
+.. autoproperty:: FunctionalProduct.inverse

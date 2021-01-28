@@ -1,0 +1,8 @@
+:orphan:
+
+TensorSpaceUfuncs.arcsin
+========================================
+
+.. currentmodule:: odl.util.ufuncs
+
+.. automethod:: TensorSpaceUfuncs.arcsin

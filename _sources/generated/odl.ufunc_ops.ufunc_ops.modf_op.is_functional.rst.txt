@@ -1,0 +1,6 @@
+modf_op.is_functional
+=============================================
+
+.. currentmodule:: odl.ufunc_ops.ufunc_ops
+
+.. autoproperty:: modf_op.is_functional

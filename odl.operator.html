@@ -1,0 +1,331 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>operator &mdash; odl 1.0.0.dev0 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="default_ops" href="odl.operator.default_ops.html" />
+    <link rel="prev" title="uniform_partition_fromintv" href="generated/odl.discr.partition.uniform_partition_fromintv.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="index.html" class="icon icon-home"> odl
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                1.0.0.dev0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Getting Started</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="getting_started/getting_started.html">Getting Started</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Working with ODL</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="guide/guide.html">User’s guide – selected topics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="math/math.html">Mathematical Background</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Developer zone</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="dev/dev.html">Contributing to ODL</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Useful facts</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="guide/faq.html">Frequently asked questions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="guide/glossary.html">Glossary</a></li>
+<li class="toctree-l1"><a class="reference internal" href="release_notes.html">Release Notes</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="refs.html">References</a></li>
+</ul>
+<p class="caption"><span class="caption-text">API Reference</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="odl.html">odl</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="odl.contrib.html">contrib</a></li>
+<li class="toctree-l2"><a class="reference internal" href="odl.deform.html">deform</a></li>
+<li class="toctree-l2"><a class="reference internal" href="odl.diagnostics.html">diagnostics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="odl.discr.html">discr</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">operator</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="odl.operator.default_ops.html">default_ops</a></li>
+<li class="toctree-l3"><a class="reference internal" href="odl.operator.operator.html">operator</a></li>
+<li class="toctree-l3"><a class="reference internal" href="odl.operator.oputils.html">oputils</a></li>
+<li class="toctree-l3"><a class="reference internal" href="odl.operator.pspace_ops.html">pspace_ops</a></li>
+<li class="toctree-l3"><a class="reference internal" href="odl.operator.tensor_ops.html">tensor_ops</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="odl.phantom.html">phantom</a></li>
+<li class="toctree-l2"><a class="reference internal" href="odl.set.html">set</a></li>
+<li class="toctree-l2"><a class="reference internal" href="odl.solvers.html">solvers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="odl.space.html">space</a></li>
+<li class="toctree-l2"><a class="reference internal" href="odl.tomo.html">tomo</a></li>
+<li class="toctree-l2"><a class="reference internal" href="odl.trafos.html">trafos</a></li>
+<li class="toctree-l2"><a class="reference internal" href="odl.ufunc_ops.html">ufunc_ops</a></li>
+<li class="toctree-l2"><a class="reference internal" href="odl.util.html">util</a></li>
+</ul>
+</li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">odl</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="odl.html">odl</a> &raquo;</li>
+        
+      <li>operator</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            <a href="_sources/odl.operator.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="operator">
+<h1>operator<a class="headerlink" href="#operator" title="Permalink to this headline">¶</a></h1>
+<p>Implementations of mathematical operators.</p>
+<p class="rubric">Modules</p>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="odl.operator.default_ops.html">default_ops</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="generated/odl.operator.default_ops.ComplexEmbedding.html">ComplexEmbedding</a></li>
+<li class="toctree-l2"><a class="reference internal" href="generated/odl.operator.default_ops.ComplexModulus.html">ComplexModulus</a></li>
+<li class="toctree-l2"><a class="reference internal" href="generated/odl.operator.default_ops.ComplexModulusSquared.html">ComplexModulusSquared</a></li>
+<li class="toctree-l2"><a class="reference internal" href="generated/odl.operator.default_ops.ConstantOperator.html">ConstantOperator</a></li>
+<li class="toctree-l2"><a class="reference internal" href="generated/odl.operator.default_ops.DistOperator.html">DistOperator</a></li>
+<li class="toctree-l2"><a class="reference internal" href="generated/odl.operator.default_ops.IdentityOperator.html">IdentityOperator</a></li>
+<li class="toctree-l2"><a class="reference internal" href="generated/odl.operator.default_ops.ImagPart.html">ImagPart</a></li>
+<li class="toctree-l2"><a class="reference internal" href="generated/odl.operator.default_ops.InnerProductOperator.html">InnerProductOperator</a></li>
+<li class="toctree-l2"><a class="reference internal" href="generated/odl.operator.default_ops.LinCombOperator.html">LinCombOperator</a></li>
+<li class="toctree-l2"><a class="reference internal" href="generated/odl.operator.default_ops.MultiplyOperator.html">MultiplyOperator</a></li>
+<li class="toctree-l2"><a class="reference internal" href="generated/odl.operator.default_ops.NormOperator.html">NormOperator</a></li>
+<li class="toctree-l2"><a class="reference internal" href="generated/odl.operator.default_ops.PowerOperator.html">PowerOperator</a></li>
+<li class="toctree-l2"><a class="reference internal" href="generated/odl.operator.default_ops.RealPart.html">RealPart</a></li>
+<li class="toctree-l2"><a class="reference internal" href="generated/odl.operator.default_ops.ScalingOperator.html">ScalingOperator</a></li>
+<li class="toctree-l2"><a class="reference internal" href="generated/odl.operator.default_ops.ZeroOperator.html">ZeroOperator</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="odl.operator.operator.html">operator</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="generated/odl.operator.operator.FunctionalLeftVectorMult.html">FunctionalLeftVectorMult</a></li>
+<li class="toctree-l2"><a class="reference internal" href="generated/odl.operator.operator.OpDomainError.html">OpDomainError</a></li>
+<li class="toctree-l2"><a class="reference internal" href="generated/odl.operator.operator.OpNotImplementedError.html">OpNotImplementedError</a></li>
+<li class="toctree-l2"><a class="reference internal" href="generated/odl.operator.operator.OpRangeError.html">OpRangeError</a></li>
+<li class="toctree-l2"><a class="reference internal" href="generated/odl.operator.operator.OpTypeError.html">OpTypeError</a></li>
+<li class="toctree-l2"><a class="reference internal" href="generated/odl.operator.operator.Operator.html">Operator</a></li>
+<li class="toctree-l2"><a class="reference internal" href="generated/odl.operator.operator.OperatorComp.html">OperatorComp</a></li>
+<li class="toctree-l2"><a class="reference internal" href="generated/odl.operator.operator.OperatorLeftScalarMult.html">OperatorLeftScalarMult</a></li>
+<li class="toctree-l2"><a class="reference internal" href="generated/odl.operator.operator.OperatorLeftVectorMult.html">OperatorLeftVectorMult</a></li>
+<li class="toctree-l2"><a class="reference internal" href="generated/odl.operator.operator.OperatorPointwiseProduct.html">OperatorPointwiseProduct</a></li>
+<li class="toctree-l2"><a class="reference internal" href="generated/odl.operator.operator.OperatorRightScalarMult.html">OperatorRightScalarMult</a></li>
+<li class="toctree-l2"><a class="reference internal" href="generated/odl.operator.operator.OperatorRightVectorMult.html">OperatorRightVectorMult</a></li>
+<li class="toctree-l2"><a class="reference internal" href="generated/odl.operator.operator.OperatorSum.html">OperatorSum</a></li>
+<li class="toctree-l2"><a class="reference internal" href="generated/odl.operator.operator.OperatorVectorSum.html">OperatorVectorSum</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="odl.operator.oputils.html">oputils</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="generated/odl.operator.oputils.as_scipy_functional.html">as_scipy_functional</a></li>
+<li class="toctree-l2"><a class="reference internal" href="generated/odl.operator.oputils.as_scipy_operator.html">as_scipy_operator</a></li>
+<li class="toctree-l2"><a class="reference internal" href="generated/odl.operator.oputils.matrix_representation.html">matrix_representation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="generated/odl.operator.oputils.power_method_opnorm.html">power_method_opnorm</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="odl.operator.pspace_ops.html">pspace_ops</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="generated/odl.operator.pspace_ops.BroadcastOperator.html">BroadcastOperator</a></li>
+<li class="toctree-l2"><a class="reference internal" href="generated/odl.operator.pspace_ops.ComponentProjection.html">ComponentProjection</a></li>
+<li class="toctree-l2"><a class="reference internal" href="generated/odl.operator.pspace_ops.ComponentProjectionAdjoint.html">ComponentProjectionAdjoint</a></li>
+<li class="toctree-l2"><a class="reference internal" href="generated/odl.operator.pspace_ops.DiagonalOperator.html">DiagonalOperator</a></li>
+<li class="toctree-l2"><a class="reference internal" href="generated/odl.operator.pspace_ops.ProductSpaceOperator.html">ProductSpaceOperator</a></li>
+<li class="toctree-l2"><a class="reference internal" href="generated/odl.operator.pspace_ops.ReductionOperator.html">ReductionOperator</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="odl.operator.tensor_ops.html">tensor_ops</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="generated/odl.operator.tensor_ops.FlatteningOperator.html">FlatteningOperator</a></li>
+<li class="toctree-l2"><a class="reference internal" href="generated/odl.operator.tensor_ops.MatrixOperator.html">MatrixOperator</a></li>
+<li class="toctree-l2"><a class="reference internal" href="generated/odl.operator.tensor_ops.PointwiseInner.html">PointwiseInner</a></li>
+<li class="toctree-l2"><a class="reference internal" href="generated/odl.operator.tensor_ops.PointwiseInnerAdjoint.html">PointwiseInnerAdjoint</a></li>
+<li class="toctree-l2"><a class="reference internal" href="generated/odl.operator.tensor_ops.PointwiseInnerBase.html">PointwiseInnerBase</a></li>
+<li class="toctree-l2"><a class="reference internal" href="generated/odl.operator.tensor_ops.PointwiseNorm.html">PointwiseNorm</a></li>
+<li class="toctree-l2"><a class="reference internal" href="generated/odl.operator.tensor_ops.PointwiseSum.html">PointwiseSum</a></li>
+<li class="toctree-l2"><a class="reference internal" href="generated/odl.operator.tensor_ops.PointwiseTensorFieldOperator.html">PointwiseTensorFieldOperator</a></li>
+<li class="toctree-l2"><a class="reference internal" href="generated/odl.operator.tensor_ops.SamplingOperator.html">SamplingOperator</a></li>
+<li class="toctree-l2"><a class="reference internal" href="generated/odl.operator.tensor_ops.WeightedSumSamplingOperator.html">WeightedSumSamplingOperator</a></li>
+<li class="toctree-l2"><a class="reference internal" href="generated/odl.operator.tensor_ops.is_compatible_space.html">is_compatible_space</a></li>
+</ul>
+</li>
+</ul>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+        <a href="odl.operator.default_ops.html" class="btn btn-neutral float-right" title="default_ops" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="generated/odl.discr.partition.uniform_partition_fromintv.html" class="btn btn-neutral float-left" title="uniform_partition_fromintv" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &#169; Copyright 2014-2020 The ODL Contributors.
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

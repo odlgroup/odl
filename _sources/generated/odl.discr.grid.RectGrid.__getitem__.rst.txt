@@ -1,0 +1,8 @@
+:orphan:
+
+RectGrid.__getitem__
+===================================
+
+.. currentmodule:: odl.discr.grid
+
+.. automethod:: RectGrid.__getitem__

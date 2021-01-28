@@ -1,0 +1,8 @@
+:orphan:
+
+ProductSpace.zero
+==================================
+
+.. currentmodule:: odl.space.pspace
+
+.. automethod:: ProductSpace.zero

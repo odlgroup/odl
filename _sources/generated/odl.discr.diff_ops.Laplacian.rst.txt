@@ -1,0 +1,38 @@
+﻿Laplacian
+============================
+
+.. currentmodule:: odl.discr.diff_ops
+
+.. autoclass:: Laplacian
+   :show-inheritance:
+   
+   
+   .. automethod:: __init__
+   
+      
+   
+   .. HACK -- the point here is that we don't want this to appear in the output, but the autosummary should still generate the pages.
+      .. autosummary::
+         :toctree:
+      
+         Laplacian.__call__
+         Laplacian.__eq__
+         Laplacian._call
+         Laplacian.derivative
+         Laplacian.norm
+   
+
+    
+   .. HACK -- the point here is that we don't want this to appear in the output, but the autosummary should still generate the pages.
+      .. autosummary::
+         :toctree:
+      
+         Laplacian.adjoint
+         Laplacian.base_space
+         Laplacian.domain
+         Laplacian.inverse
+         Laplacian.is_functional
+         Laplacian.is_linear
+         Laplacian.range
+   
+   

@@ -1,0 +1,6 @@
+PointwiseSum.vecfield
+=============================================
+
+.. currentmodule:: odl.operator.tensor_ops
+
+.. autoproperty:: PointwiseSum.vecfield

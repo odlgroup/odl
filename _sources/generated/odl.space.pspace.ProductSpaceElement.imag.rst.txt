@@ -1,0 +1,6 @@
+ProductSpaceElement.imag
+=========================================
+
+.. currentmodule:: odl.space.pspace
+
+.. autoproperty:: ProductSpaceElement.imag

@@ -1,0 +1,6 @@
+NuclearNorm.convex_conj
+==================================================================
+
+.. currentmodule:: odl.solvers.functional.default_functionals
+
+.. autoproperty:: NuclearNorm.convex_conj

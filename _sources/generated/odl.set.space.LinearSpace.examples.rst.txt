@@ -1,0 +1,6 @@
+LinearSpace.examples
+==================================
+
+.. currentmodule:: odl.set.space
+
+.. autoproperty:: LinearSpace.examples

@@ -1,0 +1,8 @@
+:orphan:
+
+NumpyTensor.conj
+======================================
+
+.. currentmodule:: odl.space.npy_tensors
+
+.. automethod:: NumpyTensor.conj

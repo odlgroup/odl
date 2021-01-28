@@ -1,0 +1,8 @@
+:orphan:
+
+FunctionalScalarSum.__eq__
+============================================================
+
+.. currentmodule:: odl.solvers.functional.functional
+
+.. automethod:: FunctionalScalarSum.__eq__

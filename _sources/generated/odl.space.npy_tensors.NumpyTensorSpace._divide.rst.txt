@@ -1,0 +1,8 @@
+:orphan:
+
+NumpyTensorSpace._divide
+==============================================
+
+.. currentmodule:: odl.space.npy_tensors
+
+.. automethod:: NumpyTensorSpace._divide

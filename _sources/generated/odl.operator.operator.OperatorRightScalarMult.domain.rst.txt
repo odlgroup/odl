@@ -1,0 +1,6 @@
+OperatorRightScalarMult.domain
+====================================================
+
+.. currentmodule:: odl.operator.operator
+
+.. autoproperty:: OperatorRightScalarMult.domain

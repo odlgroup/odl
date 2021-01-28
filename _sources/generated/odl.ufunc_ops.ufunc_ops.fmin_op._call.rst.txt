@@ -1,0 +1,8 @@
+:orphan:
+
+fmin_op._call
+=====================================
+
+.. currentmodule:: odl.ufunc_ops.ufunc_ops
+
+.. automethod:: fmin_op._call

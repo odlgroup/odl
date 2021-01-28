@@ -1,0 +1,6 @@
+KullbackLeibler.convex_conj
+======================================================================
+
+.. currentmodule:: odl.solvers.functional.default_functionals
+
+.. autoproperty:: KullbackLeibler.convex_conj

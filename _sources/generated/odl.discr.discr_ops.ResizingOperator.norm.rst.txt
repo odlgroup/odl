@@ -1,0 +1,8 @@
+:orphan:
+
+ResizingOperator.norm
+=========================================
+
+.. currentmodule:: odl.discr.discr_ops
+
+.. automethod:: ResizingOperator.norm

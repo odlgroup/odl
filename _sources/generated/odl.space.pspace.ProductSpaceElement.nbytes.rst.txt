@@ -1,0 +1,6 @@
+ProductSpaceElement.nbytes
+===========================================
+
+.. currentmodule:: odl.space.pspace
+
+.. autoproperty:: ProductSpaceElement.nbytes

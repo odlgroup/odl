@@ -1,0 +1,6 @@
+ResizingOperator.offset
+===========================================
+
+.. currentmodule:: odl.discr.discr_ops
+
+.. autoproperty:: ResizingOperator.offset

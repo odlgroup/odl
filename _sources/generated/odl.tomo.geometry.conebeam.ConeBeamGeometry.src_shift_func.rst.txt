@@ -1,0 +1,6 @@
+ConeBeamGeometry.src_shift_func
+==========================================================
+
+.. currentmodule:: odl.tomo.geometry.conebeam
+
+.. autoproperty:: ConeBeamGeometry.src_shift_func

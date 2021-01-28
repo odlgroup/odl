@@ -1,0 +1,6 @@
+﻿sparse_meshgrid
+==============================
+
+.. currentmodule:: odl.discr.grid
+
+.. autofunction:: sparse_meshgrid

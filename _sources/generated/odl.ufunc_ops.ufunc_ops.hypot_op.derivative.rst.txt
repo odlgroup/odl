@@ -1,0 +1,8 @@
+:orphan:
+
+hypot_op.derivative
+===========================================
+
+.. currentmodule:: odl.ufunc_ops.ufunc_ops
+
+.. automethod:: hypot_op.derivative

@@ -1,0 +1,6 @@
+IndicatorBox.domain
+==============================================================
+
+.. currentmodule:: odl.solvers.functional.default_functionals
+
+.. autoproperty:: IndicatorBox.domain

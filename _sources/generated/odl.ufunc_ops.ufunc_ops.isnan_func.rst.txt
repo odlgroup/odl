@@ -1,0 +1,43 @@
+﻿isnan_func
+==================================
+
+.. currentmodule:: odl.ufunc_ops.ufunc_ops
+
+.. autoclass:: isnan_func
+   :show-inheritance:
+   
+   
+   .. automethod:: __init__
+   
+      
+   
+   .. HACK -- the point here is that we don't want this to appear in the output, but the autosummary should still generate the pages.
+      .. autosummary::
+         :toctree:
+      
+         isnan_func.__call__
+         isnan_func.__eq__
+         isnan_func._call
+         isnan_func.bregman
+         isnan_func.derivative
+         isnan_func.norm
+         isnan_func.translated
+   
+
+    
+   .. HACK -- the point here is that we don't want this to appear in the output, but the autosummary should still generate the pages.
+      .. autosummary::
+         :toctree:
+      
+         isnan_func.adjoint
+         isnan_func.convex_conj
+         isnan_func.domain
+         isnan_func.grad_lipschitz
+         isnan_func.gradient
+         isnan_func.inverse
+         isnan_func.is_functional
+         isnan_func.is_linear
+         isnan_func.proximal
+         isnan_func.range
+   
+   

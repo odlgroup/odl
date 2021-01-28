@@ -1,0 +1,37 @@
+﻿maximum_op
+==================================
+
+.. currentmodule:: odl.ufunc_ops.ufunc_ops
+
+.. autoclass:: maximum_op
+   :show-inheritance:
+   
+   
+   .. automethod:: __init__
+   
+      
+   
+   .. HACK -- the point here is that we don't want this to appear in the output, but the autosummary should still generate the pages.
+      .. autosummary::
+         :toctree:
+      
+         maximum_op.__call__
+         maximum_op.__eq__
+         maximum_op._call
+         maximum_op.derivative
+         maximum_op.norm
+   
+
+    
+   .. HACK -- the point here is that we don't want this to appear in the output, but the autosummary should still generate the pages.
+      .. autosummary::
+         :toctree:
+      
+         maximum_op.adjoint
+         maximum_op.domain
+         maximum_op.inverse
+         maximum_op.is_functional
+         maximum_op.is_linear
+         maximum_op.range
+   
+   

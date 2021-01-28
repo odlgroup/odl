@@ -1,0 +1,6 @@
+LinearSpaceElement.T
+==================================
+
+.. currentmodule:: odl.set.space
+
+.. autoproperty:: LinearSpaceElement.T

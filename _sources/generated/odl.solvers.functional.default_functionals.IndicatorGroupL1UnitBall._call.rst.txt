@@ -1,0 +1,8 @@
+:orphan:
+
+IndicatorGroupL1UnitBall._call
+=========================================================================
+
+.. currentmodule:: odl.solvers.functional.default_functionals
+
+.. automethod:: IndicatorGroupL1UnitBall._call

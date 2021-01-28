@@ -1,0 +1,6 @@
+﻿precompute_raveled_slices
+===========================================================
+
+.. currentmodule:: odl.trafos.backends.pywt_bindings
+
+.. autofunction:: precompute_raveled_slices

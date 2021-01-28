@@ -1,0 +1,8 @@
+:orphan:
+
+RayTransform.get_impl
+==================================================
+
+.. currentmodule:: odl.tomo.operators.ray_trafo
+
+.. automethod:: RayTransform.get_impl

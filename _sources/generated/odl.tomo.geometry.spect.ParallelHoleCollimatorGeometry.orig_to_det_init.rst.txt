@@ -1,0 +1,6 @@
+ParallelHoleCollimatorGeometry.orig_to_det_init
+=======================================================================
+
+.. currentmodule:: odl.tomo.geometry.spect
+
+.. autoproperty:: ParallelHoleCollimatorGeometry.orig_to_det_init

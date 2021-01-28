@@ -1,0 +1,6 @@
+OperatorPointwiseProduct.inverse
+======================================================
+
+.. currentmodule:: odl.operator.operator
+
+.. autoproperty:: OperatorPointwiseProduct.inverse

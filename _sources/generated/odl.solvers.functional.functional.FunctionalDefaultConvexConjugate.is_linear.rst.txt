@@ -1,0 +1,6 @@
+FunctionalDefaultConvexConjugate.is_linear
+============================================================================
+
+.. currentmodule:: odl.solvers.functional.functional
+
+.. autoproperty:: FunctionalDefaultConvexConjugate.is_linear

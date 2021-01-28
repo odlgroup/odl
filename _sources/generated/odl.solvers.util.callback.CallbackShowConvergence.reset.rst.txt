@@ -1,0 +1,8 @@
+:orphan:
+
+CallbackShowConvergence.reset
+=======================================================
+
+.. currentmodule:: odl.solvers.util.callback
+
+.. automethod:: CallbackShowConvergence.reset

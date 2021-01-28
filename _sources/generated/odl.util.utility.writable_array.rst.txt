@@ -1,0 +1,6 @@
+﻿writable_array
+===============================
+
+.. currentmodule:: odl.util.utility
+
+.. autofunction:: writable_array

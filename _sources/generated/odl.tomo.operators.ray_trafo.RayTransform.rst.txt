@@ -1,0 +1,40 @@
+﻿RayTransform
+=========================================
+
+.. currentmodule:: odl.tomo.operators.ray_trafo
+
+.. autoclass:: RayTransform
+   :show-inheritance:
+   
+   
+   .. automethod:: __init__
+   
+      
+   
+   .. HACK -- the point here is that we don't want this to appear in the output, but the autosummary should still generate the pages.
+      .. autosummary::
+         :toctree:
+      
+         RayTransform.__call__
+         RayTransform.__eq__
+         RayTransform._call
+         RayTransform.derivative
+         RayTransform.get_impl
+         RayTransform.norm
+   
+
+    
+   .. HACK -- the point here is that we don't want this to appear in the output, but the autosummary should still generate the pages.
+      .. autosummary::
+         :toctree:
+      
+         RayTransform.adjoint
+         RayTransform.domain
+         RayTransform.geometry
+         RayTransform.impl
+         RayTransform.inverse
+         RayTransform.is_functional
+         RayTransform.is_linear
+         RayTransform.range
+   
+   

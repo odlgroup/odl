@@ -1,0 +1,17 @@
+forward_backward
+================
+
+Optimization methods based on a forward-backward splitting scheme.
+
+.. currentmodule:: odl.solvers.nonsmooth.forward_backward
+
+
+
+
+.. rubric:: Functions
+
+.. autosummary::
+   :toctree: generated/
+
+   ~odl.solvers.nonsmooth.forward_backward.forward_backward_pd
+

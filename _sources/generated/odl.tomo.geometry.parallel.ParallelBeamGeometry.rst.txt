@@ -1,0 +1,47 @@
+﻿ParallelBeamGeometry
+===============================================
+
+.. currentmodule:: odl.tomo.geometry.parallel
+
+.. autoclass:: ParallelBeamGeometry
+   :show-inheritance:
+   
+   
+   .. automethod:: __init__
+   
+      
+   
+   .. HACK -- the point here is that we don't want this to appear in the output, but the autosummary should still generate the pages.
+      .. autosummary::
+         :toctree:
+      
+         ParallelBeamGeometry.__eq__
+         ParallelBeamGeometry.det_point_position
+         ParallelBeamGeometry.det_refpoint
+         ParallelBeamGeometry.det_to_src
+         ParallelBeamGeometry.rotation_matrix
+   
+
+    
+   .. HACK -- the point here is that we don't want this to appear in the output, but the autosummary should still generate the pages.
+      .. autosummary::
+         :toctree:
+      
+         ParallelBeamGeometry.angles
+         ParallelBeamGeometry.check_bounds
+         ParallelBeamGeometry.det_grid
+         ParallelBeamGeometry.det_params
+         ParallelBeamGeometry.det_partition
+         ParallelBeamGeometry.det_pos_init
+         ParallelBeamGeometry.detector
+         ParallelBeamGeometry.grid
+         ParallelBeamGeometry.implementation_cache
+         ParallelBeamGeometry.motion_grid
+         ParallelBeamGeometry.motion_params
+         ParallelBeamGeometry.motion_partition
+         ParallelBeamGeometry.ndim
+         ParallelBeamGeometry.params
+         ParallelBeamGeometry.partition
+         ParallelBeamGeometry.translation
+   
+   

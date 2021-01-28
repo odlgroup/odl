@@ -1,0 +1,37 @@
+﻿arccosh_op
+==================================
+
+.. currentmodule:: odl.ufunc_ops.ufunc_ops
+
+.. autoclass:: arccosh_op
+   :show-inheritance:
+   
+   
+   .. automethod:: __init__
+   
+      
+   
+   .. HACK -- the point here is that we don't want this to appear in the output, but the autosummary should still generate the pages.
+      .. autosummary::
+         :toctree:
+      
+         arccosh_op.__call__
+         arccosh_op.__eq__
+         arccosh_op._call
+         arccosh_op.derivative
+         arccosh_op.norm
+   
+
+    
+   .. HACK -- the point here is that we don't want this to appear in the output, but the autosummary should still generate the pages.
+      .. autosummary::
+         :toctree:
+      
+         arccosh_op.adjoint
+         arccosh_op.domain
+         arccosh_op.inverse
+         arccosh_op.is_functional
+         arccosh_op.is_linear
+         arccosh_op.range
+   
+   

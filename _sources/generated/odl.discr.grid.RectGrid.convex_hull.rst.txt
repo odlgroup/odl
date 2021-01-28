@@ -1,0 +1,8 @@
+:orphan:
+
+RectGrid.convex_hull
+===================================
+
+.. currentmodule:: odl.discr.grid
+
+.. automethod:: RectGrid.convex_hull

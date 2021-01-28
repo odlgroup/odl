@@ -1,0 +1,6 @@
+﻿proj_simplex
+=====================================================
+
+.. currentmodule:: odl.solvers.nonsmooth.proximal_operators
+
+.. autofunction:: proj_simplex

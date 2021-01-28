@@ -1,0 +1,6 @@
+DivergentBeamGeometry.implementation_cache
+=====================================================================
+
+.. currentmodule:: odl.tomo.geometry.geometry
+
+.. autoproperty:: DivergentBeamGeometry.implementation_cache

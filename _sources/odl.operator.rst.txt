@@ -1,0 +1,21 @@
+operator
+========
+
+Implementations of mathematical operators.
+
+.. currentmodule:: odl.operator
+
+
+.. rubric:: Modules
+
+.. toctree::
+   :maxdepth: 2
+
+   odl.operator.default_ops
+   odl.operator.operator
+   odl.operator.oputils
+   odl.operator.pspace_ops
+   odl.operator.tensor_ops
+
+
+

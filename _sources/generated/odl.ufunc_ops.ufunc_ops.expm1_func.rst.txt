@@ -1,0 +1,43 @@
+﻿expm1_func
+==================================
+
+.. currentmodule:: odl.ufunc_ops.ufunc_ops
+
+.. autoclass:: expm1_func
+   :show-inheritance:
+   
+   
+   .. automethod:: __init__
+   
+      
+   
+   .. HACK -- the point here is that we don't want this to appear in the output, but the autosummary should still generate the pages.
+      .. autosummary::
+         :toctree:
+      
+         expm1_func.__call__
+         expm1_func.__eq__
+         expm1_func._call
+         expm1_func.bregman
+         expm1_func.derivative
+         expm1_func.norm
+         expm1_func.translated
+   
+
+    
+   .. HACK -- the point here is that we don't want this to appear in the output, but the autosummary should still generate the pages.
+      .. autosummary::
+         :toctree:
+      
+         expm1_func.adjoint
+         expm1_func.convex_conj
+         expm1_func.domain
+         expm1_func.grad_lipschitz
+         expm1_func.gradient
+         expm1_func.inverse
+         expm1_func.is_functional
+         expm1_func.is_linear
+         expm1_func.proximal
+         expm1_func.range
+   
+   

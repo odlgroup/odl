@@ -1,0 +1,6 @@
+PointwiseInnerAdjoint.is_linear
+=======================================================
+
+.. currentmodule:: odl.operator.tensor_ops
+
+.. autoproperty:: PointwiseInnerAdjoint.is_linear

@@ -1,0 +1,8 @@
+:orphan:
+
+ProductSpaceUfuncs.tanh
+=======================================
+
+.. currentmodule:: odl.util.ufuncs
+
+.. automethod:: ProductSpaceUfuncs.tanh

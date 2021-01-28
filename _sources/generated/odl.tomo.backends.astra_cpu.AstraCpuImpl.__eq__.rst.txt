@@ -1,0 +1,8 @@
+:orphan:
+
+AstraCpuImpl.__eq__
+===============================================
+
+.. currentmodule:: odl.tomo.backends.astra_cpu
+
+.. automethod:: AstraCpuImpl.__eq__

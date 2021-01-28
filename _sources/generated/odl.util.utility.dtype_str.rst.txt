@@ -1,0 +1,6 @@
+﻿dtype_str
+==========================
+
+.. currentmodule:: odl.util.utility
+
+.. autofunction:: dtype_str

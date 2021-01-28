@@ -1,0 +1,6 @@
+KullbackLeibler.is_linear
+====================================================================
+
+.. currentmodule:: odl.solvers.functional.default_functionals
+
+.. autoproperty:: KullbackLeibler.is_linear

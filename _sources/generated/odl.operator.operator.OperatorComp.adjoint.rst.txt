@@ -1,0 +1,6 @@
+OperatorComp.adjoint
+==========================================
+
+.. currentmodule:: odl.operator.operator
+
+.. autoproperty:: OperatorComp.adjoint

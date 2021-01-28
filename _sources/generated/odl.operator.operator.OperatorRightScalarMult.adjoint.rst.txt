@@ -1,0 +1,6 @@
+OperatorRightScalarMult.adjoint
+=====================================================
+
+.. currentmodule:: odl.operator.operator
+
+.. autoproperty:: OperatorRightScalarMult.adjoint

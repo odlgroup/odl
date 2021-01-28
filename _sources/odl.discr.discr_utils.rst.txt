@@ -1,0 +1,26 @@
+discr_utils
+===========
+
+Helpers for discretization-related functionality.
+
+Most functions deal with interpolation of arrays, sampling of functions and
+providing a single interface for the sampler by wrapping functions or
+arrays of functions appropriately.
+
+
+.. currentmodule:: odl.discr.discr_utils
+
+
+
+
+.. rubric:: Functions
+
+.. autosummary::
+   :toctree: generated/
+
+   ~odl.discr.discr_utils.linear_interpolator
+   ~odl.discr.discr_utils.nearest_interpolator
+   ~odl.discr.discr_utils.per_axis_interpolator
+   ~odl.discr.discr_utils.point_collocation
+   ~odl.discr.discr_utils.sampling_function
+

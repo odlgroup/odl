@@ -1,0 +1,6 @@
+ProductSpaceCustomNorm.exponent
+================================================
+
+.. currentmodule:: odl.space.pspace
+
+.. autoproperty:: ProductSpaceCustomNorm.exponent

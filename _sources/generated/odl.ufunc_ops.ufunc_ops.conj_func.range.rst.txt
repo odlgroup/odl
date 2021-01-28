@@ -1,0 +1,6 @@
+conj_func.range
+=======================================
+
+.. currentmodule:: odl.ufunc_ops.ufunc_ops
+
+.. autoproperty:: conj_func.range

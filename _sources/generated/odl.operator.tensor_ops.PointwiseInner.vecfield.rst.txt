@@ -1,0 +1,6 @@
+PointwiseInner.vecfield
+===============================================
+
+.. currentmodule:: odl.operator.tensor_ops
+
+.. autoproperty:: PointwiseInner.vecfield

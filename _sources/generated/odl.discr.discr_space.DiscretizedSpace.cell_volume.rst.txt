@@ -1,0 +1,6 @@
+DiscretizedSpace.cell_volume
+==================================================
+
+.. currentmodule:: odl.discr.discr_space
+
+.. autoproperty:: DiscretizedSpace.cell_volume

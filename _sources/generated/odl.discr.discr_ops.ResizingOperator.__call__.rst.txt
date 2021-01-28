@@ -1,0 +1,8 @@
+:orphan:
+
+ResizingOperator.__call__
+=============================================
+
+.. currentmodule:: odl.discr.discr_ops
+
+.. automethod:: ResizingOperator.__call__

@@ -1,0 +1,21 @@
+geometry
+========
+
+Tomographic geometries.
+
+.. currentmodule:: odl.tomo.geometry
+
+
+.. rubric:: Modules
+
+.. toctree::
+   :maxdepth: 2
+
+   odl.tomo.geometry.conebeam
+   odl.tomo.geometry.detector
+   odl.tomo.geometry.geometry
+   odl.tomo.geometry.parallel
+   odl.tomo.geometry.spect
+
+
+

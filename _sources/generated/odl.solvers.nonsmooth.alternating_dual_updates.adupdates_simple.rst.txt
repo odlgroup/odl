@@ -1,0 +1,6 @@
+﻿adupdates_simple
+===============================================================
+
+.. currentmodule:: odl.solvers.nonsmooth.alternating_dual_updates
+
+.. autofunction:: adupdates_simple

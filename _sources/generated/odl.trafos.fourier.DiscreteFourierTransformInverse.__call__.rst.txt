@@ -1,0 +1,8 @@
+:orphan:
+
+DiscreteFourierTransformInverse.__call__
+===========================================================
+
+.. currentmodule:: odl.trafos.fourier
+
+.. automethod:: DiscreteFourierTransformInverse.__call__

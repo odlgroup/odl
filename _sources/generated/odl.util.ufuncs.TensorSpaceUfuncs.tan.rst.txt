@@ -1,0 +1,8 @@
+:orphan:
+
+TensorSpaceUfuncs.tan
+=====================================
+
+.. currentmodule:: odl.util.ufuncs
+
+.. automethod:: TensorSpaceUfuncs.tan

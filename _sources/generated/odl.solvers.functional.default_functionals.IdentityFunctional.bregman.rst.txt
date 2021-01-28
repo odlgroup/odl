@@ -1,0 +1,8 @@
+:orphan:
+
+IdentityFunctional.bregman
+=====================================================================
+
+.. currentmodule:: odl.solvers.functional.default_functionals
+
+.. automethod:: IdentityFunctional.bregman

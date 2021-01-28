@@ -1,0 +1,6 @@
+PowerOperator.exponent
+===============================================
+
+.. currentmodule:: odl.operator.default_ops
+
+.. autoproperty:: PowerOperator.exponent
