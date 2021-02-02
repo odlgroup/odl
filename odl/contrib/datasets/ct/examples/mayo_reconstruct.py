@@ -1,29 +1,38 @@
 """Reconstruct Mayo dataset using FBP and compare to reference recon.
 
-Note that this example requires that Mayo has been previously downloaded and is
-stored in the location indicated by "proj_folder" and "rec_folder".
+Note that this example requires that projection and reconstruction data
+of a CT scan from the Mayo dataset have been previously downloaded (see
+[the webpage](https://ctcicblog.mayo.edu/hubcap/patient-ct-projection-data-library/))
+and are stored in the locations indicated by "proj_dir" and "rec_dir".
 
-In this example we only use a subset of the data for performance reasons,
-there are ~32 000 projections per patient in the full dataset.
+
+In this example we only use a subset of the data for performance reasons.
+The number of projections per patient varies in the full dataset. To get
+a reconstruction of the central part of the volume, modify the indices in
+the argument of the `mayo.load_projections` function accordingly.
 """
 import numpy as np
+import os
 import odl
 from odl.contrib.datasets.ct import mayo
 from time import perf_counter
 
-# define data folders
-proj_folder = odl.__path__[0] + '/../../data/LDCT-and-Projection-data/' \
-             'L004/08-21-2018-10971/1.000000-Full dose projections-24362/'
-rec_folder = odl.__path__[0] + '/../../data/LDCT-and-Projection-data/' \
-             'L004/08-21-2018-84608/1.000000-Full dose images-59704/'
+# replace with your local directory
+mayo_dir = ''
+# define projection and reconstruction data directories
+# e.g. for patient L004 full dose CT scan:
+proj_dir = os.path.join(
+    mayo_dir, 'L004/08-21-2018-10971/1.000000-Full dose projections-24362/')
+rec_dir = os.path.join(
+    mayo_dir, 'L004/08-21-2018-84608/1.000000-Full dose images-59704/')
 
-# Load projection data
-print("Loading projection data from {:s}".format(proj_folder))
-geometry, proj_data = mayo.load_projections(proj_folder,
+# Load projection data restricting to a central slice
+print("Loading projection data from {:s}".format(proj_dir))
+geometry, proj_data = mayo.load_projections(proj_dir,
                                             indices=slice(16000, 19000))
 # Load reconstruction data
-print("Loading reference data from {:s}".format(rec_folder))
-recon_space, volume = mayo.load_reconstruction(rec_folder)
+print("Loading reference data from {:s}".format(rec_dir))
+recon_space, volume = mayo.load_reconstruction(rec_dir)
 
 # ray transform
 ray_trafo = odl.tomo.RayTransform(recon_space, geometry)
@@ -47,11 +56,6 @@ stop = perf_counter()
 print('FBP done after {:.3f} seconds'.format(stop-start))
 
 fbp_result_HU = (fbp_result-0.0192)/0.0192*1000
-
-# Save reconstruction in Numpy format
-fbp_filename = proj_folder+'/fbp_result.npy'
-print("Saving reconstruction data in {:s}".format(fbp_filename))
-np.save(fbp_filename, fbp_result_HU)
 
 # Compare the computed recon to reference reconstruction (coronal slice)
 ref = recon_space.element(volume)

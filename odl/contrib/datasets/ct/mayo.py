@@ -11,9 +11,9 @@
 In addition to the standard ODL requirements, this library also requires:
 
     - tqdm
-    - dicom
-    - A copy of the Mayo dataset, see
-    https://www.aapm.org/GrandChallenge/LowDoseCT/#registration
+    - pydicom
+    - Samples from the Mayo dataset, see
+    https://ctcicblog.mayo.edu/hubcap/patient-ct-projection-data-library/
 """
 
 from __future__ import division
@@ -23,6 +23,7 @@ import sys
 import pydicom
 import odl
 import tqdm
+from functools import partial
 
 from pydicom.datadict import DicomDictionary, keyword_dict
 from odl.discr.discr_utils import linear_interpolator
@@ -38,16 +39,16 @@ keyword_dict.update(new_names_dict)
 __all__ = ('load_projections', 'load_reconstruction')
 
 
-def _read_projections(folder, indices):
-    """Read mayo projections from a folder."""
+def _read_projections(dir, indices):
+    """Read mayo projections from a directory."""
     datasets = []
     data_array = []
 
     # Get the relevant file names
-    file_names = sorted([f for f in os.listdir(folder) if f.endswith(".dcm")])
+    file_names = sorted([f for f in os.listdir(dir) if f.endswith(".dcm")])
 
     if len(file_names) == 0:
-        raise ValueError('No DICOM files found in {}'.format(folder))
+        raise ValueError('No DICOM files found in {}'.format(dir))
 
     file_names = file_names[indices]
 
@@ -55,12 +56,11 @@ def _read_projections(folder, indices):
                                             'Loading projection data')):
         # read the file
         try:
-            dataset = pydicom.read_file(folder + os.path.sep + file_name)
+            dataset = pydicom.read_file(os.path.join(dir, file_name))
         except:
             print("corrupted file: {}".format(file_name), file=sys.stderr)
             print("error:\n{}".format(sys.exc_info()[1]), file=sys.stderr)
-            print("skipping to next file..", file=sys.stderr)
-            continue
+            raise
 
         if not data_array:
             # Get some required data
@@ -76,7 +76,6 @@ def _read_projections(folder, indices):
             assert rescale_intercept == dataset.RescaleIntercept
             assert rescale_slope == dataset.RescaleSlope
 
-
         # Load the array as bytes
         proj_array = np.array(np.frombuffer(dataset.PixelData, 'H'),
                               dtype='float32')
@@ -84,7 +83,7 @@ def _read_projections(folder, indices):
         data_array.append(proj_array[:, ::-1])
         datasets.append(dataset)
 
-    data_array = np.array(data_array)
+    data_array = np.stack(data_array)
     # Rescale array
     data_array *= rescale_slope
     data_array += rescale_intercept
@@ -92,13 +91,13 @@ def _read_projections(folder, indices):
     return datasets, data_array
 
 
-def load_projections(folder, indices=None, use_ffs=True):
-    """Load geometry and data stored in Mayo format from folder.
+def load_projections(dir, indices=None, use_ffs=True):
+    """Load geometry and data stored in Mayo format from dir.
 
     Parameters
     ----------
-    folder : str
-        Path to the folder where the Mayo DICOM files are stored.
+    dir : str
+        Path to the directory where the Mayo DICOM files are stored.
     indices : optional
         Indices of the projections to load.
         Accepts advanced indexing such as slice or list of indices.
@@ -114,7 +113,7 @@ def load_projections(folder, indices=None, use_ffs=True):
         Projection data, given as the line integral of the linear attenuation
         coefficient (g/cm^3). Its unit is thus g/cm^2.
     """
-    datasets, data_array = _read_projections(folder, indices)
+    datasets, data_array = _read_projections(dir, indices)
 
     # Get the angles
     angles = np.array([d.DetectorFocalCenterAngularPosition for d in datasets])
@@ -139,8 +138,8 @@ def load_projections(folder, indices=None, use_ffs=True):
     # For unknown reasons, mayo does not include the tag
     # "TableFeedPerRotation", which is what we want.
     # Instead we manually compute the pitch
-    table_dist = datasets[-1].DetectorFocalCenterAxialPosition - \
-                 datasets[0].DetectorFocalCenterAxialPosition
+    table_dist = (datasets[-1].DetectorFocalCenterAxialPosition -
+                  datasets[0].DetectorFocalCenterAxialPosition)
     num_rot = (angles[-1] - angles[0]) / (2 * np.pi)
     pitch = table_dist / num_rot
 
@@ -160,8 +159,8 @@ def load_projections(folder, indices=None, use_ffs=True):
     detector_partition = odl.uniform_partition(det_minp, det_maxp, det_shape)
 
     # Convert offset to odl definitions
-    offset_along_axis = datasets[0].DetectorFocalCenterAxialPosition - \
-                        angles[0] / (2 * np.pi) * pitch
+    offset_along_axis = (datasets[0].DetectorFocalCenterAxialPosition -
+                         angles[0] / (2 * np.pi) * pitch)
 
     # Assemble geometry
     angle_partition = odl.nonuniform_partition(angles)
@@ -169,8 +168,10 @@ def load_projections(folder, indices=None, use_ffs=True):
     # Flying focal spot
     src_shift_func = None
     if use_ffs:
-        src_shift_func = lambda angle: odl.tomo.flying_focal_spot(
-                        angle, apart=angle_partition, shifts=shifts)
+        src_shift_func = partial(
+            odl.tomo.flying_focal_spot, apart=angle_partition, shifts=shifts)
+    else:
+        src_shift_func = None
 
     geometry = odl.tomo.ConeBeamGeometry(angle_partition,
                                          detector_partition,
@@ -203,8 +204,8 @@ def interpolate_flat_grid(data_array, range_grid, radial_dist):
     """
 
     # convert coordinates
-    theta, up, vp = range_grid.meshgrid #ray_trafo.range.grid.meshgrid
-    # d = src_radius + det_radius
+    theta, up, vp = range_grid.meshgrid
+
     u = radial_dist * np.arctan(up / radial_dist)
     v = radial_dist / np.sqrt(radial_dist**2 + up**2) * vp
 
@@ -218,13 +219,13 @@ def interpolate_flat_grid(data_array, range_grid, radial_dist):
     return proj_data
 
 
-def load_reconstruction(folder, slice_start=0, slice_end=-1):
-    """Load a volume from folder, also returns the corresponding partition.
+def load_reconstruction(dir, slice_start=0, slice_end=-1):
+    """Load a volume from dir, also returns the corresponding partition.
 
     Parameters
     ----------
-    folder : str
-        Path to the folder where the DICOM files are stored.
+    dir : str
+        Path to the directory where the DICOM files are stored.
     slice_start : int
         Index of the first slice to use. Used for subsampling.
     slice_end : int
@@ -249,10 +250,10 @@ def load_reconstruction(folder, slice_start=0, slice_end=-1):
     This function should handle all of these peculiarities and give a volume
     with the correct coordinate system attached.
     """
-    file_names = sorted([f for f in os.listdir(folder) if f.endswith(".dcm")])
+    file_names = sorted([f for f in os.listdir(dir) if f.endswith(".dcm")])
 
     if len(file_names) == 0:
-        raise ValueError('No DICOM files found in {}'.format(folder))
+        raise ValueError('No DICOM files found in {}'.format(dir))
 
     volumes = []
     datasets = []
@@ -261,7 +262,7 @@ def load_reconstruction(folder, slice_start=0, slice_end=-1):
 
     for file_name in tqdm.tqdm(file_names, 'loading volume data'):
         # read the file
-        dataset = pydicom.read_file(folder + os.path.sep + file_name)
+        dataset = pydicom.read_file(os.path.join(dir, file_name))
 
         # Get parameters
         pixel_size = np.array(dataset.PixelSpacing)
