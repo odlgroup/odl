@@ -9,6 +9,7 @@
 """Tomography helpers for Elekta systems."""
 
 import numpy as np
+import odl
 
 __all__ = ('elekta_icon_geometry',
            'elekta_icon_space',
