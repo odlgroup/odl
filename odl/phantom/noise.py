@@ -241,7 +241,7 @@ def salt_pepper_noise(vector, fraction=0.05, salt_vs_pepper=0.5,
                                int(fraction * vector.size)]
 
             values[salt_indices] = high_val
-            values[pepper_indices] = -low_val
+            values[pepper_indices] = low_val
             values = values.reshape(vector.space.shape)
 
     return vector.space.element(values)
