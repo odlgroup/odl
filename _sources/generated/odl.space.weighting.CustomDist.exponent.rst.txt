@@ -1,0 +1,6 @@
+CustomDist.exponent
+=======================================
+
+.. currentmodule:: odl.space.weighting
+
+.. autoproperty:: CustomDist.exponent

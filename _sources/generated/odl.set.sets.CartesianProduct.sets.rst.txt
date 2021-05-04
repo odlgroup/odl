@@ -1,0 +1,6 @@
+CartesianProduct.sets
+==================================
+
+.. currentmodule:: odl.set.sets
+
+.. autoproperty:: CartesianProduct.sets

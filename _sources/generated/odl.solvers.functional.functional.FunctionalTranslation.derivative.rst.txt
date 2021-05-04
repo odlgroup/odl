@@ -1,0 +1,8 @@
+:orphan:
+
+FunctionalTranslation.derivative
+==================================================================
+
+.. currentmodule:: odl.solvers.functional.functional
+
+.. automethod:: FunctionalTranslation.derivative

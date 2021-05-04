@@ -1,0 +1,6 @@
+QuadraticForm.convex_conj
+====================================================================
+
+.. currentmodule:: odl.solvers.functional.default_functionals
+
+.. autoproperty:: QuadraticForm.convex_conj

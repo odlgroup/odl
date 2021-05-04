@@ -1,0 +1,6 @@
+FunctionalQuadraticPerturb.is_linear
+======================================================================
+
+.. currentmodule:: odl.solvers.functional.functional
+
+.. autoproperty:: FunctionalQuadraticPerturb.is_linear

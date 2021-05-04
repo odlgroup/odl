@@ -1,0 +1,65 @@
+﻿TensorSpace
+==================================
+
+.. currentmodule:: odl.space.base_tensors
+
+.. autoclass:: TensorSpace
+   :show-inheritance:
+   
+   
+   .. automethod:: __init__
+   
+      
+   
+   .. HACK -- the point here is that we don't want this to appear in the output, but the autosummary should still generate the pages.
+      .. autosummary::
+         :toctree:
+      
+         TensorSpace.__contains__
+         TensorSpace.__eq__
+         TensorSpace._dist
+         TensorSpace._divide
+         TensorSpace._inner
+         TensorSpace._lincomb
+         TensorSpace._multiply
+         TensorSpace._norm
+         TensorSpace.astype
+         TensorSpace.available_dtypes
+         TensorSpace.contains_all
+         TensorSpace.contains_set
+         TensorSpace.default_dtype
+         TensorSpace.dist
+         TensorSpace.divide
+         TensorSpace.element
+         TensorSpace.inner
+         TensorSpace.lincomb
+         TensorSpace.multiply
+         TensorSpace.norm
+         TensorSpace.one
+         TensorSpace.zero
+   
+
+    
+   .. HACK -- the point here is that we don't want this to appear in the output, but the autosummary should still generate the pages.
+      .. autosummary::
+         :toctree:
+      
+         TensorSpace.complex_dtype
+         TensorSpace.complex_space
+         TensorSpace.default_order
+         TensorSpace.dtype
+         TensorSpace.element_type
+         TensorSpace.examples
+         TensorSpace.field
+         TensorSpace.impl
+         TensorSpace.is_complex
+         TensorSpace.is_real
+         TensorSpace.itemsize
+         TensorSpace.nbytes
+         TensorSpace.ndim
+         TensorSpace.real_dtype
+         TensorSpace.real_space
+         TensorSpace.shape
+         TensorSpace.size
+   
+   

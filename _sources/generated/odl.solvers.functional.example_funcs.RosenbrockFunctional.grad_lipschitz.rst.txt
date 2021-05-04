@@ -1,0 +1,6 @@
+RosenbrockFunctional.grad_lipschitz
+========================================================================
+
+.. currentmodule:: odl.solvers.functional.example_funcs
+
+.. autoproperty:: RosenbrockFunctional.grad_lipschitz

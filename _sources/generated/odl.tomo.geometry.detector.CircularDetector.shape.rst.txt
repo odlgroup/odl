@@ -1,0 +1,6 @@
+CircularDetector.shape
+=================================================
+
+.. currentmodule:: odl.tomo.geometry.detector
+
+.. autoproperty:: CircularDetector.shape

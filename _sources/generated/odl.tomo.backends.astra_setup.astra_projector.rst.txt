@@ -1,0 +1,6 @@
+﻿astra_projector
+=============================================
+
+.. currentmodule:: odl.tomo.backends.astra_setup
+
+.. autofunction:: astra_projector

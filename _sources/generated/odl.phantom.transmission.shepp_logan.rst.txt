@@ -1,0 +1,6 @@
+﻿shepp_logan
+====================================
+
+.. currentmodule:: odl.phantom.transmission
+
+.. autofunction:: shepp_logan

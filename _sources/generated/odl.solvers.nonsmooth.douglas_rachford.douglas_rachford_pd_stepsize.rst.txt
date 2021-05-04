@@ -1,0 +1,6 @@
+﻿douglas_rachford_pd_stepsize
+===================================================================
+
+.. currentmodule:: odl.solvers.nonsmooth.douglas_rachford
+
+.. autofunction:: douglas_rachford_pd_stepsize

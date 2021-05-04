@@ -1,0 +1,6 @@
+IndicatorNonnegativity.is_functional
+===============================================================================
+
+.. currentmodule:: odl.solvers.functional.default_functionals
+
+.. autoproperty:: IndicatorNonnegativity.is_functional

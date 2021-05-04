@@ -1,0 +1,8 @@
+:orphan:
+
+ProductSpaceUfuncs.arcsinh
+==========================================
+
+.. currentmodule:: odl.util.ufuncs
+
+.. automethod:: ProductSpaceUfuncs.arcsinh

@@ -1,0 +1,6 @@
+ComponentProjection.is_functional
+=========================================================
+
+.. currentmodule:: odl.operator.pspace_ops
+
+.. autoproperty:: ComponentProjection.is_functional

@@ -1,0 +1,8 @@
+:orphan:
+
+SamplingOperator.norm
+=============================================
+
+.. currentmodule:: odl.operator.tensor_ops
+
+.. automethod:: SamplingOperator.norm

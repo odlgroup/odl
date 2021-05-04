@@ -1,0 +1,530 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>ProductSpace &mdash; odl 1.0.0.dev0 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="ProductSpace._dist" href="odl.space.pspace.ProductSpace._dist.html" />
+    <link rel="prev" title="pspace" href="../odl.space.pspace.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../index.html" class="icon icon-home"> odl
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                1.0.0.dev0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Getting Started</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../getting_started/getting_started.html">Getting Started</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Working with ODL</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../guide/guide.html">User’s guide – selected topics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../math/math.html">Mathematical Background</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Developer zone</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../dev/dev.html">Contributing to ODL</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Useful facts</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../guide/faq.html">Frequently asked questions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../guide/glossary.html">Glossary</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../release_notes.html">Release Notes</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../refs.html">References</a></li>
+</ul>
+<p class="caption"><span class="caption-text">API Reference</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../odl.html">odl</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../odl.contrib.html">contrib</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../odl.deform.html">deform</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../odl.diagnostics.html">diagnostics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../odl.discr.html">discr</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../odl.operator.html">operator</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../odl.phantom.html">phantom</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../odl.set.html">set</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../odl.solvers.html">solvers</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="../odl.space.html">space</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="../odl.space.base_tensors.html">base_tensors</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../odl.space.entry_points.html">entry_points</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../odl.space.npy_tensors.html">npy_tensors</a></li>
+<li class="toctree-l3 current"><a class="reference internal" href="../odl.space.pspace.html">pspace</a><ul class="current">
+<li class="toctree-l4 current"><a class="current reference internal" href="#">ProductSpace</a></li>
+<li class="toctree-l4"><a class="reference internal" href="odl.space.pspace.ProductSpaceArrayWeighting.html">ProductSpaceArrayWeighting</a></li>
+<li class="toctree-l4"><a class="reference internal" href="odl.space.pspace.ProductSpaceConstWeighting.html">ProductSpaceConstWeighting</a></li>
+<li class="toctree-l4"><a class="reference internal" href="odl.space.pspace.ProductSpaceCustomDist.html">ProductSpaceCustomDist</a></li>
+<li class="toctree-l4"><a class="reference internal" href="odl.space.pspace.ProductSpaceCustomInner.html">ProductSpaceCustomInner</a></li>
+<li class="toctree-l4"><a class="reference internal" href="odl.space.pspace.ProductSpaceCustomNorm.html">ProductSpaceCustomNorm</a></li>
+<li class="toctree-l4"><a class="reference internal" href="odl.space.pspace.ProductSpaceElement.html">ProductSpaceElement</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../odl.space.space_utils.html">space_utils</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../odl.space.weighting.html">weighting</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../odl.tomo.html">tomo</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../odl.trafos.html">trafos</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../odl.ufunc_ops.html">ufunc_ops</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../odl.util.html">util</a></li>
+</ul>
+</li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">odl</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="../odl.html">odl</a> &raquo;</li>
+        
+          <li><a href="../odl.space.html">space</a> &raquo;</li>
+        
+          <li><a href="../odl.space.pspace.html">pspace</a> &raquo;</li>
+        
+      <li>ProductSpace</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            <a href="../_sources/generated/odl.space.pspace.ProductSpace.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="productspace">
+<h1>ProductSpace<a class="headerlink" href="#productspace" title="Permalink to this headline">¶</a></h1>
+<dl class="py class">
+<dt id="odl.space.pspace.ProductSpace">
+<em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">odl.space.pspace.</span></code><code class="sig-name descname"><span class="pre">ProductSpace</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">spaces</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/odl/space/pspace.html#ProductSpace"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#odl.space.pspace.ProductSpace" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="odl.set.space.LinearSpace.html#odl.set.space.LinearSpace" title="odl.set.space.LinearSpace"><code class="xref py py-class docutils literal notranslate"><span class="pre">odl.set.space.LinearSpace</span></code></a></p>
+<p>Cartesian product of <a class="reference internal" href="odl.set.space.LinearSpace.html#odl.set.space.LinearSpace" title="odl.set.space.LinearSpace"><code class="xref any py py-class docutils literal notranslate"><span class="pre">LinearSpace</span></code></a>’s.</p>
+<p>A product space is the Cartesian product <code class="docutils literal notranslate"><span class="pre">X_1</span> <span class="pre">x</span> <span class="pre">...</span> <span class="pre">x</span> <span class="pre">X_n</span></code> of
+linear spaces <code class="docutils literal notranslate"><span class="pre">X_i</span></code>. It is itself a linear space, where the linear
+combination is defined component-wise. Inner product, norm and
+distance can also be defined in natural ways from the corresponding
+functions in the individual components.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Attributes</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><a class="reference internal" href="odl.space.pspace.ProductSpace.complex_space.html#odl.space.pspace.ProductSpace.complex_space" title="odl.space.pspace.ProductSpace.complex_space"><code class="xref py py-obj docutils literal notranslate"><span class="pre">complex_space</span></code></a></dt><dd><p>Variant of this space with complex dtype.</p>
+</dd>
+<dt><a class="reference internal" href="odl.space.pspace.ProductSpace.dtype.html#odl.space.pspace.ProductSpace.dtype" title="odl.space.pspace.ProductSpace.dtype"><code class="xref py py-obj docutils literal notranslate"><span class="pre">dtype</span></code></a></dt><dd><p>The data type of this space.</p>
+</dd>
+<dt><a class="reference internal" href="odl.space.pspace.ProductSpace.element_type.html#odl.space.pspace.ProductSpace.element_type" title="odl.space.pspace.ProductSpace.element_type"><code class="xref py py-obj docutils literal notranslate"><span class="pre">element_type</span></code></a></dt><dd><p><a class="reference internal" href="odl.space.pspace.ProductSpaceElement.html#odl.space.pspace.ProductSpaceElement" title="odl.space.pspace.ProductSpaceElement"><code class="xref any py py-class docutils literal notranslate"><span class="pre">ProductSpaceElement</span></code></a></p>
+</dd>
+<dt><a class="reference internal" href="odl.space.pspace.ProductSpace.examples.html#odl.space.pspace.ProductSpace.examples" title="odl.space.pspace.ProductSpace.examples"><code class="xref py py-obj docutils literal notranslate"><span class="pre">examples</span></code></a></dt><dd><p>Return examples from all sub-spaces.</p>
+</dd>
+<dt><a class="reference internal" href="odl.space.pspace.ProductSpace.exponent.html#odl.space.pspace.ProductSpace.exponent" title="odl.space.pspace.ProductSpace.exponent"><code class="xref py py-obj docutils literal notranslate"><span class="pre">exponent</span></code></a></dt><dd><p>Exponent of the product space norm/dist, <code class="docutils literal notranslate"><span class="pre">None</span></code> for custom.</p>
+</dd>
+<dt><a class="reference internal" href="odl.space.pspace.ProductSpace.field.html#odl.space.pspace.ProductSpace.field" title="odl.space.pspace.ProductSpace.field"><code class="xref py py-obj docutils literal notranslate"><span class="pre">field</span></code></a></dt><dd><p>Scalar field of numbers for this vector space.</p>
+</dd>
+<dt><a class="reference internal" href="odl.space.pspace.ProductSpace.is_complex.html#odl.space.pspace.ProductSpace.is_complex" title="odl.space.pspace.ProductSpace.is_complex"><code class="xref py py-obj docutils literal notranslate"><span class="pre">is_complex</span></code></a></dt><dd><p>True if this is a space of complex valued vectors.</p>
+</dd>
+<dt><a class="reference internal" href="odl.space.pspace.ProductSpace.is_power_space.html#odl.space.pspace.ProductSpace.is_power_space" title="odl.space.pspace.ProductSpace.is_power_space"><code class="xref py py-obj docutils literal notranslate"><span class="pre">is_power_space</span></code></a></dt><dd><p><code class="docutils literal notranslate"><span class="pre">True</span></code> if all member spaces are equal.</p>
+</dd>
+<dt><a class="reference internal" href="odl.space.pspace.ProductSpace.is_real.html#odl.space.pspace.ProductSpace.is_real" title="odl.space.pspace.ProductSpace.is_real"><code class="xref py py-obj docutils literal notranslate"><span class="pre">is_real</span></code></a></dt><dd><p>True if this is a space of real valued vectors.</p>
+</dd>
+<dt><a class="reference internal" href="odl.space.pspace.ProductSpace.is_weighted.html#odl.space.pspace.ProductSpace.is_weighted" title="odl.space.pspace.ProductSpace.is_weighted"><code class="xref py py-obj docutils literal notranslate"><span class="pre">is_weighted</span></code></a></dt><dd><p>Return <code class="docutils literal notranslate"><span class="pre">True</span></code> if the space is not weighted by constant 1.0.</p>
+</dd>
+<dt><a class="reference internal" href="odl.space.pspace.ProductSpace.nbytes.html#odl.space.pspace.ProductSpace.nbytes" title="odl.space.pspace.ProductSpace.nbytes"><code class="xref py py-obj docutils literal notranslate"><span class="pre">nbytes</span></code></a></dt><dd><p>Total number of bytes in memory used by an element of this space.</p>
+</dd>
+<dt><a class="reference internal" href="odl.space.pspace.ProductSpace.real_space.html#odl.space.pspace.ProductSpace.real_space" title="odl.space.pspace.ProductSpace.real_space"><code class="xref py py-obj docutils literal notranslate"><span class="pre">real_space</span></code></a></dt><dd><p>Variant of this space with real dtype.</p>
+</dd>
+<dt><a class="reference internal" href="odl.space.pspace.ProductSpace.shape.html#odl.space.pspace.ProductSpace.shape" title="odl.space.pspace.ProductSpace.shape"><code class="xref py py-obj docutils literal notranslate"><span class="pre">shape</span></code></a></dt><dd><p>Total spaces per axis, computed recursively.</p>
+</dd>
+<dt><a class="reference internal" href="odl.space.pspace.ProductSpace.size.html#odl.space.pspace.ProductSpace.size" title="odl.space.pspace.ProductSpace.size"><code class="xref py py-obj docutils literal notranslate"><span class="pre">size</span></code></a></dt><dd><p>Total number of involved spaces, computed recursively.</p>
+</dd>
+<dt><a class="reference internal" href="odl.space.pspace.ProductSpace.spaces.html#odl.space.pspace.ProductSpace.spaces" title="odl.space.pspace.ProductSpace.spaces"><code class="xref py py-obj docutils literal notranslate"><span class="pre">spaces</span></code></a></dt><dd><p>A tuple containing all spaces.</p>
+</dd>
+<dt><a class="reference internal" href="odl.space.pspace.ProductSpace.weighting.html#odl.space.pspace.ProductSpace.weighting" title="odl.space.pspace.ProductSpace.weighting"><code class="xref py py-obj docutils literal notranslate"><span class="pre">weighting</span></code></a></dt><dd><p>This space’s weighting scheme.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+<p class="rubric">Methods</p>
+<table class="longtable docutils align-default">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="odl.space.pspace.ProductSpace._dist.html#odl.space.pspace.ProductSpace._dist" title="odl.space.pspace.ProductSpace._dist"><code class="xref py py-obj docutils literal notranslate"><span class="pre">_dist</span></code></a>(self, x1, x2)</p></td>
+<td><p>Distance between two elements.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="odl.space.pspace.ProductSpace._divide.html#odl.space.pspace.ProductSpace._divide" title="odl.space.pspace.ProductSpace._divide"><code class="xref py py-obj docutils literal notranslate"><span class="pre">_divide</span></code></a>(self, x1, x2, out)</p></td>
+<td><p>Quotient <code class="docutils literal notranslate"><span class="pre">out</span> <span class="pre">=</span> <span class="pre">x1</span> <span class="pre">/</span> <span class="pre">x2</span></code>.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="odl.space.pspace.ProductSpace._inner.html#odl.space.pspace.ProductSpace._inner" title="odl.space.pspace.ProductSpace._inner"><code class="xref py py-obj docutils literal notranslate"><span class="pre">_inner</span></code></a>(self, x1, x2)</p></td>
+<td><p>Inner product of two elements.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="odl.space.pspace.ProductSpace._lincomb.html#odl.space.pspace.ProductSpace._lincomb" title="odl.space.pspace.ProductSpace._lincomb"><code class="xref py py-obj docutils literal notranslate"><span class="pre">_lincomb</span></code></a>(self, a, x, b, y, out)</p></td>
+<td><p>Linear combination <code class="docutils literal notranslate"><span class="pre">out</span> <span class="pre">=</span> <span class="pre">a*x</span> <span class="pre">+</span> <span class="pre">b*y</span></code>.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="odl.space.pspace.ProductSpace._multiply.html#odl.space.pspace.ProductSpace._multiply" title="odl.space.pspace.ProductSpace._multiply"><code class="xref py py-obj docutils literal notranslate"><span class="pre">_multiply</span></code></a>(self, x1, x2, out)</p></td>
+<td><p>Product <code class="docutils literal notranslate"><span class="pre">out</span> <span class="pre">=</span> <span class="pre">x1</span> <span class="pre">*</span> <span class="pre">x2</span></code>.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="odl.space.pspace.ProductSpace._norm.html#odl.space.pspace.ProductSpace._norm" title="odl.space.pspace.ProductSpace._norm"><code class="xref py py-obj docutils literal notranslate"><span class="pre">_norm</span></code></a>(self, x)</p></td>
+<td><p>Norm of an element.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="odl.space.pspace.ProductSpace.astype.html#odl.space.pspace.ProductSpace.astype" title="odl.space.pspace.ProductSpace.astype"><code class="xref py py-obj docutils literal notranslate"><span class="pre">astype</span></code></a>(self, dtype)</p></td>
+<td><p>Return a copy of this space with new <code class="docutils literal notranslate"><span class="pre">dtype</span></code>.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="odl.space.pspace.ProductSpace.contains_all.html#odl.space.pspace.ProductSpace.contains_all" title="odl.space.pspace.ProductSpace.contains_all"><code class="xref py py-obj docutils literal notranslate"><span class="pre">contains_all</span></code></a>(self, other)</p></td>
+<td><p>Test if all elements in <code class="docutils literal notranslate"><span class="pre">other</span></code> are contained in this set.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="odl.space.pspace.ProductSpace.contains_set.html#odl.space.pspace.ProductSpace.contains_set" title="odl.space.pspace.ProductSpace.contains_set"><code class="xref py py-obj docutils literal notranslate"><span class="pre">contains_set</span></code></a>(self, other)</p></td>
+<td><p>Test if <code class="docutils literal notranslate"><span class="pre">other</span></code> is a subset of this set.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="odl.space.pspace.ProductSpace.dist.html#odl.space.pspace.ProductSpace.dist" title="odl.space.pspace.ProductSpace.dist"><code class="xref py py-obj docutils literal notranslate"><span class="pre">dist</span></code></a>(self, x1, x2)</p></td>
+<td><p>Return the distance between <code class="docutils literal notranslate"><span class="pre">x1</span></code> and <code class="docutils literal notranslate"><span class="pre">x2</span></code>.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="odl.space.pspace.ProductSpace.divide.html#odl.space.pspace.ProductSpace.divide" title="odl.space.pspace.ProductSpace.divide"><code class="xref py py-obj docutils literal notranslate"><span class="pre">divide</span></code></a>(self, x1, x2[, out])</p></td>
+<td><p>Return the pointwise quotient of <code class="docutils literal notranslate"><span class="pre">x1</span></code> and <code class="docutils literal notranslate"><span class="pre">x2</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="odl.space.pspace.ProductSpace.element.html#odl.space.pspace.ProductSpace.element" title="odl.space.pspace.ProductSpace.element"><code class="xref py py-obj docutils literal notranslate"><span class="pre">element</span></code></a>(self[, inp, cast])</p></td>
+<td><p>Create an element in the product space.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="odl.space.pspace.ProductSpace.inner.html#odl.space.pspace.ProductSpace.inner" title="odl.space.pspace.ProductSpace.inner"><code class="xref py py-obj docutils literal notranslate"><span class="pre">inner</span></code></a>(self, x1, x2)</p></td>
+<td><p>Return the inner product of <code class="docutils literal notranslate"><span class="pre">x1</span></code> and <code class="docutils literal notranslate"><span class="pre">x2</span></code>.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="odl.space.pspace.ProductSpace.lincomb.html#odl.space.pspace.ProductSpace.lincomb" title="odl.space.pspace.ProductSpace.lincomb"><code class="xref py py-obj docutils literal notranslate"><span class="pre">lincomb</span></code></a>(self, a, x1[, b, x2, out])</p></td>
+<td><p>Implement <code class="docutils literal notranslate"><span class="pre">out[:]</span> <span class="pre">=</span> <span class="pre">a</span> <span class="pre">*</span> <span class="pre">x1</span> <span class="pre">+</span> <span class="pre">b</span> <span class="pre">*</span> <span class="pre">x2</span></code>.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="odl.space.pspace.ProductSpace.multiply.html#odl.space.pspace.ProductSpace.multiply" title="odl.space.pspace.ProductSpace.multiply"><code class="xref py py-obj docutils literal notranslate"><span class="pre">multiply</span></code></a>(self, x1, x2[, out])</p></td>
+<td><p>Return the pointwise product of <code class="docutils literal notranslate"><span class="pre">x1</span></code> and <code class="docutils literal notranslate"><span class="pre">x2</span></code>.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="odl.space.pspace.ProductSpace.norm.html#odl.space.pspace.ProductSpace.norm" title="odl.space.pspace.ProductSpace.norm"><code class="xref py py-obj docutils literal notranslate"><span class="pre">norm</span></code></a>(self, x)</p></td>
+<td><p>Return the norm of <code class="docutils literal notranslate"><span class="pre">x</span></code>.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="odl.space.pspace.ProductSpace.one.html#odl.space.pspace.ProductSpace.one" title="odl.space.pspace.ProductSpace.one"><code class="xref py py-obj docutils literal notranslate"><span class="pre">one</span></code></a>(self)</p></td>
+<td><p>Create the one element of the product space.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="odl.space.pspace.ProductSpace.zero.html#odl.space.pspace.ProductSpace.zero" title="odl.space.pspace.ProductSpace.zero"><code class="xref py py-obj docutils literal notranslate"><span class="pre">zero</span></code></a>(self)</p></td>
+<td><p>Create the zero element of the product space.</p></td>
+</tr>
+</tbody>
+</table>
+<dl class="py method">
+<dt id="odl.space.pspace.ProductSpace.__init__">
+<code class="sig-name descname"><span class="pre">__init__</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="pre">self</span></em>, <em class="sig-param"><span class="pre">\*spaces</span></em>, <em class="sig-param"><span class="pre">\*\*kwargs</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/odl/space/pspace.html#ProductSpace.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#odl.space.pspace.ProductSpace.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initialize a new instance.</p>
+<dl class="field-list">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl>
+<dt><strong>space1,…,spaceN</strong><span class="classifier"><a class="reference internal" href="odl.set.space.LinearSpace.html#odl.set.space.LinearSpace" title="odl.set.space.LinearSpace"><code class="xref any py py-class docutils literal notranslate"><span class="pre">LinearSpace</span></code></a> or int</span></dt><dd><p>The individual spaces (“factors / parts”) in the product
+space. Can also be given as <code class="docutils literal notranslate"><span class="pre">space,</span> <span class="pre">n</span></code> with <code class="docutils literal notranslate"><span class="pre">n</span></code> integer,
+in which case the power space <code class="docutils literal notranslate"><span class="pre">space</span> <span class="pre">**</span> <span class="pre">n</span></code> is created.</p>
+</dd>
+<dt><strong>exponent</strong><span class="classifier">non-zero float or <code class="docutils literal notranslate"><span class="pre">float('inf')</span></code>, optional</span></dt><dd><p>Order of the product distance/norm, i.e.</p>
+<p><code class="docutils literal notranslate"><span class="pre">dist(x,</span> <span class="pre">y)</span> <span class="pre">=</span> <span class="pre">np.linalg.norm(x-y,</span> <span class="pre">ord=exponent)</span></code></p>
+<p><code class="docutils literal notranslate"><span class="pre">norm(x)</span> <span class="pre">=</span> <span class="pre">np.linalg.norm(x,</span> <span class="pre">ord=exponent)</span></code></p>
+<p>Values <code class="docutils literal notranslate"><span class="pre">0</span> <span class="pre">&lt;=</span> <span class="pre">exponent</span> <span class="pre">&lt;</span> <span class="pre">1</span></code> are currently unsupported
+due to numerical instability. See <code class="docutils literal notranslate"><span class="pre">Notes</span></code> for further
+information about the interpretation of the values.</p>
+<p>Default: 2.0</p>
+</dd>
+<dt><strong>field</strong><span class="classifier"><a class="reference internal" href="odl.set.sets.Field.html#odl.set.sets.Field" title="odl.set.sets.Field"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Field</span></code></a>, optional</span></dt><dd><p>Scalar field of the resulting space.
+Default: <code class="docutils literal notranslate"><span class="pre">spaces[0].field</span></code></p>
+</dd>
+<dt><strong>weighting</strong><span class="classifier">optional</span></dt><dd><p>Use weighted inner product, norm, and dist. The following
+types are supported as <code class="docutils literal notranslate"><span class="pre">weighting</span></code>:</p>
+<p><code class="docutils literal notranslate"><span class="pre">None</span></code> : no weighting (default)</p>
+<p><a class="reference internal" href="odl.space.weighting.Weighting.html#odl.space.weighting.Weighting" title="odl.space.weighting.Weighting"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Weighting</span></code></a> : weighting class, used directly. Such a
+class instance can be retrieved from the space by the
+<a class="reference internal" href="odl.space.pspace.ProductSpace.weighting.html#odl.space.pspace.ProductSpace.weighting" title="odl.space.pspace.ProductSpace.weighting"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">ProductSpace.weighting</span></code></a> property.</p>
+<p><a class="reference internal" href="../guide/glossary.html#term-array-like"><code class="xref any std std-term docutils literal notranslate"><span class="pre">array-like</span></code></a> : weigh each component with one entry from the
+array. The array must be one-dimensional and have the same
+length as the number of spaces.</p>
+<p>float : same weighting factor in each component</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Other Parameters</dt>
+<dd class="field-even"><dl>
+<dt><strong>dist</strong><span class="classifier">callable, optional</span></dt><dd><p>The distance function defining a metric on the space.
+It must accept two <a class="reference internal" href="odl.space.pspace.ProductSpaceElement.html#odl.space.pspace.ProductSpaceElement" title="odl.space.pspace.ProductSpaceElement"><code class="xref any py py-class docutils literal notranslate"><span class="pre">ProductSpaceElement</span></code></a> arguments and
+fulfill the following mathematical conditions for any
+three space elements <code class="docutils literal notranslate"><span class="pre">x,</span> <span class="pre">y,</span> <span class="pre">z</span></code>:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">dist(x,</span> <span class="pre">y)</span> <span class="pre">&gt;=</span> <span class="pre">0</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">dist(x,</span> <span class="pre">y)</span> <span class="pre">=</span> <span class="pre">0</span></code>  if and only if  <code class="docutils literal notranslate"><span class="pre">x</span> <span class="pre">=</span> <span class="pre">y</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">dist(x,</span> <span class="pre">y)</span> <span class="pre">=</span> <span class="pre">dist(y,</span> <span class="pre">x)</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">dist(x,</span> <span class="pre">y)</span> <span class="pre">&lt;=</span> <span class="pre">dist(x,</span> <span class="pre">z)</span> <span class="pre">+</span> <span class="pre">dist(z,</span> <span class="pre">y)</span></code></p></li>
+</ul>
+<p>By default, <code class="docutils literal notranslate"><span class="pre">dist(x,</span> <span class="pre">y)</span></code> is calculated as <code class="docutils literal notranslate"><span class="pre">norm(x</span> <span class="pre">-</span> <span class="pre">y)</span></code>.</p>
+<p>Cannot be combined with: <code class="docutils literal notranslate"><span class="pre">weighting,</span> <span class="pre">norm,</span> <span class="pre">inner</span></code></p>
+</dd>
+<dt><strong>norm</strong><span class="classifier">callable, optional</span></dt><dd><p>The norm implementation. It must accept an
+<a class="reference internal" href="odl.space.pspace.ProductSpaceElement.html#odl.space.pspace.ProductSpaceElement" title="odl.space.pspace.ProductSpaceElement"><code class="xref any py py-class docutils literal notranslate"><span class="pre">ProductSpaceElement</span></code></a> argument, return a float and satisfy the
+following conditions for all space elements <code class="docutils literal notranslate"><span class="pre">x,</span> <span class="pre">y</span></code> and scalars
+<code class="docutils literal notranslate"><span class="pre">s</span></code>:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">||x||</span> <span class="pre">&gt;=</span> <span class="pre">0</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">||x||</span> <span class="pre">=</span> <span class="pre">0</span></code>  if and only if  <code class="docutils literal notranslate"><span class="pre">x</span> <span class="pre">=</span> <span class="pre">0</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">||s</span> <span class="pre">*</span> <span class="pre">x||</span> <span class="pre">=</span> <span class="pre">|s|</span> <span class="pre">*</span> <span class="pre">||x||</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">||x</span> <span class="pre">+</span> <span class="pre">y||</span> <span class="pre">&lt;=</span> <span class="pre">||x||</span> <span class="pre">+</span> <span class="pre">||y||</span></code></p></li>
+</ul>
+<p>By default, <code class="docutils literal notranslate"><span class="pre">norm(x)</span></code> is calculated as <code class="docutils literal notranslate"><span class="pre">inner(x,</span> <span class="pre">x)</span></code>.</p>
+<p>Cannot be combined with: <code class="docutils literal notranslate"><span class="pre">weighting,</span> <span class="pre">dist,</span> <span class="pre">inner</span></code></p>
+</dd>
+<dt><strong>inner</strong><span class="classifier">callable, optional</span></dt><dd><p>The inner product implementation. It must accept two
+<a class="reference internal" href="odl.space.pspace.ProductSpaceElement.html#odl.space.pspace.ProductSpaceElement" title="odl.space.pspace.ProductSpaceElement"><code class="xref any py py-class docutils literal notranslate"><span class="pre">ProductSpaceElement</span></code></a> arguments, return a element from
+the field of the space (real or complex number) and
+satisfy the following conditions for all space elements
+<code class="docutils literal notranslate"><span class="pre">x,</span> <span class="pre">y,</span> <span class="pre">z</span></code> and scalars <code class="docutils literal notranslate"><span class="pre">s</span></code>:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">&lt;x,</span> <span class="pre">y&gt;</span> <span class="pre">=</span> <span class="pre">conj(&lt;y,</span> <span class="pre">x&gt;)</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">&lt;s*x</span> <span class="pre">+</span> <span class="pre">y,</span> <span class="pre">z&gt;</span> <span class="pre">=</span> <span class="pre">s</span> <span class="pre">*</span> <span class="pre">&lt;x,</span> <span class="pre">z&gt;</span> <span class="pre">+</span> <span class="pre">&lt;y,</span> <span class="pre">z&gt;</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">&lt;x,</span> <span class="pre">x&gt;</span> <span class="pre">=</span> <span class="pre">0</span></code>  if and only if  <code class="docutils literal notranslate"><span class="pre">x</span> <span class="pre">=</span> <span class="pre">0</span></code></p></li>
+</ul>
+<p>Cannot be combined with: <code class="docutils literal notranslate"><span class="pre">weighting,</span> <span class="pre">dist,</span> <span class="pre">norm</span></code></p>
+</dd>
+</dl>
+</dd>
+</dl>
+<div class="admonition seealso">
+<p class="admonition-title">See also</p>
+<dl class="simple">
+<dt><a class="reference internal" href="odl.space.pspace.ProductSpaceArrayWeighting.html#odl.space.pspace.ProductSpaceArrayWeighting" title="odl.space.pspace.ProductSpaceArrayWeighting"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ProductSpaceArrayWeighting</span></code></a></dt><dd></dd>
+<dt><a class="reference internal" href="odl.space.pspace.ProductSpaceConstWeighting.html#odl.space.pspace.ProductSpaceConstWeighting" title="odl.space.pspace.ProductSpaceConstWeighting"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ProductSpaceConstWeighting</span></code></a></dt><dd></dd>
+</dl>
+</div>
+<p class="rubric">Notes</p>
+<p>Inner product, norm and distance are evaluated by collecting
+the result of the corresponding operation in the individual
+components and reducing the resulting vector to a single number.
+The <code class="docutils literal notranslate"><span class="pre">exponent</span></code> parameter influences only this last part,
+not the computations in the individual components. We give the
+exact definitions in the following:</p>
+<p>Let <img class="math" src="../_images/math/d8af92176ed0bd296655d3e8c252ae15a1acb136.png" alt="\mathcal{X} = \mathcal{X}_1 \times \dots \times
+\mathcal{X}_d"/> be a product space, and
+<img class="math" src="../_images/math/5dffb5bd180560ed24dbbd7ccff3eff2805e5ea5.png" alt="\langle \cdot, \cdot\rangle_i"/>,
+<img class="math" src="../_images/math/fd1262763746f356285c5f1b423af00d3a4a6b56.png" alt="\lVert \cdot \rVert_i"/>, <img class="math" src="../_images/math/df49a70fe39406e308e8e19667bf93fd57d28ae9.png" alt="d_i(\cdot, \cdot)"/> be
+inner products, norms and distances in the respective
+component spaces.</p>
+<p><strong>Inner product:</strong></p>
+<div class="math">
+<p><img src="../_images/math/0072691330c052f687b58b847a010680562d4727.png" alt="\langle x, y \rangle = \sum_{i=1}^d \langle x_i, y_i \rangle_i"/></p>
+</div><p><strong>Norm:</strong></p>
+<ul class="simple">
+<li><p><img class="math" src="../_images/math/9807f9ebf51f9b2fc6c29d9b78bc10f40ab95f90.png" alt="p &lt; \infty"/>:</p></li>
+</ul>
+<div class="math">
+<p><img src="../_images/math/9e23ba1a988fedf137c724260e481e883e274160.png" alt="\lVert x\rVert =
+\left( \sum_{i=1}^d \lVert x_i \rVert_i^p \right)^{1/p}"/></p>
+</div><ul class="simple">
+<li><p><img class="math" src="../_images/math/80a91b4be9a9a04a5d091456fdece6c3450f7845.png" alt="p = \infty"/>:</p></li>
+</ul>
+<div class="math">
+<p><img src="../_images/math/0bffa1500ad46cd5719544d17c560257e000aebd.png" alt="\lVert x\rVert = \max_i \lVert x_i \rVert_i"/></p>
+</div><p><strong>Distance:</strong></p>
+<ul class="simple">
+<li><p><img class="math" src="../_images/math/9807f9ebf51f9b2fc6c29d9b78bc10f40ab95f90.png" alt="p &lt; \infty"/>:</p></li>
+</ul>
+<div class="math">
+<p><img src="../_images/math/388f77b453c26450f50c782ad9aada4010446d0b.png" alt="d(x, y) = \left( \sum_{i=1}^d d_i(x_i, y_i)^p \right)^{1/p}"/></p>
+</div><ul class="simple">
+<li><p><img class="math" src="../_images/math/80a91b4be9a9a04a5d091456fdece6c3450f7845.png" alt="p = \infty"/>:</p></li>
+</ul>
+<div class="math">
+<p><img src="../_images/math/19dd5cbea5cb855769ff0c8a7b2e29eb0f4c5f4f.png" alt="d(x, y) = \max_i d_i(x_i, y_i)"/></p>
+</div><p>To implement own versions of these functions, you can use
+the following snippet to gather the vector of norms (analogously
+for inner products and distances):</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">norms</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">fromiter</span><span class="p">(</span>
+    <span class="p">(</span><span class="n">xi</span><span class="o">.</span><span class="n">norm</span><span class="p">()</span> <span class="k">for</span> <span class="n">xi</span> <span class="ow">in</span> <span class="n">x</span><span class="p">),</span>
+    <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">,</span> <span class="n">count</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="n">x</span><span class="p">))</span>
+</pre></div>
+</div>
+<p class="rubric">Examples</p>
+<p>Product of two rn spaces</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">r2x3</span> <span class="o">=</span> <span class="n">ProductSpace</span><span class="p">(</span><span class="n">odl</span><span class="o">.</span><span class="n">rn</span><span class="p">(</span><span class="mi">2</span><span class="p">),</span> <span class="n">odl</span><span class="o">.</span><span class="n">rn</span><span class="p">(</span><span class="mi">3</span><span class="p">))</span>
+</pre></div>
+</div>
+<p>Powerspace of rn space</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">r2x2x2</span> <span class="o">=</span> <span class="n">ProductSpace</span><span class="p">(</span><span class="n">odl</span><span class="o">.</span><span class="n">rn</span><span class="p">(</span><span class="mi">2</span><span class="p">),</span> <span class="mi">3</span><span class="p">)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+        <a href="odl.space.pspace.ProductSpace._dist.html" class="btn btn-neutral float-right" title="ProductSpace._dist" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="../odl.space.pspace.html" class="btn btn-neutral float-left" title="pspace" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &#169; Copyright 2014-2020 The ODL Contributors.
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

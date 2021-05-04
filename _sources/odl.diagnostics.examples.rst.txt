@@ -1,0 +1,17 @@
+examples
+========
+
+Functions for generating standardized examples in spaces.
+
+.. currentmodule:: odl.diagnostics.examples
+
+
+
+
+.. rubric:: Functions
+
+.. autosummary::
+   :toctree: generated/
+
+   ~odl.diagnostics.examples.samples
+

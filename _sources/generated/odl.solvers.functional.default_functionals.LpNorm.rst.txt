@@ -1,0 +1,43 @@
+﻿LpNorm
+=================================================
+
+.. currentmodule:: odl.solvers.functional.default_functionals
+
+.. autoclass:: LpNorm
+   :show-inheritance:
+   
+   
+   .. automethod:: __init__
+   
+      
+   
+   .. HACK -- the point here is that we don't want this to appear in the output, but the autosummary should still generate the pages.
+      .. autosummary::
+         :toctree:
+      
+         LpNorm.__call__
+         LpNorm.__eq__
+         LpNorm._call
+         LpNorm.bregman
+         LpNorm.derivative
+         LpNorm.norm
+         LpNorm.translated
+   
+
+    
+   .. HACK -- the point here is that we don't want this to appear in the output, but the autosummary should still generate the pages.
+      .. autosummary::
+         :toctree:
+      
+         LpNorm.adjoint
+         LpNorm.convex_conj
+         LpNorm.domain
+         LpNorm.grad_lipschitz
+         LpNorm.gradient
+         LpNorm.inverse
+         LpNorm.is_functional
+         LpNorm.is_linear
+         LpNorm.proximal
+         LpNorm.range
+   
+   

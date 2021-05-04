@@ -1,0 +1,615 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>odl.operator.oputils &mdash; odl 1.0.0.dev0 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/custom.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../../" src="../../../_static/documentation_options.js"></script>
+        <script src="../../../_static/jquery.js"></script>
+        <script src="../../../_static/underscore.js"></script>
+        <script src="../../../_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="../../../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../../index.html" class="icon icon-home"> odl
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                1.0.0.dev0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Getting Started</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../getting_started/getting_started.html">Getting Started</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Working with ODL</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../guide/guide.html">User’s guide – selected topics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../math/math.html">Mathematical Background</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Developer zone</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../dev/dev.html">Contributing to ODL</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Useful facts</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../guide/faq.html">Frequently asked questions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../guide/glossary.html">Glossary</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../release_notes.html">Release Notes</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../refs.html">References</a></li>
+</ul>
+<p class="caption"><span class="caption-text">API Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../odl.html">odl</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">odl</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="../../index.html">Module code</a> &raquo;</li>
+        
+      <li>odl.operator.oputils</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for odl.operator.oputils</h1><div class="highlight"><pre>
+<span></span><span class="c1"># Copyright 2014-2020 The ODL contributors</span>
+<span class="c1">#</span>
+<span class="c1"># This file is part of ODL.</span>
+<span class="c1">#</span>
+<span class="c1"># This Source Code Form is subject to the terms of the Mozilla Public License,</span>
+<span class="c1"># v. 2.0. If a copy of the MPL was not distributed with this file, You can</span>
+<span class="c1"># obtain one at https://mozilla.org/MPL/2.0/.</span>
+
+<span class="sd">&quot;&quot;&quot;Convenience functions for operators.&quot;&quot;&quot;</span>
+
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">absolute_import</span><span class="p">,</span> <span class="n">division</span><span class="p">,</span> <span class="n">print_function</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">future.utils</span> <span class="kn">import</span> <span class="n">native</span>
+<span class="kn">from</span> <span class="nn">odl.space</span> <span class="kn">import</span> <span class="n">ProductSpace</span>
+<span class="kn">from</span> <span class="nn">odl.space.base_tensors</span> <span class="kn">import</span> <span class="n">TensorSpace</span>
+<span class="kn">from</span> <span class="nn">odl.util</span> <span class="kn">import</span> <span class="n">nd_iterator</span>
+<span class="kn">from</span> <span class="nn">odl.util.testutils</span> <span class="kn">import</span> <span class="n">noise_element</span>
+
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">(</span>
+    <span class="s1">&#39;matrix_representation&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;power_method_opnorm&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;as_scipy_operator&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;as_scipy_functional&#39;</span><span class="p">,</span>
+<span class="p">)</span>
+
+
+<div class="viewcode-block" id="matrix_representation"><a class="viewcode-back" href="../../../generated/odl.operator.oputils.matrix_representation.html#odl.operator.oputils.matrix_representation">[docs]</a><span class="k">def</span> <span class="nf">matrix_representation</span><span class="p">(</span><span class="n">op</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Return a matrix representation of a linear operator.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    op : `Operator`</span>
+<span class="sd">        The linear operator of which one wants a matrix representation.</span>
+<span class="sd">        If the domain or range is a `ProductSpace`, it must be a power-space.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    matrix : `numpy.ndarray`</span>
+<span class="sd">        The matrix representation of the operator.</span>
+<span class="sd">        The shape will be ``op.domain.shape + op.range.shape`` and the dtype</span>
+<span class="sd">        is the promoted (greatest) dtype of the domain and range.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    Approximate a matrix on its own:</span>
+
+<span class="sd">    &gt;&gt;&gt; mat = np.array([[1, 2, 3],</span>
+<span class="sd">    ...                 [4, 5, 6],</span>
+<span class="sd">    ...                 [7, 8, 9]])</span>
+<span class="sd">    &gt;&gt;&gt; op = odl.MatrixOperator(mat)</span>
+<span class="sd">    &gt;&gt;&gt; matrix_representation(op)</span>
+<span class="sd">    array([[1, 2, 3],</span>
+<span class="sd">           [4, 5, 6],</span>
+<span class="sd">           [7, 8, 9]])</span>
+
+<span class="sd">    It also works with `ProductSpace`&#39;s and higher dimensional `TensorSpace`&#39;s.</span>
+<span class="sd">    In this case, the returned &quot;matrix&quot; will also be higher dimensional:</span>
+
+<span class="sd">    &gt;&gt;&gt; space = odl.uniform_discr([0, 0], [2, 2], (2, 2))</span>
+<span class="sd">    &gt;&gt;&gt; grad = odl.Gradient(space)</span>
+<span class="sd">    &gt;&gt;&gt; tensor = odl.matrix_representation(grad)</span>
+<span class="sd">    &gt;&gt;&gt; tensor.shape == (2, 2, 2, 2, 2)</span>
+<span class="sd">    True</span>
+
+<span class="sd">    Since the &quot;matrix&quot; is now higher dimensional, we need to use e.g.</span>
+<span class="sd">    `numpy.tensordot` if we want to compute with the matrix representation:</span>
+
+<span class="sd">    &gt;&gt;&gt; x = space.element(lambda x: x[0] ** 2 + 2 * x[1] ** 2)</span>
+<span class="sd">    &gt;&gt;&gt; grad(x)</span>
+<span class="sd">    ProductSpace(uniform_discr([ 0.,  0.], [ 2.,  2.], (2, 2)), 2).element([</span>
+<span class="sd">    &lt;BLANKLINE&gt;</span>
+<span class="sd">            [[ 2.  ,  2.  ],</span>
+<span class="sd">             [-2.75, -6.75]],</span>
+<span class="sd">    &lt;BLANKLINE&gt;</span>
+<span class="sd">            [[ 4.  , -4.75],</span>
+<span class="sd">             [ 4.  , -6.75]]</span>
+<span class="sd">    ])</span>
+<span class="sd">    &gt;&gt;&gt; np.tensordot(tensor, x, axes=grad.domain.ndim)</span>
+<span class="sd">    array([[[ 2.  ,  2.  ],</span>
+<span class="sd">            [-2.75, -6.75]],</span>
+<span class="sd">    &lt;BLANKLINE&gt;</span>
+<span class="sd">           [[ 4.  , -4.75],</span>
+<span class="sd">            [ 4.  , -6.75]]])</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    ----------</span>
+<span class="sd">    The algorithm works by letting the operator act on all unit vectors, and</span>
+<span class="sd">    stacking the output as a matrix.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">op</span><span class="o">.</span><span class="n">is_linear</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;the operator is not linear&#39;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">op</span><span class="o">.</span><span class="n">domain</span><span class="p">,</span> <span class="n">TensorSpace</span><span class="p">)</span> <span class="ow">or</span>
+            <span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">op</span><span class="o">.</span><span class="n">domain</span><span class="p">,</span> <span class="n">ProductSpace</span><span class="p">)</span> <span class="ow">and</span>
+             <span class="n">op</span><span class="o">.</span><span class="n">domain</span><span class="o">.</span><span class="n">is_power_space</span> <span class="ow">and</span>
+             <span class="nb">all</span><span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">spc</span><span class="p">,</span> <span class="n">TensorSpace</span><span class="p">)</span> <span class="k">for</span> <span class="n">spc</span> <span class="ow">in</span> <span class="n">op</span><span class="o">.</span><span class="n">domain</span><span class="p">))):</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;operator domain </span><span class="si">{!r}</span><span class="s1"> is neither `TensorSpace` &#39;</span>
+                        <span class="s1">&#39;nor `ProductSpace` with only equal `TensorSpace` &#39;</span>
+                        <span class="s1">&#39;components&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">op</span><span class="o">.</span><span class="n">domain</span><span class="p">))</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">op</span><span class="o">.</span><span class="n">range</span><span class="p">,</span> <span class="n">TensorSpace</span><span class="p">)</span> <span class="ow">or</span>
+            <span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">op</span><span class="o">.</span><span class="n">range</span><span class="p">,</span> <span class="n">ProductSpace</span><span class="p">)</span> <span class="ow">and</span>
+             <span class="n">op</span><span class="o">.</span><span class="n">range</span><span class="o">.</span><span class="n">is_power_space</span> <span class="ow">and</span>
+             <span class="nb">all</span><span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">spc</span><span class="p">,</span> <span class="n">TensorSpace</span><span class="p">)</span> <span class="k">for</span> <span class="n">spc</span> <span class="ow">in</span> <span class="n">op</span><span class="o">.</span><span class="n">range</span><span class="p">))):</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;operator range </span><span class="si">{!r}</span><span class="s1"> is neither `TensorSpace` &#39;</span>
+                        <span class="s1">&#39;nor `ProductSpace` with only equal `TensorSpace` &#39;</span>
+                        <span class="s1">&#39;components&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">op</span><span class="o">.</span><span class="n">range</span><span class="p">))</span>
+
+    <span class="c1"># Generate the matrix</span>
+    <span class="n">dtype</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">promote_types</span><span class="p">(</span><span class="n">op</span><span class="o">.</span><span class="n">domain</span><span class="o">.</span><span class="n">dtype</span><span class="p">,</span> <span class="n">op</span><span class="o">.</span><span class="n">range</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span>
+    <span class="n">matrix</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">op</span><span class="o">.</span><span class="n">range</span><span class="o">.</span><span class="n">shape</span> <span class="o">+</span> <span class="n">op</span><span class="o">.</span><span class="n">domain</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">dtype</span><span class="p">)</span>
+    <span class="n">tmp_ran</span> <span class="o">=</span> <span class="n">op</span><span class="o">.</span><span class="n">range</span><span class="o">.</span><span class="n">element</span><span class="p">()</span>  <span class="c1"># Store for reuse in loop</span>
+    <span class="n">tmp_dom</span> <span class="o">=</span> <span class="n">op</span><span class="o">.</span><span class="n">domain</span><span class="o">.</span><span class="n">zero</span><span class="p">()</span>  <span class="c1"># Store for reuse in loop</span>
+
+    <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="n">nd_iterator</span><span class="p">(</span><span class="n">op</span><span class="o">.</span><span class="n">domain</span><span class="o">.</span><span class="n">shape</span><span class="p">):</span>
+        <span class="n">tmp_dom</span><span class="p">[</span><span class="n">j</span><span class="p">]</span> <span class="o">=</span> <span class="mf">1.0</span>
+
+        <span class="n">op</span><span class="p">(</span><span class="n">tmp_dom</span><span class="p">,</span> <span class="n">out</span><span class="o">=</span><span class="n">tmp_ran</span><span class="p">)</span>
+        <span class="n">matrix</span><span class="p">[(</span><span class="bp">Ellipsis</span><span class="p">,)</span> <span class="o">+</span> <span class="n">j</span><span class="p">]</span> <span class="o">=</span> <span class="n">tmp_ran</span><span class="o">.</span><span class="n">asarray</span><span class="p">()</span>
+
+        <span class="n">tmp_dom</span><span class="p">[</span><span class="n">j</span><span class="p">]</span> <span class="o">=</span> <span class="mf">0.0</span>
+
+    <span class="k">return</span> <span class="n">matrix</span></div>
+
+
+<div class="viewcode-block" id="power_method_opnorm"><a class="viewcode-back" href="../../../generated/odl.operator.oputils.power_method_opnorm.html#odl.operator.oputils.power_method_opnorm">[docs]</a><span class="k">def</span> <span class="nf">power_method_opnorm</span><span class="p">(</span><span class="n">op</span><span class="p">,</span> <span class="n">xstart</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">maxiter</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span> <span class="n">rtol</span><span class="o">=</span><span class="mf">1e-05</span><span class="p">,</span> <span class="n">atol</span><span class="o">=</span><span class="mf">1e-08</span><span class="p">,</span>
+                        <span class="n">callback</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="sa">r</span><span class="sd">&quot;&quot;&quot;Estimate the operator norm with the power method.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    op : `Operator`</span>
+<span class="sd">        Operator whose norm is to be estimated. If its `Operator.range`</span>
+<span class="sd">        range does not coincide with its `Operator.domain`, an</span>
+<span class="sd">        `Operator.adjoint` must be defined (which implies that the</span>
+<span class="sd">        operator must be linear).</span>
+<span class="sd">    xstart : ``op.domain`` `element-like`, optional</span>
+<span class="sd">        Starting point of the iteration. By default an `Operator.domain`</span>
+<span class="sd">        element containing noise is used.</span>
+<span class="sd">    maxiter : positive int, optional</span>
+<span class="sd">        Number of iterations to perform. If the domain and range of ``op``</span>
+<span class="sd">        do not match, it needs to be an even number. If ``None`` is given,</span>
+<span class="sd">        iterate until convergence.</span>
+<span class="sd">    rtol : float, optional</span>
+<span class="sd">        Relative tolerance parameter (see Notes).</span>
+<span class="sd">    atol : float, optional</span>
+<span class="sd">        Absolute tolerance parameter (see Notes).</span>
+<span class="sd">    callback : callable, optional</span>
+<span class="sd">        Function called with the current iterate in each iteration.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    est_opnorm : float</span>
+<span class="sd">        The estimated operator norm of ``op``.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    Verify that the identity operator has norm close to 1:</span>
+
+<span class="sd">    &gt;&gt;&gt; space = odl.uniform_discr(0, 1, 5)</span>
+<span class="sd">    &gt;&gt;&gt; id = odl.IdentityOperator(space)</span>
+<span class="sd">    &gt;&gt;&gt; estimation = power_method_opnorm(id)</span>
+<span class="sd">    &gt;&gt;&gt; round(estimation, ndigits=3)</span>
+<span class="sd">    1.0</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    The operator norm :math:`||A||` is defined by as the smallest number</span>
+<span class="sd">    such that</span>
+
+<span class="sd">    .. math::</span>
+<span class="sd">        ||A(x)|| \leq ||A|| ||x||</span>
+
+<span class="sd">    for all :math:`x` in the domain of :math:`A`.</span>
+
+<span class="sd">    The operator is evaluated until ``maxiter`` operator calls or until the</span>
+<span class="sd">    relative error is small enough. The error measure is given by</span>
+
+<span class="sd">        ``abs(a - b) &lt;= (atol + rtol * abs(b))``,</span>
+
+<span class="sd">    where ``a`` and ``b`` are consecutive iterates.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">maxiter</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">maxiter</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">iinfo</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span><span class="o">.</span><span class="n">max</span>
+
+    <span class="n">maxiter</span><span class="p">,</span> <span class="n">maxiter_in</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">maxiter</span><span class="p">),</span> <span class="n">maxiter</span>
+    <span class="k">if</span> <span class="n">maxiter</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;`maxiter` must be positive, got </span><span class="si">{}</span><span class="s1">&#39;</span>
+                         <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">maxiter_in</span><span class="p">))</span>
+
+    <span class="k">if</span> <span class="n">op</span><span class="o">.</span><span class="n">adjoint</span> <span class="ow">is</span> <span class="n">op</span><span class="p">:</span>
+        <span class="n">use_normal</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="n">ncalls</span> <span class="o">=</span> <span class="n">maxiter</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="c1"># Do the power iteration for A*A; the norm of A*A(x_N) is then</span>
+        <span class="c1"># an estimate of the square of the operator norm</span>
+        <span class="c1"># We do only half the number of iterations compared to the usual</span>
+        <span class="c1"># case to have the same number of operator evaluations.</span>
+        <span class="n">use_normal</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="n">ncalls</span> <span class="o">=</span> <span class="n">maxiter</span> <span class="o">//</span> <span class="mi">2</span>
+        <span class="k">if</span> <span class="n">ncalls</span> <span class="o">*</span> <span class="mi">2</span> <span class="o">!=</span> <span class="n">maxiter</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;``maxiter`` must be an even number for &#39;</span>
+                             <span class="s1">&#39;non-self-adjoint operator, got </span><span class="si">{}</span><span class="s1">&#39;</span>
+                             <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">maxiter_in</span><span class="p">))</span>
+
+    <span class="c1"># Make sure starting point is ok or select initial guess</span>
+    <span class="k">if</span> <span class="n">xstart</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="n">noise_element</span><span class="p">(</span><span class="n">op</span><span class="o">.</span><span class="n">domain</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="c1"># copy to ensure xstart is not modified</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="n">op</span><span class="o">.</span><span class="n">domain</span><span class="o">.</span><span class="n">element</span><span class="p">(</span><span class="n">xstart</span><span class="p">)</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+
+    <span class="c1"># Take first iteration step to normalize input</span>
+    <span class="n">x_norm</span> <span class="o">=</span> <span class="n">x</span><span class="o">.</span><span class="n">norm</span><span class="p">()</span>
+    <span class="k">if</span> <span class="n">x_norm</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;``xstart`` must be nonzero&#39;</span><span class="p">)</span>
+    <span class="n">x</span> <span class="o">/=</span> <span class="n">x_norm</span>
+
+    <span class="c1"># utility to calculate opnorm from xnorm</span>
+    <span class="k">def</span> <span class="nf">calc_opnorm</span><span class="p">(</span><span class="n">x_norm</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">use_normal</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">x_norm</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">x_norm</span>
+
+    <span class="c1"># initial guess of opnorm</span>
+    <span class="n">opnorm</span> <span class="o">=</span> <span class="n">calc_opnorm</span><span class="p">(</span><span class="n">x_norm</span><span class="p">)</span>
+
+    <span class="c1"># temporary to improve performance</span>
+    <span class="n">tmp</span> <span class="o">=</span> <span class="n">op</span><span class="o">.</span><span class="n">range</span><span class="o">.</span><span class="n">element</span><span class="p">()</span>
+
+    <span class="c1"># Use the power method to estimate opnorm</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">ncalls</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">use_normal</span><span class="p">:</span>
+            <span class="n">op</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">out</span><span class="o">=</span><span class="n">tmp</span><span class="p">)</span>
+            <span class="n">op</span><span class="o">.</span><span class="n">adjoint</span><span class="p">(</span><span class="n">tmp</span><span class="p">,</span> <span class="n">out</span><span class="o">=</span><span class="n">x</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">op</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">out</span><span class="o">=</span><span class="n">tmp</span><span class="p">)</span>
+            <span class="n">x</span><span class="p">,</span> <span class="n">tmp</span> <span class="o">=</span> <span class="n">tmp</span><span class="p">,</span> <span class="n">x</span>
+
+        <span class="c1"># Calculate x norm and verify it is valid</span>
+        <span class="n">x_norm</span> <span class="o">=</span> <span class="n">x</span><span class="o">.</span><span class="n">norm</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">x_norm</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;reached ``x=0`` after </span><span class="si">{}</span><span class="s1"> iterations&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">i</span><span class="p">))</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">isfinite</span><span class="p">(</span><span class="n">x_norm</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;reached nonfinite ``x=</span><span class="si">{}</span><span class="s1">`` after </span><span class="si">{}</span><span class="s1"> iterations&#39;</span>
+                             <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">i</span><span class="p">))</span>
+
+        <span class="c1"># Calculate opnorm</span>
+        <span class="n">opnorm</span><span class="p">,</span> <span class="n">opnorm_old</span> <span class="o">=</span> <span class="n">calc_opnorm</span><span class="p">(</span><span class="n">x_norm</span><span class="p">),</span> <span class="n">opnorm</span>
+
+        <span class="c1"># If the breaking condition holds, stop. Else rescale and go on.</span>
+        <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">isclose</span><span class="p">(</span><span class="n">opnorm</span><span class="p">,</span> <span class="n">opnorm_old</span><span class="p">,</span> <span class="n">rtol</span><span class="p">,</span> <span class="n">atol</span><span class="p">):</span>
+            <span class="k">break</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">x</span> <span class="o">/=</span> <span class="n">x_norm</span>
+
+        <span class="k">if</span> <span class="n">callback</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">callback</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">opnorm</span></div>
+
+
+<div class="viewcode-block" id="as_scipy_operator"><a class="viewcode-back" href="../../../generated/odl.operator.oputils.as_scipy_operator.html#odl.operator.oputils.as_scipy_operator">[docs]</a><span class="k">def</span> <span class="nf">as_scipy_operator</span><span class="p">(</span><span class="n">op</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Wrap ``op`` as a ``scipy.sparse.linalg.LinearOperator``.</span>
+
+<span class="sd">    This is intended to be used with the scipy sparse linear solvers.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    op : `Operator`</span>
+<span class="sd">        A linear operator that should be wrapped</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    ``scipy.sparse.linalg.LinearOperator`` : linear_op</span>
+<span class="sd">        The wrapped operator, has attributes ``matvec`` which calls ``op``,</span>
+<span class="sd">        and ``rmatvec`` which calls ``op.adjoint``.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    Wrap operator and solve simple problem (here toy problem ``Ix = b``)</span>
+
+<span class="sd">    &gt;&gt;&gt; op = odl.IdentityOperator(odl.rn(3))</span>
+<span class="sd">    &gt;&gt;&gt; scipy_op = as_scipy_operator(op)</span>
+<span class="sd">    &gt;&gt;&gt; import scipy.sparse.linalg as scipy_solvers</span>
+<span class="sd">    &gt;&gt;&gt; result, status = scipy_solvers.cg(scipy_op, [0, 1, 0])</span>
+<span class="sd">    &gt;&gt;&gt; result</span>
+<span class="sd">    array([ 0.,  1.,  0.])</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    If the data representation of ``op``&#39;s domain and range is of type</span>
+<span class="sd">    `NumpyTensorSpace` this incurs no significant overhead. If the space</span>
+<span class="sd">    type is ``CudaFn`` or some other nonlocal type, the overhead is</span>
+<span class="sd">    significant.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># Lazy import to improve `import odl` time</span>
+    <span class="kn">import</span> <span class="nn">scipy.sparse</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">op</span><span class="o">.</span><span class="n">is_linear</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;`op` needs to be linear&#39;</span><span class="p">)</span>
+
+    <span class="n">dtype</span> <span class="o">=</span> <span class="n">op</span><span class="o">.</span><span class="n">domain</span><span class="o">.</span><span class="n">dtype</span>
+    <span class="k">if</span> <span class="n">op</span><span class="o">.</span><span class="n">range</span><span class="o">.</span><span class="n">dtype</span> <span class="o">!=</span> <span class="n">dtype</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;dtypes of ``op.domain`` and ``op.range`` needs to &#39;</span>
+                         <span class="s1">&#39;match&#39;</span><span class="p">)</span>
+
+    <span class="n">shape</span> <span class="o">=</span> <span class="p">(</span><span class="n">native</span><span class="p">(</span><span class="n">op</span><span class="o">.</span><span class="n">range</span><span class="o">.</span><span class="n">size</span><span class="p">),</span> <span class="n">native</span><span class="p">(</span><span class="n">op</span><span class="o">.</span><span class="n">domain</span><span class="o">.</span><span class="n">size</span><span class="p">))</span>
+
+    <span class="k">def</span> <span class="nf">matvec</span><span class="p">(</span><span class="n">v</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">(</span><span class="n">op</span><span class="p">(</span><span class="n">v</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">op</span><span class="o">.</span><span class="n">domain</span><span class="o">.</span><span class="n">shape</span><span class="p">)))</span><span class="o">.</span><span class="n">asarray</span><span class="p">()</span><span class="o">.</span><span class="n">ravel</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">rmatvec</span><span class="p">(</span><span class="n">v</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">(</span><span class="n">op</span><span class="o">.</span><span class="n">adjoint</span><span class="p">(</span><span class="n">v</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">op</span><span class="o">.</span><span class="n">range</span><span class="o">.</span><span class="n">shape</span><span class="p">)))</span><span class="o">.</span><span class="n">asarray</span><span class="p">()</span><span class="o">.</span><span class="n">ravel</span><span class="p">()</span>
+
+    <span class="k">return</span> <span class="n">scipy</span><span class="o">.</span><span class="n">sparse</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">LinearOperator</span><span class="p">(</span><span class="n">shape</span><span class="o">=</span><span class="n">shape</span><span class="p">,</span>
+                                              <span class="n">matvec</span><span class="o">=</span><span class="n">matvec</span><span class="p">,</span>
+                                              <span class="n">rmatvec</span><span class="o">=</span><span class="n">rmatvec</span><span class="p">,</span>
+                                              <span class="n">dtype</span><span class="o">=</span><span class="n">dtype</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="as_scipy_functional"><a class="viewcode-back" href="../../../generated/odl.operator.oputils.as_scipy_functional.html#odl.operator.oputils.as_scipy_functional">[docs]</a><span class="k">def</span> <span class="nf">as_scipy_functional</span><span class="p">(</span><span class="n">func</span><span class="p">,</span> <span class="n">return_gradient</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Wrap ``op`` as a function operating on linear arrays.</span>
+
+<span class="sd">    This is intended to be used with the `scipy solvers</span>
+<span class="sd">    &lt;https://docs.scipy.org/doc/scipy/reference/optimize.html&gt;`_.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    func : `Functional`.</span>
+<span class="sd">        A functional that should be wrapped</span>
+<span class="sd">    return_gradient : bool, optional</span>
+<span class="sd">        ``True`` if the gradient of the functional should also be returned,</span>
+<span class="sd">        ``False`` otherwise.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    function : ``callable``</span>
+<span class="sd">        The wrapped functional.</span>
+<span class="sd">    gradient : ``callable``, optional</span>
+<span class="sd">        The wrapped gradient. Only returned if ``return_gradient`` is true.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    Wrap functional and solve simple problem</span>
+<span class="sd">    (here toy problem ``min_x ||x||^2``):</span>
+
+<span class="sd">    &gt;&gt;&gt; func = odl.solvers.L2NormSquared(odl.rn(3))</span>
+<span class="sd">    &gt;&gt;&gt; scipy_func = odl.as_scipy_functional(func)</span>
+<span class="sd">    &gt;&gt;&gt; from scipy.optimize import minimize</span>
+<span class="sd">    &gt;&gt;&gt; result = minimize(scipy_func, x0=[0, 1, 0])</span>
+<span class="sd">    &gt;&gt;&gt; np.allclose(result.x, [0, 0, 0])</span>
+<span class="sd">    True</span>
+
+<span class="sd">    The gradient (jacobian) can also be provided:</span>
+
+<span class="sd">    &gt;&gt;&gt; func = odl.solvers.L2NormSquared(odl.rn(3))</span>
+<span class="sd">    &gt;&gt;&gt; scipy_func, scipy_grad = odl.as_scipy_functional(func, True)</span>
+<span class="sd">    &gt;&gt;&gt; from scipy.optimize import minimize</span>
+<span class="sd">    &gt;&gt;&gt; result = minimize(scipy_func, x0=[0, 1, 0], jac=scipy_grad)</span>
+<span class="sd">    &gt;&gt;&gt; np.allclose(result.x, [0, 0, 0])</span>
+<span class="sd">    True</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    If the data representation of ``op``&#39;s domain is of type</span>
+<span class="sd">    `NumpyTensorSpace`, this incurs no significant overhead. If the space type</span>
+<span class="sd">    is ``CudaFn`` or some other nonlocal type, the overhead is significant.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">func_call</span><span class="p">(</span><span class="n">arr</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">func</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">arr</span><span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">func</span><span class="o">.</span><span class="n">domain</span><span class="o">.</span><span class="n">shape</span><span class="p">))</span>
+
+    <span class="k">if</span> <span class="n">return_gradient</span><span class="p">:</span>
+        <span class="k">def</span> <span class="nf">func_gradient_call</span><span class="p">(</span><span class="n">arr</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span>
+                <span class="n">func</span><span class="o">.</span><span class="n">gradient</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">arr</span><span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">func</span><span class="o">.</span><span class="n">domain</span><span class="o">.</span><span class="n">shape</span><span class="p">)))</span>
+
+        <span class="k">return</span> <span class="n">func_call</span><span class="p">,</span> <span class="n">func_gradient_call</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">func_call</span></div>
+
+
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s1">&#39;__main__&#39;</span><span class="p">:</span>
+    <span class="kn">from</span> <span class="nn">odl.util.testutils</span> <span class="kn">import</span> <span class="n">run_doctests</span>
+
+    <span class="n">run_doctests</span><span class="p">()</span>
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &#169; Copyright 2014-2020 The ODL Contributors.
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

@@ -1,0 +1,6 @@
+sinh_func.gradient
+==========================================
+
+.. currentmodule:: odl.ufunc_ops.ufunc_ops
+
+.. autoproperty:: sinh_func.gradient

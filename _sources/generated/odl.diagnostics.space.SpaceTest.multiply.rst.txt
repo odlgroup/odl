@@ -1,0 +1,8 @@
+:orphan:
+
+SpaceTest.multiply
+========================================
+
+.. currentmodule:: odl.diagnostics.space
+
+.. automethod:: SpaceTest.multiply

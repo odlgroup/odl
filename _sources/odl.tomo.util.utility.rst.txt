@@ -1,0 +1,27 @@
+utility
+=======
+
+
+
+.. currentmodule:: odl.tomo.util.utility
+
+
+
+
+.. rubric:: Functions
+
+.. autosummary::
+   :toctree: generated/
+
+   ~odl.tomo.util.utility.angles_from_matrix
+   ~odl.tomo.util.utility.axis_rotation
+   ~odl.tomo.util.utility.axis_rotation_matrix
+   ~odl.tomo.util.utility.euler_matrix
+   ~odl.tomo.util.utility.is_inside_bounds
+   ~odl.tomo.util.utility.is_rotation_matrix
+   ~odl.tomo.util.utility.perpendicular_vector
+   ~odl.tomo.util.utility.rotation_matrix_from_to
+   ~odl.tomo.util.utility.to_lab_sys
+   ~odl.tomo.util.utility.to_local_sys
+   ~odl.tomo.util.utility.transform_system
+

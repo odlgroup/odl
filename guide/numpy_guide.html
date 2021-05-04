@@ -1,0 +1,418 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>Using ODL with NumPy and SciPy &mdash; odl 1.0.0.dev0 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Vectorized functions" href="vectorization_guide.html" />
+    <link rel="prev" title="Linear spaces" href="linearspace_guide.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../index.html" class="icon icon-home"> odl
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                1.0.0.dev0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Getting Started</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../getting_started/getting_started.html">Getting Started</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Working with ODL</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="guide.html">User’s guide – selected topics</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="operator_guide.html">Operators</a></li>
+<li class="toctree-l2"><a class="reference internal" href="linearspace_guide.html">Linear spaces</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Using ODL with NumPy and SciPy</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#casting-vectors-to-and-from-arrays">Casting vectors to and from arrays</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#using-odl-objects-with-numpy-functions">Using ODL objects with NumPy functions</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#numpy-functions-as-operators">NumPy functions as Operators</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#using-odl-with-scipy-linear-solvers">Using ODL with SciPy linear solvers</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="vectorization_guide.html">Vectorized functions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="geometry_guide.html">Tomographic acquisition geometries</a></li>
+<li class="toctree-l2"><a class="reference internal" href="functional_guide.html">Functional</a></li>
+<li class="toctree-l2"><a class="reference internal" href="proximal_lang_guide.html">Using ODL with ProxImaL</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pdhg_guide.html">Primal-Dual Hybrid Gradient algorithm</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../math/math.html">Mathematical Background</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Developer zone</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../dev/dev.html">Contributing to ODL</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Useful facts</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="faq.html">Frequently asked questions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="glossary.html">Glossary</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../release_notes.html">Release Notes</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../refs.html">References</a></li>
+</ul>
+<p class="caption"><span class="caption-text">API Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../odl.html">odl</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">odl</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="guide.html">User’s guide – selected topics</a> &raquo;</li>
+        
+      <li>Using ODL with NumPy and SciPy</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            <a href="../_sources/guide/numpy_guide.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="using-odl-with-numpy-and-scipy">
+<span id="numpy-in-depth"></span><h1>Using ODL with NumPy and SciPy<a class="headerlink" href="#using-odl-with-numpy-and-scipy" title="Permalink to this headline">¶</a></h1>
+<p><a class="reference external" href="http://www.numpy.org/">NumPy</a> is the ubiquitous library for array computations in Python, and is used by almost all major numerical packages.
+It provides optimized <a class="reference external" href="http://docs.scipy.org/doc/numpy/reference/arrays.html">Array objects</a> that allow efficient storage of large arrays.
+It also provides several optimized algorithms for many of the functions used in numerical programming, such as taking the cosine or adding two arrays.</p>
+<p><a class="reference external" href="http://www.scipy.org/">SciPy</a> is a library built on top of NumPy providing more advanced algorithms such as linear solvers, statistics, signal and image processing etc.</p>
+<p>Many operations are more naturally performed using NumPy/SciPy than with ODL, and with that in mind ODL has been designed such that interfacing with them is as easy and fast as possible.</p>
+<div class="section" id="casting-vectors-to-and-from-arrays">
+<h2>Casting vectors to and from arrays<a class="headerlink" href="#casting-vectors-to-and-from-arrays" title="Permalink to this headline">¶</a></h2>
+<p>ODL vectors are stored in an abstract way, enabling storage on the CPU, GPU, or perhaps on a cluster on the other side of the world.
+This allows algorithms to be written in a generalized and storage-agnostic manner.
+Still, it is often convenient to be able to access the data and look at it, perhaps to initialize a vector, or to call an external function.</p>
+<p>To cast a NumPy array to an element of an ODL vector space, one can simply call the <a class="reference internal" href="../generated/odl.set.space.LinearSpace.element.html#odl.set.space.LinearSpace.element" title="odl.set.space.LinearSpace.element"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">LinearSpace.element</span></code></a> method in an appropriate space:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">r3</span> <span class="o">=</span> <span class="n">odl</span><span class="o">.</span><span class="n">rn</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">arr</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">x</span> <span class="o">=</span> <span class="n">r3</span><span class="o">.</span><span class="n">element</span><span class="p">(</span><span class="n">arr</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>If the data type and storage methods allow it, the element simply wraps the underlying array using a <a class="reference external" href="http://docs.scipy.org/doc/numpy/glossary.html#term-view">view</a>:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">float_arr</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">2.0</span><span class="p">,</span> <span class="mf">3.0</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">x</span> <span class="o">=</span> <span class="n">r3</span><span class="o">.</span><span class="n">element</span><span class="p">(</span><span class="n">float_arr</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">x</span><span class="o">.</span><span class="n">data</span> <span class="ow">is</span> <span class="n">float_arr</span>
+<span class="go">True</span>
+</pre></div>
+</div>
+<p>Casting ODL vector space elements to NumPy arrays can be done in two ways, either through the member function <a class="reference internal" href="../generated/odl.space.base_tensors.Tensor.asarray.html#odl.space.base_tensors.Tensor.asarray" title="odl.space.base_tensors.Tensor.asarray"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">Tensor.asarray</span></code></a>, or using <a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.asarray.html#numpy.asarray" title="(in NumPy v1.20)"><code class="xref any docutils literal notranslate"><span class="pre">numpy.asarray</span></code></a>.
+These are both optimized and return a view if possible:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">x</span><span class="o">.</span><span class="n">asarray</span><span class="p">()</span>
+<span class="go">array([ 1.,  2.,  3.])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+<span class="go">array([ 1.,  2.,  3.])</span>
+</pre></div>
+</div>
+<p>These methods work with any ODL object represented by an array.
+For example, in discretizations, a two-dimensional array can be used:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">space</span> <span class="o">=</span> <span class="n">odl</span><span class="o">.</span><span class="n">uniform_discr</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span> <span class="n">shape</span><span class="o">=</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">3</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">arr</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">],</span>
+<span class="gp">... </span>                <span class="p">[</span><span class="mi">4</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="mi">6</span><span class="p">],</span>
+<span class="gp">... </span>                <span class="p">[</span><span class="mi">7</span><span class="p">,</span> <span class="mi">8</span><span class="p">,</span> <span class="mi">9</span><span class="p">]])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">x</span> <span class="o">=</span> <span class="n">space</span><span class="o">.</span><span class="n">element</span><span class="p">(</span><span class="n">arr</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">x</span><span class="o">.</span><span class="n">asarray</span><span class="p">()</span>
+<span class="go">array([[ 1.,  2.,  3.],</span>
+<span class="go">       [ 4.,  5.,  6.],</span>
+<span class="go">       [ 7.,  8.,  9.]])</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="using-odl-objects-with-numpy-functions">
+<h2>Using ODL objects with NumPy functions<a class="headerlink" href="#using-odl-objects-with-numpy-functions" title="Permalink to this headline">¶</a></h2>
+<p>A very convenient feature of ODL is its seamless interaction with NumPy functions.
+For universal functions or <a class="reference external" href="http://docs.scipy.org/doc/numpy/reference/ufuncs.html">ufuncs</a>, this is supported by several mechanisms as explained below.</p>
+<p>Evaluating a NumPy ufunc on an ODL object works as expected:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">r3</span> <span class="o">=</span> <span class="n">odl</span><span class="o">.</span><span class="n">rn</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">x</span> <span class="o">=</span> <span class="n">r3</span><span class="o">.</span><span class="n">element</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">np</span><span class="o">.</span><span class="n">negative</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+<span class="go">rn(3).element([-1., -2., -3.])</span>
+</pre></div>
+</div>
+<p>It is also possible to use an ODL object as <code class="docutils literal notranslate"><span class="pre">out</span></code> parameter:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">out</span> <span class="o">=</span> <span class="n">r3</span><span class="o">.</span><span class="n">element</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">result</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">negative</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">out</span><span class="o">=</span><span class="n">out</span><span class="p">)</span>  <span class="c1"># variant 1</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">out</span>
+<span class="go">rn(3).element([-1., -2., -3.])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">result</span> <span class="ow">is</span> <span class="n">out</span>
+<span class="go">True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">out</span> <span class="o">=</span> <span class="n">r3</span><span class="o">.</span><span class="n">element</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">result</span> <span class="o">=</span> <span class="n">x</span><span class="o">.</span><span class="n">ufuncs</span><span class="o">.</span><span class="n">negative</span><span class="p">(</span><span class="n">out</span><span class="o">=</span><span class="n">out</span><span class="p">)</span>  <span class="c1"># variant 2</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">out</span>
+<span class="go">rn(3).element([-1., -2., -3.])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">result</span> <span class="ow">is</span> <span class="n">out</span>
+<span class="go">True</span>
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Using <code class="docutils literal notranslate"><span class="pre">out</span></code> of type other than <a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.20)"><code class="xref any docutils literal notranslate"><span class="pre">numpy.ndarray</span></code></a> in NumPy ufuncs (variant 1 above) <strong>only works with NumPy version 1.13 or higher</strong>.
+Variant 2 also works with older versions, but the interface may be removed in a future version of ODL.</p>
+<p>Before NumPy 1.13, the sequence of actions triggered by the call <code class="docutils literal notranslate"><span class="pre">np.negative(x)</span></code> would be like this:</p>
+<ol class="arabic simple">
+<li><p>Cast <code class="docutils literal notranslate"><span class="pre">x</span></code> to a NumPy array by <code class="docutils literal notranslate"><span class="pre">x_arr</span> <span class="pre">=</span> <span class="pre">x.__array__()</span></code>.</p></li>
+<li><p>Run the ufunc on the array, <code class="docutils literal notranslate"><span class="pre">res_arr</span> <span class="pre">=</span> <span class="pre">np.negative(x_arr)</span></code>.</p></li>
+<li><p>Re-wrap the result as <code class="docutils literal notranslate"><span class="pre">res</span> <span class="pre">=</span> <span class="pre">x.__array_wrap__(res_arr)</span></code>.</p></li>
+<li><p>Return <code class="docutils literal notranslate"><span class="pre">res</span></code>.</p></li>
+</ol>
+<p>This method has two major drawbacks, namely (1) users cannot override the ufunc that is being called, and (2) custom objects are not accepted as <code class="docutils literal notranslate"><span class="pre">out</span></code> parameters.
+Therefore, a new <code class="docutils literal notranslate"><span class="pre">__array_ufunc__</span></code> mechanism was [introduced in NumPy 1.13](<a class="reference external" href="https://docs.scipy.org/doc/numpy/release.html#array-ufunc-added">https://docs.scipy.org/doc/numpy/release.html#array-ufunc-added</a>) that removes these limitations.
+It is used whenever a NumPy ufunc is called on an object implementing this method, which then takes full control of the ufunc mechanism.
+For details, check out the <a class="reference external" href="https://github.com/numpy/numpy/blob/master/doc/neps/ufunc-overrides.rst">NEP</a> describing the logic, or the <a class="reference external" href="https://docs.scipy.org/doc/numpy/reference/arrays.classes.html#numpy.class.__array_ufunc__">interface documentation</a>.
+See also <a class="reference external" href="https://docs.scipy.org/doc/numpy/reference/ufuncs.html">NumPy’s general documentation on ufuncs</a></p>
+</div>
+<p>For other functions that are not ufuncs, ODL vector space elements are usually accepted as input, but the output is typically of type <a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.20)"><code class="xref any docutils literal notranslate"><span class="pre">numpy.ndarray</span></code></a>, i.e., the result will not be not re-wrapped:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">np</span><span class="o">.</span><span class="n">convolve</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s1">&#39;same&#39;</span><span class="p">)</span>
+<span class="go">array([  4.,  10.,  12.])</span>
+</pre></div>
+</div>
+<p>In such a case, or if a space element has to be modified in-place using some NumPy function (or any function defined on arrays), we have the <a class="reference internal" href="../generated/odl.util.utility.writable_array.html#odl.util.utility.writable_array" title="odl.util.utility.writable_array"><code class="xref any py py-func docutils literal notranslate"><span class="pre">writable_array</span></code></a> context manager that exposes a NumPy array which gets automatically assigned back to the ODL object:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="k">with</span> <span class="n">odl</span><span class="o">.</span><span class="n">util</span><span class="o">.</span><span class="n">writable_array</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="k">as</span> <span class="n">x_arr</span><span class="p">:</span>
+<span class="gp">... </span>    <span class="n">np</span><span class="o">.</span><span class="n">cumsum</span><span class="p">(</span><span class="n">x_arr</span><span class="p">,</span> <span class="n">out</span><span class="o">=</span><span class="n">x_arr</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">x</span>
+<span class="go">rn(3).element([ 1.,  3.,  6.])</span>
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>The re-assignment is a no-op if <code class="docutils literal notranslate"><span class="pre">x</span></code> has a NumPy array as its data container, hence the operation will be as fast as manipulating <code class="docutils literal notranslate"><span class="pre">x</span></code> directly.
+The same syntax also works with other data containers, but in this case, copies to and from a NumPy array are usually necessary.</p>
+</div>
+</div>
+<div class="section" id="numpy-functions-as-operators">
+<h2>NumPy functions as Operators<a class="headerlink" href="#numpy-functions-as-operators" title="Permalink to this headline">¶</a></h2>
+<p>To solve the above issue, it is often useful to write an <a class="reference internal" href="glossary.html#term-operator"><code class="xref any std std-term docutils literal notranslate"><span class="pre">Operator</span></code></a> wrapping NumPy functions, thus allowing full access to the ODL ecosystem.
+The convolution operation, written as ODL operator, could look like this:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="k">class</span> <span class="nc">MyConvolution</span><span class="p">(</span><span class="n">odl</span><span class="o">.</span><span class="n">Operator</span><span class="p">):</span>
+<span class="gp">... </span>    <span class="sd">&quot;&quot;&quot;Operator for convolving with a given kernel.&quot;&quot;&quot;</span>
+<span class="gp">...</span>
+<span class="gp">... </span>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">kernel</span><span class="p">):</span>
+<span class="gp">... </span>        <span class="sd">&quot;&quot;&quot;Initialize the convolution.&quot;&quot;&quot;</span>
+<span class="gp">... </span>        <span class="bp">self</span><span class="o">.</span><span class="n">kernel</span> <span class="o">=</span> <span class="n">kernel</span>
+<span class="gp">...</span>
+<span class="gp">... </span>        <span class="c1"># Initialize operator base class.</span>
+<span class="gp">... </span>        <span class="c1"># This operator maps from the space of vector to the same space and is linear</span>
+<span class="gp">... </span>        <span class="nb">super</span><span class="p">(</span><span class="n">MyConvolution</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span>
+<span class="gp">... </span>            <span class="n">domain</span><span class="o">=</span><span class="n">kernel</span><span class="o">.</span><span class="n">space</span><span class="p">,</span> <span class="nb">range</span><span class="o">=</span><span class="n">kernel</span><span class="o">.</span><span class="n">space</span><span class="p">,</span> <span class="n">linear</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="gp">...</span>
+<span class="gp">... </span>    <span class="k">def</span> <span class="nf">_call</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
+<span class="gp">... </span>        <span class="c1"># The output of an Operator is automatically cast to an ODL object</span>
+<span class="gp">... </span>        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">convolve</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">kernel</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s1">&#39;same&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>This operator can then be called on its domain elements:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">kernel</span> <span class="o">=</span> <span class="n">odl</span><span class="o">.</span><span class="n">rn</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span><span class="o">.</span><span class="n">element</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">1</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">conv_op</span> <span class="o">=</span> <span class="n">MyConvolution</span><span class="p">(</span><span class="n">kernel</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">conv_op</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">])</span>
+<span class="go">rn(3).element([ 4.,  8.,  8.])</span>
+</pre></div>
+</div>
+<p>It can be also be used with any of the ODL operator functionalities such as multiplication with scalar, composition, etc:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">scaled_op</span> <span class="o">=</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">conv_op</span>  <span class="c1"># scale output by 2</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">scaled_op</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">])</span>
+<span class="go">rn(3).element([  8.,  16.,  16.])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">y</span> <span class="o">=</span> <span class="n">odl</span><span class="o">.</span><span class="n">rn</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span><span class="o">.</span><span class="n">element</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">inner_product_op</span> <span class="o">=</span> <span class="n">odl</span><span class="o">.</span><span class="n">InnerProductOperator</span><span class="p">(</span><span class="n">y</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># Create composition with inner product operator with [1, 1, 1].</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># When called on a vector, the result should be the sum of the</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># convolved vector.</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">composed_op</span> <span class="o">=</span> <span class="n">inner_product_op</span> <span class="o">*</span> <span class="n">conv_op</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">composed_op</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">])</span>
+<span class="go">20.0</span>
+</pre></div>
+</div>
+<p>For more information on ODL Operators, how to implement them and their features, see the guide on <a class="reference internal" href="operator_guide.html#operators-in-depth"><span class="std std-ref">Operators</span></a>.</p>
+</div>
+<div class="section" id="using-odl-with-scipy-linear-solvers">
+<h2>Using ODL with SciPy linear solvers<a class="headerlink" href="#using-odl-with-scipy-linear-solvers" title="Permalink to this headline">¶</a></h2>
+<p>SciPy includes <a class="reference external" href="http://docs.scipy.org/doc/scipy/reference/sparse.linalg.html">a series of very competent solvers</a> that may be useful in solving some linear problems.
+If you have invested some effort into writing an ODL operator, or perhaps wish to use a pre-existing operator, then the function <a class="reference internal" href="../generated/odl.operator.oputils.as_scipy_operator.html#odl.operator.oputils.as_scipy_operator" title="odl.operator.oputils.as_scipy_operator"><code class="xref any py py-func docutils literal notranslate"><span class="pre">as_scipy_operator</span></code></a> creates a Python object that can be used in SciPy’s linear solvers.
+Here is a simple example of solving Poisson’s equation <img class="math" src="../_images/math/e87b2c50121fa3e2b42729049953924899e52b8d.png" alt="- \Delta u = f"/> on the interval <img class="math" src="../_images/math/8027137b3073a7f5ca4e45ba2d030dcff154eca4.png" alt="[0, 1]"/>:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">space</span> <span class="o">=</span> <span class="n">odl</span><span class="o">.</span><span class="n">uniform_discr</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">5</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">op</span> <span class="o">=</span> <span class="o">-</span><span class="n">odl</span><span class="o">.</span><span class="n">Laplacian</span><span class="p">(</span><span class="n">space</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">f</span> <span class="o">=</span> <span class="n">space</span><span class="o">.</span><span class="n">element</span><span class="p">(</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="p">(</span><span class="n">x</span> <span class="o">&gt;</span> <span class="mf">0.4</span><span class="p">)</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">x</span> <span class="o">&lt;</span> <span class="mf">0.6</span><span class="p">))</span>  <span class="c1"># indicator function on [0.4, 0.6]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">u</span><span class="p">,</span> <span class="n">status</span> <span class="o">=</span> <span class="n">scipy</span><span class="o">.</span><span class="n">sparse</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">cg</span><span class="p">(</span><span class="n">odl</span><span class="o">.</span><span class="n">as_scipy_operator</span><span class="p">(</span><span class="n">op</span><span class="p">),</span> <span class="n">f</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">u</span>
+<span class="go">array([ 0.02,  0.04,  0.06,  0.04,  0.02])</span>
+</pre></div>
+</div>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+        <a href="vectorization_guide.html" class="btn btn-neutral float-right" title="Vectorized functions" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="linearspace_guide.html" class="btn btn-neutral float-left" title="Linear spaces" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &#169; Copyright 2014-2020 The ODL Contributors.
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

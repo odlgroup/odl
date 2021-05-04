@@ -1,0 +1,6 @@
+﻿apply_on_boundary
+===================================
+
+.. currentmodule:: odl.util.numerics
+
+.. autofunction:: apply_on_boundary

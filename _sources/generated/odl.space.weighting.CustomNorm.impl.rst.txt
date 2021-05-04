@@ -1,0 +1,6 @@
+CustomNorm.impl
+===================================
+
+.. currentmodule:: odl.space.weighting
+
+.. autoproperty:: CustomNorm.impl

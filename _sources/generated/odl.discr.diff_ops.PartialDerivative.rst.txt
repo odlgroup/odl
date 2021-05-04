@@ -1,0 +1,38 @@
+﻿PartialDerivative
+====================================
+
+.. currentmodule:: odl.discr.diff_ops
+
+.. autoclass:: PartialDerivative
+   :show-inheritance:
+   
+   
+   .. automethod:: __init__
+   
+      
+   
+   .. HACK -- the point here is that we don't want this to appear in the output, but the autosummary should still generate the pages.
+      .. autosummary::
+         :toctree:
+      
+         PartialDerivative.__call__
+         PartialDerivative.__eq__
+         PartialDerivative._call
+         PartialDerivative.derivative
+         PartialDerivative.norm
+   
+
+    
+   .. HACK -- the point here is that we don't want this to appear in the output, but the autosummary should still generate the pages.
+      .. autosummary::
+         :toctree:
+      
+         PartialDerivative.adjoint
+         PartialDerivative.base_space
+         PartialDerivative.domain
+         PartialDerivative.inverse
+         PartialDerivative.is_functional
+         PartialDerivative.is_linear
+         PartialDerivative.range
+   
+   

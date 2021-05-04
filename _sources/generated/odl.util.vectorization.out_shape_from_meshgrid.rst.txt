@@ -1,0 +1,6 @@
+﻿out_shape_from_meshgrid
+==============================================
+
+.. currentmodule:: odl.util.vectorization
+
+.. autofunction:: out_shape_from_meshgrid

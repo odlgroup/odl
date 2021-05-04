@@ -1,0 +1,35 @@
+﻿ConstWeighting
+==================================
+
+.. currentmodule:: odl.space.weighting
+
+.. autoclass:: ConstWeighting
+   :show-inheritance:
+   
+   
+   .. automethod:: __init__
+   
+      
+   
+   .. HACK -- the point here is that we don't want this to appear in the output, but the autosummary should still generate the pages.
+      .. autosummary::
+         :toctree:
+      
+         ConstWeighting.__eq__
+         ConstWeighting.dist
+         ConstWeighting.equiv
+         ConstWeighting.inner
+         ConstWeighting.norm
+   
+
+    
+   .. HACK -- the point here is that we don't want this to appear in the output, but the autosummary should still generate the pages.
+      .. autosummary::
+         :toctree:
+      
+         ConstWeighting.const
+         ConstWeighting.exponent
+         ConstWeighting.impl
+         ConstWeighting.repr_part
+   
+   

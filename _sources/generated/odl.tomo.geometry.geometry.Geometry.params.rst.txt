@@ -1,0 +1,6 @@
+Geometry.params
+==========================================
+
+.. currentmodule:: odl.tomo.geometry.geometry
+
+.. autoproperty:: Geometry.params

@@ -1,0 +1,51 @@
+﻿Tensor
+=============================
+
+.. currentmodule:: odl.space.base_tensors
+
+.. autoclass:: Tensor
+   :show-inheritance:
+   
+   
+   .. automethod:: __init__
+   
+      
+   
+   .. HACK -- the point here is that we don't want this to appear in the output, but the autosummary should still generate the pages.
+      .. autosummary::
+         :toctree:
+      
+         Tensor.__eq__
+         Tensor.__getitem__
+         Tensor.__setitem__
+         Tensor.asarray
+         Tensor.assign
+         Tensor.astype
+         Tensor.copy
+         Tensor.dist
+         Tensor.divide
+         Tensor.inner
+         Tensor.lincomb
+         Tensor.multiply
+         Tensor.norm
+         Tensor.set_zero
+         Tensor.show
+   
+
+    
+   .. HACK -- the point here is that we don't want this to appear in the output, but the autosummary should still generate the pages.
+      .. autosummary::
+         :toctree:
+      
+         Tensor.T
+         Tensor.dtype
+         Tensor.impl
+         Tensor.itemsize
+         Tensor.nbytes
+         Tensor.ndim
+         Tensor.shape
+         Tensor.size
+         Tensor.space
+         Tensor.ufuncs
+   
+   

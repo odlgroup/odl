@@ -1,0 +1,39 @@
+utility
+=======
+
+Utilities mainly for internal use.
+
+.. currentmodule:: odl.util.utility
+
+
+
+
+.. rubric:: Functions
+
+.. autosummary::
+   :toctree: generated/
+
+   ~odl.util.utility.array_str
+   ~odl.util.utility.attribute_repr_string
+   ~odl.util.utility.cache_arguments
+   ~odl.util.utility.complex_dtype
+   ~odl.util.utility.conj_exponent
+   ~odl.util.utility.dedent
+   ~odl.util.utility.dtype_repr
+   ~odl.util.utility.dtype_str
+   ~odl.util.utility.indent
+   ~odl.util.utility.is_string
+   ~odl.util.utility.method_repr_string
+   ~odl.util.utility.nd_iterator
+   ~odl.util.utility.npy_printoptions
+   ~odl.util.utility.npy_random_seed
+   ~odl.util.utility.nullcontext
+   ~odl.util.utility.pkg_supports
+   ~odl.util.utility.real_dtype
+   ~odl.util.utility.repr_string
+   ~odl.util.utility.run_from_ipython
+   ~odl.util.utility.signature_string
+   ~odl.util.utility.signature_string_parts
+   ~odl.util.utility.unique
+   ~odl.util.utility.writable_array
+

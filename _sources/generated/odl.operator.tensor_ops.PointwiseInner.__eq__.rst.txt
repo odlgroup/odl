@@ -1,0 +1,8 @@
+:orphan:
+
+PointwiseInner.__eq__
+=============================================
+
+.. currentmodule:: odl.operator.tensor_ops
+
+.. automethod:: PointwiseInner.__eq__

@@ -1,0 +1,43 @@
+﻿ceil_func
+=================================
+
+.. currentmodule:: odl.ufunc_ops.ufunc_ops
+
+.. autoclass:: ceil_func
+   :show-inheritance:
+   
+   
+   .. automethod:: __init__
+   
+      
+   
+   .. HACK -- the point here is that we don't want this to appear in the output, but the autosummary should still generate the pages.
+      .. autosummary::
+         :toctree:
+      
+         ceil_func.__call__
+         ceil_func.__eq__
+         ceil_func._call
+         ceil_func.bregman
+         ceil_func.derivative
+         ceil_func.norm
+         ceil_func.translated
+   
+
+    
+   .. HACK -- the point here is that we don't want this to appear in the output, but the autosummary should still generate the pages.
+      .. autosummary::
+         :toctree:
+      
+         ceil_func.adjoint
+         ceil_func.convex_conj
+         ceil_func.domain
+         ceil_func.grad_lipschitz
+         ceil_func.gradient
+         ceil_func.inverse
+         ceil_func.is_functional
+         ceil_func.is_linear
+         ceil_func.proximal
+         ceil_func.range
+   
+   

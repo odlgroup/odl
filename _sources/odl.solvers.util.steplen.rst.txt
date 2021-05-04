@@ -1,0 +1,20 @@
+steplen
+=======
+
+Step length computation for optimization schemes.
+
+.. currentmodule:: odl.solvers.util.steplen
+
+
+
+.. rubric:: Classes
+
+.. autosummary::
+   :toctree: generated/
+
+   ~odl.solvers.util.steplen.BacktrackingLineSearch
+   ~odl.solvers.util.steplen.ConstantLineSearch
+   ~odl.solvers.util.steplen.LineSearch
+   ~odl.solvers.util.steplen.LineSearchFromIterNum
+
+

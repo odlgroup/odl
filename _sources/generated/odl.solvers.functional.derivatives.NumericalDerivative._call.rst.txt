@@ -1,0 +1,8 @@
+:orphan:
+
+NumericalDerivative._call
+============================================================
+
+.. currentmodule:: odl.solvers.functional.derivatives
+
+.. automethod:: NumericalDerivative._call

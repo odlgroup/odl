@@ -1,0 +1,6 @@
+FanBeamGeometry.src_shift_func
+=========================================================
+
+.. currentmodule:: odl.tomo.geometry.conebeam
+
+.. autoproperty:: FanBeamGeometry.src_shift_func

@@ -1,0 +1,8 @@
+:orphan:
+
+ProductSpaceUfuncs.subtract
+===========================================
+
+.. currentmodule:: odl.util.ufuncs
+
+.. automethod:: ProductSpaceUfuncs.subtract

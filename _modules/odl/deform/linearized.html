@@ -1,0 +1,695 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>odl.deform.linearized &mdash; odl 1.0.0.dev0 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/custom.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../../" src="../../../_static/documentation_options.js"></script>
+        <script src="../../../_static/jquery.js"></script>
+        <script src="../../../_static/underscore.js"></script>
+        <script src="../../../_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="../../../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../../index.html" class="icon icon-home"> odl
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                1.0.0.dev0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Getting Started</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../getting_started/getting_started.html">Getting Started</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Working with ODL</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../guide/guide.html">User’s guide – selected topics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../math/math.html">Mathematical Background</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Developer zone</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../dev/dev.html">Contributing to ODL</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Useful facts</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../guide/faq.html">Frequently asked questions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../guide/glossary.html">Glossary</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../release_notes.html">Release Notes</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../refs.html">References</a></li>
+</ul>
+<p class="caption"><span class="caption-text">API Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../odl.html">odl</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">odl</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="../../index.html">Module code</a> &raquo;</li>
+        
+      <li>odl.deform.linearized</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for odl.deform.linearized</h1><div class="highlight"><pre>
+<span></span><span class="c1"># Copyright 2014-2020 The ODL contributors</span>
+<span class="c1">#</span>
+<span class="c1"># This file is part of ODL.</span>
+<span class="c1">#</span>
+<span class="c1"># This Source Code Form is subject to the terms of the Mozilla Public License,</span>
+<span class="c1"># v. 2.0. If a copy of the MPL was not distributed with this file, You can</span>
+<span class="c1"># obtain one at https://mozilla.org/MPL/2.0/.</span>
+
+<span class="sd">&quot;&quot;&quot;Operators and functions for linearized deformation.&quot;&quot;&quot;</span>
+
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">absolute_import</span><span class="p">,</span> <span class="n">division</span><span class="p">,</span> <span class="n">print_function</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+
+<span class="kn">from</span> <span class="nn">odl.discr</span> <span class="kn">import</span> <span class="n">DiscretizedSpace</span><span class="p">,</span> <span class="n">Divergence</span><span class="p">,</span> <span class="n">Gradient</span>
+<span class="kn">from</span> <span class="nn">odl.discr.discr_space</span> <span class="kn">import</span> <span class="n">DiscretizedSpaceElement</span>
+<span class="kn">from</span> <span class="nn">odl.discr.discr_utils</span> <span class="kn">import</span> <span class="n">_normalize_interp</span><span class="p">,</span> <span class="n">per_axis_interpolator</span>
+<span class="kn">from</span> <span class="nn">odl.operator</span> <span class="kn">import</span> <span class="n">Operator</span><span class="p">,</span> <span class="n">PointwiseInner</span>
+<span class="kn">from</span> <span class="nn">odl.space</span> <span class="kn">import</span> <span class="n">ProductSpace</span>
+<span class="kn">from</span> <span class="nn">odl.space.pspace</span> <span class="kn">import</span> <span class="n">ProductSpaceElement</span>
+<span class="kn">from</span> <span class="nn">odl.util</span> <span class="kn">import</span> <span class="n">indent</span><span class="p">,</span> <span class="n">signature_string</span>
+
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;LinDeformFixedTempl&#39;</span><span class="p">,</span> <span class="s1">&#39;LinDeformFixedDisp&#39;</span><span class="p">,</span> <span class="s1">&#39;linear_deform&#39;</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="linear_deform"><a class="viewcode-back" href="../../../generated/odl.deform.linearized.linear_deform.html#odl.deform.linearized.linear_deform">[docs]</a><span class="k">def</span> <span class="nf">linear_deform</span><span class="p">(</span><span class="n">template</span><span class="p">,</span> <span class="n">displacement</span><span class="p">,</span> <span class="n">interp</span><span class="o">=</span><span class="s1">&#39;linear&#39;</span><span class="p">,</span> <span class="n">out</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Linearized deformation of a template with a displacement field.</span>
+
+<span class="sd">    The function maps a given template ``I`` and a given displacement</span>
+<span class="sd">    field ``v`` to the new function ``x --&gt; I(x + v(x))``.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    template : `DiscretizedSpaceElement`</span>
+<span class="sd">        Template to be deformed by a displacement field.</span>
+<span class="sd">    displacement : element of power space of ``template.space``</span>
+<span class="sd">        Vector field (displacement field) used to deform the</span>
+<span class="sd">        template.</span>
+<span class="sd">    interp : str or sequence of str</span>
+<span class="sd">        Interpolation type that should be used to sample the template on</span>
+<span class="sd">        the deformed grid. A single value applies to all axes, and a</span>
+<span class="sd">        sequence gives the interpolation scheme per axis.</span>
+
+<span class="sd">        Supported values: ``&#39;nearest&#39;``, ``&#39;linear&#39;``</span>
+
+<span class="sd">    out : `numpy.ndarray`, optional</span>
+<span class="sd">        Array to which the function values of the deformed template</span>
+<span class="sd">        are written. It must have the same shape as ``template`` and</span>
+<span class="sd">        a data type compatible with ``template.dtype``.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    deformed_template : `numpy.ndarray`</span>
+<span class="sd">        Function values of the deformed template. If ``out`` was given,</span>
+<span class="sd">        the returned object is a reference to it.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    Create a simple 1D template to initialize the operator and</span>
+<span class="sd">    apply it to a displacement field. Where the displacement is zero,</span>
+<span class="sd">    the output value is the same as the input value.</span>
+<span class="sd">    In the 4-th point, the value is taken from 0.2 (one cell) to the</span>
+<span class="sd">    left, i.e. 1.0.</span>
+
+<span class="sd">    &gt;&gt;&gt; space = odl.uniform_discr(0, 1, 5)</span>
+<span class="sd">    &gt;&gt;&gt; disp_field_space = space.tangent_bundle</span>
+<span class="sd">    &gt;&gt;&gt; template = space.element([0, 0, 1, 0, 0])</span>
+<span class="sd">    &gt;&gt;&gt; displacement_field = disp_field_space.element([[0, 0, 0, -0.2, 0]])</span>
+<span class="sd">    &gt;&gt;&gt; linear_deform(template, displacement_field, interp=&#39;nearest&#39;)</span>
+<span class="sd">    array([ 0.,  0.,  1.,  1.,  0.])</span>
+
+<span class="sd">    The result depends on the chosen interpolation. With &#39;linear&#39;</span>
+<span class="sd">    interpolation and an offset of half the distance between two</span>
+<span class="sd">    points, 0.1, one gets the mean of the values.</span>
+
+<span class="sd">    &gt;&gt;&gt; displacement_field = disp_field_space.element([[0, 0, 0, -0.1, 0]])</span>
+<span class="sd">    &gt;&gt;&gt; linear_deform(template, displacement_field, interp=&#39;linear&#39;)</span>
+<span class="sd">    array([ 0. ,  0. ,  1. ,  0.5,  0. ])</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">points</span> <span class="o">=</span> <span class="n">template</span><span class="o">.</span><span class="n">space</span><span class="o">.</span><span class="n">points</span><span class="p">()</span>
+    <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">vi</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">displacement</span><span class="p">):</span>
+        <span class="n">points</span><span class="p">[:,</span> <span class="n">i</span><span class="p">]</span> <span class="o">+=</span> <span class="n">vi</span><span class="o">.</span><span class="n">asarray</span><span class="p">()</span><span class="o">.</span><span class="n">ravel</span><span class="p">()</span>
+    <span class="n">templ_interpolator</span> <span class="o">=</span> <span class="n">per_axis_interpolator</span><span class="p">(</span>
+        <span class="n">template</span><span class="p">,</span> <span class="n">coord_vecs</span><span class="o">=</span><span class="n">template</span><span class="o">.</span><span class="n">space</span><span class="o">.</span><span class="n">grid</span><span class="o">.</span><span class="n">coord_vectors</span><span class="p">,</span> <span class="n">interp</span><span class="o">=</span><span class="n">interp</span>
+    <span class="p">)</span>
+    <span class="n">values</span> <span class="o">=</span> <span class="n">templ_interpolator</span><span class="p">(</span><span class="n">points</span><span class="o">.</span><span class="n">T</span><span class="p">,</span> <span class="n">out</span><span class="o">=</span><span class="n">out</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">values</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">template</span><span class="o">.</span><span class="n">space</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="LinDeformFixedTempl"><a class="viewcode-back" href="../../../generated/odl.deform.linearized.LinDeformFixedTempl.html#odl.deform.linearized.LinDeformFixedTempl">[docs]</a><span class="k">class</span> <span class="nc">LinDeformFixedTempl</span><span class="p">(</span><span class="n">Operator</span><span class="p">):</span>
+
+    <span class="sa">r</span><span class="sd">&quot;&quot;&quot;Deformation operator with fixed template acting on displacement fields.</span>
+
+<span class="sd">    The operator has a fixed template ``I`` and maps a displacement</span>
+<span class="sd">    field ``v`` to the new function ``x --&gt; I(x + v(x))``.</span>
+
+<span class="sd">    See Also</span>
+<span class="sd">    --------</span>
+<span class="sd">    LinDeformFixedDisp : Deformation with a fixed displacement.</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    For :math:`\Omega \subset \mathbb{R}^d`, we take :math:`X = L^p(\Omega)`</span>
+<span class="sd">    to be the template space, i.e. :math:`I \in X`. Then the vector field</span>
+<span class="sd">    space is identified with :math:`V := X^d`. Hence the deformation operator</span>
+<span class="sd">    with fixed template maps :math:`V` into :math:`X`:</span>
+
+<span class="sd">    .. math::</span>
+<span class="sd">        W_I : V \to X, \quad W_I(v) := I(\cdot + v(\cdot)),</span>
+
+<span class="sd">    i.e., :math:`W_I(v)(x) = I(x + v(x))`.</span>
+
+<span class="sd">    Note that this operator is non-linear. Its derivative at :math:`v` is</span>
+<span class="sd">    an operator that maps :math:`V` into :math:`X`:</span>
+
+<span class="sd">    .. math::</span>
+<span class="sd">        W_I&#39;(v) : V \to X, \quad W_I&#39;(v)(u) =</span>
+<span class="sd">        \big&lt; \nabla I(\cdot + v(\cdot)), u \big&gt;_{\mathbb{R}^d},</span>
+
+<span class="sd">    i.e., :math:`W_I&#39;(v)(u)(x) = \nabla I(x + v(x))^T u(x)`,</span>
+
+<span class="sd">    which is to be understood as a point-wise inner product, resulting</span>
+<span class="sd">    in a function in :math:`X`. And the adjoint of the preceding derivative</span>
+<span class="sd">    is also an operator that maps :math:`X` into :math:`V`:</span>
+
+<span class="sd">    .. math::</span>
+<span class="sd">        W_I&#39;(v)^* : X \to V, \quad W_I&#39;(v)^*(J) =</span>
+<span class="sd">        J \, \nabla I(\cdot + v(\cdot)),</span>
+
+<span class="sd">    i.e., :math:`W_I&#39;(v)^*(J)(x) = J(x) \, \nabla I(x + v(x))`.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="LinDeformFixedTempl.__init__"><a class="viewcode-back" href="../../../generated/odl.deform.linearized.LinDeformFixedTempl.html#odl.deform.linearized.LinDeformFixedTempl.__init__">[docs]</a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">template</span><span class="p">,</span> <span class="n">domain</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">interp</span><span class="o">=</span><span class="s1">&#39;linear&#39;</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Initialize a new instance.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        template : `DiscretizedSpaceElement`</span>
+<span class="sd">            Fixed template that is to be deformed.</span>
+<span class="sd">        domain : power space of `DiscretizedSpace`, optional</span>
+<span class="sd">            The space of all allowed coordinates in the deformation.</span>
+<span class="sd">            A `ProductSpace` of ``template.ndim`` copies of a function-space.</span>
+<span class="sd">            It must fulfill</span>
+<span class="sd">            ``domain[0].partition == template.space.partition``, so</span>
+<span class="sd">            this option is useful mainly when using different interpolations</span>
+<span class="sd">            in displacement and template.</span>
+
+<span class="sd">            Default: ``template.space.real_space.tangent_bundle``</span>
+
+<span class="sd">        interp : str or sequence of str</span>
+<span class="sd">            Interpolation type that should be used to sample the template on</span>
+<span class="sd">            the deformed grid. A single value applies to all axes, and a</span>
+<span class="sd">            sequence gives the interpolation scheme per axis.</span>
+
+<span class="sd">            Supported values: ``&#39;nearest&#39;``, ``&#39;linear&#39;``</span>
+
+<span class="sd">            .. warning::</span>
+<span class="sd">                Choosing ``&#39;nearest&#39;`` interpolation results in a formally</span>
+<span class="sd">                non-differentiable operator since the gradient of the</span>
+<span class="sd">                template is not well-defined. If the operator derivative</span>
+<span class="sd">                is to be used, a differentiable interpolation scheme (e.g.,</span>
+<span class="sd">                ``&#39;linear&#39;``) should be chosen.</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        --------</span>
+<span class="sd">        Create a simple 1D template to initialize the operator and</span>
+<span class="sd">        apply it to a displacement field. Where the displacement is zero,</span>
+<span class="sd">        the output value is the same as the input value.</span>
+<span class="sd">        In the 4-th point, the value is taken from 0.2 (one cell) to the</span>
+<span class="sd">        left, i.e. 1.0.</span>
+
+<span class="sd">        &gt;&gt;&gt; space = odl.uniform_discr(0, 1, 5)</span>
+<span class="sd">        &gt;&gt;&gt; template = space.element([0, 0, 1, 0, 0])</span>
+<span class="sd">        &gt;&gt;&gt; op = LinDeformFixedTempl(template, interp=&#39;nearest&#39;)</span>
+<span class="sd">        &gt;&gt;&gt; disp_field = [[0, 0, 0, -0.2, 0]]</span>
+<span class="sd">        &gt;&gt;&gt; print(op(disp_field))</span>
+<span class="sd">        [ 0.,  0.,  1.,  1.,  0.]</span>
+
+<span class="sd">        The result depends on the chosen interpolation. With &#39;linear&#39;</span>
+<span class="sd">        interpolation and an offset of half the distance between two</span>
+<span class="sd">        points, 0.1, one gets the mean of the values.</span>
+
+<span class="sd">        &gt;&gt;&gt; op = LinDeformFixedTempl(template, interp=&#39;linear&#39;)</span>
+<span class="sd">        &gt;&gt;&gt; disp_field = [[0, 0, 0, -0.1, 0]]</span>
+<span class="sd">        &gt;&gt;&gt; print(op(disp_field))</span>
+<span class="sd">        [ 0. ,  0. ,  1. ,  0.5,  0. ]</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">template</span><span class="p">,</span> <span class="n">DiscretizedSpaceElement</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span>
+                <span class="s1">&#39;`template` must be a `DiscretizedSpaceElement, got </span><span class="si">{!r}</span><span class="s1">`&#39;</span>
+                <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">template</span><span class="p">)</span>
+            <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__template</span> <span class="o">=</span> <span class="n">template</span>
+
+        <span class="k">if</span> <span class="n">domain</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">domain</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">template</span><span class="o">.</span><span class="n">space</span><span class="o">.</span><span class="n">real_space</span><span class="o">.</span><span class="n">tangent_bundle</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">domain</span><span class="p">,</span> <span class="n">ProductSpace</span><span class="p">):</span>
+                <span class="c1"># TODO: allow non-product spaces in the 1D case</span>
+                <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;`domain` must be a `ProductSpace` &#39;</span>
+                                <span class="s1">&#39;instance, got </span><span class="si">{!r}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">domain</span><span class="p">))</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">domain</span><span class="o">.</span><span class="n">is_power_space</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;`domain` must be a power space, &#39;</span>
+                                <span class="s1">&#39;got </span><span class="si">{!r}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">domain</span><span class="p">))</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">domain</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">DiscretizedSpace</span><span class="p">):</span>
+                <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;`domain[0]` must be a `DiscretizedSpace` &#39;</span>
+                                <span class="s1">&#39;instance, got </span><span class="si">{!r}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">domain</span><span class="p">[</span><span class="mi">0</span><span class="p">]))</span>
+
+            <span class="k">if</span> <span class="n">template</span><span class="o">.</span><span class="n">space</span><span class="o">.</span><span class="n">partition</span> <span class="o">!=</span> <span class="n">domain</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">partition</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                    <span class="s1">&#39;`template.space.partition` not equal to `coord_space`s &#39;</span>
+                    <span class="s1">&#39;partiton (</span><span class="si">{!r}</span><span class="s1"> != </span><span class="si">{!r}</span><span class="s1">)&#39;</span>
+                    <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">template</span><span class="o">.</span><span class="n">space</span><span class="o">.</span><span class="n">partition</span><span class="p">,</span> <span class="n">domain</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">partition</span><span class="p">))</span>
+
+        <span class="nb">super</span><span class="p">(</span><span class="n">LinDeformFixedTempl</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span>
+            <span class="n">domain</span><span class="o">=</span><span class="n">domain</span><span class="p">,</span> <span class="nb">range</span><span class="o">=</span><span class="n">template</span><span class="o">.</span><span class="n">space</span><span class="p">,</span> <span class="n">linear</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">__interp_byaxis</span> <span class="o">=</span> <span class="n">_normalize_interp</span><span class="p">(</span><span class="n">interp</span><span class="p">,</span> <span class="n">template</span><span class="o">.</span><span class="n">space</span><span class="o">.</span><span class="n">ndim</span><span class="p">)</span></div>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">template</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Fixed template of this deformation operator.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__template</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">interp_byaxis</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Tuple of per-axis interpolation schemes.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__interp_byaxis</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">interp</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Interpolation scheme or tuple of per-axis interpolation schemes.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="p">(</span>
+            <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">interp_byaxis</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">0</span>
+            <span class="ow">and</span> <span class="nb">all</span><span class="p">(</span><span class="n">s</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">interp_byaxis</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">interp_byaxis</span><span class="p">[</span><span class="mi">1</span><span class="p">:])</span>
+        <span class="p">):</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">interp_byaxis</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">interp_byaxis</span>
+
+<div class="viewcode-block" id="LinDeformFixedTempl._call"><a class="viewcode-back" href="../../../generated/odl.deform.linearized.LinDeformFixedTempl._call.html#odl.deform.linearized.LinDeformFixedTempl._call">[docs]</a>    <span class="k">def</span> <span class="nf">_call</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">displacement</span><span class="p">,</span> <span class="n">out</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Implementation of ``self(displacement[, out])``.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">linear_deform</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">template</span><span class="p">,</span> <span class="n">displacement</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">interp</span><span class="p">,</span> <span class="n">out</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="LinDeformFixedTempl.derivative"><a class="viewcode-back" href="../../../generated/odl.deform.linearized.LinDeformFixedTempl.derivative.html#odl.deform.linearized.LinDeformFixedTempl.derivative">[docs]</a>    <span class="k">def</span> <span class="nf">derivative</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">displacement</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Derivative of the operator at ``displacement``.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        displacement : `domain` `element-like`</span>
+<span class="sd">            Point at which the derivative is computed.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        derivative : `PointwiseInner`</span>
+<span class="sd">            The derivative evaluated at ``displacement``.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># To implement the complex case we need to be able to embed the real</span>
+        <span class="c1"># vector field space into the range of the gradient. Issue #59.</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">range</span><span class="o">.</span><span class="n">is_real</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s1">&#39;derivative not implemented for complex &#39;</span>
+                                      <span class="s1">&#39;spaces.&#39;</span><span class="p">)</span>
+
+        <span class="n">displacement</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">domain</span><span class="o">.</span><span class="n">element</span><span class="p">(</span><span class="n">displacement</span><span class="p">)</span>
+
+        <span class="c1"># TODO: allow users to select what method to use here.</span>
+        <span class="n">grad</span> <span class="o">=</span> <span class="n">Gradient</span><span class="p">(</span><span class="n">domain</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">range</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="s1">&#39;central&#39;</span><span class="p">,</span>
+                        <span class="n">pad_mode</span><span class="o">=</span><span class="s1">&#39;symmetric&#39;</span><span class="p">)</span>
+        <span class="n">grad_templ</span> <span class="o">=</span> <span class="n">grad</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">template</span><span class="p">)</span>
+        <span class="n">def_grad</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">domain</span><span class="o">.</span><span class="n">element</span><span class="p">(</span>
+            <span class="p">[</span><span class="n">linear_deform</span><span class="p">(</span><span class="n">gf</span><span class="p">,</span> <span class="n">displacement</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">interp</span><span class="p">)</span> <span class="k">for</span> <span class="n">gf</span> <span class="ow">in</span> <span class="n">grad_templ</span><span class="p">]</span>
+        <span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">PointwiseInner</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">domain</span><span class="p">,</span> <span class="n">def_grad</span><span class="p">)</span></div>
+
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return ``repr(self)``.&quot;&quot;&quot;</span>
+        <span class="n">posargs</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">template</span><span class="p">]</span>
+        <span class="n">optargs</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="p">(</span><span class="s1">&#39;domain&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">domain</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">template</span><span class="o">.</span><span class="n">space</span><span class="o">.</span><span class="n">tangent_bundle</span><span class="p">),</span>
+            <span class="p">(</span><span class="s1">&#39;interp&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">interp</span><span class="p">,</span> <span class="s1">&#39;linear&#39;</span><span class="p">),</span>
+        <span class="p">]</span>
+        <span class="n">inner_str</span> <span class="o">=</span> <span class="n">signature_string</span><span class="p">(</span><span class="n">posargs</span><span class="p">,</span> <span class="n">optargs</span><span class="p">,</span> <span class="n">mod</span><span class="o">=</span><span class="s1">&#39;!r&#39;</span><span class="p">,</span> <span class="n">sep</span><span class="o">=</span><span class="s1">&#39;,</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="s1">&#39;</span><span class="si">{}</span><span class="s1">(</span><span class="se">\n</span><span class="si">{}</span><span class="se">\n</span><span class="s1">)&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="p">,</span> <span class="n">indent</span><span class="p">(</span><span class="n">inner_str</span><span class="p">))</span></div>
+
+
+<div class="viewcode-block" id="LinDeformFixedDisp"><a class="viewcode-back" href="../../../generated/odl.deform.linearized.LinDeformFixedDisp.html#odl.deform.linearized.LinDeformFixedDisp">[docs]</a><span class="k">class</span> <span class="nc">LinDeformFixedDisp</span><span class="p">(</span><span class="n">Operator</span><span class="p">):</span>
+
+    <span class="sa">r</span><span class="sd">&quot;&quot;&quot;Deformation operator with fixed displacement acting on templates.</span>
+
+<span class="sd">    The operator has a fixed displacement field ``v`` and maps a template</span>
+<span class="sd">    ``I`` to the new function ``x --&gt; I(x + v(x))``.</span>
+
+<span class="sd">    See Also</span>
+<span class="sd">    --------</span>
+<span class="sd">    LinDeformFixedTempl : Deformation with a fixed template.</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    For :math:`\Omega \subset \mathbb{R}^d`, we take :math:`V := X^d`</span>
+<span class="sd">    to be the space of displacement fields, where :math:`X = L^p(\Omega)`</span>
+<span class="sd">    is the template space. Hence the deformation operator with the fixed</span>
+<span class="sd">    displacement field :math:`v \in V` maps :math:`X` into :math:`X`:</span>
+
+<span class="sd">    .. math::</span>
+<span class="sd">        W_v : X \to X, \quad W_v(I) := I(\cdot + v(\cdot)),</span>
+
+<span class="sd">    i.e., :math:`W_v(I)(x) = I(x + v(x))`.</span>
+
+<span class="sd">    This operator is linear, so its derivative is itself, but it may not be</span>
+<span class="sd">    bounded and may thus not have a formal adjoint. For &quot;small&quot; :math:`v`,</span>
+<span class="sd">    though, one can approximate the adjoint by</span>
+
+<span class="sd">    .. math::</span>
+<span class="sd">        W_v^*(I) \approx \exp(-\mathrm{div}\, v) \, I(\cdot - v(\cdot)),</span>
+
+<span class="sd">    i.e., :math:`W_v^*(I)(x) \approx \exp(-\mathrm{div}\,v(x))\, I(x - v(x))`.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="LinDeformFixedDisp.__init__"><a class="viewcode-back" href="../../../generated/odl.deform.linearized.LinDeformFixedDisp.html#odl.deform.linearized.LinDeformFixedDisp.__init__">[docs]</a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">displacement</span><span class="p">,</span> <span class="n">templ_space</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">interp</span><span class="o">=</span><span class="s1">&#39;linear&#39;</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Initialize a new instance.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        displacement : element of a power space of `DiscretizedSpace`</span>
+<span class="sd">            Fixed displacement field used in the deformation.</span>
+<span class="sd">        templ_space : `DiscretizedSpace`, optional</span>
+<span class="sd">            Template space on which this operator is applied, i.e. the</span>
+<span class="sd">            operator domain and range. It must fulfill</span>
+<span class="sd">            ``templ_space[0].partition == displacement.space.partition``, so</span>
+<span class="sd">            this option is useful mainly for support of complex spaces and if</span>
+<span class="sd">            different interpolations should be used for displacement and</span>
+<span class="sd">            template.</span>
+
+<span class="sd">            Default: ``displacement.space[0]``</span>
+
+<span class="sd">        interp : str or sequence of str</span>
+<span class="sd">            Interpolation type that should be used to sample the template on</span>
+<span class="sd">            the deformed grid. A single value applies to all axes, and a</span>
+<span class="sd">            sequence gives the interpolation scheme per axis.</span>
+
+<span class="sd">            Supported values: ``&#39;nearest&#39;``, ``&#39;linear&#39;``</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        --------</span>
+<span class="sd">        Create a simple 1D template to initialize the operator and</span>
+<span class="sd">        apply it to a displacement field. Where the displacement is zero,</span>
+<span class="sd">        the output value is the same as the input value.</span>
+<span class="sd">        In the 4-th point, the value is taken from 0.2 (one cell) to the</span>
+<span class="sd">        left, i.e. 1.0.</span>
+
+<span class="sd">        &gt;&gt;&gt; space = odl.uniform_discr(0, 1, 5)</span>
+<span class="sd">        &gt;&gt;&gt; disp_field = space.tangent_bundle.element([[0, 0, 0, -0.2, 0]])</span>
+<span class="sd">        &gt;&gt;&gt; op = odl.deform.LinDeformFixedDisp(disp_field, interp=&#39;nearest&#39;)</span>
+<span class="sd">        &gt;&gt;&gt; template = [0, 0, 1, 0, 0]</span>
+<span class="sd">        &gt;&gt;&gt; print(op([0, 0, 1, 0, 0]))</span>
+<span class="sd">        [ 0.,  0.,  1.,  1.,  0.]</span>
+
+<span class="sd">        The result depends on the chosen interpolation. With &#39;linear&#39;</span>
+<span class="sd">        interpolation and an offset of half the distance between two</span>
+<span class="sd">        points, 0.1, one gets the mean of the values.</span>
+
+<span class="sd">        &gt;&gt;&gt; disp_field = space.tangent_bundle.element([[0, 0, 0, -0.1, 0]])</span>
+<span class="sd">        &gt;&gt;&gt; op = odl.deform.LinDeformFixedDisp(disp_field, interp=&#39;linear&#39;)</span>
+<span class="sd">        &gt;&gt;&gt; template = [0, 0, 1, 0, 0]</span>
+<span class="sd">        &gt;&gt;&gt; print(op(template))</span>
+<span class="sd">        [ 0. ,  0. ,  1. ,  0.5,  0. ]</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">displacement</span><span class="p">,</span> <span class="n">ProductSpaceElement</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span>
+                <span class="s1">&#39;`displacement` must be a `ProductSpaceElement`, got </span><span class="si">{!r}</span><span class="s1">&#39;</span>
+                <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">displacement</span><span class="p">)</span>
+            <span class="p">)</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">displacement</span><span class="o">.</span><span class="n">space</span><span class="o">.</span><span class="n">is_power_space</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s1">&#39;`displacement.space` must be a power space, got </span><span class="si">{!r}</span><span class="s1">&#39;</span>
+                <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">displacement</span><span class="o">.</span><span class="n">space</span><span class="p">)</span>
+            <span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">displacement</span><span class="o">.</span><span class="n">space</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">DiscretizedSpace</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s1">&#39;`displacement.space[0]` must be a `DiscretizedSpace`, &#39;</span>
+                <span class="s1">&#39;got </span><span class="si">{!r}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">displacement</span><span class="o">.</span><span class="n">space</span><span class="p">[</span><span class="mi">0</span><span class="p">]))</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">__displacement</span> <span class="o">=</span> <span class="n">displacement</span>
+
+        <span class="k">if</span> <span class="n">templ_space</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">templ_space</span> <span class="o">=</span> <span class="n">displacement</span><span class="o">.</span><span class="n">space</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">templ_space</span><span class="p">,</span> <span class="n">DiscretizedSpace</span><span class="p">):</span>
+                <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;`templ_space` must be a `DiscretizedSpace` &#39;</span>
+                                <span class="s1">&#39;instance, got </span><span class="si">{!r}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">templ_space</span><span class="p">))</span>
+            <span class="k">if</span> <span class="n">templ_space</span><span class="o">.</span><span class="n">partition</span> <span class="o">!=</span> <span class="n">displacement</span><span class="o">.</span><span class="n">space</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">partition</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                    <span class="s1">&#39;`templ_space.partition` not equal to `displacement`s &#39;</span>
+                    <span class="s1">&#39;partiton (</span><span class="si">{!r}</span><span class="s1"> != </span><span class="si">{!r}</span><span class="s1">)&#39;</span>
+                    <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">templ_space</span><span class="o">.</span><span class="n">partition</span><span class="p">,</span>
+                              <span class="n">displacement</span><span class="o">.</span><span class="n">space</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">partition</span><span class="p">)</span>
+                <span class="p">)</span>
+
+        <span class="nb">super</span><span class="p">(</span><span class="n">LinDeformFixedDisp</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span>
+            <span class="n">domain</span><span class="o">=</span><span class="n">templ_space</span><span class="p">,</span> <span class="nb">range</span><span class="o">=</span><span class="n">templ_space</span><span class="p">,</span> <span class="n">linear</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">__interp_byaxis</span> <span class="o">=</span> <span class="n">_normalize_interp</span><span class="p">(</span><span class="n">interp</span><span class="p">,</span> <span class="n">templ_space</span><span class="o">.</span><span class="n">ndim</span><span class="p">)</span></div>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">interp_byaxis</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Tuple of per-axis interpolation schemes.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__interp_byaxis</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">interp</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Interpolation scheme or tuple of per-axis interpolation schemes.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="p">(</span>
+            <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">interp_byaxis</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">0</span>
+            <span class="ow">and</span> <span class="nb">all</span><span class="p">(</span><span class="n">s</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">interp_byaxis</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">interp_byaxis</span><span class="p">[</span><span class="mi">1</span><span class="p">:])</span>
+        <span class="p">):</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">interp_byaxis</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">interp_byaxis</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">displacement</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Fixed displacement field of this deformation operator.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__displacement</span>
+
+<div class="viewcode-block" id="LinDeformFixedDisp._call"><a class="viewcode-back" href="../../../generated/odl.deform.linearized.LinDeformFixedDisp._call.html#odl.deform.linearized.LinDeformFixedDisp._call">[docs]</a>    <span class="k">def</span> <span class="nf">_call</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">template</span><span class="p">,</span> <span class="n">out</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Implementation of ``self(template[, out])``.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">linear_deform</span><span class="p">(</span><span class="n">template</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">displacement</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">interp</span><span class="p">,</span> <span class="n">out</span><span class="p">)</span></div>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">inverse</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Inverse deformation using ``-v`` as displacement.</span>
+
+<span class="sd">        Note that this implementation uses an approximation that is only</span>
+<span class="sd">        valid for small displacements.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">LinDeformFixedDisp</span><span class="p">(</span>
+            <span class="o">-</span><span class="bp">self</span><span class="o">.</span><span class="n">displacement</span><span class="p">,</span> <span class="n">templ_space</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">domain</span><span class="p">,</span> <span class="n">interp</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">interp</span>
+        <span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">adjoint</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Adjoint of the linear operator.</span>
+
+<span class="sd">        Note that this implementation uses an approximation that is only</span>
+<span class="sd">        valid for small displacements.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># TODO allow users to select what method to use here.</span>
+        <span class="n">div_op</span> <span class="o">=</span> <span class="n">Divergence</span><span class="p">(</span><span class="n">domain</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">displacement</span><span class="o">.</span><span class="n">space</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="s1">&#39;forward&#39;</span><span class="p">,</span>
+                            <span class="n">pad_mode</span><span class="o">=</span><span class="s1">&#39;symmetric&#39;</span><span class="p">)</span>
+        <span class="n">jacobian_det</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">domain</span><span class="o">.</span><span class="n">element</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="n">div_op</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">displacement</span><span class="p">)))</span>
+
+        <span class="k">return</span> <span class="n">jacobian_det</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">inverse</span>
+
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return ``repr(self)``.&quot;&quot;&quot;</span>
+        <span class="n">posargs</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">displacement</span><span class="p">]</span>
+        <span class="n">optargs</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="p">(</span><span class="s1">&#39;templ_space&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">domain</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">displacement</span><span class="o">.</span><span class="n">space</span><span class="p">[</span><span class="mi">0</span><span class="p">]),</span>
+            <span class="p">(</span><span class="s1">&#39;interp&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">interp</span><span class="p">,</span> <span class="s1">&#39;linear&#39;</span><span class="p">),</span>
+        <span class="p">]</span>
+        <span class="n">inner_str</span> <span class="o">=</span> <span class="n">signature_string</span><span class="p">(</span><span class="n">posargs</span><span class="p">,</span> <span class="n">optargs</span><span class="p">,</span> <span class="n">mod</span><span class="o">=</span><span class="s1">&#39;!r&#39;</span><span class="p">,</span> <span class="n">sep</span><span class="o">=</span><span class="s1">&#39;,</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="s1">&#39;</span><span class="si">{}</span><span class="s1">(</span><span class="se">\n</span><span class="si">{}</span><span class="se">\n</span><span class="s1">)&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="p">,</span> <span class="n">indent</span><span class="p">(</span><span class="n">inner_str</span><span class="p">))</span></div>
+
+
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s1">&#39;__main__&#39;</span><span class="p">:</span>
+    <span class="kn">from</span> <span class="nn">odl.util.testutils</span> <span class="kn">import</span> <span class="n">run_doctests</span>
+    <span class="n">run_doctests</span><span class="p">()</span>
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &#169; Copyright 2014-2020 The ODL Contributors.
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

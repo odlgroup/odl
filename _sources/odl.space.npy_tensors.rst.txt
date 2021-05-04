@@ -1,0 +1,32 @@
+npy_tensors
+===========
+
+NumPy implementation of tensor spaces.
+
+.. currentmodule:: odl.space.npy_tensors
+
+
+
+.. rubric:: Classes
+
+.. autosummary::
+   :toctree: generated/
+
+   ~odl.space.npy_tensors.NumpyTensor
+   ~odl.space.npy_tensors.NumpyTensorSpace
+   ~odl.space.npy_tensors.NumpyTensorSpaceArrayWeighting
+   ~odl.space.npy_tensors.NumpyTensorSpaceConstWeighting
+   ~odl.space.npy_tensors.NumpyTensorSpaceCustomDist
+   ~odl.space.npy_tensors.NumpyTensorSpaceCustomInner
+   ~odl.space.npy_tensors.NumpyTensorSpaceCustomNorm
+
+
+.. rubric:: Functions
+
+.. autosummary::
+   :toctree: generated/
+
+   ~odl.space.npy_tensors.npy_weighted_dist
+   ~odl.space.npy_tensors.npy_weighted_inner
+   ~odl.space.npy_tensors.npy_weighted_norm
+

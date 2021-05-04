@@ -1,0 +1,389 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>MoreauEnvelope &mdash; odl 1.0.0.dev0 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="MoreauEnvelope._call" href="odl.solvers.functional.default_functionals.MoreauEnvelope._call.html" />
+    <link rel="prev" title="LpNorm.translated" href="odl.solvers.functional.default_functionals.LpNorm.translated.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../index.html" class="icon icon-home"> odl
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                1.0.0.dev0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Getting Started</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../getting_started/getting_started.html">Getting Started</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Working with ODL</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../guide/guide.html">User’s guide – selected topics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../math/math.html">Mathematical Background</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Developer zone</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../dev/dev.html">Contributing to ODL</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Useful facts</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../guide/faq.html">Frequently asked questions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../guide/glossary.html">Glossary</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../release_notes.html">Release Notes</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../refs.html">References</a></li>
+</ul>
+<p class="caption"><span class="caption-text">API Reference</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../odl.html">odl</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../odl.contrib.html">contrib</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../odl.deform.html">deform</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../odl.diagnostics.html">diagnostics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../odl.discr.html">discr</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../odl.operator.html">operator</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../odl.phantom.html">phantom</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../odl.set.html">set</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="../odl.solvers.html">solvers</a><ul class="current">
+<li class="toctree-l3 current"><a class="reference internal" href="../odl.solvers.functional.html">functional</a><ul class="current">
+<li class="toctree-l4 current"><a class="reference internal" href="../odl.solvers.functional.default_functionals.html">default_functionals</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../odl.solvers.functional.derivatives.html">derivatives</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../odl.solvers.functional.example_funcs.html">example_funcs</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../odl.solvers.functional.functional.html">functional</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../odl.solvers.iterative.html">iterative</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../odl.solvers.nonsmooth.html">nonsmooth</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../odl.solvers.smooth.html">smooth</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../odl.solvers.util.html">util</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../odl.space.html">space</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../odl.tomo.html">tomo</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../odl.trafos.html">trafos</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../odl.ufunc_ops.html">ufunc_ops</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../odl.util.html">util</a></li>
+</ul>
+</li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">odl</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="../odl.html">odl</a> &raquo;</li>
+        
+          <li><a href="../odl.solvers.html">solvers</a> &raquo;</li>
+        
+          <li><a href="../odl.solvers.functional.html">functional</a> &raquo;</li>
+        
+          <li><a href="../odl.solvers.functional.default_functionals.html">default_functionals</a> &raquo;</li>
+        
+      <li>MoreauEnvelope</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            <a href="../_sources/generated/odl.solvers.functional.default_functionals.MoreauEnvelope.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="moreauenvelope">
+<h1>MoreauEnvelope<a class="headerlink" href="#moreauenvelope" title="Permalink to this headline">¶</a></h1>
+<dl class="py class">
+<dt id="odl.solvers.functional.default_functionals.MoreauEnvelope">
+<em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">odl.solvers.functional.default_functionals.</span></code><code class="sig-name descname"><span class="pre">MoreauEnvelope</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/odl/solvers/functional/default_functionals.html#MoreauEnvelope"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#odl.solvers.functional.default_functionals.MoreauEnvelope" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="odl.solvers.functional.functional.Functional.html#odl.solvers.functional.functional.Functional" title="odl.solvers.functional.functional.Functional"><code class="xref py py-class docutils literal notranslate"><span class="pre">odl.solvers.functional.functional.Functional</span></code></a></p>
+<p>Moreau envelope of a convex functional.</p>
+<blockquote>
+<div><p>The Moreau envelope is a way to smooth an arbitrary convex functional
+such that its gradient can be computed given the proximal of the original
+functional.
+The new functional has the same critical points as the original.
+It is also called the Moreau-Yosida regularization.</p>
+<p>Note that the only computable property of the Moreau envelope is the
+gradient, the functional itself cannot be evaluated efficiently.</p>
+<p>See <a href="#id1"><span class="problematic" id="id2">`Proximal Algorithms`_</span></a> for more information.</p>
+</div></blockquote>
+<p class="rubric">Notes</p>
+<p>The Moreau envelope of a convex functional
+<img class="math" src="../_images/math/7bc93f74d03fb16d508b2166bffdbccd65def9be.png" alt="f : \mathcal{X} \rightarrow \mathbb{R}"/> multiplied by a scalar
+<img class="math" src="../_images/math/b52df27bfb0b1e3af0c2c68a7b9da459178c2a7d.png" alt="\sigma"/> is defined by</p>
+<div class="math">
+<p><img src="../_images/math/f16a304bccd13c1b30f0019994373da27fbf9a33.png" alt="\mathrm{env}_{\sigma f}(x) =
+\inf_{y \in \mathcal{X}}
+\left\{ \frac{1}{2 \sigma} \| x - y \|_2^2 + f(y) \right\}"/></p>
+</div><p>The gradient of the envelope is given by</p>
+<div class="math">
+<p><img src="../_images/math/4177de738b7bf705b4d725beba447ff63aced9ec.png" alt="[\nabla \mathrm{env}_{\sigma f}](x) =
+\frac{1}{\sigma} (x - \mathrm{prox}_{\sigma f}(x))"/></p>
+</div><p>Example: if <img class="math" src="../_images/math/b68747c76586d0b48d4c91e59b025077c5aaa863.png" alt="f = \| \cdot \|_1"/>, then</p>
+<div class="math">
+<p><img src="../_images/math/9a7c42a643d2c1be874dfedadf844cb378229fb0.png" alt="[\mathrm{env}_{\sigma  \| \cdot \|_1}(x)]_i =
+\begin{cases}
+    \frac{1}{2 \sigma} x_i^2 &amp; \text{if } |x_i| \leq \sigma \\
+    |x_i| - \frac{\sigma}{2} &amp; \text{if } |x_i| &gt; \sigma,
+\end{cases}"/></p>
+</div><p>which is the usual Huber functional.</p>
+<p><a class="reference external" href="https://web.stanford.edu/~boyd/papers/pdf/prox_algs.pdf">https://web.stanford.edu/~boyd/papers/pdf/prox_algs.pdf</a></p>
+<dl class="field-list simple">
+<dt class="field-odd">Attributes</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><a class="reference internal" href="odl.solvers.functional.default_functionals.MoreauEnvelope.adjoint.html#odl.solvers.functional.default_functionals.MoreauEnvelope.adjoint" title="odl.solvers.functional.default_functionals.MoreauEnvelope.adjoint"><code class="xref py py-obj docutils literal notranslate"><span class="pre">adjoint</span></code></a></dt><dd><p>Adjoint of this operator (abstract).</p>
+</dd>
+<dt><a class="reference internal" href="odl.solvers.functional.default_functionals.MoreauEnvelope.convex_conj.html#odl.solvers.functional.default_functionals.MoreauEnvelope.convex_conj" title="odl.solvers.functional.default_functionals.MoreauEnvelope.convex_conj"><code class="xref py py-obj docutils literal notranslate"><span class="pre">convex_conj</span></code></a></dt><dd><p>Convex conjugate functional of the functional.</p>
+</dd>
+<dt><a class="reference internal" href="odl.solvers.functional.default_functionals.MoreauEnvelope.domain.html#odl.solvers.functional.default_functionals.MoreauEnvelope.domain" title="odl.solvers.functional.default_functionals.MoreauEnvelope.domain"><code class="xref py py-obj docutils literal notranslate"><span class="pre">domain</span></code></a></dt><dd><p>Set of objects on which this operator can be evaluated.</p>
+</dd>
+<dt><a class="reference internal" href="odl.solvers.functional.default_functionals.MoreauEnvelope.functional.html#odl.solvers.functional.default_functionals.MoreauEnvelope.functional" title="odl.solvers.functional.default_functionals.MoreauEnvelope.functional"><code class="xref py py-obj docutils literal notranslate"><span class="pre">functional</span></code></a></dt><dd><p>The functional that has been regularized.</p>
+</dd>
+<dt><a class="reference internal" href="odl.solvers.functional.default_functionals.MoreauEnvelope.grad_lipschitz.html#odl.solvers.functional.default_functionals.MoreauEnvelope.grad_lipschitz" title="odl.solvers.functional.default_functionals.MoreauEnvelope.grad_lipschitz"><code class="xref py py-obj docutils literal notranslate"><span class="pre">grad_lipschitz</span></code></a></dt><dd><p>Lipschitz constant for the gradient of the functional.</p>
+</dd>
+<dt><a class="reference internal" href="odl.solvers.functional.default_functionals.MoreauEnvelope.gradient.html#odl.solvers.functional.default_functionals.MoreauEnvelope.gradient" title="odl.solvers.functional.default_functionals.MoreauEnvelope.gradient"><code class="xref py py-obj docutils literal notranslate"><span class="pre">gradient</span></code></a></dt><dd><p>The gradient operator.</p>
+</dd>
+<dt><a class="reference internal" href="odl.solvers.functional.default_functionals.MoreauEnvelope.inverse.html#odl.solvers.functional.default_functionals.MoreauEnvelope.inverse" title="odl.solvers.functional.default_functionals.MoreauEnvelope.inverse"><code class="xref py py-obj docutils literal notranslate"><span class="pre">inverse</span></code></a></dt><dd><p>Return the operator inverse.</p>
+</dd>
+<dt><a class="reference internal" href="odl.solvers.functional.default_functionals.MoreauEnvelope.is_functional.html#odl.solvers.functional.default_functionals.MoreauEnvelope.is_functional" title="odl.solvers.functional.default_functionals.MoreauEnvelope.is_functional"><code class="xref py py-obj docutils literal notranslate"><span class="pre">is_functional</span></code></a></dt><dd><p><code class="docutils literal notranslate"><span class="pre">True</span></code> if this operator’s range is a <a class="reference internal" href="odl.set.sets.Field.html#odl.set.sets.Field" title="odl.set.sets.Field"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Field</span></code></a>.</p>
+</dd>
+<dt><a class="reference internal" href="odl.solvers.functional.default_functionals.MoreauEnvelope.is_linear.html#odl.solvers.functional.default_functionals.MoreauEnvelope.is_linear" title="odl.solvers.functional.default_functionals.MoreauEnvelope.is_linear"><code class="xref py py-obj docutils literal notranslate"><span class="pre">is_linear</span></code></a></dt><dd><p><code class="docutils literal notranslate"><span class="pre">True</span></code> if this operator is linear.</p>
+</dd>
+<dt><a class="reference internal" href="odl.solvers.functional.default_functionals.MoreauEnvelope.proximal.html#odl.solvers.functional.default_functionals.MoreauEnvelope.proximal" title="odl.solvers.functional.default_functionals.MoreauEnvelope.proximal"><code class="xref py py-obj docutils literal notranslate"><span class="pre">proximal</span></code></a></dt><dd><p>Proximal factory of the functional.</p>
+</dd>
+<dt><a class="reference internal" href="odl.solvers.functional.default_functionals.MoreauEnvelope.range.html#odl.solvers.functional.default_functionals.MoreauEnvelope.range" title="odl.solvers.functional.default_functionals.MoreauEnvelope.range"><code class="xref py py-obj docutils literal notranslate"><span class="pre">range</span></code></a></dt><dd><p>Set in which the result of an evaluation of this operator lies.</p>
+</dd>
+<dt><a class="reference internal" href="odl.solvers.functional.default_functionals.MoreauEnvelope.sigma.html#odl.solvers.functional.default_functionals.MoreauEnvelope.sigma" title="odl.solvers.functional.default_functionals.MoreauEnvelope.sigma"><code class="xref py py-obj docutils literal notranslate"><span class="pre">sigma</span></code></a></dt><dd><p>Regularization constant, larger means stronger regularization.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+<p class="rubric">Methods</p>
+<table class="longtable docutils align-default">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="odl.solvers.functional.default_functionals.MoreauEnvelope._call.html#odl.solvers.functional.default_functionals.MoreauEnvelope._call" title="odl.solvers.functional.default_functionals.MoreauEnvelope._call"><code class="xref py py-obj docutils literal notranslate"><span class="pre">_call</span></code></a>(self, x[, out])</p></td>
+<td><p>Implementation of the operator evaluation.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="odl.solvers.functional.default_functionals.MoreauEnvelope.bregman.html#odl.solvers.functional.default_functionals.MoreauEnvelope.bregman" title="odl.solvers.functional.default_functionals.MoreauEnvelope.bregman"><code class="xref py py-obj docutils literal notranslate"><span class="pre">bregman</span></code></a>(self, point, subgrad)</p></td>
+<td><p>Return the Bregman distance functional.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="odl.solvers.functional.default_functionals.MoreauEnvelope.derivative.html#odl.solvers.functional.default_functionals.MoreauEnvelope.derivative" title="odl.solvers.functional.default_functionals.MoreauEnvelope.derivative"><code class="xref py py-obj docutils literal notranslate"><span class="pre">derivative</span></code></a>(self, point)</p></td>
+<td><p>Return the derivative operator in the given point.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="odl.solvers.functional.default_functionals.MoreauEnvelope.norm.html#odl.solvers.functional.default_functionals.MoreauEnvelope.norm" title="odl.solvers.functional.default_functionals.MoreauEnvelope.norm"><code class="xref py py-obj docutils literal notranslate"><span class="pre">norm</span></code></a>(self[, estimate])</p></td>
+<td><p>Return the operator norm of this operator.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="odl.solvers.functional.default_functionals.MoreauEnvelope.translated.html#odl.solvers.functional.default_functionals.MoreauEnvelope.translated" title="odl.solvers.functional.default_functionals.MoreauEnvelope.translated"><code class="xref py py-obj docutils literal notranslate"><span class="pre">translated</span></code></a>(self, shift)</p></td>
+<td><p>Return a translation of the functional.</p></td>
+</tr>
+</tbody>
+</table>
+<dl class="py method">
+<dt id="odl.solvers.functional.default_functionals.MoreauEnvelope.__init__">
+<code class="sig-name descname"><span class="pre">__init__</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">functional</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sigma</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/odl/solvers/functional/default_functionals.html#MoreauEnvelope.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#odl.solvers.functional.default_functionals.MoreauEnvelope.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initialize an instance.</p>
+<dl class="field-list">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl>
+<dt><strong>functional</strong><span class="classifier"><a class="reference internal" href="odl.solvers.functional.functional.Functional.html#odl.solvers.functional.functional.Functional" title="odl.solvers.functional.functional.Functional"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Functional</span></code></a></span></dt><dd><p>The functional <code class="docutils literal notranslate"><span class="pre">f</span></code> in the definition of the Moreau envelope that
+is to be smoothed.</p>
+</dd>
+<dt><strong>sigma</strong><span class="classifier">positive float, optional</span></dt><dd><p>The scalar <code class="docutils literal notranslate"><span class="pre">sigma</span></code> in the definition of the Moreau envelope.
+Larger values mean stronger smoothing.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+<p class="rubric">Examples</p>
+<p>Create smoothed l1 norm:</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">space</span> <span class="o">=</span> <span class="n">odl</span><span class="o">.</span><span class="n">rn</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">l1_norm</span> <span class="o">=</span> <span class="n">odl</span><span class="o">.</span><span class="n">solvers</span><span class="o">.</span><span class="n">L1Norm</span><span class="p">(</span><span class="n">space</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">smoothed_l1</span> <span class="o">=</span> <span class="n">MoreauEnvelope</span><span class="p">(</span><span class="n">l1_norm</span><span class="p">)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+        <a href="odl.solvers.functional.default_functionals.MoreauEnvelope._call.html" class="btn btn-neutral float-right" title="MoreauEnvelope._call" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="odl.solvers.functional.default_functionals.LpNorm.translated.html" class="btn btn-neutral float-left" title="LpNorm.translated" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &#169; Copyright 2014-2020 The ODL Contributors.
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

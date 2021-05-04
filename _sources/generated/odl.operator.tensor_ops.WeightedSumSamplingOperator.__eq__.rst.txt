@@ -1,0 +1,8 @@
+:orphan:
+
+WeightedSumSamplingOperator.__eq__
+==========================================================
+
+.. currentmodule:: odl.operator.tensor_ops
+
+.. automethod:: WeightedSumSamplingOperator.__eq__

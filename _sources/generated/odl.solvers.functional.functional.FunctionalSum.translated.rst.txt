@@ -1,0 +1,8 @@
+:orphan:
+
+FunctionalSum.translated
+==========================================================
+
+.. currentmodule:: odl.solvers.functional.functional
+
+.. automethod:: FunctionalSum.translated

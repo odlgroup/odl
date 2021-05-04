@@ -1,0 +1,8 @@
+:orphan:
+
+FunctionalProduct.__call__
+============================================================
+
+.. currentmodule:: odl.solvers.functional.functional
+
+.. automethod:: FunctionalProduct.__call__

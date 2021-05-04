@@ -1,0 +1,8 @@
+:orphan:
+
+PointwiseNorm.derivative
+================================================
+
+.. currentmodule:: odl.operator.tensor_ops
+
+.. automethod:: PointwiseNorm.derivative

@@ -1,0 +1,6 @@
+MatrixOperator.inverse
+==============================================
+
+.. currentmodule:: odl.operator.tensor_ops
+
+.. autoproperty:: MatrixOperator.inverse

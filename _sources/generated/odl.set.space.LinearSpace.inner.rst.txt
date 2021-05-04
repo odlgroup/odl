@@ -1,0 +1,8 @@
+:orphan:
+
+LinearSpace.inner
+===============================
+
+.. currentmodule:: odl.set.space
+
+.. automethod:: LinearSpace.inner

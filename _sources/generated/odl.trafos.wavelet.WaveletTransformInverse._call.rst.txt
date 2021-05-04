@@ -1,0 +1,8 @@
+:orphan:
+
+WaveletTransformInverse._call
+================================================
+
+.. currentmodule:: odl.trafos.wavelet
+
+.. automethod:: WaveletTransformInverse._call

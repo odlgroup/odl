@@ -1,0 +1,8 @@
+:orphan:
+
+absolute_func.norm
+==========================================
+
+.. currentmodule:: odl.ufunc_ops.ufunc_ops
+
+.. automethod:: absolute_func.norm

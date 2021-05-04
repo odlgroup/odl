@@ -1,0 +1,8 @@
+:orphan:
+
+FourierTransformInverse.__eq__
+=================================================
+
+.. currentmodule:: odl.trafos.fourier
+
+.. automethod:: FourierTransformInverse.__eq__

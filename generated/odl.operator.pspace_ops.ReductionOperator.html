@@ -1,0 +1,388 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>ReductionOperator &mdash; odl 1.0.0.dev0 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="ReductionOperator._call" href="odl.operator.pspace_ops.ReductionOperator._call.html" />
+    <link rel="prev" title="ProductSpaceOperator.norm" href="odl.operator.pspace_ops.ProductSpaceOperator.norm.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../index.html" class="icon icon-home"> odl
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                1.0.0.dev0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Getting Started</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../getting_started/getting_started.html">Getting Started</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Working with ODL</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../guide/guide.html">User’s guide – selected topics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../math/math.html">Mathematical Background</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Developer zone</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../dev/dev.html">Contributing to ODL</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Useful facts</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../guide/faq.html">Frequently asked questions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../guide/glossary.html">Glossary</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../release_notes.html">Release Notes</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../refs.html">References</a></li>
+</ul>
+<p class="caption"><span class="caption-text">API Reference</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../odl.html">odl</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../odl.contrib.html">contrib</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../odl.deform.html">deform</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../odl.diagnostics.html">diagnostics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../odl.discr.html">discr</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="../odl.operator.html">operator</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="../odl.operator.default_ops.html">default_ops</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../odl.operator.operator.html">operator</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../odl.operator.oputils.html">oputils</a></li>
+<li class="toctree-l3 current"><a class="reference internal" href="../odl.operator.pspace_ops.html">pspace_ops</a><ul class="current">
+<li class="toctree-l4"><a class="reference internal" href="odl.operator.pspace_ops.BroadcastOperator.html">BroadcastOperator</a></li>
+<li class="toctree-l4"><a class="reference internal" href="odl.operator.pspace_ops.ComponentProjection.html">ComponentProjection</a></li>
+<li class="toctree-l4"><a class="reference internal" href="odl.operator.pspace_ops.ComponentProjectionAdjoint.html">ComponentProjectionAdjoint</a></li>
+<li class="toctree-l4"><a class="reference internal" href="odl.operator.pspace_ops.DiagonalOperator.html">DiagonalOperator</a></li>
+<li class="toctree-l4"><a class="reference internal" href="odl.operator.pspace_ops.ProductSpaceOperator.html">ProductSpaceOperator</a></li>
+<li class="toctree-l4 current"><a class="current reference internal" href="#">ReductionOperator</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../odl.operator.tensor_ops.html">tensor_ops</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../odl.phantom.html">phantom</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../odl.set.html">set</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../odl.solvers.html">solvers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../odl.space.html">space</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../odl.tomo.html">tomo</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../odl.trafos.html">trafos</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../odl.ufunc_ops.html">ufunc_ops</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../odl.util.html">util</a></li>
+</ul>
+</li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">odl</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="../odl.html">odl</a> &raquo;</li>
+        
+          <li><a href="../odl.operator.html">operator</a> &raquo;</li>
+        
+          <li><a href="../odl.operator.pspace_ops.html">pspace_ops</a> &raquo;</li>
+        
+      <li>ReductionOperator</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            <a href="../_sources/generated/odl.operator.pspace_ops.ReductionOperator.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="reductionoperator">
+<h1>ReductionOperator<a class="headerlink" href="#reductionoperator" title="Permalink to this headline">¶</a></h1>
+<dl class="py class">
+<dt id="odl.operator.pspace_ops.ReductionOperator">
+<em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">odl.operator.pspace_ops.</span></code><code class="sig-name descname"><span class="pre">ReductionOperator</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/odl/operator/pspace_ops.html#ReductionOperator"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#odl.operator.pspace_ops.ReductionOperator" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="odl.operator.operator.Operator.html#odl.operator.operator.Operator" title="odl.operator.operator.Operator"><code class="xref py py-class docutils literal notranslate"><span class="pre">odl.operator.operator.Operator</span></code></a></p>
+<p>Reduce argument over set of operators.</p>
+<p>An argument is reduced by evaluating several operators and summing the
+result:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">ReductionOperator</span><span class="p">(</span><span class="n">op1</span><span class="p">,</span> <span class="n">op2</span><span class="p">)(</span><span class="n">x</span><span class="p">)</span> <span class="o">=</span> <span class="n">op1</span><span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="o">+</span> <span class="n">op2</span><span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+</pre></div>
+</div>
+<div class="admonition seealso">
+<p class="admonition-title">See also</p>
+<dl class="simple">
+<dt><a class="reference internal" href="odl.operator.pspace_ops.ProductSpaceOperator.html#odl.operator.pspace_ops.ProductSpaceOperator" title="odl.operator.pspace_ops.ProductSpaceOperator"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ProductSpaceOperator</span></code></a></dt><dd><p>More general case, used as backend.</p>
+</dd>
+<dt><a class="reference internal" href="odl.operator.pspace_ops.BroadcastOperator.html#odl.operator.pspace_ops.BroadcastOperator" title="odl.operator.pspace_ops.BroadcastOperator"><code class="xref py py-obj docutils literal notranslate"><span class="pre">BroadcastOperator</span></code></a></dt><dd><p>Calls several operators with same argument.</p>
+</dd>
+<dt><a class="reference internal" href="odl.operator.pspace_ops.DiagonalOperator.html#odl.operator.pspace_ops.DiagonalOperator" title="odl.operator.pspace_ops.DiagonalOperator"><code class="xref py py-obj docutils literal notranslate"><span class="pre">DiagonalOperator</span></code></a></dt><dd><p>Case where each operator should have its own argument.</p>
+</dd>
+<dt><code class="xref py py-obj docutils literal notranslate"><span class="pre">SeparableSum</span></code></dt><dd><p>Corresponding construction for functionals.</p>
+</dd>
+</dl>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Attributes</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><a class="reference internal" href="odl.operator.pspace_ops.ReductionOperator.adjoint.html#odl.operator.pspace_ops.ReductionOperator.adjoint" title="odl.operator.pspace_ops.ReductionOperator.adjoint"><code class="xref py py-obj docutils literal notranslate"><span class="pre">adjoint</span></code></a></dt><dd><p>Adjoint of this operator.</p>
+</dd>
+<dt><a class="reference internal" href="odl.operator.pspace_ops.ReductionOperator.domain.html#odl.operator.pspace_ops.ReductionOperator.domain" title="odl.operator.pspace_ops.ReductionOperator.domain"><code class="xref py py-obj docutils literal notranslate"><span class="pre">domain</span></code></a></dt><dd><p>Set of objects on which this operator can be evaluated.</p>
+</dd>
+<dt><a class="reference internal" href="odl.operator.pspace_ops.ReductionOperator.inverse.html#odl.operator.pspace_ops.ReductionOperator.inverse" title="odl.operator.pspace_ops.ReductionOperator.inverse"><code class="xref py py-obj docutils literal notranslate"><span class="pre">inverse</span></code></a></dt><dd><p>Return the operator inverse.</p>
+</dd>
+<dt><a class="reference internal" href="odl.operator.pspace_ops.ReductionOperator.is_functional.html#odl.operator.pspace_ops.ReductionOperator.is_functional" title="odl.operator.pspace_ops.ReductionOperator.is_functional"><code class="xref py py-obj docutils literal notranslate"><span class="pre">is_functional</span></code></a></dt><dd><p><code class="docutils literal notranslate"><span class="pre">True</span></code> if this operator’s range is a <a class="reference internal" href="odl.set.sets.Field.html#odl.set.sets.Field" title="odl.set.sets.Field"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Field</span></code></a>.</p>
+</dd>
+<dt><a class="reference internal" href="odl.operator.pspace_ops.ReductionOperator.is_linear.html#odl.operator.pspace_ops.ReductionOperator.is_linear" title="odl.operator.pspace_ops.ReductionOperator.is_linear"><code class="xref py py-obj docutils literal notranslate"><span class="pre">is_linear</span></code></a></dt><dd><p><code class="docutils literal notranslate"><span class="pre">True</span></code> if this operator is linear.</p>
+</dd>
+<dt><a class="reference internal" href="odl.operator.pspace_ops.ReductionOperator.operators.html#odl.operator.pspace_ops.ReductionOperator.operators" title="odl.operator.pspace_ops.ReductionOperator.operators"><code class="xref py py-obj docutils literal notranslate"><span class="pre">operators</span></code></a></dt><dd><p>Tuple of sub-operators that comprise <code class="docutils literal notranslate"><span class="pre">self</span></code>.</p>
+</dd>
+<dt><a class="reference internal" href="odl.operator.pspace_ops.ReductionOperator.prod_op.html#odl.operator.pspace_ops.ReductionOperator.prod_op" title="odl.operator.pspace_ops.ReductionOperator.prod_op"><code class="xref py py-obj docutils literal notranslate"><span class="pre">prod_op</span></code></a></dt><dd><p><a class="reference internal" href="odl.operator.pspace_ops.ProductSpaceOperator.html#odl.operator.pspace_ops.ProductSpaceOperator" title="odl.operator.pspace_ops.ProductSpaceOperator"><code class="xref any py py-class docutils literal notranslate"><span class="pre">ProductSpaceOperator</span></code></a> implementation.</p>
+</dd>
+<dt><a class="reference internal" href="odl.operator.pspace_ops.ReductionOperator.range.html#odl.operator.pspace_ops.ReductionOperator.range" title="odl.operator.pspace_ops.ReductionOperator.range"><code class="xref py py-obj docutils literal notranslate"><span class="pre">range</span></code></a></dt><dd><p>Set in which the result of an evaluation of this operator lies.</p>
+</dd>
+<dt><a class="reference internal" href="odl.operator.pspace_ops.ReductionOperator.size.html#odl.operator.pspace_ops.ReductionOperator.size" title="odl.operator.pspace_ops.ReductionOperator.size"><code class="xref py py-obj docutils literal notranslate"><span class="pre">size</span></code></a></dt><dd><p>Total number of sub-operators.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+<p class="rubric">Methods</p>
+<table class="longtable docutils align-default">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="odl.operator.pspace_ops.ReductionOperator._call.html#odl.operator.pspace_ops.ReductionOperator._call" title="odl.operator.pspace_ops.ReductionOperator._call"><code class="xref py py-obj docutils literal notranslate"><span class="pre">_call</span></code></a>(self, x[, out])</p></td>
+<td><p>Apply operators to <code class="docutils literal notranslate"><span class="pre">x</span></code> and sum.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="odl.operator.pspace_ops.ReductionOperator.derivative.html#odl.operator.pspace_ops.ReductionOperator.derivative" title="odl.operator.pspace_ops.ReductionOperator.derivative"><code class="xref py py-obj docutils literal notranslate"><span class="pre">derivative</span></code></a>(self, x)</p></td>
+<td><p>Derivative of the reduction operator.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="odl.operator.pspace_ops.ReductionOperator.norm.html#odl.operator.pspace_ops.ReductionOperator.norm" title="odl.operator.pspace_ops.ReductionOperator.norm"><code class="xref py py-obj docutils literal notranslate"><span class="pre">norm</span></code></a>(self[, estimate])</p></td>
+<td><p>Return the operator norm of this operator.</p></td>
+</tr>
+</tbody>
+</table>
+<dl class="py method">
+<dt id="odl.operator.pspace_ops.ReductionOperator.__init__">
+<code class="sig-name descname"><span class="pre">__init__</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="pre">self</span></em>, <em class="sig-param"><span class="pre">\*operators</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/odl/operator/pspace_ops.html#ReductionOperator.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#odl.operator.pspace_ops.ReductionOperator.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initialize a new instance.</p>
+<dl class="field-list">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl>
+<dt><strong>operator1,…,operatorN</strong><span class="classifier"><a class="reference internal" href="../guide/glossary.html#term-operator"><code class="xref any std std-term docutils literal notranslate"><span class="pre">Operator</span></code></a> or <a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.9)"><code class="xref any docutils literal notranslate"><span class="pre">int</span></code></a></span></dt><dd><p>The individual operators that should be evaluated and summed.
+Can also be given as <code class="docutils literal notranslate"><span class="pre">operator,</span> <span class="pre">n</span></code> with <code class="docutils literal notranslate"><span class="pre">n</span></code> integer,
+in which case <code class="docutils literal notranslate"><span class="pre">operator</span></code> is repeated <code class="docutils literal notranslate"><span class="pre">n</span></code> times.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+<p class="rubric">Examples</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">I</span> <span class="o">=</span> <span class="n">odl</span><span class="o">.</span><span class="n">IdentityOperator</span><span class="p">(</span><span class="n">odl</span><span class="o">.</span><span class="n">rn</span><span class="p">(</span><span class="mi">3</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">op</span> <span class="o">=</span> <span class="n">ReductionOperator</span><span class="p">(</span><span class="n">I</span><span class="p">,</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">I</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">op</span><span class="o">.</span><span class="n">domain</span>
+<span class="go">ProductSpace(rn(3), 2)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">op</span><span class="o">.</span><span class="n">range</span>
+<span class="go">rn(3)</span>
+</pre></div>
+</div>
+<p>Evaluating in a point gives the sum of the evaluation results of
+the individual operators:</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">op</span><span class="p">([[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">],</span>
+<span class="gp">... </span>    <span class="p">[</span><span class="mi">4</span><span class="p">,</span> <span class="mi">6</span><span class="p">,</span> <span class="mi">8</span><span class="p">]])</span>
+<span class="go">rn(3).element([  9.,  14.,  19.])</span>
+</pre></div>
+</div>
+<p>An <code class="docutils literal notranslate"><span class="pre">out</span></code> argument can be given for in-place evaluation:</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">out</span> <span class="o">=</span> <span class="n">op</span><span class="o">.</span><span class="n">range</span><span class="o">.</span><span class="n">element</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">result</span> <span class="o">=</span> <span class="n">op</span><span class="p">([[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">],</span>
+<span class="gp">... </span>             <span class="p">[</span><span class="mi">4</span><span class="p">,</span> <span class="mi">6</span><span class="p">,</span> <span class="mi">8</span><span class="p">]],</span> <span class="n">out</span><span class="o">=</span><span class="n">out</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">out</span>
+<span class="go">rn(3).element([  9.,  14.,  19.])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">result</span> <span class="ow">is</span> <span class="n">out</span>
+<span class="go">True</span>
+</pre></div>
+</div>
+<p>There is a simplified syntax for the case that all operators are
+the same:</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">op</span> <span class="o">=</span> <span class="n">ReductionOperator</span><span class="p">(</span><span class="n">I</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">op</span><span class="o">.</span><span class="n">operators</span>
+<span class="go">(IdentityOperator(rn(3)), IdentityOperator(rn(3)))</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+        <a href="odl.operator.pspace_ops.ReductionOperator._call.html" class="btn btn-neutral float-right" title="ReductionOperator._call" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="odl.operator.pspace_ops.ProductSpaceOperator.norm.html" class="btn btn-neutral float-left" title="ProductSpaceOperator.norm" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &#169; Copyright 2014-2020 The ODL Contributors.
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

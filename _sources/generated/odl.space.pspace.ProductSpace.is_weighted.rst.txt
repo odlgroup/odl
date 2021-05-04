@@ -1,0 +1,6 @@
+ProductSpace.is_weighted
+=========================================
+
+.. currentmodule:: odl.space.pspace
+
+.. autoproperty:: ProductSpace.is_weighted

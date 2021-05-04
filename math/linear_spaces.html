@@ -1,0 +1,434 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>Linear Spaces &mdash; odl 1.0.0.dev0 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Discretizations" href="discretization.html" />
+    <link rel="prev" title="Mathematical Background" href="math.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../index.html" class="icon icon-home"> odl
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                1.0.0.dev0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Getting Started</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../getting_started/getting_started.html">Getting Started</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Working with ODL</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../guide/guide.html">User’s guide – selected topics</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="math.html">Mathematical Background</a><ul class="current">
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Linear Spaces</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#definition-and-basic-properties">Definition and basic properties</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#metric-spaces">Metric spaces</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#normed-spaces">Normed spaces</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#inner-product-spaces">Inner product spaces</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#cartesian-spaces">Cartesian spaces</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#weighted-cartesian-spaces">Weighted Cartesian spaces</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#remark-on-matrices-as-operators">Remark on matrices as operators</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#useful-wikipedia-articles">Useful Wikipedia articles</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="discretization.html">Discretizations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="resizing_ops.html">Resizing Operators</a></li>
+<li class="toctree-l2"><a class="reference internal" href="derivatives_guide.html">On the different notions of derivative</a></li>
+<li class="toctree-l2"><a class="reference internal" href="trafos/index.html">Transformations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="solvers/solvers.html">Solvers</a></li>
+</ul>
+</li>
+</ul>
+<p class="caption"><span class="caption-text">Developer zone</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../dev/dev.html">Contributing to ODL</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Useful facts</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../guide/faq.html">Frequently asked questions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../guide/glossary.html">Glossary</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../release_notes.html">Release Notes</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../refs.html">References</a></li>
+</ul>
+<p class="caption"><span class="caption-text">API Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../odl.html">odl</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">odl</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="math.html">Mathematical Background</a> &raquo;</li>
+        
+      <li>Linear Spaces</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            <a href="../_sources/math/linear_spaces.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="linear-spaces">
+<span id="id1"></span><h1>Linear Spaces<a class="headerlink" href="#linear-spaces" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="definition-and-basic-properties">
+<h2>Definition and basic properties<a class="headerlink" href="#definition-and-basic-properties" title="Permalink to this headline">¶</a></h2>
+<p>A linear space over a <a class="reference external" href="https://en.wikipedia.org/wiki/Field_%28mathematics%29">field</a> <img class="math" src="../_images/math/092f5b0e7bb7f7ff443dd879aba1b635077467af.png" alt="\mathbb{F}"/> is a set <img class="math" src="../_images/math/35934ec49b4c4203a014d2b6114c68b9b16e45eb.png" alt="\mathcal{X}"/>, endorsed with the
+operations of <a class="reference external" href="https://en.wikipedia.org/wiki/Euclidean_vector#Addition_and_subtraction">vector addition</a> “<img class="math" src="../_images/math/26d77804f7b0232a53e8432702479a275a171831.png" alt="+"/>” and <a class="reference external" href="https://en.wikipedia.org/wiki/Scalar_multiplication">scalar multiplication</a> “<img class="math" src="../_images/math/a993123d5379f2796ab9cc92bc2341db50e24d37.png" alt="\cdot"/>” which
+are required to fullfill certain properties, usually called axioms. To emphasize the importance of
+all ingredients, vector spaces are often written as tuples
+<img class="math" src="../_images/math/f5d455618753c2385fb5becb19e3b5a69146a5fd.png" alt="(\mathcal{X}, \mathbb{F}, +, \cdot)"/>. We always assume that <img class="math" src="../_images/math/a9de2dc5abc8778c4e9dabdbe17162185d4b861f.png" alt="\mathbb{F} = \mathbb{R}"/> or
+<img class="math" src="../_images/math/6f7b1a17c05de70666deab3ca337f9efdf52ebdb.png" alt="\mathbb{C}"/>.</p>
+<p>In the following, we list the axioms, which are required to hold for arbitrary
+<img class="math" src="../_images/math/481dc674ed4aa30fd723348342fbbabac51931cb.png" alt="x, y, z \in \mathcal{X}"/> and <img class="math" src="../_images/math/7402e85491363e8030f77d23d0ce966306c42b55.png" alt="a, b \in \mathbb{F}"/>.</p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 34%" />
+<col style="width: 66%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p>Associativity of addition</p></td>
+<td><p><img class="math" src="../_images/math/937537d8417b70034d1a20e61aad0e43bd628539.png" alt="(x + y) + z = (x + y) + z"/></p></td>
+</tr>
+<tr class="row-even"><td><p>Commutativity of addition</p></td>
+<td><p><img class="math" src="../_images/math/413be3172740502c12d082ee0a87d93c6bb7ec07.png" alt="x + y = y + x"/></p></td>
+</tr>
+<tr class="row-odd"><td><p>Existence of a neutral element
+of addition</p></td>
+<td><p><img class="math" src="../_images/math/1892aa1d042ed4ac4d6a973a505c75d8d3480eff.png" alt="0 + x = x + 0 = x"/></p></td>
+</tr>
+<tr class="row-even"><td><p>Existence of  inverse elements
+of addition</p></td>
+<td><p><img class="math" src="../_images/math/a5155ad3d82acdee26a057b6b53cfc527d1f2c7b.png" alt="\forall x\ \exists \bar x: \bar x + x = x + \bar x = 0"/></p></td>
+</tr>
+<tr class="row-odd"><td><p>Compatibility of multiplications</p></td>
+<td><p><img class="math" src="../_images/math/301826dee786bf17c26adfaf2bf5533be648324e.png" alt="a \cdot (b \cdot x) = (ab) \cdot x"/></p></td>
+</tr>
+<tr class="row-even"><td><p>Neutral scalar is the neutral
+element of scalar multiplication</p></td>
+<td><p><img class="math" src="../_images/math/c4502ad10f327308a6d06248b5132bac8e788bf6.png" alt="1 \cdot x = x"/></p></td>
+</tr>
+<tr class="row-odd"><td><p>Distributivity with respect to
+vector addition</p></td>
+<td><p><img class="math" src="../_images/math/5247737bd893596b8810762e63a5bc417aebdf38.png" alt="a \cdot (x + y) = a \cdot x + a \cdot y"/></p></td>
+</tr>
+<tr class="row-even"><td><p>Distributivity with respect to
+scalar addition</p></td>
+<td><p><img class="math" src="../_images/math/0adc8d77f4b105a04adc5d3d8d3818f9e69b5a35.png" alt="(a + b) \cdot x = a \cdot x + b \cdot x"/></p></td>
+</tr>
+</tbody>
+</table>
+<p>Of course, the inverse element <img class="math" src="../_images/math/c9f93d6faf665f05c872040d69d3f2a27ac1f9a8.png" alt="\bar x"/> is usually denoted with <img class="math" src="../_images/math/7d6495fa9cfffb1558b902cbe5b8f24f76e03773.png" alt="-x"/>.</p>
+</div>
+<div class="section" id="metric-spaces">
+<h2>Metric spaces<a class="headerlink" href="#metric-spaces" title="Permalink to this headline">¶</a></h2>
+<p>The vector space <img class="math" src="../_images/math/f5d455618753c2385fb5becb19e3b5a69146a5fd.png" alt="(\mathcal{X}, \mathbb{F}, +, \cdot)"/> is called a <a class="reference external" href="https://en.wikipedia.org/wiki/Metric_space">metric space</a> if it is
+additionally endorsed with a <em>distance</em> function or <em>metric</em></p>
+<div class="math">
+<p><img src="../_images/math/7dc2b6150eab26647bd0d036446909e4f7598f5b.png" alt="d: \mathcal{X} \times \mathcal{X} \to [0, \infty)"/></p>
+</div><p>with the following properties for all <img class="math" src="../_images/math/481dc674ed4aa30fd723348342fbbabac51931cb.png" alt="x, y, z \in \mathcal{X}"/>:</p>
+<div class="math">
+<p><img src="../_images/math/96d4064e5579ca05bb5f3fce29e0afa7ed3620c6.png" alt="\begin{align*}
+  &amp; d(x, y) = 0 \quad \Leftrightarrow \quad x = y &amp;&amp; \text{(identity of indiscernibles)} \\
+  &amp; d(x, y) = d(y, x)  &amp;&amp; \text{(symmetry)} \\
+  &amp; d(x, y) \leq d(x, z) + d(z, y) &amp;&amp; \text{(subadditivity)}
+\end{align*}"/></p>
+</div><p>We call the tuple <img class="math" src="../_images/math/0539a810750493cf0abba6a4ebbb476eb5114aeb.png" alt="(\mathcal{X}, \mathbb{F}, +, \cdot, d)"/> a <a class="reference external" href="https://en.wikipedia.org/wiki/Metric_space">Metric space</a>.</p>
+</div>
+<div class="section" id="normed-spaces">
+<h2>Normed spaces<a class="headerlink" href="#normed-spaces" title="Permalink to this headline">¶</a></h2>
+<p>A function on <img class="math" src="../_images/math/35934ec49b4c4203a014d2b6114c68b9b16e45eb.png" alt="\mathcal{X}"/> intended to measure lengths of vectors is called a <a class="reference external" href="https://en.wikipedia.org/wiki/Normed_vector_space">norm</a></p>
+<div class="math">
+<p><img src="../_images/math/e800fba72a71ac461d09db62bd6edd6c4c9c0800.png" alt="\lVert \cdot \rVert : \mathcal{X} \to [0, \infty)"/></p>
+</div><p>if it fulfills the following conditions for all <img class="math" src="../_images/math/5bd86de11e27a5009c71438cc0c8aa85f5d4f1f4.png" alt="x, y \in \mathcal{X}"/> and
+<img class="math" src="../_images/math/ea578fc734627f7b03c124a81e1f510874605423.png" alt="a \in \mathbb{F}"/>:</p>
+<div class="math">
+<p><img src="../_images/math/18a9c921e0575274f02f9307bc9389d671ac5e01.png" alt="\begin{align*}
+  &amp; \lVert x \rVert = 0 \Leftrightarrow x = 0 &amp;&amp; \text{(positive definiteness)} \\
+  &amp; \lVert a \cdot x \rVert = \lvert a \rvert\, \lVert x \rVert &amp;&amp; \text{(positive homegeneity)}
+  \\
+  &amp; \lVert x + y \rVert \leq \lVert x \rVert + \lVert x \rVert &amp;&amp; \text{(triangle inequality)}
+\end{align*}"/></p>
+</div><p>A tuple <img class="math" src="../_images/math/48ab553fc0e1870f88d2a3fbadd3efa380b90e4c.png" alt="(\mathcal{X}, \mathbb{F}, +, \cdot, \lVert \cdot \rVert)"/> fulfilling these conditions
+is called <a class="reference external" href="https://en.wikipedia.org/wiki/Normed_vector_space">Normed vector space</a>. Note that a norm induces a natural metric via
+<img class="math" src="../_images/math/899a31dcb22bcc80cc19b5862d516d2f845234ab.png" alt="d(x, y) = \lVert x - y \rVert"/>.</p>
+</div>
+<div class="section" id="inner-product-spaces">
+<h2>Inner product spaces<a class="headerlink" href="#inner-product-spaces" title="Permalink to this headline">¶</a></h2>
+<p>Measure angles and defining notions like orthogonality requires the existence of an <a class="reference external" href="https://en.wikipedia.org/wiki/Inner_product_space">inner product</a></p>
+<div class="math">
+<p><img src="../_images/math/094468198f211d17d99f6992ca40f2f7a6918868.png" alt="\langle \cdot, \cdot \rangle : \mathcal{X} \times \mathcal{X} \to \mathbb{F}"/></p>
+</div><p>with the following properties for all <img class="math" src="../_images/math/481dc674ed4aa30fd723348342fbbabac51931cb.png" alt="x, y, z \in \mathcal{X}"/> and <img class="math" src="../_images/math/ea578fc734627f7b03c124a81e1f510874605423.png" alt="a \in \mathbb{F}"/>:</p>
+<div class="math">
+<p><img src="../_images/math/90f1870476c6f5c6990d8511905b700f746c48c4.png" alt="\begin{align*}
+  &amp; \langle x, x \rangle \geq 0 \quad \text{and} \quad \langle x, x \rangle = 0 \Leftrightarrow
+  x = 0 &amp;&amp; \text{(positive definiteness)} \\
+  &amp; \langle a \cdot x + y, z \rangle = a \, \langle x, z \rangle + a \, \langle y, z \rangle &amp;&amp;
+  \text{(linearity in the first argument)} \\
+  &amp; \langle x, y \rangle = \overline{\langle x, y \rangle} &amp;&amp; \text{(conjugate symmetry)}
+\end{align*}"/></p>
+</div><p>The tuple <img class="math" src="../_images/math/92814fe02700847f00e57a2c4b6cfe2370f55b7e.png" alt="(\mathcal{X}, \mathbb{F}, +, \cdot, \langle \cdot \rangle)"/> is then called an
+<a class="reference external" href="https://en.wikipedia.org/wiki/Inner_product_space">Inner product space</a>. Note that the inner product induces the norm
+<img class="math" src="../_images/math/fedb104dbe7b31169cbdbbb851972f04e2e757d4.png" alt="\lVert x \rVert = \sqrt{\langle x, x \rangle}"/>.</p>
+</div>
+<div class="section" id="cartesian-spaces">
+<h2>Cartesian spaces<a class="headerlink" href="#cartesian-spaces" title="Permalink to this headline">¶</a></h2>
+<p>We refer to the space <img class="math" src="../_images/math/19d28c5a6b8f9aa12237c6ad8b4f46bd17915d2d.png" alt="\mathbb{F}^n"/> as the <img class="math" src="../_images/math/5a939c5280da7202ca4531f175a7780ad5e1f80a.png" alt="n"/>-dimensional <a class="reference external" href="https://en.wikipedia.org/wiki/Cartesian_coordinate_system">Cartesian space</a> over the
+field <img class="math" src="../_images/math/092f5b0e7bb7f7ff443dd879aba1b635077467af.png" alt="\mathbb{F}"/>. We choose this notion since Euclidean spaces are usually associated with
+the <a class="reference external" href="https://en.wikipedia.org/wiki/Euclidean_distance">Euclidean norm and distance</a>, which are just (important) special cases. Vector addition and
+scalar multiplication in <img class="math" src="../_images/math/19d28c5a6b8f9aa12237c6ad8b4f46bd17915d2d.png" alt="\mathbb{F}^n"/> are, of course, realized with entry-wise addition
+and scalar multiplication.</p>
+<p>The natural inner product in <img class="math" src="../_images/math/19d28c5a6b8f9aa12237c6ad8b4f46bd17915d2d.png" alt="\mathbb{F}^n"/> is defined as</p>
+<div class="math">
+<p><img src="../_images/math/53052ed77799974249374ae0b2f8af27c7202347.png" alt="\langle x, y \rangle_{\mathbb{F}^n} := \sum_{i=1}^n x_i\, \overline{y_i}"/></p>
+</div><p>and reduces to the well-known <a class="reference external" href="https://en.wikipedia.org/wiki/Dot_product">dot product</a> if <img class="math" src="../_images/math/a9de2dc5abc8778c4e9dabdbe17162185d4b861f.png" alt="\mathbb{F} = \mathbb{R}"/>. For the norm, the
+most common choices are from the family of <a class="reference external" href="https://en.wikipedia.org/wiki/Lp_space#The_p-norm_in_finite_dimensions">p-norms</a></p>
+<div class="math">
+<p><img src="../_images/math/53af349e9c07974fd75dbe18220db2cc24ae784b.png" alt="\lVert x \rVert_p &amp;:= \left( \sum_{i=1}^n \lvert x_i \rvert^p \right)^{\frac{1}{p}}
+\quad \text{if } p \in [1, \infty) \\[1ex]
+\lVert x \rVert_\infty &amp;:= \max\big\{\lvert x_i \rvert\,|\, i \in \{1, \dots, n\} \big\}"/></p>
+</div><p>with the standard Euclidan norm for <img class="math" src="../_images/math/7c9e5500d7458a5c4c11df5e8c2d2056bf23525f.png" alt="p = 2"/>. As metric, one usually takes the norm-induced
+distance function, although other choices are possible.</p>
+</div>
+<div class="section" id="weighted-cartesian-spaces">
+<h2>Weighted Cartesian spaces<a class="headerlink" href="#weighted-cartesian-spaces" title="Permalink to this headline">¶</a></h2>
+<p>In the standard definition of inner products, norms and distances, all components of a vector are
+have the same weight. This can be changed by using weighted versions of those functions as described
+in the following.</p>
+<p>Let <img class="math" src="../_images/math/23d5bef3682f3ae482740db08cfb6a6edbe30f8e.png" alt="A \in \mathbb{F}^{n \times n}"/> be a <a class="reference external" href="https://en.wikipedia.org/wiki/Hermitian_matrix">Hermitian</a> square and <a class="reference external" href="https://en.wikipedia.org/wiki/Positive-definite_matrix">positive definite</a> matrix,
+in short <img class="math" src="../_images/math/6802f5e57edce4f46ee10dbfda5914885ff0cc03.png" alt="A = A^* \succeq 0"/>. Then, a weighted inner product is defined by</p>
+<div class="math">
+<p><img src="../_images/math/ffd8d3e6279e9240731e0347126a7e26e1f28a0c.png" alt="\langle x, y \rangle_A := \langle Ax, y \rangle_{\mathbb{F}^n}."/></p>
+</div><p>Weighted norms can be defined in different ways. For a general norm <img class="math" src="../_images/math/61bb8d07edcda2f9b1373a7319e5cb95004c3c03.png" alt="\lVert \cdot \rVert"/>,
+a weighted version is given by</p>
+<div class="math">
+<p><img src="../_images/math/c9a1f2b27908dcee497f215b259526584199413c.png" alt="\lVert x \rVert_A := \lVert Ax \rVert"/></p>
+</div><p>For the <img class="math" src="../_images/math/141bbefb74014fc5e43499901bf78607ae335583.png" alt="p"/>-norms with <img class="math" src="../_images/math/9807f9ebf51f9b2fc6c29d9b78bc10f40ab95f90.png" alt="p &lt; \infty"/>, the definition is usually changed to</p>
+<div class="math">
+<p><img src="../_images/math/ad29e8d25f44d3ba172f4e3271af737827a7fea5.png" alt="\lVert x \rVert_{p, A} := \lVert A^{1/p} x \rVert,"/></p>
+</div><p>where <img class="math" src="../_images/math/2e4819d3b9112489fd3b78f05dfa37ea5ad0ec3a.png" alt="A^{1/p}"/> is the <img class="math" src="../_images/math/141bbefb74014fc5e43499901bf78607ae335583.png" alt="p"/>-th <a class="reference external" href="https://en.wikipedia.org/wiki/Matrix_function">root of the matrix</a> <img class="math" src="../_images/math/211284f68205c3e66773eaf026f32a0acdd3dfb3.png" alt="A"/>. The reason for this
+definition is that for <img class="math" src="../_images/math/7c9e5500d7458a5c4c11df5e8c2d2056bf23525f.png" alt="p = 2"/>, this version is consistent with the inner product
+since <img class="math" src="../_images/math/2969b618b1753a06f2558e56a3ad962993dd0cc5.png" alt="\langle Ax, x \rangle = \langle A^{1/2} x, A^{1/2} x \rangle =
+\lVert A^{1/2} x \rVert^2"/>.</p>
+<div class="section" id="remark-on-matrices-as-operators">
+<h3>Remark on matrices as operators<a class="headerlink" href="#remark-on-matrices-as-operators" title="Permalink to this headline">¶</a></h3>
+<p>A matrix <img class="math" src="../_images/math/6cfc2046d400801b553df4a1893775cfbac58a3e.png" alt="M \in \mathbb{F}^{m \times n}"/> can be regarded as a <a class="reference external" href="https://en.wikipedia.org/wiki/Linear_map">linear operator</a></p>
+<div class="math">
+<p><img src="../_images/math/178573cb4ccf717cf834e97c592157618639be4c.png" alt="\mathcal{M} &amp;: \mathbb{F}^n \to \mathbb{F}^m \\
+\mathcal{M}(x) &amp;:= M x"/></p>
+</div><p>It is well known that in the standard case of a Euclidean space, the adjoint operator is simply
+defined with the conjugate transposed matrix:</p>
+<div class="math">
+<p><img src="../_images/math/8ca8037af9d55e55550c1143044c3ad2e87d9c74.png" alt="\mathcal{M}^* &amp;: \mathbb{F}^m \to \mathbb{F}^n \\
+\mathcal{M}^*(y) &amp;:= M^* y"/></p>
+</div><p>However if the spaces <img class="math" src="../_images/math/19d28c5a6b8f9aa12237c6ad8b4f46bd17915d2d.png" alt="\mathbb{F}^n"/> and <img class="math" src="../_images/math/f682fe7bd1dcfef4ba8300d7d21fec74aa2cad78.png" alt="\mathbb{F}^m"/> have weighted inner products,
+this identification is no longer valid. If <img class="math" src="../_images/math/c541194ca965e2b4c2b37c16fe1069cbc4d7631d.png" alt="\mathbb{F}^{n \times n} \ni A = A^* \succeq 0"/>
+and <img class="math" src="../_images/math/c98a66177610fa2515bdabde77f0d517e4e8ce98.png" alt="\mathbb{F}^{m \times m} \ni B = B^* \succeq 0"/> are the weighting matrices of the
+inner products, we get</p>
+<div class="math">
+<p><img src="../_images/math/651e0c8c4b970b946260a045d03ce84fd84803c7.png" alt="\langle \mathcal{M}(x), y \rangle_B
+&amp;= \langle B\mathcal{M}(x), y \rangle_{\mathbb{F}^m}
+= \langle M x, B y \rangle_{\mathbb{F}^m}
+= \langle x, M^* B y \rangle_{\mathbb{F}^n} \\
+&amp;= \langle A^{-1} A x, M^* B y \rangle_{\mathbb{F}^n}
+= \langle A x, A^{-1} M^* B y \rangle_{\mathbb{F}^n} \\
+&amp;= \langle x, A^{-1} M^* B y \rangle_A"/></p>
+</div><p>Thus, the adjoint of the matrix operator between the weighted spaces is rather given as
+<img class="math" src="../_images/math/028d26f62da6bb1e0fdc8baff0816176480aeb65.png" alt="\mathcal{M}^*(y) = A^{-1} M^* B y"/>.</p>
+</div>
+</div>
+<div class="section" id="useful-wikipedia-articles">
+<h2>Useful Wikipedia articles<a class="headerlink" href="#useful-wikipedia-articles" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li><p><a class="reference external" href="https://en.wikipedia.org/wiki/Vector_space">Vector space</a></p></li>
+<li><p><a class="reference external" href="https://en.wikipedia.org/wiki/Metric_space">Metric space</a></p></li>
+<li><p><a class="reference external" href="https://en.wikipedia.org/wiki/Normed_vector_space">Normed vector space</a></p></li>
+<li><p><a class="reference external" href="https://en.wikipedia.org/wiki/Inner_product_space">Inner product space</a></p></li>
+<li><p><a class="reference external" href="https://en.wikipedia.org/wiki/Euclidean_space">Euclidean space</a></p></li>
+</ul>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+        <a href="discretization.html" class="btn btn-neutral float-right" title="Discretizations" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="math.html" class="btn btn-neutral float-left" title="Mathematical Background" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &#169; Copyright 2014-2020 The ODL Contributors.
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

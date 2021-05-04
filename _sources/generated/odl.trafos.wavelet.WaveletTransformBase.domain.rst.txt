@@ -1,0 +1,6 @@
+WaveletTransformBase.domain
+==============================================
+
+.. currentmodule:: odl.trafos.wavelet
+
+.. autoproperty:: WaveletTransformBase.domain

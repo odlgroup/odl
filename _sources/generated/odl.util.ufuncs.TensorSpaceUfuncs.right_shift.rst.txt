@@ -1,0 +1,8 @@
+:orphan:
+
+TensorSpaceUfuncs.right_shift
+=============================================
+
+.. currentmodule:: odl.util.ufuncs
+
+.. automethod:: TensorSpaceUfuncs.right_shift

@@ -1,0 +1,6 @@
+FunctionalQuotient.adjoint
+============================================================
+
+.. currentmodule:: odl.solvers.functional.functional
+
+.. autoproperty:: FunctionalQuotient.adjoint

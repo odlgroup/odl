@@ -1,0 +1,337 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>Parallel3dAxisGeometry.frommatrix &mdash; odl 1.0.0.dev0 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Parallel3dAxisGeometry.rotation_matrix" href="odl.tomo.geometry.parallel.Parallel3dAxisGeometry.rotation_matrix.html" />
+    <link rel="prev" title="Parallel3dAxisGeometry.det_to_src" href="odl.tomo.geometry.parallel.Parallel3dAxisGeometry.det_to_src.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../index.html" class="icon icon-home"> odl
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                1.0.0.dev0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Getting Started</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../getting_started/getting_started.html">Getting Started</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Working with ODL</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../guide/guide.html">User’s guide – selected topics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../math/math.html">Mathematical Background</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Developer zone</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../dev/dev.html">Contributing to ODL</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Useful facts</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../guide/faq.html">Frequently asked questions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../guide/glossary.html">Glossary</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../release_notes.html">Release Notes</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../refs.html">References</a></li>
+</ul>
+<p class="caption"><span class="caption-text">API Reference</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../odl.html">odl</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../odl.contrib.html">contrib</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../odl.deform.html">deform</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../odl.diagnostics.html">diagnostics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../odl.discr.html">discr</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../odl.operator.html">operator</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../odl.phantom.html">phantom</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../odl.set.html">set</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../odl.solvers.html">solvers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../odl.space.html">space</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="../odl.tomo.html">tomo</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="../odl.tomo.analytic.html">analytic</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../odl.tomo.backends.html">backends</a></li>
+<li class="toctree-l3 current"><a class="reference internal" href="../odl.tomo.geometry.html">geometry</a><ul class="current">
+<li class="toctree-l4"><a class="reference internal" href="../odl.tomo.geometry.conebeam.html">conebeam</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../odl.tomo.geometry.detector.html">detector</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../odl.tomo.geometry.geometry.html">geometry</a></li>
+<li class="toctree-l4 current"><a class="reference internal" href="../odl.tomo.geometry.parallel.html">parallel</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../odl.tomo.geometry.spect.html">spect</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../odl.tomo.operators.html">operators</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../odl.tomo.util.html">util</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../odl.trafos.html">trafos</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../odl.ufunc_ops.html">ufunc_ops</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../odl.util.html">util</a></li>
+</ul>
+</li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">odl</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="../odl.html">odl</a> &raquo;</li>
+        
+          <li><a href="../odl.tomo.html">tomo</a> &raquo;</li>
+        
+          <li><a href="../odl.tomo.geometry.html">geometry</a> &raquo;</li>
+        
+          <li><a href="../odl.tomo.geometry.parallel.html">parallel</a> &raquo;</li>
+        
+          <li><a href="odl.tomo.geometry.parallel.Parallel3dAxisGeometry.html">Parallel3dAxisGeometry</a> &raquo;</li>
+        
+      <li>Parallel3dAxisGeometry.frommatrix</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            <a href="../_sources/generated/odl.tomo.geometry.parallel.Parallel3dAxisGeometry.frommatrix.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="parallel3daxisgeometry-frommatrix">
+<h1>Parallel3dAxisGeometry.frommatrix<a class="headerlink" href="#parallel3daxisgeometry-frommatrix" title="Permalink to this headline">¶</a></h1>
+<dl class="py method">
+<dt id="odl.tomo.geometry.parallel.Parallel3dAxisGeometry.frommatrix">
+<em class="property"><span class="pre">classmethod</span> </em><code class="sig-prename descclassname"><span class="pre">Parallel3dAxisGeometry.</span></code><code class="sig-name descname"><span class="pre">frommatrix</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="pre">apart</span></em>, <em class="sig-param"><span class="pre">dpart</span></em>, <em class="sig-param"><span class="pre">init_matrix</span></em>, <em class="sig-param"><span class="pre">\*\*kwargs</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/odl/tomo/geometry/parallel.html#Parallel3dAxisGeometry.frommatrix"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#odl.tomo.geometry.parallel.Parallel3dAxisGeometry.frommatrix" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create an instance of <a class="reference internal" href="odl.tomo.geometry.parallel.Parallel3dAxisGeometry.html#odl.tomo.geometry.parallel.Parallel3dAxisGeometry" title="odl.tomo.geometry.parallel.Parallel3dAxisGeometry"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Parallel3dAxisGeometry</span></code></a> using a matrix.</p>
+<p>This alternative constructor uses a matrix to rotate and
+translate the default configuration. It is most useful when
+the transformation to be applied is already given as a matrix.</p>
+<dl class="field-list">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl>
+<dt><strong>apart</strong><span class="classifier">1-dim. <a class="reference internal" href="odl.discr.partition.RectPartition.html#odl.discr.partition.RectPartition" title="odl.discr.partition.RectPartition"><code class="xref any py py-class docutils literal notranslate"><span class="pre">RectPartition</span></code></a></span></dt><dd><p>Partition of the parameter interval.</p>
+</dd>
+<dt><strong>dpart</strong><span class="classifier">2-dim. <a class="reference internal" href="odl.discr.partition.RectPartition.html#odl.discr.partition.RectPartition" title="odl.discr.partition.RectPartition"><code class="xref any py py-class docutils literal notranslate"><span class="pre">RectPartition</span></code></a></span></dt><dd><p>Partition of the detector parameter set.</p>
+</dd>
+<dt><strong>init_matrix</strong><span class="classifier"><a class="reference external" href="https://numpy.org/doc/stable/glossary.html#term-array-like" title="(in NumPy v1.20)"><code class="xref any docutils literal notranslate"><span class="pre">array_like</span></code></a>, shape <code class="docutils literal notranslate"><span class="pre">(3,</span> <span class="pre">3)</span></code> or <code class="docutils literal notranslate"><span class="pre">(3,</span> <span class="pre">4)</span></code>, optional</span></dt><dd><p>Transformation matrix whose left <code class="docutils literal notranslate"><span class="pre">(3,</span> <span class="pre">3)</span></code> block is multiplied
+with the default <code class="docutils literal notranslate"><span class="pre">det_pos_init</span></code> and <code class="docutils literal notranslate"><span class="pre">det_axes_init</span></code> to
+determine the new vectors. If present, the fourth column acts
+as a translation after the initial transformation.
+The resulting <code class="docutils literal notranslate"><span class="pre">det_axes_init</span></code> will be normalized.</p>
+</dd>
+<dt><strong>kwargs :</strong></dt><dd><p>Further keyword arguments passed to the class constructor.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><dl>
+<dt><strong>geometry</strong><span class="classifier"><a class="reference internal" href="odl.tomo.geometry.parallel.Parallel3dAxisGeometry.html#odl.tomo.geometry.parallel.Parallel3dAxisGeometry" title="odl.tomo.geometry.parallel.Parallel3dAxisGeometry"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Parallel3dAxisGeometry</span></code></a></span></dt><dd></dd>
+</dl>
+</dd>
+</dl>
+<p class="rubric">Examples</p>
+<p>Map unit vectors <code class="docutils literal notranslate"><span class="pre">e_y</span> <span class="pre">-&gt;</span> <span class="pre">e_z</span></code> and <code class="docutils literal notranslate"><span class="pre">e_z</span> <span class="pre">-&gt;</span> <span class="pre">-e_y</span></code>, keeping the
+right-handedness:</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">apart</span> <span class="o">=</span> <span class="n">odl</span><span class="o">.</span><span class="n">uniform_partition</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="p">,</span> <span class="mi">10</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">dpart</span> <span class="o">=</span> <span class="n">odl</span><span class="o">.</span><span class="n">uniform_partition</span><span class="p">([</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span> <span class="p">(</span><span class="mi">20</span><span class="p">,</span> <span class="mi">20</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">matrix</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span>
+<span class="gp">... </span>                   <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">],</span>
+<span class="gp">... </span>                   <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">]])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">geom</span> <span class="o">=</span> <span class="n">Parallel3dAxisGeometry</span><span class="o">.</span><span class="n">frommatrix</span><span class="p">(</span>
+<span class="gp">... </span>    <span class="n">apart</span><span class="p">,</span> <span class="n">dpart</span><span class="p">,</span> <span class="n">init_matrix</span><span class="o">=</span><span class="n">matrix</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">geom</span><span class="o">.</span><span class="n">axis</span>
+<span class="go">array([ 0., -1.,  0.])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">geom</span><span class="o">.</span><span class="n">det_pos_init</span>
+<span class="go">array([ 0.,  0.,  1.])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">geom</span><span class="o">.</span><span class="n">det_axes_init</span>
+<span class="go">array([[ 1.,  0.,  0.],</span>
+<span class="go">       [ 0., -1.,  0.]])</span>
+</pre></div>
+</div>
+<p>Adding a translation with a fourth matrix column:</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">matrix</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span>
+<span class="gp">... </span>                   <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span>
+<span class="gp">... </span>                   <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">]])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">geom</span> <span class="o">=</span> <span class="n">Parallel3dAxisGeometry</span><span class="o">.</span><span class="n">frommatrix</span><span class="p">(</span><span class="n">apart</span><span class="p">,</span> <span class="n">dpart</span><span class="p">,</span> <span class="n">matrix</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">geom</span><span class="o">.</span><span class="n">translation</span>
+<span class="go">array([ 0.,  1.,  1.])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">geom</span><span class="o">.</span><span class="n">det_pos_init</span>  <span class="c1"># (0, 1, 0) + (0, 1, 1)</span>
+<span class="go">array([ 0.,  2.,  1.])</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+        <a href="odl.tomo.geometry.parallel.Parallel3dAxisGeometry.rotation_matrix.html" class="btn btn-neutral float-right" title="Parallel3dAxisGeometry.rotation_matrix" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="odl.tomo.geometry.parallel.Parallel3dAxisGeometry.det_to_src.html" class="btn btn-neutral float-left" title="Parallel3dAxisGeometry.det_to_src" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &#169; Copyright 2014-2020 The ODL Contributors.
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

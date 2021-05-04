@@ -1,0 +1,690 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>odl.tomo.backends.astra_cuda &mdash; odl 1.0.0.dev0 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../../../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../../../../_static/custom.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../../../" src="../../../../_static/documentation_options.js"></script>
+        <script src="../../../../_static/jquery.js"></script>
+        <script src="../../../../_static/underscore.js"></script>
+        <script src="../../../../_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="../../../../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../../../index.html" class="icon icon-home"> odl
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                1.0.0.dev0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Getting Started</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../getting_started/getting_started.html">Getting Started</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Working with ODL</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../guide/guide.html">User’s guide – selected topics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../math/math.html">Mathematical Background</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Developer zone</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../dev/dev.html">Contributing to ODL</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Useful facts</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../guide/faq.html">Frequently asked questions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../guide/glossary.html">Glossary</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../release_notes.html">Release Notes</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../refs.html">References</a></li>
+</ul>
+<p class="caption"><span class="caption-text">API Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../odl.html">odl</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../../index.html">odl</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../../../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="../../../index.html">Module code</a> &raquo;</li>
+        
+      <li>odl.tomo.backends.astra_cuda</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for odl.tomo.backends.astra_cuda</h1><div class="highlight"><pre>
+<span></span><span class="c1"># Copyright 2014-2020 The ODL contributors</span>
+<span class="c1">#</span>
+<span class="c1"># This file is part of ODL.</span>
+<span class="c1">#</span>
+<span class="c1"># This Source Code Form is subject to the terms of the Mozilla Public License,</span>
+<span class="c1"># v. 2.0. If a copy of the MPL was not distributed with this file, You can</span>
+<span class="c1"># obtain one at https://mozilla.org/MPL/2.0/.</span>
+
+<span class="sd">&quot;&quot;&quot;Backend for ASTRA using CUDA.&quot;&quot;&quot;</span>
+
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">absolute_import</span><span class="p">,</span> <span class="n">division</span><span class="p">,</span> <span class="n">print_function</span>
+
+<span class="kn">import</span> <span class="nn">warnings</span>
+<span class="kn">from</span> <span class="nn">multiprocessing</span> <span class="kn">import</span> <span class="n">Lock</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">packaging.version</span> <span class="kn">import</span> <span class="n">parse</span> <span class="k">as</span> <span class="n">parse_version</span>
+
+<span class="kn">from</span> <span class="nn">odl.discr</span> <span class="kn">import</span> <span class="n">DiscretizedSpace</span>
+<span class="kn">from</span> <span class="nn">odl.tomo.backends.astra_setup</span> <span class="kn">import</span> <span class="p">(</span>
+    <span class="n">ASTRA_VERSION</span><span class="p">,</span> <span class="n">astra_algorithm</span><span class="p">,</span> <span class="n">astra_data</span><span class="p">,</span> <span class="n">astra_projection_geometry</span><span class="p">,</span>
+    <span class="n">astra_projector</span><span class="p">,</span> <span class="n">astra_supports</span><span class="p">,</span> <span class="n">astra_versions_supporting</span><span class="p">,</span>
+    <span class="n">astra_volume_geometry</span><span class="p">)</span>
+<span class="kn">from</span> <span class="nn">odl.tomo.backends.util</span> <span class="kn">import</span> <span class="n">_add_default_complex_impl</span>
+<span class="kn">from</span> <span class="nn">odl.tomo.geometry</span> <span class="kn">import</span> <span class="p">(</span>
+    <span class="n">ConeBeamGeometry</span><span class="p">,</span> <span class="n">FanBeamGeometry</span><span class="p">,</span> <span class="n">Geometry</span><span class="p">,</span> <span class="n">Parallel2dGeometry</span><span class="p">,</span>
+    <span class="n">Parallel3dAxisGeometry</span><span class="p">)</span>
+
+<span class="k">try</span><span class="p">:</span>
+    <span class="kn">import</span> <span class="nn">astra</span>
+
+    <span class="n">ASTRA_CUDA_AVAILABLE</span> <span class="o">=</span> <span class="n">astra</span><span class="o">.</span><span class="n">astra</span><span class="o">.</span><span class="n">use_cuda</span><span class="p">()</span>
+<span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
+    <span class="n">ASTRA_CUDA_AVAILABLE</span> <span class="o">=</span> <span class="kc">False</span>
+
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">(</span>
+    <span class="s1">&#39;ASTRA_CUDA_AVAILABLE&#39;</span><span class="p">,</span>
+<span class="p">)</span>
+
+
+<div class="viewcode-block" id="AstraCudaImpl"><a class="viewcode-back" href="../../../../generated/odl.tomo.backends.astra_cuda.AstraCudaImpl.html#odl.tomo.backends.astra_cuda.AstraCudaImpl">[docs]</a><span class="k">class</span> <span class="nc">AstraCudaImpl</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;`RayTransform` implementation for CUDA algorithms in ASTRA.&quot;&quot;&quot;</span>
+
+    <span class="n">algo_forward_id</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">algo_backward_id</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">vol_id</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">sino_id</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">proj_id</span> <span class="o">=</span> <span class="kc">None</span>
+
+<div class="viewcode-block" id="AstraCudaImpl.__init__"><a class="viewcode-back" href="../../../../generated/odl.tomo.backends.astra_cuda.AstraCudaImpl.html#odl.tomo.backends.astra_cuda.AstraCudaImpl.__init__">[docs]</a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">geometry</span><span class="p">,</span> <span class="n">vol_space</span><span class="p">,</span> <span class="n">proj_space</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Initialize a new instance.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        geometry : `Geometry`</span>
+<span class="sd">            Geometry defining the tomographic setup.</span>
+<span class="sd">        vol_space : `DiscretizedSpace`</span>
+<span class="sd">            Reconstruction space, the space of the images to be forward</span>
+<span class="sd">            projected.</span>
+<span class="sd">        proj_space : `DiscretizedSpace`</span>
+<span class="sd">            Projection space, the space of the result.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">geometry</span><span class="p">,</span> <span class="n">Geometry</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span>
+                <span class="s1">&#39;`geometry` must be a `Geometry` instance, got </span><span class="si">{!r}</span><span class="s1">&#39;</span>
+                <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">geometry</span><span class="p">)</span>
+            <span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">vol_space</span><span class="p">,</span> <span class="n">DiscretizedSpace</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span>
+                <span class="s1">&#39;`vol_space` must be a `DiscretizedSpace` instance, got </span><span class="si">{!r}</span><span class="s1">&#39;</span>
+                <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">vol_space</span><span class="p">)</span>
+            <span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">proj_space</span><span class="p">,</span> <span class="n">DiscretizedSpace</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span>
+                <span class="s1">&#39;`proj_space` must be a `DiscretizedSpace` instance, got </span><span class="si">{!r}</span><span class="s1">&#39;</span>
+                <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">proj_space</span><span class="p">)</span>
+            <span class="p">)</span>
+
+        <span class="c1"># Print a warning if the detector midpoint normal vector at any</span>
+        <span class="c1"># angle is perpendicular to the geometry axis in parallel 3d</span>
+        <span class="c1"># single-axis geometry -- this is broken in some ASTRA versions</span>
+        <span class="k">if</span> <span class="p">(</span>
+            <span class="nb">isinstance</span><span class="p">(</span><span class="n">geometry</span><span class="p">,</span> <span class="n">Parallel3dAxisGeometry</span><span class="p">)</span>
+            <span class="ow">and</span> <span class="ow">not</span> <span class="n">astra_supports</span><span class="p">(</span><span class="s1">&#39;par3d_det_mid_pt_perp_to_axis&#39;</span><span class="p">)</span>
+        <span class="p">):</span>
+            <span class="n">req_ver</span> <span class="o">=</span> <span class="n">astra_versions_supporting</span><span class="p">(</span>
+                <span class="s1">&#39;par3d_det_mid_pt_perp_to_axis&#39;</span>
+            <span class="p">)</span>
+            <span class="n">axis</span> <span class="o">=</span> <span class="n">geometry</span><span class="o">.</span><span class="n">axis</span>
+            <span class="n">mid_pt</span> <span class="o">=</span> <span class="n">geometry</span><span class="o">.</span><span class="n">det_params</span><span class="o">.</span><span class="n">mid_pt</span>
+            <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">angle</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">geometry</span><span class="o">.</span><span class="n">angles</span><span class="p">):</span>
+                <span class="k">if</span> <span class="nb">abs</span><span class="p">(</span>
+                    <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">axis</span><span class="p">,</span> <span class="n">geometry</span><span class="o">.</span><span class="n">det_to_src</span><span class="p">(</span><span class="n">angle</span><span class="p">,</span> <span class="n">mid_pt</span><span class="p">))</span>
+                <span class="p">)</span> <span class="o">&lt;</span> <span class="mf">1e-4</span><span class="p">:</span>
+                    <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span>
+                        <span class="s1">&#39;angle </span><span class="si">{}</span><span class="s1">: detector midpoint normal </span><span class="si">{}</span><span class="s1"> is &#39;</span>
+                        <span class="s1">&#39;perpendicular to the geometry axis </span><span class="si">{}</span><span class="s1"> in &#39;</span>
+                        <span class="s1">&#39;`Parallel3dAxisGeometry`; this is broken in &#39;</span>
+                        <span class="s1">&#39;ASTRA </span><span class="si">{}</span><span class="s1">, please upgrade to ASTRA </span><span class="si">{}</span><span class="s1">&#39;</span>
+                        <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">geometry</span><span class="o">.</span><span class="n">det_to_src</span><span class="p">(</span><span class="n">angle</span><span class="p">,</span> <span class="n">mid_pt</span><span class="p">),</span>
+                                  <span class="n">axis</span><span class="p">,</span> <span class="n">ASTRA_VERSION</span><span class="p">,</span> <span class="n">req_ver</span><span class="p">),</span>
+                        <span class="ne">RuntimeWarning</span><span class="p">)</span>
+                    <span class="k">break</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">geometry</span> <span class="o">=</span> <span class="n">geometry</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_vol_space</span> <span class="o">=</span> <span class="n">vol_space</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_proj_space</span> <span class="o">=</span> <span class="n">proj_space</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">create_ids</span><span class="p">()</span>
+
+        <span class="c1"># ASTRA projectors are not thread-safe, thus we need to lock manually</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_mutex</span> <span class="o">=</span> <span class="n">Lock</span><span class="p">()</span></div>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">vol_space</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_vol_space</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">proj_space</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_proj_space</span>
+
+<div class="viewcode-block" id="AstraCudaImpl.create_ids"><a class="viewcode-back" href="../../../../generated/odl.tomo.backends.astra_cuda.AstraCudaImpl.create_ids.html#odl.tomo.backends.astra_cuda.AstraCudaImpl.create_ids">[docs]</a>    <span class="k">def</span> <span class="nf">create_ids</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Create ASTRA objects.&quot;&quot;&quot;</span>
+        <span class="c1"># Create input and output arrays</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">geometry</span><span class="o">.</span><span class="n">motion_partition</span><span class="o">.</span><span class="n">ndim</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">motion_shape</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">geometry</span><span class="o">.</span><span class="n">motion_partition</span><span class="o">.</span><span class="n">shape</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># Need to flatten 2- or 3-dimensional angles into one axis</span>
+            <span class="n">motion_shape</span> <span class="o">=</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">prod</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">geometry</span><span class="o">.</span><span class="n">motion_partition</span><span class="o">.</span><span class="n">shape</span><span class="p">),)</span>
+
+        <span class="n">proj_shape</span> <span class="o">=</span> <span class="n">motion_shape</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">geometry</span><span class="o">.</span><span class="n">det_partition</span><span class="o">.</span><span class="n">shape</span>
+        <span class="n">proj_ndim</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">proj_shape</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">proj_ndim</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
+            <span class="n">astra_proj_shape</span> <span class="o">=</span> <span class="n">proj_shape</span>
+            <span class="n">astra_vol_shape</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">vol_space</span><span class="o">.</span><span class="n">shape</span>
+        <span class="k">elif</span> <span class="n">proj_ndim</span> <span class="o">==</span> <span class="mi">3</span><span class="p">:</span>
+            <span class="c1"># The `u` and `v` axes of the projection data are swapped,</span>
+            <span class="c1"># see explanation in `astra_*_3d_geom_to_vec`.</span>
+            <span class="n">astra_proj_shape</span> <span class="o">=</span> <span class="p">(</span><span class="n">proj_shape</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">proj_shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">proj_shape</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span>
+            <span class="n">astra_vol_shape</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">vol_space</span><span class="o">.</span><span class="n">shape</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">vol_array</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">(</span><span class="n">astra_vol_shape</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="s1">&#39;float32&#39;</span><span class="p">,</span> <span class="n">order</span><span class="o">=</span><span class="s1">&#39;C&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">proj_array</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">(</span><span class="n">astra_proj_shape</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="s1">&#39;float32&#39;</span><span class="p">,</span>
+                                   <span class="n">order</span><span class="o">=</span><span class="s1">&#39;C&#39;</span><span class="p">)</span>
+
+        <span class="c1"># Create ASTRA data structures</span>
+        <span class="n">vol_geom</span> <span class="o">=</span> <span class="n">astra_volume_geometry</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">vol_space</span><span class="p">)</span>
+        <span class="n">proj_geom</span> <span class="o">=</span> <span class="n">astra_projection_geometry</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">geometry</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">vol_id</span> <span class="o">=</span> <span class="n">astra_data</span><span class="p">(</span>
+            <span class="n">vol_geom</span><span class="p">,</span>
+            <span class="n">datatype</span><span class="o">=</span><span class="s1">&#39;volume&#39;</span><span class="p">,</span>
+            <span class="n">ndim</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">vol_space</span><span class="o">.</span><span class="n">ndim</span><span class="p">,</span>
+            <span class="n">data</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">vol_array</span><span class="p">,</span>
+            <span class="n">allow_copy</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="n">proj_type</span> <span class="o">=</span> <span class="s1">&#39;cuda&#39;</span> <span class="k">if</span> <span class="n">proj_ndim</span> <span class="o">==</span> <span class="mi">2</span> <span class="k">else</span> <span class="s1">&#39;cuda3d&#39;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">proj_id</span> <span class="o">=</span> <span class="n">astra_projector</span><span class="p">(</span>
+            <span class="n">proj_type</span><span class="p">,</span> <span class="n">vol_geom</span><span class="p">,</span> <span class="n">proj_geom</span><span class="p">,</span> <span class="n">proj_ndim</span>
+        <span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">sino_id</span> <span class="o">=</span> <span class="n">astra_data</span><span class="p">(</span>
+            <span class="n">proj_geom</span><span class="p">,</span>
+            <span class="n">datatype</span><span class="o">=</span><span class="s1">&#39;projection&#39;</span><span class="p">,</span>
+            <span class="n">ndim</span><span class="o">=</span><span class="n">proj_ndim</span><span class="p">,</span>
+            <span class="n">data</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">proj_array</span><span class="p">,</span>
+            <span class="n">allow_copy</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="c1"># Create algorithm</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">algo_forward_id</span> <span class="o">=</span> <span class="n">astra_algorithm</span><span class="p">(</span>
+            <span class="s1">&#39;forward&#39;</span><span class="p">,</span>
+            <span class="n">proj_ndim</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">vol_id</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">sino_id</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">proj_id</span><span class="p">,</span>
+            <span class="n">impl</span><span class="o">=</span><span class="s1">&#39;cuda&#39;</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="c1"># Create algorithm</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">algo_backward_id</span> <span class="o">=</span> <span class="n">astra_algorithm</span><span class="p">(</span>
+            <span class="s1">&#39;backward&#39;</span><span class="p">,</span>
+            <span class="n">proj_ndim</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">vol_id</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">sino_id</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">proj_id</span><span class="p">,</span>
+            <span class="n">impl</span><span class="o">=</span><span class="s1">&#39;cuda&#39;</span><span class="p">,</span>
+        <span class="p">)</span></div>
+
+<div class="viewcode-block" id="AstraCudaImpl.call_forward"><a class="viewcode-back" href="../../../../generated/odl.tomo.backends.astra_cuda.AstraCudaImpl.call_forward.html#odl.tomo.backends.astra_cuda.AstraCudaImpl.call_forward">[docs]</a>    <span class="nd">@_add_default_complex_impl</span>
+    <span class="k">def</span> <span class="nf">call_forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">out</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_call_forward_real</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">out</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
+
+    <span class="k">def</span> <span class="nf">_call_forward_real</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">vol_data</span><span class="p">,</span> <span class="n">out</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Run an ASTRA forward projection on the given data using the GPU.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        vol_data : ``vol_space.real_space`` element</span>
+<span class="sd">            Volume data to which the projector is applied. Although</span>
+<span class="sd">            ``vol_space`` may be complex, this element needs to be real.</span>
+<span class="sd">        out : ``proj_space`` element, optional</span>
+<span class="sd">            Element of the projection space to which the result is written. If</span>
+<span class="sd">            ``None``, an element in `proj_space` is created.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        out : ``proj_space`` element</span>
+<span class="sd">            Projection data resulting from the application of the projector.</span>
+<span class="sd">            If ``out`` was provided, the returned object is a reference to it.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">_mutex</span><span class="p">:</span>
+            <span class="k">assert</span> <span class="n">vol_data</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">vol_space</span><span class="o">.</span><span class="n">real_space</span>
+
+            <span class="k">if</span> <span class="n">out</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="k">assert</span> <span class="n">out</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">proj_space</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">out</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">proj_space</span><span class="o">.</span><span class="n">element</span><span class="p">()</span>
+
+            <span class="c1"># Copy data to GPU memory</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">geometry</span><span class="o">.</span><span class="n">ndim</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
+                <span class="n">astra</span><span class="o">.</span><span class="n">data2d</span><span class="o">.</span><span class="n">store</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">vol_id</span><span class="p">,</span> <span class="n">vol_data</span><span class="o">.</span><span class="n">asarray</span><span class="p">())</span>
+            <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">geometry</span><span class="o">.</span><span class="n">ndim</span> <span class="o">==</span> <span class="mi">3</span><span class="p">:</span>
+                <span class="n">astra</span><span class="o">.</span><span class="n">data3d</span><span class="o">.</span><span class="n">store</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">vol_id</span><span class="p">,</span> <span class="n">vol_data</span><span class="o">.</span><span class="n">asarray</span><span class="p">())</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s1">&#39;unknown ndim&#39;</span><span class="p">)</span>
+
+            <span class="c1"># Run algorithm</span>
+            <span class="n">astra</span><span class="o">.</span><span class="n">algorithm</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">algo_forward_id</span><span class="p">)</span>
+
+            <span class="c1"># Copy result to host</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">geometry</span><span class="o">.</span><span class="n">ndim</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
+                <span class="n">out</span><span class="p">[:]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">proj_array</span>
+            <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">geometry</span><span class="o">.</span><span class="n">ndim</span> <span class="o">==</span> <span class="mi">3</span><span class="p">:</span>
+                <span class="n">out</span><span class="p">[:]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">swapaxes</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">proj_array</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">proj_space</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+
+            <span class="c1"># Fix scaling to weight by pixel size</span>
+            <span class="k">if</span> <span class="p">(</span>
+                <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">geometry</span><span class="p">,</span> <span class="n">Parallel2dGeometry</span><span class="p">)</span>
+                <span class="ow">and</span> <span class="n">parse_version</span><span class="p">(</span><span class="n">ASTRA_VERSION</span><span class="p">)</span> <span class="o">&lt;</span> <span class="n">parse_version</span><span class="p">(</span><span class="s1">&#39;1.9.9.dev&#39;</span><span class="p">)</span>
+            <span class="p">):</span>
+                <span class="c1"># parallel2d scales with pixel stride</span>
+                <span class="n">out</span> <span class="o">*=</span> <span class="mi">1</span> <span class="o">/</span> <span class="nb">float</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">geometry</span><span class="o">.</span><span class="n">det_partition</span><span class="o">.</span><span class="n">cell_volume</span><span class="p">)</span>
+
+            <span class="k">return</span> <span class="n">out</span>
+
+<div class="viewcode-block" id="AstraCudaImpl.call_backward"><a class="viewcode-back" href="../../../../generated/odl.tomo.backends.astra_cuda.AstraCudaImpl.call_backward.html#odl.tomo.backends.astra_cuda.AstraCudaImpl.call_backward">[docs]</a>    <span class="nd">@_add_default_complex_impl</span>
+    <span class="k">def</span> <span class="nf">call_backward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">out</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_call_backward_real</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">out</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
+
+    <span class="k">def</span> <span class="nf">_call_backward_real</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">proj_data</span><span class="p">,</span> <span class="n">out</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Run an ASTRA back-projection on the given data using the GPU.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        proj_data : ``proj_space.real_space`` element</span>
+<span class="sd">            Projection data to which the back-projector is applied. Although</span>
+<span class="sd">            ``proj_space`` may be complex, this element needs to be real.</span>
+<span class="sd">        out : ``vol_space`` element, optional</span>
+<span class="sd">            Element of the reconstruction space to which the result is written.</span>
+<span class="sd">            If ``None``, an element in ``vol_space`` is created.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        out : ``vol_space`` element</span>
+<span class="sd">            Reconstruction data resulting from the application of the</span>
+<span class="sd">            back-projector. If ``out`` was provided, the returned object is a</span>
+<span class="sd">            reference to it.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">_mutex</span><span class="p">:</span>
+            <span class="k">assert</span> <span class="n">proj_data</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">proj_space</span><span class="o">.</span><span class="n">real_space</span>
+
+            <span class="k">if</span> <span class="n">out</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="k">assert</span> <span class="n">out</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">vol_space</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">out</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">vol_space</span><span class="o">.</span><span class="n">element</span><span class="p">()</span>
+
+            <span class="c1"># Copy data to GPU memory</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">geometry</span><span class="o">.</span><span class="n">ndim</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
+                <span class="n">astra</span><span class="o">.</span><span class="n">data2d</span><span class="o">.</span><span class="n">store</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">sino_id</span><span class="p">,</span> <span class="n">proj_data</span><span class="o">.</span><span class="n">asarray</span><span class="p">())</span>
+            <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">geometry</span><span class="o">.</span><span class="n">ndim</span> <span class="o">==</span> <span class="mi">3</span><span class="p">:</span>
+                <span class="n">shape</span> <span class="o">=</span> <span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,)</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">geometry</span><span class="o">.</span><span class="n">det_partition</span><span class="o">.</span><span class="n">shape</span>
+                <span class="n">reshaped_proj_data</span> <span class="o">=</span> <span class="n">proj_data</span><span class="o">.</span><span class="n">asarray</span><span class="p">()</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">shape</span><span class="p">)</span>
+                <span class="n">swapped_proj_data</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ascontiguousarray</span><span class="p">(</span>
+                    <span class="n">np</span><span class="o">.</span><span class="n">swapaxes</span><span class="p">(</span><span class="n">reshaped_proj_data</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+                <span class="p">)</span>
+                <span class="n">astra</span><span class="o">.</span><span class="n">data3d</span><span class="o">.</span><span class="n">store</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">sino_id</span><span class="p">,</span> <span class="n">swapped_proj_data</span><span class="p">)</span>
+
+            <span class="c1"># Run algorithm</span>
+            <span class="n">astra</span><span class="o">.</span><span class="n">algorithm</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">algo_backward_id</span><span class="p">)</span>
+
+            <span class="c1"># Copy result to CPU memory</span>
+            <span class="n">out</span><span class="p">[:]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">vol_array</span>
+
+            <span class="c1"># Fix scaling to weight by pixel/voxel size</span>
+            <span class="n">out</span> <span class="o">*=</span> <span class="n">astra_cuda_bp_scaling_factor</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">proj_space</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">vol_space</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">geometry</span>
+            <span class="p">)</span>
+
+            <span class="k">return</span> <span class="n">out</span>
+
+    <span class="k">def</span> <span class="fm">__del__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Delete ASTRA objects.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">geometry</span><span class="o">.</span><span class="n">ndim</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
+            <span class="n">adata</span><span class="p">,</span> <span class="n">aproj</span> <span class="o">=</span> <span class="n">astra</span><span class="o">.</span><span class="n">data2d</span><span class="p">,</span> <span class="n">astra</span><span class="o">.</span><span class="n">projector</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">adata</span><span class="p">,</span> <span class="n">aproj</span> <span class="o">=</span> <span class="n">astra</span><span class="o">.</span><span class="n">data3d</span><span class="p">,</span> <span class="n">astra</span><span class="o">.</span><span class="n">projector3d</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">algo_forward_id</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">astra</span><span class="o">.</span><span class="n">algorithm</span><span class="o">.</span><span class="n">delete</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">algo_forward_id</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">algo_forward_id</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">algo_backward_id</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">astra</span><span class="o">.</span><span class="n">algorithm</span><span class="o">.</span><span class="n">delete</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">algo_backward_id</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">algo_backward_id</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">vol_id</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">adata</span><span class="o">.</span><span class="n">delete</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">vol_id</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">vol_id</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">sino_id</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">adata</span><span class="o">.</span><span class="n">delete</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">sino_id</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">sino_id</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">proj_id</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">aproj</span><span class="o">.</span><span class="n">delete</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">proj_id</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">proj_id</span> <span class="o">=</span> <span class="kc">None</span></div>
+
+
+<div class="viewcode-block" id="astra_cuda_bp_scaling_factor"><a class="viewcode-back" href="../../../../generated/odl.tomo.backends.astra_cuda.astra_cuda_bp_scaling_factor.html#odl.tomo.backends.astra_cuda.astra_cuda_bp_scaling_factor">[docs]</a><span class="k">def</span> <span class="nf">astra_cuda_bp_scaling_factor</span><span class="p">(</span><span class="n">proj_space</span><span class="p">,</span> <span class="n">vol_space</span><span class="p">,</span> <span class="n">geometry</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Volume scaling accounting for differing adjoint definitions.</span>
+
+<span class="sd">    ASTRA defines the adjoint operator in terms of a fully discrete</span>
+<span class="sd">    setting (transposed &quot;projection matrix&quot;) without any relation to</span>
+<span class="sd">    physical dimensions, which makes a re-scaling necessary to</span>
+<span class="sd">    translate it to spaces with physical dimensions.</span>
+
+<span class="sd">    Behavior of ASTRA changes slightly between versions, so we keep</span>
+<span class="sd">    track of it and adapt the scaling accordingly.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># Angular integration weighting factor</span>
+    <span class="c1"># angle interval weight by approximate cell volume</span>
+    <span class="n">angle_extent</span> <span class="o">=</span> <span class="n">geometry</span><span class="o">.</span><span class="n">motion_partition</span><span class="o">.</span><span class="n">extent</span>
+    <span class="n">num_angles</span> <span class="o">=</span> <span class="n">geometry</span><span class="o">.</span><span class="n">motion_partition</span><span class="o">.</span><span class="n">shape</span>
+    <span class="c1"># TODO: this gives the wrong factor for Parallel3dEulerGeometry with</span>
+    <span class="c1"># 2 angles</span>
+    <span class="n">scaling_factor</span> <span class="o">=</span> <span class="p">(</span><span class="n">angle_extent</span> <span class="o">/</span> <span class="n">num_angles</span><span class="p">)</span><span class="o">.</span><span class="n">prod</span><span class="p">()</span>
+
+    <span class="c1"># Correct in case of non-weighted spaces</span>
+    <span class="n">proj_extent</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">proj_space</span><span class="o">.</span><span class="n">partition</span><span class="o">.</span><span class="n">extent</span><span class="o">.</span><span class="n">prod</span><span class="p">())</span>
+    <span class="n">proj_size</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">proj_space</span><span class="o">.</span><span class="n">partition</span><span class="o">.</span><span class="n">size</span><span class="p">)</span>
+    <span class="n">proj_weighting</span> <span class="o">=</span> <span class="n">proj_extent</span> <span class="o">/</span> <span class="n">proj_size</span>
+
+    <span class="n">scaling_factor</span> <span class="o">*=</span> <span class="p">(</span>
+        <span class="n">proj_space</span><span class="o">.</span><span class="n">weighting</span><span class="o">.</span><span class="n">const</span> <span class="o">/</span> <span class="n">proj_weighting</span>
+    <span class="p">)</span>
+    <span class="n">scaling_factor</span> <span class="o">/=</span> <span class="p">(</span>
+        <span class="n">vol_space</span><span class="o">.</span><span class="n">weighting</span><span class="o">.</span><span class="n">const</span> <span class="o">/</span> <span class="n">vol_space</span><span class="o">.</span><span class="n">cell_volume</span>
+    <span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">parse_version</span><span class="p">(</span><span class="n">ASTRA_VERSION</span><span class="p">)</span> <span class="o">&lt;</span> <span class="n">parse_version</span><span class="p">(</span><span class="s1">&#39;1.8rc1&#39;</span><span class="p">):</span>
+        <span class="c1"># Scaling for the old, pre-1.8 behaviour</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">geometry</span><span class="p">,</span> <span class="n">Parallel2dGeometry</span><span class="p">):</span>
+            <span class="c1"># Scales with 1 / cell_volume</span>
+            <span class="n">scaling_factor</span> <span class="o">*=</span> <span class="nb">float</span><span class="p">(</span><span class="n">vol_space</span><span class="o">.</span><span class="n">cell_volume</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">geometry</span><span class="p">,</span> <span class="n">FanBeamGeometry</span><span class="p">)</span>
+              <span class="ow">and</span> <span class="n">geometry</span><span class="o">.</span><span class="n">det_curvature_radius</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">):</span>
+            <span class="c1"># Scales with 1 / cell_volume</span>
+            <span class="n">scaling_factor</span> <span class="o">*=</span> <span class="nb">float</span><span class="p">(</span><span class="n">vol_space</span><span class="o">.</span><span class="n">cell_volume</span><span class="p">)</span>
+            <span class="c1"># Additional magnification correction</span>
+            <span class="n">src_radius</span> <span class="o">=</span> <span class="n">geometry</span><span class="o">.</span><span class="n">src_radius</span>
+            <span class="n">det_radius</span> <span class="o">=</span> <span class="n">geometry</span><span class="o">.</span><span class="n">det_radius</span>
+            <span class="n">scaling_factor</span> <span class="o">*=</span> <span class="p">((</span><span class="n">src_radius</span> <span class="o">+</span> <span class="n">det_radius</span><span class="p">)</span> <span class="o">/</span> <span class="n">src_radius</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">geometry</span><span class="p">,</span> <span class="n">Parallel3dAxisGeometry</span><span class="p">):</span>
+            <span class="c1"># Scales with voxel stride</span>
+            <span class="c1"># In 1.7, only cubic voxels are supported</span>
+            <span class="n">voxel_stride</span> <span class="o">=</span> <span class="n">vol_space</span><span class="o">.</span><span class="n">cell_sides</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="n">scaling_factor</span> <span class="o">/=</span> <span class="nb">float</span><span class="p">(</span><span class="n">voxel_stride</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">geometry</span><span class="p">,</span> <span class="n">ConeBeamGeometry</span><span class="p">)</span>
+              <span class="ow">and</span> <span class="n">geometry</span><span class="o">.</span><span class="n">det_curvature_radius</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">):</span>
+            <span class="c1"># Scales with 1 / cell_volume</span>
+            <span class="c1"># In 1.7, only cubic voxels are supported</span>
+            <span class="n">voxel_stride</span> <span class="o">=</span> <span class="n">vol_space</span><span class="o">.</span><span class="n">cell_sides</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="n">scaling_factor</span> <span class="o">/=</span> <span class="nb">float</span><span class="p">(</span><span class="n">voxel_stride</span><span class="p">)</span>
+            <span class="c1"># Magnification correction</span>
+            <span class="n">src_radius</span> <span class="o">=</span> <span class="n">geometry</span><span class="o">.</span><span class="n">src_radius</span>
+            <span class="n">det_radius</span> <span class="o">=</span> <span class="n">geometry</span><span class="o">.</span><span class="n">det_radius</span>
+            <span class="n">scaling_factor</span> <span class="o">*=</span> <span class="p">((</span><span class="n">src_radius</span> <span class="o">+</span> <span class="n">det_radius</span><span class="p">)</span> <span class="o">/</span> <span class="n">src_radius</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span>
+    <span class="k">elif</span> <span class="n">parse_version</span><span class="p">(</span><span class="n">ASTRA_VERSION</span><span class="p">)</span> <span class="o">&lt;</span> <span class="n">parse_version</span><span class="p">(</span><span class="s1">&#39;1.9.0dev&#39;</span><span class="p">):</span>
+        <span class="c1"># Scaling for the 1.8.x releases</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">geometry</span><span class="p">,</span> <span class="n">Parallel2dGeometry</span><span class="p">):</span>
+            <span class="c1"># Scales with 1 / cell_volume</span>
+            <span class="n">scaling_factor</span> <span class="o">*=</span> <span class="nb">float</span><span class="p">(</span><span class="n">vol_space</span><span class="o">.</span><span class="n">cell_volume</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">geometry</span><span class="p">,</span> <span class="n">FanBeamGeometry</span><span class="p">)</span>
+              <span class="ow">and</span> <span class="n">geometry</span><span class="o">.</span><span class="n">det_curvature_radius</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">):</span>
+            <span class="c1"># Scales with 1 / cell_volume</span>
+            <span class="n">scaling_factor</span> <span class="o">*=</span> <span class="nb">float</span><span class="p">(</span><span class="n">vol_space</span><span class="o">.</span><span class="n">cell_volume</span><span class="p">)</span>
+            <span class="c1"># Magnification correction</span>
+            <span class="n">src_radius</span> <span class="o">=</span> <span class="n">geometry</span><span class="o">.</span><span class="n">src_radius</span>
+            <span class="n">det_radius</span> <span class="o">=</span> <span class="n">geometry</span><span class="o">.</span><span class="n">det_radius</span>
+            <span class="n">scaling_factor</span> <span class="o">*=</span> <span class="p">((</span><span class="n">src_radius</span> <span class="o">+</span> <span class="n">det_radius</span><span class="p">)</span> <span class="o">/</span> <span class="n">src_radius</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">geometry</span><span class="p">,</span> <span class="n">Parallel3dAxisGeometry</span><span class="p">):</span>
+            <span class="c1"># Scales with cell volume</span>
+            <span class="c1"># currently only square voxels are supported</span>
+            <span class="n">scaling_factor</span> <span class="o">/=</span> <span class="n">vol_space</span><span class="o">.</span><span class="n">cell_volume</span>
+        <span class="k">elif</span> <span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">geometry</span><span class="p">,</span> <span class="n">ConeBeamGeometry</span><span class="p">)</span>
+              <span class="ow">and</span> <span class="n">geometry</span><span class="o">.</span><span class="n">det_curvature_radius</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">):</span>
+            <span class="c1"># Scales with cell volume</span>
+            <span class="n">scaling_factor</span> <span class="o">/=</span> <span class="n">vol_space</span><span class="o">.</span><span class="n">cell_volume</span>
+            <span class="c1"># Magnification correction (scaling = 1 / magnification ** 2)</span>
+            <span class="n">src_radius</span> <span class="o">=</span> <span class="n">geometry</span><span class="o">.</span><span class="n">src_radius</span>
+            <span class="n">det_radius</span> <span class="o">=</span> <span class="n">geometry</span><span class="o">.</span><span class="n">det_radius</span>
+            <span class="n">scaling_factor</span> <span class="o">*=</span> <span class="p">((</span><span class="n">src_radius</span> <span class="o">+</span> <span class="n">det_radius</span><span class="p">)</span> <span class="o">/</span> <span class="n">src_radius</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span>
+
+            <span class="c1"># Correction for scaled 1/r^2 factor in ASTRA&#39;s density weighting.</span>
+            <span class="c1"># This compensates for scaled voxels and pixels, as well as a</span>
+            <span class="c1"># missing factor src_radius ** 2 in the ASTRA BP with</span>
+            <span class="c1"># density weighting.</span>
+            <span class="n">det_px_area</span> <span class="o">=</span> <span class="n">geometry</span><span class="o">.</span><span class="n">det_partition</span><span class="o">.</span><span class="n">cell_volume</span>
+            <span class="n">scaling_factor</span> <span class="o">*=</span> <span class="p">(</span>
+                <span class="n">src_radius</span> <span class="o">**</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">det_px_area</span> <span class="o">**</span> <span class="mi">2</span> <span class="o">/</span> <span class="n">vol_space</span><span class="o">.</span><span class="n">cell_volume</span> <span class="o">**</span> <span class="mi">2</span>
+            <span class="p">)</span>
+    <span class="k">elif</span> <span class="n">parse_version</span><span class="p">(</span><span class="n">ASTRA_VERSION</span><span class="p">)</span> <span class="o">&lt;</span> <span class="n">parse_version</span><span class="p">(</span><span class="s1">&#39;1.9.9.dev&#39;</span><span class="p">):</span>
+        <span class="c1"># Scaling for intermediate dev releases between 1.8.3 and 1.9.9.dev</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">geometry</span><span class="p">,</span> <span class="n">Parallel2dGeometry</span><span class="p">):</span>
+            <span class="c1"># Scales with 1 / cell_volume</span>
+            <span class="n">scaling_factor</span> <span class="o">*=</span> <span class="nb">float</span><span class="p">(</span><span class="n">vol_space</span><span class="o">.</span><span class="n">cell_volume</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">geometry</span><span class="p">,</span> <span class="n">FanBeamGeometry</span><span class="p">)</span>
+              <span class="ow">and</span> <span class="n">geometry</span><span class="o">.</span><span class="n">det_curvature_radius</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">):</span>
+            <span class="c1"># Scales with 1 / cell_volume</span>
+            <span class="n">scaling_factor</span> <span class="o">*=</span> <span class="nb">float</span><span class="p">(</span><span class="n">vol_space</span><span class="o">.</span><span class="n">cell_volume</span><span class="p">)</span>
+            <span class="c1"># Magnification correction</span>
+            <span class="n">src_radius</span> <span class="o">=</span> <span class="n">geometry</span><span class="o">.</span><span class="n">src_radius</span>
+            <span class="n">det_radius</span> <span class="o">=</span> <span class="n">geometry</span><span class="o">.</span><span class="n">det_radius</span>
+            <span class="n">scaling_factor</span> <span class="o">*=</span> <span class="p">((</span><span class="n">src_radius</span> <span class="o">+</span> <span class="n">det_radius</span><span class="p">)</span> <span class="o">/</span> <span class="n">src_radius</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">geometry</span><span class="p">,</span> <span class="n">Parallel3dAxisGeometry</span><span class="p">):</span>
+            <span class="c1"># Scales with cell volume</span>
+            <span class="c1"># currently only square voxels are supported</span>
+            <span class="n">scaling_factor</span> <span class="o">/=</span> <span class="n">vol_space</span><span class="o">.</span><span class="n">cell_volume</span>
+        <span class="k">elif</span> <span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">geometry</span><span class="p">,</span> <span class="n">ConeBeamGeometry</span><span class="p">)</span>
+              <span class="ow">and</span> <span class="n">geometry</span><span class="o">.</span><span class="n">det_curvature_radius</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">):</span>
+            <span class="c1"># Scales with cell volume</span>
+            <span class="n">scaling_factor</span> <span class="o">/=</span> <span class="n">vol_space</span><span class="o">.</span><span class="n">cell_volume</span>
+            <span class="c1"># Magnification correction (scaling = 1 / magnification ** 2)</span>
+            <span class="n">src_radius</span> <span class="o">=</span> <span class="n">geometry</span><span class="o">.</span><span class="n">src_radius</span>
+            <span class="n">det_radius</span> <span class="o">=</span> <span class="n">geometry</span><span class="o">.</span><span class="n">det_radius</span>
+            <span class="n">scaling_factor</span> <span class="o">*=</span> <span class="p">((</span><span class="n">src_radius</span> <span class="o">+</span> <span class="n">det_radius</span><span class="p">)</span> <span class="o">/</span> <span class="n">src_radius</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span>
+
+            <span class="c1"># Correction for scaled 1/r^2 factor in ASTRA&#39;s density weighting.</span>
+            <span class="c1"># This compensates for scaled voxels and pixels, as well as a</span>
+            <span class="c1"># missing factor src_radius ** 2 in the ASTRA BP with</span>
+            <span class="c1"># density weighting.</span>
+            <span class="n">det_px_area</span> <span class="o">=</span> <span class="n">geometry</span><span class="o">.</span><span class="n">det_partition</span><span class="o">.</span><span class="n">cell_volume</span>
+            <span class="n">scaling_factor</span> <span class="o">*=</span> <span class="p">(</span><span class="n">src_radius</span> <span class="o">**</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">det_px_area</span> <span class="o">**</span> <span class="mi">2</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="c1"># Scaling for versions since 1.9.9.dev</span>
+        <span class="n">scaling_factor</span> <span class="o">/=</span> <span class="nb">float</span><span class="p">(</span><span class="n">vol_space</span><span class="o">.</span><span class="n">cell_volume</span><span class="p">)</span>
+        <span class="n">scaling_factor</span> <span class="o">*=</span> <span class="nb">float</span><span class="p">(</span><span class="n">geometry</span><span class="o">.</span><span class="n">det_partition</span><span class="o">.</span><span class="n">cell_volume</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">scaling_factor</span></div>
+
+
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s1">&#39;__main__&#39;</span><span class="p">:</span>
+    <span class="kn">from</span> <span class="nn">odl.util.testutils</span> <span class="kn">import</span> <span class="n">run_doctests</span>
+
+    <span class="n">run_doctests</span><span class="p">()</span>
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &#169; Copyright 2014-2020 The ODL Contributors.
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

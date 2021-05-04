@@ -1,0 +1,6 @@
+KullbackLeiblerCrossEntropyConvexConj.adjoint
+========================================================================================
+
+.. currentmodule:: odl.solvers.functional.default_functionals
+
+.. autoproperty:: KullbackLeiblerCrossEntropyConvexConj.adjoint

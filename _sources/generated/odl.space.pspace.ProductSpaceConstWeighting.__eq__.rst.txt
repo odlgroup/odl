@@ -1,0 +1,8 @@
+:orphan:
+
+ProductSpaceConstWeighting.__eq__
+==================================================
+
+.. currentmodule:: odl.space.pspace
+
+.. automethod:: ProductSpaceConstWeighting.__eq__

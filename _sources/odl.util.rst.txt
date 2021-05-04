@@ -1,0 +1,24 @@
+util
+====
+
+Utilities mainly for internal use.
+
+.. currentmodule:: odl.util
+
+
+.. rubric:: Modules
+
+.. toctree::
+   :maxdepth: 2
+
+   odl.util.graphics
+   odl.util.normalize
+   odl.util.npy_compat
+   odl.util.numerics
+   odl.util.testutils
+   odl.util.ufuncs
+   odl.util.utility
+   odl.util.vectorization
+
+
+

@@ -1,0 +1,349 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>PointwiseTensorFieldOperator._call &mdash; odl 1.0.0.dev0 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="PointwiseTensorFieldOperator.derivative" href="odl.operator.tensor_ops.PointwiseTensorFieldOperator.derivative.html" />
+    <link rel="prev" title="PointwiseTensorFieldOperator" href="odl.operator.tensor_ops.PointwiseTensorFieldOperator.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../index.html" class="icon icon-home"> odl
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                1.0.0.dev0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Getting Started</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../getting_started/getting_started.html">Getting Started</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Working with ODL</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../guide/guide.html">User’s guide – selected topics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../math/math.html">Mathematical Background</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Developer zone</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../dev/dev.html">Contributing to ODL</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Useful facts</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../guide/faq.html">Frequently asked questions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../guide/glossary.html">Glossary</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../release_notes.html">Release Notes</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../refs.html">References</a></li>
+</ul>
+<p class="caption"><span class="caption-text">API Reference</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../odl.html">odl</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../odl.contrib.html">contrib</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../odl.deform.html">deform</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../odl.diagnostics.html">diagnostics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../odl.discr.html">discr</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="../odl.operator.html">operator</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="../odl.operator.default_ops.html">default_ops</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../odl.operator.operator.html">operator</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../odl.operator.oputils.html">oputils</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../odl.operator.pspace_ops.html">pspace_ops</a></li>
+<li class="toctree-l3 current"><a class="reference internal" href="../odl.operator.tensor_ops.html">tensor_ops</a><ul class="current">
+<li class="toctree-l4"><a class="reference internal" href="odl.operator.tensor_ops.FlatteningOperator.html">FlatteningOperator</a></li>
+<li class="toctree-l4"><a class="reference internal" href="odl.operator.tensor_ops.MatrixOperator.html">MatrixOperator</a></li>
+<li class="toctree-l4"><a class="reference internal" href="odl.operator.tensor_ops.PointwiseInner.html">PointwiseInner</a></li>
+<li class="toctree-l4"><a class="reference internal" href="odl.operator.tensor_ops.PointwiseInnerAdjoint.html">PointwiseInnerAdjoint</a></li>
+<li class="toctree-l4"><a class="reference internal" href="odl.operator.tensor_ops.PointwiseInnerBase.html">PointwiseInnerBase</a></li>
+<li class="toctree-l4"><a class="reference internal" href="odl.operator.tensor_ops.PointwiseNorm.html">PointwiseNorm</a></li>
+<li class="toctree-l4"><a class="reference internal" href="odl.operator.tensor_ops.PointwiseSum.html">PointwiseSum</a></li>
+<li class="toctree-l4 current"><a class="reference internal" href="odl.operator.tensor_ops.PointwiseTensorFieldOperator.html">PointwiseTensorFieldOperator</a></li>
+<li class="toctree-l4"><a class="reference internal" href="odl.operator.tensor_ops.SamplingOperator.html">SamplingOperator</a></li>
+<li class="toctree-l4"><a class="reference internal" href="odl.operator.tensor_ops.WeightedSumSamplingOperator.html">WeightedSumSamplingOperator</a></li>
+<li class="toctree-l4"><a class="reference internal" href="odl.operator.tensor_ops.is_compatible_space.html">is_compatible_space</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../odl.phantom.html">phantom</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../odl.set.html">set</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../odl.solvers.html">solvers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../odl.space.html">space</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../odl.tomo.html">tomo</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../odl.trafos.html">trafos</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../odl.ufunc_ops.html">ufunc_ops</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../odl.util.html">util</a></li>
+</ul>
+</li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">odl</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="../odl.html">odl</a> &raquo;</li>
+        
+          <li><a href="../odl.operator.html">operator</a> &raquo;</li>
+        
+          <li><a href="../odl.operator.tensor_ops.html">tensor_ops</a> &raquo;</li>
+        
+          <li><a href="odl.operator.tensor_ops.PointwiseTensorFieldOperator.html">PointwiseTensorFieldOperator</a> &raquo;</li>
+        
+      <li>PointwiseTensorFieldOperator._call</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            <a href="../_sources/generated/odl.operator.tensor_ops.PointwiseTensorFieldOperator._call.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="pointwisetensorfieldoperator-call">
+<h1>PointwiseTensorFieldOperator._call<a class="headerlink" href="#pointwisetensorfieldoperator-call" title="Permalink to this headline">¶</a></h1>
+<dl class="py method">
+<dt id="odl.operator.tensor_ops.PointwiseTensorFieldOperator._call">
+<code class="sig-prename descclassname"><span class="pre">PointwiseTensorFieldOperator.</span></code><code class="sig-name descname"><span class="pre">_call</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="pre">self</span></em>, <em class="sig-param"><span class="pre">x</span></em>, <em class="sig-param"><span class="pre">out=None</span></em>, <em class="sig-param"><span class="pre">\*\*kwargs</span></em><span class="sig-paren">)</span><a class="headerlink" href="#odl.operator.tensor_ops.PointwiseTensorFieldOperator._call" title="Permalink to this definition">¶</a></dt>
+<dd><p>Implementation of the operator evaluation.</p>
+<p>This method is the private backend for the evaluation of an
+operator. It needs to match certain signature conventions,
+and its implementation type is inferred from its signature.</p>
+<p>The following signatures are allowed:</p>
+<dl class="simple">
+<dt>Python 2 and 3:</dt><dd><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">_call(self,</span> <span class="pre">x)</span></code>  –&gt;  out-of-place evaluation</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">_call(self,</span> <span class="pre">vec,</span> <span class="pre">out)</span></code>  –&gt;  in-place evaluation</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">_call(self,</span> <span class="pre">x,</span> <span class="pre">out=None)</span></code>   –&gt; both</p></li>
+</ul>
+</dd>
+<dt>Python 3 only:</dt><dd><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">_call(self,</span> <span class="pre">x,</span> <span class="pre">*,</span> <span class="pre">out=None)</span></code> (<code class="docutils literal notranslate"><span class="pre">out</span></code> as keyword-only
+argument)  –&gt; both</p></li>
+</ul>
+</dd>
+</dl>
+<p>For disambiguation, the instance name (the first argument) <strong>must</strong>
+be ‘self’.</p>
+<p>The name of the <code class="docutils literal notranslate"><span class="pre">out</span></code> argument <strong>must</strong> be ‘out’, the second
+argument may have any name.</p>
+<p>Additional variable <code class="docutils literal notranslate"><span class="pre">**kwargs</span></code> and keyword-only arguments
+(Python 3 only) are also allowed.</p>
+<dl class="field-list">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl>
+<dt><strong>x</strong><span class="classifier"><a class="reference internal" href="../guide/glossary.html#term-domain"><code class="xref any std std-term docutils literal notranslate"><span class="pre">domain</span></code></a> <a class="reference internal" href="../guide/glossary.html#term-element-like"><code class="xref any std std-term docutils literal notranslate"><span class="pre">element-like</span></code></a></span></dt><dd><p>Element to which the operator is applied</p>
+</dd>
+<dt><strong>out</strong><span class="classifier"><a class="reference internal" href="../guide/glossary.html#term-range"><code class="xref any std std-term docutils literal notranslate"><span class="pre">range</span></code></a> element, optional</span></dt><dd><p>Element to which the result is written</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><dl>
+<dt><strong>out</strong><span class="classifier"><a class="reference internal" href="../guide/glossary.html#term-range"><code class="xref any std std-term docutils literal notranslate"><span class="pre">range</span></code></a> <a class="reference internal" href="../guide/glossary.html#term-element-like"><code class="xref any std std-term docutils literal notranslate"><span class="pre">element-like</span></code></a></span></dt><dd><p>Result of the evaluation. If <code class="docutils literal notranslate"><span class="pre">out</span></code> was provided, the
+returned object is a reference to it.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+<p class="rubric">Notes</p>
+<p>Some general advice on how to implement operator evaluation:</p>
+<ul class="simple">
+<li><p>If you just write a quick implementation or are not too
+worried about efficiency, it may be easiest to write the
+evaluation <em>out-of-place</em>.</p></li>
+<li><p>We recommend advanced and performance-aware users to implement
+the <em>in-place</em> pattern if the wrapped code supports it.
+In-place evaluation is usually significantly faster since it
+avoids the allocation of new memory and a copy compared to
+out-of-place evaluation.</p></li>
+<li><p>If there is a significant performance gain from implementing
+an out-of-place method separately, use the pattern for both
+(<code class="docutils literal notranslate"><span class="pre">out</span></code> optional) and decide according to the given <code class="docutils literal notranslate"><span class="pre">out</span></code>
+parameter which one to use.</p></li>
+<li><p>If your evaluation code does not support in-place evaluation,
+use the out-of-place pattern.</p></li>
+</ul>
+<p>Note that the public call pattern <code class="docutils literal notranslate"><span class="pre">op()</span></code> using <code class="docutils literal notranslate"><span class="pre">op.__call__</span></code>
+provides a default implementation of the underlying in-place or
+out-of-place call even if you choose the respective other
+pattern.</p>
+<p>See the <a class="reference external" href="https://odlgroup.github.io/odl/guide/in_depth/operator_guide.html">operator guide</a>
+for more info on in-place vs. out-of-place evaluation.</p>
+</dd></dl>
+
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+        <a href="odl.operator.tensor_ops.PointwiseTensorFieldOperator.derivative.html" class="btn btn-neutral float-right" title="PointwiseTensorFieldOperator.derivative" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="odl.operator.tensor_ops.PointwiseTensorFieldOperator.html" class="btn btn-neutral float-left" title="PointwiseTensorFieldOperator" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &#169; Copyright 2014-2020 The ODL Contributors.
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

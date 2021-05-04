@@ -1,0 +1,6 @@
+PointwiseTensorFieldOperator.inverse
+============================================================
+
+.. currentmodule:: odl.operator.tensor_ops
+
+.. autoproperty:: PointwiseTensorFieldOperator.inverse

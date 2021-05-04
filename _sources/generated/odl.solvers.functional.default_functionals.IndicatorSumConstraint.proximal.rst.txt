@@ -1,0 +1,6 @@
+IndicatorSumConstraint.proximal
+==========================================================================
+
+.. currentmodule:: odl.solvers.functional.default_functionals
+
+.. autoproperty:: IndicatorSumConstraint.proximal

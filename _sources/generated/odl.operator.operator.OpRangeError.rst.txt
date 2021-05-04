@@ -1,0 +1,6 @@
+﻿OpRangeError
+==================================
+
+.. currentmodule:: odl.operator.operator
+
+.. autoexception:: OpRangeError

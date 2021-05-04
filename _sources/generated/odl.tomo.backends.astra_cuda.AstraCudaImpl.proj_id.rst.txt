@@ -1,0 +1,6 @@
+AstraCudaImpl.proj_id
+==================================================
+
+.. currentmodule:: odl.tomo.backends.astra_cuda
+
+.. autoattribute:: AstraCudaImpl.proj_id

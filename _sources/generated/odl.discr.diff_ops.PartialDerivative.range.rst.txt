@@ -1,0 +1,6 @@
+PartialDerivative.range
+==========================================
+
+.. currentmodule:: odl.discr.diff_ops
+
+.. autoproperty:: PartialDerivative.range

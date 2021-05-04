@@ -1,0 +1,6 @@
+PointwiseTensorFieldOperator.range
+==========================================================
+
+.. currentmodule:: odl.operator.tensor_ops
+
+.. autoproperty:: PointwiseTensorFieldOperator.range

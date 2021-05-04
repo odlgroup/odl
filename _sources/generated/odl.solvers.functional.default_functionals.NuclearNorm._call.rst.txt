@@ -1,0 +1,8 @@
+:orphan:
+
+NuclearNorm._call
+============================================================
+
+.. currentmodule:: odl.solvers.functional.default_functionals
+
+.. automethod:: NuclearNorm._call

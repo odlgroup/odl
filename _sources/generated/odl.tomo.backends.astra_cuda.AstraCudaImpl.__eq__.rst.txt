@@ -1,0 +1,8 @@
+:orphan:
+
+AstraCudaImpl.__eq__
+=================================================
+
+.. currentmodule:: odl.tomo.backends.astra_cuda
+
+.. automethod:: AstraCudaImpl.__eq__

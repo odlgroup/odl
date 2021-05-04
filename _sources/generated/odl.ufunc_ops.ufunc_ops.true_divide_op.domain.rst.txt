@@ -1,0 +1,6 @@
+true_divide_op.domain
+=============================================
+
+.. currentmodule:: odl.ufunc_ops.ufunc_ops
+
+.. autoproperty:: true_divide_op.domain

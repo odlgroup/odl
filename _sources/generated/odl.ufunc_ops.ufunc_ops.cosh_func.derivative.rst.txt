@@ -1,0 +1,8 @@
+:orphan:
+
+cosh_func.derivative
+============================================
+
+.. currentmodule:: odl.ufunc_ops.ufunc_ops
+
+.. automethod:: cosh_func.derivative

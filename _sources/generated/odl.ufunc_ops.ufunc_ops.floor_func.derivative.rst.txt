@@ -1,0 +1,8 @@
+:orphan:
+
+floor_func.derivative
+=============================================
+
+.. currentmodule:: odl.ufunc_ops.ufunc_ops
+
+.. automethod:: floor_func.derivative

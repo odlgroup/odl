@@ -1,0 +1,6 @@
+WaveletTransform.is_linear
+=============================================
+
+.. currentmodule:: odl.trafos.wavelet
+
+.. autoproperty:: WaveletTransform.is_linear

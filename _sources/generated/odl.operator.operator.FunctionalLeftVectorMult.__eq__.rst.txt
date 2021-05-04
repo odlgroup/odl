@@ -1,0 +1,8 @@
+:orphan:
+
+FunctionalLeftVectorMult.__eq__
+=====================================================
+
+.. currentmodule:: odl.operator.operator
+
+.. automethod:: FunctionalLeftVectorMult.__eq__

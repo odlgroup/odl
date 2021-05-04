@@ -1,0 +1,6 @@
+ScalingFunctional.convex_conj
+========================================================================
+
+.. currentmodule:: odl.solvers.functional.default_functionals
+
+.. autoproperty:: ScalingFunctional.convex_conj

@@ -1,0 +1,6 @@
+IndicatorSimplex.gradient
+====================================================================
+
+.. currentmodule:: odl.solvers.functional.default_functionals
+
+.. autoproperty:: IndicatorSimplex.gradient

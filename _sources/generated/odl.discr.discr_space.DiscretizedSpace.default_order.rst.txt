@@ -1,0 +1,6 @@
+DiscretizedSpace.default_order
+====================================================
+
+.. currentmodule:: odl.discr.discr_space
+
+.. autoproperty:: DiscretizedSpace.default_order

@@ -1,0 +1,6 @@
+PointwiseSum.base_space
+===============================================
+
+.. currentmodule:: odl.operator.tensor_ops
+
+.. autoproperty:: PointwiseSum.base_space

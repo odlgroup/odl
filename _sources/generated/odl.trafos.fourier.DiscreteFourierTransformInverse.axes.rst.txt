@@ -1,0 +1,6 @@
+DiscreteFourierTransformInverse.axes
+=======================================================
+
+.. currentmodule:: odl.trafos.fourier
+
+.. autoproperty:: DiscreteFourierTransformInverse.axes

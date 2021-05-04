@@ -1,0 +1,6 @@
+MatrixOperator.axis
+===========================================
+
+.. currentmodule:: odl.operator.tensor_ops
+
+.. autoproperty:: MatrixOperator.axis

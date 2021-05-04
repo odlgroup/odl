@@ -1,0 +1,6 @@
+ConeBeamGeometry.translation
+=======================================================
+
+.. currentmodule:: odl.tomo.geometry.conebeam
+
+.. autoproperty:: ConeBeamGeometry.translation

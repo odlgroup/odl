@@ -1,0 +1,6 @@
+FunctionalDefaultConvexConjugate.convex_conj
+==============================================================================
+
+.. currentmodule:: odl.solvers.functional.functional
+
+.. autoproperty:: FunctionalDefaultConvexConjugate.convex_conj

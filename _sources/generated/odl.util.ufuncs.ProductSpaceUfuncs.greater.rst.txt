@@ -1,0 +1,8 @@
+:orphan:
+
+ProductSpaceUfuncs.greater
+==========================================
+
+.. currentmodule:: odl.util.ufuncs
+
+.. automethod:: ProductSpaceUfuncs.greater

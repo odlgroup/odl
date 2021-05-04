@@ -1,0 +1,8 @@
+:orphan:
+
+ProductSpaceElement.lincomb
+============================================
+
+.. currentmodule:: odl.space.pspace
+
+.. automethod:: ProductSpaceElement.lincomb

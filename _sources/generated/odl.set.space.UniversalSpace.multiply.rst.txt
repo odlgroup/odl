@@ -1,0 +1,8 @@
+:orphan:
+
+UniversalSpace.multiply
+=====================================
+
+.. currentmodule:: odl.set.space
+
+.. automethod:: UniversalSpace.multiply

@@ -1,0 +1,8 @@
+:orphan:
+
+DistOperator.__call__
+==============================================
+
+.. currentmodule:: odl.operator.default_ops
+
+.. automethod:: DistOperator.__call__

@@ -1,0 +1,22 @@
+discr
+=====
+
+Discretization-related functionality like grids and discrete spaces.
+
+.. currentmodule:: odl.discr
+
+
+.. rubric:: Modules
+
+.. toctree::
+   :maxdepth: 2
+
+   odl.discr.diff_ops
+   odl.discr.discr_ops
+   odl.discr.discr_space
+   odl.discr.discr_utils
+   odl.discr.grid
+   odl.discr.partition
+
+
+

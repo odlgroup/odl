@@ -1,0 +1,8 @@
+:orphan:
+
+sqrt_op.__eq__
+======================================
+
+.. currentmodule:: odl.ufunc_ops.ufunc_ops
+
+.. automethod:: sqrt_op.__eq__

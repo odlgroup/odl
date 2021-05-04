@@ -1,0 +1,8 @@
+:orphan:
+
+ImagPart.derivative
+============================================
+
+.. currentmodule:: odl.operator.default_ops
+
+.. automethod:: ImagPart.derivative

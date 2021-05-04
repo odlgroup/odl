@@ -1,0 +1,8 @@
+:orphan:
+
+multiply_op.__call__
+============================================
+
+.. currentmodule:: odl.ufunc_ops.ufunc_ops
+
+.. automethod:: multiply_op.__call__

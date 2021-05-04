@@ -1,0 +1,495 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>Fourier Transform &mdash; odl 1.0.0.dev0 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/custom.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+        <script src="../../_static/jquery.js"></script>
+        <script src="../../_static/underscore.js"></script>
+        <script src="../../_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="../../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="Solvers" href="../solvers/solvers.html" />
+    <link rel="prev" title="Transformations" href="index.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../index.html" class="icon icon-home"> odl
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                1.0.0.dev0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Getting Started</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../getting_started/getting_started.html">Getting Started</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Working with ODL</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../../guide/guide.html">User’s guide – selected topics</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../math.html">Mathematical Background</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../linear_spaces.html">Linear Spaces</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../discretization.html">Discretizations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../resizing_ops.html">Resizing Operators</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../derivatives_guide.html">On the different notions of derivative</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="index.html">Transformations</a><ul class="current">
+<li class="toctree-l3 current"><a class="current reference internal" href="#">Fourier Transform</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#background">Background</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#discretized-fourier-transform">Discretized Fourier Transform</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#useful-wikipedia-articles">Useful Wikipedia articles</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../solvers/solvers.html">Solvers</a></li>
+</ul>
+</li>
+</ul>
+<p class="caption"><span class="caption-text">Developer zone</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../dev/dev.html">Contributing to ODL</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Useful facts</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../guide/faq.html">Frequently asked questions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../guide/glossary.html">Glossary</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../release_notes.html">Release Notes</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../refs.html">References</a></li>
+</ul>
+<p class="caption"><span class="caption-text">API Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../odl.html">odl</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">odl</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="../math.html">Mathematical Background</a> &raquo;</li>
+        
+          <li><a href="index.html">Transformations</a> &raquo;</li>
+        
+      <li>Fourier Transform</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            <a href="../../_sources/math/trafos/fourier_transform.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="fourier-transform">
+<span id="id1"></span><h1>Fourier Transform<a class="headerlink" href="#fourier-transform" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="background">
+<h2>Background<a class="headerlink" href="#background" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="definition-and-basic-properties">
+<h3>Definition and basic properties<a class="headerlink" href="#definition-and-basic-properties" title="Permalink to this headline">¶</a></h3>
+<p>The <a class="reference external" href="https://en.wikipedia.org/wiki/Fourier_Transform">Fourier Transform</a> (FT) of a function <img class="math" src="../../_images/math/5b7752c757e0b691a80ab8227eadb8a8389dc58a.png" alt="f"/> belonging to the <a class="reference external" href="https://en.wikipedia.org/wiki/Lp_space">Lebesgue Space</a>
+<img class="math" src="../../_images/math/ff7304647243d95959cd19c2424fb9f19e57c8b3.png" alt="L^1(\mathbb{R}, \mathbb{C})"/> is defined as</p>
+<div class="math" id="equation-def-fourier">
+<p><span class="eqno">(1)<a class="headerlink" href="#equation-def-fourier" title="Permalink to this equation">¶</a></span><img src="../../_images/math/9f17cc2f1bedfc81706c0307f069e4abc940ce26.png" alt="\widehat{f}(\xi) = \mathcal{F}(f)(\xi) = (2\pi)^{-\frac{1}{2}}
+\int_{\mathbb{R}} f(x)\ e^{-i x \xi} \, \mathrm{d}x."/></p>
+</div><p>(Note that this definition differs from the one in the linked article by the placement of the
+factor <img class="math" src="../../_images/math/2ef04e0a4bcc5f1840308dabe353cfe6e48632c4.png" alt="2\pi"/>.) By unique continuation, the bounded FT operator can be
+<a class="reference external" href="https://en.wikipedia.org/wiki/Fourier_transform#On_Lp_spaces">extended</a> to
+<img class="math" src="../../_images/math/7431eed8b5479a96451cc0936a01b75f00d5fc7c.png" alt="L^p(\mathbb{R}, \mathbb{C})"/> for <img class="math" src="../../_images/math/0dec1b2d2ab6a0b03bea9832d2560943012bf667.png" alt="p \in [1, 2]"/>, yielding a mapping</p>
+<div class="math">
+<p><img src="../../_images/math/81b1df510a8625a70e32fffde0f7f6831f12dbbb.png" alt="\mathcal{F}: L^p(\mathbb{R}, \mathbb{C}) \longrightarrow L^q(\mathbb{R}, \mathbb{C}),
+\quad q = \frac{p}{p-1},"/></p>
+</div><p>where <img class="math" src="../../_images/math/a5fa84b363f309ebc8fe7db38304541732c7de9a.png" alt="q"/> is the conjugate exponent of <img class="math" src="../../_images/math/141bbefb74014fc5e43499901bf78607ae335583.png" alt="p"/> (for <img class="math" src="../../_images/math/6d6e0dd70a93885338a6116adf156883cd57116c.png" alt="p=1"/> one sets <img class="math" src="../../_images/math/caa097b540c2e94846b74449fec96cec431401cc.png" alt="q=\infty"/>).
+Finite exponents larger than 2 also allow the extension of the operator but require the notion of
+<a class="reference external" href="https://en.wikipedia.org/wiki/Distribution_(mathematics)">Distributions</a> to characterize its range. See <a class="reference internal" href="../../refs.html#sw1971" id="id2"><span>[SW1971]</span></a> for further details.</p>
+<p>The inverse of <img class="math" src="../../_images/math/1c407cadee66a3a40c25f2119e3a8c44f681beb2.png" alt="\mathcal{F}"/> on its range is given by the formula</p>
+<div class="math" id="equation-def-fourier-inverse">
+<p><span class="eqno">(2)<a class="headerlink" href="#equation-def-fourier-inverse" title="Permalink to this equation">¶</a></span><img src="../../_images/math/4ef76206aba7db1170118d60969d0bcf5460cb4f.png" alt="\widetilde{\phi}(x) = \mathcal{F}^{-1}(\phi)(x) = (2\pi)^{-\frac{1}{2}}
+\int_{\mathbb{R}} \phi(\xi)\ e^{i \xi x}\, \mathrm{d}\xi."/></p>
+</div><p>For <img class="math" src="../../_images/math/7c9e5500d7458a5c4c11df5e8c2d2056bf23525f.png" alt="p = 2"/>, the conjugate exponent is <img class="math" src="../../_images/math/6c0eec0c401e8f0ced09d29d3bfd289d0e382544.png" alt="q = 2"/>, and the FT is a unitary
+operator on <img class="math" src="../../_images/math/918864522aa2b972fa0bf85210d1f46ccad436d3.png" alt="L^2(\mathbb{R})"/> according to <a class="reference external" href="https://en.wikipedia.org/wiki/Parseval's_identity">Parseval’s Identity</a></p>
+<div class="math">
+<p><img src="../../_images/math/b40156bdafe81778253549b6c6efb771be6dd847.png" alt="\int_{\mathbb{R}} \lvert f(x)\rvert^2\, \mathrm{d}x =
+\int_{\mathbb{R}} \lvert \widetilde{f}(\xi) \rvert^2\, \mathrm{d}\xi,"/></p>
+</div><p>which implies that its adjoint is its inverse, <img class="math" src="../../_images/math/ea4fa55075589cf4f04a742d4d349cd10dd8ed39.png" alt="\mathcal{F}^* = \mathcal{F}^{-1}"/>.</p>
+</div>
+<div class="section" id="further-properties">
+<h3>Further Properties<a class="headerlink" href="#further-properties" title="Permalink to this headline">¶</a></h3>
+<div class="math" id="equation-fourier-properties">
+<p><span class="eqno">(3)<a class="headerlink" href="#equation-fourier-properties" title="Permalink to this equation">¶</a></span><img src="../../_images/math/93c84972be0a63085d01839bcdba64ea5c6495f6.png" alt="\mathcal{F}^{-1}(\phi) = \mathcal{F}(\check\phi) = \mathcal{F}(\phi)(-\cdot)
+= \overline{\mathcal{F}(\overline{\phi})} = \mathcal{F}^3(\phi),
+\quad \check\phi(x) = \phi(-x),
+
+\mathcal{F}\big(f(\cdot - b)\big)(\xi) = e^{-i b \xi} \widehat{f}(\xi),
+
+\mathcal{F}\big(f(a \cdot)\big)(\xi) = a^{-1} \widehat{f}(a^{-1}\xi),
+
+\frac{\mathrm{d}}{\mathrm{d} \xi} \widehat{f}(\xi) = \mathcal{F}(-i x f)(\xi)
+
+\mathcal{F}(f')(\xi) = i \xi \widehat{f}(\xi)."/></p>
+</div><p>The first identity implies in particular that for real-valued <img class="math" src="../../_images/math/5b7752c757e0b691a80ab8227eadb8a8389dc58a.png" alt="f"/>, it is
+<img class="math" src="../../_images/math/0d7f0dfc24d670bdc4bcd638f831f2ed5ea625f2.png" alt="\overline{\mathcal{F}(\phi)}(\xi) = \mathcal{F}(\phi)(-\xi)"/>, i.e. the FT is
+completely known already from the its values in a half-space only. This property is later exploited
+to reduce storage.</p>
+<p>In <img class="math" src="../../_images/math/badad346f6fbe2e237af99bfbd9a93a4da53a3da.png" alt="d"/> dimensions, the FT is defined as</p>
+<div class="math">
+<p><img src="../../_images/math/a8423074a7cd33e598c55fbdc5be5e3042ba6116.png" alt="\mathcal{F}(f)(\xi) = (2\pi)^{-\frac{d}{2}}
+\int_{\mathbb{R}^d} f(x)\ e^{-i x^{\mathrm{T}}\xi} \, \mathrm{d}x"/></p>
+</div><p>with the usual inner product <img class="math" src="../../_images/math/304fbdb462b95852c01f69d13b482bb4cb101720.png" alt="x^{\mathrm{T}}\xi = \sum_{k=1}^d x_k \xi_k"/> in
+<img class="math" src="../../_images/math/884e1da60bb111e9150f609e22bf2279198ca3ce.png" alt="\mathbb{R}^d"/>. The identities <a class="reference internal" href="#equation-fourier-properties">(3)</a> also hold in this case with obvious
+modifications.</p>
+</div>
+</div>
+<div class="section" id="discretized-fourier-transform">
+<h2>Discretized Fourier Transform<a class="headerlink" href="#discretized-fourier-transform" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="general-case">
+<h3>General case<a class="headerlink" href="#general-case" title="Permalink to this headline">¶</a></h3>
+<p>The approach taken in ODL for the discretization of the FT follows immediately from the way
+<a class="reference internal" href="../discretization.html#discretizations"><span class="std std-ref">Discretizations</span></a> are defined, but the original inspiration for it came from the book
+<a class="reference internal" href="../../refs.html#pre-2007" id="id3"><span>[Pre+2007]</span></a>, Section 13.9 “Computing Fourier Integrals Using the FFT”.</p>
+<p>Discretization of the Fourier transform operator means evaluating the Fourier integral
+<a class="reference internal" href="#equation-def-fourier">(1)</a> on a discretized function</p>
+<div class="math" id="equation-discr-function">
+<p><span class="eqno">(4)<a class="headerlink" href="#equation-discr-function" title="Permalink to this equation">¶</a></span><img src="../../_images/math/8bba37e18ea8d805f627cbc93836c449c9b352bd.png" alt="f(x) = \sum_{k=0}^{n-1} f_k \phi_k(x)"/></p>
+</div><p>with coefficients <img class="math" src="../../_images/math/72d19c18138d74f820279549e308afdabc65a2c3.png" alt="\bar f = (f_0, \dots, f_{n-1}) \in \mathbb{C}^n"/> and functions
+<img class="math" src="../../_images/math/161e44827d793fa4dd27af77f8f203341a2d7a83.png" alt="\phi_0, \dots, \phi_{n-1}"/>. This approach follows from the way , but can be
+We consider in particular functions generated from a single
+kernel <img class="math" src="../../_images/math/fffd2357ee88a9c50ba9e831ed64c39c73d54a07.png" alt="\phi"/> via</p>
+<div class="math">
+<p><img src="../../_images/math/2ce986f2d3b5c93436d641bb224f929d35e77465.png" alt="\phi_k(x) = \phi\left( \frac{x - x_k}{s_k} \right),"/></p>
+</div><p>where <img class="math" src="../../_images/math/6287bd66b537775e07f11d80bc725526c9407988.png" alt="x_0 &lt; \dots &lt; x_{n-1}"/> are sampling points and <img class="math" src="../../_images/math/84247cff1c1de9344b79f8904368f13afb13b8f3.png" alt="s_k &gt; 0"/> scaling factors. Using
+the shift and scaling properties in <a class="reference internal" href="#equation-fourier-properties">(3)</a> yields</p>
+<div class="math" id="equation-discr-fourier-general">
+<p><span class="eqno">(5)<a class="headerlink" href="#equation-discr-fourier-general" title="Permalink to this equation">¶</a></span><img src="../../_images/math/51db368568a6b54917421be83cf484912c7e3cfc.png" alt="\widehat{f}(\xi) = \sum_{k=0}^{n-1} f_k \widehat{\phi_k}(\xi) =
+\sum_{k=0}^{n-1} f_k\, s_k \widehat{\phi}(s_k\xi) e^{-i x_k \xi}."/></p>
+</div><p>There exist methods for the fast approximation of such sums for a general choice of frequency
+samples <img class="math" src="../../_images/math/b56698ce16eca663ba644bfe1ffa9dfd8d793d90.png" alt="\xi_m"/>, e.g. <a class="reference external" href="https://github.com/NFFT/nfft">NFFT</a>.</p>
+</div>
+<div class="section" id="regular-grids">
+<h3>Regular grids<a class="headerlink" href="#regular-grids" title="Permalink to this headline">¶</a></h3>
+<p>For regular grids</p>
+<div class="math" id="equation-regular-grids">
+<p><span class="eqno">(6)<a class="headerlink" href="#equation-regular-grids" title="Permalink to this equation">¶</a></span><img src="../../_images/math/6aca4a9bb40035e19afaa23c6f7ad4ccb5811951.png" alt="x_k = x_0 + ks, \quad \xi_j = \xi_0 + j\sigma,"/></p>
+</div><p>the evaluation of the integral can be written in the form which uses trigonometric sums
+as <a class="reference external" href="http://www.fftw.org/fftw3_doc/What-FFTW-Really-Computes.html">computed in FFTW</a> or <a class="reference external" href="http://docs.scipy.org/doc/numpy/reference/routines.fft.html#implementation-details">in Numpy</a>:</p>
+<div class="math" id="equation-fft-sum">
+<p><span class="eqno">(7)<a class="headerlink" href="#equation-fft-sum" title="Permalink to this equation">¶</a></span><img src="../../_images/math/6798decda6bb7fb96d9c681ef5ac2694e0034fda.png" alt="\hat f_j = \sum_{k=0}^{n-1} f_k e^{-i 2\pi jk/n}."/></p>
+</div><p>Hence, the Fourier integral evaluation can be built around established libraries with simple pre-
+and post-processing steps.</p>
+<p>With regular grids, the discretized integral <a class="reference internal" href="#equation-discr-fourier-general">(5)</a> evaluated at
+<img class="math" src="../../_images/math/994d751fc7ca49ac7f0c0d8b544898802747bc62.png" alt="\xi = \xi_j"/>, can be expanded to</p>
+<div class="math">
+<p><img src="../../_images/math/db000c08b08b62f687f8a0ed74976b7b425a0609.png" alt="\widehat{f}(\xi_j) = s \widehat{\phi}(s\xi_j) e^{-i x_0\xi_j}
+\sum_{k=0}^{n-1} f_k\, e^{-i k s \xi_0}\, e^{-i jk s\sigma}"/></p>
+</div><p>To reach the form <a class="reference internal" href="#equation-fft-sum">(7)</a>, the factor depending on both indices <img class="math" src="../../_images/math/e3fc28292267f066fee7718c64f4bbfece521f24.png" alt="j"/> and <img class="math" src="../../_images/math/9630132210b904754c9ab272b61cb527d12263ca.png" alt="k"/>
+must agree with the corresponding factor in the FFT sum. This is achieved by setting</p>
+<div class="math" id="equation-reciprocal-stride">
+<p><span class="eqno">(8)<a class="headerlink" href="#equation-reciprocal-stride" title="Permalink to this equation">¶</a></span><img src="../../_images/math/afe432a1743d08339472cf00f36a034f566dc02f.png" alt="\sigma = \frac{2\pi}{ns},"/></p>
+</div><p>finally yielding the representation</p>
+<div class="math" id="equation-discr-fourier-final">
+<p><span class="eqno">(9)<a class="headerlink" href="#equation-discr-fourier-final" title="Permalink to this equation">¶</a></span><img src="../../_images/math/67cc687e43636d0ffd8582e3c81cc909cbbb4063.png" alt="\hat f_j = \widehat{f}(\xi_j) = s \widehat{\phi}(s\xi_j) e^{-i x_0\xi_j}
+\sum_{k=0}^{n-1} f_k\, e^{-i k s \xi_0}\, e^{-i 2\pi jk/n}."/></p>
+</div></div>
+<div class="section" id="choice-of-xi-0">
+<h3>Choice of <img class="math" src="../../_images/math/710c38df5dd4f0b8e783a9d01ab4c8a0d7b39bb3.png" alt="\xi_0"/><a class="headerlink" href="#choice-of-xi-0" title="Permalink to this headline">¶</a></h3>
+<p>There is a certain degree of freedom in the choice of the most negative frequency <img class="math" src="../../_images/math/710c38df5dd4f0b8e783a9d01ab4c8a0d7b39bb3.png" alt="\xi_0"/>.
+Usually one wants to center the Fourier space grid around zero since most information is typically
+concentrated there. Point-symmetric grids are the standard choice, however sometimes one explicitly
+wants to include (for even <img class="math" src="../../_images/math/5a939c5280da7202ca4531f175a7780ad5e1f80a.png" alt="n"/>) or exclude (for odd <img class="math" src="../../_images/math/5a939c5280da7202ca4531f175a7780ad5e1f80a.png" alt="n"/>) the zero frequency from the
+grid, which is achieved by shifting the frequency <img class="math" src="../../_images/math/b7b72214dd58c28d6f5f5751f427c28d3ded698e.png" alt="xi_0"/> by <img class="math" src="../../_images/math/5f7d4871135f502ba6fc81a8053899dd314e3324.png" alt="-\sigma/2"/>. This results in
+two possible choices</p>
+<div class="math">
+<p><img src="../../_images/math/993b41eca11d5bf6d6ba99578b70ca52fa392da1.png" alt="\xi_{0, \mathrm{n}} = -\frac{\pi}{s} + \frac{\pi}{sn} \quad \text{(no shift)},
+
+\xi_{0, \mathrm{s}} = -\frac{\pi}{s} \quad \text{(shift)}."/></p>
+</div><p>For the shifted frequency, the pre-processing factor in the sum in
+<a class="reference internal" href="#equation-discr-fourier-final">(9)</a> can be simplified to</p>
+<div class="math">
+<p><img src="../../_images/math/829be259fd0f368f089d0c05957f5735197afeea.png" alt="e^{-i k s \xi_0} = e^{i k \pi} = (-1)^k,"/></p>
+</div><p>which is favorable for real-valued input <img class="math" src="../../_images/math/6b2ca70c1dfedc12c68330607c8212bd06e0fc7a.png" alt="\bar f"/> since this first operation preserves
+this property. For half-complex transforms, shifting is required.</p>
+</div>
+<div class="section" id="the-factor-widehat-phi-s-xi-j">
+<h3>The factor <img class="math" src="../../_images/math/24ec03b120852d7b73fb72fc6d2154ab42ae4f27.png" alt="\widehat{\phi}(s\xi_j)"/><a class="headerlink" href="#the-factor-widehat-phi-s-xi-j" title="Permalink to this headline">¶</a></h3>
+<p>In <a class="reference internal" href="#equation-discr-fourier-final">(9)</a>, the FT of the kernel <img class="math" src="../../_images/math/fffd2357ee88a9c50ba9e831ed64c39c73d54a07.png" alt="\phi"/> appears as post-processing factor.
+We give the explicit formulas for the two standard discretizations currently used in ODL, which
+are nearest neighbor interpolation</p>
+<div class="math">
+<p><img src="../../_images/math/7e75334a338d4b1e854eb0a6a81dadb799e6e74b.png" alt="\phi_{\mathrm{nn}}(x) =
+\begin{cases}
+    1, &amp; \text{if } -1/2 \leq x &lt; 1/2, \\
+    0, &amp; \text{else,}
+\end{cases}"/></p>
+</div><p>and linear interpolation</p>
+<div class="math">
+<p><img src="../../_images/math/ad1ac689a0b752cf29b0358e550d8d532e8b344b.png" alt="\phi_{\mathrm{lin}}(x) =
+\begin{cases}
+    1 - \lvert x \rvert, &amp; \text{if } -1 \leq x \leq 1, \\
+    0, &amp; \text{else.}
+\end{cases}"/></p>
+</div><p>Their Fourier transforms are given by</p>
+<div class="math">
+<p><img src="../../_images/math/f79abc9d78f596733c68446c30e19890004bf334.png" alt="\widehat{\phi_{\mathrm{nn}}}(\xi) = (2\pi)^{-1/2} \mathrm{sinc}(\xi/2),
+
+\widehat{\phi_{\mathrm{lin}}}(\xi) = (2\pi)^{-1/2} \mathrm{sinc}^2(\xi/2)."/></p>
+</div><p>Since their arguments <img class="math" src="../../_images/math/4c4671c7e9486369e284ef79107d18628b13c90b.png" alt="s\xi_j = s\xi_0 + 2\pi/n"/> lie between <img class="math" src="../../_images/math/1cdf32194709603ce30a209d0b8a6d52bf9f1a02.png" alt="-\pi"/> and <img class="math" src="../../_images/math/9cc8517129c87252edd7fe2e4532af9dcf7a54d9.png" alt="\pi"/>,
+these functions introduce only a slight taper towards higher frequencies given the fact that the
+first zeros lie at <img class="math" src="../../_images/math/8aaa25f0392bb08724efa86b304e4ad1431a49c4.png" alt="\pm 2\pi"/>.</p>
+</div>
+<div class="section" id="inverse-transform">
+<h3>Inverse transform<a class="headerlink" href="#inverse-transform" title="Permalink to this headline">¶</a></h3>
+<p>According to <a class="reference internal" href="#equation-def-fourier-inverse">(2)</a>, the inverse of the continuous Fourier transform is given by
+the same formula as the forward transform <a class="reference internal" href="#equation-def-fourier">(1)</a>, except for a switched sign in the
+complex exponential. Hence, this operator can rather be viewed as a variation of the forward FT,
+and it is implemented via a <code class="docutils literal notranslate"><span class="pre">sign</span></code> parameter in <a class="reference internal" href="../../generated/odl.trafos.fourier.FourierTransform.html#odl.trafos.fourier.FourierTransform" title="odl.trafos.fourier.FourierTransform"><code class="xref any py py-class docutils literal notranslate"><span class="pre">FourierTransform</span></code></a>.</p>
+<p>The inverse of the discretized formula <a class="reference internal" href="#equation-discr-fourier-final">(9)</a> is instead gained directly using
+the identity</p>
+<div class="math" id="equation-trig-sum-delta">
+<p><span class="eqno">(10)<a class="headerlink" href="#equation-trig-sum-delta" title="Permalink to this equation">¶</a></span><img src="../../_images/math/d0dae20ede50afdda3db3102efdfdb6f7c85b924.png" alt="\sum_{j=0}^{N-1} e^{i 2\pi \frac{(l-k)j}{N}}
+&amp;= \sum_{j=0}^{N-1} \Big( e^{i 2\pi \frac{(l-k)}{N}} \Big)^j =
+\begin{cases}
+  N, &amp; \text{if } l = k, \\
+  \frac{1 - e^{i 2\pi (l-k)}}{1 - e^{i 2\pi (l-k)/N}} = 0, &amp; \text{else}
+\end{cases}\\
+&amp;= N\, \delta_{l, k}."/></p>
+</div><p>By dividing <a class="reference internal" href="#equation-discr-fourier-final">(9)</a> with the factor</p>
+<div class="math">
+<p><img src="../../_images/math/89695eaa01d1387d60809e018910e33ff148c0f2.png" alt="\alpha_j = s\widehat{\psi}(s\xi_j)\, e^{- i x_0 \xi_j}"/></p>
+</div><p>before the sum, multiplying with the exponential factor <img class="math" src="../../_images/math/4fa6658008f3977e403882cf207d337a05935841.png" alt="e^{i 2\pi \frac{lj}{N}}"/> and
+summing over <img class="math" src="../../_images/math/e3fc28292267f066fee7718c64f4bbfece521f24.png" alt="j"/>, the coefficients <img class="math" src="../../_images/math/0edac3a6b0973196c5005c560d87e755c0ea5c86.png" alt="f_k"/> can be recovered:</p>
+<div class="math">
+<p><img src="../../_images/math/ca16f7c5719ad6cd53598e02b9aa79d3a67eb2ef.png" alt="\sum_{j=0}^{N-1} \hat f_j\, \frac{1}{\alpha_j}\, e^{i 2\pi \frac{lj}{N}}
+&amp;= \sum_{j=0}^{N-1} \sum_{k=0}^{N-1} \bar f_k\, e^{- i 2\pi \frac{jk}{N}}
+e^{i 2\pi \frac{lj}{N}}
+
+&amp;= \sum_{k=0}^{N-1} \bar f_k\, N \delta_{l,k}
+
+&amp;= N\, \bar f_l."/></p>
+</div><p>Hence, the inversion formula for the discretized FT reads as</p>
+<div class="math" id="equation-discr-fourier-inverse">
+<p><span class="eqno">(11)<a class="headerlink" href="#equation-discr-fourier-inverse" title="Permalink to this equation">¶</a></span><img src="../../_images/math/6c8df8b566b23cedb0e75c42ff17d7bfe6139ecd.png" alt="f_k = e^{i k s\xi_0}\, \frac{1}{N} \sum_{j=0}^{N-1} \hat f_j
+\, \frac{1}{s\widehat{\psi}(s\xi_j)}\, e^{i x_0\xi_j}\, e^{i 2\pi \frac{kj}{N}},"/></p>
+</div><p>which can be calculated in the same manner as the forward FT, basically by switching the roles of
+pre- and post-processing steps and flipping the sign in the complex exponentials.</p>
+</div>
+<div class="section" id="adjoint-operator">
+<h3>Adjoint operator<a class="headerlink" href="#adjoint-operator" title="Permalink to this headline">¶</a></h3>
+<p>If the FT is defined between the complex Hilbert spaces <img class="math" src="../../_images/math/6d6e1001ad81787cb00550dabf31ee000e41a47b.png" alt="L^2(\mathbb{R}, \mathbb{C})"/>,
+one can easily show that the operator is unitary, and therefore its adjoint is equal to the
+inverse.</p>
+<p>However, if the domain is a real space, <img class="math" src="../../_images/math/6d6e1001ad81787cb00550dabf31ee000e41a47b.png" alt="L^2(\mathbb{R}, \mathbb{C})"/>, one cannot even
+speak of a linear operator since the property</p>
+<div class="math">
+<p><img src="../../_images/math/27efa5699b671038a46042b028bd001da181a816.png" alt="\mathcal{F}(\alpha f) = \alpha \mathcal{F}(f)"/></p>
+</div><p>cannot be tested for all <img class="math" src="../../_images/math/48043eeafa29eab9c5b73af37bda6e059c71af82.png" alt="\alpha \in \mathbb{C}"/> as required by the right-hand side, since
+on the left-hand side, <img class="math" src="../../_images/math/f9b7538d5f60500e260bd26c01e163527a354983.png" alt="\alpha f"/> needs to be real. This issue can be remedied by identifying
+the real and imaginary parts in the range with components of a product space element:</p>
+<div class="math">
+<p><img src="../../_images/math/f148cb1eb13373a6cbe46c80b8b6ea89a6f9872c.png" alt="\widetilde{\mathcal{F}}: L^2(\mathbb{R}, \mathbb{R}) \longrightarrow
+\big[L^2(\mathbb{R}, \mathbb{R})\big]^2,
+
+\widetilde{\mathcal{F}}(f) = \big(\Re \big(\mathcal{F}(f)\big), \Im \big(\mathcal{F}(f)\big)\big) =
+\big( \mathcal{F}_{\mathrm{c}}(f), -\mathcal{F}_{\mathrm{s}}(f) \big),"/></p>
+</div><p>where <img class="math" src="../../_images/math/b45ec9413bc7b50dbb4654e6024db3ae45202939.png" alt="\mathcal{F}_{\mathrm{c}}"/> and <img class="math" src="../../_images/math/b54a1ba611f117d51f81b4b6dc95b7f0ce099cf9.png" alt="\mathcal{F}_{\mathrm{s}}"/> are the
+<a class="reference external" href="https://en.wikipedia.org/wiki/Sine_and_cosine_transforms">sine and cosine transforms</a>, respectively. Those two operators are self-adjoint between real
+Hilbert spaces, and thus the adjoint of the above defined transform is given by</p>
+<div class="math">
+<p><img src="../../_images/math/16fd6a35a191f0407ad2bc162189dfd7c4fe3b45.png" alt="\widetilde{\mathcal{F}}^*: \big[L^2(\mathbb{R}, \mathbb{R})\big]^2 \longrightarrow
+L^2(\mathbb{R}, \mathbb{R})
+
+\widetilde{\mathcal{F}}^*(g_1, g_2) = \mathcal{F}_{\mathrm{c}}(g_1) -
+\mathcal{F}_{\mathrm{s}}(g_2)."/></p>
+</div><p>If we compare this result to the “naive” approach of taking the real part of the inverse of the
+complex inverse transform, we get</p>
+<div class="math">
+<p><img src="../../_images/math/c28ab8400c4d7ba2046a6ca7f9bea4c71f5b554b.png" alt="\begin{align*}
+    \Re\big( \mathcal{F}^*(g) \big)
+    &amp;= \Re\big( \mathcal{F}_{\mathrm{c}}(g) + i \mathcal{F}_{\mathrm{s}}(g) \big)\\
+    &amp;= \Re\big( \mathcal{F}_{\mathrm{c}}(\Re g) + i \mathcal{F}_{\mathrm{c}}(\Im g)
+    + i \mathcal{F}_{\mathrm{c}}(\Re g) - \mathcal{F}_{\mathrm{c}}(\Im g) \big)\\
+    &amp;= \mathcal{F}_{\mathrm{c}}(\Re g) - \mathcal{F}_{\mathrm{c}}(\Im g).
+\end{align*}"/></p>
+</div><p>Hence, by identifying <img class="math" src="../../_images/math/25f8a35c23610534eb332be586ac8fc7d391b86d.png" alt="g_1 = \Re g"/> and <img class="math" src="../../_images/math/f109438d34098455f22b891a70a50825489051ed.png" alt="g_2 = \Im g"/>, we see that the result is the
+same. Therefore, using the naive approach for the adjoint operator is justified by this argument.</p>
+</div>
+</div>
+<div class="section" id="useful-wikipedia-articles">
+<h2>Useful Wikipedia articles<a class="headerlink" href="#useful-wikipedia-articles" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li><p><a class="reference external" href="https://en.wikipedia.org/wiki/Fourier_Transform">Fourier Transform</a></p></li>
+<li><p><a class="reference external" href="https://en.wikipedia.org/wiki/Lp_space">Lebesgue Space</a></p></li>
+<li><p><a class="reference external" href="https://en.wikipedia.org/wiki/Distribution_(mathematics)">Distributions</a></p></li>
+<li><p><a class="reference external" href="https://en.wikipedia.org/wiki/Parseval's_identity">Parseval’s Identity</a></p></li>
+</ul>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+        <a href="../solvers/solvers.html" class="btn btn-neutral float-right" title="Solvers" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="index.html" class="btn btn-neutral float-left" title="Transformations" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &#169; Copyright 2014-2020 The ODL Contributors.
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

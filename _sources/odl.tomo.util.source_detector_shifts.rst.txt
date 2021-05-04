@@ -1,0 +1,17 @@
+source_detector_shifts
+======================
+
+Source and detector shifts for divergent beam geometries.
+
+.. currentmodule:: odl.tomo.util.source_detector_shifts
+
+
+
+
+.. rubric:: Functions
+
+.. autosummary::
+   :toctree: generated/
+
+   ~odl.tomo.util.source_detector_shifts.flying_focal_spot
+

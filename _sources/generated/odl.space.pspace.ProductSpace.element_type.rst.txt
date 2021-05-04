@@ -1,0 +1,6 @@
+ProductSpace.element_type
+==========================================
+
+.. currentmodule:: odl.space.pspace
+
+.. autoproperty:: ProductSpace.element_type

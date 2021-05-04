@@ -1,0 +1,8 @@
+:orphan:
+
+UniversalSpace.contains_all
+=========================================
+
+.. currentmodule:: odl.set.space
+
+.. automethod:: UniversalSpace.contains_all

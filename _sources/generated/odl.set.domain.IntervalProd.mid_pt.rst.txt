@@ -1,0 +1,6 @@
+IntervalProd.mid_pt
+==================================
+
+.. currentmodule:: odl.set.domain
+
+.. autoproperty:: IntervalProd.mid_pt

@@ -1,0 +1,602 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>odl.util.normalize &mdash; odl 1.0.0.dev0 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/custom.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../../" src="../../../_static/documentation_options.js"></script>
+        <script src="../../../_static/jquery.js"></script>
+        <script src="../../../_static/underscore.js"></script>
+        <script src="../../../_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="../../../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../../index.html" class="icon icon-home"> odl
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                1.0.0.dev0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Getting Started</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../getting_started/getting_started.html">Getting Started</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Working with ODL</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../guide/guide.html">User’s guide – selected topics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../math/math.html">Mathematical Background</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Developer zone</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../dev/dev.html">Contributing to ODL</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Useful facts</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../guide/faq.html">Frequently asked questions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../guide/glossary.html">Glossary</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../release_notes.html">Release Notes</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../refs.html">References</a></li>
+</ul>
+<p class="caption"><span class="caption-text">API Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../odl.html">odl</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">odl</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="../../index.html">Module code</a> &raquo;</li>
+        
+      <li>odl.util.normalize</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for odl.util.normalize</h1><div class="highlight"><pre>
+<span></span><span class="c1"># Copyright 2014-2019 The ODL contributors</span>
+<span class="c1">#</span>
+<span class="c1"># This file is part of ODL.</span>
+<span class="c1">#</span>
+<span class="c1"># This Source Code Form is subject to the terms of the Mozilla Public License,</span>
+<span class="c1"># v. 2.0. If a copy of the MPL was not distributed with this file, You can</span>
+<span class="c1"># obtain one at https://mozilla.org/MPL/2.0/.</span>
+
+<span class="sd">&quot;&quot;&quot;Utilities for normalization of user input.&quot;&quot;&quot;</span>
+
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">print_function</span><span class="p">,</span> <span class="n">division</span><span class="p">,</span> <span class="n">absolute_import</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+
+
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;normalized_scalar_param_list&#39;</span><span class="p">,</span> <span class="s1">&#39;normalized_index_expression&#39;</span><span class="p">,</span>
+           <span class="s1">&#39;normalized_nodes_on_bdry&#39;</span><span class="p">,</span> <span class="s1">&#39;normalized_axes_tuple&#39;</span><span class="p">,</span>
+           <span class="s1">&#39;safe_int_conv&#39;</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="normalized_scalar_param_list"><a class="viewcode-back" href="../../../generated/odl.util.normalize.normalized_scalar_param_list.html#odl.util.normalize.normalized_scalar_param_list">[docs]</a><span class="k">def</span> <span class="nf">normalized_scalar_param_list</span><span class="p">(</span><span class="n">param</span><span class="p">,</span> <span class="n">length</span><span class="p">,</span> <span class="n">param_conv</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                                 <span class="n">keep_none</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">return_nonconv</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Return a list of given length from a scalar parameter.</span>
+
+<span class="sd">    The typical use case is when a single value or a sequence of</span>
+<span class="sd">    values is accepted as input. This function makes a list from</span>
+<span class="sd">    a given sequence or a list of identical elements from a single</span>
+<span class="sd">    value, with cast to a given parameter type if desired.</span>
+
+<span class="sd">    To distinguish a parameter sequence from a single parameter, the</span>
+<span class="sd">    following rules are applied:</span>
+
+<span class="sd">    * If ``param`` is not a sequence, it is treated as a single</span>
+<span class="sd">      parameter (e.g. ``1``).</span>
+<span class="sd">    * If ``len(param) == length == 1``, then ``param`` is interpreted</span>
+<span class="sd">      as a single parameter (e.g. ``[1]`` or ``&#39;1&#39;``).</span>
+<span class="sd">    * If ``len(param) == length != 1``, then ``param`` is interpreted as</span>
+<span class="sd">      sequence of parameters.</span>
+<span class="sd">    * Otherwise, ``param`` is interpreted as a single parameter.</span>
+
+<span class="sd">    Note that this function is not applicable to parameters which are</span>
+<span class="sd">    themselves iterable (e.g. ``&#39;abc&#39;`` with ``length=3`` will be</span>
+<span class="sd">    interpreted as equivalent to ``[&#39;a&#39;, &#39;b&#39;, &#39;c&#39;]``).</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    param :</span>
+<span class="sd">        Input parameter to turn into a list.</span>
+<span class="sd">    length : nonnegative int</span>
+<span class="sd">        Desired length of the output list.</span>
+<span class="sd">    param_conv : callable, optional</span>
+<span class="sd">        Conversion applied to each list element. ``None`` means no conversion.</span>
+<span class="sd">    keep_none : bool, optional</span>
+<span class="sd">        If ``True``, ``None`` is not converted.</span>
+<span class="sd">    return_nonconv : bool, optional</span>
+<span class="sd">        If ``True``, return also the list where no conversion has been</span>
+<span class="sd">        applied.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    plist : list</span>
+<span class="sd">        Input parameter turned into a list of length ``length``.</span>
+<span class="sd">    nonconv : list</span>
+<span class="sd">        The same as ``plist``, but without conversion. This is only</span>
+<span class="sd">        returned if ``return_nonconv == True``.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    Turn input into a list of given length, possibly by broadcasting.</span>
+<span class="sd">    By default, no conversion is performed.</span>
+
+<span class="sd">    &gt;&gt;&gt; normalized_scalar_param_list((1, 2, 3), 3)</span>
+<span class="sd">    [1, 2, 3]</span>
+<span class="sd">    &gt;&gt;&gt; normalized_scalar_param_list((1, None, 3.0), 3)</span>
+<span class="sd">    [1, None, 3.0]</span>
+
+<span class="sd">    Single parameters are broadcast to the given length.</span>
+
+<span class="sd">    &gt;&gt;&gt; normalized_scalar_param_list(1, 3)</span>
+<span class="sd">    [1, 1, 1]</span>
+<span class="sd">    &gt;&gt;&gt; normalized_scalar_param_list(&#39;10&#39;, 3)</span>
+<span class="sd">    [&#39;10&#39;, &#39;10&#39;, &#39;10&#39;]</span>
+<span class="sd">    &gt;&gt;&gt; normalized_scalar_param_list(None, 3)</span>
+<span class="sd">    [None, None, None]</span>
+
+<span class="sd">    List entries can be explicitly converted using ``param_conv``. If</span>
+<span class="sd">    ``None`` should be kept, set ``keep_none`` to ``True``:</span>
+
+<span class="sd">    &gt;&gt;&gt; normalized_scalar_param_list(1, 3, param_conv=float)</span>
+<span class="sd">    [1.0, 1.0, 1.0]</span>
+<span class="sd">    &gt;&gt;&gt; normalized_scalar_param_list(&#39;10&#39;, 3, param_conv=int)</span>
+<span class="sd">    [10, 10, 10]</span>
+<span class="sd">    &gt;&gt;&gt; normalized_scalar_param_list((1, None, 3.0), 3, param_conv=int,</span>
+<span class="sd">    ...                              keep_none=True)  # default</span>
+<span class="sd">    [1, None, 3]</span>
+
+<span class="sd">    The conversion parameter can be any callable:</span>
+
+<span class="sd">    &gt;&gt;&gt; def myconv(x):</span>
+<span class="sd">    ...     return False if x is None else bool(x)</span>
+<span class="sd">    &gt;&gt;&gt; normalized_scalar_param_list((0, None, 3.0), 3, param_conv=myconv,</span>
+<span class="sd">    ...                              keep_none=False)</span>
+<span class="sd">    [False, False, True]</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">length</span><span class="p">,</span> <span class="n">length_in</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">length</span><span class="p">),</span> <span class="n">length</span>
+    <span class="k">if</span> <span class="n">length</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;`length` must be nonnegative, got </span><span class="si">{}</span><span class="s1">&#39;</span>
+                         <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">length_in</span><span class="p">))</span>
+
+    <span class="n">param</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">param</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">object</span><span class="p">,</span> <span class="n">copy</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">ndmin</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+    <span class="n">nonconv_list</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">broadcast_to</span><span class="p">(</span><span class="n">param</span><span class="p">,</span> <span class="p">(</span><span class="n">length</span><span class="p">,)))</span>
+
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">nonconv_list</span><span class="p">)</span> <span class="o">!=</span> <span class="n">length</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;sequence `param` has length </span><span class="si">{}</span><span class="s1">, expected </span><span class="si">{}</span><span class="s1">&#39;</span>
+                         <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">nonconv_list</span><span class="p">),</span> <span class="n">length</span><span class="p">))</span>
+
+    <span class="k">if</span> <span class="n">param_conv</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">out_list</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">nonconv_list</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">out_list</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">nonconv_list</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">p</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">keep_none</span><span class="p">:</span>
+                <span class="n">out_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">p</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">out_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">param_conv</span><span class="p">(</span><span class="n">p</span><span class="p">))</span>
+
+    <span class="k">if</span> <span class="n">return_nonconv</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">out_list</span><span class="p">,</span> <span class="n">nonconv_list</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">out_list</span></div>
+
+
+<div class="viewcode-block" id="normalized_index_expression"><a class="viewcode-back" href="../../../generated/odl.util.normalize.normalized_index_expression.html#odl.util.normalize.normalized_index_expression">[docs]</a><span class="k">def</span> <span class="nf">normalized_index_expression</span><span class="p">(</span><span class="n">indices</span><span class="p">,</span> <span class="n">shape</span><span class="p">,</span> <span class="n">int_to_slice</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Enable indexing with almost Numpy-like capabilities.</span>
+
+<span class="sd">    Implements the following features:</span>
+
+<span class="sd">    - Usage of general slices and sequences of slices</span>
+<span class="sd">    - Conversion of `Ellipsis` into an adequate number of ``slice(None)``</span>
+<span class="sd">      objects</span>
+<span class="sd">    - Fewer indices than axes by filling up with an `Ellipsis`</span>
+<span class="sd">    - Error checking with respect to a given shape</span>
+<span class="sd">    - Conversion of integer indices into corresponding slices</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    indices : int, `slice`, `Ellipsis` or sequence of these</span>
+<span class="sd">        Index expression to be normalized.</span>
+<span class="sd">    shape : sequence of ints</span>
+<span class="sd">        Target shape for error checking of out-of-bounds indices.</span>
+<span class="sd">        Also needed to determine the number of axes.</span>
+<span class="sd">    int_to_slice : bool, optional</span>
+<span class="sd">        If ``True``, turn integers into corresponding slice objects.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    normalized : tuple of ints or `slice`&#39;s</span>
+<span class="sd">        Normalized index expression</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    Sequences are turned into tuples. We can have at most as many entries</span>
+<span class="sd">    as the length of ``shape``, but fewer are allowed - the remaining</span>
+<span class="sd">    list places are filled up by ``slice(None)``:</span>
+
+<span class="sd">    &gt;&gt;&gt; normalized_index_expression([1, 2, 3], shape=(3, 4, 5))</span>
+<span class="sd">    (1, 2, 3)</span>
+<span class="sd">    &gt;&gt;&gt; normalized_index_expression([1, 2], shape=(3, 4, 5))</span>
+<span class="sd">    (1, 2, slice(None, None, None))</span>
+<span class="sd">    &gt;&gt;&gt; normalized_index_expression([slice(2), 2], shape=(3, 4, 5))</span>
+<span class="sd">    (slice(None, 2, None), 2, slice(None, None, None))</span>
+<span class="sd">    &gt;&gt;&gt; normalized_index_expression([1, Ellipsis], shape=(3, 4, 5))</span>
+<span class="sd">    (1, slice(None, None, None), slice(None, None, None))</span>
+
+<span class="sd">    By default, integer indices are kept. If they should be converted</span>
+<span class="sd">    to slices, use ``int_to_slice=True``. This can be useful to guarantee</span>
+<span class="sd">    that the result of slicing with the returned object is of the same</span>
+<span class="sd">    type as the array into which is sliced and has the same number of</span>
+<span class="sd">    axes:</span>
+
+<span class="sd">    &gt;&gt;&gt; x = np.zeros(shape=(3, 4, 5))</span>
+<span class="sd">    &gt;&gt;&gt; idx1 = normalized_index_expression([1, 2, 3], shape=(3, 4, 5),</span>
+<span class="sd">    ...                                   int_to_slice=True)</span>
+<span class="sd">    &gt;&gt;&gt; idx1</span>
+<span class="sd">    (slice(1, 2, None), slice(2, 3, None), slice(3, 4, None))</span>
+<span class="sd">    &gt;&gt;&gt; x[idx1]</span>
+<span class="sd">    array([[[ 0.]]])</span>
+<span class="sd">    &gt;&gt;&gt; idx2 = normalized_index_expression([1, 2, 3], shape=(3, 4, 5),</span>
+<span class="sd">    ...                                   int_to_slice=False)</span>
+<span class="sd">    &gt;&gt;&gt; idx2</span>
+<span class="sd">    (1, 2, 3)</span>
+<span class="sd">    &gt;&gt;&gt; x[idx2]</span>
+<span class="sd">    0.0</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">ndim</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">shape</span><span class="p">)</span>
+    <span class="c1"># Support indexing with fewer indices as indexing along the first</span>
+    <span class="c1"># corresponding axes. In the other cases, normalize the input.</span>
+    <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">isscalar</span><span class="p">(</span><span class="n">indices</span><span class="p">):</span>
+        <span class="n">indices</span> <span class="o">=</span> <span class="p">[</span><span class="n">indices</span><span class="p">,</span> <span class="bp">Ellipsis</span><span class="p">]</span>
+    <span class="k">elif</span> <span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">indices</span><span class="p">,</span> <span class="nb">slice</span><span class="p">)</span> <span class="ow">or</span> <span class="n">indices</span> <span class="ow">is</span> <span class="bp">Ellipsis</span><span class="p">):</span>
+        <span class="n">indices</span> <span class="o">=</span> <span class="p">[</span><span class="n">indices</span><span class="p">]</span>
+
+    <span class="n">indices</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">indices</span><span class="p">)</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">indices</span><span class="p">)</span> <span class="o">&lt;</span> <span class="n">ndim</span> <span class="ow">and</span> <span class="bp">Ellipsis</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">indices</span><span class="p">:</span>
+        <span class="n">indices</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">Ellipsis</span><span class="p">)</span>
+
+    <span class="c1"># Turn Ellipsis into the correct number of slice(None)</span>
+    <span class="k">if</span> <span class="bp">Ellipsis</span> <span class="ow">in</span> <span class="n">indices</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">indices</span><span class="o">.</span><span class="n">count</span><span class="p">(</span><span class="bp">Ellipsis</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;cannot use more than one Ellipsis.&#39;</span><span class="p">)</span>
+
+        <span class="n">eidx</span> <span class="o">=</span> <span class="n">indices</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="bp">Ellipsis</span><span class="p">)</span>
+        <span class="n">extra_dims</span> <span class="o">=</span> <span class="n">ndim</span> <span class="o">-</span> <span class="nb">len</span><span class="p">(</span><span class="n">indices</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span>
+        <span class="n">indices</span> <span class="o">=</span> <span class="p">(</span><span class="n">indices</span><span class="p">[:</span><span class="n">eidx</span><span class="p">]</span> <span class="o">+</span> <span class="p">[</span><span class="nb">slice</span><span class="p">(</span><span class="kc">None</span><span class="p">)]</span> <span class="o">*</span> <span class="n">extra_dims</span> <span class="o">+</span>
+                   <span class="n">indices</span><span class="p">[</span><span class="n">eidx</span> <span class="o">+</span> <span class="mi">1</span><span class="p">:])</span>
+
+    <span class="c1"># Turn single indices into length-1 slices if desired</span>
+    <span class="k">for</span> <span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">idx</span><span class="p">),</span> <span class="n">n</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="nb">enumerate</span><span class="p">(</span><span class="n">indices</span><span class="p">),</span> <span class="n">shape</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">isscalar</span><span class="p">(</span><span class="n">idx</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">idx</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="n">idx</span> <span class="o">+=</span> <span class="n">n</span>
+
+            <span class="k">if</span> <span class="n">idx</span> <span class="o">&gt;=</span> <span class="n">n</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">IndexError</span><span class="p">(</span><span class="s1">&#39;Index </span><span class="si">{}</span><span class="s1"> is out of bounds for axis &#39;</span>
+                                 <span class="s1">&#39;</span><span class="si">{}</span><span class="s1"> with size </span><span class="si">{}</span><span class="s1">.&#39;</span>
+                                 <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">idx</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="n">n</span><span class="p">))</span>
+            <span class="k">if</span> <span class="n">int_to_slice</span><span class="p">:</span>
+                <span class="n">indices</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="nb">slice</span><span class="p">(</span><span class="n">idx</span><span class="p">,</span> <span class="n">idx</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
+
+    <span class="c1"># Catch most common errors</span>
+    <span class="k">if</span> <span class="nb">any</span><span class="p">(</span><span class="n">s</span><span class="o">.</span><span class="n">start</span> <span class="o">==</span> <span class="n">s</span><span class="o">.</span><span class="n">stop</span> <span class="ow">and</span> <span class="n">s</span><span class="o">.</span><span class="n">start</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">or</span>
+           <span class="n">s</span><span class="o">.</span><span class="n">start</span> <span class="o">==</span> <span class="n">n</span>
+           <span class="k">for</span> <span class="n">s</span><span class="p">,</span> <span class="n">n</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">indices</span><span class="p">,</span> <span class="n">shape</span><span class="p">)</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="nb">slice</span><span class="p">)):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;Slices with empty axes not allowed.&#39;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="kc">None</span> <span class="ow">in</span> <span class="n">indices</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;creating new axes is not supported.&#39;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">indices</span><span class="p">)</span> <span class="o">&gt;</span> <span class="n">ndim</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">IndexError</span><span class="p">(</span><span class="s1">&#39;too may indices: </span><span class="si">{}</span><span class="s1"> &gt; </span><span class="si">{}</span><span class="s1">.&#39;</span>
+                         <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">indices</span><span class="p">),</span> <span class="n">ndim</span><span class="p">))</span>
+
+    <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">indices</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="normalized_nodes_on_bdry"><a class="viewcode-back" href="../../../generated/odl.util.normalize.normalized_nodes_on_bdry.html#odl.util.normalize.normalized_nodes_on_bdry">[docs]</a><span class="k">def</span> <span class="nf">normalized_nodes_on_bdry</span><span class="p">(</span><span class="n">nodes_on_bdry</span><span class="p">,</span> <span class="n">length</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Return a list of 2-tuples of bool from the input parameter.</span>
+
+<span class="sd">    This function is intended to normalize a ``nodes_on_bdry`` parameter</span>
+<span class="sd">    that can be given as a single boolean (global) or as a sequence</span>
+<span class="sd">    (per axis). Each entry of the sequence can either be a single</span>
+<span class="sd">    boolean (global for the axis) or a boolean sequence of length 2.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    nodes_on_bdry : bool or sequence</span>
+<span class="sd">        Input parameter to be normalized according to the above scheme.</span>
+<span class="sd">    length : positive int</span>
+<span class="sd">        Desired length of the returned list.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    normalized : list of 2-tuples of bool</span>
+<span class="sd">        Normalized list with ``length`` entries, each of which is a</span>
+<span class="sd">        2-tuple of boolean values.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    Global for all axes:</span>
+
+<span class="sd">    &gt;&gt;&gt; normalized_nodes_on_bdry(True, length=2)</span>
+<span class="sd">    [(True, True), (True, True)]</span>
+
+<span class="sd">    Global per axis:</span>
+
+<span class="sd">    &gt;&gt;&gt; normalized_nodes_on_bdry([True, False], length=2)</span>
+<span class="sd">    [(True, True), (False, False)]</span>
+
+<span class="sd">    Mixing global and explicit per axis:</span>
+
+<span class="sd">    &gt;&gt;&gt; normalized_nodes_on_bdry([[True, False], False, True], length=3)</span>
+<span class="sd">    [(True, False), (False, False), (True, True)]</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">shape</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">shape</span><span class="p">(</span><span class="n">nodes_on_bdry</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">shape</span> <span class="o">==</span> <span class="p">():</span>
+        <span class="n">out_list</span> <span class="o">=</span> <span class="p">[(</span><span class="nb">bool</span><span class="p">(</span><span class="n">nodes_on_bdry</span><span class="p">),</span> <span class="nb">bool</span><span class="p">(</span><span class="n">nodes_on_bdry</span><span class="p">))]</span> <span class="o">*</span> <span class="n">length</span>
+    <span class="k">elif</span> <span class="n">length</span> <span class="o">==</span> <span class="mi">1</span> <span class="ow">and</span> <span class="n">shape</span> <span class="o">==</span> <span class="p">(</span><span class="mi">2</span><span class="p">,):</span>
+        <span class="n">out_list</span> <span class="o">=</span> <span class="p">[(</span><span class="nb">bool</span><span class="p">(</span><span class="n">nodes_on_bdry</span><span class="p">[</span><span class="mi">0</span><span class="p">]),</span> <span class="nb">bool</span><span class="p">(</span><span class="n">nodes_on_bdry</span><span class="p">[</span><span class="mi">1</span><span class="p">]))]</span>
+    <span class="k">elif</span> <span class="nb">len</span><span class="p">(</span><span class="n">nodes_on_bdry</span><span class="p">)</span> <span class="o">==</span> <span class="n">length</span><span class="p">:</span>
+        <span class="n">out_list</span> <span class="o">=</span> <span class="p">[]</span>
+
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">on_bdry</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">nodes_on_bdry</span><span class="p">):</span>
+            <span class="n">shape_i</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">shape</span><span class="p">(</span><span class="n">on_bdry</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">shape_i</span> <span class="o">==</span> <span class="p">():</span>
+                <span class="n">out_list</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="nb">bool</span><span class="p">(</span><span class="n">on_bdry</span><span class="p">),</span> <span class="nb">bool</span><span class="p">(</span><span class="n">on_bdry</span><span class="p">)))</span>
+            <span class="k">elif</span> <span class="n">shape_i</span> <span class="o">==</span> <span class="p">(</span><span class="mi">2</span><span class="p">,):</span>
+                <span class="n">out_list</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="nb">bool</span><span class="p">(</span><span class="n">on_bdry</span><span class="p">[</span><span class="mi">0</span><span class="p">]),</span> <span class="nb">bool</span><span class="p">(</span><span class="n">on_bdry</span><span class="p">[</span><span class="mi">1</span><span class="p">])))</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;in axis </span><span class="si">{}</span><span class="s1">: `nodes_on_bdry` has shape </span><span class="si">{}</span><span class="s1">, &#39;</span>
+                                 <span class="s1">&#39;expected (2,)&#39;</span>
+                                 <span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">shape_i</span><span class="p">))</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;`nodes_on_bdry` has shape </span><span class="si">{}</span><span class="s1">, expected (</span><span class="si">{}</span><span class="s1">,)&#39;</span>
+                         <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">shape</span><span class="p">,</span> <span class="n">length</span><span class="p">))</span>
+
+    <span class="k">return</span> <span class="n">out_list</span></div>
+
+
+<div class="viewcode-block" id="normalized_axes_tuple"><a class="viewcode-back" href="../../../generated/odl.util.normalize.normalized_axes_tuple.html#odl.util.normalize.normalized_axes_tuple">[docs]</a><span class="k">def</span> <span class="nf">normalized_axes_tuple</span><span class="p">(</span><span class="n">axes</span><span class="p">,</span> <span class="n">ndim</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Return a tuple of ``axes`` converted to positive integers.</span>
+
+<span class="sd">    This function turns negative entries into equivalent positive</span>
+<span class="sd">    ones according to standard Python indexing &quot;from the right&quot;.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    axes : int or sequence of ints</span>
+<span class="sd">        Single integer or integer sequence of arbitrary length.</span>
+<span class="sd">        Duplicate entries are not allowed. All entries must fulfill</span>
+<span class="sd">        ``-ndim &lt;= axis &lt;= ndim - 1``.</span>
+<span class="sd">    ndim : positive int</span>
+<span class="sd">        Number of available axes determining the valid axis range.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    axes_list : tuple of ints</span>
+<span class="sd">        The converted tuple of axes.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    Normalizing a sequence of axes:</span>
+
+<span class="sd">    &gt;&gt;&gt; normalized_axes_tuple([0, -1, 2], ndim=3)</span>
+<span class="sd">    (0, 2, 2)</span>
+
+<span class="sd">    Single integer works, too:</span>
+
+<span class="sd">    &gt;&gt;&gt; normalized_axes_tuple(-3, ndim=3)</span>
+<span class="sd">    (0,)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">axes</span><span class="p">,</span> <span class="n">axes_in</span> <span class="o">=</span> <span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">axes</span><span class="p">),),</span> <span class="n">axes</span>
+    <span class="k">except</span> <span class="ne">TypeError</span><span class="p">:</span>
+        <span class="n">axes</span><span class="p">,</span> <span class="n">axes_in</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">axis</span><span class="p">)</span> <span class="k">for</span> <span class="n">axis</span> <span class="ow">in</span> <span class="n">axes</span><span class="p">),</span> <span class="n">axes</span>
+        <span class="k">if</span> <span class="nb">any</span><span class="p">(</span><span class="n">axis</span> <span class="o">!=</span> <span class="n">axis_in</span> <span class="k">for</span> <span class="n">axis</span><span class="p">,</span> <span class="n">axis_in</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">axes</span><span class="p">,</span> <span class="n">axes_in</span><span class="p">)):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;`axes` may only contain integers, got </span><span class="si">{}</span><span class="s1">&#39;</span>
+                             <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">axes_in</span><span class="p">))</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">axes</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">!=</span> <span class="n">axes_in</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;`axes` must be integer or sequence, got </span><span class="si">{}</span><span class="s1">&#39;</span>
+                            <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">axes_in</span><span class="p">))</span>
+
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">axes</span><span class="p">))</span> <span class="o">!=</span> <span class="nb">len</span><span class="p">(</span><span class="n">axes</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;`axes` may not contain duplicate entries&#39;</span><span class="p">)</span>
+
+    <span class="n">ndim</span><span class="p">,</span> <span class="n">ndim_in</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">ndim</span><span class="p">),</span> <span class="n">ndim</span>
+    <span class="k">if</span> <span class="n">ndim</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;`ndim` must be positive, got </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">ndim_in</span><span class="p">))</span>
+
+    <span class="n">axes_arr</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">axes</span><span class="p">)</span>
+    <span class="n">axes_arr</span><span class="p">[</span><span class="n">axes_arr</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">]</span> <span class="o">+=</span> <span class="n">ndim</span>
+    <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">any</span><span class="p">((</span><span class="n">axes_arr</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">)</span> <span class="o">|</span> <span class="p">(</span><span class="n">axes_arr</span> <span class="o">&gt;=</span> <span class="n">ndim</span><span class="p">)):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;all `axes` entries must satisfy -</span><span class="si">{0}</span><span class="s1"> &lt;= axis &lt; </span><span class="si">{0}</span><span class="s1">, &#39;</span>
+                         <span class="s1">&#39;got </span><span class="si">{1}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">ndim</span><span class="p">,</span> <span class="n">axes_in</span><span class="p">))</span>
+
+    <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">axes_arr</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="safe_int_conv"><a class="viewcode-back" href="../../../generated/odl.util.normalize.safe_int_conv.html#odl.util.normalize.safe_int_conv">[docs]</a><span class="k">def</span> <span class="nf">safe_int_conv</span><span class="p">(</span><span class="n">number</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Safely convert a single number to integer.&quot;&quot;&quot;</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="k">return</span> <span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">number</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">int</span><span class="p">,</span> <span class="n">casting</span><span class="o">=</span><span class="s1">&#39;safe&#39;</span><span class="p">))</span>
+    <span class="k">except</span> <span class="ne">TypeError</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;cannot safely convert </span><span class="si">{}</span><span class="s1"> to integer&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">number</span><span class="p">))</span></div>
+
+
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s1">&#39;__main__&#39;</span><span class="p">:</span>
+    <span class="kn">from</span> <span class="nn">odl.util.testutils</span> <span class="kn">import</span> <span class="n">run_doctests</span>
+    <span class="n">run_doctests</span><span class="p">()</span>
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &#169; Copyright 2014-2020 The ODL Contributors.
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

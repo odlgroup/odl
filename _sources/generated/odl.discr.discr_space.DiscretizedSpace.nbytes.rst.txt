@@ -1,0 +1,6 @@
+DiscretizedSpace.nbytes
+=============================================
+
+.. currentmodule:: odl.discr.discr_space
+
+.. autoproperty:: DiscretizedSpace.nbytes

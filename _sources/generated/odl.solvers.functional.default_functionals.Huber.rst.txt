@@ -1,0 +1,44 @@
+﻿Huber
+================================================
+
+.. currentmodule:: odl.solvers.functional.default_functionals
+
+.. autoclass:: Huber
+   :show-inheritance:
+   
+   
+   .. automethod:: __init__
+   
+      
+   
+   .. HACK -- the point here is that we don't want this to appear in the output, but the autosummary should still generate the pages.
+      .. autosummary::
+         :toctree:
+      
+         Huber.__call__
+         Huber.__eq__
+         Huber._call
+         Huber.bregman
+         Huber.derivative
+         Huber.norm
+         Huber.translated
+   
+
+    
+   .. HACK -- the point here is that we don't want this to appear in the output, but the autosummary should still generate the pages.
+      .. autosummary::
+         :toctree:
+      
+         Huber.adjoint
+         Huber.convex_conj
+         Huber.domain
+         Huber.gamma
+         Huber.grad_lipschitz
+         Huber.gradient
+         Huber.inverse
+         Huber.is_functional
+         Huber.is_linear
+         Huber.proximal
+         Huber.range
+   
+   

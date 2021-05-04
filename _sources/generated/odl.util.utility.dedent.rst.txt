@@ -1,0 +1,6 @@
+﻿dedent
+=======================
+
+.. currentmodule:: odl.util.utility
+
+.. autofunction:: dedent

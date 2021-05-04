@@ -1,0 +1,6 @@
+FunctionalQuadraticPerturb.is_functional
+==========================================================================
+
+.. currentmodule:: odl.solvers.functional.functional
+
+.. autoproperty:: FunctionalQuadraticPerturb.is_functional

@@ -1,0 +1,6 @@
+SkImageImpl.proj_space
+======================================================
+
+.. currentmodule:: odl.tomo.backends.skimage_radon
+
+.. autoproperty:: SkImageImpl.proj_space

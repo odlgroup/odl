@@ -1,0 +1,6 @@
+left_shift_op.inverse
+=============================================
+
+.. currentmodule:: odl.ufunc_ops.ufunc_ops
+
+.. autoproperty:: left_shift_op.inverse

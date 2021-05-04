@@ -1,0 +1,8 @@
+:orphan:
+
+Resampling.norm
+===================================
+
+.. currentmodule:: odl.discr.discr_ops
+
+.. automethod:: Resampling.norm

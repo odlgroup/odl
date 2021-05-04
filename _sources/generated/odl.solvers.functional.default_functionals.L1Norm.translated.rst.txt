@@ -1,0 +1,8 @@
+:orphan:
+
+L1Norm.translated
+============================================================
+
+.. currentmodule:: odl.solvers.functional.default_functionals
+
+.. automethod:: L1Norm.translated

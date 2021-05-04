@@ -1,0 +1,369 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>utility &mdash; odl 1.0.0.dev0 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="array_str" href="generated/odl.util.utility.array_str.html" />
+    <link rel="prev" title="wrap_ufunc_productspace" href="generated/odl.util.ufuncs.wrap_ufunc_productspace.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="index.html" class="icon icon-home"> odl
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                1.0.0.dev0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Getting Started</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="getting_started/getting_started.html">Getting Started</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Working with ODL</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="guide/guide.html">User’s guide – selected topics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="math/math.html">Mathematical Background</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Developer zone</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="dev/dev.html">Contributing to ODL</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Useful facts</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="guide/faq.html">Frequently asked questions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="guide/glossary.html">Glossary</a></li>
+<li class="toctree-l1"><a class="reference internal" href="release_notes.html">Release Notes</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="refs.html">References</a></li>
+</ul>
+<p class="caption"><span class="caption-text">API Reference</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="odl.html">odl</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="odl.contrib.html">contrib</a></li>
+<li class="toctree-l2"><a class="reference internal" href="odl.deform.html">deform</a></li>
+<li class="toctree-l2"><a class="reference internal" href="odl.diagnostics.html">diagnostics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="odl.discr.html">discr</a></li>
+<li class="toctree-l2"><a class="reference internal" href="odl.operator.html">operator</a></li>
+<li class="toctree-l2"><a class="reference internal" href="odl.phantom.html">phantom</a></li>
+<li class="toctree-l2"><a class="reference internal" href="odl.set.html">set</a></li>
+<li class="toctree-l2"><a class="reference internal" href="odl.solvers.html">solvers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="odl.space.html">space</a></li>
+<li class="toctree-l2"><a class="reference internal" href="odl.tomo.html">tomo</a></li>
+<li class="toctree-l2"><a class="reference internal" href="odl.trafos.html">trafos</a></li>
+<li class="toctree-l2"><a class="reference internal" href="odl.ufunc_ops.html">ufunc_ops</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="odl.util.html">util</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="odl.util.graphics.html">graphics</a></li>
+<li class="toctree-l3"><a class="reference internal" href="odl.util.normalize.html">normalize</a></li>
+<li class="toctree-l3"><a class="reference internal" href="odl.util.npy_compat.html">npy_compat</a></li>
+<li class="toctree-l3"><a class="reference internal" href="odl.util.numerics.html">numerics</a></li>
+<li class="toctree-l3"><a class="reference internal" href="odl.util.testutils.html">testutils</a></li>
+<li class="toctree-l3"><a class="reference internal" href="odl.util.ufuncs.html">ufuncs</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#">utility</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="generated/odl.util.utility.array_str.html">array_str</a></li>
+<li class="toctree-l4"><a class="reference internal" href="generated/odl.util.utility.attribute_repr_string.html">attribute_repr_string</a></li>
+<li class="toctree-l4"><a class="reference internal" href="generated/odl.util.utility.cache_arguments.html">cache_arguments</a></li>
+<li class="toctree-l4"><a class="reference internal" href="generated/odl.util.utility.complex_dtype.html">complex_dtype</a></li>
+<li class="toctree-l4"><a class="reference internal" href="generated/odl.util.utility.conj_exponent.html">conj_exponent</a></li>
+<li class="toctree-l4"><a class="reference internal" href="generated/odl.util.utility.dedent.html">dedent</a></li>
+<li class="toctree-l4"><a class="reference internal" href="generated/odl.util.utility.dtype_repr.html">dtype_repr</a></li>
+<li class="toctree-l4"><a class="reference internal" href="generated/odl.util.utility.dtype_str.html">dtype_str</a></li>
+<li class="toctree-l4"><a class="reference internal" href="generated/odl.util.utility.indent.html">indent</a></li>
+<li class="toctree-l4"><a class="reference internal" href="generated/odl.util.utility.is_string.html">is_string</a></li>
+<li class="toctree-l4"><a class="reference internal" href="generated/odl.util.utility.method_repr_string.html">method_repr_string</a></li>
+<li class="toctree-l4"><a class="reference internal" href="generated/odl.util.utility.nd_iterator.html">nd_iterator</a></li>
+<li class="toctree-l4"><a class="reference internal" href="generated/odl.util.utility.npy_printoptions.html">npy_printoptions</a></li>
+<li class="toctree-l4"><a class="reference internal" href="generated/odl.util.utility.npy_random_seed.html">npy_random_seed</a></li>
+<li class="toctree-l4"><a class="reference internal" href="generated/odl.util.utility.nullcontext.html">nullcontext</a></li>
+<li class="toctree-l4"><a class="reference internal" href="generated/odl.util.utility.pkg_supports.html">pkg_supports</a></li>
+<li class="toctree-l4"><a class="reference internal" href="generated/odl.util.utility.real_dtype.html">real_dtype</a></li>
+<li class="toctree-l4"><a class="reference internal" href="generated/odl.util.utility.repr_string.html">repr_string</a></li>
+<li class="toctree-l4"><a class="reference internal" href="generated/odl.util.utility.run_from_ipython.html">run_from_ipython</a></li>
+<li class="toctree-l4"><a class="reference internal" href="generated/odl.util.utility.signature_string.html">signature_string</a></li>
+<li class="toctree-l4"><a class="reference internal" href="generated/odl.util.utility.signature_string_parts.html">signature_string_parts</a></li>
+<li class="toctree-l4"><a class="reference internal" href="generated/odl.util.utility.unique.html">unique</a></li>
+<li class="toctree-l4"><a class="reference internal" href="generated/odl.util.utility.writable_array.html">writable_array</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="odl.util.vectorization.html">vectorization</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">odl</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="odl.html">odl</a> &raquo;</li>
+        
+          <li><a href="odl.util.html">util</a> &raquo;</li>
+        
+      <li>utility</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            <a href="_sources/odl.util.utility.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="utility">
+<h1>utility<a class="headerlink" href="#utility" title="Permalink to this headline">¶</a></h1>
+<p>Utilities mainly for internal use.</p>
+<p class="rubric">Functions</p>
+<table class="longtable docutils align-default">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="generated/odl.util.utility.array_str.html#odl.util.utility.array_str" title="odl.util.utility.array_str"><code class="xref py py-obj docutils literal notranslate"><span class="pre">array_str</span></code></a>(a[, nprint])</p></td>
+<td><p>Stringification of an array.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="generated/odl.util.utility.attribute_repr_string.html#odl.util.utility.attribute_repr_string" title="odl.util.utility.attribute_repr_string"><code class="xref py py-obj docutils literal notranslate"><span class="pre">attribute_repr_string</span></code></a>(inst_str, attr_str)</p></td>
+<td><p>Return a repr string for an attribute that respects line width.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="generated/odl.util.utility.cache_arguments.html#odl.util.utility.cache_arguments" title="odl.util.utility.cache_arguments"><code class="xref py py-obj docutils literal notranslate"><span class="pre">cache_arguments</span></code></a>(function)</p></td>
+<td><p>Decorate function to cache the result with given arguments.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="generated/odl.util.utility.complex_dtype.html#odl.util.utility.complex_dtype" title="odl.util.utility.complex_dtype"><code class="xref py py-obj docutils literal notranslate"><span class="pre">complex_dtype</span></code></a>(dtype[, default])</p></td>
+<td><p>Return complex counterpart of <code class="docutils literal notranslate"><span class="pre">dtype</span></code> if existing, else <code class="docutils literal notranslate"><span class="pre">default</span></code>.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="generated/odl.util.utility.conj_exponent.html#odl.util.utility.conj_exponent" title="odl.util.utility.conj_exponent"><code class="xref py py-obj docutils literal notranslate"><span class="pre">conj_exponent</span></code></a>(exp)</p></td>
+<td><p>Conjugate exponent <code class="docutils literal notranslate"><span class="pre">exp</span> <span class="pre">/</span> <span class="pre">(exp</span> <span class="pre">-</span> <span class="pre">1)</span></code>.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="generated/odl.util.utility.dedent.html#odl.util.utility.dedent" title="odl.util.utility.dedent"><code class="xref py py-obj docutils literal notranslate"><span class="pre">dedent</span></code></a>(string[, indent_str, max_levels])</p></td>
+<td><p>Revert the effect of indentation.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="generated/odl.util.utility.dtype_repr.html#odl.util.utility.dtype_repr" title="odl.util.utility.dtype_repr"><code class="xref py py-obj docutils literal notranslate"><span class="pre">dtype_repr</span></code></a>(dtype)</p></td>
+<td><p>Stringify <code class="docutils literal notranslate"><span class="pre">dtype</span></code> for <code class="docutils literal notranslate"><span class="pre">repr</span></code> with default for int and float.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="generated/odl.util.utility.dtype_str.html#odl.util.utility.dtype_str" title="odl.util.utility.dtype_str"><code class="xref py py-obj docutils literal notranslate"><span class="pre">dtype_str</span></code></a>(dtype)</p></td>
+<td><p>Stringify <code class="docutils literal notranslate"><span class="pre">dtype</span></code> for <code class="docutils literal notranslate"><span class="pre">str</span></code> with default for int and float.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="generated/odl.util.utility.indent.html#odl.util.utility.indent" title="odl.util.utility.indent"><code class="xref py py-obj docutils literal notranslate"><span class="pre">indent</span></code></a>(string[, indent_str])</p></td>
+<td><p>Return a copy of <code class="docutils literal notranslate"><span class="pre">string</span></code> indented by <code class="docutils literal notranslate"><span class="pre">indent_str</span></code>.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="generated/odl.util.utility.is_string.html#odl.util.utility.is_string" title="odl.util.utility.is_string"><code class="xref py py-obj docutils literal notranslate"><span class="pre">is_string</span></code></a>(obj)</p></td>
+<td><p>Return <code class="docutils literal notranslate"><span class="pre">True</span></code> if <code class="docutils literal notranslate"><span class="pre">obj</span></code> behaves like a string, <code class="docutils literal notranslate"><span class="pre">False</span></code> else.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="generated/odl.util.utility.method_repr_string.html#odl.util.utility.method_repr_string" title="odl.util.utility.method_repr_string"><code class="xref py py-obj docutils literal notranslate"><span class="pre">method_repr_string</span></code></a>(inst_str, meth_str[, …])</p></td>
+<td><p>Return a repr string for a method that respects line width.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="generated/odl.util.utility.nd_iterator.html#odl.util.utility.nd_iterator" title="odl.util.utility.nd_iterator"><code class="xref py py-obj docutils literal notranslate"><span class="pre">nd_iterator</span></code></a>(shape)</p></td>
+<td><p>Iterator over n-d cube with shape.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="generated/odl.util.utility.npy_printoptions.html#odl.util.utility.npy_printoptions" title="odl.util.utility.npy_printoptions"><code class="xref py py-obj docutils literal notranslate"><span class="pre">npy_printoptions</span></code></a>(\*\*extra_opts)</p></td>
+<td><p>Context manager to temporarily set NumPy print options.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="generated/odl.util.utility.npy_random_seed.html#odl.util.utility.npy_random_seed" title="odl.util.utility.npy_random_seed"><code class="xref py py-obj docutils literal notranslate"><span class="pre">npy_random_seed</span></code></a>(seed)</p></td>
+<td><p>Context manager to temporarily set the NumPy random generator seed.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="generated/odl.util.utility.nullcontext.html#odl.util.utility.nullcontext" title="odl.util.utility.nullcontext"><code class="xref py py-obj docutils literal notranslate"><span class="pre">nullcontext</span></code></a>([enter_result])</p></td>
+<td><p>Backport of the Python &gt;=3.7 trivial context manager.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="generated/odl.util.utility.pkg_supports.html#odl.util.utility.pkg_supports" title="odl.util.utility.pkg_supports"><code class="xref py py-obj docutils literal notranslate"><span class="pre">pkg_supports</span></code></a>(feature, pkg_version, pkg_feat_dict)</p></td>
+<td><p>Return bool indicating whether a package supports <code class="docutils literal notranslate"><span class="pre">feature</span></code>.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="generated/odl.util.utility.real_dtype.html#odl.util.utility.real_dtype" title="odl.util.utility.real_dtype"><code class="xref py py-obj docutils literal notranslate"><span class="pre">real_dtype</span></code></a>(dtype[, default])</p></td>
+<td><p>Return the real counterpart of <code class="docutils literal notranslate"><span class="pre">dtype</span></code> if existing.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="generated/odl.util.utility.repr_string.html#odl.util.utility.repr_string" title="odl.util.utility.repr_string"><code class="xref py py-obj docutils literal notranslate"><span class="pre">repr_string</span></code></a>(outer_string, inner_strings[, …])</p></td>
+<td><p>Return a pretty string for <code class="docutils literal notranslate"><span class="pre">repr</span></code>.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="generated/odl.util.utility.run_from_ipython.html#odl.util.utility.run_from_ipython" title="odl.util.utility.run_from_ipython"><code class="xref py py-obj docutils literal notranslate"><span class="pre">run_from_ipython</span></code></a>()</p></td>
+<td><p>If the process is run from IPython.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="generated/odl.util.utility.signature_string.html#odl.util.utility.signature_string" title="odl.util.utility.signature_string"><code class="xref py py-obj docutils literal notranslate"><span class="pre">signature_string</span></code></a>(posargs, optargs[, sep, mod])</p></td>
+<td><p>Return a stringified signature from given arguments.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="generated/odl.util.utility.signature_string_parts.html#odl.util.utility.signature_string_parts" title="odl.util.utility.signature_string_parts"><code class="xref py py-obj docutils literal notranslate"><span class="pre">signature_string_parts</span></code></a>(posargs, optargs[, mod])</p></td>
+<td><p>Return stringified arguments as tuples.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="generated/odl.util.utility.unique.html#odl.util.utility.unique" title="odl.util.utility.unique"><code class="xref py py-obj docutils literal notranslate"><span class="pre">unique</span></code></a>(seq)</p></td>
+<td><p>Return the unique values in a sequence.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="generated/odl.util.utility.writable_array.html#odl.util.utility.writable_array" title="odl.util.utility.writable_array"><code class="xref py py-obj docutils literal notranslate"><span class="pre">writable_array</span></code></a>(obj, \*\*kwargs)</p></td>
+<td><p>Context manager that casts obj to a <a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.array.html#numpy.array" title="(in NumPy v1.20)"><code class="xref any docutils literal notranslate"><span class="pre">numpy.array</span></code></a> and saves changes.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+        <a href="generated/odl.util.utility.array_str.html" class="btn btn-neutral float-right" title="array_str" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="generated/odl.util.ufuncs.wrap_ufunc_productspace.html" class="btn btn-neutral float-left" title="wrap_ufunc_productspace" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &#169; Copyright 2014-2020 The ODL Contributors.
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

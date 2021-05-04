@@ -1,0 +1,6 @@
+RosenbrockFunctional.domain
+================================================================
+
+.. currentmodule:: odl.solvers.functional.example_funcs
+
+.. autoproperty:: RosenbrockFunctional.domain

@@ -1,0 +1,8 @@
+:orphan:
+
+ProductSpaceUfuncs.absolute
+===========================================
+
+.. currentmodule:: odl.util.ufuncs
+
+.. automethod:: ProductSpaceUfuncs.absolute

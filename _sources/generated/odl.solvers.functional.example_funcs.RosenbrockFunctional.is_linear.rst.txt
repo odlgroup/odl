@@ -1,0 +1,6 @@
+RosenbrockFunctional.is_linear
+===================================================================
+
+.. currentmodule:: odl.solvers.functional.example_funcs
+
+.. autoproperty:: RosenbrockFunctional.is_linear

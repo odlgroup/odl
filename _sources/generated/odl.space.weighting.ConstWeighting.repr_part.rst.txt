@@ -1,0 +1,6 @@
+ConstWeighting.repr_part
+============================================
+
+.. currentmodule:: odl.space.weighting
+
+.. autoproperty:: ConstWeighting.repr_part

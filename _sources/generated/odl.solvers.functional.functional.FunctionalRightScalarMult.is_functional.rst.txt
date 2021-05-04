@@ -1,0 +1,6 @@
+FunctionalRightScalarMult.is_functional
+=========================================================================
+
+.. currentmodule:: odl.solvers.functional.functional
+
+.. autoproperty:: FunctionalRightScalarMult.is_functional

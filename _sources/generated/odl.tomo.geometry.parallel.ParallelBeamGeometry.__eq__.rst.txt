@@ -1,0 +1,8 @@
+:orphan:
+
+ParallelBeamGeometry.__eq__
+======================================================
+
+.. currentmodule:: odl.tomo.geometry.parallel
+
+.. automethod:: ParallelBeamGeometry.__eq__

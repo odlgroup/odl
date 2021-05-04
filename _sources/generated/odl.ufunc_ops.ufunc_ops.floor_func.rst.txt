@@ -1,0 +1,43 @@
+﻿floor_func
+==================================
+
+.. currentmodule:: odl.ufunc_ops.ufunc_ops
+
+.. autoclass:: floor_func
+   :show-inheritance:
+   
+   
+   .. automethod:: __init__
+   
+      
+   
+   .. HACK -- the point here is that we don't want this to appear in the output, but the autosummary should still generate the pages.
+      .. autosummary::
+         :toctree:
+      
+         floor_func.__call__
+         floor_func.__eq__
+         floor_func._call
+         floor_func.bregman
+         floor_func.derivative
+         floor_func.norm
+         floor_func.translated
+   
+
+    
+   .. HACK -- the point here is that we don't want this to appear in the output, but the autosummary should still generate the pages.
+      .. autosummary::
+         :toctree:
+      
+         floor_func.adjoint
+         floor_func.convex_conj
+         floor_func.domain
+         floor_func.grad_lipschitz
+         floor_func.gradient
+         floor_func.inverse
+         floor_func.is_functional
+         floor_func.is_linear
+         floor_func.proximal
+         floor_func.range
+   
+   

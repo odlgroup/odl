@@ -1,0 +1,6 @@
+GroupL1Norm.proximal
+===============================================================
+
+.. currentmodule:: odl.solvers.functional.default_functionals
+
+.. autoproperty:: GroupL1Norm.proximal

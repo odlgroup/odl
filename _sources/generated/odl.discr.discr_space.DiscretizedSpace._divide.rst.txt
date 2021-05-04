@@ -1,0 +1,8 @@
+:orphan:
+
+DiscretizedSpace._divide
+==============================================
+
+.. currentmodule:: odl.discr.discr_space
+
+.. automethod:: DiscretizedSpace._divide

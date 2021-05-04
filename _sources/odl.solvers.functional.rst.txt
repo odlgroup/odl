@@ -1,0 +1,20 @@
+functional
+==========
+
+Implementations of mathematical functionals.
+
+.. currentmodule:: odl.solvers.functional
+
+
+.. rubric:: Modules
+
+.. toctree::
+   :maxdepth: 2
+
+   odl.solvers.functional.default_functionals
+   odl.solvers.functional.derivatives
+   odl.solvers.functional.example_funcs
+   odl.solvers.functional.functional
+
+
+

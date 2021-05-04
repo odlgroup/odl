@@ -1,0 +1,8 @@
+:orphan:
+
+NumpyTensorSpaceArrayWeighting.inner
+==========================================================
+
+.. currentmodule:: odl.space.npy_tensors
+
+.. automethod:: NumpyTensorSpaceArrayWeighting.inner

@@ -1,0 +1,19 @@
+wavelet
+=======
+
+Discrete wavelet transformation on L2 spaces.
+
+.. currentmodule:: odl.trafos.wavelet
+
+
+
+.. rubric:: Classes
+
+.. autosummary::
+   :toctree: generated/
+
+   ~odl.trafos.wavelet.WaveletTransform
+   ~odl.trafos.wavelet.WaveletTransformBase
+   ~odl.trafos.wavelet.WaveletTransformInverse
+
+

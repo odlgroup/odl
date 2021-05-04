@@ -1,0 +1,6 @@
+NumericalGradient.domain
+===========================================================
+
+.. currentmodule:: odl.solvers.functional.derivatives
+
+.. autoproperty:: NumericalGradient.domain

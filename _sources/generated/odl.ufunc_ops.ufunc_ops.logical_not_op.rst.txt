@@ -1,0 +1,37 @@
+﻿logical_not_op
+======================================
+
+.. currentmodule:: odl.ufunc_ops.ufunc_ops
+
+.. autoclass:: logical_not_op
+   :show-inheritance:
+   
+   
+   .. automethod:: __init__
+   
+      
+   
+   .. HACK -- the point here is that we don't want this to appear in the output, but the autosummary should still generate the pages.
+      .. autosummary::
+         :toctree:
+      
+         logical_not_op.__call__
+         logical_not_op.__eq__
+         logical_not_op._call
+         logical_not_op.derivative
+         logical_not_op.norm
+   
+
+    
+   .. HACK -- the point here is that we don't want this to appear in the output, but the autosummary should still generate the pages.
+      .. autosummary::
+         :toctree:
+      
+         logical_not_op.adjoint
+         logical_not_op.domain
+         logical_not_op.inverse
+         logical_not_op.is_functional
+         logical_not_op.is_linear
+         logical_not_op.range
+   
+   

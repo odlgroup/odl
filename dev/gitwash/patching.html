@@ -1,0 +1,380 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>Making a patch &mdash; odl 1.0.0.dev0 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/custom.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+        <script src="../../_static/jquery.js"></script>
+        <script src="../../_static/underscore.js"></script>
+        <script src="../../_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="../../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="Git for development" href="git_development.html" />
+    <link rel="prev" title="Following the latest source" href="following_latest.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../index.html" class="icon icon-home"> odl
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                1.0.0.dev0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Getting Started</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../getting_started/getting_started.html">Getting Started</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Working with ODL</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../guide/guide.html">User’s guide – selected topics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../math/math.html">Mathematical Background</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Developer zone</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../dev.html">Contributing to ODL</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../dev.html#introduction">Introduction</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="../dev.html#contents">Contents</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="../extend.html">Extending ODL</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../document.html">How to document</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../testing.html">Testing in ODL</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../release.html">The ODL release process</a></li>
+<li class="toctree-l3 current"><a class="reference internal" href="index.html">Working with ODL source code</a><ul class="current">
+<li class="toctree-l4"><a class="reference internal" href="git_intro.html">Introduction</a></li>
+<li class="toctree-l4"><a class="reference internal" href="git_install.html">Install Git</a></li>
+<li class="toctree-l4"><a class="reference internal" href="following_latest.html">Following the latest source</a></li>
+<li class="toctree-l4 current"><a class="current reference internal" href="#">Making a patch</a></li>
+<li class="toctree-l4"><a class="reference internal" href="git_development.html">Git for development</a></li>
+<li class="toctree-l4"><a class="reference internal" href="git_resources.html">Git resources</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<p class="caption"><span class="caption-text">Useful facts</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../guide/faq.html">Frequently asked questions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../guide/glossary.html">Glossary</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../release_notes.html">Release Notes</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../refs.html">References</a></li>
+</ul>
+<p class="caption"><span class="caption-text">API Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../odl.html">odl</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">odl</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="../dev.html">Contributing to ODL</a> &raquo;</li>
+        
+          <li><a href="index.html">Working with ODL source code</a> &raquo;</li>
+        
+      <li>Making a patch</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            <a href="../../_sources/dev/gitwash/patching.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="making-a-patch">
+<h1>Making a patch<a class="headerlink" href="#making-a-patch" title="Permalink to this headline">¶</a></h1>
+<p>You’ve discovered a bug or something else you want to change in ODL — excellent!</p>
+<p>You’ve worked out a way to fix it — even better!</p>
+<p>You want to tell us about it — best of all!</p>
+<p>The easiest way is to make a <em>patch</em> or set of patches.  Here we explain how. Making a patch is
+simplest and quickest, but if you’re going to be doing anything more than simple
+quick things, please consider following the <a class="reference internal" href="git_development.html#git-development"><span class="std std-ref">Git for development</span></a> model instead.</p>
+<div class="section" id="making-patches">
+<span id="id1"></span><h2>Making patches<a class="headerlink" href="#making-patches" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="overview">
+<h3>Overview<a class="headerlink" href="#overview" title="Permalink to this headline">¶</a></h3>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>  <span class="c1"># Tell Git who you are</span>
+$ git config --global user.email you@yourdomain.example.com
+$ git config --global user.name <span class="s2">&quot;Your Name Comes Here&quot;</span>
+
+  <span class="c1"># Get the repository if you don&#39;t have it already</span>
+$ git clone https://github.com/odlgroup/odl.git
+
+  <span class="c1"># Make a branch for your patching</span>
+$ <span class="nb">cd</span> odl
+$ git branch the-fix-im-thinking-of
+$ git checkout the-fix-im-thinking-of
+
+  <span class="c1"># hack, hack, hack</span>
+
+  <span class="c1"># Tell Git about any new files you&#39;ve made</span>
+$ git add somewhere/tests/test_my_bug.py
+  <span class="c1"># Commit work in progress as you go</span>
+$ git commit -am <span class="s2">&quot;TST: add tests for Funny bug&quot;</span>
+
+  <span class="c1"># hack hack, hack</span>
+
+$ git commit -am <span class="s2">&quot;BUG: add fix for Funny bug&quot;</span>
+
+  <span class="c1"># Make the patch files</span>
+$ git format-patch -M -C master
+</pre></div>
+</div>
+<p>Then, send the generated patch files to the <a class="reference external" href="mailto:odl&#37;&#52;&#48;math&#46;kth&#46;se">ODL mailing list</a> — where we will thank you
+warmly.</p>
+</div>
+<div class="section" id="in-detail">
+<h3>In detail<a class="headerlink" href="#in-detail" title="Permalink to this headline">¶</a></h3>
+<ol class="arabic">
+<li><p>Tell Git who you are so it can label the commits you’ve made:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$ git config --global user.email you@yourdomain.example.com
+$ git config --global user.name <span class="s2">&quot;Your Name Comes Here&quot;</span>
+</pre></div>
+</div>
+</li>
+<li><p>If you don’t already have one, clone a copy of the ODL repository:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$ git clone https://github.com/odlgroup/odl.git
+$ <span class="nb">cd</span> odl
+</pre></div>
+</div>
+</li>
+<li><p>Make a ‘feature branch’. This will be where you work on your bug fix. It’s nice and safe and
+leaves you with access to an unmodified copy of the code in the main branch (<code class="docutils literal notranslate"><span class="pre">master</span></code>).</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$ git branch the-fix-im-thinking-of
+$ git checkout the-fix-im-thinking-of
+</pre></div>
+</div>
+</li>
+<li><p>Do some edits, and commit them as you go:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>  <span class="c1"># hack, hack, hack</span>
+
+  <span class="c1"># Tell Git about any new files you&#39;ve made</span>
+$ git add somewhere/tests/test_my_bug.py
+  <span class="c1"># commit work in progress as you go</span>
+$ git commit -am <span class="s2">&quot;TST: add tests for Funny bug&quot;</span>
+  <span class="c1"># hack hack, hack</span>
+$ git commit -am <span class="s2">&quot;BUG: add fix for Funny bug&quot;</span>
+</pre></div>
+</div>
+<p>Note the <code class="docutils literal notranslate"><span class="pre">-am</span></code> options to <code class="docutils literal notranslate"><span class="pre">commit</span></code>. The <code class="docutils literal notranslate"><span class="pre">m</span></code> flag just
+signals that you’re going to type a message on the command
+line.  The <code class="docutils literal notranslate"><span class="pre">a</span></code> flag — you can just take on faith —
+or see <a class="reference external" href="http://www.gitready.com/beginner/2009/01/18/the-staging-area.html">why the -a flag?</a>.</p>
+</li>
+<li><p>When you are finished, check you have committed all your
+changes:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$ git status
+</pre></div>
+</div>
+</li>
+<li><p>Finally, turn your commits into patches.  You want all the commits since you branched off from the
+<code class="docutils literal notranslate"><span class="pre">master</span></code> branch:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$ git format-patch -M -C master
+</pre></div>
+</div>
+<p>You will now have several files named after the commits:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="mi">0001</span><span class="o">-</span><span class="n">TST</span><span class="o">-</span><span class="n">add</span><span class="o">-</span><span class="n">tests</span><span class="o">-</span><span class="k">for</span><span class="o">-</span><span class="n">Funny</span><span class="o">-</span><span class="n">bug</span><span class="o">.</span><span class="n">patch</span>
+<span class="mi">0002</span><span class="o">-</span><span class="n">BUG</span><span class="o">-</span><span class="n">add</span><span class="o">-</span><span class="n">fix</span><span class="o">-</span><span class="k">for</span><span class="o">-</span><span class="n">Funny</span><span class="o">-</span><span class="n">bug</span><span class="o">.</span><span class="n">patch</span>
+</pre></div>
+</div>
+<p>Send these files to the <a class="reference external" href="mailto:odl&#37;&#52;&#48;math&#46;kth&#46;se">ODL mailing list</a>.</p>
+</li>
+</ol>
+<p>When you are done, to switch back to the main copy of the code, just return to the <code class="docutils literal notranslate"><span class="pre">master</span></code> branch:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$ git checkout master
+</pre></div>
+</div>
+</div>
+</div>
+<div class="section" id="moving-from-patching-to-development">
+<h2>Moving from patching to development<a class="headerlink" href="#moving-from-patching-to-development" title="Permalink to this headline">¶</a></h2>
+<p>If you find you have done some patches, and you have one or more feature branches, you will probably
+want to switch to development mode. You can do this with the repository you have.</p>
+<p>Fork the <a class="reference external" href="https://github.com/odlgroup/odl">ODL</a> repository on GitHub — see <a class="reference internal" href="forking_hell.html#forking"><span class="std std-ref">Making your own copy (fork) of ODL</span></a>. Then:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>  <span class="c1"># checkout and refresh master branch from main repo</span>
+$ git checkout master
+$ git pull origin master
+  <span class="c1"># rename pointer to main repository to &#39;upstream&#39;</span>
+$ git remote rename origin upstream
+  <span class="c1"># point your repo to default read / write to your fork on GitHub</span>
+$ git remote add myfork git@github.com:your-user-name/odl.git
+  <span class="c1"># push up any branches you&#39;ve made and want to keep</span>
+$ git push myfork the-fix-im-thinking-of
+</pre></div>
+</div>
+<p>Now you can follow the <a class="reference internal" href="development_workflow.html#development-workflow"><span class="std std-ref">Development workflow</span></a>.</p>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+        <a href="git_development.html" class="btn btn-neutral float-right" title="Git for development" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="following_latest.html" class="btn btn-neutral float-left" title="Following the latest source" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &#169; Copyright 2014-2020 The ODL Contributors.
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

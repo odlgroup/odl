@@ -1,0 +1,41 @@
+﻿PointwiseSum
+====================================
+
+.. currentmodule:: odl.operator.tensor_ops
+
+.. autoclass:: PointwiseSum
+   :show-inheritance:
+   
+   
+   .. automethod:: __init__
+   
+      
+   
+   .. HACK -- the point here is that we don't want this to appear in the output, but the autosummary should still generate the pages.
+      .. autosummary::
+         :toctree:
+      
+         PointwiseSum.__call__
+         PointwiseSum.__eq__
+         PointwiseSum._call
+         PointwiseSum.derivative
+         PointwiseSum.norm
+   
+
+    
+   .. HACK -- the point here is that we don't want this to appear in the output, but the autosummary should still generate the pages.
+      .. autosummary::
+         :toctree:
+      
+         PointwiseSum.adjoint
+         PointwiseSum.base_space
+         PointwiseSum.domain
+         PointwiseSum.inverse
+         PointwiseSum.is_functional
+         PointwiseSum.is_linear
+         PointwiseSum.is_weighted
+         PointwiseSum.range
+         PointwiseSum.vecfield
+         PointwiseSum.weights
+   
+   

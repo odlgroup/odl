@@ -1,0 +1,311 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>FourierTransform.init_fftw_plan &mdash; odl 1.0.0.dev0 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="FourierTransform.norm" href="odl.trafos.fourier.FourierTransform.norm.html" />
+    <link rel="prev" title="FourierTransform.derivative" href="odl.trafos.fourier.FourierTransform.derivative.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../index.html" class="icon icon-home"> odl
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                1.0.0.dev0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Getting Started</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../getting_started/getting_started.html">Getting Started</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Working with ODL</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../guide/guide.html">User’s guide – selected topics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../math/math.html">Mathematical Background</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Developer zone</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../dev/dev.html">Contributing to ODL</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Useful facts</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../guide/faq.html">Frequently asked questions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../guide/glossary.html">Glossary</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../release_notes.html">Release Notes</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../refs.html">References</a></li>
+</ul>
+<p class="caption"><span class="caption-text">API Reference</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../odl.html">odl</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../odl.contrib.html">contrib</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../odl.deform.html">deform</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../odl.diagnostics.html">diagnostics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../odl.discr.html">discr</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../odl.operator.html">operator</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../odl.phantom.html">phantom</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../odl.set.html">set</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../odl.solvers.html">solvers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../odl.space.html">space</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../odl.tomo.html">tomo</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="../odl.trafos.html">trafos</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="../odl.trafos.backends.html">backends</a></li>
+<li class="toctree-l3 current"><a class="reference internal" href="../odl.trafos.fourier.html">fourier</a><ul class="current">
+<li class="toctree-l4"><a class="reference internal" href="odl.trafos.fourier.DiscreteFourierTransform.html">DiscreteFourierTransform</a></li>
+<li class="toctree-l4"><a class="reference internal" href="odl.trafos.fourier.DiscreteFourierTransformBase.html">DiscreteFourierTransformBase</a></li>
+<li class="toctree-l4"><a class="reference internal" href="odl.trafos.fourier.DiscreteFourierTransformInverse.html">DiscreteFourierTransformInverse</a></li>
+<li class="toctree-l4 current"><a class="reference internal" href="odl.trafos.fourier.FourierTransform.html">FourierTransform</a></li>
+<li class="toctree-l4"><a class="reference internal" href="odl.trafos.fourier.FourierTransformBase.html">FourierTransformBase</a></li>
+<li class="toctree-l4"><a class="reference internal" href="odl.trafos.fourier.FourierTransformInverse.html">FourierTransformInverse</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../odl.trafos.util.html">util</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../odl.trafos.wavelet.html">wavelet</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../odl.ufunc_ops.html">ufunc_ops</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../odl.util.html">util</a></li>
+</ul>
+</li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">odl</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="../odl.html">odl</a> &raquo;</li>
+        
+          <li><a href="../odl.trafos.html">trafos</a> &raquo;</li>
+        
+          <li><a href="../odl.trafos.fourier.html">fourier</a> &raquo;</li>
+        
+          <li><a href="odl.trafos.fourier.FourierTransform.html">FourierTransform</a> &raquo;</li>
+        
+      <li>FourierTransform.init_fftw_plan</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            <a href="../_sources/generated/odl.trafos.fourier.FourierTransform.init_fftw_plan.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="fouriertransform-init-fftw-plan">
+<h1>FourierTransform.init_fftw_plan<a class="headerlink" href="#fouriertransform-init-fftw-plan" title="Permalink to this headline">¶</a></h1>
+<dl class="py method">
+<dt id="odl.trafos.fourier.FourierTransform.init_fftw_plan">
+<code class="sig-prename descclassname"><span class="pre">FourierTransform.</span></code><code class="sig-name descname"><span class="pre">init_fftw_plan</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="pre">self</span></em>, <em class="sig-param"><span class="pre">planning_effort='measure'</span></em>, <em class="sig-param"><span class="pre">\*\*kwargs</span></em><span class="sig-paren">)</span><a class="headerlink" href="#odl.trafos.fourier.FourierTransform.init_fftw_plan" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initialize the FFTW plan for this transform for later use.</p>
+<p>If the implementation of this operator is not ‘pyfftw’, this
+method should not be called.</p>
+<dl class="field-list">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl>
+<dt><strong>planning_effort</strong><span class="classifier">str, optional</span></dt><dd><p>Flag for the amount of effort put into finding an optimal
+FFTW plan. See the <a class="reference external" href="http://www.fftw.org/fftw3_doc/Planner-Flags.html">FFTW doc on planner flags</a>.
+Options: {‘estimate’, ‘measure’, ‘patient’, ‘exhaustive’}</p>
+</dd>
+<dt><strong>planning_timelimit</strong><span class="classifier">float or <code class="docutils literal notranslate"><span class="pre">None</span></code>, optional</span></dt><dd><p>Limit planning time to roughly this many seconds.
+Default: <code class="docutils literal notranslate"><span class="pre">None</span></code> (no limit)</p>
+</dd>
+<dt><strong>threads</strong><span class="classifier">int, optional</span></dt><dd><p>Number of threads to use. Default: 1</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Raises</dt>
+<dd class="field-even"><dl class="simple">
+<dt>ValueError</dt><dd><p>If <a class="reference internal" href="odl.trafos.fourier.FourierTransform.impl.html#odl.trafos.fourier.FourierTransform.impl" title="odl.trafos.fourier.FourierTransform.impl"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">impl</span></code></a> is not ‘pyfftw’</p>
+</dd>
+</dl>
+</dd>
+</dl>
+<div class="admonition seealso">
+<p class="admonition-title">See also</p>
+<dl class="simple">
+<dt><a class="reference internal" href="odl.trafos.fourier.FourierTransform.clear_fftw_plan.html#odl.trafos.fourier.FourierTransform.clear_fftw_plan" title="odl.trafos.fourier.FourierTransform.clear_fftw_plan"><code class="xref py py-obj docutils literal notranslate"><span class="pre">clear_fftw_plan</span></code></a></dt><dd></dd>
+</dl>
+</div>
+<p class="rubric">Notes</p>
+<p>To save memory, clear the plan when the transform is no longer
+used (the plan stores 2 arrays).</p>
+</dd></dl>
+
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+        <a href="odl.trafos.fourier.FourierTransform.norm.html" class="btn btn-neutral float-right" title="FourierTransform.norm" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="odl.trafos.fourier.FourierTransform.derivative.html" class="btn btn-neutral float-left" title="FourierTransform.derivative" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &#169; Copyright 2014-2020 The ODL Contributors.
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

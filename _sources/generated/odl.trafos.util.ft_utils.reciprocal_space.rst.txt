@@ -1,0 +1,6 @@
+﻿reciprocal_space
+=========================================
+
+.. currentmodule:: odl.trafos.util.ft_utils
+
+.. autofunction:: reciprocal_space

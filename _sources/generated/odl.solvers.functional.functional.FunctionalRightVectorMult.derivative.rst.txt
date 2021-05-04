@@ -1,0 +1,8 @@
+:orphan:
+
+FunctionalRightVectorMult.derivative
+======================================================================
+
+.. currentmodule:: odl.solvers.functional.functional
+
+.. automethod:: FunctionalRightVectorMult.derivative

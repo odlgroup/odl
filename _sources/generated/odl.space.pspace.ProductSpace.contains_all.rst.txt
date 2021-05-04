@@ -1,0 +1,8 @@
+:orphan:
+
+ProductSpace.contains_all
+==========================================
+
+.. currentmodule:: odl.space.pspace
+
+.. automethod:: ProductSpace.contains_all

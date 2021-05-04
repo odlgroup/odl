@@ -1,0 +1,6 @@
+Parallel3dEulerGeometry.det_grid
+===========================================================
+
+.. currentmodule:: odl.tomo.geometry.parallel
+
+.. autoproperty:: Parallel3dEulerGeometry.det_grid

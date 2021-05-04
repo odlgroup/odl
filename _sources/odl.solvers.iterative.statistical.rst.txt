@@ -1,0 +1,19 @@
+statistical
+===========
+
+Maximum Likelihood Expectation Maximization algorithm.
+
+.. currentmodule:: odl.solvers.iterative.statistical
+
+
+
+
+.. rubric:: Functions
+
+.. autosummary::
+   :toctree: generated/
+
+   ~odl.solvers.iterative.statistical.mlem
+   ~odl.solvers.iterative.statistical.osmlem
+   ~odl.solvers.iterative.statistical.poisson_log_likelihood
+

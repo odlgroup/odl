@@ -1,0 +1,8 @@
+:orphan:
+
+DiscretizedSpace.__eq__
+=============================================
+
+.. currentmodule:: odl.discr.discr_space
+
+.. automethod:: DiscretizedSpace.__eq__

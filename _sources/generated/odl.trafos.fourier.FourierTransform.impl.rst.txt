@@ -1,0 +1,6 @@
+FourierTransform.impl
+========================================
+
+.. currentmodule:: odl.trafos.fourier
+
+.. autoproperty:: FourierTransform.impl

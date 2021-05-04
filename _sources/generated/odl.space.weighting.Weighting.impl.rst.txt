@@ -1,0 +1,6 @@
+Weighting.impl
+==================================
+
+.. currentmodule:: odl.space.weighting
+
+.. autoproperty:: Weighting.impl

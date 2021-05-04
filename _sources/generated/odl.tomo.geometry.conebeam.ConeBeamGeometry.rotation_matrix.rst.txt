@@ -1,0 +1,8 @@
+:orphan:
+
+ConeBeamGeometry.rotation_matrix
+===========================================================
+
+.. currentmodule:: odl.tomo.geometry.conebeam
+
+.. automethod:: ConeBeamGeometry.rotation_matrix

@@ -1,0 +1,453 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>RectGrid &mdash; odl 1.0.0.dev0 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="RectGrid.append" href="odl.discr.grid.RectGrid.append.html" />
+    <link rel="prev" title="grid" href="../odl.discr.grid.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../index.html" class="icon icon-home"> odl
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                1.0.0.dev0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Getting Started</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../getting_started/getting_started.html">Getting Started</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Working with ODL</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../guide/guide.html">User’s guide – selected topics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../math/math.html">Mathematical Background</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Developer zone</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../dev/dev.html">Contributing to ODL</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Useful facts</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../guide/faq.html">Frequently asked questions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../guide/glossary.html">Glossary</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../release_notes.html">Release Notes</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../refs.html">References</a></li>
+</ul>
+<p class="caption"><span class="caption-text">API Reference</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../odl.html">odl</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../odl.contrib.html">contrib</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../odl.deform.html">deform</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../odl.diagnostics.html">diagnostics</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="../odl.discr.html">discr</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="../odl.discr.diff_ops.html">diff_ops</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../odl.discr.discr_ops.html">discr_ops</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../odl.discr.discr_space.html">discr_space</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../odl.discr.discr_utils.html">discr_utils</a></li>
+<li class="toctree-l3 current"><a class="reference internal" href="../odl.discr.grid.html">grid</a><ul class="current">
+<li class="toctree-l4 current"><a class="current reference internal" href="#">RectGrid</a></li>
+<li class="toctree-l4"><a class="reference internal" href="odl.discr.grid.sparse_meshgrid.html">sparse_meshgrid</a></li>
+<li class="toctree-l4"><a class="reference internal" href="odl.discr.grid.uniform_grid.html">uniform_grid</a></li>
+<li class="toctree-l4"><a class="reference internal" href="odl.discr.grid.uniform_grid_fromintv.html">uniform_grid_fromintv</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../odl.discr.partition.html">partition</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../odl.operator.html">operator</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../odl.phantom.html">phantom</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../odl.set.html">set</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../odl.solvers.html">solvers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../odl.space.html">space</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../odl.tomo.html">tomo</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../odl.trafos.html">trafos</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../odl.ufunc_ops.html">ufunc_ops</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../odl.util.html">util</a></li>
+</ul>
+</li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">odl</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="../odl.html">odl</a> &raquo;</li>
+        
+          <li><a href="../odl.discr.html">discr</a> &raquo;</li>
+        
+          <li><a href="../odl.discr.grid.html">grid</a> &raquo;</li>
+        
+      <li>RectGrid</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            <a href="../_sources/generated/odl.discr.grid.RectGrid.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="rectgrid">
+<h1>RectGrid<a class="headerlink" href="#rectgrid" title="Permalink to this headline">¶</a></h1>
+<dl class="py class">
+<dt id="odl.discr.grid.RectGrid">
+<em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">odl.discr.grid.</span></code><code class="sig-name descname"><span class="pre">RectGrid</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">coord_vectors</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/odl/discr/grid.html#RectGrid"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#odl.discr.grid.RectGrid" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="odl.set.sets.Set.html#odl.set.sets.Set" title="odl.set.sets.Set"><code class="xref py py-class docutils literal notranslate"><span class="pre">odl.set.sets.Set</span></code></a></p>
+<p>An n-dimensional rectilinear grid.</p>
+<p>A rectilinear grid is the set of points defined by all possible
+combination of coordinates taken from fixed coordinate vectors.</p>
+<p>The storage need for a rectilinear grid is only the sum of the lengths
+of the coordinate vectors, while the total number of points is
+the product of these lengths. This class makes use of that
+sparse storage scheme.</p>
+<p>See <code class="docutils literal notranslate"><span class="pre">Notes</span></code> for details.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Attributes</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><a class="reference internal" href="odl.discr.grid.RectGrid.coord_vectors.html#odl.discr.grid.RectGrid.coord_vectors" title="odl.discr.grid.RectGrid.coord_vectors"><code class="xref py py-obj docutils literal notranslate"><span class="pre">coord_vectors</span></code></a></dt><dd><p>Coordinate vectors of the grid.</p>
+</dd>
+<dt><a class="reference internal" href="odl.discr.grid.RectGrid.examples.html#odl.discr.grid.RectGrid.examples" title="odl.discr.grid.RectGrid.examples"><code class="xref py py-obj docutils literal notranslate"><span class="pre">examples</span></code></a></dt><dd><p>Generator creating name-value pairs of set elements.</p>
+</dd>
+<dt><a class="reference internal" href="odl.discr.grid.RectGrid.extent.html#odl.discr.grid.RectGrid.extent" title="odl.discr.grid.RectGrid.extent"><code class="xref py py-obj docutils literal notranslate"><span class="pre">extent</span></code></a></dt><dd><p>Return the edge lengths of this grid’s minimal bounding box.</p>
+</dd>
+<dt><a class="reference internal" href="odl.discr.grid.RectGrid.is_uniform.html#odl.discr.grid.RectGrid.is_uniform" title="odl.discr.grid.RectGrid.is_uniform"><code class="xref py py-obj docutils literal notranslate"><span class="pre">is_uniform</span></code></a></dt><dd><p><code class="docutils literal notranslate"><span class="pre">True</span></code> if this grid is uniform in all axes, else <code class="docutils literal notranslate"><span class="pre">False</span></code>.</p>
+</dd>
+<dt><a class="reference internal" href="odl.discr.grid.RectGrid.is_uniform_byaxis.html#odl.discr.grid.RectGrid.is_uniform_byaxis" title="odl.discr.grid.RectGrid.is_uniform_byaxis"><code class="xref py py-obj docutils literal notranslate"><span class="pre">is_uniform_byaxis</span></code></a></dt><dd><p>Boolean tuple showing uniformity of this grid per axis.</p>
+</dd>
+<dt><a class="reference internal" href="odl.discr.grid.RectGrid.max_pt.html#odl.discr.grid.RectGrid.max_pt" title="odl.discr.grid.RectGrid.max_pt"><code class="xref py py-obj docutils literal notranslate"><span class="pre">max_pt</span></code></a></dt><dd><p>Vector containing the maximal grid coordinates per axis.</p>
+</dd>
+<dt><a class="reference internal" href="odl.discr.grid.RectGrid.meshgrid.html#odl.discr.grid.RectGrid.meshgrid" title="odl.discr.grid.RectGrid.meshgrid"><code class="xref py py-obj docutils literal notranslate"><span class="pre">meshgrid</span></code></a></dt><dd><p>A grid suitable for function evaluation.</p>
+</dd>
+<dt><a class="reference internal" href="odl.discr.grid.RectGrid.mid_pt.html#odl.discr.grid.RectGrid.mid_pt" title="odl.discr.grid.RectGrid.mid_pt"><code class="xref py py-obj docutils literal notranslate"><span class="pre">mid_pt</span></code></a></dt><dd><p>Midpoint of the grid, not necessarily a grid point.</p>
+</dd>
+<dt><a class="reference internal" href="odl.discr.grid.RectGrid.min_pt.html#odl.discr.grid.RectGrid.min_pt" title="odl.discr.grid.RectGrid.min_pt"><code class="xref py py-obj docutils literal notranslate"><span class="pre">min_pt</span></code></a></dt><dd><p>Vector containing the minimal grid coordinates per axis.</p>
+</dd>
+<dt><a class="reference internal" href="odl.discr.grid.RectGrid.ndim.html#odl.discr.grid.RectGrid.ndim" title="odl.discr.grid.RectGrid.ndim"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ndim</span></code></a></dt><dd><p>Number of dimensions of the grid.</p>
+</dd>
+<dt><a class="reference internal" href="odl.discr.grid.RectGrid.nondegen_byaxis.html#odl.discr.grid.RectGrid.nondegen_byaxis" title="odl.discr.grid.RectGrid.nondegen_byaxis"><code class="xref py py-obj docutils literal notranslate"><span class="pre">nondegen_byaxis</span></code></a></dt><dd><p>Boolean array with <code class="docutils literal notranslate"><span class="pre">True</span></code> entries for non-degenerate axes.</p>
+</dd>
+<dt><a class="reference internal" href="odl.discr.grid.RectGrid.shape.html#odl.discr.grid.RectGrid.shape" title="odl.discr.grid.RectGrid.shape"><code class="xref py py-obj docutils literal notranslate"><span class="pre">shape</span></code></a></dt><dd><p>Number of grid points per axis.</p>
+</dd>
+<dt><a class="reference internal" href="odl.discr.grid.RectGrid.size.html#odl.discr.grid.RectGrid.size" title="odl.discr.grid.RectGrid.size"><code class="xref py py-obj docutils literal notranslate"><span class="pre">size</span></code></a></dt><dd><p>Total number of grid points.</p>
+</dd>
+<dt><a class="reference internal" href="odl.discr.grid.RectGrid.stride.html#odl.discr.grid.RectGrid.stride" title="odl.discr.grid.RectGrid.stride"><code class="xref py py-obj docutils literal notranslate"><span class="pre">stride</span></code></a></dt><dd><p>Step per axis between neighboring points of a uniform grid.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+<p class="rubric">Methods</p>
+<table class="longtable docutils align-default">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="odl.discr.grid.RectGrid.append.html#odl.discr.grid.RectGrid.append" title="odl.discr.grid.RectGrid.append"><code class="xref py py-obj docutils literal notranslate"><span class="pre">append</span></code></a>(self, \*grids)</p></td>
+<td><p>Insert <code class="docutils literal notranslate"><span class="pre">grids</span></code> at the end as a block.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="odl.discr.grid.RectGrid.approx_contains.html#odl.discr.grid.RectGrid.approx_contains" title="odl.discr.grid.RectGrid.approx_contains"><code class="xref py py-obj docutils literal notranslate"><span class="pre">approx_contains</span></code></a>(self, other, atol)</p></td>
+<td><p>Test if <code class="docutils literal notranslate"><span class="pre">other</span></code> belongs to this grid up to a tolerance.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="odl.discr.grid.RectGrid.approx_equals.html#odl.discr.grid.RectGrid.approx_equals" title="odl.discr.grid.RectGrid.approx_equals"><code class="xref py py-obj docutils literal notranslate"><span class="pre">approx_equals</span></code></a>(self, other, atol)</p></td>
+<td><p>Test if this grid is equal to another grid.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="odl.discr.grid.RectGrid.contains_all.html#odl.discr.grid.RectGrid.contains_all" title="odl.discr.grid.RectGrid.contains_all"><code class="xref py py-obj docutils literal notranslate"><span class="pre">contains_all</span></code></a>(self, other)</p></td>
+<td><p>Test if all elements in <code class="docutils literal notranslate"><span class="pre">other</span></code> are contained in this set.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="odl.discr.grid.RectGrid.contains_set.html#odl.discr.grid.RectGrid.contains_set" title="odl.discr.grid.RectGrid.contains_set"><code class="xref py py-obj docutils literal notranslate"><span class="pre">contains_set</span></code></a>(self, other)</p></td>
+<td><p>Test if <code class="docutils literal notranslate"><span class="pre">other</span></code> is a subset of this set.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="odl.discr.grid.RectGrid.convex_hull.html#odl.discr.grid.RectGrid.convex_hull" title="odl.discr.grid.RectGrid.convex_hull"><code class="xref py py-obj docutils literal notranslate"><span class="pre">convex_hull</span></code></a>(self)</p></td>
+<td><p>Return the smallest <a class="reference internal" href="odl.set.domain.IntervalProd.html#odl.set.domain.IntervalProd" title="odl.set.domain.IntervalProd"><code class="xref any py py-class docutils literal notranslate"><span class="pre">IntervalProd</span></code></a> containing this grid.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="odl.discr.grid.RectGrid.corner_grid.html#odl.discr.grid.RectGrid.corner_grid" title="odl.discr.grid.RectGrid.corner_grid"><code class="xref py py-obj docutils literal notranslate"><span class="pre">corner_grid</span></code></a>(self)</p></td>
+<td><p>Return a grid with only the corner points.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="odl.discr.grid.RectGrid.corners.html#odl.discr.grid.RectGrid.corners" title="odl.discr.grid.RectGrid.corners"><code class="xref py py-obj docutils literal notranslate"><span class="pre">corners</span></code></a>(self[, order])</p></td>
+<td><p>Corner points of the grid in a single array.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="odl.discr.grid.RectGrid.element.html#odl.discr.grid.RectGrid.element" title="odl.discr.grid.RectGrid.element"><code class="xref py py-obj docutils literal notranslate"><span class="pre">element</span></code></a>(self)</p></td>
+<td><p>An arbitrary element, the minimum coordinates.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="odl.discr.grid.RectGrid.insert.html#odl.discr.grid.RectGrid.insert" title="odl.discr.grid.RectGrid.insert"><code class="xref py py-obj docutils literal notranslate"><span class="pre">insert</span></code></a>(self, index, \*grids)</p></td>
+<td><p>Return a copy with <code class="docutils literal notranslate"><span class="pre">grids</span></code> inserted before <code class="docutils literal notranslate"><span class="pre">index</span></code>.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="odl.discr.grid.RectGrid.is_subgrid.html#odl.discr.grid.RectGrid.is_subgrid" title="odl.discr.grid.RectGrid.is_subgrid"><code class="xref py py-obj docutils literal notranslate"><span class="pre">is_subgrid</span></code></a>(self, other[, atol])</p></td>
+<td><p>Return <code class="docutils literal notranslate"><span class="pre">True</span></code> if this grid is a subgrid of <code class="docutils literal notranslate"><span class="pre">other</span></code>.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="odl.discr.grid.RectGrid.max.html#odl.discr.grid.RectGrid.max" title="odl.discr.grid.RectGrid.max"><code class="xref py py-obj docutils literal notranslate"><span class="pre">max</span></code></a>(self, \*\*kwargs)</p></td>
+<td><p>Return <a class="reference internal" href="odl.discr.grid.RectGrid.max_pt.html#odl.discr.grid.RectGrid.max_pt" title="odl.discr.grid.RectGrid.max_pt"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">max_pt</span></code></a>.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="odl.discr.grid.RectGrid.min.html#odl.discr.grid.RectGrid.min" title="odl.discr.grid.RectGrid.min"><code class="xref py py-obj docutils literal notranslate"><span class="pre">min</span></code></a>(self, \*\*kwargs)</p></td>
+<td><p>Return <a class="reference internal" href="odl.discr.grid.RectGrid.min_pt.html#odl.discr.grid.RectGrid.min_pt" title="odl.discr.grid.RectGrid.min_pt"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">min_pt</span></code></a>.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="odl.discr.grid.RectGrid.points.html#odl.discr.grid.RectGrid.points" title="odl.discr.grid.RectGrid.points"><code class="xref py py-obj docutils literal notranslate"><span class="pre">points</span></code></a>(self[, order])</p></td>
+<td><p>All grid points in a single array.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="odl.discr.grid.RectGrid.squeeze.html#odl.discr.grid.RectGrid.squeeze" title="odl.discr.grid.RectGrid.squeeze"><code class="xref py py-obj docutils literal notranslate"><span class="pre">squeeze</span></code></a>(self[, axis])</p></td>
+<td><p>Return the grid with removed degenerate (length 1) dimensions.</p></td>
+</tr>
+</tbody>
+</table>
+<dl class="py method">
+<dt id="odl.discr.grid.RectGrid.__init__">
+<code class="sig-name descname"><span class="pre">__init__</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="pre">self</span></em>, <em class="sig-param"><span class="pre">\*coord_vectors</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/odl/discr/grid.html#RectGrid.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#odl.discr.grid.RectGrid.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initialize a new instance.</p>
+<dl class="field-list">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl>
+<dt><strong>vec1,…,vecN</strong><span class="classifier"><a class="reference internal" href="../guide/glossary.html#term-array-like"><code class="xref any std std-term docutils literal notranslate"><span class="pre">array-like</span></code></a></span></dt><dd><p>The coordinate vectors defining the grid points. They must
+be sorted in ascending order and may not contain
+duplicates. Empty vectors are not allowed.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+<p class="rubric">Notes</p>
+<p>In 2 dimensions, for example, given two coordinate vectors</p>
+<div class="math">
+<p><img src="../_images/math/e1b22f88a867bf51680e95ca06881580ab7cfedc.png" alt="v_1 = (-1, 0, 2),\ v_2 = (0, 1)"/></p>
+</div><p>the corresponding rectilinear grid <img class="math" src="../_images/math/89878909dbb648acdc4a44ded1bd982d7bddef5d.png" alt="G"/> is the set of all
+2d points whose first component is from <img class="math" src="../_images/math/1c74485fdd094fc0242d5a0e1a357dc89527ca7e.png" alt="v_1"/> and the
+second component from <img class="math" src="../_images/math/dce2ee68e8a49072ebdeaa689da6f207bee581ea.png" alt="v_2"/>:</p>
+<div class="math">
+<p><img src="../_images/math/d96b648a8038c48dfc9dee05ee15580c9502b237.png" alt="G = \{(-1, 0), (-1, 1), (0, 0), (0, 1), (2, 0), (2, 1)\}"/></p>
+</div><p>Here is a graphical representation:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>   <span class="p">:</span>    <span class="p">:</span>        <span class="p">:</span>
+   <span class="p">:</span>    <span class="p">:</span>        <span class="p">:</span>
+<span class="mi">1</span> <span class="o">-</span><span class="n">x</span><span class="o">----</span><span class="n">x</span><span class="o">--------</span><span class="n">x</span><span class="o">-...</span>
+   <span class="o">|</span>    <span class="o">|</span>        <span class="o">|</span>
+<span class="mi">0</span> <span class="o">-</span><span class="n">x</span><span class="o">----</span><span class="n">x</span><span class="o">--------</span><span class="n">x</span><span class="o">-...</span>
+   <span class="o">|</span>    <span class="o">|</span>        <span class="o">|</span>
+  <span class="o">-</span><span class="mi">1</span>    <span class="mi">0</span>        <span class="mi">2</span>
+</pre></div>
+</div>
+<p>Apparently, this structure can represent grids with arbitrary step
+sizes in each axis.</p>
+<p>Note that the above ordering of points is the standard <code class="docutils literal notranslate"><span class="pre">'C'</span></code>
+ordering where the first axis (<img class="math" src="../_images/math/1c74485fdd094fc0242d5a0e1a357dc89527ca7e.png" alt="v_1"/>) varies slowest.
+Ordering is only relevant when the point array is actually created;
+the grid itself is independent of this ordering.</p>
+<p class="rubric">Examples</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">g</span> <span class="o">=</span> <span class="n">RectGrid</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">5</span><span class="p">],</span> <span class="p">[</span><span class="o">-</span><span class="mi">2</span><span class="p">,</span> <span class="mf">1.5</span><span class="p">,</span> <span class="mi">2</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">g</span>
+<span class="go">RectGrid(</span>
+<span class="go">    [ 1.,  2.,  5.],</span>
+<span class="go">    [-2. ,  1.5,  2. ]</span>
+<span class="go">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">g</span><span class="o">.</span><span class="n">ndim</span>  <span class="c1"># number of axes</span>
+<span class="go">2</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">g</span><span class="o">.</span><span class="n">shape</span>  <span class="c1"># points per axis</span>
+<span class="go">(3, 3)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">g</span><span class="o">.</span><span class="n">size</span>  <span class="c1"># total number of points</span>
+<span class="go">9</span>
+</pre></div>
+</div>
+<p>Grid points can be extracted with index notation (NOTE: This is
+slow, do not loop over the grid using indices!):</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">g</span> <span class="o">=</span> <span class="n">RectGrid</span><span class="p">([</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">3</span><span class="p">],</span> <span class="p">[</span><span class="mi">2</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">5</span><span class="p">],</span> <span class="p">[</span><span class="mi">5</span><span class="p">],</span> <span class="p">[</span><span class="mi">2</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">7</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">g</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span>
+<span class="go">array([-1.,  2.,  5.,  2.])</span>
+</pre></div>
+</div>
+<p>Slices and ellipsis are also supported:</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">g</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span>
+<span class="go">RectGrid(</span>
+<span class="go">    [-1.,  0.,  3.],</span>
+<span class="go">    [ 2.],</span>
+<span class="go">    [ 5.],</span>
+<span class="go">    [ 2.]</span>
+<span class="go">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">g</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="o">...</span><span class="p">,</span> <span class="mi">1</span><span class="p">:]</span>
+<span class="go">RectGrid(</span>
+<span class="go">    [-1.],</span>
+<span class="go">    [ 2.,  4.,  5.],</span>
+<span class="go">    [ 5.],</span>
+<span class="go">    [ 4.,  7.]</span>
+<span class="go">)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+        <a href="odl.discr.grid.RectGrid.append.html" class="btn btn-neutral float-right" title="RectGrid.append" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="../odl.discr.grid.html" class="btn btn-neutral float-left" title="grid" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &#169; Copyright 2014-2020 The ODL Contributors.
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

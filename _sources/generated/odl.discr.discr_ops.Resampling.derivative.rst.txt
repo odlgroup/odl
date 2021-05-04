@@ -1,0 +1,8 @@
+:orphan:
+
+Resampling.derivative
+=========================================
+
+.. currentmodule:: odl.discr.discr_ops
+
+.. automethod:: Resampling.derivative

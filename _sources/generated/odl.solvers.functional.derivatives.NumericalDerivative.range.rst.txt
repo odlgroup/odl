@@ -1,0 +1,6 @@
+NumericalDerivative.range
+============================================================
+
+.. currentmodule:: odl.solvers.functional.derivatives
+
+.. autoproperty:: NumericalDerivative.range

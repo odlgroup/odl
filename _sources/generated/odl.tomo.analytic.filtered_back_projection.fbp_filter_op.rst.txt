@@ -1,0 +1,6 @@
+﻿fbp_filter_op
+========================================================
+
+.. currentmodule:: odl.tomo.analytic.filtered_back_projection
+
+.. autofunction:: fbp_filter_op

@@ -1,0 +1,8 @@
+:orphan:
+
+SpaceTest.field
+=====================================
+
+.. currentmodule:: odl.diagnostics.space
+
+.. automethod:: SpaceTest.field

@@ -1,0 +1,6 @@
+IndicatorGroupL1UnitBall.convex_conj
+===============================================================================
+
+.. currentmodule:: odl.solvers.functional.default_functionals
+
+.. autoproperty:: IndicatorGroupL1UnitBall.convex_conj

@@ -1,0 +1,8 @@
+:orphan:
+
+NumpyTensorSpaceConstWeighting.dist
+=========================================================
+
+.. currentmodule:: odl.space.npy_tensors
+
+.. automethod:: NumpyTensorSpaceConstWeighting.dist

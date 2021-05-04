@@ -1,0 +1,8 @@
+:orphan:
+
+ProductSpaceElement.set_zero
+=============================================
+
+.. currentmodule:: odl.space.pspace
+
+.. automethod:: ProductSpaceElement.set_zero

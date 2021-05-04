@@ -1,0 +1,6 @@
+SamplingOperator.sampling_points
+========================================================
+
+.. currentmodule:: odl.operator.tensor_ops
+
+.. autoproperty:: SamplingOperator.sampling_points

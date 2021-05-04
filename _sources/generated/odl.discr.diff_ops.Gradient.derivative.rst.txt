@@ -1,0 +1,8 @@
+:orphan:
+
+Gradient.derivative
+======================================
+
+.. currentmodule:: odl.discr.diff_ops
+
+.. automethod:: Gradient.derivative

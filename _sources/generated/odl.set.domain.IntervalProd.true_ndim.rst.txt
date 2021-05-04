@@ -1,0 +1,6 @@
+IntervalProd.true_ndim
+=====================================
+
+.. currentmodule:: odl.set.domain
+
+.. autoproperty:: IntervalProd.true_ndim

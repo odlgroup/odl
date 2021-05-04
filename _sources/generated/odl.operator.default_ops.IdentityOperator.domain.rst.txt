@@ -1,0 +1,6 @@
+IdentityOperator.domain
+================================================
+
+.. currentmodule:: odl.operator.default_ops
+
+.. autoproperty:: IdentityOperator.domain

@@ -1,0 +1,6 @@
+FourierTransformBase.axes
+============================================
+
+.. currentmodule:: odl.trafos.fourier
+
+.. autoproperty:: FourierTransformBase.axes

@@ -1,0 +1,8 @@
+:orphan:
+
+ComplexModulusSquared.derivative
+=========================================================
+
+.. currentmodule:: odl.operator.default_ops
+
+.. automethod:: ComplexModulusSquared.derivative

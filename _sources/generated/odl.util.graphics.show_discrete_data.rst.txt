@@ -1,0 +1,6 @@
+﻿show_discrete_data
+====================================
+
+.. currentmodule:: odl.util.graphics
+
+.. autofunction:: show_discrete_data

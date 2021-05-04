@@ -1,0 +1,8 @@
+:orphan:
+
+EmptySet.contains_all
+==================================
+
+.. currentmodule:: odl.set.sets
+
+.. automethod:: EmptySet.contains_all

@@ -1,0 +1,8 @@
+:orphan:
+
+FunctionalTranslation.translated
+==================================================================
+
+.. currentmodule:: odl.solvers.functional.functional
+
+.. automethod:: FunctionalTranslation.translated

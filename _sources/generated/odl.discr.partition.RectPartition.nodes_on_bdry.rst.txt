@@ -1,0 +1,6 @@
+RectPartition.nodes_on_bdry
+===============================================
+
+.. currentmodule:: odl.discr.partition
+
+.. autoproperty:: RectPartition.nodes_on_bdry

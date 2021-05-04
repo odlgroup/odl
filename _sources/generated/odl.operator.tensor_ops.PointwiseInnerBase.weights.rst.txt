@@ -1,0 +1,6 @@
+PointwiseInnerBase.weights
+==================================================
+
+.. currentmodule:: odl.operator.tensor_ops
+
+.. autoproperty:: PointwiseInnerBase.weights

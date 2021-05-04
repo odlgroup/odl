@@ -1,0 +1,8 @@
+:orphan:
+
+ArrayWeighting.__eq__
+=========================================
+
+.. currentmodule:: odl.space.weighting
+
+.. automethod:: ArrayWeighting.__eq__

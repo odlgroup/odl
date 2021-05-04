@@ -1,0 +1,6 @@
+RectGrid.is_uniform_byaxis
+=========================================
+
+.. currentmodule:: odl.discr.grid
+
+.. autoproperty:: RectGrid.is_uniform_byaxis

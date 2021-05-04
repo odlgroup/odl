@@ -1,0 +1,6 @@
+deg2rad_func.inverse
+============================================
+
+.. currentmodule:: odl.ufunc_ops.ufunc_ops
+
+.. autoproperty:: deg2rad_func.inverse

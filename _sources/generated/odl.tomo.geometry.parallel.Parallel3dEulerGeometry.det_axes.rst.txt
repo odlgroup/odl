@@ -1,0 +1,8 @@
+:orphan:
+
+Parallel3dEulerGeometry.det_axes
+===========================================================
+
+.. currentmodule:: odl.tomo.geometry.parallel
+
+.. automethod:: Parallel3dEulerGeometry.det_axes

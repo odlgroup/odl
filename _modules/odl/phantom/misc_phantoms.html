@@ -1,0 +1,494 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>odl.phantom.misc_phantoms &mdash; odl 1.0.0.dev0 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/custom.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../../" src="../../../_static/documentation_options.js"></script>
+        <script src="../../../_static/jquery.js"></script>
+        <script src="../../../_static/underscore.js"></script>
+        <script src="../../../_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="../../../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../../index.html" class="icon icon-home"> odl
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                1.0.0.dev0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Getting Started</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../getting_started/getting_started.html">Getting Started</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Working with ODL</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../guide/guide.html">User’s guide – selected topics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../math/math.html">Mathematical Background</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Developer zone</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../dev/dev.html">Contributing to ODL</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Useful facts</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../guide/faq.html">Frequently asked questions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../guide/glossary.html">Glossary</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../release_notes.html">Release Notes</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../refs.html">References</a></li>
+</ul>
+<p class="caption"><span class="caption-text">API Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../odl.html">odl</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">odl</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="../../index.html">Module code</a> &raquo;</li>
+        
+      <li>odl.phantom.misc_phantoms</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for odl.phantom.misc_phantoms</h1><div class="highlight"><pre>
+<span></span><span class="c1"># Copyright 2014-2020 The ODL contributors</span>
+<span class="c1">#</span>
+<span class="c1"># This file is part of ODL.</span>
+<span class="c1">#</span>
+<span class="c1"># This Source Code Form is subject to the terms of the Mozilla Public License,</span>
+<span class="c1"># v. 2.0. If a copy of the MPL was not distributed with this file, You can</span>
+<span class="c1"># obtain one at https://mozilla.org/MPL/2.0/.</span>
+
+<span class="sd">&quot;&quot;&quot;Miscellaneous phantoms that do not fit in other categories.&quot;&quot;&quot;</span>
+
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">absolute_import</span><span class="p">,</span> <span class="n">division</span><span class="p">,</span> <span class="n">print_function</span>
+
+<span class="kn">import</span> <span class="nn">sys</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;submarine&#39;</span><span class="p">,</span> <span class="s1">&#39;text&#39;</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="submarine"><a class="viewcode-back" href="../../../generated/odl.phantom.misc_phantoms.submarine.html#odl.phantom.misc_phantoms.submarine">[docs]</a><span class="k">def</span> <span class="nf">submarine</span><span class="p">(</span><span class="n">space</span><span class="p">,</span> <span class="n">smooth</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">taper</span><span class="o">=</span><span class="mf">20.0</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Return a &#39;submarine&#39; phantom consisting in an ellipsoid and a box.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    space : `DiscretizedSpace`</span>
+<span class="sd">        Discretized space in which the phantom is supposed to be created.</span>
+<span class="sd">    smooth : bool, optional</span>
+<span class="sd">        If ``True``, the boundaries are smoothed out. Otherwise, the</span>
+<span class="sd">        function steps from 0 to 1 at the boundaries.</span>
+<span class="sd">    taper : float, optional</span>
+<span class="sd">        Tapering parameter for the boundary smoothing. Larger values</span>
+<span class="sd">        mean faster taper, i.e. sharper boundaries.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    phantom : ``space`` element</span>
+<span class="sd">        The submarine phantom in ``space``.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">space</span><span class="o">.</span><span class="n">ndim</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">smooth</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">_submarine_2d_smooth</span><span class="p">(</span><span class="n">space</span><span class="p">,</span> <span class="n">taper</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">_submarine_2d_nonsmooth</span><span class="p">(</span><span class="n">space</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;phantom only defined in 2 dimensions, got </span><span class="si">{}</span><span class="s1">&#39;</span>
+                         <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">space</span><span class="o">.</span><span class="n">ndim</span><span class="p">))</span></div>
+
+
+<span class="k">def</span> <span class="nf">_submarine_2d_smooth</span><span class="p">(</span><span class="n">space</span><span class="p">,</span> <span class="n">taper</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Return a 2d smooth &#39;submarine&#39; phantom.&quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">logistic</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">c</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Smoothed step function from 0 to 1, centered at 0.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="mf">1.</span> <span class="o">/</span> <span class="p">(</span><span class="mi">1</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="n">c</span> <span class="o">*</span> <span class="n">x</span><span class="p">))</span>
+
+    <span class="k">def</span> <span class="nf">blurred_ellipse</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Blurred characteristic function of an ellipse.</span>
+
+<span class="sd">        If ``space.domain`` is a rectangle ``[0, 1] x [0, 1]``,</span>
+<span class="sd">        the ellipse is centered at ``(0.6, 0.3)`` and has half-axes</span>
+<span class="sd">        ``(0.4, 0.14)``. For other domains, the values are scaled</span>
+<span class="sd">        accordingly.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">halfaxes</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mf">0.4</span><span class="p">,</span> <span class="mf">0.14</span><span class="p">])</span> <span class="o">*</span> <span class="n">space</span><span class="o">.</span><span class="n">domain</span><span class="o">.</span><span class="n">extent</span>
+        <span class="n">center</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mf">0.6</span><span class="p">,</span> <span class="mf">0.3</span><span class="p">])</span> <span class="o">*</span> <span class="n">space</span><span class="o">.</span><span class="n">domain</span><span class="o">.</span><span class="n">extent</span>
+        <span class="n">center</span> <span class="o">+=</span> <span class="n">space</span><span class="o">.</span><span class="n">domain</span><span class="o">.</span><span class="n">min</span><span class="p">()</span>
+
+        <span class="c1"># Efficiently calculate |z|^2, z = (x - center) / radii</span>
+        <span class="n">sq_ndist</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros_like</span><span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+        <span class="k">for</span> <span class="n">xi</span><span class="p">,</span> <span class="n">rad</span><span class="p">,</span> <span class="n">cen</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">halfaxes</span><span class="p">,</span> <span class="n">center</span><span class="p">):</span>
+            <span class="n">sq_ndist</span> <span class="o">=</span> <span class="n">sq_ndist</span> <span class="o">+</span> <span class="p">((</span><span class="n">xi</span> <span class="o">-</span> <span class="n">cen</span><span class="p">)</span> <span class="o">/</span> <span class="n">rad</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span>
+
+        <span class="n">out</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">sq_ndist</span><span class="p">)</span>
+        <span class="n">out</span> <span class="o">-=</span> <span class="mi">1</span>
+        <span class="c1"># Return logistic(taper * (1 - |z|))</span>
+        <span class="k">return</span> <span class="n">logistic</span><span class="p">(</span><span class="n">out</span><span class="p">,</span> <span class="o">-</span><span class="n">taper</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">blurred_rect</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Blurred characteristic function of a rectangle.</span>
+
+<span class="sd">        If ``space.domain`` is a rectangle ``[0, 1] x [0, 1]``,</span>
+<span class="sd">        the rect has lower left ``(0.56, 0.4)`` and upper right</span>
+<span class="sd">        ``(0.76, 0.6)``. For other domains, the values are scaled</span>
+<span class="sd">        accordingly.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">xlower</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mf">0.56</span><span class="p">,</span> <span class="mf">0.4</span><span class="p">])</span> <span class="o">*</span> <span class="n">space</span><span class="o">.</span><span class="n">domain</span><span class="o">.</span><span class="n">extent</span>
+        <span class="n">xlower</span> <span class="o">+=</span> <span class="n">space</span><span class="o">.</span><span class="n">domain</span><span class="o">.</span><span class="n">min</span><span class="p">()</span>
+        <span class="n">xupper</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mf">0.76</span><span class="p">,</span> <span class="mf">0.6</span><span class="p">])</span> <span class="o">*</span> <span class="n">space</span><span class="o">.</span><span class="n">domain</span><span class="o">.</span><span class="n">extent</span>
+        <span class="n">xupper</span> <span class="o">+=</span> <span class="n">space</span><span class="o">.</span><span class="n">domain</span><span class="o">.</span><span class="n">min</span><span class="p">()</span>
+
+        <span class="n">out</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ones_like</span><span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+        <span class="k">for</span> <span class="n">xi</span><span class="p">,</span> <span class="n">low</span><span class="p">,</span> <span class="n">upp</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">xlower</span><span class="p">,</span> <span class="n">xupper</span><span class="p">):</span>
+            <span class="n">length</span> <span class="o">=</span> <span class="n">upp</span> <span class="o">-</span> <span class="n">low</span>
+            <span class="n">out</span> <span class="o">=</span> <span class="n">out</span> <span class="o">*</span> <span class="p">(</span><span class="n">logistic</span><span class="p">((</span><span class="n">xi</span> <span class="o">-</span> <span class="n">low</span><span class="p">)</span> <span class="o">/</span> <span class="n">length</span><span class="p">,</span> <span class="n">taper</span><span class="p">)</span> <span class="o">*</span>
+                         <span class="n">logistic</span><span class="p">((</span><span class="n">upp</span> <span class="o">-</span> <span class="n">xi</span><span class="p">)</span> <span class="o">/</span> <span class="n">length</span><span class="p">,</span> <span class="n">taper</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">out</span>
+
+    <span class="n">out</span> <span class="o">=</span> <span class="n">space</span><span class="o">.</span><span class="n">element</span><span class="p">(</span><span class="n">blurred_ellipse</span><span class="p">)</span>
+    <span class="n">out</span> <span class="o">+=</span> <span class="n">space</span><span class="o">.</span><span class="n">element</span><span class="p">(</span><span class="n">blurred_rect</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">out</span><span class="o">.</span><span class="n">ufuncs</span><span class="o">.</span><span class="n">minimum</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">out</span><span class="o">=</span><span class="n">out</span><span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">_submarine_2d_nonsmooth</span><span class="p">(</span><span class="n">space</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Return a 2d nonsmooth &#39;submarine&#39; phantom.&quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">ellipse</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Characteristic function of an ellipse.</span>
+
+<span class="sd">        If ``space.domain`` is a rectangle ``[0, 1] x [0, 1]``,</span>
+<span class="sd">        the ellipse is centered at ``(0.6, 0.3)`` and has half-axes</span>
+<span class="sd">        ``(0.4, 0.14)``. For other domains, the values are scaled</span>
+<span class="sd">        accordingly.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">halfaxes</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mf">0.4</span><span class="p">,</span> <span class="mf">0.14</span><span class="p">])</span> <span class="o">*</span> <span class="n">space</span><span class="o">.</span><span class="n">domain</span><span class="o">.</span><span class="n">extent</span>
+        <span class="n">center</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mf">0.6</span><span class="p">,</span> <span class="mf">0.3</span><span class="p">])</span> <span class="o">*</span> <span class="n">space</span><span class="o">.</span><span class="n">domain</span><span class="o">.</span><span class="n">extent</span>
+        <span class="n">center</span> <span class="o">+=</span> <span class="n">space</span><span class="o">.</span><span class="n">domain</span><span class="o">.</span><span class="n">min</span><span class="p">()</span>
+
+        <span class="n">sq_ndist</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros_like</span><span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+        <span class="k">for</span> <span class="n">xi</span><span class="p">,</span> <span class="n">rad</span><span class="p">,</span> <span class="n">cen</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">halfaxes</span><span class="p">,</span> <span class="n">center</span><span class="p">):</span>
+            <span class="n">sq_ndist</span> <span class="o">=</span> <span class="n">sq_ndist</span> <span class="o">+</span> <span class="p">((</span><span class="n">xi</span> <span class="o">-</span> <span class="n">cen</span><span class="p">)</span> <span class="o">/</span> <span class="n">rad</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span>
+
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">sq_ndist</span> <span class="o">&lt;=</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">rect</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Characteristic function of a rectangle.</span>
+
+<span class="sd">        If ``space.domain`` is a rectangle ``[0, 1] x [0, 1]``,</span>
+<span class="sd">        the rect has lower left ``(0.56, 0.4)`` and upper right</span>
+<span class="sd">        ``(0.76, 0.6)``. For other domains, the values are scaled</span>
+<span class="sd">        accordingly.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">xlower</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mf">0.56</span><span class="p">,</span> <span class="mf">0.4</span><span class="p">])</span> <span class="o">*</span> <span class="n">space</span><span class="o">.</span><span class="n">domain</span><span class="o">.</span><span class="n">extent</span>
+        <span class="n">xlower</span> <span class="o">+=</span> <span class="n">space</span><span class="o">.</span><span class="n">domain</span><span class="o">.</span><span class="n">min</span><span class="p">()</span>
+        <span class="n">xupper</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mf">0.76</span><span class="p">,</span> <span class="mf">0.6</span><span class="p">])</span> <span class="o">*</span> <span class="n">space</span><span class="o">.</span><span class="n">domain</span><span class="o">.</span><span class="n">extent</span>
+        <span class="n">xupper</span> <span class="o">+=</span> <span class="n">space</span><span class="o">.</span><span class="n">domain</span><span class="o">.</span><span class="n">min</span><span class="p">()</span>
+
+        <span class="n">out</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ones_like</span><span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+        <span class="k">for</span> <span class="n">xi</span><span class="p">,</span> <span class="n">low</span><span class="p">,</span> <span class="n">upp</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">xlower</span><span class="p">,</span> <span class="n">xupper</span><span class="p">):</span>
+            <span class="n">out</span> <span class="o">=</span> <span class="n">out</span> <span class="o">*</span> <span class="p">((</span><span class="n">xi</span> <span class="o">&gt;=</span> <span class="n">low</span><span class="p">)</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">xi</span> <span class="o">&lt;=</span> <span class="n">upp</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">out</span>
+
+    <span class="n">out</span> <span class="o">=</span> <span class="n">space</span><span class="o">.</span><span class="n">element</span><span class="p">(</span><span class="n">ellipse</span><span class="p">)</span>
+    <span class="n">out</span> <span class="o">+=</span> <span class="n">space</span><span class="o">.</span><span class="n">element</span><span class="p">(</span><span class="n">rect</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">out</span><span class="o">.</span><span class="n">ufuncs</span><span class="o">.</span><span class="n">minimum</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">out</span><span class="o">=</span><span class="n">out</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="text"><a class="viewcode-back" href="../../../generated/odl.phantom.misc_phantoms.text.html#odl.phantom.misc_phantoms.text">[docs]</a><span class="k">def</span> <span class="nf">text</span><span class="p">(</span><span class="n">space</span><span class="p">,</span> <span class="n">text</span><span class="p">,</span> <span class="n">font</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">border</span><span class="o">=</span><span class="mf">0.2</span><span class="p">,</span> <span class="n">inverted</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Create phantom from text.</span>
+
+<span class="sd">    The text is represented by a scalar image taking values in [0, 1].</span>
+<span class="sd">    Depending on the choice of font, the text may or may not be anti-aliased.</span>
+<span class="sd">    anti-aliased text can take any value between 0 and 1, while</span>
+<span class="sd">    non-anti-aliased text produces a binary image.</span>
+
+<span class="sd">    This method requires the ``pillow`` package.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    space : `DiscretizedSpace`</span>
+<span class="sd">        Discretized space in which the phantom is supposed to be created.</span>
+<span class="sd">        Must be two-dimensional.</span>
+<span class="sd">    text : str</span>
+<span class="sd">        The text that should be written onto the background.</span>
+<span class="sd">    font : str, optional</span>
+<span class="sd">        The font that should be used to write the text. Available options are</span>
+<span class="sd">        platform dependent.</span>
+<span class="sd">        Default: Platform dependent. &#39;arial&#39; for windows,</span>
+<span class="sd">        &#39;LiberationSans-Regular&#39; for linux and &#39;Helvetica&#39; for OSX</span>
+<span class="sd">    border : float, optional</span>
+<span class="sd">        Padding added around the text. 0.0 indicates that the phantom should</span>
+<span class="sd">        occupy all of the space along its largest dimension while 1.0 gives a</span>
+<span class="sd">        maximally padded image (text not visible).</span>
+<span class="sd">    inverted : bool, optional</span>
+<span class="sd">        If the phantom should be given in inverted style, i.e. white on black.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    phantom : ``space`` element</span>
+<span class="sd">        The text phantom in ``space``.</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    The set of available fonts is highly platform dependent, and there is no</span>
+<span class="sd">    obvious way (except from trial and error) to find what fonts are supported</span>
+<span class="sd">    on an arbitrary platform.</span>
+
+<span class="sd">    In general, the fonts ``&#39;arial&#39;``, ``&#39;calibri&#39;`` and ``&#39;impact&#39;`` tend to</span>
+<span class="sd">    be available on windows.</span>
+
+<span class="sd">    Platform dependent tricks:</span>
+
+<span class="sd">    **Linux**::</span>
+
+<span class="sd">        $ find /usr/share/fonts -name &quot;*.[to]tf&quot;</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="kn">from</span> <span class="nn">PIL</span> <span class="kn">import</span> <span class="n">Image</span><span class="p">,</span> <span class="n">ImageDraw</span><span class="p">,</span> <span class="n">ImageFont</span>
+
+    <span class="k">if</span> <span class="n">space</span><span class="o">.</span><span class="n">ndim</span> <span class="o">!=</span> <span class="mi">2</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;`space` must be two-dimensional&#39;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">font</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">platform</span> <span class="o">=</span> <span class="n">sys</span><span class="o">.</span><span class="n">platform</span>
+        <span class="k">if</span> <span class="n">platform</span> <span class="o">==</span> <span class="s1">&#39;win32&#39;</span><span class="p">:</span>
+            <span class="c1"># Windows</span>
+            <span class="n">font</span> <span class="o">=</span> <span class="s1">&#39;arial&#39;</span>
+        <span class="k">elif</span> <span class="n">platform</span> <span class="o">==</span> <span class="s1">&#39;darwin&#39;</span><span class="p">:</span>
+            <span class="c1"># Mac OSX</span>
+            <span class="n">font</span> <span class="o">=</span> <span class="s1">&#39;Helvetica&#39;</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># Assume platform is linux</span>
+            <span class="n">font</span> <span class="o">=</span> <span class="s1">&#39;LiberationSans-Regular&#39;</span>
+
+    <span class="n">text</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">text</span><span class="p">)</span>
+
+    <span class="c1"># Figure out what font size we should use by creating a very high</span>
+    <span class="c1"># resolution font and calculating the size of the text in this font</span>
+    <span class="n">init_size</span> <span class="o">=</span> <span class="mi">1000</span>
+    <span class="n">init_pil_font</span> <span class="o">=</span> <span class="n">ImageFont</span><span class="o">.</span><span class="n">truetype</span><span class="p">(</span><span class="n">font</span> <span class="o">+</span> <span class="s2">&quot;.ttf&quot;</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="n">init_size</span><span class="p">,</span>
+                                       <span class="n">encoding</span><span class="o">=</span><span class="s2">&quot;unic&quot;</span><span class="p">)</span>
+    <span class="n">init_text_width</span><span class="p">,</span> <span class="n">init_text_height</span> <span class="o">=</span> <span class="n">init_pil_font</span><span class="o">.</span><span class="n">getsize</span><span class="p">(</span><span class="n">text</span><span class="p">)</span>
+
+    <span class="c1"># True size is given by how much too large (or small) the example was</span>
+    <span class="n">scaled_init_size</span> <span class="o">=</span> <span class="p">(</span><span class="mf">1.0</span> <span class="o">-</span> <span class="n">border</span><span class="p">)</span> <span class="o">*</span> <span class="n">init_size</span>
+    <span class="n">size</span> <span class="o">=</span> <span class="n">scaled_init_size</span> <span class="o">*</span> <span class="nb">min</span><span class="p">([</span><span class="n">space</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">/</span> <span class="n">init_text_width</span><span class="p">,</span>
+                                   <span class="n">space</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">/</span> <span class="n">init_text_height</span><span class="p">])</span>
+    <span class="n">size</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">size</span><span class="p">)</span>
+
+    <span class="c1"># Create font</span>
+    <span class="n">pil_font</span> <span class="o">=</span> <span class="n">ImageFont</span><span class="o">.</span><span class="n">truetype</span><span class="p">(</span><span class="n">font</span> <span class="o">+</span> <span class="s2">&quot;.ttf&quot;</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="n">size</span><span class="p">,</span>
+                                  <span class="n">encoding</span><span class="o">=</span><span class="s2">&quot;unic&quot;</span><span class="p">)</span>
+    <span class="n">text_width</span><span class="p">,</span> <span class="n">text_height</span> <span class="o">=</span> <span class="n">pil_font</span><span class="o">.</span><span class="n">getsize</span><span class="p">(</span><span class="n">text</span><span class="p">)</span>
+
+    <span class="c1"># create a blank canvas with extra space between lines</span>
+    <span class="n">canvas</span> <span class="o">=</span> <span class="n">Image</span><span class="o">.</span><span class="n">new</span><span class="p">(</span><span class="s1">&#39;RGB&#39;</span><span class="p">,</span> <span class="n">space</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="p">(</span><span class="mi">255</span><span class="p">,</span> <span class="mi">255</span><span class="p">,</span> <span class="mi">255</span><span class="p">))</span>
+
+    <span class="c1"># draw the text onto the canvas</span>
+    <span class="n">draw</span> <span class="o">=</span> <span class="n">ImageDraw</span><span class="o">.</span><span class="n">Draw</span><span class="p">(</span><span class="n">canvas</span><span class="p">)</span>
+    <span class="n">offset</span> <span class="o">=</span> <span class="p">((</span><span class="n">space</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">-</span> <span class="n">text_width</span><span class="p">)</span> <span class="o">//</span> <span class="mi">2</span><span class="p">,</span>
+              <span class="p">(</span><span class="n">space</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">text_height</span><span class="p">)</span> <span class="o">//</span> <span class="mi">2</span><span class="p">)</span>
+    <span class="n">white</span> <span class="o">=</span> <span class="s2">&quot;#000000&quot;</span>
+    <span class="n">draw</span><span class="o">.</span><span class="n">text</span><span class="p">(</span><span class="n">offset</span><span class="p">,</span> <span class="n">text</span><span class="p">,</span> <span class="n">font</span><span class="o">=</span><span class="n">pil_font</span><span class="p">,</span> <span class="n">fill</span><span class="o">=</span><span class="n">white</span><span class="p">)</span>
+
+    <span class="c1"># Convert the canvas into an array with values in [0, 1]</span>
+    <span class="n">arr</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">canvas</span><span class="p">)</span>
+    <span class="n">arr</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">arr</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+    <span class="n">arr</span> <span class="o">=</span> <span class="n">arr</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">arr</span><span class="p">)</span>
+    <span class="n">arr</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">rot90</span><span class="p">(</span><span class="n">arr</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">inverted</span><span class="p">:</span>
+        <span class="n">arr</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">-</span> <span class="n">arr</span>
+
+    <span class="k">return</span> <span class="n">space</span><span class="o">.</span><span class="n">element</span><span class="p">(</span><span class="n">arr</span><span class="p">)</span></div>
+
+
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s1">&#39;__main__&#39;</span><span class="p">:</span>
+    <span class="c1"># Show the phantoms</span>
+    <span class="kn">import</span> <span class="nn">odl</span>
+    <span class="kn">from</span> <span class="nn">odl.util.testutils</span> <span class="kn">import</span> <span class="n">run_doctests</span>
+
+    <span class="n">space</span> <span class="o">=</span> <span class="n">odl</span><span class="o">.</span><span class="n">uniform_discr</span><span class="p">([</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span> <span class="p">[</span><span class="mi">300</span><span class="p">,</span> <span class="mi">300</span><span class="p">])</span>
+    <span class="n">submarine</span><span class="p">(</span><span class="n">space</span><span class="p">,</span> <span class="n">smooth</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span><span class="o">.</span><span class="n">show</span><span class="p">(</span><span class="s1">&#39;submarine smooth=False&#39;</span><span class="p">)</span>
+    <span class="n">submarine</span><span class="p">(</span><span class="n">space</span><span class="p">,</span> <span class="n">smooth</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span><span class="o">.</span><span class="n">show</span><span class="p">(</span><span class="s1">&#39;submarine smooth=True&#39;</span><span class="p">)</span>
+    <span class="n">submarine</span><span class="p">(</span><span class="n">space</span><span class="p">,</span> <span class="n">smooth</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">taper</span><span class="o">=</span><span class="mi">50</span><span class="p">)</span><span class="o">.</span><span class="n">show</span><span class="p">(</span><span class="s1">&#39;submarine taper=50&#39;</span><span class="p">)</span>
+
+    <span class="n">text</span><span class="p">(</span><span class="n">space</span><span class="p">,</span> <span class="n">text</span><span class="o">=</span><span class="s1">&#39;phantom&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">show</span><span class="p">(</span><span class="s1">&#39;phantom&#39;</span><span class="p">)</span>
+
+    <span class="c1"># Run also the doctests</span>
+    <span class="n">run_doctests</span><span class="p">()</span>
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &#169; Copyright 2014-2020 The ODL Contributors.
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

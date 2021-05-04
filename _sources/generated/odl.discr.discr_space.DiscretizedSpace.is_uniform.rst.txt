@@ -1,0 +1,6 @@
+DiscretizedSpace.is_uniform
+=================================================
+
+.. currentmodule:: odl.discr.discr_space
+
+.. autoproperty:: DiscretizedSpace.is_uniform

@@ -1,0 +1,6 @@
+NumpyTensorSpaceConstWeighting.repr_part
+==============================================================
+
+.. currentmodule:: odl.space.npy_tensors
+
+.. autoproperty:: NumpyTensorSpaceConstWeighting.repr_part

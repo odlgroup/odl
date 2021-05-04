@@ -1,0 +1,8 @@
+:orphan:
+
+L2NormSquared.bregman
+================================================================
+
+.. currentmodule:: odl.solvers.functional.default_functionals
+
+.. automethod:: L2NormSquared.bregman

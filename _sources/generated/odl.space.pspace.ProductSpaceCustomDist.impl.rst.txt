@@ -1,0 +1,6 @@
+ProductSpaceCustomDist.impl
+============================================
+
+.. currentmodule:: odl.space.pspace
+
+.. autoproperty:: ProductSpaceCustomDist.impl

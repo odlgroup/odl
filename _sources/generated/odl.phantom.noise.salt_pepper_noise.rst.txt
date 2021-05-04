@@ -1,0 +1,6 @@
+﻿salt_pepper_noise
+===================================
+
+.. currentmodule:: odl.phantom.noise
+
+.. autofunction:: salt_pepper_noise

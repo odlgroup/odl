@@ -1,0 +1,6 @@
+L2NormSquared.adjoint
+================================================================
+
+.. currentmodule:: odl.solvers.functional.default_functionals
+
+.. autoproperty:: L2NormSquared.adjoint

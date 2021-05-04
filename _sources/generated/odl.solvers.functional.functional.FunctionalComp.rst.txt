@@ -1,0 +1,45 @@
+﻿FunctionalComp
+================================================
+
+.. currentmodule:: odl.solvers.functional.functional
+
+.. autoclass:: FunctionalComp
+   :show-inheritance:
+   
+   
+   .. automethod:: __init__
+   
+      
+   
+   .. HACK -- the point here is that we don't want this to appear in the output, but the autosummary should still generate the pages.
+      .. autosummary::
+         :toctree:
+      
+         FunctionalComp.__call__
+         FunctionalComp.__eq__
+         FunctionalComp._call
+         FunctionalComp.bregman
+         FunctionalComp.derivative
+         FunctionalComp.norm
+         FunctionalComp.translated
+   
+
+    
+   .. HACK -- the point here is that we don't want this to appear in the output, but the autosummary should still generate the pages.
+      .. autosummary::
+         :toctree:
+      
+         FunctionalComp.adjoint
+         FunctionalComp.convex_conj
+         FunctionalComp.domain
+         FunctionalComp.grad_lipschitz
+         FunctionalComp.gradient
+         FunctionalComp.inverse
+         FunctionalComp.is_functional
+         FunctionalComp.is_linear
+         FunctionalComp.left
+         FunctionalComp.proximal
+         FunctionalComp.range
+         FunctionalComp.right
+   
+   

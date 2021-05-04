@@ -1,0 +1,6 @@
+ProductSpaceArrayWeighting.impl
+================================================
+
+.. currentmodule:: odl.space.pspace
+
+.. autoproperty:: ProductSpaceArrayWeighting.impl

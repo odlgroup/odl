@@ -1,0 +1,328 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>FunctionalLeftVectorMult.norm &mdash; odl 1.0.0.dev0 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="OpDomainError" href="odl.operator.operator.OpDomainError.html" />
+    <link rel="prev" title="FunctionalLeftVectorMult.derivative" href="odl.operator.operator.FunctionalLeftVectorMult.derivative.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../index.html" class="icon icon-home"> odl
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                1.0.0.dev0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Getting Started</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../getting_started/getting_started.html">Getting Started</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Working with ODL</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../guide/guide.html">User’s guide – selected topics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../math/math.html">Mathematical Background</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Developer zone</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../dev/dev.html">Contributing to ODL</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Useful facts</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../guide/faq.html">Frequently asked questions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../guide/glossary.html">Glossary</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../release_notes.html">Release Notes</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../refs.html">References</a></li>
+</ul>
+<p class="caption"><span class="caption-text">API Reference</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../odl.html">odl</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../odl.contrib.html">contrib</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../odl.deform.html">deform</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../odl.diagnostics.html">diagnostics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../odl.discr.html">discr</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="../odl.operator.html">operator</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="../odl.operator.default_ops.html">default_ops</a></li>
+<li class="toctree-l3 current"><a class="reference internal" href="../odl.operator.operator.html">operator</a><ul class="current">
+<li class="toctree-l4 current"><a class="reference internal" href="odl.operator.operator.FunctionalLeftVectorMult.html">FunctionalLeftVectorMult</a></li>
+<li class="toctree-l4"><a class="reference internal" href="odl.operator.operator.OpDomainError.html">OpDomainError</a></li>
+<li class="toctree-l4"><a class="reference internal" href="odl.operator.operator.OpNotImplementedError.html">OpNotImplementedError</a></li>
+<li class="toctree-l4"><a class="reference internal" href="odl.operator.operator.OpRangeError.html">OpRangeError</a></li>
+<li class="toctree-l4"><a class="reference internal" href="odl.operator.operator.OpTypeError.html">OpTypeError</a></li>
+<li class="toctree-l4"><a class="reference internal" href="odl.operator.operator.Operator.html">Operator</a></li>
+<li class="toctree-l4"><a class="reference internal" href="odl.operator.operator.OperatorComp.html">OperatorComp</a></li>
+<li class="toctree-l4"><a class="reference internal" href="odl.operator.operator.OperatorLeftScalarMult.html">OperatorLeftScalarMult</a></li>
+<li class="toctree-l4"><a class="reference internal" href="odl.operator.operator.OperatorLeftVectorMult.html">OperatorLeftVectorMult</a></li>
+<li class="toctree-l4"><a class="reference internal" href="odl.operator.operator.OperatorPointwiseProduct.html">OperatorPointwiseProduct</a></li>
+<li class="toctree-l4"><a class="reference internal" href="odl.operator.operator.OperatorRightScalarMult.html">OperatorRightScalarMult</a></li>
+<li class="toctree-l4"><a class="reference internal" href="odl.operator.operator.OperatorRightVectorMult.html">OperatorRightVectorMult</a></li>
+<li class="toctree-l4"><a class="reference internal" href="odl.operator.operator.OperatorSum.html">OperatorSum</a></li>
+<li class="toctree-l4"><a class="reference internal" href="odl.operator.operator.OperatorVectorSum.html">OperatorVectorSum</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../odl.operator.oputils.html">oputils</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../odl.operator.pspace_ops.html">pspace_ops</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../odl.operator.tensor_ops.html">tensor_ops</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../odl.phantom.html">phantom</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../odl.set.html">set</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../odl.solvers.html">solvers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../odl.space.html">space</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../odl.tomo.html">tomo</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../odl.trafos.html">trafos</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../odl.ufunc_ops.html">ufunc_ops</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../odl.util.html">util</a></li>
+</ul>
+</li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">odl</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="../odl.html">odl</a> &raquo;</li>
+        
+          <li><a href="../odl.operator.html">operator</a> &raquo;</li>
+        
+          <li><a href="../odl.operator.operator.html">operator</a> &raquo;</li>
+        
+          <li><a href="odl.operator.operator.FunctionalLeftVectorMult.html">FunctionalLeftVectorMult</a> &raquo;</li>
+        
+      <li>FunctionalLeftVectorMult.norm</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            <a href="../_sources/generated/odl.operator.operator.FunctionalLeftVectorMult.norm.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="functionalleftvectormult-norm">
+<h1>FunctionalLeftVectorMult.norm<a class="headerlink" href="#functionalleftvectormult-norm" title="Permalink to this headline">¶</a></h1>
+<dl class="py method">
+<dt id="odl.operator.operator.FunctionalLeftVectorMult.norm">
+<code class="sig-prename descclassname"><span class="pre">FunctionalLeftVectorMult.</span></code><code class="sig-name descname"><span class="pre">norm</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="pre">self</span></em>, <em class="sig-param"><span class="pre">estimate=False</span></em>, <em class="sig-param"><span class="pre">\*\*kwargs</span></em><span class="sig-paren">)</span><a class="headerlink" href="#odl.operator.operator.FunctionalLeftVectorMult.norm" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the operator norm of this operator.</p>
+<p>If this operator is non-linear, this should be the Lipschitz constant.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>estimate</strong><span class="classifier">bool</span></dt><dd><p>If true, estimate the operator norm. By default, it is estimated
+using <a class="reference internal" href="odl.operator.oputils.power_method_opnorm.html#odl.operator.oputils.power_method_opnorm" title="odl.operator.oputils.power_method_opnorm"><code class="xref any py py-func docutils literal notranslate"><span class="pre">power_method_opnorm</span></code></a>, which is only applicable for linear
+operators.
+Subclasses are allowed to ignore this parameter if they can provide
+an exact value.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><dl class="simple">
+<dt><strong>norm</strong><span class="classifier">float</span></dt><dd></dd>
+</dl>
+</dd>
+<dt class="field-odd">Other Parameters</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>kwargs :</strong></dt><dd><p>If <code class="docutils literal notranslate"><span class="pre">estimate</span></code> is True, pass these arguments to the
+<a class="reference internal" href="odl.operator.oputils.power_method_opnorm.html#odl.operator.oputils.power_method_opnorm" title="odl.operator.oputils.power_method_opnorm"><code class="xref any py py-func docutils literal notranslate"><span class="pre">power_method_opnorm</span></code></a> call.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+<p class="rubric">Examples</p>
+<p>Some operators know their own operator norm and do not need an estimate</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">spc</span> <span class="o">=</span> <span class="n">odl</span><span class="o">.</span><span class="n">rn</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">id</span> <span class="o">=</span> <span class="n">odl</span><span class="o">.</span><span class="n">IdentityOperator</span><span class="p">(</span><span class="n">spc</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">id</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="kc">True</span><span class="p">)</span>
+<span class="go">1.0</span>
+</pre></div>
+</div>
+<p>For others, there is no closed form expression and an estimate is
+needed:</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">spc</span> <span class="o">=</span> <span class="n">odl</span><span class="o">.</span><span class="n">uniform_discr</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">grad</span> <span class="o">=</span> <span class="n">odl</span><span class="o">.</span><span class="n">Gradient</span><span class="p">(</span><span class="n">spc</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">opnorm</span> <span class="o">=</span> <span class="n">grad</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">estimate</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+        <a href="odl.operator.operator.OpDomainError.html" class="btn btn-neutral float-right" title="OpDomainError" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="odl.operator.operator.FunctionalLeftVectorMult.derivative.html" class="btn btn-neutral float-left" title="FunctionalLeftVectorMult.derivative" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &#169; Copyright 2014-2020 The ODL Contributors.
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

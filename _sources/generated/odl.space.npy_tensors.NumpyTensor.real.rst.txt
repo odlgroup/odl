@@ -1,0 +1,6 @@
+NumpyTensor.real
+======================================
+
+.. currentmodule:: odl.space.npy_tensors
+
+.. autoproperty:: NumpyTensor.real

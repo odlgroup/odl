@@ -1,0 +1,39 @@
+﻿OperatorComp
+==================================
+
+.. currentmodule:: odl.operator.operator
+
+.. autoclass:: OperatorComp
+   :show-inheritance:
+   
+   
+   .. automethod:: __init__
+   
+      
+   
+   .. HACK -- the point here is that we don't want this to appear in the output, but the autosummary should still generate the pages.
+      .. autosummary::
+         :toctree:
+      
+         OperatorComp.__call__
+         OperatorComp.__eq__
+         OperatorComp._call
+         OperatorComp.derivative
+         OperatorComp.norm
+   
+
+    
+   .. HACK -- the point here is that we don't want this to appear in the output, but the autosummary should still generate the pages.
+      .. autosummary::
+         :toctree:
+      
+         OperatorComp.adjoint
+         OperatorComp.domain
+         OperatorComp.inverse
+         OperatorComp.is_functional
+         OperatorComp.is_linear
+         OperatorComp.left
+         OperatorComp.range
+         OperatorComp.right
+   
+   

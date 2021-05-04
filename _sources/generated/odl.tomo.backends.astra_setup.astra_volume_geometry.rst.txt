@@ -1,0 +1,6 @@
+﻿astra_volume_geometry
+===================================================
+
+.. currentmodule:: odl.tomo.backends.astra_setup
+
+.. autofunction:: astra_volume_geometry

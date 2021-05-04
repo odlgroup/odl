@@ -1,0 +1,6 @@
+﻿normalized_scalar_param_list
+===============================================
+
+.. currentmodule:: odl.util.normalize
+
+.. autofunction:: normalized_scalar_param_list

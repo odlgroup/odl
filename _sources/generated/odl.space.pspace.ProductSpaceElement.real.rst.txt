@@ -1,0 +1,6 @@
+ProductSpaceElement.real
+=========================================
+
+.. currentmodule:: odl.space.pspace
+
+.. autoproperty:: ProductSpaceElement.real

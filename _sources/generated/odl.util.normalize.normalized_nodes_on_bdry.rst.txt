@@ -1,0 +1,6 @@
+﻿normalized_nodes_on_bdry
+===========================================
+
+.. currentmodule:: odl.util.normalize
+
+.. autofunction:: normalized_nodes_on_bdry

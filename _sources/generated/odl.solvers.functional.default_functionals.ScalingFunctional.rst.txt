@@ -1,0 +1,44 @@
+﻿ScalingFunctional
+============================================================
+
+.. currentmodule:: odl.solvers.functional.default_functionals
+
+.. autoclass:: ScalingFunctional
+   :show-inheritance:
+   
+   
+   .. automethod:: __init__
+   
+      
+   
+   .. HACK -- the point here is that we don't want this to appear in the output, but the autosummary should still generate the pages.
+      .. autosummary::
+         :toctree:
+      
+         ScalingFunctional.__call__
+         ScalingFunctional.__eq__
+         ScalingFunctional._call
+         ScalingFunctional.bregman
+         ScalingFunctional.derivative
+         ScalingFunctional.norm
+         ScalingFunctional.translated
+   
+
+    
+   .. HACK -- the point here is that we don't want this to appear in the output, but the autosummary should still generate the pages.
+      .. autosummary::
+         :toctree:
+      
+         ScalingFunctional.adjoint
+         ScalingFunctional.convex_conj
+         ScalingFunctional.domain
+         ScalingFunctional.grad_lipschitz
+         ScalingFunctional.gradient
+         ScalingFunctional.inverse
+         ScalingFunctional.is_functional
+         ScalingFunctional.is_linear
+         ScalingFunctional.proximal
+         ScalingFunctional.range
+         ScalingFunctional.scalar
+   
+   

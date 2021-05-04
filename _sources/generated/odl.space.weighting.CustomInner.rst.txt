@@ -1,0 +1,34 @@
+﻿CustomInner
+===============================
+
+.. currentmodule:: odl.space.weighting
+
+.. autoclass:: CustomInner
+   :show-inheritance:
+   
+   
+   .. automethod:: __init__
+   
+      
+   
+   .. HACK -- the point here is that we don't want this to appear in the output, but the autosummary should still generate the pages.
+      .. autosummary::
+         :toctree:
+      
+         CustomInner.__eq__
+         CustomInner.dist
+         CustomInner.equiv
+         CustomInner.norm
+   
+
+    
+   .. HACK -- the point here is that we don't want this to appear in the output, but the autosummary should still generate the pages.
+      .. autosummary::
+         :toctree:
+      
+         CustomInner.exponent
+         CustomInner.impl
+         CustomInner.inner
+         CustomInner.repr_part
+   
+   

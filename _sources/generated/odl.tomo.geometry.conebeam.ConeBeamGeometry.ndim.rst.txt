@@ -1,0 +1,6 @@
+ConeBeamGeometry.ndim
+================================================
+
+.. currentmodule:: odl.tomo.geometry.conebeam
+
+.. autoproperty:: ConeBeamGeometry.ndim

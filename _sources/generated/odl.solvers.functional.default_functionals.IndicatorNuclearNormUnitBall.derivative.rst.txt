@@ -1,0 +1,8 @@
+:orphan:
+
+IndicatorNuclearNormUnitBall.derivative
+==================================================================================
+
+.. currentmodule:: odl.solvers.functional.default_functionals
+
+.. automethod:: IndicatorNuclearNormUnitBall.derivative

@@ -1,0 +1,56 @@
+﻿NumpyTensor
+=================================
+
+.. currentmodule:: odl.space.npy_tensors
+
+.. autoclass:: NumpyTensor
+   :show-inheritance:
+   
+   
+   .. automethod:: __init__
+   
+      
+   
+   .. HACK -- the point here is that we don't want this to appear in the output, but the autosummary should still generate the pages.
+      .. autosummary::
+         :toctree:
+      
+         NumpyTensor.__eq__
+         NumpyTensor.__getitem__
+         NumpyTensor.__setitem__
+         NumpyTensor.asarray
+         NumpyTensor.assign
+         NumpyTensor.astype
+         NumpyTensor.conj
+         NumpyTensor.copy
+         NumpyTensor.dist
+         NumpyTensor.divide
+         NumpyTensor.inner
+         NumpyTensor.lincomb
+         NumpyTensor.multiply
+         NumpyTensor.norm
+         NumpyTensor.set_zero
+         NumpyTensor.show
+   
+
+    
+   .. HACK -- the point here is that we don't want this to appear in the output, but the autosummary should still generate the pages.
+      .. autosummary::
+         :toctree:
+      
+         NumpyTensor.T
+         NumpyTensor.data
+         NumpyTensor.data_ptr
+         NumpyTensor.dtype
+         NumpyTensor.imag
+         NumpyTensor.impl
+         NumpyTensor.itemsize
+         NumpyTensor.nbytes
+         NumpyTensor.ndim
+         NumpyTensor.real
+         NumpyTensor.shape
+         NumpyTensor.size
+         NumpyTensor.space
+         NumpyTensor.ufuncs
+   
+   

@@ -1,0 +1,6 @@
+ScalingFunctional.is_functional
+==========================================================================
+
+.. currentmodule:: odl.solvers.functional.default_functionals
+
+.. autoproperty:: ScalingFunctional.is_functional

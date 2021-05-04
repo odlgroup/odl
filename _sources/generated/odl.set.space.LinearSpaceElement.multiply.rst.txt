@@ -1,0 +1,8 @@
+:orphan:
+
+LinearSpaceElement.multiply
+=========================================
+
+.. currentmodule:: odl.set.space
+
+.. automethod:: LinearSpaceElement.multiply

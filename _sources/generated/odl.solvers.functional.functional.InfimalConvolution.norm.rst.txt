@@ -1,0 +1,8 @@
+:orphan:
+
+InfimalConvolution.norm
+=========================================================
+
+.. currentmodule:: odl.solvers.functional.functional
+
+.. automethod:: InfimalConvolution.norm

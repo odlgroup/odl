@@ -1,0 +1,515 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>FanBeamGeometry &mdash; odl 1.0.0.dev0 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="FanBeamGeometry.det_axis" href="odl.tomo.geometry.conebeam.FanBeamGeometry.det_axis.html" />
+    <link rel="prev" title="ConeBeamGeometry.src_position" href="odl.tomo.geometry.conebeam.ConeBeamGeometry.src_position.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../index.html" class="icon icon-home"> odl
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                1.0.0.dev0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Getting Started</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../getting_started/getting_started.html">Getting Started</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Working with ODL</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../guide/guide.html">User’s guide – selected topics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../math/math.html">Mathematical Background</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Developer zone</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../dev/dev.html">Contributing to ODL</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Useful facts</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../guide/faq.html">Frequently asked questions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../guide/glossary.html">Glossary</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../release_notes.html">Release Notes</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../refs.html">References</a></li>
+</ul>
+<p class="caption"><span class="caption-text">API Reference</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../odl.html">odl</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../odl.contrib.html">contrib</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../odl.deform.html">deform</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../odl.diagnostics.html">diagnostics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../odl.discr.html">discr</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../odl.operator.html">operator</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../odl.phantom.html">phantom</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../odl.set.html">set</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../odl.solvers.html">solvers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../odl.space.html">space</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="../odl.tomo.html">tomo</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="../odl.tomo.analytic.html">analytic</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../odl.tomo.backends.html">backends</a></li>
+<li class="toctree-l3 current"><a class="reference internal" href="../odl.tomo.geometry.html">geometry</a><ul class="current">
+<li class="toctree-l4 current"><a class="reference internal" href="../odl.tomo.geometry.conebeam.html">conebeam</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../odl.tomo.geometry.detector.html">detector</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../odl.tomo.geometry.geometry.html">geometry</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../odl.tomo.geometry.parallel.html">parallel</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../odl.tomo.geometry.spect.html">spect</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../odl.tomo.operators.html">operators</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../odl.tomo.util.html">util</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../odl.trafos.html">trafos</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../odl.ufunc_ops.html">ufunc_ops</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../odl.util.html">util</a></li>
+</ul>
+</li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">odl</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="../odl.html">odl</a> &raquo;</li>
+        
+          <li><a href="../odl.tomo.html">tomo</a> &raquo;</li>
+        
+          <li><a href="../odl.tomo.geometry.html">geometry</a> &raquo;</li>
+        
+          <li><a href="../odl.tomo.geometry.conebeam.html">conebeam</a> &raquo;</li>
+        
+      <li>FanBeamGeometry</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            <a href="../_sources/generated/odl.tomo.geometry.conebeam.FanBeamGeometry.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="fanbeamgeometry">
+<h1>FanBeamGeometry<a class="headerlink" href="#fanbeamgeometry" title="Permalink to this headline">¶</a></h1>
+<dl class="py class">
+<dt id="odl.tomo.geometry.conebeam.FanBeamGeometry">
+<em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">odl.tomo.geometry.conebeam.</span></code><code class="sig-name descname"><span class="pre">FanBeamGeometry</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">apart</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dpart</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">src_radius</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">det_radius</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">det_curvature_radius</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">src_to_det_init</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">(0,</span> <span class="pre">1)</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">src_shift_func</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">det_shift_func</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/odl/tomo/geometry/conebeam.html#FanBeamGeometry"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#odl.tomo.geometry.conebeam.FanBeamGeometry" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="odl.tomo.geometry.geometry.DivergentBeamGeometry.html#odl.tomo.geometry.geometry.DivergentBeamGeometry" title="odl.tomo.geometry.geometry.DivergentBeamGeometry"><code class="xref py py-class docutils literal notranslate"><span class="pre">odl.tomo.geometry.geometry.DivergentBeamGeometry</span></code></a></p>
+<p>Fan beam (2d cone beam) geometry.</p>
+<p>The source moves on a circle with radius <code class="docutils literal notranslate"><span class="pre">src_radius</span></code>, and the
+detector reference point is opposite to the source, i.e. at maximum
+distance, on a circle with radius <code class="docutils literal notranslate"><span class="pre">det_radius</span></code>. One of the two
+radii can be chosen as 0, which corresponds to a stationary source
+or detector, respectively.</p>
+<p>The motion parameter is the 1d rotation angle parameterizing source
+and detector positions simultaneously.</p>
+<p>In the standard configuration, the detector is perpendicular to the
+ray direction, its reference point is initially at <code class="docutils literal notranslate"><span class="pre">(0,</span> <span class="pre">1)</span></code>, and
+the initial detector axis is <code class="docutils literal notranslate"><span class="pre">(1,</span> <span class="pre">0)</span></code>.</p>
+<p>For details, check <a class="reference external" href="https://odlgroup.github.io/odl/guide/geometry_guide.html">the online docs</a>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Attributes</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><a class="reference internal" href="odl.tomo.geometry.conebeam.FanBeamGeometry.angles.html#odl.tomo.geometry.conebeam.FanBeamGeometry.angles" title="odl.tomo.geometry.conebeam.FanBeamGeometry.angles"><code class="xref py py-obj docutils literal notranslate"><span class="pre">angles</span></code></a></dt><dd><p>Discrete angles given in this geometry.</p>
+</dd>
+<dt><a class="reference internal" href="odl.tomo.geometry.conebeam.FanBeamGeometry.check_bounds.html#odl.tomo.geometry.conebeam.FanBeamGeometry.check_bounds" title="odl.tomo.geometry.conebeam.FanBeamGeometry.check_bounds"><code class="xref py py-obj docutils literal notranslate"><span class="pre">check_bounds</span></code></a></dt><dd><p>If <code class="docutils literal notranslate"><span class="pre">True</span></code>, methods computing vectors check input arguments.</p>
+</dd>
+<dt><a class="reference internal" href="odl.tomo.geometry.conebeam.FanBeamGeometry.det_axis_init.html#odl.tomo.geometry.conebeam.FanBeamGeometry.det_axis_init" title="odl.tomo.geometry.conebeam.FanBeamGeometry.det_axis_init"><code class="xref py py-obj docutils literal notranslate"><span class="pre">det_axis_init</span></code></a></dt><dd><p>Detector axis at angle 0.</p>
+</dd>
+<dt><a class="reference internal" href="odl.tomo.geometry.conebeam.FanBeamGeometry.det_curvature_radius.html#odl.tomo.geometry.conebeam.FanBeamGeometry.det_curvature_radius" title="odl.tomo.geometry.conebeam.FanBeamGeometry.det_curvature_radius"><code class="xref py py-obj docutils literal notranslate"><span class="pre">det_curvature_radius</span></code></a></dt><dd><p>Detector curve radius of this geometry.</p>
+</dd>
+<dt><a class="reference internal" href="odl.tomo.geometry.conebeam.FanBeamGeometry.det_grid.html#odl.tomo.geometry.conebeam.FanBeamGeometry.det_grid" title="odl.tomo.geometry.conebeam.FanBeamGeometry.det_grid"><code class="xref py py-obj docutils literal notranslate"><span class="pre">det_grid</span></code></a></dt><dd><p>Sampling grid of <a class="reference internal" href="odl.tomo.geometry.conebeam.FanBeamGeometry.det_params.html#odl.tomo.geometry.conebeam.FanBeamGeometry.det_params" title="odl.tomo.geometry.conebeam.FanBeamGeometry.det_params"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">det_params</span></code></a>.</p>
+</dd>
+<dt><a class="reference internal" href="odl.tomo.geometry.conebeam.FanBeamGeometry.det_params.html#odl.tomo.geometry.conebeam.FanBeamGeometry.det_params" title="odl.tomo.geometry.conebeam.FanBeamGeometry.det_params"><code class="xref py py-obj docutils literal notranslate"><span class="pre">det_params</span></code></a></dt><dd><p>Continuous detector parameter range, an <a class="reference internal" href="odl.set.domain.IntervalProd.html#odl.set.domain.IntervalProd" title="odl.set.domain.IntervalProd"><code class="xref any py py-class docutils literal notranslate"><span class="pre">IntervalProd</span></code></a>.</p>
+</dd>
+<dt><a class="reference internal" href="odl.tomo.geometry.conebeam.FanBeamGeometry.det_partition.html#odl.tomo.geometry.conebeam.FanBeamGeometry.det_partition" title="odl.tomo.geometry.conebeam.FanBeamGeometry.det_partition"><code class="xref py py-obj docutils literal notranslate"><span class="pre">det_partition</span></code></a></dt><dd><p>Partition of the detector parameter set into subsets.</p>
+</dd>
+<dt><a class="reference internal" href="odl.tomo.geometry.conebeam.FanBeamGeometry.det_radius.html#odl.tomo.geometry.conebeam.FanBeamGeometry.det_radius" title="odl.tomo.geometry.conebeam.FanBeamGeometry.det_radius"><code class="xref py py-obj docutils literal notranslate"><span class="pre">det_radius</span></code></a></dt><dd><p>Detector circle radius of this geometry.</p>
+</dd>
+<dt><a class="reference internal" href="odl.tomo.geometry.conebeam.FanBeamGeometry.det_shift_func.html#odl.tomo.geometry.conebeam.FanBeamGeometry.det_shift_func" title="odl.tomo.geometry.conebeam.FanBeamGeometry.det_shift_func"><code class="xref py py-obj docutils literal notranslate"><span class="pre">det_shift_func</span></code></a></dt><dd><p>Detector shifts in the geometry.</p>
+</dd>
+<dt><a class="reference internal" href="odl.tomo.geometry.conebeam.FanBeamGeometry.detector.html#odl.tomo.geometry.conebeam.FanBeamGeometry.detector" title="odl.tomo.geometry.conebeam.FanBeamGeometry.detector"><code class="xref py py-obj docutils literal notranslate"><span class="pre">detector</span></code></a></dt><dd><p>Detector representation of this geometry.</p>
+</dd>
+<dt><a class="reference internal" href="odl.tomo.geometry.conebeam.FanBeamGeometry.grid.html#odl.tomo.geometry.conebeam.FanBeamGeometry.grid" title="odl.tomo.geometry.conebeam.FanBeamGeometry.grid"><code class="xref py py-obj docutils literal notranslate"><span class="pre">grid</span></code></a></dt><dd><p>Joined sampling grid for motion and detector.</p>
+</dd>
+<dt><a class="reference internal" href="odl.tomo.geometry.conebeam.FanBeamGeometry.implementation_cache.html#odl.tomo.geometry.conebeam.FanBeamGeometry.implementation_cache" title="odl.tomo.geometry.conebeam.FanBeamGeometry.implementation_cache"><code class="xref py py-obj docutils literal notranslate"><span class="pre">implementation_cache</span></code></a></dt><dd><p>Dictionary acting as a cache for this geometry.</p>
+</dd>
+<dt><a class="reference internal" href="odl.tomo.geometry.conebeam.FanBeamGeometry.motion_grid.html#odl.tomo.geometry.conebeam.FanBeamGeometry.motion_grid" title="odl.tomo.geometry.conebeam.FanBeamGeometry.motion_grid"><code class="xref py py-obj docutils literal notranslate"><span class="pre">motion_grid</span></code></a></dt><dd><p>Sampling grid of <a class="reference internal" href="odl.tomo.geometry.conebeam.FanBeamGeometry.motion_params.html#odl.tomo.geometry.conebeam.FanBeamGeometry.motion_params" title="odl.tomo.geometry.conebeam.FanBeamGeometry.motion_params"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">motion_params</span></code></a>.</p>
+</dd>
+<dt><a class="reference internal" href="odl.tomo.geometry.conebeam.FanBeamGeometry.motion_params.html#odl.tomo.geometry.conebeam.FanBeamGeometry.motion_params" title="odl.tomo.geometry.conebeam.FanBeamGeometry.motion_params"><code class="xref py py-obj docutils literal notranslate"><span class="pre">motion_params</span></code></a></dt><dd><p>Continuous motion parameter range, an <a class="reference internal" href="odl.set.domain.IntervalProd.html#odl.set.domain.IntervalProd" title="odl.set.domain.IntervalProd"><code class="xref any py py-class docutils literal notranslate"><span class="pre">IntervalProd</span></code></a>.</p>
+</dd>
+<dt><a class="reference internal" href="odl.tomo.geometry.conebeam.FanBeamGeometry.motion_partition.html#odl.tomo.geometry.conebeam.FanBeamGeometry.motion_partition" title="odl.tomo.geometry.conebeam.FanBeamGeometry.motion_partition"><code class="xref py py-obj docutils literal notranslate"><span class="pre">motion_partition</span></code></a></dt><dd><p>Partition of the motion parameter set into subsets.</p>
+</dd>
+<dt><a class="reference internal" href="odl.tomo.geometry.conebeam.FanBeamGeometry.ndim.html#odl.tomo.geometry.conebeam.FanBeamGeometry.ndim" title="odl.tomo.geometry.conebeam.FanBeamGeometry.ndim"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ndim</span></code></a></dt><dd><p>Number of dimensions of the geometry.</p>
+</dd>
+<dt><a class="reference internal" href="odl.tomo.geometry.conebeam.FanBeamGeometry.params.html#odl.tomo.geometry.conebeam.FanBeamGeometry.params" title="odl.tomo.geometry.conebeam.FanBeamGeometry.params"><code class="xref py py-obj docutils literal notranslate"><span class="pre">params</span></code></a></dt><dd><p>Joined parameter set for motion and detector.</p>
+</dd>
+<dt><a class="reference internal" href="odl.tomo.geometry.conebeam.FanBeamGeometry.partition.html#odl.tomo.geometry.conebeam.FanBeamGeometry.partition" title="odl.tomo.geometry.conebeam.FanBeamGeometry.partition"><code class="xref py py-obj docutils literal notranslate"><span class="pre">partition</span></code></a></dt><dd><p>Joined parameter set partition for motion and detector.</p>
+</dd>
+<dt><a class="reference internal" href="odl.tomo.geometry.conebeam.FanBeamGeometry.src_radius.html#odl.tomo.geometry.conebeam.FanBeamGeometry.src_radius" title="odl.tomo.geometry.conebeam.FanBeamGeometry.src_radius"><code class="xref py py-obj docutils literal notranslate"><span class="pre">src_radius</span></code></a></dt><dd><p>Source circle radius of this geometry.</p>
+</dd>
+<dt><a class="reference internal" href="odl.tomo.geometry.conebeam.FanBeamGeometry.src_shift_func.html#odl.tomo.geometry.conebeam.FanBeamGeometry.src_shift_func" title="odl.tomo.geometry.conebeam.FanBeamGeometry.src_shift_func"><code class="xref py py-obj docutils literal notranslate"><span class="pre">src_shift_func</span></code></a></dt><dd><p>Source shifts in the geometry.</p>
+</dd>
+<dt><a class="reference internal" href="odl.tomo.geometry.conebeam.FanBeamGeometry.src_to_det_init.html#odl.tomo.geometry.conebeam.FanBeamGeometry.src_to_det_init" title="odl.tomo.geometry.conebeam.FanBeamGeometry.src_to_det_init"><code class="xref py py-obj docutils literal notranslate"><span class="pre">src_to_det_init</span></code></a></dt><dd><p>Initial source-to-detector unit vector.</p>
+</dd>
+<dt><a class="reference internal" href="odl.tomo.geometry.conebeam.FanBeamGeometry.translation.html#odl.tomo.geometry.conebeam.FanBeamGeometry.translation" title="odl.tomo.geometry.conebeam.FanBeamGeometry.translation"><code class="xref py py-obj docutils literal notranslate"><span class="pre">translation</span></code></a></dt><dd><p>Shift of the origin of this geometry.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+<p class="rubric">Methods</p>
+<table class="longtable docutils align-default">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="odl.tomo.geometry.conebeam.FanBeamGeometry.det_axis.html#odl.tomo.geometry.conebeam.FanBeamGeometry.det_axis" title="odl.tomo.geometry.conebeam.FanBeamGeometry.det_axis"><code class="xref py py-obj docutils literal notranslate"><span class="pre">det_axis</span></code></a>(self, angle)</p></td>
+<td><p>Return the detector axis at <code class="docutils literal notranslate"><span class="pre">angle</span></code>.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="odl.tomo.geometry.conebeam.FanBeamGeometry.det_point_position.html#odl.tomo.geometry.conebeam.FanBeamGeometry.det_point_position" title="odl.tomo.geometry.conebeam.FanBeamGeometry.det_point_position"><code class="xref py py-obj docutils literal notranslate"><span class="pre">det_point_position</span></code></a>(self, mparam, dparam)</p></td>
+<td><p>Return the detector point at <code class="docutils literal notranslate"><span class="pre">(mparam,</span> <span class="pre">dparam)</span></code>.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="odl.tomo.geometry.conebeam.FanBeamGeometry.det_refpoint.html#odl.tomo.geometry.conebeam.FanBeamGeometry.det_refpoint" title="odl.tomo.geometry.conebeam.FanBeamGeometry.det_refpoint"><code class="xref py py-obj docutils literal notranslate"><span class="pre">det_refpoint</span></code></a>(self, angle)</p></td>
+<td><p>Return the detector reference point position at <code class="docutils literal notranslate"><span class="pre">angle</span></code>.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="odl.tomo.geometry.conebeam.FanBeamGeometry.det_to_src.html#odl.tomo.geometry.conebeam.FanBeamGeometry.det_to_src" title="odl.tomo.geometry.conebeam.FanBeamGeometry.det_to_src"><code class="xref py py-obj docutils literal notranslate"><span class="pre">det_to_src</span></code></a>(self, angle, dparam[, normalized])</p></td>
+<td><p>Vector or direction from a detector location to the source.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="odl.tomo.geometry.conebeam.FanBeamGeometry.frommatrix.html#odl.tomo.geometry.conebeam.FanBeamGeometry.frommatrix" title="odl.tomo.geometry.conebeam.FanBeamGeometry.frommatrix"><code class="xref py py-obj docutils literal notranslate"><span class="pre">frommatrix</span></code></a>(apart, dpart, src_radius, …[, …])</p></td>
+<td><p>Create an instance of <a class="reference internal" href="#odl.tomo.geometry.conebeam.FanBeamGeometry" title="odl.tomo.geometry.conebeam.FanBeamGeometry"><code class="xref any py py-class docutils literal notranslate"><span class="pre">FanBeamGeometry</span></code></a> using a matrix.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="odl.tomo.geometry.conebeam.FanBeamGeometry.rotation_matrix.html#odl.tomo.geometry.conebeam.FanBeamGeometry.rotation_matrix" title="odl.tomo.geometry.conebeam.FanBeamGeometry.rotation_matrix"><code class="xref py py-obj docutils literal notranslate"><span class="pre">rotation_matrix</span></code></a>(self, angle)</p></td>
+<td><p>Return the rotation matrix for <code class="docutils literal notranslate"><span class="pre">angle</span></code>.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="odl.tomo.geometry.conebeam.FanBeamGeometry.src_position.html#odl.tomo.geometry.conebeam.FanBeamGeometry.src_position" title="odl.tomo.geometry.conebeam.FanBeamGeometry.src_position"><code class="xref py py-obj docutils literal notranslate"><span class="pre">src_position</span></code></a>(self, angle)</p></td>
+<td><p>Return the source position at <code class="docutils literal notranslate"><span class="pre">angle</span></code>.</p></td>
+</tr>
+</tbody>
+</table>
+<dl class="py method">
+<dt id="odl.tomo.geometry.conebeam.FanBeamGeometry.__init__">
+<code class="sig-name descname"><span class="pre">__init__</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="pre">self</span></em>, <em class="sig-param"><span class="pre">apart</span></em>, <em class="sig-param"><span class="pre">dpart</span></em>, <em class="sig-param"><span class="pre">src_radius</span></em>, <em class="sig-param"><span class="pre">det_radius</span></em>, <em class="sig-param"><span class="pre">det_curvature_radius=None</span></em>, <em class="sig-param"><span class="pre">src_to_det_init=(0</span></em>, <em class="sig-param"><span class="pre">1)</span></em>, <em class="sig-param"><span class="pre">src_shift_func=None</span></em>, <em class="sig-param"><span class="pre">det_shift_func=None</span></em>, <em class="sig-param"><span class="pre">\*\*kwargs</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/odl/tomo/geometry/conebeam.html#FanBeamGeometry.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#odl.tomo.geometry.conebeam.FanBeamGeometry.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initialize a new instance.</p>
+<dl class="field-list">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl>
+<dt><strong>apart</strong><span class="classifier">1-dim. <a class="reference internal" href="odl.discr.partition.RectPartition.html#odl.discr.partition.RectPartition" title="odl.discr.partition.RectPartition"><code class="xref any py py-class docutils literal notranslate"><span class="pre">RectPartition</span></code></a></span></dt><dd><p>Partition of the angle interval.</p>
+</dd>
+<dt><strong>dpart</strong><span class="classifier">1-dim. <a class="reference internal" href="odl.discr.partition.RectPartition.html#odl.discr.partition.RectPartition" title="odl.discr.partition.RectPartition"><code class="xref any py py-class docutils literal notranslate"><span class="pre">RectPartition</span></code></a></span></dt><dd><p>Partition of the detector parameter interval.</p>
+</dd>
+<dt><strong>src_radius</strong><span class="classifier">nonnegative float</span></dt><dd><p>Radius of the source circle.</p>
+</dd>
+<dt><strong>det_radius</strong><span class="classifier">nonnegative float</span></dt><dd><p>Radius of the detector circle. Must be nonzero if <code class="docutils literal notranslate"><span class="pre">src_radius</span></code>
+is zero.</p>
+</dd>
+<dt><strong>det_curvature_radius</strong><span class="classifier">nonnegative float, optional</span></dt><dd><p>Radius of the detector curvature.
+If <code class="docutils literal notranslate"><span class="pre">None</span></code>, a flat detector is used, otherwise must be positive.</p>
+</dd>
+<dt><strong>src_to_det_init</strong><span class="classifier"><a class="reference internal" href="../guide/glossary.html#term-array-like"><code class="xref any std std-term docutils literal notranslate"><span class="pre">array-like</span></code></a> (shape <code class="docutils literal notranslate"><span class="pre">(2,)</span></code>), optional</span></dt><dd><p>Initial state of the vector pointing from source to detector
+reference point. The zero vector is not allowed.</p>
+</dd>
+<dt><strong>src_shift_func</strong><span class="classifier">callable, optional</span></dt><dd><p>Function with signature <code class="docutils literal notranslate"><span class="pre">src_shift_func(angle)</span> <span class="pre">-&gt;</span> <span class="pre">shift</span></code>
+returning a source shift for a given angle.
+Each shift is interpreted as a vector <code class="docutils literal notranslate"><span class="pre">[shift_d,</span> <span class="pre">shift_t]</span></code>, where
+“d” and “t” denote shifts in the detector-to-source and
+tangent directions, respectively.</p>
+</dd>
+<dt><strong>det_shift_func</strong><span class="classifier">callable, optional</span></dt><dd><p>Function with signature <code class="docutils literal notranslate"><span class="pre">det_shift_func(angle)</span> <span class="pre">-&gt;</span> <span class="pre">shift</span></code>
+returning a detector shift for a given angle.
+Each shift is interpreted as a vector <code class="docutils literal notranslate"><span class="pre">[shift_d,</span> <span class="pre">shift_t]</span></code>, where
+“d” and “t” denote shifts in the source-to-detector and
+tangent directions, respectively.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Other Parameters</dt>
+<dd class="field-even"><dl>
+<dt><strong>det_axis_init</strong><span class="classifier"><a class="reference internal" href="../guide/glossary.html#term-array-like"><code class="xref any std std-term docutils literal notranslate"><span class="pre">array-like</span></code></a> (shape <code class="docutils literal notranslate"><span class="pre">(2,)</span></code>), optional</span></dt><dd><p>Initial axis defining the detector orientation. The default
+depends on <code class="docutils literal notranslate"><span class="pre">src_to_det_init</span></code>, see Notes.</p>
+</dd>
+<dt><strong>translation</strong><span class="classifier"><a class="reference internal" href="../guide/glossary.html#term-array-like"><code class="xref any std std-term docutils literal notranslate"><span class="pre">array-like</span></code></a>, shape <code class="docutils literal notranslate"><span class="pre">(2,)</span></code>, optional</span></dt><dd><p>Global translation of the geometry. This is added last in any
+method that computes an absolute vector, e.g., <a class="reference internal" href="odl.tomo.geometry.conebeam.FanBeamGeometry.det_refpoint.html#odl.tomo.geometry.conebeam.FanBeamGeometry.det_refpoint" title="odl.tomo.geometry.conebeam.FanBeamGeometry.det_refpoint"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">det_refpoint</span></code></a>,
+and also shifts the center of rotation.</p>
+</dd>
+<dt><strong>check_bounds</strong><span class="classifier">bool, optional</span></dt><dd><p>If <code class="docutils literal notranslate"><span class="pre">True</span></code>, methods computing vectors check input arguments.
+Checks are vectorized and add only a small overhead.
+Default: <code class="docutils literal notranslate"><span class="pre">True</span></code></p>
+</dd>
+</dl>
+</dd>
+</dl>
+<p class="rubric">Notes</p>
+<p>In the default configuration, the initial source-to-detector vector
+is <code class="docutils literal notranslate"><span class="pre">(0,</span> <span class="pre">1)</span></code>, and the initial detector axis is <code class="docutils literal notranslate"><span class="pre">(1,</span> <span class="pre">0)</span></code>. If a
+different <code class="docutils literal notranslate"><span class="pre">src_to_det_init</span></code> is chosen, the new default axis is
+given as a rotation of the original one by a matrix that transforms
+<code class="docutils literal notranslate"><span class="pre">(0,</span> <span class="pre">1)</span></code> to the new (normalized) <code class="docutils literal notranslate"><span class="pre">src_to_det_init</span></code>. This matrix
+is calculated with the <a class="reference internal" href="odl.tomo.util.utility.rotation_matrix_from_to.html#odl.tomo.util.utility.rotation_matrix_from_to" title="odl.tomo.util.utility.rotation_matrix_from_to"><code class="xref any py py-func docutils literal notranslate"><span class="pre">rotation_matrix_from_to</span></code></a> function.
+Expressed in code, we have</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">init_rot</span> <span class="o">=</span> <span class="n">rotation_matrix_from_to</span><span class="p">((</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span> <span class="n">src_to_det_init</span><span class="p">)</span>
+<span class="n">det_axis_init</span> <span class="o">=</span> <span class="n">init_rot</span><span class="o">.</span><span class="n">dot</span><span class="p">((</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">))</span>
+</pre></div>
+</div>
+<p class="rubric">Examples</p>
+<p>Initialization with default parameters and some radii:</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">apart</span> <span class="o">=</span> <span class="n">odl</span><span class="o">.</span><span class="n">uniform_partition</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="p">,</span> <span class="mi">10</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">dpart</span> <span class="o">=</span> <span class="n">odl</span><span class="o">.</span><span class="n">uniform_partition</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">20</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">geom</span> <span class="o">=</span> <span class="n">FanBeamGeometry</span><span class="p">(</span><span class="n">apart</span><span class="p">,</span> <span class="n">dpart</span><span class="p">,</span> <span class="n">src_radius</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">det_radius</span><span class="o">=</span><span class="mi">5</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">geom</span><span class="o">.</span><span class="n">src_position</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+<span class="go">array([ 0., -1.])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">geom</span><span class="o">.</span><span class="n">det_refpoint</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+<span class="go">array([ 0.,  5.])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">geom</span><span class="o">.</span><span class="n">det_point_position</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>  <span class="c1"># (0, 5) + 1 * (1, 0)</span>
+<span class="go">array([ 1.,  5.])</span>
+</pre></div>
+</div>
+<p>Checking the default orientation:</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">geom</span><span class="o">.</span><span class="n">src_to_det_init</span>
+<span class="go">array([ 0.,  1.])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">geom</span><span class="o">.</span><span class="n">det_axis_init</span>
+<span class="go">array([ 1.,  0.])</span>
+</pre></div>
+</div>
+<p>Specifying curvature of the detector:</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">apart</span> <span class="o">=</span> <span class="n">odl</span><span class="o">.</span><span class="n">uniform_partition</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="p">,</span> <span class="mi">10</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">dpart</span> <span class="o">=</span> <span class="n">odl</span><span class="o">.</span><span class="n">uniform_partition</span><span class="p">(</span><span class="o">-</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span> <span class="o">/</span> <span class="mi">2</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span> <span class="o">/</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">10</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">geom</span> <span class="o">=</span> <span class="n">FanBeamGeometry</span><span class="p">(</span><span class="n">apart</span><span class="p">,</span> <span class="n">dpart</span><span class="p">,</span> <span class="n">src_radius</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">det_radius</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span>
+<span class="gp">... </span>                       <span class="n">det_curvature_radius</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">geom</span><span class="o">.</span><span class="n">src_position</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+<span class="go">array([ 0., -1.])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">geom</span><span class="o">.</span><span class="n">det_refpoint</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+<span class="go">array([ 0.,  5.])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># (0, 5) + 10 * (sin(pi/6), cos(pi/6) - 1)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">np</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="n">geom</span><span class="o">.</span><span class="n">det_point_position</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span> <span class="o">/</span> <span class="mi">6</span><span class="p">),</span> <span class="mi">2</span><span class="p">)</span>
+<span class="go">array([ 5.  ,  3.66])</span>
+</pre></div>
+</div>
+<p>Specifying an initial detector position by default rotates the
+standard configuration to this position:</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">e_x</span><span class="p">,</span> <span class="n">e_y</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>  <span class="c1"># standard unit vectors</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">geom</span> <span class="o">=</span> <span class="n">FanBeamGeometry</span><span class="p">(</span><span class="n">apart</span><span class="p">,</span> <span class="n">dpart</span><span class="p">,</span> <span class="n">src_radius</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">det_radius</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span>
+<span class="gp">... </span>                       <span class="n">src_to_det_init</span><span class="o">=</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">np</span><span class="o">.</span><span class="n">allclose</span><span class="p">(</span><span class="n">geom</span><span class="o">.</span><span class="n">src_to_det_init</span><span class="p">,</span> <span class="n">e_x</span><span class="p">)</span>
+<span class="go">True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">np</span><span class="o">.</span><span class="n">allclose</span><span class="p">(</span><span class="n">geom</span><span class="o">.</span><span class="n">det_axis_init</span><span class="p">,</span> <span class="o">-</span><span class="n">e_y</span><span class="p">)</span>
+<span class="go">True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">geom</span> <span class="o">=</span> <span class="n">FanBeamGeometry</span><span class="p">(</span><span class="n">apart</span><span class="p">,</span> <span class="n">dpart</span><span class="p">,</span> <span class="n">src_radius</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">det_radius</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span>
+<span class="gp">... </span>                       <span class="n">src_to_det_init</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">np</span><span class="o">.</span><span class="n">allclose</span><span class="p">(</span><span class="n">geom</span><span class="o">.</span><span class="n">src_to_det_init</span><span class="p">,</span> <span class="o">-</span><span class="n">e_y</span><span class="p">)</span>
+<span class="go">True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">np</span><span class="o">.</span><span class="n">allclose</span><span class="p">(</span><span class="n">geom</span><span class="o">.</span><span class="n">det_axis_init</span><span class="p">,</span> <span class="o">-</span><span class="n">e_x</span><span class="p">)</span>
+<span class="go">True</span>
+</pre></div>
+</div>
+<p>The initial detector axis can also be set explicitly:</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">geom</span> <span class="o">=</span> <span class="n">FanBeamGeometry</span><span class="p">(</span>
+<span class="gp">... </span>    <span class="n">apart</span><span class="p">,</span> <span class="n">dpart</span><span class="p">,</span> <span class="n">src_radius</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">det_radius</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span>
+<span class="gp">... </span>    <span class="n">src_to_det_init</span><span class="o">=</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="n">det_axis_init</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">np</span><span class="o">.</span><span class="n">allclose</span><span class="p">(</span><span class="n">geom</span><span class="o">.</span><span class="n">src_to_det_init</span><span class="p">,</span> <span class="n">e_x</span><span class="p">)</span>
+<span class="go">True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">np</span><span class="o">.</span><span class="n">allclose</span><span class="p">(</span><span class="n">geom</span><span class="o">.</span><span class="n">det_axis_init</span><span class="p">,</span> <span class="n">e_y</span><span class="p">)</span>
+<span class="go">True</span>
+</pre></div>
+</div>
+<p>Specifying a flying focal spot and detector offset:</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">apart</span> <span class="o">=</span> <span class="n">odl</span><span class="o">.</span><span class="n">uniform_partition</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="p">,</span> <span class="mi">4</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">geom</span> <span class="o">=</span> <span class="n">FanBeamGeometry</span><span class="p">(</span>
+<span class="gp">... </span>    <span class="n">apart</span><span class="p">,</span> <span class="n">dpart</span><span class="p">,</span>
+<span class="gp">... </span>    <span class="n">src_radius</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">det_radius</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span>
+<span class="gp">... </span>    <span class="n">src_shift_func</span><span class="o">=</span><span class="k">lambda</span> <span class="n">angle</span><span class="p">:</span> <span class="n">odl</span><span class="o">.</span><span class="n">tomo</span><span class="o">.</span><span class="n">flying_focal_spot</span><span class="p">(</span>
+<span class="gp">... </span>            <span class="n">angle</span><span class="p">,</span> <span class="n">apart</span><span class="o">=</span><span class="n">apart</span><span class="p">,</span> <span class="n">shifts</span><span class="o">=</span><span class="p">[(</span><span class="mf">0.1</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mf">0.1</span><span class="p">)]),</span>
+<span class="gp">... </span>    <span class="n">det_shift_func</span><span class="o">=</span><span class="k">lambda</span> <span class="n">angle</span><span class="p">:</span> <span class="p">[</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.05</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">geom</span><span class="o">.</span><span class="n">src_shift_func</span><span class="p">(</span><span class="n">geom</span><span class="o">.</span><span class="n">angles</span><span class="p">)</span>
+<span class="go">array([[ 0.1, 0. ],</span>
+<span class="go">       [ 0. , 0.1],</span>
+<span class="go">       [ 0.1, 0. ],</span>
+<span class="go">       [ 0. , 0.1]])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">geom</span><span class="o">.</span><span class="n">det_shift_func</span><span class="p">(</span><span class="n">geom</span><span class="o">.</span><span class="n">angles</span><span class="p">)</span>
+<span class="go">[0.0, 0.05]</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+        <a href="odl.tomo.geometry.conebeam.FanBeamGeometry.det_axis.html" class="btn btn-neutral float-right" title="FanBeamGeometry.det_axis" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="odl.tomo.geometry.conebeam.ConeBeamGeometry.src_position.html" class="btn btn-neutral float-left" title="ConeBeamGeometry.src_position" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &#169; Copyright 2014-2020 The ODL Contributors.
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

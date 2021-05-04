@@ -1,0 +1,8 @@
+:orphan:
+
+TensorSpace.contains_set
+===============================================
+
+.. currentmodule:: odl.space.base_tensors
+
+.. automethod:: TensorSpace.contains_set

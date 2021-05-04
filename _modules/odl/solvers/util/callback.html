@@ -1,0 +1,1370 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>odl.solvers.util.callback &mdash; odl 1.0.0.dev0 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../../../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../../../../_static/custom.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../../../" src="../../../../_static/documentation_options.js"></script>
+        <script src="../../../../_static/jquery.js"></script>
+        <script src="../../../../_static/underscore.js"></script>
+        <script src="../../../../_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="../../../../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../../../index.html" class="icon icon-home"> odl
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                1.0.0.dev0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Getting Started</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../getting_started/getting_started.html">Getting Started</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Working with ODL</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../guide/guide.html">User’s guide – selected topics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../math/math.html">Mathematical Background</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Developer zone</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../dev/dev.html">Contributing to ODL</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Useful facts</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../guide/faq.html">Frequently asked questions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../guide/glossary.html">Glossary</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../release_notes.html">Release Notes</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../refs.html">References</a></li>
+</ul>
+<p class="caption"><span class="caption-text">API Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../odl.html">odl</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../../index.html">odl</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../../../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="../../../index.html">Module code</a> &raquo;</li>
+        
+      <li>odl.solvers.util.callback</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for odl.solvers.util.callback</h1><div class="highlight"><pre>
+<span></span><span class="c1"># Copyright 2014-2020 The ODL contributors</span>
+<span class="c1">#</span>
+<span class="c1"># This file is part of ODL.</span>
+<span class="c1">#</span>
+<span class="c1"># This Source Code Form is subject to the terms of the Mozilla Public License,</span>
+<span class="c1"># v. 2.0. If a copy of the MPL was not distributed with this file, You can</span>
+<span class="c1"># obtain one at https://mozilla.org/MPL/2.0/.</span>
+
+<span class="sd">&quot;&quot;&quot;Callback objects for per-iterate actions in iterative methods.&quot;&quot;&quot;</span>
+
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">absolute_import</span><span class="p">,</span> <span class="n">division</span><span class="p">,</span> <span class="n">print_function</span>
+
+<span class="kn">import</span> <span class="nn">contextlib</span>
+<span class="kn">import</span> <span class="nn">copy</span>
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">time</span>
+<span class="kn">import</span> <span class="nn">warnings</span>
+<span class="kn">from</span> <span class="nn">builtins</span> <span class="kn">import</span> <span class="nb">object</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+
+<span class="kn">from</span> <span class="nn">odl.util</span> <span class="kn">import</span> <span class="n">signature_string</span>
+
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;Callback&#39;</span><span class="p">,</span> <span class="s1">&#39;CallbackStore&#39;</span><span class="p">,</span> <span class="s1">&#39;CallbackApply&#39;</span><span class="p">,</span> <span class="s1">&#39;CallbackPrintTiming&#39;</span><span class="p">,</span>
+           <span class="s1">&#39;CallbackPrintIteration&#39;</span><span class="p">,</span> <span class="s1">&#39;CallbackPrint&#39;</span><span class="p">,</span> <span class="s1">&#39;CallbackPrintNorm&#39;</span><span class="p">,</span>
+           <span class="s1">&#39;CallbackShow&#39;</span><span class="p">,</span> <span class="s1">&#39;CallbackSaveToDisk&#39;</span><span class="p">,</span> <span class="s1">&#39;CallbackSleep&#39;</span><span class="p">,</span>
+           <span class="s1">&#39;CallbackShowConvergence&#39;</span><span class="p">,</span> <span class="s1">&#39;CallbackPrintHardwareUsage&#39;</span><span class="p">,</span>
+           <span class="s1">&#39;CallbackProgressBar&#39;</span><span class="p">,</span> <span class="s1">&#39;save_animation&#39;</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="Callback"><a class="viewcode-back" href="../../../../generated/odl.solvers.util.callback.Callback.html#odl.solvers.util.callback.Callback">[docs]</a><span class="k">class</span> <span class="nc">Callback</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+
+    <span class="sd">&quot;&quot;&quot;Abstract base class for handling iterates of solvers.&quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="Callback.__call__"><a class="viewcode-back" href="../../../../generated/odl.solvers.util.callback.Callback.__call__.html#odl.solvers.util.callback.Callback.__call__">[docs]</a>    <span class="k">def</span> <span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">iterate</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Apply the callback object to result.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        iterate : `LinearSpaceElement`</span>
+<span class="sd">            Partial result after n iterations.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        None</span>
+<span class="sd">        &quot;&quot;&quot;</span></div>
+
+    <span class="k">def</span> <span class="fm">__and__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return ``self &amp; other``.</span>
+
+<span class="sd">        Compose callbacks, calls both in sequence.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        other : callable</span>
+<span class="sd">            The other callback to compose with.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        result : `Callback`</span>
+<span class="sd">            A callback whose `__call__` method calls both constituents</span>
+<span class="sd">            `__call__`.</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        --------</span>
+<span class="sd">        &gt;&gt;&gt; store = CallbackStore()</span>
+<span class="sd">        &gt;&gt;&gt; iter = CallbackPrintIteration()</span>
+<span class="sd">        &gt;&gt;&gt; store &amp; iter</span>
+<span class="sd">        CallbackStore() &amp; CallbackPrintIteration()</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">_CallbackAnd</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="fm">__mul__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return ``self * other``.</span>
+
+<span class="sd">        Compose callback with operator, calls the callback after calling the</span>
+<span class="sd">        operator.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        other : `Operator`</span>
+<span class="sd">            The operator to compose with.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        result : `Callback`</span>
+<span class="sd">            A callback whose `__call__` method calls first the operator, and</span>
+<span class="sd">            then applies the callback to the result.</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        --------</span>
+<span class="sd">        &gt;&gt;&gt; r3 = odl.rn(3)</span>
+<span class="sd">        &gt;&gt;&gt; callback = odl.solvers.CallbackPrint()</span>
+<span class="sd">        &gt;&gt;&gt; operator = odl.ScalingOperator(r3, 2.0)</span>
+<span class="sd">        &gt;&gt;&gt; composed_callback = callback * operator</span>
+<span class="sd">        &gt;&gt;&gt; composed_callback([1, 2, 3])</span>
+<span class="sd">        rn(3).element([ 2.,  4.,  6.])</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">_CallbackCompose</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">)</span>
+
+<div class="viewcode-block" id="Callback.reset"><a class="viewcode-back" href="../../../../generated/odl.solvers.util.callback.Callback.reset.html#odl.solvers.util.callback.Callback.reset">[docs]</a>    <span class="k">def</span> <span class="nf">reset</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Reset the callback to its initial state.</span>
+
+<span class="sd">        Should be overridden by subclasses.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">pass</span></div>
+
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return ``repr(self)``.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="s1">&#39;</span><span class="si">{}</span><span class="s1">()&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="p">)</span></div>
+
+
+<span class="k">class</span> <span class="nc">_CallbackAnd</span><span class="p">(</span><span class="n">Callback</span><span class="p">):</span>
+
+    <span class="sd">&quot;&quot;&quot;Callback used for combining several callbacks.&quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">callbacks</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Initialize a new instance.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        callback1, ..., callbackN : callable</span>
+<span class="sd">            Callables to be called in sequence as listed.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">callbacks</span> <span class="o">=</span> <span class="p">[</span><span class="n">c</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">c</span><span class="p">,</span> <span class="n">Callback</span><span class="p">)</span> <span class="k">else</span> <span class="n">CallbackApply</span><span class="p">(</span><span class="n">c</span><span class="p">)</span>
+                     <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">callbacks</span><span class="p">]</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">callbacks</span> <span class="o">=</span> <span class="n">callbacks</span>
+
+    <span class="k">def</span> <span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">result</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Apply all callbacks to result.&quot;&quot;&quot;</span>
+        <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">callbacks</span><span class="p">:</span>
+            <span class="n">p</span><span class="p">(</span><span class="n">result</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">reset</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Reset all callbacks to their initial state.&quot;&quot;&quot;</span>
+        <span class="k">for</span> <span class="n">callback</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">callbacks</span><span class="p">:</span>
+            <span class="n">callback</span><span class="o">.</span><span class="n">reset</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return ``repr(self)``.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="s1">&#39; &amp; &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">{!r}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">p</span><span class="p">)</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">callbacks</span><span class="p">)</span>
+
+
+<span class="k">class</span> <span class="nc">_CallbackCompose</span><span class="p">(</span><span class="n">Callback</span><span class="p">):</span>
+
+    <span class="sd">&quot;&quot;&quot;Callback used for the composition of a callback with an operator.&quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">callback</span><span class="p">,</span> <span class="n">operator</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Initialize a new instance.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        callback : callable</span>
+<span class="sd">            The callback to call.</span>
+<span class="sd">        operator : `Operator`</span>
+<span class="sd">            Operator to apply before calling the callback.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">callback</span> <span class="o">=</span> <span class="n">callback</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">operator</span> <span class="o">=</span> <span class="n">operator</span>
+
+    <span class="k">def</span> <span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">result</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Apply the callback.&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">callback</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">operator</span><span class="p">(</span><span class="n">result</span><span class="p">))</span>
+
+    <span class="k">def</span> <span class="nf">reset</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Reset the internal callback to its initial state.&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">callback</span><span class="o">.</span><span class="n">reset</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return ``repr(self)``.</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        --------</span>
+<span class="sd">        &gt;&gt;&gt; r3 = odl.rn(3)</span>
+<span class="sd">        &gt;&gt;&gt; callback = odl.solvers.CallbackPrint()</span>
+<span class="sd">        &gt;&gt;&gt; operator = odl.ScalingOperator(r3, 2.0)</span>
+<span class="sd">        &gt;&gt;&gt; callback * operator</span>
+<span class="sd">        CallbackPrint() * ScalingOperator(rn(3), 2.0)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="s1">&#39;</span><span class="si">{!r}</span><span class="s1"> * </span><span class="si">{!r}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">callback</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">operator</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="CallbackStore"><a class="viewcode-back" href="../../../../generated/odl.solvers.util.callback.CallbackStore.html#odl.solvers.util.callback.CallbackStore">[docs]</a><span class="k">class</span> <span class="nc">CallbackStore</span><span class="p">(</span><span class="n">Callback</span><span class="p">):</span>
+
+    <span class="sd">&quot;&quot;&quot;Callback for storing all iterates of a solver.</span>
+
+<span class="sd">    Can optionally apply a function, for example the norm or calculating the</span>
+<span class="sd">    residual.</span>
+
+<span class="sd">    By default, calls the ``copy()`` method on the iterates before storing.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="CallbackStore.__init__"><a class="viewcode-back" href="../../../../generated/odl.solvers.util.callback.CallbackStore.html#odl.solvers.util.callback.CallbackStore.__init__">[docs]</a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">results</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">function</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">step</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Initialize a new instance.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        results : list, optional</span>
+<span class="sd">            List in which to store the iterates.</span>
+<span class="sd">            Default: new list (``[]``)</span>
+<span class="sd">        function : callable, optional</span>
+<span class="sd">            Deprecated, use composition instead. See examples.</span>
+<span class="sd">            Function to be called on all incoming results before storage.</span>
+<span class="sd">            Default: copy</span>
+<span class="sd">        step : int, optional</span>
+<span class="sd">            Number of iterates between storing iterates.</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        --------</span>
+<span class="sd">        Store results as-is:</span>
+
+<span class="sd">        &gt;&gt;&gt; callback = CallbackStore()</span>
+
+<span class="sd">        Provide list to store iterates in:</span>
+
+<span class="sd">        &gt;&gt;&gt; results = []</span>
+<span class="sd">        &gt;&gt;&gt; callback = CallbackStore(results=results)</span>
+
+<span class="sd">        Store the norm of the results:</span>
+
+<span class="sd">        &gt;&gt;&gt; norm_function = lambda x: x.norm()</span>
+<span class="sd">        &gt;&gt;&gt; callback = CallbackStore() * norm_function</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">results</span> <span class="o">=</span> <span class="p">[]</span> <span class="k">if</span> <span class="n">results</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">results</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">function</span> <span class="o">=</span> <span class="n">function</span>
+        <span class="k">if</span> <span class="n">function</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s1">&#39;`function` argument is deprecated and will be &#39;</span>
+                          <span class="s1">&#39;removed in a future release. Use composition &#39;</span>
+                          <span class="s1">&#39;instead. &#39;</span>
+                          <span class="s1">&#39;See Examples in the documentation.&#39;</span><span class="p">,</span>
+                          <span class="ne">DeprecationWarning</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">step</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">step</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">iter</span> <span class="o">=</span> <span class="mi">0</span></div>
+
+<div class="viewcode-block" id="CallbackStore.__call__"><a class="viewcode-back" href="../../../../generated/odl.solvers.util.callback.CallbackStore.__call__.html#odl.solvers.util.callback.CallbackStore.__call__">[docs]</a>    <span class="k">def</span> <span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">result</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Append result to results list.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">iter</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">step</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">function</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">results</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">function</span><span class="p">(</span><span class="n">result</span><span class="p">))</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">results</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">copy</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="n">result</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">iter</span> <span class="o">+=</span> <span class="mi">1</span></div>
+
+<div class="viewcode-block" id="CallbackStore.reset"><a class="viewcode-back" href="../../../../generated/odl.solvers.util.callback.CallbackStore.reset.html#odl.solvers.util.callback.CallbackStore.reset">[docs]</a>    <span class="k">def</span> <span class="nf">reset</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Clear the results list.&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">results</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">iter</span> <span class="o">=</span> <span class="mi">0</span></div>
+
+    <span class="k">def</span> <span class="fm">__iter__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Allow iteration over the results.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="nb">iter</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">results</span><span class="p">)</span>
+
+<div class="viewcode-block" id="CallbackStore.__getitem__"><a class="viewcode-back" href="../../../../generated/odl.solvers.util.callback.CallbackStore.__getitem__.html#odl.solvers.util.callback.CallbackStore.__getitem__">[docs]</a>    <span class="k">def</span> <span class="fm">__getitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">index</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return ``self[index]``.</span>
+
+<span class="sd">        Get iterates by index.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">results</span><span class="p">[</span><span class="n">index</span><span class="p">]</span></div>
+
+    <span class="k">def</span> <span class="fm">__len__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Number of results stored.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">results</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return ``repr(self)``.&quot;&quot;&quot;</span>
+        <span class="n">optargs</span> <span class="o">=</span> <span class="p">[(</span><span class="s1">&#39;results&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">results</span><span class="p">,</span> <span class="p">[]),</span>
+                   <span class="p">(</span><span class="s1">&#39;function&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">function</span><span class="p">,</span> <span class="kc">None</span><span class="p">),</span>
+                   <span class="p">(</span><span class="s1">&#39;step&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">step</span><span class="p">,</span> <span class="mi">1</span><span class="p">)]</span>
+        <span class="n">inner_str</span> <span class="o">=</span> <span class="n">signature_string</span><span class="p">([],</span> <span class="n">optargs</span><span class="p">)</span>
+        <span class="k">return</span> <span class="s1">&#39;</span><span class="si">{}</span><span class="s1">(</span><span class="si">{}</span><span class="s1">)&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="p">,</span> <span class="n">inner_str</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="CallbackApply"><a class="viewcode-back" href="../../../../generated/odl.solvers.util.callback.CallbackApply.html#odl.solvers.util.callback.CallbackApply">[docs]</a><span class="k">class</span> <span class="nc">CallbackApply</span><span class="p">(</span><span class="n">Callback</span><span class="p">):</span>
+
+    <span class="sd">&quot;&quot;&quot;Callback for applying a custom function to iterates.&quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="CallbackApply.__init__"><a class="viewcode-back" href="../../../../generated/odl.solvers.util.callback.CallbackApply.html#odl.solvers.util.callback.CallbackApply.__init__">[docs]</a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">function</span><span class="p">,</span> <span class="n">step</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Initialize a new instance.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        function : callable</span>
+<span class="sd">            Function to call on the current iterate.</span>
+<span class="sd">        step : int, optional</span>
+<span class="sd">            Number of iterates between applications of ``function``.</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        --------</span>
+<span class="sd">        By default, the function is called on each iterate:</span>
+
+<span class="sd">        &gt;&gt;&gt; def func(x):</span>
+<span class="sd">        ...     print(np.max(x))</span>
+<span class="sd">        &gt;&gt;&gt; callback = CallbackApply(func)</span>
+<span class="sd">        &gt;&gt;&gt; x = odl.rn(3).element([1, 2, 3])</span>
+<span class="sd">        &gt;&gt;&gt; callback(x)</span>
+<span class="sd">        3.0</span>
+<span class="sd">        &gt;&gt;&gt; callback(x)</span>
+<span class="sd">        3.0</span>
+
+<span class="sd">        To apply only to each n-th iterate, supply ``step=n``:</span>
+
+<span class="sd">        &gt;&gt;&gt; callback = CallbackApply(func, step=2)</span>
+<span class="sd">        &gt;&gt;&gt; callback(x)</span>
+<span class="sd">        3.0</span>
+<span class="sd">        &gt;&gt;&gt; callback(x)  # no output</span>
+<span class="sd">        &gt;&gt;&gt; callback(x)  # next output</span>
+<span class="sd">        3.0</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">assert</span> <span class="n">callable</span><span class="p">(</span><span class="n">function</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">function</span> <span class="o">=</span> <span class="n">function</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">step</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">step</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">iter</span> <span class="o">=</span> <span class="mi">0</span></div>
+
+<div class="viewcode-block" id="CallbackApply.__call__"><a class="viewcode-back" href="../../../../generated/odl.solvers.util.callback.CallbackApply.__call__.html#odl.solvers.util.callback.CallbackApply.__call__">[docs]</a>    <span class="k">def</span> <span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">result</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Apply function to result.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">iter</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">step</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">function</span><span class="p">(</span><span class="n">result</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">iter</span> <span class="o">+=</span> <span class="mi">1</span></div>
+
+<div class="viewcode-block" id="CallbackApply.reset"><a class="viewcode-back" href="../../../../generated/odl.solvers.util.callback.CallbackApply.reset.html#odl.solvers.util.callback.CallbackApply.reset">[docs]</a>    <span class="k">def</span> <span class="nf">reset</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Set `iter` to 0.&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">iter</span> <span class="o">=</span> <span class="mi">0</span></div>
+
+    <span class="k">def</span> <span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return ``str(self)``.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="nb">repr</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return ``repr(self)``.&quot;&quot;&quot;</span>
+        <span class="n">posargs</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">function</span><span class="p">]</span>
+        <span class="n">optargs</span> <span class="o">=</span> <span class="p">[(</span><span class="s1">&#39;step&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">step</span><span class="p">,</span> <span class="mi">1</span><span class="p">)]</span>
+        <span class="n">inner_str</span> <span class="o">=</span> <span class="n">signature_string</span><span class="p">(</span><span class="n">posargs</span><span class="p">,</span> <span class="n">optargs</span><span class="p">)</span>
+        <span class="k">return</span> <span class="s1">&#39;</span><span class="si">{}</span><span class="s1">(</span><span class="si">{}</span><span class="s1">)&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="p">,</span> <span class="n">inner_str</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="CallbackPrintIteration"><a class="viewcode-back" href="../../../../generated/odl.solvers.util.callback.CallbackPrintIteration.html#odl.solvers.util.callback.CallbackPrintIteration">[docs]</a><span class="k">class</span> <span class="nc">CallbackPrintIteration</span><span class="p">(</span><span class="n">Callback</span><span class="p">):</span>
+
+    <span class="sd">&quot;&quot;&quot;Callback for printing the iteration count.&quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="CallbackPrintIteration.__init__"><a class="viewcode-back" href="../../../../generated/odl.solvers.util.callback.CallbackPrintIteration.html#odl.solvers.util.callback.CallbackPrintIteration.__init__">[docs]</a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fmt</span><span class="o">=</span><span class="s1">&#39;iter = </span><span class="si">{}</span><span class="s1">&#39;</span><span class="p">,</span> <span class="n">step</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Initialize a new instance.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        fmt : string, optional</span>
+<span class="sd">            Format string for the text to be printed. The text is printed as::</span>
+
+<span class="sd">                print(fmt.format(cur_iter_num))</span>
+
+<span class="sd">            where ``cur_iter_num`` is the current iteration number.</span>
+<span class="sd">        step : positive int, optional</span>
+<span class="sd">            Number of iterations between output.</span>
+
+<span class="sd">        Other Parameters</span>
+<span class="sd">        ----------------</span>
+<span class="sd">        kwargs :</span>
+<span class="sd">            Key word arguments passed to the print function.</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        --------</span>
+<span class="sd">        Create simple callback that prints iteration count:</span>
+
+<span class="sd">        &gt;&gt;&gt; callback = CallbackPrintIteration()</span>
+<span class="sd">        &gt;&gt;&gt; callback(None)</span>
+<span class="sd">        iter = 0</span>
+<span class="sd">        &gt;&gt;&gt; callback(None)</span>
+<span class="sd">        iter = 1</span>
+
+<span class="sd">        Create callback that every 2nd iterate prints iteration count with</span>
+<span class="sd">        a custom string:</span>
+
+<span class="sd">        &gt;&gt;&gt; callback = CallbackPrintIteration(fmt=&#39;Current iter is {}.&#39;,</span>
+<span class="sd">        ...                                   step=2)</span>
+<span class="sd">        &gt;&gt;&gt; callback(None)</span>
+<span class="sd">        Current iter is 0.</span>
+<span class="sd">        &gt;&gt;&gt; callback(None)  # prints nothing</span>
+<span class="sd">        &gt;&gt;&gt; callback(None)</span>
+<span class="sd">        Current iter is 2.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">fmt</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">fmt</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">step</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">step</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">iter</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">kwargs</span> <span class="o">=</span> <span class="n">kwargs</span></div>
+
+<div class="viewcode-block" id="CallbackPrintIteration.__call__"><a class="viewcode-back" href="../../../../generated/odl.solvers.util.callback.CallbackPrintIteration.__call__.html#odl.solvers.util.callback.CallbackPrintIteration.__call__">[docs]</a>    <span class="k">def</span> <span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">_</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Print the current iteration.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">iter</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">step</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">fmt</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">iter</span><span class="p">),</span> <span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">kwargs</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">iter</span> <span class="o">+=</span> <span class="mi">1</span></div>
+
+<div class="viewcode-block" id="CallbackPrintIteration.reset"><a class="viewcode-back" href="../../../../generated/odl.solvers.util.callback.CallbackPrintIteration.reset.html#odl.solvers.util.callback.CallbackPrintIteration.reset">[docs]</a>    <span class="k">def</span> <span class="nf">reset</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Set `iter` to 0.&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">iter</span> <span class="o">=</span> <span class="mi">0</span></div>
+
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return ``repr(self)``.</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        --------</span>
+<span class="sd">        &gt;&gt;&gt; CallbackPrintIteration(fmt=&#39;Current iter is {}.&#39;, step=2)</span>
+<span class="sd">        CallbackPrintIteration(fmt=&#39;Current iter is {}.&#39;, step=2)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">optargs</span> <span class="o">=</span> <span class="p">[(</span><span class="s1">&#39;fmt&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">fmt</span><span class="p">,</span> <span class="s1">&#39;iter = </span><span class="si">{}</span><span class="s1">&#39;</span><span class="p">),</span>
+                   <span class="p">(</span><span class="s1">&#39;step&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">step</span><span class="p">,</span> <span class="mi">1</span><span class="p">)]</span>
+        <span class="n">inner_str</span> <span class="o">=</span> <span class="n">signature_string</span><span class="p">([],</span> <span class="n">optargs</span><span class="p">)</span>
+        <span class="k">return</span> <span class="s1">&#39;</span><span class="si">{}</span><span class="s1">(</span><span class="si">{}</span><span class="s1">)&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="p">,</span> <span class="n">inner_str</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="CallbackPrintTiming"><a class="viewcode-back" href="../../../../generated/odl.solvers.util.callback.CallbackPrintTiming.html#odl.solvers.util.callback.CallbackPrintTiming">[docs]</a><span class="k">class</span> <span class="nc">CallbackPrintTiming</span><span class="p">(</span><span class="n">Callback</span><span class="p">):</span>
+
+    <span class="sd">&quot;&quot;&quot;Callback for printing the time elapsed since the previous iteration.&quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="CallbackPrintTiming.__init__"><a class="viewcode-back" href="../../../../generated/odl.solvers.util.callback.CallbackPrintTiming.html#odl.solvers.util.callback.CallbackPrintTiming.__init__">[docs]</a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fmt</span><span class="o">=</span><span class="s1">&#39;Time elapsed = </span><span class="si">{:&lt;5.03f}</span><span class="s1"> s&#39;</span><span class="p">,</span> <span class="n">step</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+                 <span class="n">cumulative</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Initialize a new instance.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        fmt : string, optional</span>
+<span class="sd">            Formating that should be applied. The time is printed as ::</span>
+
+<span class="sd">                print(fmt.format(runtime))</span>
+
+<span class="sd">            where ``runtime`` is the runtime since the last iterate.</span>
+<span class="sd">        step : positive int, optional</span>
+<span class="sd">            Number of iterations between prints.</span>
+<span class="sd">        cumulative : boolean, optional</span>
+<span class="sd">            Print the time since the initialization instead of the last call.</span>
+
+<span class="sd">        Other Parameters</span>
+<span class="sd">        ----------------</span>
+<span class="sd">        kwargs :</span>
+<span class="sd">            Key word arguments passed to the print function.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">fmt</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">fmt</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">step</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">step</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">iter</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">cumulative</span> <span class="o">=</span> <span class="n">cumulative</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">start_time</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">kwargs</span> <span class="o">=</span> <span class="n">kwargs</span></div>
+
+<div class="viewcode-block" id="CallbackPrintTiming.__call__"><a class="viewcode-back" href="../../../../generated/odl.solvers.util.callback.CallbackPrintTiming.__call__.html#odl.solvers.util.callback.CallbackPrintTiming.__call__">[docs]</a>    <span class="k">def</span> <span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">_</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Print time elapsed from the previous iteration.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">iter</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">step</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">current_time</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
+
+            <span class="nb">print</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">fmt</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">current_time</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">start_time</span><span class="p">),</span>
+                  <span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">kwargs</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">cumulative</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">start_time</span> <span class="o">=</span> <span class="n">current_time</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">iter</span> <span class="o">+=</span> <span class="mi">1</span></div>
+
+<div class="viewcode-block" id="CallbackPrintTiming.reset"><a class="viewcode-back" href="../../../../generated/odl.solvers.util.callback.CallbackPrintTiming.reset.html#odl.solvers.util.callback.CallbackPrintTiming.reset">[docs]</a>    <span class="k">def</span> <span class="nf">reset</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Set `time` to the current time.&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">start_time</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">iter</span> <span class="o">=</span> <span class="mi">0</span></div>
+
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return ``repr(self)``.&quot;&quot;&quot;</span>
+        <span class="n">optargs</span> <span class="o">=</span> <span class="p">[(</span><span class="s1">&#39;fmt&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">fmt</span><span class="p">,</span> <span class="s1">&#39;Time elapsed = </span><span class="si">{:&lt;5.03f}</span><span class="s1"> s&#39;</span><span class="p">),</span>
+                   <span class="p">(</span><span class="s1">&#39;step&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">step</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span>
+                   <span class="p">(</span><span class="s1">&#39;cumulative&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">cumulative</span><span class="p">,</span> <span class="kc">False</span><span class="p">)]</span>
+        <span class="n">inner_str</span> <span class="o">=</span> <span class="n">signature_string</span><span class="p">([],</span> <span class="n">optargs</span><span class="p">)</span>
+        <span class="k">return</span> <span class="s1">&#39;</span><span class="si">{}</span><span class="s1">(</span><span class="si">{}</span><span class="s1">)&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="p">,</span> <span class="n">inner_str</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="CallbackPrint"><a class="viewcode-back" href="../../../../generated/odl.solvers.util.callback.CallbackPrint.html#odl.solvers.util.callback.CallbackPrint">[docs]</a><span class="k">class</span> <span class="nc">CallbackPrint</span><span class="p">(</span><span class="n">Callback</span><span class="p">):</span>
+
+    <span class="sd">&quot;&quot;&quot;Callback for printing the current value.&quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="CallbackPrint.__init__"><a class="viewcode-back" href="../../../../generated/odl.solvers.util.callback.CallbackPrint.html#odl.solvers.util.callback.CallbackPrint.__init__">[docs]</a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">func</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">fmt</span><span class="o">=</span><span class="s1">&#39;</span><span class="si">{!r}</span><span class="s1">&#39;</span><span class="p">,</span> <span class="n">step</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Initialize a new instance.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        func : callable, optional</span>
+<span class="sd">            Deprecated, use composition instead. See examples.</span>
+<span class="sd">            Functional that should be called on the current iterate before</span>
+<span class="sd">            printing. Default: print current iterate.</span>
+<span class="sd">        fmt : string, optional</span>
+<span class="sd">            Formating that should be applied. Will be used as ::</span>
+
+<span class="sd">                print(fmt.format(x))</span>
+
+<span class="sd">            where ``x`` is the input to the callback.</span>
+<span class="sd">        step : positive int, optional</span>
+<span class="sd">            Number of iterations between prints.</span>
+
+<span class="sd">        Other Parameters</span>
+<span class="sd">        ----------------</span>
+<span class="sd">        kwargs :</span>
+<span class="sd">            Key word arguments passed to the print function.</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        --------</span>
+<span class="sd">        Callback for simply printing the current iterate:</span>
+
+<span class="sd">        &gt;&gt;&gt; callback = CallbackPrint()</span>
+<span class="sd">        &gt;&gt;&gt; callback([1, 2])</span>
+<span class="sd">        [1, 2]</span>
+
+<span class="sd">        Apply function before printing via composition:</span>
+
+<span class="sd">        &gt;&gt;&gt; callback = CallbackPrint() * np.sum</span>
+<span class="sd">        &gt;&gt;&gt; callback([1, 2])</span>
+<span class="sd">        3</span>
+
+<span class="sd">        Format to two decimal points:</span>
+
+<span class="sd">        &gt;&gt;&gt; callback = CallbackPrint(fmt=&#39;{0:.2f}&#39;) * np.sum</span>
+<span class="sd">        &gt;&gt;&gt; callback([1, 2])</span>
+<span class="sd">        3.00</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">func</span> <span class="o">=</span> <span class="n">func</span>
+        <span class="k">if</span> <span class="n">func</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s1">&#39;`func` argument is deprecated and will be removed &#39;</span>
+                          <span class="s1">&#39;in a future release. Use composition instead. &#39;</span>
+                          <span class="s1">&#39;See Examples in the documentation.&#39;</span><span class="p">,</span>
+                          <span class="ne">DeprecationWarning</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">func</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">callable</span><span class="p">(</span><span class="n">func</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;`func` must be `callable` or `None`&#39;</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">fmt</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">fmt</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">step</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">step</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">iter</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">kwargs</span> <span class="o">=</span> <span class="n">kwargs</span></div>
+
+<div class="viewcode-block" id="CallbackPrint.__call__"><a class="viewcode-back" href="../../../../generated/odl.solvers.util.callback.CallbackPrint.__call__.html#odl.solvers.util.callback.CallbackPrint.__call__">[docs]</a>    <span class="k">def</span> <span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">result</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Print the current value.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">iter</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">step</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">func</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">result</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">func</span><span class="p">(</span><span class="n">result</span><span class="p">)</span>
+
+            <span class="nb">print</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">fmt</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">result</span><span class="p">),</span> <span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">kwargs</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">iter</span> <span class="o">+=</span> <span class="mi">1</span></div>
+
+<div class="viewcode-block" id="CallbackPrint.reset"><a class="viewcode-back" href="../../../../generated/odl.solvers.util.callback.CallbackPrint.reset.html#odl.solvers.util.callback.CallbackPrint.reset">[docs]</a>    <span class="k">def</span> <span class="nf">reset</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Set `iter` to 0.&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">iter</span> <span class="o">=</span> <span class="mi">0</span></div>
+
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return ``repr(self)``.&quot;&quot;&quot;</span>
+        <span class="n">optargs</span> <span class="o">=</span> <span class="p">[(</span><span class="s1">&#39;func&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">func</span><span class="p">,</span> <span class="kc">None</span><span class="p">),</span>
+                   <span class="p">(</span><span class="s1">&#39;fmt&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">fmt</span><span class="p">,</span> <span class="s1">&#39;</span><span class="si">{!r}</span><span class="s1">&#39;</span><span class="p">),</span>
+                   <span class="p">(</span><span class="s1">&#39;step&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">step</span><span class="p">,</span> <span class="mi">1</span><span class="p">)]</span>
+        <span class="n">inner_str</span> <span class="o">=</span> <span class="n">signature_string</span><span class="p">([],</span> <span class="n">optargs</span><span class="p">)</span>
+        <span class="k">return</span> <span class="s1">&#39;</span><span class="si">{}</span><span class="s1">(</span><span class="si">{}</span><span class="s1">)&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="p">,</span> <span class="n">inner_str</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="CallbackPrintNorm"><a class="viewcode-back" href="../../../../generated/odl.solvers.util.callback.CallbackPrintNorm.html#odl.solvers.util.callback.CallbackPrintNorm">[docs]</a><span class="k">class</span> <span class="nc">CallbackPrintNorm</span><span class="p">(</span><span class="n">Callback</span><span class="p">):</span>
+
+    <span class="sd">&quot;&quot;&quot;Callback for printing the current norm.&quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="CallbackPrintNorm.__call__"><a class="viewcode-back" href="../../../../generated/odl.solvers.util.callback.CallbackPrintNorm.__call__.html#odl.solvers.util.callback.CallbackPrintNorm.__call__">[docs]</a>    <span class="k">def</span> <span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">result</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Print the current norm.&quot;&quot;&quot;</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;norm = </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">norm</span><span class="p">()))</span></div>
+
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return ``repr(self)``.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="s1">&#39;</span><span class="si">{}</span><span class="s1">()&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="CallbackShow"><a class="viewcode-back" href="../../../../generated/odl.solvers.util.callback.CallbackShow.html#odl.solvers.util.callback.CallbackShow">[docs]</a><span class="k">class</span> <span class="nc">CallbackShow</span><span class="p">(</span><span class="n">Callback</span><span class="p">):</span>
+
+    <span class="sd">&quot;&quot;&quot;Callback for showing iterates.</span>
+
+<span class="sd">    See Also</span>
+<span class="sd">    --------</span>
+<span class="sd">    odl.discr.discr_space.DiscretizedSpaceElement.show</span>
+<span class="sd">    odl.space.base_tensors.Tensor.show</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="CallbackShow.__init__"><a class="viewcode-back" href="../../../../generated/odl.solvers.util.callback.CallbackShow.html#odl.solvers.util.callback.CallbackShow.__init__">[docs]</a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">title</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">step</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">saveto</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Initialize a new instance.</span>
+
+<span class="sd">        Additional parameters are passed through to the ``show`` method.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        title : str, optional</span>
+<span class="sd">            Format string for the title of the displayed figure.</span>
+<span class="sd">            The title name is generated as ::</span>
+
+<span class="sd">                title = title.format(cur_iter_num)</span>
+
+<span class="sd">            where ``cur_iter_num`` is the current iteration number.</span>
+<span class="sd">            For the default ``None``, the title format ``&#39;Iterate {}&#39;``</span>
+<span class="sd">            is used.</span>
+<span class="sd">        step : positive int, optional</span>
+<span class="sd">            Number of iterations between plots.</span>
+<span class="sd">        saveto : str or callable, optional</span>
+<span class="sd">            Format string for the name of the file(s) where</span>
+<span class="sd">            iterates are saved.</span>
+
+<span class="sd">            If ``saveto`` is a string, the file name is generated as ::</span>
+
+<span class="sd">                filename = saveto.format(cur_iter_num)</span>
+
+<span class="sd">            where ``cur_iter_num`` is the current iteration number.</span>
+
+<span class="sd">            If ``saveto`` is a callable, the file name is generated as ::</span>
+
+<span class="sd">                filename = saveto(cur_iter_num)</span>
+
+<span class="sd">            If the directory name does not exist, a ``ValueError`` is raised.</span>
+<span class="sd">            If ``saveto is None``, the figures are not saved.</span>
+
+<span class="sd">        Other Parameters</span>
+<span class="sd">        ----------------</span>
+<span class="sd">        kwargs :</span>
+<span class="sd">            Optional keyword arguments passed on to ``x.show``.</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        --------</span>
+<span class="sd">        Show the result of each iterate:</span>
+
+<span class="sd">        &gt;&gt;&gt; callback = CallbackShow()</span>
+
+<span class="sd">        Show and save every fifth iterate in ``png`` format, overwriting the</span>
+<span class="sd">        previous one:</span>
+
+<span class="sd">        &gt;&gt;&gt; callback = CallbackShow(step=5,</span>
+<span class="sd">        ...                         saveto=&#39;my_path/my_iterate.png&#39;)</span>
+
+<span class="sd">        Show and save each fifth iterate in ``png`` format, indexing the files</span>
+<span class="sd">        with the iteration number:</span>
+
+<span class="sd">        &gt;&gt;&gt; callback = CallbackShow(step=5,</span>
+<span class="sd">        ...                         saveto=&#39;my_path/my_iterate_{}.png&#39;)</span>
+
+<span class="sd">        Pass additional arguments to ``show``:</span>
+
+<span class="sd">        &gt;&gt;&gt; callback = CallbackShow(step=5, clim=[0, 1])</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">title</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">title</span> <span class="o">=</span> <span class="s1">&#39;Iterate </span><span class="si">{}</span><span class="s1">&#39;</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">title</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">title</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">title_formatter</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">title</span><span class="o">.</span><span class="n">format</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">saveto</span> <span class="o">=</span> <span class="n">saveto</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">saveto_formatter</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">saveto</span><span class="p">,</span> <span class="s1">&#39;format&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">saveto</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">step</span> <span class="o">=</span> <span class="n">step</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">fig</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;fig&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">iter</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">space_of_last_x</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">kwargs</span> <span class="o">=</span> <span class="n">kwargs</span></div>
+
+<div class="viewcode-block" id="CallbackShow.__call__"><a class="viewcode-back" href="../../../../generated/odl.solvers.util.callback.CallbackShow.__call__.html#odl.solvers.util.callback.CallbackShow.__call__">[docs]</a>    <span class="k">def</span> <span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Show the current iterate.&quot;&quot;&quot;</span>
+        <span class="c1"># Check if we should update the figure in-place</span>
+        <span class="n">x_space</span> <span class="o">=</span> <span class="n">x</span><span class="o">.</span><span class="n">space</span>
+        <span class="n">update_in_place</span> <span class="o">=</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">space_of_last_x</span> <span class="o">==</span> <span class="n">x_space</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">space_of_last_x</span> <span class="o">=</span> <span class="n">x_space</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">iter</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">step</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">title</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">title_formatter</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">iter</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">saveto</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">fig</span> <span class="o">=</span> <span class="n">x</span><span class="o">.</span><span class="n">show</span><span class="p">(</span><span class="n">title</span><span class="p">,</span> <span class="n">fig</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">fig</span><span class="p">,</span>
+                                  <span class="n">update_in_place</span><span class="o">=</span><span class="n">update_in_place</span><span class="p">,</span>
+                                  <span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">kwargs</span><span class="p">)</span>
+
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">saveto</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">saveto_formatter</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">iter</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">fig</span> <span class="o">=</span> <span class="n">x</span><span class="o">.</span><span class="n">show</span><span class="p">(</span><span class="n">title</span><span class="p">,</span> <span class="n">fig</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">fig</span><span class="p">,</span>
+                                  <span class="n">update_in_place</span><span class="o">=</span><span class="n">update_in_place</span><span class="p">,</span>
+                                  <span class="n">saveto</span><span class="o">=</span><span class="n">saveto</span><span class="p">,</span> <span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">kwargs</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">iter</span> <span class="o">+=</span> <span class="mi">1</span></div>
+
+<div class="viewcode-block" id="CallbackShow.reset"><a class="viewcode-back" href="../../../../generated/odl.solvers.util.callback.CallbackShow.reset.html#odl.solvers.util.callback.CallbackShow.reset">[docs]</a>    <span class="k">def</span> <span class="nf">reset</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Set `iter` to 0 and create a new figure.&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">iter</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">fig</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">space_of_last_x</span> <span class="o">=</span> <span class="kc">None</span></div>
+
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return ``repr(self)``.&quot;&quot;&quot;</span>
+        <span class="n">posargs</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">title</span> <span class="o">!=</span> <span class="s1">&#39;Iterate </span><span class="si">{}</span><span class="s1">&#39;</span><span class="p">:</span>
+            <span class="n">posargs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">title</span><span class="p">)</span>
+        <span class="n">optargs</span> <span class="o">=</span> <span class="p">[(</span><span class="s1">&#39;step&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">step</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span>
+                   <span class="p">(</span><span class="s1">&#39;saveto&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">saveto</span><span class="p">,</span> <span class="kc">None</span><span class="p">)]</span>
+        <span class="k">for</span> <span class="n">kwarg</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">kwargs</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="n">optargs</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">kwarg</span><span class="p">,</span> <span class="n">value</span><span class="p">,</span> <span class="kc">None</span><span class="p">))</span>
+        <span class="n">inner_str</span> <span class="o">=</span> <span class="n">signature_string</span><span class="p">(</span><span class="n">posargs</span><span class="p">,</span> <span class="n">optargs</span><span class="p">)</span>
+        <span class="k">return</span> <span class="s1">&#39;</span><span class="si">{}</span><span class="s1">(</span><span class="si">{}</span><span class="s1">)&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="p">,</span> <span class="n">inner_str</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="CallbackSaveToDisk"><a class="viewcode-back" href="../../../../generated/odl.solvers.util.callback.CallbackSaveToDisk.html#odl.solvers.util.callback.CallbackSaveToDisk">[docs]</a><span class="k">class</span> <span class="nc">CallbackSaveToDisk</span><span class="p">(</span><span class="n">Callback</span><span class="p">):</span>
+
+    <span class="sd">&quot;&quot;&quot;Callback for saving iterates to disk.&quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="CallbackSaveToDisk.__init__"><a class="viewcode-back" href="../../../../generated/odl.solvers.util.callback.CallbackSaveToDisk.html#odl.solvers.util.callback.CallbackSaveToDisk.__init__">[docs]</a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">saveto</span><span class="p">,</span> <span class="n">step</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">impl</span><span class="o">=</span><span class="s1">&#39;pickle&#39;</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Initialize a new instance.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        saveto : string</span>
+<span class="sd">            Format string for the name of the file(s) where</span>
+<span class="sd">            iterates are saved. The file name is generated as</span>
+
+<span class="sd">                filename = saveto.format(cur_iter_num)</span>
+
+<span class="sd">            where ``cur_iter_num`` is the current iteration number.</span>
+<span class="sd">        step : positive int, optional</span>
+<span class="sd">            Number of iterations between saves.</span>
+<span class="sd">        impl : {&#39;pickle&#39;, &#39;numpy&#39;, &#39;numpy_txt&#39;}, optional</span>
+<span class="sd">            The format to store the iterates in. Numpy formats are only usable</span>
+<span class="sd">            if the data can be converted to an array via `numpy.asarray`.</span>
+
+<span class="sd">        Other Parameters</span>
+<span class="sd">        ----------------</span>
+<span class="sd">        kwargs :</span>
+<span class="sd">            Optional arguments passed to the save function.</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        --------</span>
+<span class="sd">        Store each iterate:</span>
+
+<span class="sd">        &gt;&gt;&gt; callback = CallbackSaveToDisk(&#39;my_path/my_iterate&#39;)</span>
+
+<span class="sd">        Save every fifth overwriting the previous one:</span>
+
+<span class="sd">        &gt;&gt;&gt; callback = CallbackSaveToDisk(saveto=&#39;my_path/my_iterate&#39;,</span>
+<span class="sd">        ...                               step=5)</span>
+
+<span class="sd">        Save each fifth iterate in ``numpy`` format, indexing the files with</span>
+<span class="sd">        the iteration number:</span>
+
+<span class="sd">        &gt;&gt;&gt; callback = CallbackSaveToDisk(saveto=&#39;my_path/my_iterate_{}&#39;,</span>
+<span class="sd">        ...                               step=5, impl=&#39;numpy&#39;)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">saveto</span> <span class="o">=</span> <span class="n">saveto</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">saveto_formatter</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">saveto</span><span class="o">.</span><span class="n">format</span>
+        <span class="k">except</span> <span class="ne">AttributeError</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">saveto_formatter</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">saveto</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">step</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">step</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">impl</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">impl</span><span class="p">)</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">kwargs</span> <span class="o">=</span> <span class="n">kwargs</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">iter</span> <span class="o">=</span> <span class="mi">0</span></div>
+
+<div class="viewcode-block" id="CallbackSaveToDisk.__call__"><a class="viewcode-back" href="../../../../generated/odl.solvers.util.callback.CallbackSaveToDisk.__call__.html#odl.solvers.util.callback.CallbackSaveToDisk.__call__">[docs]</a>    <span class="k">def</span> <span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Save the current iterate.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">iter</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">step</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">file_path</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">saveto_formatter</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">iter</span><span class="p">)</span>
+            <span class="n">folder_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">realpath</span><span class="p">(</span><span class="n">file_path</span><span class="p">))</span>
+
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">folder_path</span><span class="p">):</span>
+                <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="n">folder_path</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">impl</span> <span class="o">==</span> <span class="s1">&#39;pickle&#39;</span><span class="p">:</span>
+                <span class="kn">import</span> <span class="nn">pickle</span>
+                <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">file_path</span><span class="p">,</span> <span class="s1">&#39;wb+&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+                    <span class="n">pickle</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">f</span><span class="p">,</span> <span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">kwargs</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">impl</span> <span class="o">==</span> <span class="s1">&#39;numpy&#39;</span><span class="p">:</span>
+                <span class="n">np</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">file_path</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">x</span><span class="p">),</span> <span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">kwargs</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">impl</span> <span class="o">==</span> <span class="s1">&#39;numpy_txt&#39;</span><span class="p">:</span>
+                <span class="n">np</span><span class="o">.</span><span class="n">savetxt</span><span class="p">(</span><span class="n">file_path</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">x</span><span class="p">),</span> <span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">kwargs</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s1">&#39;unknown `impl` </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">impl</span><span class="p">))</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">iter</span> <span class="o">+=</span> <span class="mi">1</span></div>
+
+<div class="viewcode-block" id="CallbackSaveToDisk.reset"><a class="viewcode-back" href="../../../../generated/odl.solvers.util.callback.CallbackSaveToDisk.reset.html#odl.solvers.util.callback.CallbackSaveToDisk.reset">[docs]</a>    <span class="k">def</span> <span class="nf">reset</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Set `iter` to 0.&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">iter</span> <span class="o">=</span> <span class="mi">0</span></div>
+
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return ``repr(self)``.&quot;&quot;&quot;</span>
+        <span class="n">posargs</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">saveto</span><span class="p">]</span>
+        <span class="n">optargs</span> <span class="o">=</span> <span class="p">[(</span><span class="s1">&#39;step&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">step</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span>
+                   <span class="p">(</span><span class="s1">&#39;impl&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">impl</span><span class="p">,</span> <span class="s1">&#39;pickle&#39;</span><span class="p">)]</span>
+        <span class="k">for</span> <span class="n">kwarg</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">kwargs</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="n">optargs</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">kwarg</span><span class="p">,</span> <span class="n">value</span><span class="p">,</span> <span class="kc">None</span><span class="p">))</span>
+        <span class="n">inner_str</span> <span class="o">=</span> <span class="n">signature_string</span><span class="p">(</span><span class="n">posargs</span><span class="p">,</span> <span class="n">optargs</span><span class="p">)</span>
+        <span class="k">return</span> <span class="s1">&#39;</span><span class="si">{}</span><span class="s1">(</span><span class="si">{}</span><span class="s1">)&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="p">,</span> <span class="n">inner_str</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="CallbackSleep"><a class="viewcode-back" href="../../../../generated/odl.solvers.util.callback.CallbackSleep.html#odl.solvers.util.callback.CallbackSleep">[docs]</a><span class="k">class</span> <span class="nc">CallbackSleep</span><span class="p">(</span><span class="n">Callback</span><span class="p">):</span>
+
+    <span class="sd">&quot;&quot;&quot;Callback for sleeping for a specific time span.&quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="CallbackSleep.__init__"><a class="viewcode-back" href="../../../../generated/odl.solvers.util.callback.CallbackSleep.html#odl.solvers.util.callback.CallbackSleep.__init__">[docs]</a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">seconds</span><span class="o">=</span><span class="mf">1.0</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Initialize a new instance.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        seconds : float, optional</span>
+<span class="sd">            Number of seconds to sleep, can be float for subsecond precision.</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        --------</span>
+<span class="sd">        Sleep 1 second between consecutive iterates:</span>
+
+<span class="sd">        &gt;&gt;&gt; callback = CallbackSleep(seconds=1)</span>
+
+<span class="sd">        Sleep 10 ms between consecutive iterate:</span>
+
+<span class="sd">        &gt;&gt;&gt; callback = CallbackSleep(seconds=0.01)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">seconds</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">seconds</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="CallbackSleep.__call__"><a class="viewcode-back" href="../../../../generated/odl.solvers.util.callback.CallbackSleep.__call__.html#odl.solvers.util.callback.CallbackSleep.__call__">[docs]</a>    <span class="k">def</span> <span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Sleep for a specified time.&quot;&quot;&quot;</span>
+        <span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">seconds</span><span class="p">)</span></div>
+
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return ``repr(self)``.&quot;&quot;&quot;</span>
+        <span class="n">optargs</span> <span class="o">=</span> <span class="p">[(</span><span class="s1">&#39;seconds&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">seconds</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">)]</span>
+        <span class="n">inner_str</span> <span class="o">=</span> <span class="n">signature_string</span><span class="p">([],</span> <span class="n">optargs</span><span class="p">)</span>
+        <span class="k">return</span> <span class="s1">&#39;</span><span class="si">{}</span><span class="s1">(</span><span class="si">{}</span><span class="s1">)&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="p">,</span> <span class="n">inner_str</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="CallbackShowConvergence"><a class="viewcode-back" href="../../../../generated/odl.solvers.util.callback.CallbackShowConvergence.html#odl.solvers.util.callback.CallbackShowConvergence">[docs]</a><span class="k">class</span> <span class="nc">CallbackShowConvergence</span><span class="p">(</span><span class="n">Callback</span><span class="p">):</span>
+
+    <span class="sd">&quot;&quot;&quot;Displays a convergence plot.&quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="CallbackShowConvergence.__init__"><a class="viewcode-back" href="../../../../generated/odl.solvers.util.callback.CallbackShowConvergence.html#odl.solvers.util.callback.CallbackShowConvergence.__init__">[docs]</a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">functional</span><span class="p">,</span> <span class="n">title</span><span class="o">=</span><span class="s1">&#39;convergence&#39;</span><span class="p">,</span> <span class="n">logx</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">logy</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                 <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Initialize a new instance.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        functional : callable</span>
+<span class="sd">            Function that is called with the current iterate and returns the</span>
+<span class="sd">            function value.</span>
+<span class="sd">        title : str, optional</span>
+<span class="sd">            Title of the plot.</span>
+<span class="sd">        logx : bool, optional</span>
+<span class="sd">            If true, the x axis is logarithmic.</span>
+<span class="sd">        logx : bool, optional</span>
+<span class="sd">            If true, the y axis is logarithmic.</span>
+
+<span class="sd">        Other Parameters</span>
+<span class="sd">        ----------------</span>
+<span class="sd">        kwargs :</span>
+<span class="sd">            Additional parameters passed to the scatter-plotting function.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">functional</span> <span class="o">=</span> <span class="n">functional</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">title</span> <span class="o">=</span> <span class="n">title</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">logx</span> <span class="o">=</span> <span class="n">logx</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">logy</span> <span class="o">=</span> <span class="n">logy</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">kwargs</span> <span class="o">=</span> <span class="n">kwargs</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">iter</span> <span class="o">=</span> <span class="mi">0</span>
+
+        <span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">fig</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">(</span><span class="n">title</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ax</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">fig</span><span class="o">.</span><span class="n">add_subplot</span><span class="p">(</span><span class="mi">111</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ax</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="s1">&#39;iteration&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ax</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s1">&#39;function value&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ax</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="n">title</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">logx</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">ax</span><span class="o">.</span><span class="n">set_xscale</span><span class="p">(</span><span class="s2">&quot;log&quot;</span><span class="p">,</span> <span class="n">nonposx</span><span class="o">=</span><span class="s1">&#39;clip&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">logy</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">ax</span><span class="o">.</span><span class="n">set_yscale</span><span class="p">(</span><span class="s2">&quot;log&quot;</span><span class="p">,</span> <span class="n">nonposy</span><span class="o">=</span><span class="s1">&#39;clip&#39;</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="CallbackShowConvergence.__call__"><a class="viewcode-back" href="../../../../generated/odl.solvers.util.callback.CallbackShowConvergence.__call__.html#odl.solvers.util.callback.CallbackShowConvergence.__call__">[docs]</a>    <span class="k">def</span> <span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Implement ``self(x)``.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">logx</span><span class="p">:</span>
+            <span class="n">it</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">iter</span> <span class="o">+</span> <span class="mi">1</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">it</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">iter</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ax</span><span class="o">.</span><span class="n">scatter</span><span class="p">(</span><span class="n">it</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">functional</span><span class="p">(</span><span class="n">x</span><span class="p">),</span> <span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">iter</span> <span class="o">+=</span> <span class="mi">1</span></div>
+
+<div class="viewcode-block" id="CallbackShowConvergence.reset"><a class="viewcode-back" href="../../../../generated/odl.solvers.util.callback.CallbackShowConvergence.reset.html#odl.solvers.util.callback.CallbackShowConvergence.reset">[docs]</a>    <span class="k">def</span> <span class="nf">reset</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Set `iter` to 0.&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">iter</span> <span class="o">=</span> <span class="mi">0</span></div>
+
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return ``repr(self)``.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="s1">&#39;</span><span class="si">{}</span><span class="s1">(functional=</span><span class="si">{}</span><span class="s1">, title=</span><span class="si">{}</span><span class="s1">, logx=</span><span class="si">{}</span><span class="s1">, logy=</span><span class="si">{}</span><span class="s1">)&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">functional</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">title</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">logx</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">logy</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="CallbackPrintHardwareUsage"><a class="viewcode-back" href="../../../../generated/odl.solvers.util.callback.CallbackPrintHardwareUsage.html#odl.solvers.util.callback.CallbackPrintHardwareUsage">[docs]</a><span class="k">class</span> <span class="nc">CallbackPrintHardwareUsage</span><span class="p">(</span><span class="n">Callback</span><span class="p">):</span>
+
+    <span class="sd">&quot;&quot;&quot;Callback for printing memory and CPU usage.</span>
+
+<span class="sd">    This callback requires the ``psutil`` package.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="CallbackPrintHardwareUsage.__init__"><a class="viewcode-back" href="../../../../generated/odl.solvers.util.callback.CallbackPrintHardwareUsage.html#odl.solvers.util.callback.CallbackPrintHardwareUsage.__init__">[docs]</a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">step</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">fmt_cpu</span><span class="o">=</span><span class="s1">&#39;CPU usage (</span><span class="si">% e</span><span class="s1">ach core): </span><span class="si">{}</span><span class="s1">&#39;</span><span class="p">,</span>
+                 <span class="n">fmt_mem</span><span class="o">=</span><span class="s1">&#39;RAM usage: </span><span class="si">{}</span><span class="s1">&#39;</span><span class="p">,</span> <span class="n">fmt_swap</span><span class="o">=</span><span class="s1">&#39;SWAP usage: </span><span class="si">{}</span><span class="s1">&#39;</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Initialize a new instance.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        step : positive int, optional</span>
+<span class="sd">            Number of iterations between output.</span>
+<span class="sd">        fmt_cpu : string, optional</span>
+<span class="sd">            Formating that should be applied. The CPU usage is printed as ::</span>
+
+<span class="sd">                print(fmt_cpu.format(cpu))</span>
+
+<span class="sd">            where ``cpu`` is a vector with the percentage of current CPU usaged</span>
+<span class="sd">            for each core. An empty format string disables printing of CPU</span>
+<span class="sd">            usage.</span>
+<span class="sd">        fmt_mem : string, optional</span>
+<span class="sd">            Formating that should be applied. The RAM usage is printed as ::</span>
+
+<span class="sd">                print(fmt_mem.format(mem))</span>
+
+<span class="sd">            where ``mem`` is the current RAM memory usaged. An empty format</span>
+<span class="sd">            string disables printing of RAM memory usage.</span>
+<span class="sd">        fmt_swap : string, optional</span>
+<span class="sd">            Formating that should be applied. The SWAP usage is printed as ::</span>
+
+<span class="sd">                print(fmt_swap.format(swap))</span>
+
+<span class="sd">            where ``swap`` is the current SWAP memory usaged. An empty format</span>
+<span class="sd">            string disables printing of SWAP memory usage.</span>
+
+<span class="sd">        Other Parameters</span>
+<span class="sd">        ----------------</span>
+<span class="sd">        kwargs :</span>
+<span class="sd">            Key word arguments passed to the print function.</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        --------</span>
+<span class="sd">        Print memory and CPU usage</span>
+
+<span class="sd">        &gt;&gt;&gt; callback = CallbackPrintHardwareUsage()</span>
+
+<span class="sd">        Only print every tenth step</span>
+
+<span class="sd">        &gt;&gt;&gt; callback = CallbackPrintHardwareUsage(step=10)</span>
+
+<span class="sd">        Only print the RAM memory usage in every step, and with a non-default</span>
+<span class="sd">        formatting</span>
+
+<span class="sd">        &gt;&gt;&gt; callback = CallbackPrintHardwareUsage(step=1, fmt_cpu=&#39;&#39;,</span>
+<span class="sd">        ...                                       fmt_mem=&#39;RAM {}&#39;,</span>
+<span class="sd">        ...                                       fmt_swap=&#39;&#39;)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">step</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">step</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">fmt_cpu</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">fmt_cpu</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">fmt_mem</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">fmt_mem</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">fmt_swap</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">fmt_swap</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">iter</span> <span class="o">=</span> <span class="mi">0</span></div>
+
+<div class="viewcode-block" id="CallbackPrintHardwareUsage.__call__"><a class="viewcode-back" href="../../../../generated/odl.solvers.util.callback.CallbackPrintHardwareUsage.__call__.html#odl.solvers.util.callback.CallbackPrintHardwareUsage.__call__">[docs]</a>    <span class="k">def</span> <span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">_</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Print the memory and CPU usage&quot;&quot;&quot;</span>
+
+        <span class="kn">import</span> <span class="nn">psutil</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">iter</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">step</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">fmt_cpu</span><span class="p">:</span>
+                <span class="nb">print</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">fmt_cpu</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">psutil</span><span class="o">.</span><span class="n">cpu_percent</span><span class="p">(</span><span class="n">percpu</span><span class="o">=</span><span class="kc">True</span><span class="p">)),</span>
+                      <span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">kwargs</span><span class="p">)</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">fmt_mem</span><span class="p">:</span>
+                <span class="nb">print</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">fmt_mem</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">psutil</span><span class="o">.</span><span class="n">virtual_memory</span><span class="p">()),</span>
+                      <span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">kwargs</span><span class="p">)</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">fmt_swap</span><span class="p">:</span>
+                <span class="nb">print</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">fmt_swap</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">psutil</span><span class="o">.</span><span class="n">swap_memory</span><span class="p">()),</span>
+                      <span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">kwargs</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">iter</span> <span class="o">+=</span> <span class="mi">1</span></div>
+
+<div class="viewcode-block" id="CallbackPrintHardwareUsage.reset"><a class="viewcode-back" href="../../../../generated/odl.solvers.util.callback.CallbackPrintHardwareUsage.reset.html#odl.solvers.util.callback.CallbackPrintHardwareUsage.reset">[docs]</a>    <span class="k">def</span> <span class="nf">reset</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Set `iter` to 0.&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">iter</span> <span class="o">=</span> <span class="mi">0</span></div>
+
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return ``repr(self)``.&quot;&quot;&quot;</span>
+        <span class="n">optargs</span> <span class="o">=</span> <span class="p">[(</span><span class="s1">&#39;step&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">step</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span>
+                   <span class="p">(</span><span class="s1">&#39;fmt_cpu&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">fmt_cpu</span><span class="p">,</span> <span class="s1">&#39;CPU usage (</span><span class="si">% e</span><span class="s1">ach core): </span><span class="si">{}</span><span class="s1">&#39;</span><span class="p">),</span>
+                   <span class="p">(</span><span class="s1">&#39;fmt_mem&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">fmt_mem</span><span class="p">,</span> <span class="s1">&#39;RAM usage: </span><span class="si">{}</span><span class="s1">&#39;</span><span class="p">),</span>
+                   <span class="p">(</span><span class="s1">&#39;fmt_swap&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">fmt_swap</span><span class="p">,</span> <span class="s1">&#39;SWAP usage: </span><span class="si">{}</span><span class="s1">&#39;</span><span class="p">)]</span>
+        <span class="n">inner_str</span> <span class="o">=</span> <span class="n">signature_string</span><span class="p">([],</span> <span class="n">optargs</span><span class="p">)</span>
+        <span class="k">return</span> <span class="s1">&#39;</span><span class="si">{}</span><span class="s1">(</span><span class="si">{}</span><span class="s1">)&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="p">,</span> <span class="n">inner_str</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="CallbackProgressBar"><a class="viewcode-back" href="../../../../generated/odl.solvers.util.callback.CallbackProgressBar.html#odl.solvers.util.callback.CallbackProgressBar">[docs]</a><span class="k">class</span> <span class="nc">CallbackProgressBar</span><span class="p">(</span><span class="n">Callback</span><span class="p">):</span>
+
+    <span class="sd">&quot;&quot;&quot;Callback for displaying a progress bar.</span>
+
+<span class="sd">    This callback requires the ``tqdm`` package.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="CallbackProgressBar.__init__"><a class="viewcode-back" href="../../../../generated/odl.solvers.util.callback.CallbackProgressBar.html#odl.solvers.util.callback.CallbackProgressBar.__init__">[docs]</a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">niter</span><span class="p">,</span> <span class="n">step</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Initialize a new instance.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        niter : positive int, optional</span>
+<span class="sd">            Total number of iterations.</span>
+<span class="sd">        step : positive int, optional</span>
+<span class="sd">            Number of iterations between output.</span>
+
+<span class="sd">        Other Parameters</span>
+<span class="sd">        ----------------</span>
+<span class="sd">        kwargs :</span>
+<span class="sd">            Further parameters passed to ``tqdm.tqdm``.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">niter</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">niter</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">step</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">step</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">kwargs</span> <span class="o">=</span> <span class="n">kwargs</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">reset</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="CallbackProgressBar.__call__"><a class="viewcode-back" href="../../../../generated/odl.solvers.util.callback.CallbackProgressBar.__call__.html#odl.solvers.util.callback.CallbackProgressBar.__call__">[docs]</a>    <span class="k">def</span> <span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">_</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Update the progressbar.&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">iter</span> <span class="o">+=</span> <span class="mi">1</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">iter</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">step</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">pbar</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">step</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="CallbackProgressBar.reset"><a class="viewcode-back" href="../../../../generated/odl.solvers.util.callback.CallbackProgressBar.reset.html#odl.solvers.util.callback.CallbackProgressBar.reset">[docs]</a>    <span class="k">def</span> <span class="nf">reset</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Set `iter` to 0.&quot;&quot;&quot;</span>
+        <span class="kn">import</span> <span class="nn">tqdm</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">iter</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">pbar</span> <span class="o">=</span> <span class="n">tqdm</span><span class="o">.</span><span class="n">tqdm</span><span class="p">(</span><span class="n">total</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">niter</span><span class="p">,</span> <span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">kwargs</span><span class="p">)</span></div>
+
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return ``repr(self)``.&quot;&quot;&quot;</span>
+        <span class="n">posargs</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">niter</span><span class="p">]</span>
+        <span class="n">optargs</span> <span class="o">=</span> <span class="p">[(</span><span class="s1">&#39;step&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">step</span><span class="p">,</span> <span class="mi">1</span><span class="p">)]</span>
+        <span class="n">inner_str</span> <span class="o">=</span> <span class="n">signature_string</span><span class="p">(</span><span class="n">posargs</span><span class="p">,</span> <span class="n">optargs</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">kwargs</span><span class="p">:</span>
+            <span class="k">return</span> <span class="s1">&#39;</span><span class="si">{}</span><span class="s1">(</span><span class="si">{}</span><span class="s1">, **</span><span class="si">{}</span><span class="s1">)&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="p">,</span>
+                                         <span class="n">inner_str</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="s1">&#39;</span><span class="si">{}</span><span class="s1">(</span><span class="si">{}</span><span class="s1">)&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="p">,</span>
+                                   <span class="n">inner_str</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="save_animation"><a class="viewcode-back" href="../../../../generated/odl.solvers.util.callback.save_animation.html#odl.solvers.util.callback.save_animation">[docs]</a><span class="nd">@contextlib</span><span class="o">.</span><span class="n">contextmanager</span>
+<span class="k">def</span> <span class="nf">save_animation</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span>
+                   <span class="n">writer</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                   <span class="n">writer_kwargs</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                   <span class="n">dpi</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                   <span class="n">saving_kwargs</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                   <span class="n">fig</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                   <span class="n">step</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Context manager for creating animations from a series of plots.</span>
+
+<span class="sd">    The context manager uses `matplotlib.animation` to generate the</span>
+<span class="sd">    animation.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    filename : str</span>
+<span class="sd">        Name of the generated output file.</span>
+<span class="sd">    writer : str</span>
+<span class="sd">        Back-end for generating the movie file. Available writers can be</span>
+<span class="sd">        checked with the command ``matplotlib.animation.writers.list()``.</span>
+<span class="sd">        See the `matplotlib animation writers doc`_ for details.</span>
+<span class="sd">        For the default ``None``, the first writer from the list of available</span>
+<span class="sd">        ones is chosen.</span>
+<span class="sd">    writer_kwargs : dict</span>
+<span class="sd">        Keyword arguments passed to the writer class constructor.</span>
+<span class="sd">        See the `matplotlib animation writers doc`_ for details.</span>
+<span class="sd">    dpi : float, optional</span>
+<span class="sd">        Resolution of the saved frames in DPI. For ``None``, the figure</span>
+<span class="sd">        resolution ``fig.dpi`` is used, which is the default resolution if</span>
+<span class="sd">        ``fig is None``.</span>
+<span class="sd">    saving_kwargs : dict</span>
+<span class="sd">        Keyword arguments passed to the ``saving`` method of the writer</span>
+<span class="sd">        instance. See the `matplotlib animation writers doc`_ for details.</span>
+<span class="sd">    fig : matplotlib.figure.Figure, optional</span>
+<span class="sd">        Matplotlib figure used for plotting. For the default ``None``, a new</span>
+<span class="sd">        figure is created.</span>
+<span class="sd">    step : positive int, optional</span>
+<span class="sd">        Number of iterations between frames.</span>
+
+<span class="sd">    .. _matplotlib animation writers doc:</span>
+<span class="sd">       https://matplotlib.org/api/animation_api.html#writer-classes</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="kn">import</span> <span class="nn">matplotlib.animation</span>
+    <span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
+
+    <span class="k">if</span> <span class="n">writer_kwargs</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">writer_kwargs</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">if</span> <span class="n">saving_kwargs</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">saving_kwargs</span> <span class="o">=</span> <span class="p">{}</span>
+
+    <span class="k">if</span> <span class="n">writer</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">writer</span> <span class="o">=</span> <span class="n">matplotlib</span><span class="o">.</span><span class="n">animation</span><span class="o">.</span><span class="n">writers</span><span class="o">.</span><span class="n">list</span><span class="p">()[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="k">except</span> <span class="ne">IndexError</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s1">&#39;no animation writer available&#39;</span><span class="p">)</span>
+
+    <span class="n">writer_cls</span> <span class="o">=</span> <span class="n">matplotlib</span><span class="o">.</span><span class="n">animation</span><span class="o">.</span><span class="n">writers</span><span class="p">[</span><span class="n">writer</span><span class="p">]</span>
+    <span class="n">moviewriter</span> <span class="o">=</span> <span class="n">writer_cls</span><span class="p">(</span><span class="o">**</span><span class="n">writer_kwargs</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">fig</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="n">dpi</span><span class="o">=</span><span class="n">dpi</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">ax</span> <span class="o">=</span> <span class="n">fig</span><span class="o">.</span><span class="n">axes</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+
+    <span class="n">dpi</span> <span class="o">=</span> <span class="n">fig</span><span class="o">.</span><span class="n">dpi</span> <span class="k">if</span> <span class="n">dpi</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="nb">float</span><span class="p">(</span><span class="n">dpi</span><span class="p">)</span>
+    <span class="n">it</span> <span class="o">=</span> <span class="mi">0</span>
+
+    <span class="k">class</span> <span class="nc">CallbackAppendMovieFrame</span><span class="p">(</span><span class="n">Callback</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Callback for appending frames to an animation.&quot;&quot;&quot;</span>
+
+        <span class="nd">@staticmethod</span>
+        <span class="k">def</span> <span class="nf">_update_plot_2d</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
+            <span class="sd">&quot;&quot;&quot;Helper for updating a 2D plot (``imshow``).&quot;&quot;&quot;</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">im</span> <span class="o">=</span> <span class="n">ax</span><span class="o">.</span><span class="n">get_images</span><span class="p">()[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+            <span class="k">except</span> <span class="ne">IndexError</span><span class="p">:</span>
+                <span class="n">im</span> <span class="o">=</span> <span class="n">ax</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+            <span class="n">im</span><span class="o">.</span><span class="n">set_array</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+
+        <span class="k">def</span> <span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
+            <span class="sd">&quot;&quot;&quot;Implement ``self(x)``.&quot;&quot;&quot;</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="s1">&#39;ndim&#39;</span><span class="p">)</span> <span class="ow">or</span> <span class="n">x</span><span class="o">.</span><span class="n">ndim</span> <span class="o">!=</span> <span class="mi">2</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span>
+                    <span class="s1">&#39;input must be `ndim` and `shape` attributes, but got &#39;</span>
+                    <span class="s1">&#39;input of type </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">x</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="p">)</span>
+                <span class="p">)</span>
+
+            <span class="k">if</span> <span class="n">x</span><span class="o">.</span><span class="n">ndim</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
+                <span class="n">update_plot</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_update_plot_2d</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span>
+                    <span class="s1">&#39;currently only 2D plots (`imshow`) are supported&#39;</span>
+                <span class="p">)</span>
+
+            <span class="k">if</span> <span class="n">it</span> <span class="o">%</span> <span class="n">step</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="n">update_plot</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+                <span class="n">moviewriter</span><span class="o">.</span><span class="n">grab_frame</span><span class="p">()</span>
+
+    <span class="k">with</span> <span class="n">moviewriter</span><span class="o">.</span><span class="n">saving</span><span class="p">(</span><span class="n">fig</span><span class="p">,</span> <span class="n">filename</span><span class="p">,</span> <span class="n">dpi</span><span class="o">=</span><span class="n">dpi</span><span class="p">,</span> <span class="o">**</span><span class="n">saving_kwargs</span><span class="p">):</span>
+        <span class="k">yield</span> <span class="n">CallbackAppendMovieFrame</span><span class="p">()</span></div>
+
+
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s1">&#39;__main__&#39;</span><span class="p">:</span>
+    <span class="kn">from</span> <span class="nn">odl.util.testutils</span> <span class="kn">import</span> <span class="n">run_doctests</span>
+    <span class="n">run_doctests</span><span class="p">()</span>
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &#169; Copyright 2014-2020 The ODL Contributors.
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

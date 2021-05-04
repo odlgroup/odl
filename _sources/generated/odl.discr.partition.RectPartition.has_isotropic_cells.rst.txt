@@ -1,0 +1,6 @@
+RectPartition.has_isotropic_cells
+=====================================================
+
+.. currentmodule:: odl.discr.partition
+
+.. autoproperty:: RectPartition.has_isotropic_cells

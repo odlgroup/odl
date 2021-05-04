@@ -1,0 +1,8 @@
+:orphan:
+
+ceil_op.norm
+====================================
+
+.. currentmodule:: odl.ufunc_ops.ufunc_ops
+
+.. automethod:: ceil_op.norm

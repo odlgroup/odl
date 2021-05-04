@@ -1,0 +1,6 @@
+RosenbrockFunctional.adjoint
+=================================================================
+
+.. currentmodule:: odl.solvers.functional.example_funcs
+
+.. autoproperty:: RosenbrockFunctional.adjoint

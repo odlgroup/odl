@@ -1,0 +1,8 @@
+:orphan:
+
+ConeBeamGeometry.__eq__
+==================================================
+
+.. currentmodule:: odl.tomo.geometry.conebeam
+
+.. automethod:: ConeBeamGeometry.__eq__

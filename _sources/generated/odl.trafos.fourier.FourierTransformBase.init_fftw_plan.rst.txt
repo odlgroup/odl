@@ -1,0 +1,8 @@
+:orphan:
+
+FourierTransformBase.init_fftw_plan
+======================================================
+
+.. currentmodule:: odl.trafos.fourier
+
+.. automethod:: FourierTransformBase.init_fftw_plan

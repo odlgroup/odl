@@ -1,0 +1,6 @@
+AstraCpuImpl.proj_space
+===================================================
+
+.. currentmodule:: odl.tomo.backends.astra_cpu
+
+.. autoproperty:: AstraCpuImpl.proj_space

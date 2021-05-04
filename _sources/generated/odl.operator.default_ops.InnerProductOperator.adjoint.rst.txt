@@ -1,0 +1,6 @@
+InnerProductOperator.adjoint
+=====================================================
+
+.. currentmodule:: odl.operator.default_ops
+
+.. autoproperty:: InnerProductOperator.adjoint

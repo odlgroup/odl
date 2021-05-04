@@ -1,0 +1,6 @@
+NumpyTensorSpace.weighting
+================================================
+
+.. currentmodule:: odl.space.npy_tensors
+
+.. autoproperty:: NumpyTensorSpace.weighting

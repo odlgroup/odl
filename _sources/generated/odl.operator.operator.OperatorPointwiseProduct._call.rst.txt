@@ -1,0 +1,8 @@
+:orphan:
+
+OperatorPointwiseProduct._call
+====================================================
+
+.. currentmodule:: odl.operator.operator
+
+.. automethod:: OperatorPointwiseProduct._call

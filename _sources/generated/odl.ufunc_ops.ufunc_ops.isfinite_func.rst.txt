@@ -1,0 +1,43 @@
+﻿isfinite_func
+=====================================
+
+.. currentmodule:: odl.ufunc_ops.ufunc_ops
+
+.. autoclass:: isfinite_func
+   :show-inheritance:
+   
+   
+   .. automethod:: __init__
+   
+      
+   
+   .. HACK -- the point here is that we don't want this to appear in the output, but the autosummary should still generate the pages.
+      .. autosummary::
+         :toctree:
+      
+         isfinite_func.__call__
+         isfinite_func.__eq__
+         isfinite_func._call
+         isfinite_func.bregman
+         isfinite_func.derivative
+         isfinite_func.norm
+         isfinite_func.translated
+   
+
+    
+   .. HACK -- the point here is that we don't want this to appear in the output, but the autosummary should still generate the pages.
+      .. autosummary::
+         :toctree:
+      
+         isfinite_func.adjoint
+         isfinite_func.convex_conj
+         isfinite_func.domain
+         isfinite_func.grad_lipschitz
+         isfinite_func.gradient
+         isfinite_func.inverse
+         isfinite_func.is_functional
+         isfinite_func.is_linear
+         isfinite_func.proximal
+         isfinite_func.range
+   
+   

@@ -1,0 +1,340 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>ProductSpaceElement.show &mdash; odl 1.0.0.dev0 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="space_utils" href="../odl.space.space_utils.html" />
+    <link rel="prev" title="ProductSpaceElement.set_zero" href="odl.space.pspace.ProductSpaceElement.set_zero.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../index.html" class="icon icon-home"> odl
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                1.0.0.dev0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Getting Started</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../getting_started/getting_started.html">Getting Started</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Working with ODL</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../guide/guide.html">User’s guide – selected topics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../math/math.html">Mathematical Background</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Developer zone</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../dev/dev.html">Contributing to ODL</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Useful facts</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../guide/faq.html">Frequently asked questions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../guide/glossary.html">Glossary</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../release_notes.html">Release Notes</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../refs.html">References</a></li>
+</ul>
+<p class="caption"><span class="caption-text">API Reference</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../odl.html">odl</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../odl.contrib.html">contrib</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../odl.deform.html">deform</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../odl.diagnostics.html">diagnostics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../odl.discr.html">discr</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../odl.operator.html">operator</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../odl.phantom.html">phantom</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../odl.set.html">set</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../odl.solvers.html">solvers</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="../odl.space.html">space</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="../odl.space.base_tensors.html">base_tensors</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../odl.space.entry_points.html">entry_points</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../odl.space.npy_tensors.html">npy_tensors</a></li>
+<li class="toctree-l3 current"><a class="reference internal" href="../odl.space.pspace.html">pspace</a><ul class="current">
+<li class="toctree-l4"><a class="reference internal" href="odl.space.pspace.ProductSpace.html">ProductSpace</a></li>
+<li class="toctree-l4"><a class="reference internal" href="odl.space.pspace.ProductSpaceArrayWeighting.html">ProductSpaceArrayWeighting</a></li>
+<li class="toctree-l4"><a class="reference internal" href="odl.space.pspace.ProductSpaceConstWeighting.html">ProductSpaceConstWeighting</a></li>
+<li class="toctree-l4"><a class="reference internal" href="odl.space.pspace.ProductSpaceCustomDist.html">ProductSpaceCustomDist</a></li>
+<li class="toctree-l4"><a class="reference internal" href="odl.space.pspace.ProductSpaceCustomInner.html">ProductSpaceCustomInner</a></li>
+<li class="toctree-l4"><a class="reference internal" href="odl.space.pspace.ProductSpaceCustomNorm.html">ProductSpaceCustomNorm</a></li>
+<li class="toctree-l4 current"><a class="reference internal" href="odl.space.pspace.ProductSpaceElement.html">ProductSpaceElement</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../odl.space.space_utils.html">space_utils</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../odl.space.weighting.html">weighting</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../odl.tomo.html">tomo</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../odl.trafos.html">trafos</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../odl.ufunc_ops.html">ufunc_ops</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../odl.util.html">util</a></li>
+</ul>
+</li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">odl</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="../odl.html">odl</a> &raquo;</li>
+        
+          <li><a href="../odl.space.html">space</a> &raquo;</li>
+        
+          <li><a href="../odl.space.pspace.html">pspace</a> &raquo;</li>
+        
+          <li><a href="odl.space.pspace.ProductSpaceElement.html">ProductSpaceElement</a> &raquo;</li>
+        
+      <li>ProductSpaceElement.show</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            <a href="../_sources/generated/odl.space.pspace.ProductSpaceElement.show.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="productspaceelement-show">
+<h1>ProductSpaceElement.show<a class="headerlink" href="#productspaceelement-show" title="Permalink to this headline">¶</a></h1>
+<dl class="py method">
+<dt id="odl.space.pspace.ProductSpaceElement.show">
+<code class="sig-prename descclassname"><span class="pre">ProductSpaceElement.</span></code><code class="sig-name descname"><span class="pre">show</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="pre">self</span></em>, <em class="sig-param"><span class="pre">title=None</span></em>, <em class="sig-param"><span class="pre">indices=None</span></em>, <em class="sig-param"><span class="pre">\*\*kwargs</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/odl/space/pspace.html#ProductSpaceElement.show"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#odl.space.pspace.ProductSpaceElement.show" title="Permalink to this definition">¶</a></dt>
+<dd><p>Display the parts of this product space element graphically.</p>
+<dl class="field-list">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl>
+<dt><strong>title</strong><span class="classifier">string, optional</span></dt><dd><p>Title of the figures</p>
+</dd>
+<dt><strong>indices</strong><span class="classifier">int, slice, tuple or list, optional</span></dt><dd><p>Display parts of <code class="docutils literal notranslate"><span class="pre">self</span></code> in the way described in the following.</p>
+<p>A single list of integers selects the corresponding parts
+of this vector.</p>
+<p>For other tuples or lists, the first entry indexes the parts of
+this vector, and the remaining entries (if any) are used to
+slice into the parts. Handling those remaining indices is
+up to the <code class="docutils literal notranslate"><span class="pre">show</span></code> methods of the parts to be displayed.</p>
+<p>The types of the first entry trigger the following behaviors:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">int</span></code>: take the part corresponding to this index</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">slice</span></code>: take a subset of the parts</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">None</span></code>: equivalent to <code class="docutils literal notranslate"><span class="pre">slice(None)</span></code>, i.e., everything</p></li>
+</ul>
+</div></blockquote>
+<p>Typical use cases are displaying of selected parts, which can
+be achieved with a list, e.g., <code class="docutils literal notranslate"><span class="pre">indices=[0,</span> <span class="pre">2]</span></code> for parts
+0 and 2, and plotting of all parts sliced in a certain way,
+e.g., <code class="docutils literal notranslate"><span class="pre">indices=[None,</span> <span class="pre">20,</span> <span class="pre">None]</span></code> for showing all parts
+sliced with indices <code class="docutils literal notranslate"><span class="pre">[20,</span> <span class="pre">None]</span></code>.</p>
+<p>A single <code class="docutils literal notranslate"><span class="pre">int</span></code>, <code class="docutils literal notranslate"><span class="pre">slice</span></code>, <code class="docutils literal notranslate"><span class="pre">list</span></code> or <code class="docutils literal notranslate"><span class="pre">None</span></code> object
+indexes the parts only, i.e., is treated roughly as
+<code class="docutils literal notranslate"><span class="pre">(indices,</span> <span class="pre">Ellipsis)</span></code>. In particular, for <code class="docutils literal notranslate"><span class="pre">None</span></code>, all
+parts are shown with default slicing.</p>
+</dd>
+<dt><strong>in_figs</strong><span class="classifier">sequence of <a class="reference external" href="https://matplotlib.org/api/figure_api.html#matplotlib.figure.Figure" title="(in Matplotlib v3.4.1)"><code class="xref any docutils literal notranslate"><span class="pre">matplotlib.figure.Figure</span></code></a>, optional</span></dt><dd><p>Update these figures instead of creating new ones. Typically
+the return value of an earlier call to <code class="docutils literal notranslate"><span class="pre">show</span></code> is used
+for this parameter.</p>
+</dd>
+<dt><strong>kwargs</strong></dt><dd><p>Additional arguments passed on to the <code class="docutils literal notranslate"><span class="pre">show</span></code> methods of
+the parts.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><dl>
+<dt><strong>figs</strong><span class="classifier">tuple of <a class="reference external" href="https://matplotlib.org/api/figure_api.html#matplotlib.figure.Figure" title="(in Matplotlib v3.4.1)"><code class="xref any docutils literal notranslate"><span class="pre">matplotlib.figure.Figure</span></code></a></span></dt><dd><p>The resulting figures. In an interactive shell, they are
+automatically displayed.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+<div class="admonition seealso">
+<p class="admonition-title">See also</p>
+<dl class="simple">
+<dt><a class="reference internal" href="odl.discr.discr_space.DiscretizedSpaceElement.show.html#odl.discr.discr_space.DiscretizedSpaceElement.show" title="odl.discr.discr_space.DiscretizedSpaceElement.show"><code class="xref py py-obj docutils literal notranslate"><span class="pre">odl.discr.discr_space.DiscretizedSpaceElement.show</span></code></a></dt><dd><p>Display of a discretized function</p>
+</dd>
+<dt><a class="reference internal" href="odl.space.base_tensors.Tensor.show.html#odl.space.base_tensors.Tensor.show" title="odl.space.base_tensors.Tensor.show"><code class="xref py py-obj docutils literal notranslate"><span class="pre">odl.space.base_tensors.Tensor.show</span></code></a></dt><dd><p>Display of sequence type data</p>
+</dd>
+<dt><a class="reference internal" href="odl.util.graphics.show_discrete_data.html#odl.util.graphics.show_discrete_data" title="odl.util.graphics.show_discrete_data"><code class="xref py py-obj docutils literal notranslate"><span class="pre">odl.util.graphics.show_discrete_data</span></code></a></dt><dd><p>Underlying implementation</p>
+</dd>
+</dl>
+</div>
+</dd></dl>
+
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+        <a href="../odl.space.space_utils.html" class="btn btn-neutral float-right" title="space_utils" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="odl.space.pspace.ProductSpaceElement.set_zero.html" class="btn btn-neutral float-left" title="ProductSpaceElement.set_zero" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &#169; Copyright 2014-2020 The ODL Contributors.
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

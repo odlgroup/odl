@@ -1,0 +1,6 @@
+Parallel2dGeometry.partition
+=======================================================
+
+.. currentmodule:: odl.tomo.geometry.parallel
+
+.. autoproperty:: Parallel2dGeometry.partition

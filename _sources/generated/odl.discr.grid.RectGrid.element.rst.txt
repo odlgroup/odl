@@ -1,0 +1,8 @@
+:orphan:
+
+RectGrid.element
+===============================
+
+.. currentmodule:: odl.discr.grid
+
+.. automethod:: RectGrid.element

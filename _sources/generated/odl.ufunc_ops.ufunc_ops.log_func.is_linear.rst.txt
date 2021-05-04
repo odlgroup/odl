@@ -1,0 +1,6 @@
+log_func.is_linear
+==========================================
+
+.. currentmodule:: odl.ufunc_ops.ufunc_ops
+
+.. autoproperty:: log_func.is_linear

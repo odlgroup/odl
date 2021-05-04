@@ -1,0 +1,1648 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>odl.tomo.geometry.detector &mdash; odl 1.0.0.dev0 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../../../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../../../../_static/custom.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../../../" src="../../../../_static/documentation_options.js"></script>
+        <script src="../../../../_static/jquery.js"></script>
+        <script src="../../../../_static/underscore.js"></script>
+        <script src="../../../../_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="../../../../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../../../index.html" class="icon icon-home"> odl
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                1.0.0.dev0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Getting Started</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../getting_started/getting_started.html">Getting Started</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Working with ODL</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../guide/guide.html">User’s guide – selected topics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../math/math.html">Mathematical Background</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Developer zone</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../dev/dev.html">Contributing to ODL</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Useful facts</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../guide/faq.html">Frequently asked questions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../guide/glossary.html">Glossary</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../release_notes.html">Release Notes</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../refs.html">References</a></li>
+</ul>
+<p class="caption"><span class="caption-text">API Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../odl.html">odl</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../../index.html">odl</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../../../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="../../../index.html">Module code</a> &raquo;</li>
+        
+      <li>odl.tomo.geometry.detector</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for odl.tomo.geometry.detector</h1><div class="highlight"><pre>
+<span></span><span class="c1"># Copyright 2014-2019 The ODL contributors</span>
+<span class="c1">#</span>
+<span class="c1"># This file is part of ODL.</span>
+<span class="c1">#</span>
+<span class="c1"># This Source Code Form is subject to the terms of the Mozilla Public License,</span>
+<span class="c1"># v. 2.0. If a copy of the MPL was not distributed with this file, You can</span>
+<span class="c1"># obtain one at https://mozilla.org/MPL/2.0/.</span>
+
+<span class="sd">&quot;&quot;&quot;Detectors for tomographic imaging.&quot;&quot;&quot;</span>
+
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">absolute_import</span><span class="p">,</span> <span class="n">division</span><span class="p">,</span> <span class="n">print_function</span>
+
+<span class="kn">from</span> <span class="nn">builtins</span> <span class="kn">import</span> <span class="nb">object</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+
+<span class="kn">from</span> <span class="nn">odl.discr</span> <span class="kn">import</span> <span class="n">RectPartition</span>
+<span class="kn">from</span> <span class="nn">odl.tomo.util</span> <span class="kn">import</span> <span class="n">is_inside_bounds</span><span class="p">,</span> <span class="n">perpendicular_vector</span>
+<span class="kn">from</span> <span class="nn">odl.tomo.util.utility</span> <span class="kn">import</span> <span class="n">rotation_matrix_from_to</span>
+<span class="kn">from</span> <span class="nn">odl.util</span> <span class="kn">import</span> <span class="n">array_str</span><span class="p">,</span> <span class="n">indent</span><span class="p">,</span> <span class="n">signature_string</span>
+
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;Detector&#39;</span><span class="p">,</span>
+           <span class="s1">&#39;Flat1dDetector&#39;</span><span class="p">,</span> <span class="s1">&#39;Flat2dDetector&#39;</span><span class="p">,</span> <span class="s1">&#39;CircularDetector&#39;</span><span class="p">,</span>
+           <span class="s1">&#39;CylindricalDetector&#39;</span><span class="p">,</span> <span class="s1">&#39;SphericalDetector&#39;</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="Detector"><a class="viewcode-back" href="../../../../generated/odl.tomo.geometry.detector.Detector.html#odl.tomo.geometry.detector.Detector">[docs]</a><span class="k">class</span> <span class="nc">Detector</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+
+    <span class="sd">&quot;&quot;&quot;Abstract detector class.</span>
+
+<span class="sd">    A detector is described by</span>
+
+<span class="sd">    * a set of parameters for surface parametrization (including sampling),</span>
+<span class="sd">    * a function mapping a surface parameter to the location of a detector</span>
+<span class="sd">      point relative to its reference point,</span>
+<span class="sd">    * optionally a surface measure function.</span>
+
+<span class="sd">    Most implementations implicitly assume that an N-dimensional detector</span>
+<span class="sd">    is embedded in an (N+1)-dimensional space, but subclasses can override</span>
+<span class="sd">    this behavior.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="Detector.__init__"><a class="viewcode-back" href="../../../../generated/odl.tomo.geometry.detector.Detector.html#odl.tomo.geometry.detector.Detector.__init__">[docs]</a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">partition</span><span class="p">,</span> <span class="n">space_ndim</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">check_bounds</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Initialize a new instance.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        partition : `RectPartition`</span>
+<span class="sd">            Partition of the detector parameter set (pixelization).</span>
+<span class="sd">            It determines dimension, parameter range and discretization.</span>
+<span class="sd">        space_ndim : positive int, optional</span>
+<span class="sd">            Number of dimensions of the embedding space.</span>
+<span class="sd">            Default: ``partition.ndim + 1``</span>
+<span class="sd">        check_bounds : bool, optional</span>
+<span class="sd">            If ``True``, methods computing vectors check input arguments.</span>
+<span class="sd">            Checks are vectorized and add only a small overhead.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">partition</span><span class="p">,</span> <span class="n">RectPartition</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;`partition` </span><span class="si">{!r}</span><span class="s1"> is not a RectPartition instance&#39;</span>
+                            <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">partition</span><span class="p">))</span>
+
+        <span class="k">if</span> <span class="n">space_ndim</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">__space_ndim</span> <span class="o">=</span> <span class="n">partition</span><span class="o">.</span><span class="n">ndim</span> <span class="o">+</span> <span class="mi">1</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">__space_ndim</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">space_ndim</span><span class="p">)</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">space_ndim</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;`space_ndim` must be postitive, got </span><span class="si">{}</span><span class="s1">&#39;</span>
+                                 <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">space_ndim</span><span class="p">))</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">__partition</span> <span class="o">=</span> <span class="n">partition</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__check_bounds</span> <span class="o">=</span> <span class="nb">bool</span><span class="p">(</span><span class="n">check_bounds</span><span class="p">)</span></div>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">partition</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Partition of the detector parameter set into subsets.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__partition</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">check_bounds</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;If ``True``, methods computing vectors check input arguments.</span>
+
+<span class="sd">        For very large input arrays, these checks can introduce significant</span>
+<span class="sd">        overhead, but the overhead is kept low by vectorization.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__check_bounds</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">ndim</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Number of dimensions of the parameters (= surface dimension).&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">partition</span><span class="o">.</span><span class="n">ndim</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">space_ndim</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Number of dimensions of the embedding space.</span>
+
+<span class="sd">        This default (``space_ndim = ndim + 1``) can be overridden by</span>
+<span class="sd">        subclasses.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__space_ndim</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">params</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Surface parameter set of this detector.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">partition</span><span class="o">.</span><span class="n">set</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">grid</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Sampling grid of the parameters.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">partition</span><span class="o">.</span><span class="n">grid</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">shape</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Number of subsets (pixels) of the detector per axis.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">partition</span><span class="o">.</span><span class="n">shape</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">size</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Total number of pixels.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">partition</span><span class="o">.</span><span class="n">size</span>
+
+<div class="viewcode-block" id="Detector.surface"><a class="viewcode-back" href="../../../../generated/odl.tomo.geometry.detector.Detector.surface.html#odl.tomo.geometry.detector.Detector.surface">[docs]</a>    <span class="k">def</span> <span class="nf">surface</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">param</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Parametrization of the detector reference surface.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        param : `array-like` or sequence</span>
+<span class="sd">            Parameter value(s) at which to evaluate.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        point : `numpy.ndarray`</span>
+<span class="sd">            Vector(s) pointing from the origin to the detector surface</span>
+<span class="sd">            point at ``param``.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s1">&#39;abstract method&#39;</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Detector.surface_deriv"><a class="viewcode-back" href="../../../../generated/odl.tomo.geometry.detector.Detector.surface_deriv.html#odl.tomo.geometry.detector.Detector.surface_deriv">[docs]</a>    <span class="k">def</span> <span class="nf">surface_deriv</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">param</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Partial derivative(s) of the surface parametrization.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        param : `array-like` or sequence</span>
+<span class="sd">            Parameter value(s) at which to evaluate. If ``ndim &gt;= 2``,</span>
+<span class="sd">            a sequence of length `ndim` must be provided.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        deriv : `numpy.ndarray`</span>
+<span class="sd">            Array of vectors representing the surface derivative(s) at</span>
+<span class="sd">            ``param``.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s1">&#39;abstract method&#39;</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Detector.surface_normal"><a class="viewcode-back" href="../../../../generated/odl.tomo.geometry.detector.Detector.surface_normal.html#odl.tomo.geometry.detector.Detector.surface_normal">[docs]</a>    <span class="k">def</span> <span class="nf">surface_normal</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">param</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Unit vector perpendicular to the detector surface at ``param``.</span>
+
+<span class="sd">        The orientation is chosen as follows:</span>
+
+<span class="sd">            - In 2D, the system ``(normal, tangent)`` should be</span>
+<span class="sd">              right-handed.</span>
+<span class="sd">            - In 3D, the system ``(tangent[0], tangent[1], normal)``</span>
+<span class="sd">              should be right-handed.</span>
+
+<span class="sd">        Here, ``tangent`` is the return value of `surface_deriv` at</span>
+<span class="sd">        ``param``.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        param : `array-like` or sequence</span>
+<span class="sd">            Parameter value(s) at which to evaluate.  If ``ndim &gt;= 2``,</span>
+<span class="sd">            a sequence of length `ndim` must be provided.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        normal : `numpy.ndarray`</span>
+<span class="sd">            Unit vector(s) perpendicular to the detector surface at</span>
+<span class="sd">            ``param``.</span>
+<span class="sd">            If ``param`` is a single parameter, an array of shape</span>
+<span class="sd">            ``(space_ndim,)`` representing a single vector is returned.</span>
+<span class="sd">            Otherwise the shape of the returned array is</span>
+
+<span class="sd">            - ``param.shape + (space_ndim,)`` if `ndim` is 1,</span>
+<span class="sd">            - ``param.shape[:-1] + (space_ndim,)`` otherwise.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># Checking is done by `surface_deriv`</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">ndim</span> <span class="o">==</span> <span class="mi">1</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">space_ndim</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
+            <span class="k">return</span> <span class="o">-</span><span class="n">perpendicular_vector</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">surface_deriv</span><span class="p">(</span><span class="n">param</span><span class="p">))</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">ndim</span> <span class="o">==</span> <span class="mi">2</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">space_ndim</span> <span class="o">==</span> <span class="mi">3</span><span class="p">:</span>
+            <span class="n">deriv</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">surface_deriv</span><span class="p">(</span><span class="n">param</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">deriv</span><span class="o">.</span><span class="n">ndim</span> <span class="o">&gt;</span> <span class="mi">2</span><span class="p">:</span>
+                <span class="c1"># Vectorized, need to reshape (N, 2, 3) to (2, N, 3)</span>
+                <span class="n">deriv</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">moveaxis</span><span class="p">(</span><span class="n">deriv</span><span class="p">,</span> <span class="o">-</span><span class="mi">2</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+            <span class="n">normal</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">cross</span><span class="p">(</span><span class="o">*</span><span class="n">deriv</span><span class="p">,</span> <span class="n">axis</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span>
+            <span class="n">normal</span> <span class="o">/=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">normal</span><span class="p">,</span> <span class="n">axis</span><span class="o">=-</span><span class="mi">1</span><span class="p">,</span> <span class="n">keepdims</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">normal</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span>
+                <span class="s1">&#39;no default implementation of `surface_normal` available &#39;</span>
+                <span class="s1">&#39;for `ndim = </span><span class="si">{}</span><span class="s1">` and `space_ndim = </span><span class="si">{}</span><span class="s1">`&#39;</span>
+                <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ndim</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">space_ndim</span><span class="p">))</span></div>
+
+<div class="viewcode-block" id="Detector.surface_measure"><a class="viewcode-back" href="../../../../generated/odl.tomo.geometry.detector.Detector.surface_measure.html#odl.tomo.geometry.detector.Detector.surface_measure">[docs]</a>    <span class="k">def</span> <span class="nf">surface_measure</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">param</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Density function of the surface measure.</span>
+
+<span class="sd">        This is the default implementation relying on the `surface_deriv`</span>
+<span class="sd">        method. For a detector with `ndim` equal to 1, the density is given</span>
+<span class="sd">        by the `Arc length`_, for a surface with `ndim` 2 in a 3D space, it</span>
+<span class="sd">        is the length of the cross product of the partial derivatives of the</span>
+<span class="sd">        parametrization, see Wikipedia&#39;s `Surface area`_ article.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        param : `array-like` or sequence</span>
+<span class="sd">            Parameter value(s) at which to evaluate.  If ``ndim &gt;= 2``,</span>
+<span class="sd">            a sequence of length `ndim` must be provided.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        measure : float or `numpy.ndarray`</span>
+<span class="sd">            The density value(s) at the given parameter(s). If a single</span>
+<span class="sd">            parameter is provided, a float is returned. Otherwise, an</span>
+<span class="sd">            array is returned with shape</span>
+
+<span class="sd">            - ``param.shape`` if `ndim` is 1,</span>
+<span class="sd">            - ``broadcast(*param).shape`` otherwise.</span>
+
+<span class="sd">        References</span>
+<span class="sd">        ----------</span>
+<span class="sd">        .. _Arc length:</span>
+<span class="sd">            https://en.wikipedia.org/wiki/Curve#Lengths_of_curves</span>
+<span class="sd">        .. _Surface area:</span>
+<span class="sd">            https://en.wikipedia.org/wiki/Surface_area</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># Checking is done by `surface_deriv`</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">ndim</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">scalar_out</span> <span class="o">=</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">shape</span><span class="p">(</span><span class="n">param</span><span class="p">)</span> <span class="o">==</span> <span class="p">())</span>
+            <span class="n">measure</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">surface_deriv</span><span class="p">(</span><span class="n">param</span><span class="p">),</span> <span class="n">axis</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">scalar_out</span><span class="p">:</span>
+                <span class="n">measure</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">measure</span><span class="p">)</span>
+
+            <span class="k">return</span> <span class="n">measure</span>
+
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">ndim</span> <span class="o">==</span> <span class="mi">2</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">space_ndim</span> <span class="o">==</span> <span class="mi">3</span><span class="p">:</span>
+            <span class="n">scalar_out</span> <span class="o">=</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">shape</span><span class="p">(</span><span class="n">param</span><span class="p">)</span> <span class="o">==</span> <span class="p">(</span><span class="mi">2</span><span class="p">,))</span>
+            <span class="n">deriv</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">surface_deriv</span><span class="p">(</span><span class="n">param</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">deriv</span><span class="o">.</span><span class="n">ndim</span> <span class="o">&gt;</span> <span class="mi">2</span><span class="p">:</span>
+                <span class="c1"># Vectorized, need to reshape (N, 2, 3) to (2, N, 3)</span>
+                <span class="n">deriv</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">moveaxis</span><span class="p">(</span><span class="n">deriv</span><span class="p">,</span> <span class="o">-</span><span class="mi">2</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+            <span class="n">cross</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">cross</span><span class="p">(</span><span class="o">*</span><span class="n">deriv</span><span class="p">,</span> <span class="n">axis</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span>
+            <span class="n">measure</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">cross</span><span class="p">,</span> <span class="n">axis</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">scalar_out</span><span class="p">:</span>
+                <span class="n">measure</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">measure</span><span class="p">)</span>
+
+            <span class="k">return</span> <span class="n">measure</span>
+
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span>
+                <span class="s1">&#39;no default implementation of `surface_measure` available &#39;</span>
+                <span class="s1">&#39;for `ndim=</span><span class="si">{}</span><span class="s1">` and `space_ndim=</span><span class="si">{}</span><span class="s1">`&#39;</span>
+                <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ndim</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">space_ndim</span><span class="p">))</span></div></div>
+
+
+<div class="viewcode-block" id="Flat1dDetector"><a class="viewcode-back" href="../../../../generated/odl.tomo.geometry.detector.Flat1dDetector.html#odl.tomo.geometry.detector.Flat1dDetector">[docs]</a><span class="k">class</span> <span class="nc">Flat1dDetector</span><span class="p">(</span><span class="n">Detector</span><span class="p">):</span>
+
+    <span class="sd">&quot;&quot;&quot;A 1d line detector aligned with a given axis in 2D space.&quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="Flat1dDetector.__init__"><a class="viewcode-back" href="../../../../generated/odl.tomo.geometry.detector.Flat1dDetector.html#odl.tomo.geometry.detector.Flat1dDetector.__init__">[docs]</a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">partition</span><span class="p">,</span> <span class="n">axis</span><span class="p">,</span> <span class="n">check_bounds</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Initialize a new instance.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        partition : 1-dim. `RectPartition`</span>
+<span class="sd">            Partition of the parameter interval, corresponding to the</span>
+<span class="sd">            line elements.</span>
+<span class="sd">        axis : `array-like`, shape ``(2,)``</span>
+<span class="sd">            Fixed axis along which this detector is aligned.</span>
+<span class="sd">        check_bounds : bool, optional</span>
+<span class="sd">            If ``True``, methods computing vectors check input arguments.</span>
+<span class="sd">            Checks are vectorized and add only a small overhead.</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        --------</span>
+<span class="sd">        &gt;&gt;&gt; part = odl.uniform_partition(0, 1, 10)</span>
+<span class="sd">        &gt;&gt;&gt; det = Flat1dDetector(part, axis=[1, 0])</span>
+<span class="sd">        &gt;&gt;&gt; det.axis</span>
+<span class="sd">        array([ 1.,  0.])</span>
+<span class="sd">        &gt;&gt;&gt; np.allclose(det.surface_normal(0), [0, -1])</span>
+<span class="sd">        True</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">Flat1dDetector</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">partition</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="n">check_bounds</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">ndim</span> <span class="o">!=</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;`partition` must be 1-dimensional, got ndim=</span><span class="si">{}</span><span class="s1">&#39;</span>
+                             <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ndim</span><span class="p">))</span>
+
+        <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">axis</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;`axis` cannot be zero&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__axis</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">axis</span><span class="p">)</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">axis</span><span class="p">)</span></div>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">axis</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Fixed axis along which this detector is aligned.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__axis</span>
+
+<div class="viewcode-block" id="Flat1dDetector.surface"><a class="viewcode-back" href="../../../../generated/odl.tomo.geometry.detector.Flat1dDetector.surface.html#odl.tomo.geometry.detector.Flat1dDetector.surface">[docs]</a>    <span class="k">def</span> <span class="nf">surface</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">param</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return the detector surface point corresponding to ``param``.</span>
+
+<span class="sd">        For parameter value ``p``, the surface point is given by ::</span>
+
+<span class="sd">            surf = p * axis</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        param : float or `array-like`</span>
+<span class="sd">            Parameter value(s) at which to evaluate.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        point : `numpy.ndarray`</span>
+<span class="sd">            Vector(s) pointing from the origin to the detector surface</span>
+<span class="sd">            point at ``param``.</span>
+<span class="sd">            If ``param`` is a single parameter, the returned array has</span>
+<span class="sd">            shape ``(2,)``, otherwise ``param.shape + (2,)``.</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        --------</span>
+<span class="sd">        The method works with a single parameter, resulting in a single</span>
+<span class="sd">        vector:</span>
+
+<span class="sd">        &gt;&gt;&gt; part = odl.uniform_partition(0, 1, 10)</span>
+<span class="sd">        &gt;&gt;&gt; det = Flat1dDetector(part, axis=[1, 0])</span>
+<span class="sd">        &gt;&gt;&gt; det.surface(0)</span>
+<span class="sd">        array([ 0.,  0.])</span>
+<span class="sd">        &gt;&gt;&gt; det.surface(1)</span>
+<span class="sd">        array([ 1.,  0.])</span>
+
+<span class="sd">        It is also vectorized, i.e., it can be called with multiple</span>
+<span class="sd">        parameters at once (or an n-dimensional array of parameters):</span>
+
+<span class="sd">        &gt;&gt;&gt; det.surface([0, 1])</span>
+<span class="sd">        array([[ 0.,  0.],</span>
+<span class="sd">               [ 1.,  0.]])</span>
+<span class="sd">        &gt;&gt;&gt; det.surface(np.zeros((4, 5))).shape</span>
+<span class="sd">        (4, 5, 2)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">squeeze_out</span> <span class="o">=</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">shape</span><span class="p">(</span><span class="n">param</span><span class="p">)</span> <span class="o">==</span> <span class="p">())</span>
+        <span class="n">param</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">param</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">,</span> <span class="n">copy</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">ndmin</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">check_bounds</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">is_inside_bounds</span><span class="p">(</span><span class="n">param</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;`param` </span><span class="si">{}</span><span class="s1"> not in the valid range &#39;</span>
+                             <span class="s1">&#39;</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">param</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="p">))</span>
+
+        <span class="c1"># Create outer product of `params` and `axis`, resulting in shape</span>
+        <span class="c1"># params.shape + axis.shape</span>
+        <span class="n">surf</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">multiply</span><span class="o">.</span><span class="n">outer</span><span class="p">(</span><span class="n">param</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">axis</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">squeeze_out</span><span class="p">:</span>
+            <span class="n">surf</span> <span class="o">=</span> <span class="n">surf</span><span class="o">.</span><span class="n">squeeze</span><span class="p">()</span>
+
+        <span class="k">return</span> <span class="n">surf</span></div>
+
+<div class="viewcode-block" id="Flat1dDetector.surface_deriv"><a class="viewcode-back" href="../../../../generated/odl.tomo.geometry.detector.Flat1dDetector.surface_deriv.html#odl.tomo.geometry.detector.Flat1dDetector.surface_deriv">[docs]</a>    <span class="k">def</span> <span class="nf">surface_deriv</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">param</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return the surface derivative at ``param``.</span>
+
+<span class="sd">        This is a constant function evaluating to `axis` everywhere.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        param : float or `array-like`</span>
+<span class="sd">            Parameter value(s) at which to evaluate.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        deriv : `numpy.ndarray`</span>
+<span class="sd">            Array representing the derivative vector(s) at ``param``.</span>
+<span class="sd">            If ``param`` is a single parameter, the returned array has</span>
+<span class="sd">            shape ``(2,)``, otherwise ``param.shape + (2,)``.</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        --------</span>
+<span class="sd">        The method works with a single parameter, resulting in a single</span>
+<span class="sd">        vector:</span>
+
+<span class="sd">        &gt;&gt;&gt; part = odl.uniform_partition(0, 1, 10)</span>
+<span class="sd">        &gt;&gt;&gt; det = Flat1dDetector(part, axis=[1, 0])</span>
+<span class="sd">        &gt;&gt;&gt; det.surface_deriv(0)</span>
+<span class="sd">        array([ 1.,  0.])</span>
+<span class="sd">        &gt;&gt;&gt; det.surface_deriv(1)</span>
+<span class="sd">        array([ 1.,  0.])</span>
+
+<span class="sd">        It is also vectorized, i.e., it can be called with multiple</span>
+<span class="sd">        parameters at once (or an n-dimensional array of parameters):</span>
+
+<span class="sd">        &gt;&gt;&gt; det.surface_deriv([0, 1])</span>
+<span class="sd">        array([[ 1.,  0.],</span>
+<span class="sd">               [ 1.,  0.]])</span>
+<span class="sd">        &gt;&gt;&gt; det.surface_deriv(np.zeros((4, 5))).shape</span>
+<span class="sd">        (4, 5, 2)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">squeeze_out</span> <span class="o">=</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">shape</span><span class="p">(</span><span class="n">param</span><span class="p">)</span> <span class="o">==</span> <span class="p">())</span>
+        <span class="n">param</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">param</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">,</span> <span class="n">copy</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">ndmin</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">check_bounds</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">is_inside_bounds</span><span class="p">(</span><span class="n">param</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;`param` </span><span class="si">{}</span><span class="s1"> not in the valid range &#39;</span>
+                             <span class="s1">&#39;</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">param</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="p">))</span>
+        <span class="k">if</span> <span class="n">squeeze_out</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">axis</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># Produce array of shape `param.shape + (ndim,)` by broadcasting</span>
+            <span class="n">bcast_slc</span> <span class="o">=</span> <span class="p">(</span><span class="kc">None</span><span class="p">,)</span> <span class="o">*</span> <span class="n">param</span><span class="o">.</span><span class="n">ndim</span> <span class="o">+</span> <span class="p">(</span><span class="nb">slice</span><span class="p">(</span><span class="kc">None</span><span class="p">),)</span>
+            <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">broadcast_to</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">axis</span><span class="p">[</span><span class="n">bcast_slc</span><span class="p">],</span> <span class="n">param</span><span class="o">.</span><span class="n">shape</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">axis</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span></div>
+
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return ``repr(self)``.&quot;&quot;&quot;</span>
+        <span class="n">posargs</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">partition</span><span class="p">]</span>
+        <span class="n">optargs</span> <span class="o">=</span> <span class="p">[(</span><span class="s1">&#39;axis&#39;</span><span class="p">,</span> <span class="n">array_str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">axis</span><span class="p">),</span> <span class="s1">&#39;&#39;</span><span class="p">)]</span>
+        <span class="n">inner_str</span> <span class="o">=</span> <span class="n">signature_string</span><span class="p">(</span><span class="n">posargs</span><span class="p">,</span> <span class="n">optargs</span><span class="p">,</span> <span class="n">sep</span><span class="o">=</span><span class="s1">&#39;,</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="s1">&#39;</span><span class="si">{}</span><span class="s1">(</span><span class="se">\n</span><span class="si">{}</span><span class="se">\n</span><span class="s1">)&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="p">,</span> <span class="n">indent</span><span class="p">(</span><span class="n">inner_str</span><span class="p">))</span>
+
+    <span class="k">def</span> <span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return ``str(self)``.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="nb">repr</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Flat2dDetector"><a class="viewcode-back" href="../../../../generated/odl.tomo.geometry.detector.Flat2dDetector.html#odl.tomo.geometry.detector.Flat2dDetector">[docs]</a><span class="k">class</span> <span class="nc">Flat2dDetector</span><span class="p">(</span><span class="n">Detector</span><span class="p">):</span>
+
+    <span class="sd">&quot;&quot;&quot;A 2D flat panel detector aligned two given axes in 3D space.&quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="Flat2dDetector.__init__"><a class="viewcode-back" href="../../../../generated/odl.tomo.geometry.detector.Flat2dDetector.html#odl.tomo.geometry.detector.Flat2dDetector.__init__">[docs]</a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">partition</span><span class="p">,</span> <span class="n">axes</span><span class="p">,</span> <span class="n">check_bounds</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Initialize a new instance.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        partition : 2-dim. `RectPartition`</span>
+<span class="sd">            Partition of the parameter rectangle, corresponding to the</span>
+<span class="sd">            pixels.</span>
+<span class="sd">        axes : sequence of `array-like`&#39;s</span>
+<span class="sd">            Fixed pair of of unit vectors with which the detector is aligned.</span>
+<span class="sd">            The vectors must have shape ``(3,)`` and be linearly</span>
+<span class="sd">            independent.</span>
+<span class="sd">        check_bounds : bool, optional</span>
+<span class="sd">            If ``True``, methods computing vectors check input arguments.</span>
+<span class="sd">            Checks are vectorized and add only a small overhead.</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        --------</span>
+<span class="sd">        &gt;&gt;&gt; part = odl.uniform_partition([0, 0], [1, 1], (10, 10))</span>
+<span class="sd">        &gt;&gt;&gt; det = Flat2dDetector(part, axes=[(1, 0, 0), (0, 0, 1)])</span>
+<span class="sd">        &gt;&gt;&gt; det.axes</span>
+<span class="sd">        array([[ 1.,  0.,  0.],</span>
+<span class="sd">               [ 0.,  0.,  1.]])</span>
+<span class="sd">        &gt;&gt;&gt; det.surface_normal([0, 0])</span>
+<span class="sd">        array([ 0., -1.,  0.])</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">Flat2dDetector</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">partition</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="n">check_bounds</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">ndim</span> <span class="o">!=</span> <span class="mi">2</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;`partition` must be 2-dimensional, got ndim=</span><span class="si">{}</span><span class="s1">&#39;</span>
+                             <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ndim</span><span class="p">))</span>
+
+        <span class="n">axes</span><span class="p">,</span> <span class="n">axes_in</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">axes</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">),</span> <span class="n">axes</span>
+        <span class="k">if</span> <span class="n">axes</span><span class="o">.</span><span class="n">shape</span> <span class="o">!=</span> <span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;`axes` must be a sequence of 2 3-dimensional &#39;</span>
+                             <span class="s1">&#39;vectors, got </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">axes_in</span><span class="p">))</span>
+        <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">cross</span><span class="p">(</span><span class="o">*</span><span class="n">axes</span><span class="p">))</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;`axes` </span><span class="si">{}</span><span class="s1"> are linearly dependent&#39;</span>
+                             <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">axes_in</span><span class="p">))</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">__axes</span> <span class="o">=</span> <span class="n">axes</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">axes</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">keepdims</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span></div>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">axes</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Fixed array of unit vectors with which the detector is aligned.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__axes</span>
+
+<div class="viewcode-block" id="Flat2dDetector.surface"><a class="viewcode-back" href="../../../../generated/odl.tomo.geometry.detector.Flat2dDetector.surface.html#odl.tomo.geometry.detector.Flat2dDetector.surface">[docs]</a>    <span class="k">def</span> <span class="nf">surface</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">param</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return the detector surface point corresponding to ``param``.</span>
+
+<span class="sd">        For parameter value ``p``, the surface point is given by ::</span>
+
+<span class="sd">            surf = p[0] * axes[0] + p[1] * axes[1]</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        param : `array-like` or sequence</span>
+<span class="sd">            Parameter value(s) at which to evaluate. A sequence of</span>
+<span class="sd">            parameters must have length 2.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        point : `numpy.ndarray`</span>
+<span class="sd">            Vector(s) pointing from the origin to the detector surface</span>
+<span class="sd">            point at ``param``.</span>
+<span class="sd">            If ``param`` is a single parameter, the returned array has</span>
+<span class="sd">            shape ``(3,)``, otherwise ``broadcast(*param).shape + (3,)``.</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        --------</span>
+<span class="sd">        The method works with a single parameter, resulting in a single</span>
+<span class="sd">        vector:</span>
+
+<span class="sd">        &gt;&gt;&gt; part = odl.uniform_partition([0, 0], [1, 1], (10, 10))</span>
+<span class="sd">        &gt;&gt;&gt; det = Flat2dDetector(part, axes=[(1, 0, 0), (0, 0, 1)])</span>
+<span class="sd">        &gt;&gt;&gt; det.surface([0, 0])</span>
+<span class="sd">        array([ 0.,  0.,  0.])</span>
+<span class="sd">        &gt;&gt;&gt; det.surface([0, 1])</span>
+<span class="sd">        array([ 0.,  0.,  1.])</span>
+<span class="sd">        &gt;&gt;&gt; det.surface([1, 1])</span>
+<span class="sd">        array([ 1.,  0.,  1.])</span>
+
+<span class="sd">        It is also vectorized, i.e., it can be called with multiple</span>
+<span class="sd">        parameters at once (or n-dimensional arrays of parameters):</span>
+
+<span class="sd">        &gt;&gt;&gt; # 3 pairs of parameters, resulting in 3 vectors</span>
+<span class="sd">        &gt;&gt;&gt; det.surface([[0, 0, 1],</span>
+<span class="sd">        ...              [0, 1, 1]])</span>
+<span class="sd">        array([[ 0.,  0.,  0.],</span>
+<span class="sd">               [ 0.,  0.,  1.],</span>
+<span class="sd">               [ 1.,  0.,  1.]])</span>
+<span class="sd">        &gt;&gt;&gt; # Pairs of parameters in a (4, 5) array each</span>
+<span class="sd">        &gt;&gt;&gt; param = (np.zeros((4, 5)), np.zeros((4, 5)))</span>
+<span class="sd">        &gt;&gt;&gt; det.surface(param).shape</span>
+<span class="sd">        (4, 5, 3)</span>
+<span class="sd">        &gt;&gt;&gt; # Using broadcasting for &quot;outer product&quot; type result</span>
+<span class="sd">        &gt;&gt;&gt; param = (np.zeros((4, 1)), np.zeros((1, 5)))</span>
+<span class="sd">        &gt;&gt;&gt; det.surface(param).shape</span>
+<span class="sd">        (4, 5, 3)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">squeeze_out</span> <span class="o">=</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">broadcast</span><span class="p">(</span><span class="o">*</span><span class="n">param</span><span class="p">)</span><span class="o">.</span><span class="n">shape</span> <span class="o">==</span> <span class="p">())</span>
+        <span class="n">param_in</span> <span class="o">=</span> <span class="n">param</span>
+        <span class="n">param</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">,</span> <span class="n">copy</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">ndmin</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+                      <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">param</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">check_bounds</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">is_inside_bounds</span><span class="p">(</span><span class="n">param</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;`param` </span><span class="si">{}</span><span class="s1"> not in the valid range &#39;</span>
+                             <span class="s1">&#39;</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">param_in</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="p">))</span>
+
+        <span class="c1"># Compute outer product of the i-th spatial component of the</span>
+        <span class="c1"># parameter and sum up the contributions</span>
+        <span class="n">surf</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">multiply</span><span class="o">.</span><span class="n">outer</span><span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="n">ax</span><span class="p">)</span> <span class="k">for</span> <span class="n">p</span><span class="p">,</span> <span class="n">ax</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">param</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">axes</span><span class="p">))</span>
+        <span class="k">if</span> <span class="n">squeeze_out</span><span class="p">:</span>
+            <span class="n">surf</span> <span class="o">=</span> <span class="n">surf</span><span class="o">.</span><span class="n">squeeze</span><span class="p">()</span>
+
+        <span class="k">return</span> <span class="n">surf</span></div>
+
+<div class="viewcode-block" id="Flat2dDetector.surface_deriv"><a class="viewcode-back" href="../../../../generated/odl.tomo.geometry.detector.Flat2dDetector.surface_deriv.html#odl.tomo.geometry.detector.Flat2dDetector.surface_deriv">[docs]</a>    <span class="k">def</span> <span class="nf">surface_deriv</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">param</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return the surface derivative at ``param``.</span>
+
+<span class="sd">        This is a constant function evaluating to `axes` everywhere.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        param : `array-like` or sequence</span>
+<span class="sd">            Parameter value(s) at which to evaluate. A sequence of</span>
+<span class="sd">            parameters must have length 2.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        deriv : `numpy.ndarray`</span>
+<span class="sd">            Array containing the derivative vectors. The first dimension</span>
+<span class="sd">            enumerates the axes, i.e., has always length 2.</span>
+<span class="sd">            If ``param`` is a single parameter, the returned array has</span>
+<span class="sd">            shape ``(2, 3)``, otherwise</span>
+<span class="sd">            ``broadcast(*param).shape + (2, 3)``.</span>
+
+<span class="sd">        Notes</span>
+<span class="sd">        -----</span>
+<span class="sd">        To get an array that enumerates the derivative vectors in the first</span>
+<span class="sd">        dimension, move the second-to-last axis to the first position::</span>
+
+<span class="sd">            deriv = surface_deriv(param)</span>
+<span class="sd">            axes_enumeration = np.moveaxis(deriv, -2, 0)</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        --------</span>
+<span class="sd">        The method works with a single parameter, resulting in a 2-tuple</span>
+<span class="sd">        of vectors:</span>
+
+<span class="sd">        &gt;&gt;&gt; part = odl.uniform_partition([0, 0], [1, 1], (10, 10))</span>
+<span class="sd">        &gt;&gt;&gt; det = Flat2dDetector(part, axes=[(1, 0, 0), (0, 0, 1)])</span>
+<span class="sd">        &gt;&gt;&gt; det.surface_deriv([0, 0])</span>
+<span class="sd">        array([[ 1.,  0.,  0.],</span>
+<span class="sd">               [ 0.,  0.,  1.]])</span>
+<span class="sd">        &gt;&gt;&gt; det.surface_deriv([1, 1])</span>
+<span class="sd">        array([[ 1.,  0.,  0.],</span>
+<span class="sd">               [ 0.,  0.,  1.]])</span>
+
+<span class="sd">        It is also vectorized, i.e., it can be called with multiple</span>
+<span class="sd">        parameters at once (or n-dimensional arrays of parameters):</span>
+
+<span class="sd">        &gt;&gt;&gt; # 2 pairs of parameters, resulting in 3 vectors for each axis</span>
+<span class="sd">        &gt;&gt;&gt; deriv = det.surface_deriv([[0, 1],</span>
+<span class="sd">        ...                            [0, 1]])</span>
+<span class="sd">        &gt;&gt;&gt; deriv[0]  # first pair of vectors</span>
+<span class="sd">        array([[ 1.,  0.,  0.],</span>
+<span class="sd">               [ 0.,  0.,  1.]])</span>
+<span class="sd">        &gt;&gt;&gt; deriv[1]  # second pair of vectors</span>
+<span class="sd">        array([[ 1.,  0.,  0.],</span>
+<span class="sd">               [ 0.,  0.,  1.]])</span>
+<span class="sd">        &gt;&gt;&gt; # Pairs of parameters in a (4, 5) array each</span>
+<span class="sd">        &gt;&gt;&gt; param = (np.zeros((4, 5)), np.zeros((4, 5)))  # pairs of params</span>
+<span class="sd">        &gt;&gt;&gt; det.surface_deriv(param).shape</span>
+<span class="sd">        (4, 5, 2, 3)</span>
+<span class="sd">        &gt;&gt;&gt; # Using broadcasting for &quot;outer product&quot; type result</span>
+<span class="sd">        &gt;&gt;&gt; param = (np.zeros((4, 1)), np.zeros((1, 5)))  # broadcasting</span>
+<span class="sd">        &gt;&gt;&gt; det.surface_deriv(param).shape</span>
+<span class="sd">        (4, 5, 2, 3)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">squeeze_out</span> <span class="o">=</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">broadcast</span><span class="p">(</span><span class="o">*</span><span class="n">param</span><span class="p">)</span><span class="o">.</span><span class="n">shape</span> <span class="o">==</span> <span class="p">())</span>
+        <span class="n">param_in</span> <span class="o">=</span> <span class="n">param</span>
+        <span class="n">param</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">,</span> <span class="n">copy</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">ndmin</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+                      <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">param</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">check_bounds</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">is_inside_bounds</span><span class="p">(</span><span class="n">param</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;`param` </span><span class="si">{}</span><span class="s1"> not in the valid range &#39;</span>
+                             <span class="s1">&#39;</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">param_in</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="p">))</span>
+
+        <span class="k">if</span> <span class="n">squeeze_out</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">axes</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">broadcast_to</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">axes</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">broadcast</span><span class="p">(</span><span class="o">*</span><span class="n">param</span><span class="p">)</span><span class="o">.</span><span class="n">shape</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">axes</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span></div>
+
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return ``repr(self)``.&quot;&quot;&quot;</span>
+        <span class="n">posargs</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">partition</span><span class="p">]</span>
+        <span class="n">optargs</span> <span class="o">=</span> <span class="p">[(</span><span class="s1">&#39;axes&#39;</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">array_str</span><span class="p">(</span><span class="n">ax</span><span class="p">)</span> <span class="k">for</span> <span class="n">ax</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">axes</span><span class="p">),</span> <span class="kc">None</span><span class="p">)]</span>
+        <span class="n">inner_str</span> <span class="o">=</span> <span class="n">signature_string</span><span class="p">(</span><span class="n">posargs</span><span class="p">,</span> <span class="n">optargs</span><span class="p">,</span> <span class="n">sep</span><span class="o">=</span><span class="s1">&#39;,</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="s1">&#39;</span><span class="si">{}</span><span class="s1">(</span><span class="se">\n</span><span class="si">{}</span><span class="se">\n</span><span class="s1">)&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="p">,</span> <span class="n">indent</span><span class="p">(</span><span class="n">inner_str</span><span class="p">))</span>
+
+    <span class="k">def</span> <span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return ``str(self)``.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="nb">repr</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="CircularDetector"><a class="viewcode-back" href="../../../../generated/odl.tomo.geometry.detector.CircularDetector.html#odl.tomo.geometry.detector.CircularDetector">[docs]</a><span class="k">class</span> <span class="nc">CircularDetector</span><span class="p">(</span><span class="n">Detector</span><span class="p">):</span>
+
+    <span class="sd">&quot;&quot;&quot;A 1D detector on a circle section in 2D space.</span>
+
+<span class="sd">    The circular section that corresponds to the angular partition</span>
+<span class="sd">    is rotated to be aligned with a given axis and</span>
+<span class="sd">    shifted to cross the origin. Note, the partition angle increases</span>
+<span class="sd">    in the clockwise direction, by analogy to flat detectors.&quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="CircularDetector.__init__"><a class="viewcode-back" href="../../../../generated/odl.tomo.geometry.detector.CircularDetector.html#odl.tomo.geometry.detector.CircularDetector.__init__">[docs]</a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">partition</span><span class="p">,</span> <span class="n">axis</span><span class="p">,</span> <span class="n">radius</span><span class="p">,</span> <span class="n">check_bounds</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Initialize a new instance.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        partition : 1-dim. `RectPartition`</span>
+<span class="sd">            Partition of the parameter interval, corresponding to the</span>
+<span class="sd">            angular sections along the line.</span>
+<span class="sd">        axis : `array-like`, shape ``(2,)``</span>
+<span class="sd">            Fixed axis along which this detector is aligned.</span>
+<span class="sd">        radius : nonnegative float</span>
+<span class="sd">            Radius of the circle.</span>
+<span class="sd">        check_bounds : bool, optional</span>
+<span class="sd">            If ``True``, methods computing vectors check input arguments.</span>
+<span class="sd">            Checks are vectorized and add only a small overhead.</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        --------</span>
+<span class="sd">        Initialize a detector with circle radius 2 and extending to</span>
+<span class="sd">        90 degrees on both sides of the origin (a half circle).</span>
+
+<span class="sd">        &gt;&gt;&gt; part = odl.uniform_partition(-np.pi / 2, np.pi / 2, 10)</span>
+<span class="sd">        &gt;&gt;&gt; det = CircularDetector(part, axis=[1, 0], radius=2)</span>
+<span class="sd">        &gt;&gt;&gt; det.axis</span>
+<span class="sd">        array([ 1.,  0.])</span>
+<span class="sd">        &gt;&gt;&gt; det.radius</span>
+<span class="sd">        2.0</span>
+<span class="sd">        &gt;&gt;&gt; np.allclose(det.surface_normal(0), [0, -1])</span>
+<span class="sd">        True</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">CircularDetector</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">partition</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="n">check_bounds</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">ndim</span> <span class="o">!=</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;`partition` must be 1-dimensional, got ndim=</span><span class="si">{}</span><span class="s1">&#39;</span>
+                             <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ndim</span><span class="p">))</span>
+
+        <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">axis</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;`axis` cannot be zero&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__axis</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">axis</span><span class="p">)</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">axis</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">__radius</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">radius</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">__radius</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;`radius` must be positive&#39;</span><span class="p">)</span>
+
+        <span class="n">sin</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__axis</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">cos</span> <span class="o">=</span> <span class="o">-</span><span class="bp">self</span><span class="o">.</span><span class="n">__axis</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__rotation_matrix</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([[</span><span class="n">cos</span><span class="p">,</span> <span class="o">-</span><span class="n">sin</span><span class="p">],</span> <span class="p">[</span><span class="n">sin</span><span class="p">,</span> <span class="n">cos</span><span class="p">]])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__translation</span> <span class="o">=</span> <span class="p">(</span><span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">__radius</span>
+                              <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">matmul</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">__rotation_matrix</span><span class="p">,</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">)))</span></div>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">axis</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Fixed axis along which this detector is aligned.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__axis</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">radius</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Curvature radius of the detector.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__radius</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">rotation_matrix</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Rotation matrix that is used to align the detector</span>
+<span class="sd">        with a given axis.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__rotation_matrix</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">translation</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;A vector used to shift the detector towards the origin.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__translation</span>
+
+<div class="viewcode-block" id="CircularDetector.surface"><a class="viewcode-back" href="../../../../generated/odl.tomo.geometry.detector.CircularDetector.surface.html#odl.tomo.geometry.detector.CircularDetector.surface">[docs]</a>    <span class="k">def</span> <span class="nf">surface</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">param</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return the detector surface point corresponding to ``param``.</span>
+
+<span class="sd">        For a parameter ``phi``, the returned point is given by ::</span>
+
+<span class="sd">            surf = R * radius * (cos(phi), -sin(phi)) + t</span>
+
+<span class="sd">        where ``R`` is a rotation matrix and ``t`` is a translation vector.</span>
+<span class="sd">        Note that increase of ``phi`` corresponds to rotation</span>
+<span class="sd">        in the clockwise direction, by analogy to flat detectors.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        param : float or `array-like`</span>
+<span class="sd">            Parameter value(s) at which to evaluate.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        point : `numpy.ndarray`</span>
+<span class="sd">            Vector(s) pointing from the origin to the detector surface</span>
+<span class="sd">            point at ``param``.</span>
+<span class="sd">            If ``param`` is a single parameter, the returned array has</span>
+<span class="sd">            shape ``(2,)``, otherwise ``param.shape + (2,)``.</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        --------</span>
+<span class="sd">        The method works with a single parameter, resulting in a single</span>
+<span class="sd">        vector:</span>
+
+<span class="sd">        &gt;&gt;&gt; part = odl.uniform_partition(-np.pi / 2, np.pi / 2, 10)</span>
+<span class="sd">        &gt;&gt;&gt; det = CircularDetector(part, axis=[1, 0], radius=2)</span>
+<span class="sd">        &gt;&gt;&gt; np.allclose(det.surface(0), [0, 0])</span>
+<span class="sd">        True</span>
+
+<span class="sd">        It is also vectorized, i.e., it can be called with multiple</span>
+<span class="sd">        parameters at once (or an n-dimensional array of parameters):</span>
+
+<span class="sd">        &gt;&gt;&gt; np.round(det.surface([-np.pi / 2, 0, np.pi / 2]), 10)</span>
+<span class="sd">        array([[-2., -2.],</span>
+<span class="sd">               [ 0.,  0.],</span>
+<span class="sd">               [ 2., -2.]])</span>
+
+<span class="sd">        &gt;&gt;&gt; det.surface(np.zeros((4, 5))).shape</span>
+<span class="sd">        (4, 5, 2)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">squeeze_out</span> <span class="o">=</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">shape</span><span class="p">(</span><span class="n">param</span><span class="p">)</span> <span class="o">==</span> <span class="p">())</span>
+        <span class="n">param</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">param</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">,</span> <span class="n">copy</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">ndmin</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">check_bounds</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">is_inside_bounds</span><span class="p">(</span><span class="n">param</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;`param` </span><span class="si">{}</span><span class="s1"> not in the valid range &#39;</span>
+                             <span class="s1">&#39;</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">param</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="p">))</span>
+
+        <span class="n">surf</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">(</span><span class="n">param</span><span class="o">.</span><span class="n">shape</span> <span class="o">+</span> <span class="p">(</span><span class="mi">2</span><span class="p">,))</span>
+        <span class="n">surf</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">param</span><span class="p">)</span>
+        <span class="n">surf</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="o">-</span><span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">param</span><span class="p">)</span>
+        <span class="n">surf</span> <span class="o">*=</span> <span class="bp">self</span><span class="o">.</span><span class="n">radius</span>
+        <span class="n">surf</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">matmul</span><span class="p">(</span><span class="n">surf</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">transpose</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">rotation_matrix</span><span class="p">))</span>
+        <span class="n">surf</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">translation</span>
+        <span class="k">if</span> <span class="n">squeeze_out</span><span class="p">:</span>
+            <span class="n">surf</span> <span class="o">=</span> <span class="n">surf</span><span class="o">.</span><span class="n">squeeze</span><span class="p">()</span>
+
+        <span class="k">return</span> <span class="n">surf</span></div>
+
+<div class="viewcode-block" id="CircularDetector.surface_deriv"><a class="viewcode-back" href="../../../../generated/odl.tomo.geometry.detector.CircularDetector.surface_deriv.html#odl.tomo.geometry.detector.CircularDetector.surface_deriv">[docs]</a>    <span class="k">def</span> <span class="nf">surface_deriv</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">param</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return the surface derivative at ``param``.</span>
+
+<span class="sd">        The derivative at parameter ``phi`` is given by ::</span>
+
+<span class="sd">            deriv = R * radius * (-sin(phi), -cos(phi))</span>
+
+<span class="sd">        where R is a rotation matrix.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        param : float or `array-like`</span>
+<span class="sd">            Parameter value(s) at which to evaluate.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        deriv : `numpy.ndarray`</span>
+<span class="sd">            Array representing the derivative vector(s) at ``param``.</span>
+<span class="sd">            If ``param`` is a single parameter, the returned array has</span>
+<span class="sd">            shape ``(2,)``, otherwise ``param.shape + (2,)``.</span>
+
+<span class="sd">        See Also</span>
+<span class="sd">        --------</span>
+<span class="sd">        surface</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        --------</span>
+<span class="sd">        The method works with a single parameter, resulting in a single</span>
+<span class="sd">        vector:</span>
+
+<span class="sd">        &gt;&gt;&gt; part = odl.uniform_partition(-np.pi / 2, np.pi / 2, 10)</span>
+<span class="sd">        &gt;&gt;&gt; det = CircularDetector(part, axis=[1, 0], radius=2)</span>
+<span class="sd">        &gt;&gt;&gt; det.surface_deriv(0)</span>
+<span class="sd">        array([ 2.,  0.])</span>
+
+<span class="sd">        It is also vectorized, i.e., it can be called with multiple</span>
+<span class="sd">        parameters at once (or an n-dimensional array of parameters):</span>
+
+<span class="sd">        &gt;&gt;&gt; np.round(det.surface_deriv([-np.pi / 2, 0, np.pi / 2]), 10)</span>
+<span class="sd">        array([[ 0.,  2.],</span>
+<span class="sd">               [ 2.,  0.],</span>
+<span class="sd">               [ 0., -2.]])</span>
+
+<span class="sd">        &gt;&gt;&gt; det.surface_deriv(np.zeros((4, 5))).shape</span>
+<span class="sd">        (4, 5, 2)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">squeeze_out</span> <span class="o">=</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">shape</span><span class="p">(</span><span class="n">param</span><span class="p">)</span> <span class="o">==</span> <span class="p">())</span>
+        <span class="n">param</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">param</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">,</span> <span class="n">copy</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">ndmin</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">check_bounds</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">is_inside_bounds</span><span class="p">(</span><span class="n">param</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;`param` </span><span class="si">{}</span><span class="s1"> not in the valid range &#39;</span>
+                             <span class="s1">&#39;</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">param</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="p">))</span>
+
+        <span class="n">deriv</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">(</span><span class="n">param</span><span class="o">.</span><span class="n">shape</span> <span class="o">+</span> <span class="p">(</span><span class="mi">2</span><span class="p">,))</span>
+        <span class="n">deriv</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="o">-</span><span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">param</span><span class="p">)</span>
+        <span class="n">deriv</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="o">-</span><span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">param</span><span class="p">)</span>
+        <span class="n">deriv</span> <span class="o">*=</span> <span class="bp">self</span><span class="o">.</span><span class="n">radius</span>
+        <span class="n">deriv</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">matmul</span><span class="p">(</span><span class="n">deriv</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">transpose</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">rotation_matrix</span><span class="p">))</span>
+
+        <span class="k">if</span> <span class="n">squeeze_out</span><span class="p">:</span>
+            <span class="n">deriv</span> <span class="o">=</span> <span class="n">deriv</span><span class="o">.</span><span class="n">squeeze</span><span class="p">()</span>
+
+        <span class="k">return</span> <span class="n">deriv</span></div>
+
+<div class="viewcode-block" id="CircularDetector.surface_measure"><a class="viewcode-back" href="../../../../generated/odl.tomo.geometry.detector.CircularDetector.surface_measure.html#odl.tomo.geometry.detector.CircularDetector.surface_measure">[docs]</a>    <span class="k">def</span> <span class="nf">surface_measure</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">param</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return the arc length measure at ``param``.</span>
+
+<span class="sd">        This is a constant function evaluating to `radius` everywhere.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        param : float or `array-like`</span>
+<span class="sd">            Parameter value(s) at which to evaluate.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        measure : float or `numpy.ndarray`</span>
+<span class="sd">            Constant value(s) of the arc length measure at ``param``.</span>
+<span class="sd">            If ``param`` is a single parameter, a float is returned,</span>
+<span class="sd">            otherwise an array of shape ``param.shape``.</span>
+
+<span class="sd">        See Also</span>
+<span class="sd">        --------</span>
+<span class="sd">        surface</span>
+<span class="sd">        surface_deriv</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        --------</span>
+<span class="sd">        The method works with a single parameter, resulting in a float:</span>
+
+<span class="sd">        &gt;&gt;&gt; part = odl.uniform_partition(-np.pi / 2, np.pi / 2, 10)</span>
+<span class="sd">        &gt;&gt;&gt; det = CircularDetector(part, axis=[1, 0], radius=2)</span>
+<span class="sd">        &gt;&gt;&gt; det.surface_measure(0)</span>
+<span class="sd">        2.0</span>
+<span class="sd">        &gt;&gt;&gt; det.surface_measure(np.pi / 2)</span>
+<span class="sd">        2.0</span>
+
+<span class="sd">        It is also vectorized, i.e., it can be called with multiple</span>
+<span class="sd">        parameters at once (or an n-dimensional array of parameters):</span>
+
+<span class="sd">        &gt;&gt;&gt; det.surface_measure([0, np.pi / 2])</span>
+<span class="sd">        array([ 2.,  2.])</span>
+<span class="sd">        &gt;&gt;&gt; det.surface_measure(np.zeros((4, 5))).shape</span>
+<span class="sd">        (4, 5)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">scalar_out</span> <span class="o">=</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">shape</span><span class="p">(</span><span class="n">param</span><span class="p">)</span> <span class="o">==</span> <span class="p">())</span>
+        <span class="n">param</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">param</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">,</span> <span class="n">copy</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">ndmin</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">check_bounds</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">is_inside_bounds</span><span class="p">(</span><span class="n">param</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;`param` </span><span class="si">{}</span><span class="s1"> not in the valid range &#39;</span>
+                             <span class="s1">&#39;</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">param</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="p">))</span>
+
+        <span class="k">if</span> <span class="n">scalar_out</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">radius</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">radius</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="n">param</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span></div>
+
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return ``repr(self)``.&quot;&quot;&quot;</span>
+        <span class="n">posargs</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">partition</span><span class="p">]</span>
+        <span class="n">optargs</span> <span class="o">=</span> <span class="p">[(</span><span class="s1">&#39;radius&#39;</span><span class="p">,</span> <span class="n">array_str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">center</span><span class="p">),</span> <span class="s1">&#39;&#39;</span><span class="p">)]</span>
+        <span class="n">inner_str</span> <span class="o">=</span> <span class="n">signature_string</span><span class="p">(</span><span class="n">posargs</span><span class="p">,</span> <span class="n">optargs</span><span class="p">,</span> <span class="n">sep</span><span class="o">=</span><span class="s1">&#39;,</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="s1">&#39;</span><span class="si">{}</span><span class="s1">(</span><span class="se">\n</span><span class="si">{}</span><span class="se">\n</span><span class="s1">)&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="p">,</span> <span class="n">indent</span><span class="p">(</span><span class="n">inner_str</span><span class="p">))</span>
+
+    <span class="k">def</span> <span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return ``str(self)``.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="nb">repr</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="CylindricalDetector"><a class="viewcode-back" href="../../../../generated/odl.tomo.geometry.detector.CylindricalDetector.html#odl.tomo.geometry.detector.CylindricalDetector">[docs]</a><span class="k">class</span> <span class="nc">CylindricalDetector</span><span class="p">(</span><span class="n">Detector</span><span class="p">):</span>
+
+    <span class="sd">&quot;&quot;&quot;A 2D detector on a cylindrical surface in 3D space.</span>
+
+<span class="sd">    The cylindrical surface that corresponds to the partition</span>
+<span class="sd">    is rotated to be aligned with given axes and</span>
+<span class="sd">    shifted to cross the origin. Note that the partition angle increases</span>
+<span class="sd">    in the clockwise direction, by analogy to flat detectors.&quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="CylindricalDetector.__init__"><a class="viewcode-back" href="../../../../generated/odl.tomo.geometry.detector.CylindricalDetector.html#odl.tomo.geometry.detector.CylindricalDetector.__init__">[docs]</a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">partition</span><span class="p">,</span> <span class="n">axes</span><span class="p">,</span> <span class="n">radius</span><span class="p">,</span> <span class="n">check_bounds</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Initialize a new instance.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        partition : 2-dim. `RectPartition`</span>
+<span class="sd">            Partition of the parameter interval, corresponding to the</span>
+<span class="sd">            angular partition and height partition.</span>
+<span class="sd">        axes : sequence of `array-like`</span>
+<span class="sd">            Fixed pair of of unit vectors with which the detector is aligned.</span>
+<span class="sd">            The vectors must have shape ``(3,)`` and be perpendicular.</span>
+<span class="sd">        radius : nonnegative float</span>
+<span class="sd">            Radius of the cylinder.</span>
+<span class="sd">        check_bounds : bool, optional</span>
+<span class="sd">            If ``True``, methods computing vectors check input arguments.</span>
+<span class="sd">            Checks are vectorized and add only a small overhead.</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        --------</span>
+<span class="sd">        Initialize a detector with height 8 and circle radius 2 extending to</span>
+<span class="sd">        90 degrees on both sides of the origin (a half cylinder).</span>
+
+<span class="sd">        &gt;&gt;&gt; part = odl.uniform_partition(</span>
+<span class="sd">        ...     [-np.pi / 2, -4], [np.pi / 2, 4], [10, 8])</span>
+<span class="sd">        &gt;&gt;&gt; det = CylindricalDetector(</span>
+<span class="sd">        ...     part, axes=[(1, 0, 0), (0, 0, 1)], radius=2)</span>
+<span class="sd">        &gt;&gt;&gt; det.axes</span>
+<span class="sd">        array([[ 1.,  0.,  0.],</span>
+<span class="sd">               [ 0.,  0.,  1.]])</span>
+<span class="sd">        &gt;&gt;&gt; det.radius</span>
+<span class="sd">        2.0</span>
+<span class="sd">        &gt;&gt;&gt; np.allclose(det.surface_normal([0, 0]), [ 0, -1,  0])</span>
+<span class="sd">        True</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">CylindricalDetector</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">partition</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="n">check_bounds</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">ndim</span> <span class="o">!=</span> <span class="mi">2</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;`partition` must be 2-dimensional, got ndim=</span><span class="si">{}</span><span class="s1">&#39;</span>
+                             <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ndim</span><span class="p">))</span>
+
+        <span class="n">axes</span><span class="p">,</span> <span class="n">axes_in</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">axes</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">),</span> <span class="n">axes</span>
+        <span class="k">if</span> <span class="n">axes</span><span class="o">.</span><span class="n">shape</span> <span class="o">!=</span> <span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;`axes` must be a sequence of 2 3-dimensional &#39;</span>
+                             <span class="s1">&#39;vectors, got </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">axes_in</span><span class="p">))</span>
+        <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">cross</span><span class="p">(</span><span class="o">*</span><span class="n">axes</span><span class="p">))</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;`axes` </span><span class="si">{}</span><span class="s1"> are linearly dependent&#39;</span>
+                             <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">axes_in</span><span class="p">))</span>
+        <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="o">*</span><span class="n">axes</span><span class="p">))</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;`axes` </span><span class="si">{}</span><span class="s1"> are not perpendicular&#39;</span>
+                             <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">axes_in</span><span class="p">))</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">__axes</span> <span class="o">=</span> <span class="n">axes</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">axes</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">keepdims</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">__radius</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">radius</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">__radius</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;`radius` must be positive&#39;</span><span class="p">)</span>
+
+        <span class="n">initial_axes</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([[</span><span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">]])</span>
+        <span class="n">r1</span> <span class="o">=</span> <span class="n">rotation_matrix_from_to</span><span class="p">(</span><span class="n">initial_axes</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">axes</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+        <span class="n">r2</span> <span class="o">=</span> <span class="n">rotation_matrix_from_to</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">matmul</span><span class="p">(</span><span class="n">r1</span><span class="p">,</span> <span class="n">initial_axes</span><span class="p">[</span><span class="mi">1</span><span class="p">]),</span> <span class="n">axes</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__rotation_matrix</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">matmul</span><span class="p">(</span><span class="n">r2</span><span class="p">,</span> <span class="n">r1</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__translation</span> <span class="o">=</span> <span class="p">(</span><span class="o">-</span><span class="bp">self</span><span class="o">.</span><span class="n">__radius</span>
+                              <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">matmul</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">__rotation_matrix</span><span class="p">,</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">)))</span></div>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">axes</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Fixed array of unit vectors with which the detector is aligned.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__axes</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">radius</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Curvature radius of the detector.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__radius</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">rotation_matrix</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Rotation matrix that is used to align the detector</span>
+<span class="sd">        with a given axis.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__rotation_matrix</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">translation</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;A vector used to shift the detector towards the origin.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__translation</span>
+
+<div class="viewcode-block" id="CylindricalDetector.surface"><a class="viewcode-back" href="../../../../generated/odl.tomo.geometry.detector.CylindricalDetector.surface.html#odl.tomo.geometry.detector.CylindricalDetector.surface">[docs]</a>    <span class="k">def</span> <span class="nf">surface</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">param</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return the detector surface point corresponding to ``param``.</span>
+
+<span class="sd">        For parameters ``phi`` and ``h``, the returned point is given by ::</span>
+
+<span class="sd">            surf = R * (radius * cos(phi), -radius * sin(phi), h) + t</span>
+
+<span class="sd">        where ``R`` is a rotation matrix and ``t`` is a translation vector.</span>
+<span class="sd">        Note that increase of ``phi`` corresponds to rotation</span>
+<span class="sd">        in the clockwise direction, by analogy to flat detectors.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        param : `array-like` or sequence</span>
+<span class="sd">            Parameter value(s) at which to evaluate. A sequence of</span>
+<span class="sd">            parameters must have length 2.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        point : `numpy.ndarray`</span>
+<span class="sd">            Vector(s) pointing from the origin to the detector surface</span>
+<span class="sd">            point at ``param``.</span>
+<span class="sd">            If ``param`` is a single parameter, the returned array has</span>
+<span class="sd">            shape ``(3,)``, otherwise ``broadcast(*param).shape + (3,)``.</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        --------</span>
+<span class="sd">        The method works with a single parameter, resulting in a single</span>
+<span class="sd">        vector:</span>
+
+<span class="sd">        &gt;&gt;&gt; part = odl.uniform_partition(</span>
+<span class="sd">        ...     [-np.pi / 2, -4], [np.pi / 2, 4], (10, 8))</span>
+<span class="sd">        &gt;&gt;&gt; det = CylindricalDetector(</span>
+<span class="sd">        ...     part, axes=[(1, 0, 0), (0, 0, 1)], radius = 2)</span>
+<span class="sd">        &gt;&gt;&gt; det.surface([0, 0])</span>
+<span class="sd">        array([ 0., 0.,  0.])</span>
+<span class="sd">        &gt;&gt;&gt; np.round(det.surface([np.pi / 2, 1]), 10)</span>
+<span class="sd">        array([ 2., -2.,  1.])</span>
+
+<span class="sd">        It is also vectorized, i.e., it can be called with multiple</span>
+<span class="sd">        parameters at once (or an n-dimensional array of parameters):</span>
+
+<span class="sd">        &gt;&gt;&gt; # 3 pairs of parameters, resulting in 3 vectors</span>
+<span class="sd">        &gt;&gt;&gt; np.round(det.surface([[-np.pi / 2, 0, np.pi / 2], [-1, 0, 1]]), 10)</span>
+<span class="sd">        array([[-2., -2., -1.],</span>
+<span class="sd">               [ 0.,  0.,  0.],</span>
+<span class="sd">               [ 2., -2.,  1.]])</span>
+<span class="sd">        &gt;&gt;&gt; # Pairs of parameters in a (4, 5) array each</span>
+<span class="sd">        &gt;&gt;&gt; param = (np.zeros((4, 5)), np.zeros((4, 5)))</span>
+<span class="sd">        &gt;&gt;&gt; det.surface(param).shape</span>
+<span class="sd">        (4, 5, 3)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">squeeze_out</span> <span class="o">=</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">broadcast</span><span class="p">(</span><span class="o">*</span><span class="n">param</span><span class="p">)</span><span class="o">.</span><span class="n">shape</span> <span class="o">==</span> <span class="p">())</span>
+        <span class="n">param_in</span> <span class="o">=</span> <span class="n">param</span>
+        <span class="n">param</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">,</span> <span class="n">copy</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">ndmin</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+                      <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">param</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">check_bounds</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">is_inside_bounds</span><span class="p">(</span><span class="n">param</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;`param` </span><span class="si">{}</span><span class="s1"> not in the valid range &#39;</span>
+                             <span class="s1">&#39;</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">param_in</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="p">))</span>
+
+        <span class="n">surf</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">(</span><span class="n">param</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span> <span class="o">+</span> <span class="p">(</span><span class="mi">3</span><span class="p">,))</span>
+        <span class="n">surf</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">radius</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">param</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+        <span class="n">surf</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">radius</span> <span class="o">*</span> <span class="p">(</span><span class="o">-</span><span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">param</span><span class="p">[</span><span class="mi">0</span><span class="p">]))</span>
+        <span class="n">surf</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="mi">2</span><span class="p">]</span> <span class="o">=</span> <span class="n">param</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+        <span class="n">surf</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">matmul</span><span class="p">(</span><span class="n">surf</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">transpose</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">rotation_matrix</span><span class="p">))</span>
+        <span class="n">surf</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">translation</span>
+        <span class="k">if</span> <span class="n">squeeze_out</span><span class="p">:</span>
+            <span class="n">surf</span> <span class="o">=</span> <span class="n">surf</span><span class="o">.</span><span class="n">squeeze</span><span class="p">()</span>
+
+        <span class="k">return</span> <span class="n">surf</span></div>
+
+<div class="viewcode-block" id="CylindricalDetector.surface_deriv"><a class="viewcode-back" href="../../../../generated/odl.tomo.geometry.detector.CylindricalDetector.surface_deriv.html#odl.tomo.geometry.detector.CylindricalDetector.surface_deriv">[docs]</a>    <span class="k">def</span> <span class="nf">surface_deriv</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">param</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return the surface derivative at ``param``.</span>
+
+<span class="sd">        The derivative at parameters ``phi`` and ``h`` is given by ::</span>
+
+<span class="sd">            deriv = R * ((-radius * sin(phi), 0),</span>
+<span class="sd">                         (-radius * cos(phi), 0),</span>
+<span class="sd">                         (                 0, 1))</span>
+
+<span class="sd">        where ``R`` is a rotation matrix.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        param : `array-like` or sequence</span>
+<span class="sd">            Parameter value(s) at which to evaluate. A sequence of</span>
+<span class="sd">            parameters must have length 2.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        deriv : `numpy.ndarray`</span>
+<span class="sd">            Array representing the derivative vector(s) at ``param``.</span>
+<span class="sd">            If ``param`` is a single parameter, the returned array has</span>
+<span class="sd">            shape ``(2,)``, otherwise ``param.shape + (2,)``.</span>
+
+<span class="sd">        See Also</span>
+<span class="sd">        --------</span>
+<span class="sd">        surface</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        --------</span>
+<span class="sd">        The method works with a single parameter, resulting in a single</span>
+<span class="sd">        vector:</span>
+
+<span class="sd">        &gt;&gt;&gt; part = odl.uniform_partition(</span>
+<span class="sd">        ...     [-np.pi / 2, -4], [np.pi / 2, 4], (10,8))</span>
+<span class="sd">        &gt;&gt;&gt; det = CylindricalDetector(</span>
+<span class="sd">        ...     part, axes=[(1, 0, 0), (0, 0, 1)], radius = 2)</span>
+<span class="sd">        &gt;&gt;&gt; np.round(det.surface_deriv([0, 0]), 10)</span>
+<span class="sd">        array([[ 2., -0.,  0.],</span>
+<span class="sd">               [ 0.,  0.,  1.]])</span>
+
+<span class="sd">        It is also vectorized, i.e., it can be called with multiple</span>
+<span class="sd">        parameters at once (or an n-dimensional array of parameters):</span>
+
+<span class="sd">        &gt;&gt;&gt; # 2 pairs of parameters, resulting in 3 vectors for each axis</span>
+<span class="sd">        &gt;&gt;&gt; deriv = det.surface_deriv([[0, np.pi / 2], [0, 1]])</span>
+<span class="sd">        &gt;&gt;&gt; np.round(deriv[0], 10)</span>
+<span class="sd">        array([[ 2., -0.,  0.],</span>
+<span class="sd">               [ 0.,  0.,  1.]])</span>
+<span class="sd">        &gt;&gt;&gt; np.round(deriv[1], 10)</span>
+<span class="sd">        array([[ 0., -2.,  0.],</span>
+<span class="sd">               [ 0.,  0.,  1.]])</span>
+<span class="sd">        &gt;&gt;&gt; # Pairs of parameters in a (4, 5) array each</span>
+<span class="sd">        &gt;&gt;&gt; param = (np.zeros((4, 5)), np.zeros((4, 5)))  # pairs of params</span>
+<span class="sd">        &gt;&gt;&gt; det.surface_deriv(param).shape</span>
+<span class="sd">        (4, 5, 2, 3)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">squeeze_out</span> <span class="o">=</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">broadcast</span><span class="p">(</span><span class="o">*</span><span class="n">param</span><span class="p">)</span><span class="o">.</span><span class="n">shape</span> <span class="o">==</span> <span class="p">())</span>
+        <span class="n">param_in</span> <span class="o">=</span> <span class="n">param</span>
+        <span class="n">param</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">,</span> <span class="n">copy</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">ndmin</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+                      <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">param</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">check_bounds</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">is_inside_bounds</span><span class="p">(</span><span class="n">param</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;`param` </span><span class="si">{}</span><span class="s1"> not in the valid range &#39;</span>
+                             <span class="s1">&#39;</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">param_in</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="p">))</span>
+
+        <span class="n">deriv_phi</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">(</span><span class="n">param</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span> <span class="o">+</span> <span class="p">(</span><span class="mi">3</span><span class="p">,))</span>
+        <span class="n">deriv_phi</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="o">-</span><span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">param</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+        <span class="n">deriv_phi</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="o">-</span><span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">param</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+        <span class="n">deriv_phi</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="mi">2</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="n">deriv_phi</span> <span class="o">*=</span> <span class="bp">self</span><span class="o">.</span><span class="n">radius</span>
+        <span class="n">deriv_h</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">broadcast_to</span><span class="p">((</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span>
+                                  <span class="n">np</span><span class="o">.</span><span class="n">broadcast</span><span class="p">(</span><span class="o">*</span><span class="n">param</span><span class="p">)</span><span class="o">.</span><span class="n">shape</span> <span class="o">+</span> <span class="p">(</span><span class="mi">3</span><span class="p">,))</span>
+        <span class="n">deriv</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">stack</span><span class="p">((</span><span class="n">deriv_phi</span><span class="p">,</span> <span class="n">deriv_h</span><span class="p">),</span> <span class="n">axis</span><span class="o">=-</span><span class="mi">2</span><span class="p">)</span>
+        <span class="n">deriv</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">matmul</span><span class="p">(</span><span class="n">deriv</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">transpose</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">rotation_matrix</span><span class="p">))</span>
+
+        <span class="k">if</span> <span class="n">squeeze_out</span><span class="p">:</span>
+            <span class="n">deriv</span> <span class="o">=</span> <span class="n">deriv</span><span class="o">.</span><span class="n">squeeze</span><span class="p">()</span>
+
+        <span class="k">return</span> <span class="n">deriv</span></div>
+
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return ``repr(self)``.&quot;&quot;&quot;</span>
+        <span class="n">posargs</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">partition</span><span class="p">]</span>
+        <span class="n">optargs</span> <span class="o">=</span> <span class="p">[(</span><span class="s1">&#39;radius&#39;</span><span class="p">,</span> <span class="n">array_str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">center</span><span class="p">),</span> <span class="s1">&#39;&#39;</span><span class="p">)]</span>
+        <span class="n">inner_str</span> <span class="o">=</span> <span class="n">signature_string</span><span class="p">(</span><span class="n">posargs</span><span class="p">,</span> <span class="n">optargs</span><span class="p">,</span> <span class="n">sep</span><span class="o">=</span><span class="s1">&#39;,</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="s1">&#39;</span><span class="si">{}</span><span class="s1">(</span><span class="se">\n</span><span class="si">{}</span><span class="se">\n</span><span class="s1">)&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="p">,</span> <span class="n">indent</span><span class="p">(</span><span class="n">inner_str</span><span class="p">))</span>
+
+    <span class="k">def</span> <span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return ``str(self)``.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="nb">repr</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="SphericalDetector"><a class="viewcode-back" href="../../../../generated/odl.tomo.geometry.detector.SphericalDetector.html#odl.tomo.geometry.detector.SphericalDetector">[docs]</a><span class="k">class</span> <span class="nc">SphericalDetector</span><span class="p">(</span><span class="n">Detector</span><span class="p">):</span>
+
+    <span class="sd">&quot;&quot;&quot;A 2D detector on a spherical surface in 3D space.</span>
+
+<span class="sd">    The spherical surface that corresponds to the partition</span>
+<span class="sd">    is rotated to be aligned with given axes and</span>
+<span class="sd">    shifted to cross the origin. Note, the partition angles</span>
+<span class="sd">    increase in the direction of -y (clockwise) and z axis,</span>
+<span class="sd">    by analogy to flat detectors.&quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="SphericalDetector.__init__"><a class="viewcode-back" href="../../../../generated/odl.tomo.geometry.detector.SphericalDetector.html#odl.tomo.geometry.detector.SphericalDetector.__init__">[docs]</a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">partition</span><span class="p">,</span> <span class="n">axes</span><span class="p">,</span> <span class="n">radius</span><span class="p">,</span> <span class="n">check_bounds</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Initialize a new instance.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        partition : 2-dim. `RectPartition`</span>
+<span class="sd">            Partition of the parameter interval, corresponding to the</span>
+<span class="sd">            angular partition in two directions.</span>
+<span class="sd">        axes : sequence of `array-like`&#39;s</span>
+<span class="sd">            Fixed pair of of unit vectors with which the detector is aligned.</span>
+<span class="sd">            The vectors must have shape ``(3,)`` and be perpendicular.</span>
+<span class="sd">        radius : nonnegative float</span>
+<span class="sd">            Radius of the sphere.</span>
+<span class="sd">        check_bounds : bool, optional</span>
+<span class="sd">            If ``True``, methods computing vectors check input arguments.</span>
+<span class="sd">            Checks are vectorized and add only a small overhead.</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        --------</span>
+<span class="sd">        Initialize a detector with radius 2 extending to</span>
+<span class="sd">        90 degrees in both directions along the equator and</span>
+<span class="sd">        45 degrees in both directions towards the poles.</span>
+
+<span class="sd">        &gt;&gt;&gt; part = odl.uniform_partition([-np.pi / 2, -np.pi / 3],</span>
+<span class="sd">        ...                              [ np.pi / 2,  np.pi / 3], [20, 10])</span>
+<span class="sd">        &gt;&gt;&gt; det = SphericalDetector(</span>
+<span class="sd">        ...     part, axes=[(1, 0, 0), (0, 0, 1)], radius = 2)</span>
+<span class="sd">        &gt;&gt;&gt; det.axes</span>
+<span class="sd">        array([[ 1.,  0.,  0.],</span>
+<span class="sd">               [ 0.,  0.,  1.]])</span>
+<span class="sd">        &gt;&gt;&gt; det.radius</span>
+<span class="sd">        2.0</span>
+<span class="sd">        &gt;&gt;&gt; np.allclose(det.surface_normal([0, 0]), [0, -1, 0])</span>
+<span class="sd">        True</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">SphericalDetector</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">partition</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="n">check_bounds</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">ndim</span> <span class="o">!=</span> <span class="mi">2</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;`partition` must be 2-dimensional, got ndim=</span><span class="si">{}</span><span class="s1">&#39;</span>
+                             <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ndim</span><span class="p">))</span>
+
+        <span class="n">axes</span><span class="p">,</span> <span class="n">axes_in</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">axes</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">),</span> <span class="n">axes</span>
+        <span class="k">if</span> <span class="n">axes</span><span class="o">.</span><span class="n">shape</span> <span class="o">!=</span> <span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;`axes` must be a sequence of 2 3-dimensional &#39;</span>
+                             <span class="s1">&#39;vectors, got </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">axes_in</span><span class="p">))</span>
+        <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">cross</span><span class="p">(</span><span class="o">*</span><span class="n">axes</span><span class="p">))</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;`axes` </span><span class="si">{}</span><span class="s1"> are linearly dependent&#39;</span>
+                             <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">axes_in</span><span class="p">))</span>
+        <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="o">*</span><span class="n">axes</span><span class="p">))</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;`axes` </span><span class="si">{}</span><span class="s1"> are not perpendicular&#39;</span>
+                             <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">axes_in</span><span class="p">))</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">__axes</span> <span class="o">=</span> <span class="n">axes</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">axes</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">keepdims</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">__radius</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">radius</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">__radius</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;`radius` must be positive&#39;</span><span class="p">)</span>
+
+        <span class="n">initial_axes</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([[</span><span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">]])</span>
+        <span class="n">r1</span> <span class="o">=</span> <span class="n">rotation_matrix_from_to</span><span class="p">(</span><span class="n">initial_axes</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">axes</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+        <span class="n">r2</span> <span class="o">=</span> <span class="n">rotation_matrix_from_to</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">matmul</span><span class="p">(</span><span class="n">r1</span><span class="p">,</span> <span class="n">initial_axes</span><span class="p">[</span><span class="mi">1</span><span class="p">]),</span> <span class="n">axes</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__rotation_matrix</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">matmul</span><span class="p">(</span><span class="n">r2</span><span class="p">,</span> <span class="n">r1</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__translation</span> <span class="o">=</span> <span class="p">(</span><span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">__radius</span>
+                              <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">matmul</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">__rotation_matrix</span><span class="p">,</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">)))</span></div>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">axes</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Fixed array of unit vectors with which the detector is aligned.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__axes</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">radius</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Curvature radius of the detector.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__radius</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">rotation_matrix</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Rotation matrix that is used to align the detector</span>
+<span class="sd">        with a given axis.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__rotation_matrix</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">translation</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;A vector used to shift the detector towards the origin.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__translation</span>
+
+<div class="viewcode-block" id="SphericalDetector.surface"><a class="viewcode-back" href="../../../../generated/odl.tomo.geometry.detector.SphericalDetector.surface.html#odl.tomo.geometry.detector.SphericalDetector.surface">[docs]</a>    <span class="k">def</span> <span class="nf">surface</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">param</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return the detector surface point corresponding to ``param``.</span>
+
+<span class="sd">        For parameters ``phi`` and ``theta``, the surface point is given by ::</span>
+
+<span class="sd">            surf = R * radius * ( cos(phi) * cos(theta),</span>
+<span class="sd">                                 -sin(phi) * cos(theta),</span>
+<span class="sd">                                             sin(theta)) + t</span>
+
+<span class="sd">        where ``R`` is a rotation matrix and ``t`` is a translation vector.</span>
+<span class="sd">        Note that increase of ``phi`` corresponds to rotation</span>
+<span class="sd">        in the clockwise direction, by analogy to flat detectors.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        param : `array-like` or sequence</span>
+<span class="sd">            Parameter value(s) at which to evaluate. A sequence of</span>
+<span class="sd">            parameters must have length 2.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        point : `numpy.ndarray`</span>
+<span class="sd">            Vector(s) pointing from the origin to the detector surface</span>
+<span class="sd">            point at ``param``.</span>
+<span class="sd">            If ``param`` is a single parameter, the returned array has</span>
+<span class="sd">            shape ``(3,)``, otherwise ``broadcast(*param).shape + (3,)``.</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        --------</span>
+<span class="sd">        The method works with a single parameter, resulting in a single</span>
+<span class="sd">        vector:</span>
+
+<span class="sd">        &gt;&gt;&gt; part = odl.uniform_partition([-np.pi / 2, -np.pi / 3],</span>
+<span class="sd">        ...                              [ np.pi / 2,  np.pi / 3], [20, 10])</span>
+<span class="sd">        &gt;&gt;&gt; det = SphericalDetector(</span>
+<span class="sd">        ...     part, axes=[(1, 0, 0), (0, 0, 1)], radius = 2)</span>
+<span class="sd">        &gt;&gt;&gt; det.surface([0, 0])</span>
+<span class="sd">        array([ 0., 0.,  0.])</span>
+<span class="sd">        &gt;&gt;&gt; np.round(det.surface([ np.pi / 2, np.pi / 3]), 2)</span>
+<span class="sd">        array([ 1.  , -2.  ,  1.73])</span>
+
+<span class="sd">        It is also vectorized, i.e., it can be called with multiple</span>
+<span class="sd">        parameters at once (or an n-dimensional array of parameters):</span>
+
+<span class="sd">        &gt;&gt;&gt; # 3 pairs of parameters, resulting in 3 vectors</span>
+<span class="sd">        &gt;&gt;&gt; np.round(det.surface([[-np.pi / 2, 0, np.pi / 2],</span>
+<span class="sd">        ...                       [-np.pi / 3, 0, np.pi / 3]]), 2)</span>
+<span class="sd">        array([[-1.  , -2.  , -1.73],</span>
+<span class="sd">               [ 0.  ,  0.  ,  0.  ],</span>
+<span class="sd">               [ 1.  , -2.  ,  1.73]])</span>
+<span class="sd">        &gt;&gt;&gt; # Pairs of parameters in a (4, 5) array each</span>
+<span class="sd">        &gt;&gt;&gt; param = (np.zeros((4, 5)), np.zeros((4, 5)))</span>
+<span class="sd">        &gt;&gt;&gt; det.surface(param).shape</span>
+<span class="sd">        (4, 5, 3)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">squeeze_out</span> <span class="o">=</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">broadcast</span><span class="p">(</span><span class="o">*</span><span class="n">param</span><span class="p">)</span><span class="o">.</span><span class="n">shape</span> <span class="o">==</span> <span class="p">())</span>
+        <span class="n">param_in</span> <span class="o">=</span> <span class="n">param</span>
+        <span class="n">param</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">,</span> <span class="n">copy</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">ndmin</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+                      <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">param</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">check_bounds</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">is_inside_bounds</span><span class="p">(</span><span class="n">param</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;`param` </span><span class="si">{}</span><span class="s1"> not in the valid range &#39;</span>
+                             <span class="s1">&#39;</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">param_in</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="p">))</span>
+
+        <span class="n">surf</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">(</span><span class="n">param</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span> <span class="o">+</span> <span class="p">(</span><span class="mi">3</span><span class="p">,))</span>
+        <span class="n">surf</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">param</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">param</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+        <span class="n">surf</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="o">-</span><span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">param</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">param</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+        <span class="n">surf</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="mi">2</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">param</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+        <span class="n">surf</span> <span class="o">*=</span> <span class="bp">self</span><span class="o">.</span><span class="n">radius</span>
+        <span class="n">surf</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">matmul</span><span class="p">(</span><span class="n">surf</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">transpose</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">rotation_matrix</span><span class="p">))</span>
+        <span class="n">surf</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">translation</span>
+        <span class="k">if</span> <span class="n">squeeze_out</span><span class="p">:</span>
+            <span class="n">surf</span> <span class="o">=</span> <span class="n">surf</span><span class="o">.</span><span class="n">squeeze</span><span class="p">()</span>
+
+        <span class="k">return</span> <span class="n">surf</span></div>
+
+<div class="viewcode-block" id="SphericalDetector.surface_deriv"><a class="viewcode-back" href="../../../../generated/odl.tomo.geometry.detector.SphericalDetector.surface_deriv.html#odl.tomo.geometry.detector.SphericalDetector.surface_deriv">[docs]</a>    <span class="k">def</span> <span class="nf">surface_deriv</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">param</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return the surface derivative at ``param``.</span>
+
+<span class="sd">        The derivative at parameters ``phi`` and ``theta`` is given by ::</span>
+
+<span class="sd">            deriv = R * radius</span>
+<span class="sd">                      * ((-sin(phi) * cos(theta), -cos(phi) * sin(theta)),</span>
+<span class="sd">                         (-cos(phi) * cos(theta),  sin(phi) * sin(theta)),</span>
+<span class="sd">                         (                     0,             cos(theta)))</span>
+
+<span class="sd">        where R is a rotation matrix.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        param : `array-like` or sequence</span>
+<span class="sd">            Parameter value(s) at which to evaluate. A sequence of</span>
+<span class="sd">            parameters must have length 2.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        deriv : `numpy.ndarray`</span>
+<span class="sd">            Array representing the derivative vector(s) at ``param``.</span>
+<span class="sd">            If ``param`` is a single parameter, the returned array has</span>
+<span class="sd">            shape ``(2,)``, otherwise ``param.shape + (2,)``.</span>
+
+<span class="sd">        See Also</span>
+<span class="sd">        --------</span>
+<span class="sd">        surface</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        --------</span>
+<span class="sd">        The method works with a single parameter, resulting in a single</span>
+<span class="sd">        vector:</span>
+
+<span class="sd">        &gt;&gt;&gt; part = odl.uniform_partition([-np.pi / 2, -np.pi / 3],</span>
+<span class="sd">        ...                              [ np.pi / 2,  np.pi / 3], [20, 10])</span>
+<span class="sd">        &gt;&gt;&gt; det = SphericalDetector(</span>
+<span class="sd">        ...     part, axes=[(1, 0, 0), (0, 0, 1)], radius = 2)</span>
+<span class="sd">        &gt;&gt;&gt; np.round(det.surface_deriv([0, 0]), 10)</span>
+<span class="sd">        array([[ 2., -0.,  0.],</span>
+<span class="sd">               [ 0.,  0.,  2.]])</span>
+
+<span class="sd">        It is also vectorized, i.e., it can be called with multiple</span>
+<span class="sd">        parameters at once (or an n-dimensional array of parameters):</span>
+
+<span class="sd">        &gt;&gt;&gt; # 2 pairs of parameters, resulting in 3 vectors for each axis</span>
+<span class="sd">        &gt;&gt;&gt; deriv = det.surface_deriv([[0, np.pi / 2], [0, np.pi / 3]])</span>
+<span class="sd">        &gt;&gt;&gt; np.round(deriv[0], 10)</span>
+<span class="sd">        array([[ 2., -0.,  0.],</span>
+<span class="sd">               [ 0.,  0.,  2.]])</span>
+<span class="sd">        &gt;&gt;&gt; np.round(deriv[1], 2)</span>
+<span class="sd">        array([[ 0.  , -1.  ,  0.  ],</span>
+<span class="sd">               [-1.73,  0.  ,  1.  ]])</span>
+<span class="sd">        &gt;&gt;&gt; # Pairs of parameters in a (4, 5) array each</span>
+<span class="sd">        &gt;&gt;&gt; param = (np.zeros((4, 5)), np.zeros((4, 5)))  # pairs of params</span>
+<span class="sd">        &gt;&gt;&gt; det.surface_deriv(param).shape</span>
+<span class="sd">        (4, 5, 2, 3)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">squeeze_out</span> <span class="o">=</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">broadcast</span><span class="p">(</span><span class="o">*</span><span class="n">param</span><span class="p">)</span><span class="o">.</span><span class="n">shape</span> <span class="o">==</span> <span class="p">())</span>
+        <span class="n">param_in</span> <span class="o">=</span> <span class="n">param</span>
+        <span class="n">param</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">,</span> <span class="n">copy</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">ndmin</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+                      <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">param</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">check_bounds</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">is_inside_bounds</span><span class="p">(</span><span class="n">param</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;`param` </span><span class="si">{}</span><span class="s1"> not in the valid range &#39;</span>
+                             <span class="s1">&#39;</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">param_in</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="p">))</span>
+
+        <span class="n">deriv_phi</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">(</span><span class="n">param</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span> <span class="o">+</span> <span class="p">(</span><span class="mi">3</span><span class="p">,))</span>
+        <span class="n">deriv_phi</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="o">-</span><span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">param</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">param</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+        <span class="n">deriv_phi</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="o">-</span><span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">param</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">param</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+        <span class="n">deriv_phi</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="mi">2</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="n">deriv_phi</span> <span class="o">*=</span> <span class="bp">self</span><span class="o">.</span><span class="n">radius</span>
+        <span class="n">deriv_theta</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">(</span><span class="n">param</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span> <span class="o">+</span> <span class="p">(</span><span class="mi">3</span><span class="p">,))</span>
+        <span class="n">deriv_theta</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="o">-</span><span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">param</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">param</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+        <span class="n">deriv_theta</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">param</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">param</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+        <span class="n">deriv_theta</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="mi">2</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">param</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+        <span class="n">deriv_theta</span> <span class="o">*=</span> <span class="bp">self</span><span class="o">.</span><span class="n">radius</span>
+        <span class="n">deriv</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">stack</span><span class="p">((</span><span class="n">deriv_phi</span><span class="p">,</span> <span class="n">deriv_theta</span><span class="p">),</span> <span class="n">axis</span><span class="o">=-</span><span class="mi">2</span><span class="p">)</span>
+        <span class="n">deriv</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">matmul</span><span class="p">(</span><span class="n">deriv</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">transpose</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">rotation_matrix</span><span class="p">))</span>
+
+        <span class="k">if</span> <span class="n">squeeze_out</span><span class="p">:</span>
+            <span class="n">deriv</span> <span class="o">=</span> <span class="n">deriv</span><span class="o">.</span><span class="n">squeeze</span><span class="p">()</span>
+
+        <span class="k">return</span> <span class="n">deriv</span></div>
+
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return ``repr(self)``.&quot;&quot;&quot;</span>
+        <span class="n">posargs</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">partition</span><span class="p">]</span>
+        <span class="n">optargs</span> <span class="o">=</span> <span class="p">[(</span><span class="s1">&#39;radius&#39;</span><span class="p">,</span> <span class="n">array_str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">center</span><span class="p">),</span> <span class="s1">&#39;&#39;</span><span class="p">)]</span>
+        <span class="n">inner_str</span> <span class="o">=</span> <span class="n">signature_string</span><span class="p">(</span><span class="n">posargs</span><span class="p">,</span> <span class="n">optargs</span><span class="p">,</span> <span class="n">sep</span><span class="o">=</span><span class="s1">&#39;,</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="s1">&#39;</span><span class="si">{}</span><span class="s1">(</span><span class="se">\n</span><span class="si">{}</span><span class="se">\n</span><span class="s1">)&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="p">,</span> <span class="n">indent</span><span class="p">(</span><span class="n">inner_str</span><span class="p">))</span>
+
+    <span class="k">def</span> <span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return ``str(self)``.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="nb">repr</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span></div>
+
+
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s1">&#39;__main__&#39;</span><span class="p">:</span>
+    <span class="kn">from</span> <span class="nn">odl.util.testutils</span> <span class="kn">import</span> <span class="n">run_doctests</span>
+    <span class="n">run_doctests</span><span class="p">()</span>
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &#169; Copyright 2014-2020 The ODL Contributors.
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

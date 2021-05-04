@@ -1,0 +1,19 @@
+smooth
+======
+
+Gradient-based optimization schemes.
+
+.. currentmodule:: odl.solvers.smooth
+
+
+.. rubric:: Modules
+
+.. toctree::
+   :maxdepth: 2
+
+   odl.solvers.smooth.gradient
+   odl.solvers.smooth.newton
+   odl.solvers.smooth.nonlinear_cg
+
+
+

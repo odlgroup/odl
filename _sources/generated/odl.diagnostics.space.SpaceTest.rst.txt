@@ -1,0 +1,45 @@
+﻿SpaceTest
+===============================
+
+.. currentmodule:: odl.diagnostics.space
+
+.. autoclass:: SpaceTest
+   :show-inheritance:
+   
+   
+   .. automethod:: __init__
+   
+      
+   
+   .. HACK -- the point here is that we don't want this to appear in the output, but the autosummary should still generate the pages.
+      .. autosummary::
+         :toctree:
+      
+         SpaceTest.__eq__
+         SpaceTest._lincomb
+         SpaceTest.contains
+         SpaceTest.dist
+         SpaceTest.element
+         SpaceTest.element_assign
+         SpaceTest.element_copy
+         SpaceTest.element_equals
+         SpaceTest.element_method
+         SpaceTest.element_set_zero
+         SpaceTest.element_space
+         SpaceTest.equals
+         SpaceTest.field
+         SpaceTest.inner
+         SpaceTest.linearity
+         SpaceTest.log
+         SpaceTest.multiply
+         SpaceTest.norm
+         SpaceTest.run_tests
+   
+
+    
+   .. HACK -- the point here is that we don't want this to appear in the output, but the autosummary should still generate the pages.
+      .. autosummary::
+         :toctree:
+      
+   
+   

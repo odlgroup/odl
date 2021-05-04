@@ -1,0 +1,6 @@
+PointwiseInner.is_functional
+====================================================
+
+.. currentmodule:: odl.operator.tensor_ops
+
+.. autoproperty:: PointwiseInner.is_functional

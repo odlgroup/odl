@@ -1,0 +1,6 @@
+IndicatorNuclearNormUnitBall.is_functional
+=====================================================================================
+
+.. currentmodule:: odl.solvers.functional.default_functionals
+
+.. autoproperty:: IndicatorNuclearNormUnitBall.is_functional

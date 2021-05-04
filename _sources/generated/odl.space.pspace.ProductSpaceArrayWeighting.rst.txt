@@ -1,0 +1,36 @@
+﻿ProductSpaceArrayWeighting
+===========================================
+
+.. currentmodule:: odl.space.pspace
+
+.. autoclass:: ProductSpaceArrayWeighting
+   :show-inheritance:
+   
+   
+   .. automethod:: __init__
+   
+      
+   
+   .. HACK -- the point here is that we don't want this to appear in the output, but the autosummary should still generate the pages.
+      .. autosummary::
+         :toctree:
+      
+         ProductSpaceArrayWeighting.__eq__
+         ProductSpaceArrayWeighting.dist
+         ProductSpaceArrayWeighting.equiv
+         ProductSpaceArrayWeighting.inner
+         ProductSpaceArrayWeighting.is_valid
+         ProductSpaceArrayWeighting.norm
+   
+
+    
+   .. HACK -- the point here is that we don't want this to appear in the output, but the autosummary should still generate the pages.
+      .. autosummary::
+         :toctree:
+      
+         ProductSpaceArrayWeighting.array
+         ProductSpaceArrayWeighting.exponent
+         ProductSpaceArrayWeighting.impl
+         ProductSpaceArrayWeighting.repr_part
+   
+   

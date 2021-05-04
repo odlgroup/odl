@@ -1,0 +1,8 @@
+:orphan:
+
+FunctionalQuotient.__eq__
+===========================================================
+
+.. currentmodule:: odl.solvers.functional.functional
+
+.. automethod:: FunctionalQuotient.__eq__

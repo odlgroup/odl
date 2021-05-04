@@ -1,0 +1,6 @@
+﻿flying_focal_spot
+======================================================
+
+.. currentmodule:: odl.tomo.util.source_detector_shifts
+
+.. autofunction:: flying_focal_spot

@@ -1,0 +1,6 @@
+tan_op.adjoint
+======================================
+
+.. currentmodule:: odl.ufunc_ops.ufunc_ops
+
+.. autoproperty:: tan_op.adjoint

@@ -1,0 +1,6 @@
+absolute_func.gradient
+==============================================
+
+.. currentmodule:: odl.ufunc_ops.ufunc_ops
+
+.. autoproperty:: absolute_func.gradient

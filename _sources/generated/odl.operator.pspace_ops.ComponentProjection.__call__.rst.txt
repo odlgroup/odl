@@ -1,0 +1,8 @@
+:orphan:
+
+ComponentProjection.__call__
+====================================================
+
+.. currentmodule:: odl.operator.pspace_ops
+
+.. automethod:: ComponentProjection.__call__

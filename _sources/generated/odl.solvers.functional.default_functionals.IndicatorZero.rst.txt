@@ -1,0 +1,44 @@
+﻿IndicatorZero
+========================================================
+
+.. currentmodule:: odl.solvers.functional.default_functionals
+
+.. autoclass:: IndicatorZero
+   :show-inheritance:
+   
+   
+   .. automethod:: __init__
+   
+      
+   
+   .. HACK -- the point here is that we don't want this to appear in the output, but the autosummary should still generate the pages.
+      .. autosummary::
+         :toctree:
+      
+         IndicatorZero.__call__
+         IndicatorZero.__eq__
+         IndicatorZero._call
+         IndicatorZero.bregman
+         IndicatorZero.derivative
+         IndicatorZero.norm
+         IndicatorZero.translated
+   
+
+    
+   .. HACK -- the point here is that we don't want this to appear in the output, but the autosummary should still generate the pages.
+      .. autosummary::
+         :toctree:
+      
+         IndicatorZero.adjoint
+         IndicatorZero.constant
+         IndicatorZero.convex_conj
+         IndicatorZero.domain
+         IndicatorZero.grad_lipschitz
+         IndicatorZero.gradient
+         IndicatorZero.inverse
+         IndicatorZero.is_functional
+         IndicatorZero.is_linear
+         IndicatorZero.proximal
+         IndicatorZero.range
+   
+   

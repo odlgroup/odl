@@ -1,0 +1,6 @@
+MatrixWeighting.matrix
+==========================================
+
+.. currentmodule:: odl.space.weighting
+
+.. autoproperty:: MatrixWeighting.matrix

@@ -1,0 +1,6 @@
+OperatorLeftVectorMult.adjoint
+====================================================
+
+.. currentmodule:: odl.operator.operator
+
+.. autoproperty:: OperatorLeftVectorMult.adjoint

@@ -1,0 +1,6 @@
+ParallelHoleCollimatorGeometry.translation
+==================================================================
+
+.. currentmodule:: odl.tomo.geometry.spect
+
+.. autoproperty:: ParallelHoleCollimatorGeometry.translation

@@ -1,0 +1,6 @@
+TensorSpace.is_real
+==========================================
+
+.. currentmodule:: odl.space.base_tensors
+
+.. autoproperty:: TensorSpace.is_real

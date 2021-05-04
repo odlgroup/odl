@@ -1,0 +1,6 @@
+DistOperator.vector
+============================================
+
+.. currentmodule:: odl.operator.default_ops
+
+.. autoproperty:: DistOperator.vector

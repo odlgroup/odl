@@ -1,0 +1,6 @@
+FourierTransformInverse.is_linear
+====================================================
+
+.. currentmodule:: odl.trafos.fourier
+
+.. autoproperty:: FourierTransformInverse.is_linear

@@ -1,0 +1,8 @@
+:orphan:
+
+WaveletTransformBase.__eq__
+==============================================
+
+.. currentmodule:: odl.trafos.wavelet
+
+.. automethod:: WaveletTransformBase.__eq__

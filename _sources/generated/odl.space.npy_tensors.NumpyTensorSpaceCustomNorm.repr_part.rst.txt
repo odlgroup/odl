@@ -1,0 +1,6 @@
+NumpyTensorSpaceCustomNorm.repr_part
+==========================================================
+
+.. currentmodule:: odl.space.npy_tensors
+
+.. autoproperty:: NumpyTensorSpaceCustomNorm.repr_part

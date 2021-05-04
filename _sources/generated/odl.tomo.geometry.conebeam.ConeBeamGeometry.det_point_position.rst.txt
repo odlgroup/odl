@@ -1,0 +1,8 @@
+:orphan:
+
+ConeBeamGeometry.det_point_position
+==============================================================
+
+.. currentmodule:: odl.tomo.geometry.conebeam
+
+.. automethod:: ConeBeamGeometry.det_point_position

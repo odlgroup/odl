@@ -1,0 +1,8 @@
+:orphan:
+
+IdentityOperator.__eq__
+================================================
+
+.. currentmodule:: odl.operator.default_ops
+
+.. automethod:: IdentityOperator.__eq__

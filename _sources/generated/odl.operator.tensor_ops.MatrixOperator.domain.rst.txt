@@ -1,0 +1,6 @@
+MatrixOperator.domain
+=============================================
+
+.. currentmodule:: odl.operator.tensor_ops
+
+.. autoproperty:: MatrixOperator.domain

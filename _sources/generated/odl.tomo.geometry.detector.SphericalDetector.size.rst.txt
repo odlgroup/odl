@@ -1,0 +1,6 @@
+SphericalDetector.size
+=================================================
+
+.. currentmodule:: odl.tomo.geometry.detector
+
+.. autoproperty:: SphericalDetector.size

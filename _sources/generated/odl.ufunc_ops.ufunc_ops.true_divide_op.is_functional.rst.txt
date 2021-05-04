@@ -1,0 +1,6 @@
+true_divide_op.is_functional
+====================================================
+
+.. currentmodule:: odl.ufunc_ops.ufunc_ops
+
+.. autoproperty:: true_divide_op.is_functional

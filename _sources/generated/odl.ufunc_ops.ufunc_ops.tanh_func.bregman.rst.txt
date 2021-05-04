@@ -1,0 +1,8 @@
+:orphan:
+
+tanh_func.bregman
+=========================================
+
+.. currentmodule:: odl.ufunc_ops.ufunc_ops
+
+.. automethod:: tanh_func.bregman

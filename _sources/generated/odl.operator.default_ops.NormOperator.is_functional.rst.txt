@@ -1,0 +1,6 @@
+NormOperator.is_functional
+===================================================
+
+.. currentmodule:: odl.operator.default_ops
+
+.. autoproperty:: NormOperator.is_functional

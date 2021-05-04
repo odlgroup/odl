@@ -1,0 +1,6 @@
+PartialDerivative.inverse
+============================================
+
+.. currentmodule:: odl.discr.diff_ops
+
+.. autoproperty:: PartialDerivative.inverse

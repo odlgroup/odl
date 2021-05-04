@@ -1,0 +1,8 @@
+:orphan:
+
+DiscreteFourierTransformInverse.init_fftw_plan
+=================================================================
+
+.. currentmodule:: odl.trafos.fourier
+
+.. automethod:: DiscreteFourierTransformInverse.init_fftw_plan

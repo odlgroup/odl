@@ -1,0 +1,8 @@
+:orphan:
+
+GroupL1Norm.derivative
+=================================================================
+
+.. currentmodule:: odl.solvers.functional.default_functionals
+
+.. automethod:: GroupL1Norm.derivative

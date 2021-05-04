@@ -1,0 +1,8 @@
+:orphan:
+
+ReductionOperator.__call__
+==================================================
+
+.. currentmodule:: odl.operator.pspace_ops
+
+.. automethod:: ReductionOperator.__call__

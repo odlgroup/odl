@@ -1,0 +1,8 @@
+:orphan:
+
+SetUnion.element
+=============================
+
+.. currentmodule:: odl.set.sets
+
+.. automethod:: SetUnion.element

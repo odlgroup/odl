@@ -1,0 +1,8 @@
+:orphan:
+
+ProductSpaceUfuncs.power
+========================================
+
+.. currentmodule:: odl.util.ufuncs
+
+.. automethod:: ProductSpaceUfuncs.power

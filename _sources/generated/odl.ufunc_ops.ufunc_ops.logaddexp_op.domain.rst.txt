@@ -1,0 +1,6 @@
+logaddexp_op.domain
+===========================================
+
+.. currentmodule:: odl.ufunc_ops.ufunc_ops
+
+.. autoproperty:: logaddexp_op.domain

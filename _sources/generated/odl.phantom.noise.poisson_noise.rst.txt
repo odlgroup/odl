@@ -1,0 +1,6 @@
+﻿poisson_noise
+===============================
+
+.. currentmodule:: odl.phantom.noise
+
+.. autofunction:: poisson_noise

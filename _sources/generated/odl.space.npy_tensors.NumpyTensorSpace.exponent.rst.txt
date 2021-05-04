@@ -1,0 +1,6 @@
+NumpyTensorSpace.exponent
+===============================================
+
+.. currentmodule:: odl.space.npy_tensors
+
+.. autoproperty:: NumpyTensorSpace.exponent

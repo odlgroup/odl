@@ -1,0 +1,6 @@
+Detector.space_ndim
+==============================================
+
+.. currentmodule:: odl.tomo.geometry.detector
+
+.. autoproperty:: Detector.space_ndim

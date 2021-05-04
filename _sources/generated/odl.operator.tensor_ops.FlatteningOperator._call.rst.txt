@@ -1,0 +1,8 @@
+:orphan:
+
+FlatteningOperator._call
+================================================
+
+.. currentmodule:: odl.operator.tensor_ops
+
+.. automethod:: FlatteningOperator._call

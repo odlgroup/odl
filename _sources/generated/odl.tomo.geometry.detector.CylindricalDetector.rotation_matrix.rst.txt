@@ -1,0 +1,6 @@
+CylindricalDetector.rotation_matrix
+==============================================================
+
+.. currentmodule:: odl.tomo.geometry.detector
+
+.. autoproperty:: CylindricalDetector.rotation_matrix

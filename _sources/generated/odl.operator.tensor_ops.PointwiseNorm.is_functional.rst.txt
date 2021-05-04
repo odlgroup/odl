@@ -1,0 +1,6 @@
+PointwiseNorm.is_functional
+===================================================
+
+.. currentmodule:: odl.operator.tensor_ops
+
+.. autoproperty:: PointwiseNorm.is_functional

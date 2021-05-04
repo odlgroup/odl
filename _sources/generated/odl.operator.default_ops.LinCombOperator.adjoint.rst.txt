@@ -1,0 +1,6 @@
+LinCombOperator.adjoint
+================================================
+
+.. currentmodule:: odl.operator.default_ops
+
+.. autoproperty:: LinCombOperator.adjoint

@@ -1,0 +1,6 @@
+FunctionalQuadraticPerturb.convex_conj
+========================================================================
+
+.. currentmodule:: odl.solvers.functional.functional
+
+.. autoproperty:: FunctionalQuadraticPerturb.convex_conj

@@ -1,0 +1,8 @@
+:orphan:
+
+NumpyTensorSpace.element
+==============================================
+
+.. currentmodule:: odl.space.npy_tensors
+
+.. automethod:: NumpyTensorSpace.element

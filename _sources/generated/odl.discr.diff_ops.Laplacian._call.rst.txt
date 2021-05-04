@@ -1,0 +1,8 @@
+:orphan:
+
+Laplacian._call
+==================================
+
+.. currentmodule:: odl.discr.diff_ops
+
+.. automethod:: Laplacian._call

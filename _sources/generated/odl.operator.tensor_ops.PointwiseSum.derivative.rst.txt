@@ -1,0 +1,8 @@
+:orphan:
+
+PointwiseSum.derivative
+===============================================
+
+.. currentmodule:: odl.operator.tensor_ops
+
+.. automethod:: PointwiseSum.derivative

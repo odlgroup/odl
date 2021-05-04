@@ -1,0 +1,6 @@
+ParallelBeamGeometry.det_params
+==========================================================
+
+.. currentmodule:: odl.tomo.geometry.parallel
+
+.. autoproperty:: ParallelBeamGeometry.det_params

@@ -1,0 +1,8 @@
+:orphan:
+
+RosenbrockFunctional.translated
+====================================================================
+
+.. currentmodule:: odl.solvers.functional.example_funcs
+
+.. automethod:: RosenbrockFunctional.translated

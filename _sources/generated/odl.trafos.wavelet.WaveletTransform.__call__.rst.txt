@@ -1,0 +1,8 @@
+:orphan:
+
+WaveletTransform.__call__
+============================================
+
+.. currentmodule:: odl.trafos.wavelet
+
+.. automethod:: WaveletTransform.__call__

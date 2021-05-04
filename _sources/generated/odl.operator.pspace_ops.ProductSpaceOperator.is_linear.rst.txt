@@ -1,0 +1,6 @@
+ProductSpaceOperator.is_linear
+======================================================
+
+.. currentmodule:: odl.operator.pspace_ops
+
+.. autoproperty:: ProductSpaceOperator.is_linear

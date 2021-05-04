@@ -1,0 +1,6 @@
+FunctionalSum.convex_conj
+===========================================================
+
+.. currentmodule:: odl.solvers.functional.functional
+
+.. autoproperty:: FunctionalSum.convex_conj

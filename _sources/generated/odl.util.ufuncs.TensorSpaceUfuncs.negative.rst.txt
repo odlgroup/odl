@@ -1,0 +1,8 @@
+:orphan:
+
+TensorSpaceUfuncs.negative
+==========================================
+
+.. currentmodule:: odl.util.ufuncs
+
+.. automethod:: TensorSpaceUfuncs.negative

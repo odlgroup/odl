@@ -1,0 +1,8 @@
+:orphan:
+
+SphericalDetector.surface_normal
+===========================================================
+
+.. currentmodule:: odl.tomo.geometry.detector
+
+.. automethod:: SphericalDetector.surface_normal

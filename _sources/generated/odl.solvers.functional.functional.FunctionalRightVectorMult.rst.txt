@@ -1,0 +1,46 @@
+﻿FunctionalRightVectorMult
+===========================================================
+
+.. currentmodule:: odl.solvers.functional.functional
+
+.. autoclass:: FunctionalRightVectorMult
+   :show-inheritance:
+   
+   
+   .. automethod:: __init__
+   
+      
+   
+   .. HACK -- the point here is that we don't want this to appear in the output, but the autosummary should still generate the pages.
+      .. autosummary::
+         :toctree:
+      
+         FunctionalRightVectorMult.__call__
+         FunctionalRightVectorMult.__eq__
+         FunctionalRightVectorMult._call
+         FunctionalRightVectorMult.bregman
+         FunctionalRightVectorMult.derivative
+         FunctionalRightVectorMult.norm
+         FunctionalRightVectorMult.translated
+   
+
+    
+   .. HACK -- the point here is that we don't want this to appear in the output, but the autosummary should still generate the pages.
+      .. autosummary::
+         :toctree:
+      
+         FunctionalRightVectorMult.adjoint
+         FunctionalRightVectorMult.convex_conj
+         FunctionalRightVectorMult.domain
+         FunctionalRightVectorMult.functional
+         FunctionalRightVectorMult.grad_lipschitz
+         FunctionalRightVectorMult.gradient
+         FunctionalRightVectorMult.inverse
+         FunctionalRightVectorMult.is_functional
+         FunctionalRightVectorMult.is_linear
+         FunctionalRightVectorMult.operator
+         FunctionalRightVectorMult.proximal
+         FunctionalRightVectorMult.range
+         FunctionalRightVectorMult.vector
+   
+   

@@ -1,0 +1,8 @@
+:orphan:
+
+UniversalSet.__eq__
+================================
+
+.. currentmodule:: odl.set.sets
+
+.. automethod:: UniversalSet.__eq__

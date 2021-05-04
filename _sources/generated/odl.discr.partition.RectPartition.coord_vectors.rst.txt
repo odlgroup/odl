@@ -1,0 +1,6 @@
+RectPartition.coord_vectors
+===============================================
+
+.. currentmodule:: odl.discr.partition
+
+.. autoproperty:: RectPartition.coord_vectors

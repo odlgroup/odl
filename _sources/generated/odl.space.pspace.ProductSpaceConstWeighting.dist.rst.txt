@@ -1,0 +1,8 @@
+:orphan:
+
+ProductSpaceConstWeighting.dist
+================================================
+
+.. currentmodule:: odl.space.pspace
+
+.. automethod:: ProductSpaceConstWeighting.dist

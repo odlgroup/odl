@@ -1,0 +1,6 @@
+tanh_op.range
+=====================================
+
+.. currentmodule:: odl.ufunc_ops.ufunc_ops
+
+.. autoproperty:: tanh_op.range

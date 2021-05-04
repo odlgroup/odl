@@ -1,0 +1,8 @@
+:orphan:
+
+ComplexEmbedding.derivative
+====================================================
+
+.. currentmodule:: odl.operator.default_ops
+
+.. automethod:: ComplexEmbedding.derivative

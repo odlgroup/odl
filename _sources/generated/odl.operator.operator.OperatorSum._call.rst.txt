@@ -1,0 +1,8 @@
+:orphan:
+
+OperatorSum._call
+=======================================
+
+.. currentmodule:: odl.operator.operator
+
+.. automethod:: OperatorSum._call

@@ -1,0 +1,46 @@
+﻿FunctionalRightScalarMult
+===========================================================
+
+.. currentmodule:: odl.solvers.functional.functional
+
+.. autoclass:: FunctionalRightScalarMult
+   :show-inheritance:
+   
+   
+   .. automethod:: __init__
+   
+      
+   
+   .. HACK -- the point here is that we don't want this to appear in the output, but the autosummary should still generate the pages.
+      .. autosummary::
+         :toctree:
+      
+         FunctionalRightScalarMult.__call__
+         FunctionalRightScalarMult.__eq__
+         FunctionalRightScalarMult._call
+         FunctionalRightScalarMult.bregman
+         FunctionalRightScalarMult.derivative
+         FunctionalRightScalarMult.norm
+         FunctionalRightScalarMult.translated
+   
+
+    
+   .. HACK -- the point here is that we don't want this to appear in the output, but the autosummary should still generate the pages.
+      .. autosummary::
+         :toctree:
+      
+         FunctionalRightScalarMult.adjoint
+         FunctionalRightScalarMult.convex_conj
+         FunctionalRightScalarMult.domain
+         FunctionalRightScalarMult.functional
+         FunctionalRightScalarMult.grad_lipschitz
+         FunctionalRightScalarMult.gradient
+         FunctionalRightScalarMult.inverse
+         FunctionalRightScalarMult.is_functional
+         FunctionalRightScalarMult.is_linear
+         FunctionalRightScalarMult.operator
+         FunctionalRightScalarMult.proximal
+         FunctionalRightScalarMult.range
+         FunctionalRightScalarMult.scalar
+   
+   

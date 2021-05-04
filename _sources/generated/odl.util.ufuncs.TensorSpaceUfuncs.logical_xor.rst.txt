@@ -1,0 +1,8 @@
+:orphan:
+
+TensorSpaceUfuncs.logical_xor
+=============================================
+
+.. currentmodule:: odl.util.ufuncs
+
+.. automethod:: TensorSpaceUfuncs.logical_xor

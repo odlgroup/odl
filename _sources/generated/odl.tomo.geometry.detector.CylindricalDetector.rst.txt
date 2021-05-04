@@ -1,0 +1,43 @@
+﻿CylindricalDetector
+==============================================
+
+.. currentmodule:: odl.tomo.geometry.detector
+
+.. autoclass:: CylindricalDetector
+   :show-inheritance:
+   
+   
+   .. automethod:: __init__
+   
+      
+   
+   .. HACK -- the point here is that we don't want this to appear in the output, but the autosummary should still generate the pages.
+      .. autosummary::
+         :toctree:
+      
+         CylindricalDetector.__eq__
+         CylindricalDetector.surface
+         CylindricalDetector.surface_deriv
+         CylindricalDetector.surface_measure
+         CylindricalDetector.surface_normal
+   
+
+    
+   .. HACK -- the point here is that we don't want this to appear in the output, but the autosummary should still generate the pages.
+      .. autosummary::
+         :toctree:
+      
+         CylindricalDetector.axes
+         CylindricalDetector.check_bounds
+         CylindricalDetector.grid
+         CylindricalDetector.ndim
+         CylindricalDetector.params
+         CylindricalDetector.partition
+         CylindricalDetector.radius
+         CylindricalDetector.rotation_matrix
+         CylindricalDetector.shape
+         CylindricalDetector.size
+         CylindricalDetector.space_ndim
+         CylindricalDetector.translation
+   
+   

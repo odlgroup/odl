@@ -1,0 +1,27 @@
+diff_ops
+========
+
+Operators defined for tensor fields.
+
+.. currentmodule:: odl.discr.diff_ops
+
+
+
+.. rubric:: Classes
+
+.. autosummary::
+   :toctree: generated/
+
+   ~odl.discr.diff_ops.Divergence
+   ~odl.discr.diff_ops.Gradient
+   ~odl.discr.diff_ops.Laplacian
+   ~odl.discr.diff_ops.PartialDerivative
+
+
+.. rubric:: Functions
+
+.. autosummary::
+   :toctree: generated/
+
+   ~odl.discr.diff_ops.finite_diff
+

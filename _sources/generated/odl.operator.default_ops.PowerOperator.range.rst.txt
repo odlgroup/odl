@@ -1,0 +1,6 @@
+PowerOperator.range
+============================================
+
+.. currentmodule:: odl.operator.default_ops
+
+.. autoproperty:: PowerOperator.range

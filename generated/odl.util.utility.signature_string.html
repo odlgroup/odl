@@ -1,0 +1,427 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>signature_string &mdash; odl 1.0.0.dev0 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="signature_string_parts" href="odl.util.utility.signature_string_parts.html" />
+    <link rel="prev" title="run_from_ipython" href="odl.util.utility.run_from_ipython.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../index.html" class="icon icon-home"> odl
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                1.0.0.dev0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Getting Started</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../getting_started/getting_started.html">Getting Started</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Working with ODL</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../guide/guide.html">User’s guide – selected topics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../math/math.html">Mathematical Background</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Developer zone</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../dev/dev.html">Contributing to ODL</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Useful facts</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../guide/faq.html">Frequently asked questions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../guide/glossary.html">Glossary</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../release_notes.html">Release Notes</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../refs.html">References</a></li>
+</ul>
+<p class="caption"><span class="caption-text">API Reference</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../odl.html">odl</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../odl.contrib.html">contrib</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../odl.deform.html">deform</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../odl.diagnostics.html">diagnostics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../odl.discr.html">discr</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../odl.operator.html">operator</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../odl.phantom.html">phantom</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../odl.set.html">set</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../odl.solvers.html">solvers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../odl.space.html">space</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../odl.tomo.html">tomo</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../odl.trafos.html">trafos</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../odl.ufunc_ops.html">ufunc_ops</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="../odl.util.html">util</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="../odl.util.graphics.html">graphics</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../odl.util.normalize.html">normalize</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../odl.util.npy_compat.html">npy_compat</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../odl.util.numerics.html">numerics</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../odl.util.testutils.html">testutils</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../odl.util.ufuncs.html">ufuncs</a></li>
+<li class="toctree-l3 current"><a class="reference internal" href="../odl.util.utility.html">utility</a><ul class="current">
+<li class="toctree-l4"><a class="reference internal" href="odl.util.utility.array_str.html">array_str</a></li>
+<li class="toctree-l4"><a class="reference internal" href="odl.util.utility.attribute_repr_string.html">attribute_repr_string</a></li>
+<li class="toctree-l4"><a class="reference internal" href="odl.util.utility.cache_arguments.html">cache_arguments</a></li>
+<li class="toctree-l4"><a class="reference internal" href="odl.util.utility.complex_dtype.html">complex_dtype</a></li>
+<li class="toctree-l4"><a class="reference internal" href="odl.util.utility.conj_exponent.html">conj_exponent</a></li>
+<li class="toctree-l4"><a class="reference internal" href="odl.util.utility.dedent.html">dedent</a></li>
+<li class="toctree-l4"><a class="reference internal" href="odl.util.utility.dtype_repr.html">dtype_repr</a></li>
+<li class="toctree-l4"><a class="reference internal" href="odl.util.utility.dtype_str.html">dtype_str</a></li>
+<li class="toctree-l4"><a class="reference internal" href="odl.util.utility.indent.html">indent</a></li>
+<li class="toctree-l4"><a class="reference internal" href="odl.util.utility.is_string.html">is_string</a></li>
+<li class="toctree-l4"><a class="reference internal" href="odl.util.utility.method_repr_string.html">method_repr_string</a></li>
+<li class="toctree-l4"><a class="reference internal" href="odl.util.utility.nd_iterator.html">nd_iterator</a></li>
+<li class="toctree-l4"><a class="reference internal" href="odl.util.utility.npy_printoptions.html">npy_printoptions</a></li>
+<li class="toctree-l4"><a class="reference internal" href="odl.util.utility.npy_random_seed.html">npy_random_seed</a></li>
+<li class="toctree-l4"><a class="reference internal" href="odl.util.utility.nullcontext.html">nullcontext</a></li>
+<li class="toctree-l4"><a class="reference internal" href="odl.util.utility.pkg_supports.html">pkg_supports</a></li>
+<li class="toctree-l4"><a class="reference internal" href="odl.util.utility.real_dtype.html">real_dtype</a></li>
+<li class="toctree-l4"><a class="reference internal" href="odl.util.utility.repr_string.html">repr_string</a></li>
+<li class="toctree-l4"><a class="reference internal" href="odl.util.utility.run_from_ipython.html">run_from_ipython</a></li>
+<li class="toctree-l4 current"><a class="current reference internal" href="#">signature_string</a></li>
+<li class="toctree-l4"><a class="reference internal" href="odl.util.utility.signature_string_parts.html">signature_string_parts</a></li>
+<li class="toctree-l4"><a class="reference internal" href="odl.util.utility.unique.html">unique</a></li>
+<li class="toctree-l4"><a class="reference internal" href="odl.util.utility.writable_array.html">writable_array</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../odl.util.vectorization.html">vectorization</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">odl</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="../odl.html">odl</a> &raquo;</li>
+        
+          <li><a href="../odl.util.html">util</a> &raquo;</li>
+        
+          <li><a href="../odl.util.utility.html">utility</a> &raquo;</li>
+        
+      <li>signature_string</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            <a href="../_sources/generated/odl.util.utility.signature_string.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="signature-string">
+<h1>signature_string<a class="headerlink" href="#signature-string" title="Permalink to this headline">¶</a></h1>
+<dl class="py function">
+<dt id="odl.util.utility.signature_string">
+<code class="sig-prename descclassname"><span class="pre">odl.util.utility.</span></code><code class="sig-name descname"><span class="pre">signature_string</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">posargs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">optargs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sep</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">',</span> <span class="pre">'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mod</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'!r'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/odl/util/utility.html#signature_string"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#odl.util.utility.signature_string" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return a stringified signature from given arguments.</p>
+<dl class="field-list">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl>
+<dt><strong>posargs</strong><span class="classifier">sequence</span></dt><dd><p>Positional argument values, always included in the returned string.
+They appear in the string as (roughly):</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">sep</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">arg</span><span class="p">)</span> <span class="k">for</span> <span class="n">arg</span> <span class="ow">in</span> <span class="n">posargs</span><span class="p">)</span>
+</pre></div>
+</div>
+</dd>
+<dt><strong>optargs</strong><span class="classifier">sequence of 3-tuples</span></dt><dd><p>Optional arguments with names and defaults, given in the form:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">[(</span><span class="n">name1</span><span class="p">,</span> <span class="n">value1</span><span class="p">,</span> <span class="n">default1</span><span class="p">),</span> <span class="p">(</span><span class="n">name2</span><span class="p">,</span> <span class="n">value2</span><span class="p">,</span> <span class="n">default2</span><span class="p">),</span> <span class="o">...</span><span class="p">]</span>
+</pre></div>
+</div>
+<p>Only those parameters that are different from the given default
+are included as <code class="docutils literal notranslate"><span class="pre">name=value</span></code> keyword pairs.</p>
+<p><strong>Note:</strong> The comparison is done by using <code class="docutils literal notranslate"><span class="pre">if</span> <span class="pre">value</span> <span class="pre">==</span> <span class="pre">default:</span></code>,
+which is not valid for, e.g., NumPy arrays.</p>
+</dd>
+<dt><strong>sep</strong><span class="classifier">string or sequence of strings, optional</span></dt><dd><p>Separator(s) for the argument strings. A provided single string is
+used for all joining operations.
+A given sequence must have 3 entries <code class="docutils literal notranslate"><span class="pre">pos_sep,</span> <span class="pre">opt_sep,</span> <span class="pre">part_sep</span></code>.
+The <code class="docutils literal notranslate"><span class="pre">pos_sep</span></code> and <code class="docutils literal notranslate"><span class="pre">opt_sep</span></code> strings are used for joining the
+respective sequences of argument strings, and <code class="docutils literal notranslate"><span class="pre">part_sep</span></code> joins
+these two joined strings.</p>
+</dd>
+<dt><strong>mod</strong><span class="classifier">string or callable or sequence, optional</span></dt><dd><p>Format modifier(s) for the argument strings.
+In its most general form, <code class="docutils literal notranslate"><span class="pre">mod</span></code> is a sequence of 2 sequences
+<code class="docutils literal notranslate"><span class="pre">pos_mod,</span> <span class="pre">opt_mod</span></code> with <code class="docutils literal notranslate"><span class="pre">len(pos_mod)</span> <span class="pre">==</span> <span class="pre">len(posargs)</span></code> and
+<code class="docutils literal notranslate"><span class="pre">len(opt_mod)</span> <span class="pre">==</span> <span class="pre">len(optargs)</span></code>. Each entry <code class="docutils literal notranslate"><span class="pre">m</span></code> in those sequences
+can be eiter a string, resulting in the following stringification
+of <code class="docutils literal notranslate"><span class="pre">arg</span></code>:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">arg_fmt</span> <span class="o">=</span> <span class="p">{{{}}}</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">m</span><span class="p">)</span>
+<span class="n">arg_str</span> <span class="o">=</span> <span class="n">arg_fmt</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">arg</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>For a callable <code class="docutils literal notranslate"><span class="pre">to_str</span></code>, the stringification is simply
+<code class="docutils literal notranslate"><span class="pre">arg_str</span> <span class="pre">=</span> <span class="pre">to_str(arg)</span></code>.</p>
+<p>The entries <code class="docutils literal notranslate"><span class="pre">pos_mod,</span> <span class="pre">opt_mod</span></code> of <code class="docutils literal notranslate"><span class="pre">mod</span></code> can also be strings
+or callables instead of sequences, in which case the modifier
+applies to all corresponding arguments.</p>
+<p>Finally, if <code class="docutils literal notranslate"><span class="pre">mod</span></code> is a string or callable, it is applied to
+all arguments.</p>
+<p>The default behavior is to apply the “{!r}” (<code class="docutils literal notranslate"><span class="pre">repr</span></code>) conversion.
+For floating point scalars, the number of digits printed is
+determined by the <code class="docutils literal notranslate"><span class="pre">precision</span></code> value in NumPy’s printing options,
+which can be temporarily modified with <a class="reference internal" href="odl.util.utility.npy_printoptions.html#odl.util.utility.npy_printoptions" title="odl.util.utility.npy_printoptions"><code class="xref any py py-func docutils literal notranslate"><span class="pre">npy_printoptions</span></code></a>.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><dl>
+<dt><strong>signature</strong><span class="classifier">string</span></dt><dd><p>Stringification of a signature, typically used in the form:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="s1">&#39;</span><span class="si">{}</span><span class="s1">(</span><span class="si">{}</span><span class="s1">)&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="p">,</span> <span class="n">signature</span><span class="p">)</span>
+</pre></div>
+</div>
+</dd>
+</dl>
+</dd>
+</dl>
+<p class="rubric">Examples</p>
+<p>Usage with non-trivial entries in both sequences, with a typical
+use case:</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">posargs</span> <span class="o">=</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="s1">&#39;hello&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">optargs</span> <span class="o">=</span> <span class="p">[(</span><span class="s1">&#39;dtype&#39;</span><span class="p">,</span> <span class="s1">&#39;float32&#39;</span><span class="p">,</span> <span class="s1">&#39;float64&#39;</span><span class="p">)]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">signature_string</span><span class="p">(</span><span class="n">posargs</span><span class="p">,</span> <span class="n">optargs</span><span class="p">)</span>
+<span class="go">&quot;1, &#39;hello&#39;, None, dtype=&#39;float32&#39;&quot;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="s1">&#39;</span><span class="si">{}</span><span class="s1">(</span><span class="si">{}</span><span class="s1">)&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="s1">&#39;MyClass&#39;</span><span class="p">,</span> <span class="n">signature_string</span><span class="p">(</span><span class="n">posargs</span><span class="p">,</span> <span class="n">optargs</span><span class="p">))</span>
+<span class="go">&quot;MyClass(1, &#39;hello&#39;, None, dtype=&#39;float32&#39;)&quot;</span>
+</pre></div>
+</div>
+<p>Empty sequences and optargs values equal to default are omitted:</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">posargs</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;hello&#39;</span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">optargs</span> <span class="o">=</span> <span class="p">[(</span><span class="s1">&#39;size&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">signature_string</span><span class="p">(</span><span class="n">posargs</span><span class="p">,</span> <span class="n">optargs</span><span class="p">)</span>
+<span class="go">&quot;&#39;hello&#39;&quot;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">posargs</span> <span class="o">=</span> <span class="p">[]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">optargs</span> <span class="o">=</span> <span class="p">[(</span><span class="s1">&#39;size&#39;</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">1</span><span class="p">)]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">signature_string</span><span class="p">(</span><span class="n">posargs</span><span class="p">,</span> <span class="n">optargs</span><span class="p">)</span>
+<span class="go">&#39;size=2&#39;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">posargs</span> <span class="o">=</span> <span class="p">[]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">optargs</span> <span class="o">=</span> <span class="p">[(</span><span class="s1">&#39;size&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">signature_string</span><span class="p">(</span><span class="n">posargs</span><span class="p">,</span> <span class="n">optargs</span><span class="p">)</span>
+<span class="go">&#39;&#39;</span>
+</pre></div>
+</div>
+<p>Using a different separator, globally or per argument “category”:</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">posargs</span> <span class="o">=</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="s1">&#39;hello&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">optargs</span> <span class="o">=</span> <span class="p">[(</span><span class="s1">&#39;dtype&#39;</span><span class="p">,</span> <span class="s1">&#39;float32&#39;</span><span class="p">,</span> <span class="s1">&#39;float64&#39;</span><span class="p">),</span>
+<span class="gp">... </span>           <span class="p">(</span><span class="s1">&#39;order&#39;</span><span class="p">,</span> <span class="s1">&#39;F&#39;</span><span class="p">,</span> <span class="s1">&#39;C&#39;</span><span class="p">)]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">signature_string</span><span class="p">(</span><span class="n">posargs</span><span class="p">,</span> <span class="n">optargs</span><span class="p">)</span>
+<span class="go">&quot;1, &#39;hello&#39;, None, dtype=&#39;float32&#39;, order=&#39;F&#39;&quot;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">signature_string</span><span class="p">(</span><span class="n">posargs</span><span class="p">,</span> <span class="n">optargs</span><span class="p">,</span> <span class="n">sep</span><span class="o">=</span><span class="p">(</span><span class="s1">&#39;,&#39;</span><span class="p">,</span> <span class="s1">&#39;,&#39;</span><span class="p">,</span> <span class="s1">&#39;, &#39;</span><span class="p">))</span>
+<span class="go">&quot;1,&#39;hello&#39;,None, dtype=&#39;float32&#39;,order=&#39;F&#39;&quot;</span>
+</pre></div>
+</div>
+<p>Using format modifiers:</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">posargs</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;hello&#39;</span><span class="p">,</span> <span class="mf">2.345</span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">optargs</span> <span class="o">=</span> <span class="p">[(</span><span class="s1">&#39;extent&#39;</span><span class="p">,</span> <span class="mf">1.442</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">),</span> <span class="p">(</span><span class="s1">&#39;spacing&#39;</span><span class="p">,</span> <span class="mf">0.0151</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">)]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">signature_string</span><span class="p">(</span><span class="n">posargs</span><span class="p">,</span> <span class="n">optargs</span><span class="p">)</span>
+<span class="go">&quot;&#39;hello&#39;, 2.345, extent=1.442, spacing=0.0151&quot;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># Print only two significant digits for all arguments.</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># NOTE: this also affects the string!</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mod</span> <span class="o">=</span> <span class="s1">&#39;:.2&#39;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">signature_string</span><span class="p">(</span><span class="n">posargs</span><span class="p">,</span> <span class="n">optargs</span><span class="p">,</span> <span class="n">mod</span><span class="o">=</span><span class="n">mod</span><span class="p">)</span>
+<span class="go">&#39;he, 2.3, extent=1.4, spacing=0.015&#39;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mod</span> <span class="o">=</span> <span class="p">[[</span><span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">],</span> <span class="p">[</span><span class="s1">&#39;:.3&#39;</span><span class="p">,</span> <span class="s1">&#39;:.2&#39;</span><span class="p">]]</span>  <span class="c1"># one modifier per argument</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">signature_string</span><span class="p">(</span><span class="n">posargs</span><span class="p">,</span> <span class="n">optargs</span><span class="p">,</span> <span class="n">mod</span><span class="o">=</span><span class="n">mod</span><span class="p">)</span>
+<span class="go">&quot;&#39;hello&#39;, 2.345, extent=1.44, spacing=0.015&quot;</span>
+</pre></div>
+</div>
+<p>Using callables for stringification:</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">posargs</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;arg1&#39;</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="mi">3</span><span class="p">)]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">optargs</span> <span class="o">=</span> <span class="p">[]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">signature_string</span><span class="p">(</span><span class="n">posargs</span><span class="p">,</span> <span class="n">optargs</span><span class="p">,</span> <span class="n">mod</span><span class="o">=</span><span class="p">[[</span><span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="n">array_str</span><span class="p">],</span> <span class="p">[]])</span>
+<span class="go">&quot;&#39;arg1&#39;, [ 1., 1., 1.]&quot;</span>
+</pre></div>
+</div>
+<p>The number of printed digits in floating point numbers can be changed
+with <a class="reference internal" href="odl.util.utility.npy_printoptions.html#odl.util.utility.npy_printoptions" title="odl.util.utility.npy_printoptions"><code class="xref any py py-func docutils literal notranslate"><span class="pre">npy_printoptions</span></code></a>:</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">posargs</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;hello&#39;</span><span class="p">,</span> <span class="mf">0.123456789012345</span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">optargs</span> <span class="o">=</span> <span class="p">[(</span><span class="s1">&#39;extent&#39;</span><span class="p">,</span> <span class="mf">1.234567890123456</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">)]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">signature_string</span><span class="p">(</span><span class="n">posargs</span><span class="p">,</span> <span class="n">optargs</span><span class="p">)</span>  <span class="c1"># default is 8 digits</span>
+<span class="go">&quot;&#39;hello&#39;, 0.12345679, extent=1.2345679&quot;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">with</span> <span class="n">npy_printoptions</span><span class="p">(</span><span class="n">precision</span><span class="o">=</span><span class="mi">2</span><span class="p">):</span>
+<span class="gp">... </span>    <span class="n">sig_str</span> <span class="o">=</span> <span class="n">signature_string</span><span class="p">(</span><span class="n">posargs</span><span class="p">,</span> <span class="n">optargs</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sig_str</span>
+<span class="go">&quot;&#39;hello&#39;, 0.12, extent=1.2&quot;</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+        <a href="odl.util.utility.signature_string_parts.html" class="btn btn-neutral float-right" title="signature_string_parts" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="odl.util.utility.run_from_ipython.html" class="btn btn-neutral float-left" title="run_from_ipython" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &#169; Copyright 2014-2020 The ODL Contributors.
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

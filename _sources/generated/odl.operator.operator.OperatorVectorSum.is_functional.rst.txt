@@ -1,0 +1,6 @@
+OperatorVectorSum.is_functional
+=====================================================
+
+.. currentmodule:: odl.operator.operator
+
+.. autoproperty:: OperatorVectorSum.is_functional

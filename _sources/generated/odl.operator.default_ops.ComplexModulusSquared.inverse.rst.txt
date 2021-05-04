@@ -1,0 +1,6 @@
+ComplexModulusSquared.inverse
+======================================================
+
+.. currentmodule:: odl.operator.default_ops
+
+.. autoproperty:: ComplexModulusSquared.inverse

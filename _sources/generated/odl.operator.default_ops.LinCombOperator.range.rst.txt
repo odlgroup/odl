@@ -1,0 +1,6 @@
+LinCombOperator.range
+==============================================
+
+.. currentmodule:: odl.operator.default_ops
+
+.. autoproperty:: LinCombOperator.range

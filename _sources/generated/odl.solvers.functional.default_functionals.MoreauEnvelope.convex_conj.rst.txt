@@ -1,0 +1,6 @@
+MoreauEnvelope.convex_conj
+=====================================================================
+
+.. currentmodule:: odl.solvers.functional.default_functionals
+
+.. autoproperty:: MoreauEnvelope.convex_conj

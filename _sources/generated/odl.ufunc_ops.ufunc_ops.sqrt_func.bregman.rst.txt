@@ -1,0 +1,8 @@
+:orphan:
+
+sqrt_func.bregman
+=========================================
+
+.. currentmodule:: odl.ufunc_ops.ufunc_ops
+
+.. automethod:: sqrt_func.bregman

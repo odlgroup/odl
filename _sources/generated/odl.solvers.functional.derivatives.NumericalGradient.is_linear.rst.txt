@@ -1,0 +1,6 @@
+NumericalGradient.is_linear
+==============================================================
+
+.. currentmodule:: odl.solvers.functional.derivatives
+
+.. autoproperty:: NumericalGradient.is_linear

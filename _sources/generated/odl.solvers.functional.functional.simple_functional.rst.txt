@@ -1,0 +1,6 @@
+﻿simple_functional
+===================================================
+
+.. currentmodule:: odl.solvers.functional.functional
+
+.. autofunction:: simple_functional

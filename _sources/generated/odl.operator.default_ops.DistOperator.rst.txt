@@ -1,0 +1,38 @@
+﻿DistOperator
+=====================================
+
+.. currentmodule:: odl.operator.default_ops
+
+.. autoclass:: DistOperator
+   :show-inheritance:
+   
+   
+   .. automethod:: __init__
+   
+      
+   
+   .. HACK -- the point here is that we don't want this to appear in the output, but the autosummary should still generate the pages.
+      .. autosummary::
+         :toctree:
+      
+         DistOperator.__call__
+         DistOperator.__eq__
+         DistOperator._call
+         DistOperator.derivative
+         DistOperator.norm
+   
+
+    
+   .. HACK -- the point here is that we don't want this to appear in the output, but the autosummary should still generate the pages.
+      .. autosummary::
+         :toctree:
+      
+         DistOperator.adjoint
+         DistOperator.domain
+         DistOperator.inverse
+         DistOperator.is_functional
+         DistOperator.is_linear
+         DistOperator.range
+         DistOperator.vector
+   
+   

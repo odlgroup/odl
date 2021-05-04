@@ -1,0 +1,8 @@
+:orphan:
+
+KullbackLeibler._call
+================================================================
+
+.. currentmodule:: odl.solvers.functional.default_functionals
+
+.. automethod:: KullbackLeibler._call

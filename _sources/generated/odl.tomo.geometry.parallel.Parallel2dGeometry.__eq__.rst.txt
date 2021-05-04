@@ -1,0 +1,8 @@
+:orphan:
+
+Parallel2dGeometry.__eq__
+====================================================
+
+.. currentmodule:: odl.tomo.geometry.parallel
+
+.. automethod:: Parallel2dGeometry.__eq__

@@ -1,0 +1,6 @@
+MultiplyOperator.domain
+================================================
+
+.. currentmodule:: odl.operator.default_ops
+
+.. autoproperty:: MultiplyOperator.domain

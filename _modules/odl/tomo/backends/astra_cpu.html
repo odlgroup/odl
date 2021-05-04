@@ -1,0 +1,579 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>odl.tomo.backends.astra_cpu &mdash; odl 1.0.0.dev0 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../../../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../../../../_static/custom.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../../../" src="../../../../_static/documentation_options.js"></script>
+        <script src="../../../../_static/jquery.js"></script>
+        <script src="../../../../_static/underscore.js"></script>
+        <script src="../../../../_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="../../../../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../../../index.html" class="icon icon-home"> odl
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                1.0.0.dev0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Getting Started</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../getting_started/getting_started.html">Getting Started</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Working with ODL</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../guide/guide.html">User’s guide – selected topics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../math/math.html">Mathematical Background</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Developer zone</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../dev/dev.html">Contributing to ODL</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Useful facts</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../guide/faq.html">Frequently asked questions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../guide/glossary.html">Glossary</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../release_notes.html">Release Notes</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../refs.html">References</a></li>
+</ul>
+<p class="caption"><span class="caption-text">API Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../odl.html">odl</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../../index.html">odl</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../../../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="../../../index.html">Module code</a> &raquo;</li>
+        
+      <li>odl.tomo.backends.astra_cpu</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for odl.tomo.backends.astra_cpu</h1><div class="highlight"><pre>
+<span></span><span class="c1"># Copyright 2014-2020 The ODL contributors</span>
+<span class="c1">#</span>
+<span class="c1"># This file is part of ODL.</span>
+<span class="c1">#</span>
+<span class="c1"># This Source Code Form is subject to the terms of the Mozilla Public License,</span>
+<span class="c1"># v. 2.0. If a copy of the MPL was not distributed with this file, You can</span>
+<span class="c1"># obtain one at https://mozilla.org/MPL/2.0/.</span>
+
+<span class="sd">&quot;&quot;&quot;Backend for ASTRA using CPU.&quot;&quot;&quot;</span>
+
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">absolute_import</span><span class="p">,</span> <span class="n">division</span><span class="p">,</span> <span class="n">print_function</span>
+
+<span class="kn">import</span> <span class="nn">warnings</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+
+<span class="kn">from</span> <span class="nn">odl.discr</span> <span class="kn">import</span> <span class="n">DiscretizedSpace</span><span class="p">,</span> <span class="n">DiscretizedSpaceElement</span>
+<span class="kn">from</span> <span class="nn">odl.tomo.backends.astra_setup</span> <span class="kn">import</span> <span class="p">(</span>
+    <span class="n">astra_algorithm</span><span class="p">,</span> <span class="n">astra_data</span><span class="p">,</span> <span class="n">astra_projection_geometry</span><span class="p">,</span> <span class="n">astra_projector</span><span class="p">,</span>
+    <span class="n">astra_volume_geometry</span><span class="p">)</span>
+<span class="kn">from</span> <span class="nn">odl.tomo.backends.util</span> <span class="kn">import</span> <span class="n">_add_default_complex_impl</span>
+<span class="kn">from</span> <span class="nn">odl.tomo.geometry</span> <span class="kn">import</span> <span class="p">(</span>
+    <span class="n">DivergentBeamGeometry</span><span class="p">,</span> <span class="n">Geometry</span><span class="p">,</span> <span class="n">ParallelBeamGeometry</span><span class="p">)</span>
+<span class="kn">from</span> <span class="nn">odl.util</span> <span class="kn">import</span> <span class="n">writable_array</span>
+
+<span class="k">try</span><span class="p">:</span>
+    <span class="kn">import</span> <span class="nn">astra</span>
+<span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
+    <span class="k">pass</span>
+
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">(</span>
+    <span class="s1">&#39;astra_cpu_forward_projector&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;astra_cpu_back_projector&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;default_astra_proj_type&#39;</span><span class="p">,</span>
+<span class="p">)</span>
+
+
+<div class="viewcode-block" id="default_astra_proj_type"><a class="viewcode-back" href="../../../../generated/odl.tomo.backends.astra_cpu.default_astra_proj_type.html#odl.tomo.backends.astra_cpu.default_astra_proj_type">[docs]</a><span class="k">def</span> <span class="nf">default_astra_proj_type</span><span class="p">(</span><span class="n">geom</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Return the default ASTRA projector type for a given geometry.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    geom : `Geometry`</span>
+<span class="sd">        ODL geometry object for which to get the default projector type.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    astra_proj_type : str</span>
+<span class="sd">        Default projector type for the given geometry.</span>
+
+<span class="sd">        In 2D:</span>
+
+<span class="sd">        - `ParallelBeamGeometry`: ``&#39;linear&#39;``</span>
+<span class="sd">        - `DivergentBeamGeometry`: ``&#39;line_fanflat&#39;``</span>
+
+<span class="sd">        In 3D:</span>
+
+<span class="sd">        - `ParallelBeamGeometry`: ``&#39;linear3d&#39;``</span>
+<span class="sd">        - `DivergentBeamGeometry`: ``&#39;linearcone&#39;``</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">geom</span><span class="p">,</span> <span class="n">ParallelBeamGeometry</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s1">&#39;linear&#39;</span> <span class="k">if</span> <span class="n">geom</span><span class="o">.</span><span class="n">ndim</span> <span class="o">==</span> <span class="mi">2</span> <span class="k">else</span> <span class="s1">&#39;linear3d&#39;</span>
+    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">geom</span><span class="p">,</span> <span class="n">DivergentBeamGeometry</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s1">&#39;line_fanflat&#39;</span> <span class="k">if</span> <span class="n">geom</span><span class="o">.</span><span class="n">ndim</span> <span class="o">==</span> <span class="mi">2</span> <span class="k">else</span> <span class="s1">&#39;linearcone&#39;</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span>
+            <span class="s1">&#39;no default exists for </span><span class="si">{}</span><span class="s1">, `astra_proj_type` must be given &#39;</span>
+            <span class="s1">&#39;explicitly&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">geom</span><span class="p">))</span>
+        <span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="astra_cpu_forward_projector"><a class="viewcode-back" href="../../../../generated/odl.tomo.backends.astra_cpu.astra_cpu_forward_projector.html#odl.tomo.backends.astra_cpu.astra_cpu_forward_projector">[docs]</a><span class="k">def</span> <span class="nf">astra_cpu_forward_projector</span><span class="p">(</span><span class="n">vol_data</span><span class="p">,</span> <span class="n">geometry</span><span class="p">,</span> <span class="n">proj_space</span><span class="p">,</span> <span class="n">out</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                                <span class="n">astra_proj_type</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Run an ASTRA forward projection on the given data using the CPU.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    vol_data : `DiscretizedSpaceElement`</span>
+<span class="sd">        Volume data to which the forward projector is applied.</span>
+<span class="sd">    geometry : `Geometry`</span>
+<span class="sd">        Geometry defining the tomographic setup.</span>
+<span class="sd">    proj_space : `DiscretizedSpace`</span>
+<span class="sd">        Space to which the calling operator maps.</span>
+<span class="sd">    out : ``proj_space`` element, optional</span>
+<span class="sd">        Element of the projection space to which the result is written. If</span>
+<span class="sd">        ``None``, an element in ``proj_space`` is created.</span>
+<span class="sd">    astra_proj_type : str, optional</span>
+<span class="sd">        Type of projector that should be used. See `the ASTRA documentation</span>
+<span class="sd">        &lt;http://www.astra-toolbox.com/docs/proj2d.html&gt;`_ for details.</span>
+<span class="sd">        By default, a suitable projector type for the given geometry is</span>
+<span class="sd">        selected, see `default_astra_proj_type`.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    out : ``proj_space`` element</span>
+<span class="sd">        Projection data resulting from the application of the projector.</span>
+<span class="sd">        If ``out`` was provided, the returned object is a reference to it.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">vol_data</span><span class="p">,</span> <span class="n">DiscretizedSpaceElement</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span>
+            <span class="s1">&#39;volume data </span><span class="si">{!r}</span><span class="s1"> is not a `DiscretizedSpaceElement` instance&#39;</span>
+            <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">vol_data</span><span class="p">)</span>
+        <span class="p">)</span>
+    <span class="k">if</span> <span class="n">vol_data</span><span class="o">.</span><span class="n">space</span><span class="o">.</span><span class="n">impl</span> <span class="o">!=</span> <span class="s1">&#39;numpy&#39;</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span>
+            <span class="s2">&quot;`vol_data.space.impl` must be &#39;numpy&#39;, got </span><span class="si">{!r}</span><span class="s2">&quot;</span>
+            <span class="s2">&quot;&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">vol_data</span><span class="o">.</span><span class="n">space</span><span class="o">.</span><span class="n">impl</span><span class="p">)</span>
+        <span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">geometry</span><span class="p">,</span> <span class="n">Geometry</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span>
+            <span class="s1">&#39;geometry </span><span class="si">{!r}</span><span class="s1"> is not a Geometry instance&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">geometry</span><span class="p">)</span>
+        <span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">proj_space</span><span class="p">,</span> <span class="n">DiscretizedSpace</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span>
+            <span class="s1">&#39;`proj_space` </span><span class="si">{!r}</span><span class="s1"> is not a DiscretizedSpace instance.&#39;</span>
+            <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">proj_space</span><span class="p">)</span>
+        <span class="p">)</span>
+    <span class="k">if</span> <span class="n">proj_space</span><span class="o">.</span><span class="n">impl</span> <span class="o">!=</span> <span class="s1">&#39;numpy&#39;</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span>
+            <span class="s2">&quot;`proj_space.impl` must be &#39;numpy&#39;, got </span><span class="si">{!r}</span><span class="s2">&quot;</span>
+            <span class="s2">&quot;&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">proj_space</span><span class="o">.</span><span class="n">impl</span><span class="p">)</span>
+        <span class="p">)</span>
+    <span class="k">if</span> <span class="n">vol_data</span><span class="o">.</span><span class="n">ndim</span> <span class="o">!=</span> <span class="n">geometry</span><span class="o">.</span><span class="n">ndim</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+            <span class="s1">&#39;dimensions </span><span class="si">{}</span><span class="s1"> of volume data and </span><span class="si">{}</span><span class="s1"> of geometry do not match&#39;</span>
+            <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">vol_data</span><span class="o">.</span><span class="n">ndim</span><span class="p">,</span> <span class="n">geometry</span><span class="o">.</span><span class="n">ndim</span><span class="p">)</span>
+        <span class="p">)</span>
+    <span class="k">if</span> <span class="n">out</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">out</span> <span class="o">=</span> <span class="n">proj_space</span><span class="o">.</span><span class="n">element</span><span class="p">()</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">out</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">proj_space</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span>
+                <span class="s1">&#39;`out` </span><span class="si">{}</span><span class="s1"> is neither None nor a `DiscretizedSpaceElement` &#39;</span>
+                <span class="s1">&#39;instance&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">out</span><span class="p">)</span>
+            <span class="p">)</span>
+
+    <span class="n">ndim</span> <span class="o">=</span> <span class="n">vol_data</span><span class="o">.</span><span class="n">ndim</span>
+
+    <span class="c1"># Create astra geometries</span>
+    <span class="n">vol_geom</span> <span class="o">=</span> <span class="n">astra_volume_geometry</span><span class="p">(</span><span class="n">vol_data</span><span class="o">.</span><span class="n">space</span><span class="p">)</span>
+    <span class="n">proj_geom</span> <span class="o">=</span> <span class="n">astra_projection_geometry</span><span class="p">(</span><span class="n">geometry</span><span class="p">)</span>
+
+    <span class="c1"># Create projector</span>
+    <span class="k">if</span> <span class="n">astra_proj_type</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">astra_proj_type</span> <span class="o">=</span> <span class="n">default_astra_proj_type</span><span class="p">(</span><span class="n">geometry</span><span class="p">)</span>
+    <span class="n">proj_id</span> <span class="o">=</span> <span class="n">astra_projector</span><span class="p">(</span><span class="n">astra_proj_type</span><span class="p">,</span> <span class="n">vol_geom</span><span class="p">,</span> <span class="n">proj_geom</span><span class="p">,</span> <span class="n">ndim</span><span class="p">)</span>
+
+    <span class="c1"># Create ASTRA data structures</span>
+    <span class="n">vol_data_arr</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">vol_data</span><span class="p">)</span>
+    <span class="n">vol_id</span> <span class="o">=</span> <span class="n">astra_data</span><span class="p">(</span><span class="n">vol_geom</span><span class="p">,</span> <span class="n">datatype</span><span class="o">=</span><span class="s1">&#39;volume&#39;</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="n">vol_data_arr</span><span class="p">,</span>
+                        <span class="n">allow_copy</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+    <span class="k">with</span> <span class="n">writable_array</span><span class="p">(</span><span class="n">out</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="s1">&#39;float32&#39;</span><span class="p">,</span> <span class="n">order</span><span class="o">=</span><span class="s1">&#39;C&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">out_arr</span><span class="p">:</span>
+        <span class="n">sino_id</span> <span class="o">=</span> <span class="n">astra_data</span><span class="p">(</span><span class="n">proj_geom</span><span class="p">,</span> <span class="n">datatype</span><span class="o">=</span><span class="s1">&#39;projection&#39;</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="n">out_arr</span><span class="p">,</span>
+                             <span class="n">ndim</span><span class="o">=</span><span class="n">proj_space</span><span class="o">.</span><span class="n">ndim</span><span class="p">)</span>
+
+        <span class="c1"># Create algorithm</span>
+        <span class="n">algo_id</span> <span class="o">=</span> <span class="n">astra_algorithm</span><span class="p">(</span><span class="s1">&#39;forward&#39;</span><span class="p">,</span> <span class="n">ndim</span><span class="p">,</span> <span class="n">vol_id</span><span class="p">,</span> <span class="n">sino_id</span><span class="p">,</span> <span class="n">proj_id</span><span class="p">,</span>
+                                  <span class="n">impl</span><span class="o">=</span><span class="s1">&#39;cpu&#39;</span><span class="p">)</span>
+
+        <span class="c1"># Run algorithm</span>
+        <span class="n">astra</span><span class="o">.</span><span class="n">algorithm</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">algo_id</span><span class="p">)</span>
+
+    <span class="c1"># Delete ASTRA objects</span>
+    <span class="n">astra</span><span class="o">.</span><span class="n">algorithm</span><span class="o">.</span><span class="n">delete</span><span class="p">(</span><span class="n">algo_id</span><span class="p">)</span>
+    <span class="n">astra</span><span class="o">.</span><span class="n">data2d</span><span class="o">.</span><span class="n">delete</span><span class="p">((</span><span class="n">vol_id</span><span class="p">,</span> <span class="n">sino_id</span><span class="p">))</span>
+    <span class="n">astra</span><span class="o">.</span><span class="n">projector</span><span class="o">.</span><span class="n">delete</span><span class="p">(</span><span class="n">proj_id</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">out</span></div>
+
+
+<div class="viewcode-block" id="astra_cpu_back_projector"><a class="viewcode-back" href="../../../../generated/odl.tomo.backends.astra_cpu.astra_cpu_back_projector.html#odl.tomo.backends.astra_cpu.astra_cpu_back_projector">[docs]</a><span class="k">def</span> <span class="nf">astra_cpu_back_projector</span><span class="p">(</span><span class="n">proj_data</span><span class="p">,</span> <span class="n">geometry</span><span class="p">,</span> <span class="n">vol_space</span><span class="p">,</span> <span class="n">out</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                             <span class="n">astra_proj_type</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Run an ASTRA back-projection on the given data using the CPU.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    proj_data : `DiscretizedSpaceElement`</span>
+<span class="sd">        Projection data to which the back-projector is applied.</span>
+<span class="sd">    geometry : `Geometry`</span>
+<span class="sd">        Geometry defining the tomographic setup.</span>
+<span class="sd">    vol_space : `DiscretizedSpace`</span>
+<span class="sd">        Space to which the calling operator maps.</span>
+<span class="sd">    out : ``vol_space`` element, optional</span>
+<span class="sd">        Element of the reconstruction space to which the result is written.</span>
+<span class="sd">        If ``None``, an element in ``vol_space`` is created.</span>
+<span class="sd">    astra_proj_type : str, optional</span>
+<span class="sd">        Type of projector that should be used. See `the ASTRA documentation</span>
+<span class="sd">        &lt;http://www.astra-toolbox.com/docs/proj2d.html&gt;`_ for details.</span>
+<span class="sd">        By default, a suitable projector type for the given geometry is</span>
+<span class="sd">        selected, see `default_astra_proj_type`.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    out : ``vol_space`` element</span>
+<span class="sd">        Reconstruction data resulting from the application of the backward</span>
+<span class="sd">        projector. If ``out`` was provided, the returned object is a</span>
+<span class="sd">        reference to it.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">proj_data</span><span class="p">,</span> <span class="n">DiscretizedSpaceElement</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span>
+            <span class="s1">&#39;projection data </span><span class="si">{!r}</span><span class="s1"> is not a `DiscretizedSpaceElement` &#39;</span>
+            <span class="s1">&#39;instance&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">proj_data</span><span class="p">)</span>
+        <span class="p">)</span>
+    <span class="k">if</span> <span class="n">proj_data</span><span class="o">.</span><span class="n">space</span><span class="o">.</span><span class="n">impl</span> <span class="o">!=</span> <span class="s1">&#39;numpy&#39;</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span>
+            <span class="s1">&#39;`proj_data` must be a `numpy.ndarray` based, container, &#39;</span>
+            <span class="s2">&quot;got `impl` </span><span class="si">{!r}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">proj_data</span><span class="o">.</span><span class="n">space</span><span class="o">.</span><span class="n">impl</span><span class="p">)</span>
+        <span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">geometry</span><span class="p">,</span> <span class="n">Geometry</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span>
+            <span class="s1">&#39;geometry </span><span class="si">{!r}</span><span class="s1"> is not a Geometry instance&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">geometry</span><span class="p">)</span>
+        <span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">vol_space</span><span class="p">,</span> <span class="n">DiscretizedSpace</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span>
+            <span class="s1">&#39;volume space </span><span class="si">{!r}</span><span class="s1"> is not a DiscretizedSpace instance&#39;</span>
+            <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">vol_space</span><span class="p">)</span>
+        <span class="p">)</span>
+    <span class="k">if</span> <span class="n">vol_space</span><span class="o">.</span><span class="n">impl</span> <span class="o">!=</span> <span class="s1">&#39;numpy&#39;</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span>
+            <span class="s2">&quot;`vol_space.impl` must be &#39;numpy&#39;, got </span><span class="si">{!r}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">vol_space</span><span class="o">.</span><span class="n">impl</span><span class="p">)</span>
+        <span class="p">)</span>
+    <span class="k">if</span> <span class="n">vol_space</span><span class="o">.</span><span class="n">ndim</span> <span class="o">!=</span> <span class="n">geometry</span><span class="o">.</span><span class="n">ndim</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+            <span class="s1">&#39;dimensions </span><span class="si">{}</span><span class="s1"> of reconstruction space and </span><span class="si">{}</span><span class="s1"> of geometry &#39;</span>
+            <span class="s1">&#39;do not match&#39;</span>
+            <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">vol_space</span><span class="o">.</span><span class="n">ndim</span><span class="p">,</span> <span class="n">geometry</span><span class="o">.</span><span class="n">ndim</span><span class="p">)</span>
+        <span class="p">)</span>
+    <span class="k">if</span> <span class="n">out</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">out</span> <span class="o">=</span> <span class="n">vol_space</span><span class="o">.</span><span class="n">element</span><span class="p">()</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">out</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">vol_space</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span>
+                <span class="s1">&#39;`out` </span><span class="si">{}</span><span class="s1"> is neither None nor a `DiscretizedSpaceElement` &#39;</span>
+                <span class="s1">&#39;instance&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">out</span><span class="p">)</span>
+            <span class="p">)</span>
+
+    <span class="n">ndim</span> <span class="o">=</span> <span class="n">proj_data</span><span class="o">.</span><span class="n">ndim</span>
+
+    <span class="c1"># Create astra geometries</span>
+    <span class="n">vol_geom</span> <span class="o">=</span> <span class="n">astra_volume_geometry</span><span class="p">(</span><span class="n">vol_space</span><span class="p">)</span>
+    <span class="n">proj_geom</span> <span class="o">=</span> <span class="n">astra_projection_geometry</span><span class="p">(</span><span class="n">geometry</span><span class="p">)</span>
+
+    <span class="c1"># Create ASTRA data structure</span>
+    <span class="n">sino_id</span> <span class="o">=</span> <span class="n">astra_data</span><span class="p">(</span>
+        <span class="n">proj_geom</span><span class="p">,</span> <span class="n">datatype</span><span class="o">=</span><span class="s1">&#39;projection&#39;</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="n">proj_data</span><span class="p">,</span> <span class="n">allow_copy</span><span class="o">=</span><span class="kc">True</span>
+    <span class="p">)</span>
+
+    <span class="c1"># Create projector</span>
+    <span class="k">if</span> <span class="n">astra_proj_type</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">astra_proj_type</span> <span class="o">=</span> <span class="n">default_astra_proj_type</span><span class="p">(</span><span class="n">geometry</span><span class="p">)</span>
+    <span class="n">proj_id</span> <span class="o">=</span> <span class="n">astra_projector</span><span class="p">(</span><span class="n">astra_proj_type</span><span class="p">,</span> <span class="n">vol_geom</span><span class="p">,</span> <span class="n">proj_geom</span><span class="p">,</span> <span class="n">ndim</span><span class="p">)</span>
+
+    <span class="c1"># Convert out to correct dtype and order if needed.</span>
+    <span class="k">with</span> <span class="n">writable_array</span><span class="p">(</span><span class="n">out</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="s1">&#39;float32&#39;</span><span class="p">,</span> <span class="n">order</span><span class="o">=</span><span class="s1">&#39;C&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">out_arr</span><span class="p">:</span>
+        <span class="n">vol_id</span> <span class="o">=</span> <span class="n">astra_data</span><span class="p">(</span>
+            <span class="n">vol_geom</span><span class="p">,</span> <span class="n">datatype</span><span class="o">=</span><span class="s1">&#39;volume&#39;</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="n">out_arr</span><span class="p">,</span> <span class="n">ndim</span><span class="o">=</span><span class="n">vol_space</span><span class="o">.</span><span class="n">ndim</span>
+        <span class="p">)</span>
+        <span class="c1"># Create algorithm</span>
+        <span class="n">algo_id</span> <span class="o">=</span> <span class="n">astra_algorithm</span><span class="p">(</span>
+            <span class="s1">&#39;backward&#39;</span><span class="p">,</span> <span class="n">ndim</span><span class="p">,</span> <span class="n">vol_id</span><span class="p">,</span> <span class="n">sino_id</span><span class="p">,</span> <span class="n">proj_id</span><span class="p">,</span> <span class="n">impl</span><span class="o">=</span><span class="s1">&#39;cpu&#39;</span>
+        <span class="p">)</span>
+
+        <span class="c1"># Run algorithm</span>
+        <span class="n">astra</span><span class="o">.</span><span class="n">algorithm</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">algo_id</span><span class="p">)</span>
+
+    <span class="c1"># Weight the adjoint by appropriate weights</span>
+    <span class="n">scaling_factor</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">proj_data</span><span class="o">.</span><span class="n">space</span><span class="o">.</span><span class="n">weighting</span><span class="o">.</span><span class="n">const</span><span class="p">)</span>
+    <span class="n">scaling_factor</span> <span class="o">/=</span> <span class="nb">float</span><span class="p">(</span><span class="n">vol_space</span><span class="o">.</span><span class="n">weighting</span><span class="o">.</span><span class="n">const</span><span class="p">)</span>
+
+    <span class="n">out</span> <span class="o">*=</span> <span class="n">scaling_factor</span>
+
+    <span class="c1"># Delete ASTRA objects</span>
+    <span class="n">astra</span><span class="o">.</span><span class="n">algorithm</span><span class="o">.</span><span class="n">delete</span><span class="p">(</span><span class="n">algo_id</span><span class="p">)</span>
+    <span class="n">astra</span><span class="o">.</span><span class="n">data2d</span><span class="o">.</span><span class="n">delete</span><span class="p">((</span><span class="n">vol_id</span><span class="p">,</span> <span class="n">sino_id</span><span class="p">))</span>
+    <span class="n">astra</span><span class="o">.</span><span class="n">projector</span><span class="o">.</span><span class="n">delete</span><span class="p">(</span><span class="n">proj_id</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">out</span></div>
+
+
+<div class="viewcode-block" id="AstraCpuImpl"><a class="viewcode-back" href="../../../../generated/odl.tomo.backends.astra_cpu.AstraCpuImpl.html#odl.tomo.backends.astra_cpu.AstraCpuImpl">[docs]</a><span class="k">class</span> <span class="nc">AstraCpuImpl</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;Thin wrapper implementing ASTRA CPU for `RayTransform`.&quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="AstraCpuImpl.__init__"><a class="viewcode-back" href="../../../../generated/odl.tomo.backends.astra_cpu.AstraCpuImpl.html#odl.tomo.backends.astra_cpu.AstraCpuImpl.__init__">[docs]</a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">geometry</span><span class="p">,</span> <span class="n">vol_space</span><span class="p">,</span> <span class="n">proj_space</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Initialize a new instance.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        geometry : `Geometry`</span>
+<span class="sd">            Geometry defining the tomographic setup.</span>
+<span class="sd">        vol_space : `DiscretizedSpace`</span>
+<span class="sd">            Reconstruction space, the space of the images to be forward</span>
+<span class="sd">            projected.</span>
+<span class="sd">        proj_space : `DiscretizedSpace`</span>
+<span class="sd">            Projection space, the space of the result.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">geometry</span><span class="p">,</span> <span class="n">Geometry</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span>
+                <span class="s1">&#39;`geometry` must be a `Geometry` instance, got </span><span class="si">{!r}</span><span class="s1">&#39;</span>
+                <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">geometry</span><span class="p">)</span>
+            <span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">vol_space</span><span class="p">,</span> <span class="n">DiscretizedSpace</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span>
+                <span class="s1">&#39;`vol_space` must be a `DiscretizedSpace` instance, got </span><span class="si">{!r}</span><span class="s1">&#39;</span>
+                <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">vol_space</span><span class="p">)</span>
+            <span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">proj_space</span><span class="p">,</span> <span class="n">DiscretizedSpace</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span>
+                <span class="s1">&#39;`proj_space` must be a `DiscretizedSpace` instance, got </span><span class="si">{!r}</span><span class="s1">&#39;</span>
+                <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">proj_space</span><span class="p">)</span>
+            <span class="p">)</span>
+        <span class="k">if</span> <span class="n">geometry</span><span class="o">.</span><span class="n">ndim</span> <span class="o">&gt;</span> <span class="mi">2</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s1">&#39;`impl` </span><span class="si">{!r}</span><span class="s1"> only works for 2d&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="p">)</span>
+            <span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">vol_space</span><span class="o">.</span><span class="n">size</span> <span class="o">&gt;=</span> <span class="mi">512</span> <span class="o">**</span> <span class="mi">2</span><span class="p">:</span>
+            <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span>
+                <span class="s2">&quot;The &#39;astra_cpu&#39; backend may be too slow for volumes of this &quot;</span>
+                <span class="s2">&quot;size. Consider using &#39;astra_cuda&#39; if your machine has an &quot;</span>
+                <span class="s2">&quot;Nvidia GPU.&quot;</span><span class="p">,</span>
+                <span class="ne">RuntimeWarning</span><span class="p">,</span>
+            <span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">geometry</span> <span class="o">=</span> <span class="n">geometry</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_vol_space</span> <span class="o">=</span> <span class="n">vol_space</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_proj_space</span> <span class="o">=</span> <span class="n">proj_space</span></div>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">vol_space</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_vol_space</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">proj_space</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_proj_space</span>
+
+<div class="viewcode-block" id="AstraCpuImpl.call_backward"><a class="viewcode-back" href="../../../../generated/odl.tomo.backends.astra_cpu.AstraCpuImpl.call_backward.html#odl.tomo.backends.astra_cpu.AstraCpuImpl.call_backward">[docs]</a>    <span class="nd">@_add_default_complex_impl</span>
+    <span class="k">def</span> <span class="nf">call_backward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">out</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">astra_cpu_back_projector</span><span class="p">(</span>
+            <span class="n">x</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">geometry</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">vol_space</span><span class="o">.</span><span class="n">real_space</span><span class="p">,</span> <span class="n">out</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span>
+        <span class="p">)</span></div>
+
+<div class="viewcode-block" id="AstraCpuImpl.call_forward"><a class="viewcode-back" href="../../../../generated/odl.tomo.backends.astra_cpu.AstraCpuImpl.call_forward.html#odl.tomo.backends.astra_cpu.AstraCpuImpl.call_forward">[docs]</a>    <span class="nd">@_add_default_complex_impl</span>
+    <span class="k">def</span> <span class="nf">call_forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">out</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">astra_cpu_forward_projector</span><span class="p">(</span>
+            <span class="n">x</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">geometry</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">proj_space</span><span class="o">.</span><span class="n">real_space</span><span class="p">,</span> <span class="n">out</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span>
+        <span class="p">)</span></div></div>
+
+
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s1">&#39;__main__&#39;</span><span class="p">:</span>
+    <span class="kn">from</span> <span class="nn">odl.util.testutils</span> <span class="kn">import</span> <span class="n">run_doctests</span>
+
+    <span class="n">run_doctests</span><span class="p">()</span>
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &#169; Copyright 2014-2020 The ODL Contributors.
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

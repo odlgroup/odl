@@ -1,0 +1,6 @@
+SamplingOperator.inverse
+================================================
+
+.. currentmodule:: odl.operator.tensor_ops
+
+.. autoproperty:: SamplingOperator.inverse

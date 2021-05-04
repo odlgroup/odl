@@ -1,0 +1,37 @@
+﻿NumericalGradient
+====================================================
+
+.. currentmodule:: odl.solvers.functional.derivatives
+
+.. autoclass:: NumericalGradient
+   :show-inheritance:
+   
+   
+   .. automethod:: __init__
+   
+      
+   
+   .. HACK -- the point here is that we don't want this to appear in the output, but the autosummary should still generate the pages.
+      .. autosummary::
+         :toctree:
+      
+         NumericalGradient.__call__
+         NumericalGradient.__eq__
+         NumericalGradient._call
+         NumericalGradient.derivative
+         NumericalGradient.norm
+   
+
+    
+   .. HACK -- the point here is that we don't want this to appear in the output, but the autosummary should still generate the pages.
+      .. autosummary::
+         :toctree:
+      
+         NumericalGradient.adjoint
+         NumericalGradient.domain
+         NumericalGradient.inverse
+         NumericalGradient.is_functional
+         NumericalGradient.is_linear
+         NumericalGradient.range
+   
+   

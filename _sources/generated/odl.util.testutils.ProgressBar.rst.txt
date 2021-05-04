@@ -1,0 +1,29 @@
+﻿ProgressBar
+==============================
+
+.. currentmodule:: odl.util.testutils
+
+.. autoclass:: ProgressBar
+   :show-inheritance:
+   
+   
+   .. automethod:: __init__
+   
+      
+   
+   .. HACK -- the point here is that we don't want this to appear in the output, but the autosummary should still generate the pages.
+      .. autosummary::
+         :toctree:
+      
+         ProgressBar.__eq__
+         ProgressBar.start
+         ProgressBar.update
+   
+
+    
+   .. HACK -- the point here is that we don't want this to appear in the output, but the autosummary should still generate the pages.
+      .. autosummary::
+         :toctree:
+      
+   
+   

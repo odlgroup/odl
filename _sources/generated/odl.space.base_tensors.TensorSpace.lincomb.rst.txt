@@ -1,0 +1,8 @@
+:orphan:
+
+TensorSpace.lincomb
+==========================================
+
+.. currentmodule:: odl.space.base_tensors
+
+.. automethod:: TensorSpace.lincomb

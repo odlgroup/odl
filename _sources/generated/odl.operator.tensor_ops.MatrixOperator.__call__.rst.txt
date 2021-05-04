@@ -1,0 +1,8 @@
+:orphan:
+
+MatrixOperator.__call__
+===============================================
+
+.. currentmodule:: odl.operator.tensor_ops
+
+.. automethod:: MatrixOperator.__call__

@@ -1,0 +1,6 @@
+Parallel3dAxisGeometry.translation
+=============================================================
+
+.. currentmodule:: odl.tomo.geometry.parallel
+
+.. autoproperty:: Parallel3dAxisGeometry.translation

@@ -1,0 +1,6 @@
+DiscretizedSpace.is_uniform_byaxis
+========================================================
+
+.. currentmodule:: odl.discr.discr_space
+
+.. autoproperty:: DiscretizedSpace.is_uniform_byaxis

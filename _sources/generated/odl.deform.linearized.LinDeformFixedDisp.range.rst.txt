@@ -1,0 +1,6 @@
+LinDeformFixedDisp.range
+==============================================
+
+.. currentmodule:: odl.deform.linearized
+
+.. autoproperty:: LinDeformFixedDisp.range

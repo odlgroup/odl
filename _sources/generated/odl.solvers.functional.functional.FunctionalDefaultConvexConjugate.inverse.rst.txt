@@ -1,0 +1,6 @@
+FunctionalDefaultConvexConjugate.inverse
+==========================================================================
+
+.. currentmodule:: odl.solvers.functional.functional
+
+.. autoproperty:: FunctionalDefaultConvexConjugate.inverse

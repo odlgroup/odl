@@ -1,0 +1,6 @@
+﻿parallel_beam_geometry
+=================================================
+
+.. currentmodule:: odl.tomo.geometry.parallel
+
+.. autofunction:: parallel_beam_geometry

@@ -1,0 +1,6 @@
+IdentityOperator.scalar
+================================================
+
+.. currentmodule:: odl.operator.default_ops
+
+.. autoproperty:: IdentityOperator.scalar

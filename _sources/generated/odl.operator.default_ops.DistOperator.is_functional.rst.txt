@@ -1,0 +1,6 @@
+DistOperator.is_functional
+===================================================
+
+.. currentmodule:: odl.operator.default_ops
+
+.. autoproperty:: DistOperator.is_functional

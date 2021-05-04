@@ -1,0 +1,6 @@
+ParallelHoleCollimatorGeometry.axis
+===========================================================
+
+.. currentmodule:: odl.tomo.geometry.spect
+
+.. autoproperty:: ParallelHoleCollimatorGeometry.axis

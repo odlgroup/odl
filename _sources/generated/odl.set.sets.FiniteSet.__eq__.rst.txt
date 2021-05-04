@@ -1,0 +1,8 @@
+:orphan:
+
+FiniteSet.__eq__
+=============================
+
+.. currentmodule:: odl.set.sets
+
+.. automethod:: FiniteSet.__eq__

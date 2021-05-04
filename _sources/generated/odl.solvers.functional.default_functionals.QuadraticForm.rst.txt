@@ -1,0 +1,46 @@
+﻿QuadraticForm
+========================================================
+
+.. currentmodule:: odl.solvers.functional.default_functionals
+
+.. autoclass:: QuadraticForm
+   :show-inheritance:
+   
+   
+   .. automethod:: __init__
+   
+      
+   
+   .. HACK -- the point here is that we don't want this to appear in the output, but the autosummary should still generate the pages.
+      .. autosummary::
+         :toctree:
+      
+         QuadraticForm.__call__
+         QuadraticForm.__eq__
+         QuadraticForm._call
+         QuadraticForm.bregman
+         QuadraticForm.derivative
+         QuadraticForm.norm
+         QuadraticForm.translated
+   
+
+    
+   .. HACK -- the point here is that we don't want this to appear in the output, but the autosummary should still generate the pages.
+      .. autosummary::
+         :toctree:
+      
+         QuadraticForm.adjoint
+         QuadraticForm.constant
+         QuadraticForm.convex_conj
+         QuadraticForm.domain
+         QuadraticForm.grad_lipschitz
+         QuadraticForm.gradient
+         QuadraticForm.inverse
+         QuadraticForm.is_functional
+         QuadraticForm.is_linear
+         QuadraticForm.operator
+         QuadraticForm.proximal
+         QuadraticForm.range
+         QuadraticForm.vector
+   
+   

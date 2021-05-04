@@ -1,0 +1,6 @@
+floor_func.adjoint
+==========================================
+
+.. currentmodule:: odl.ufunc_ops.ufunc_ops
+
+.. autoproperty:: floor_func.adjoint

@@ -1,0 +1,8 @@
+:orphan:
+
+FunctionalTranslation.norm
+============================================================
+
+.. currentmodule:: odl.solvers.functional.functional
+
+.. automethod:: FunctionalTranslation.norm

@@ -1,0 +1,8 @@
+:orphan:
+
+DivergentBeamGeometry.src_position
+=============================================================
+
+.. currentmodule:: odl.tomo.geometry.geometry
+
+.. automethod:: DivergentBeamGeometry.src_position

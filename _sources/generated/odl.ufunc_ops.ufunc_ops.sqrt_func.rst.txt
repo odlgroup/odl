@@ -1,0 +1,43 @@
+﻿sqrt_func
+=================================
+
+.. currentmodule:: odl.ufunc_ops.ufunc_ops
+
+.. autoclass:: sqrt_func
+   :show-inheritance:
+   
+   
+   .. automethod:: __init__
+   
+      
+   
+   .. HACK -- the point here is that we don't want this to appear in the output, but the autosummary should still generate the pages.
+      .. autosummary::
+         :toctree:
+      
+         sqrt_func.__call__
+         sqrt_func.__eq__
+         sqrt_func._call
+         sqrt_func.bregman
+         sqrt_func.derivative
+         sqrt_func.norm
+         sqrt_func.translated
+   
+
+    
+   .. HACK -- the point here is that we don't want this to appear in the output, but the autosummary should still generate the pages.
+      .. autosummary::
+         :toctree:
+      
+         sqrt_func.adjoint
+         sqrt_func.convex_conj
+         sqrt_func.domain
+         sqrt_func.grad_lipschitz
+         sqrt_func.gradient
+         sqrt_func.inverse
+         sqrt_func.is_functional
+         sqrt_func.is_linear
+         sqrt_func.proximal
+         sqrt_func.range
+   
+   

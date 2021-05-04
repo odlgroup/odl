@@ -1,0 +1,6 @@
+NumericalGradient.is_functional
+==================================================================
+
+.. currentmodule:: odl.solvers.functional.derivatives
+
+.. autoproperty:: NumericalGradient.is_functional

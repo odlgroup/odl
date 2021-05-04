@@ -1,0 +1,6 @@
+BregmanDistance.gradient
+==========================================================
+
+.. currentmodule:: odl.solvers.functional.functional
+
+.. autoproperty:: BregmanDistance.gradient

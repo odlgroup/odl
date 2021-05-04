@@ -1,0 +1,37 @@
+﻿divide_op
+=================================
+
+.. currentmodule:: odl.ufunc_ops.ufunc_ops
+
+.. autoclass:: divide_op
+   :show-inheritance:
+   
+   
+   .. automethod:: __init__
+   
+      
+   
+   .. HACK -- the point here is that we don't want this to appear in the output, but the autosummary should still generate the pages.
+      .. autosummary::
+         :toctree:
+      
+         divide_op.__call__
+         divide_op.__eq__
+         divide_op._call
+         divide_op.derivative
+         divide_op.norm
+   
+
+    
+   .. HACK -- the point here is that we don't want this to appear in the output, but the autosummary should still generate the pages.
+      .. autosummary::
+         :toctree:
+      
+         divide_op.adjoint
+         divide_op.domain
+         divide_op.inverse
+         divide_op.is_functional
+         divide_op.is_linear
+         divide_op.range
+   
+   

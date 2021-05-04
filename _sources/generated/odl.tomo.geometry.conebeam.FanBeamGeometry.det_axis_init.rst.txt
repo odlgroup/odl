@@ -1,0 +1,6 @@
+FanBeamGeometry.det_axis_init
+========================================================
+
+.. currentmodule:: odl.tomo.geometry.conebeam
+
+.. autoproperty:: FanBeamGeometry.det_axis_init

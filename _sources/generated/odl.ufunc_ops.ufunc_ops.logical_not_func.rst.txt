@@ -1,0 +1,43 @@
+﻿logical_not_func
+========================================
+
+.. currentmodule:: odl.ufunc_ops.ufunc_ops
+
+.. autoclass:: logical_not_func
+   :show-inheritance:
+   
+   
+   .. automethod:: __init__
+   
+      
+   
+   .. HACK -- the point here is that we don't want this to appear in the output, but the autosummary should still generate the pages.
+      .. autosummary::
+         :toctree:
+      
+         logical_not_func.__call__
+         logical_not_func.__eq__
+         logical_not_func._call
+         logical_not_func.bregman
+         logical_not_func.derivative
+         logical_not_func.norm
+         logical_not_func.translated
+   
+
+    
+   .. HACK -- the point here is that we don't want this to appear in the output, but the autosummary should still generate the pages.
+      .. autosummary::
+         :toctree:
+      
+         logical_not_func.adjoint
+         logical_not_func.convex_conj
+         logical_not_func.domain
+         logical_not_func.grad_lipschitz
+         logical_not_func.gradient
+         logical_not_func.inverse
+         logical_not_func.is_functional
+         logical_not_func.is_linear
+         logical_not_func.proximal
+         logical_not_func.range
+   
+   

@@ -1,0 +1,6 @@
+LinCombOperator.domain
+===============================================
+
+.. currentmodule:: odl.operator.default_ops
+
+.. autoproperty:: LinCombOperator.domain

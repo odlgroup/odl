@@ -1,0 +1,8 @@
+:orphan:
+
+TensorSpaceUfuncs.floor
+=======================================
+
+.. currentmodule:: odl.util.ufuncs
+
+.. automethod:: TensorSpaceUfuncs.floor

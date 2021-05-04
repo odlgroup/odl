@@ -1,0 +1,24 @@
+astra_cuda
+==========
+
+Backend for ASTRA using CUDA.
+
+.. currentmodule:: odl.tomo.backends.astra_cuda
+
+
+
+.. rubric:: Classes
+
+.. autosummary::
+   :toctree: generated/
+
+   ~odl.tomo.backends.astra_cuda.AstraCudaImpl
+
+
+.. rubric:: Functions
+
+.. autosummary::
+   :toctree: generated/
+
+   ~odl.tomo.backends.astra_cuda.astra_cuda_bp_scaling_factor
+

@@ -1,0 +1,6 @@
+FourierTransformInverse.adjoint
+==================================================
+
+.. currentmodule:: odl.trafos.fourier
+
+.. autoproperty:: FourierTransformInverse.adjoint

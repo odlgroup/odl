@@ -1,0 +1,32 @@
+﻿Set
+================
+
+.. currentmodule:: odl.set.sets
+
+.. autoclass:: Set
+   :show-inheritance:
+   
+   
+   .. automethod:: __init__
+   
+      
+   
+   .. HACK -- the point here is that we don't want this to appear in the output, but the autosummary should still generate the pages.
+      .. autosummary::
+         :toctree:
+      
+         Set.__contains__
+         Set.__eq__
+         Set.contains_all
+         Set.contains_set
+         Set.element
+   
+
+    
+   .. HACK -- the point here is that we don't want this to appear in the output, but the autosummary should still generate the pages.
+      .. autosummary::
+         :toctree:
+      
+         Set.examples
+   
+   

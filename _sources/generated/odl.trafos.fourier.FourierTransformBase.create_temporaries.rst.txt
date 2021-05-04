@@ -1,0 +1,8 @@
+:orphan:
+
+FourierTransformBase.create_temporaries
+==========================================================
+
+.. currentmodule:: odl.trafos.fourier
+
+.. automethod:: FourierTransformBase.create_temporaries

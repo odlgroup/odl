@@ -1,0 +1,8 @@
+:orphan:
+
+Flat1dDetector.__eq__
+================================================
+
+.. currentmodule:: odl.tomo.geometry.detector
+
+.. automethod:: Flat1dDetector.__eq__

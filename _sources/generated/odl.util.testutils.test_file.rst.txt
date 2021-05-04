@@ -1,0 +1,6 @@
+﻿test_file
+============================
+
+.. currentmodule:: odl.util.testutils
+
+.. autofunction:: test_file

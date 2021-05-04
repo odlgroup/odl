@@ -1,0 +1,6 @@
+logical_or_op.is_functional
+===================================================
+
+.. currentmodule:: odl.ufunc_ops.ufunc_ops
+
+.. autoproperty:: logical_or_op.is_functional

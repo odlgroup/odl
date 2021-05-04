@@ -1,0 +1,6 @@
+﻿OpNotImplementedError
+===========================================
+
+.. currentmodule:: odl.operator.operator
+
+.. autoexception:: OpNotImplementedError

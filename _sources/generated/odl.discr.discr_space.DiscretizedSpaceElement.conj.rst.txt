@@ -1,0 +1,8 @@
+:orphan:
+
+DiscretizedSpaceElement.conj
+==================================================
+
+.. currentmodule:: odl.discr.discr_space
+
+.. automethod:: DiscretizedSpaceElement.conj

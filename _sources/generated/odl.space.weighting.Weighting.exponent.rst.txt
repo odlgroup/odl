@@ -1,0 +1,6 @@
+Weighting.exponent
+======================================
+
+.. currentmodule:: odl.space.weighting
+
+.. autoproperty:: Weighting.exponent

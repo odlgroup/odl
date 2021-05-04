@@ -1,0 +1,37 @@
+﻿right_shift_op
+======================================
+
+.. currentmodule:: odl.ufunc_ops.ufunc_ops
+
+.. autoclass:: right_shift_op
+   :show-inheritance:
+   
+   
+   .. automethod:: __init__
+   
+      
+   
+   .. HACK -- the point here is that we don't want this to appear in the output, but the autosummary should still generate the pages.
+      .. autosummary::
+         :toctree:
+      
+         right_shift_op.__call__
+         right_shift_op.__eq__
+         right_shift_op._call
+         right_shift_op.derivative
+         right_shift_op.norm
+   
+
+    
+   .. HACK -- the point here is that we don't want this to appear in the output, but the autosummary should still generate the pages.
+      .. autosummary::
+         :toctree:
+      
+         right_shift_op.adjoint
+         right_shift_op.domain
+         right_shift_op.inverse
+         right_shift_op.is_functional
+         right_shift_op.is_linear
+         right_shift_op.range
+   
+   

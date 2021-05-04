@@ -1,0 +1,6 @@
+IndicatorNuclearNormUnitBall.convex_conj
+===================================================================================
+
+.. currentmodule:: odl.solvers.functional.default_functionals
+
+.. autoproperty:: IndicatorNuclearNormUnitBall.convex_conj

@@ -1,0 +1,8 @@
+:orphan:
+
+IntervalProd.corners
+===================================
+
+.. currentmodule:: odl.set.domain
+
+.. automethod:: IntervalProd.corners

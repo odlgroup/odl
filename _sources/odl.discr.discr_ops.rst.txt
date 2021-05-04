@@ -1,0 +1,18 @@
+discr_ops
+=========
+
+Operators defined on `DiscretizedSpace`.
+
+.. currentmodule:: odl.discr.discr_ops
+
+
+
+.. rubric:: Classes
+
+.. autosummary::
+   :toctree: generated/
+
+   ~odl.discr.discr_ops.Resampling
+   ~odl.discr.discr_ops.ResizingOperator
+
+

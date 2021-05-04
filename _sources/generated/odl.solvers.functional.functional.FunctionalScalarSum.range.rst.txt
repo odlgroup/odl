@@ -1,0 +1,6 @@
+FunctionalScalarSum.range
+===========================================================
+
+.. currentmodule:: odl.solvers.functional.functional
+
+.. autoproperty:: FunctionalScalarSum.range

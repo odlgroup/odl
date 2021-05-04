@@ -1,0 +1,6 @@
+Parallel3dEulerGeometry.check_bounds
+===============================================================
+
+.. currentmodule:: odl.tomo.geometry.parallel
+
+.. autoproperty:: Parallel3dEulerGeometry.check_bounds

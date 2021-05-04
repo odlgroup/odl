@@ -1,0 +1,8 @@
+:orphan:
+
+Geometry.rotation_matrix
+===================================================
+
+.. currentmodule:: odl.tomo.geometry.geometry
+
+.. automethod:: Geometry.rotation_matrix

@@ -1,0 +1,8 @@
+:orphan:
+
+TensorSpace.available_dtypes
+===================================================
+
+.. currentmodule:: odl.space.base_tensors
+
+.. automethod:: TensorSpace.available_dtypes

@@ -1,0 +1,6 @@
+trunc_func.grad_lipschitz
+=================================================
+
+.. currentmodule:: odl.ufunc_ops.ufunc_ops
+
+.. autoproperty:: trunc_func.grad_lipschitz

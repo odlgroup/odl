@@ -1,0 +1,8 @@
+:orphan:
+
+true_divide_op.derivative
+=================================================
+
+.. currentmodule:: odl.ufunc_ops.ufunc_ops
+
+.. automethod:: true_divide_op.derivative

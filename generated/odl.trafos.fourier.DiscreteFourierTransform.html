@@ -1,0 +1,410 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>DiscreteFourierTransform &mdash; odl 1.0.0.dev0 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="DiscreteFourierTransform._call" href="odl.trafos.fourier.DiscreteFourierTransform._call.html" />
+    <link rel="prev" title="fourier" href="../odl.trafos.fourier.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../index.html" class="icon icon-home"> odl
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                1.0.0.dev0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Getting Started</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../getting_started/getting_started.html">Getting Started</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Working with ODL</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../guide/guide.html">User’s guide – selected topics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../math/math.html">Mathematical Background</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Developer zone</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../dev/dev.html">Contributing to ODL</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Useful facts</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../guide/faq.html">Frequently asked questions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../guide/glossary.html">Glossary</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../release_notes.html">Release Notes</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../refs.html">References</a></li>
+</ul>
+<p class="caption"><span class="caption-text">API Reference</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../odl.html">odl</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../odl.contrib.html">contrib</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../odl.deform.html">deform</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../odl.diagnostics.html">diagnostics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../odl.discr.html">discr</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../odl.operator.html">operator</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../odl.phantom.html">phantom</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../odl.set.html">set</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../odl.solvers.html">solvers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../odl.space.html">space</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../odl.tomo.html">tomo</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="../odl.trafos.html">trafos</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="../odl.trafos.backends.html">backends</a></li>
+<li class="toctree-l3 current"><a class="reference internal" href="../odl.trafos.fourier.html">fourier</a><ul class="current">
+<li class="toctree-l4 current"><a class="current reference internal" href="#">DiscreteFourierTransform</a></li>
+<li class="toctree-l4"><a class="reference internal" href="odl.trafos.fourier.DiscreteFourierTransformBase.html">DiscreteFourierTransformBase</a></li>
+<li class="toctree-l4"><a class="reference internal" href="odl.trafos.fourier.DiscreteFourierTransformInverse.html">DiscreteFourierTransformInverse</a></li>
+<li class="toctree-l4"><a class="reference internal" href="odl.trafos.fourier.FourierTransform.html">FourierTransform</a></li>
+<li class="toctree-l4"><a class="reference internal" href="odl.trafos.fourier.FourierTransformBase.html">FourierTransformBase</a></li>
+<li class="toctree-l4"><a class="reference internal" href="odl.trafos.fourier.FourierTransformInverse.html">FourierTransformInverse</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../odl.trafos.util.html">util</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../odl.trafos.wavelet.html">wavelet</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../odl.ufunc_ops.html">ufunc_ops</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../odl.util.html">util</a></li>
+</ul>
+</li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">odl</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="../odl.html">odl</a> &raquo;</li>
+        
+          <li><a href="../odl.trafos.html">trafos</a> &raquo;</li>
+        
+          <li><a href="../odl.trafos.fourier.html">fourier</a> &raquo;</li>
+        
+      <li>DiscreteFourierTransform</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            <a href="../_sources/generated/odl.trafos.fourier.DiscreteFourierTransform.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="discretefouriertransform">
+<h1>DiscreteFourierTransform<a class="headerlink" href="#discretefouriertransform" title="Permalink to this headline">¶</a></h1>
+<dl class="py class">
+<dt id="odl.trafos.fourier.DiscreteFourierTransform">
+<em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">odl.trafos.fourier.</span></code><code class="sig-name descname"><span class="pre">DiscreteFourierTransform</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/odl/trafos/fourier.html#DiscreteFourierTransform"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#odl.trafos.fourier.DiscreteFourierTransform" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="odl.trafos.fourier.DiscreteFourierTransformBase.html#odl.trafos.fourier.DiscreteFourierTransformBase" title="odl.trafos.fourier.DiscreteFourierTransformBase"><code class="xref py py-class docutils literal notranslate"><span class="pre">odl.trafos.fourier.DiscreteFourierTransformBase</span></code></a></p>
+<p>Plain forward DFT, only evaluating the trigonometric sum.</p>
+<p>This operator calculates the forward DFT:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">f_hat</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="n">sum_j</span><span class="p">(</span> <span class="n">f</span><span class="p">[</span><span class="n">j</span><span class="p">]</span> <span class="o">*</span> <span class="n">exp</span><span class="p">(</span><span class="o">-+</span> <span class="mi">1</span><span class="n">j</span><span class="o">*</span><span class="mi">2</span><span class="o">*</span><span class="n">pi</span> <span class="o">*</span> <span class="n">j</span><span class="o">*</span><span class="n">k</span><span class="o">/</span><span class="n">N</span><span class="p">)</span> <span class="p">)</span>
+</pre></div>
+</div>
+<p>without any further shifting or scaling compensation. See the
+<a class="reference external" href="http://docs.scipy.org/doc/numpy/reference/routines.fft.html">Numpy FFT documentation</a>, the <a class="reference external" href="https://pyfftw.readthedocs.io">pyfftw API documentation</a> or
+<a class="reference external" href="http://www.fftw.org/fftw3_doc/What-FFTW-Really-Computes.html">What FFTW really computes</a> for further information.</p>
+<div class="admonition seealso">
+<p class="admonition-title">See also</p>
+<dl class="simple">
+<dt><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.fft.fftn.html#numpy.fft.fftn" title="(in NumPy v1.20)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">numpy.fft.fftn</span></code></a></dt><dd><p>n-dimensional FFT routine</p>
+</dd>
+<dt><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.fft.rfftn.html#numpy.fft.rfftn" title="(in NumPy v1.20)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">numpy.fft.rfftn</span></code></a></dt><dd><p>n-dimensional half-complex FFT</p>
+</dd>
+<dt><a class="reference internal" href="odl.trafos.backends.pyfftw_bindings.pyfftw_call.html#odl.trafos.backends.pyfftw_bindings.pyfftw_call" title="odl.trafos.backends.pyfftw_bindings.pyfftw_call"><code class="xref py py-obj docutils literal notranslate"><span class="pre">odl.trafos.backends.pyfftw_bindings.pyfftw_call</span></code></a></dt><dd><p>apply an FFTW transform</p>
+</dd>
+</dl>
+</div>
+<p class="rubric">References</p>
+<dl class="field-list simple">
+<dt class="field-odd">Attributes</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><a class="reference internal" href="odl.trafos.fourier.DiscreteFourierTransform.adjoint.html#odl.trafos.fourier.DiscreteFourierTransform.adjoint" title="odl.trafos.fourier.DiscreteFourierTransform.adjoint"><code class="xref py py-obj docutils literal notranslate"><span class="pre">adjoint</span></code></a></dt><dd><p>Adjoint transform, equal to the inverse.</p>
+</dd>
+<dt><a class="reference internal" href="odl.trafos.fourier.DiscreteFourierTransform.axes.html#odl.trafos.fourier.DiscreteFourierTransform.axes" title="odl.trafos.fourier.DiscreteFourierTransform.axes"><code class="xref py py-obj docutils literal notranslate"><span class="pre">axes</span></code></a></dt><dd><p>Axes along the FT is calculated by this operator.</p>
+</dd>
+<dt><a class="reference internal" href="odl.trafos.fourier.DiscreteFourierTransform.domain.html#odl.trafos.fourier.DiscreteFourierTransform.domain" title="odl.trafos.fourier.DiscreteFourierTransform.domain"><code class="xref py py-obj docutils literal notranslate"><span class="pre">domain</span></code></a></dt><dd><p>Set of objects on which this operator can be evaluated.</p>
+</dd>
+<dt><a class="reference internal" href="odl.trafos.fourier.DiscreteFourierTransform.halfcomplex.html#odl.trafos.fourier.DiscreteFourierTransform.halfcomplex" title="odl.trafos.fourier.DiscreteFourierTransform.halfcomplex"><code class="xref py py-obj docutils literal notranslate"><span class="pre">halfcomplex</span></code></a></dt><dd><p>Return <code class="docutils literal notranslate"><span class="pre">True</span></code> if the last transform axis is halved.</p>
+</dd>
+<dt><a class="reference internal" href="odl.trafos.fourier.DiscreteFourierTransform.impl.html#odl.trafos.fourier.DiscreteFourierTransform.impl" title="odl.trafos.fourier.DiscreteFourierTransform.impl"><code class="xref py py-obj docutils literal notranslate"><span class="pre">impl</span></code></a></dt><dd><p>Backend for the FFT implementation.</p>
+</dd>
+<dt><a class="reference internal" href="odl.trafos.fourier.DiscreteFourierTransform.inverse.html#odl.trafos.fourier.DiscreteFourierTransform.inverse" title="odl.trafos.fourier.DiscreteFourierTransform.inverse"><code class="xref py py-obj docutils literal notranslate"><span class="pre">inverse</span></code></a></dt><dd><p>Inverse Fourier transform.</p>
+</dd>
+<dt><a class="reference internal" href="odl.trafos.fourier.DiscreteFourierTransform.is_functional.html#odl.trafos.fourier.DiscreteFourierTransform.is_functional" title="odl.trafos.fourier.DiscreteFourierTransform.is_functional"><code class="xref py py-obj docutils literal notranslate"><span class="pre">is_functional</span></code></a></dt><dd><p><code class="docutils literal notranslate"><span class="pre">True</span></code> if this operator’s range is a <a class="reference internal" href="odl.set.sets.Field.html#odl.set.sets.Field" title="odl.set.sets.Field"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Field</span></code></a>.</p>
+</dd>
+<dt><a class="reference internal" href="odl.trafos.fourier.DiscreteFourierTransform.is_linear.html#odl.trafos.fourier.DiscreteFourierTransform.is_linear" title="odl.trafos.fourier.DiscreteFourierTransform.is_linear"><code class="xref py py-obj docutils literal notranslate"><span class="pre">is_linear</span></code></a></dt><dd><p><code class="docutils literal notranslate"><span class="pre">True</span></code> if this operator is linear.</p>
+</dd>
+<dt><a class="reference internal" href="odl.trafos.fourier.DiscreteFourierTransform.range.html#odl.trafos.fourier.DiscreteFourierTransform.range" title="odl.trafos.fourier.DiscreteFourierTransform.range"><code class="xref py py-obj docutils literal notranslate"><span class="pre">range</span></code></a></dt><dd><p>Set in which the result of an evaluation of this operator lies.</p>
+</dd>
+<dt><a class="reference internal" href="odl.trafos.fourier.DiscreteFourierTransform.sign.html#odl.trafos.fourier.DiscreteFourierTransform.sign" title="odl.trafos.fourier.DiscreteFourierTransform.sign"><code class="xref py py-obj docutils literal notranslate"><span class="pre">sign</span></code></a></dt><dd><p>Sign of the complex exponent in the transform.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+<p class="rubric">Methods</p>
+<table class="longtable docutils align-default">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="odl.trafos.fourier.DiscreteFourierTransform._call.html#odl.trafos.fourier.DiscreteFourierTransform._call" title="odl.trafos.fourier.DiscreteFourierTransform._call"><code class="xref py py-obj docutils literal notranslate"><span class="pre">_call</span></code></a>(self, x, out, \*\*kwargs)</p></td>
+<td><p>Implement <code class="docutils literal notranslate"><span class="pre">self(x,</span> <span class="pre">out[,</span> <span class="pre">**kwargs])</span></code>.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="odl.trafos.fourier.DiscreteFourierTransform.clear_fftw_plan.html#odl.trafos.fourier.DiscreteFourierTransform.clear_fftw_plan" title="odl.trafos.fourier.DiscreteFourierTransform.clear_fftw_plan"><code class="xref py py-obj docutils literal notranslate"><span class="pre">clear_fftw_plan</span></code></a>(self)</p></td>
+<td><p>Delete the FFTW plan of this transform.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="odl.trafos.fourier.DiscreteFourierTransform.derivative.html#odl.trafos.fourier.DiscreteFourierTransform.derivative" title="odl.trafos.fourier.DiscreteFourierTransform.derivative"><code class="xref py py-obj docutils literal notranslate"><span class="pre">derivative</span></code></a>(self, point)</p></td>
+<td><p>Return the operator derivative at <code class="docutils literal notranslate"><span class="pre">point</span></code>.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="odl.trafos.fourier.DiscreteFourierTransform.init_fftw_plan.html#odl.trafos.fourier.DiscreteFourierTransform.init_fftw_plan" title="odl.trafos.fourier.DiscreteFourierTransform.init_fftw_plan"><code class="xref py py-obj docutils literal notranslate"><span class="pre">init_fftw_plan</span></code></a>(self[, planning_effort])</p></td>
+<td><p>Initialize the FFTW plan for this transform for later use.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="odl.trafos.fourier.DiscreteFourierTransform.norm.html#odl.trafos.fourier.DiscreteFourierTransform.norm" title="odl.trafos.fourier.DiscreteFourierTransform.norm"><code class="xref py py-obj docutils literal notranslate"><span class="pre">norm</span></code></a>(self[, estimate])</p></td>
+<td><p>Return the operator norm of this operator.</p></td>
+</tr>
+</tbody>
+</table>
+<dl class="py method">
+<dt id="odl.trafos.fourier.DiscreteFourierTransform.__init__">
+<code class="sig-name descname"><span class="pre">__init__</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">domain</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">range</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">axes</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sign</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'-'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">halfcomplex</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">impl</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/odl/trafos/fourier.html#DiscreteFourierTransform.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#odl.trafos.fourier.DiscreteFourierTransform.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initialize a new instance.</p>
+<dl class="field-list">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl>
+<dt><strong>domain</strong><span class="classifier"><a class="reference internal" href="odl.discr.discr_space.DiscretizedSpace.html#odl.discr.discr_space.DiscretizedSpace" title="odl.discr.discr_space.DiscretizedSpace"><code class="xref any py py-class docutils literal notranslate"><span class="pre">DiscretizedSpace</span></code></a></span></dt><dd><p>Domain of the Fourier transform. If its
+<a class="reference internal" href="odl.discr.discr_space.DiscretizedSpace.exponent.html#odl.discr.discr_space.DiscretizedSpace.exponent" title="odl.discr.discr_space.DiscretizedSpace.exponent"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">DiscretizedSpace.exponent</span></code></a> is equal to 2.0, this operator has
+an adjoint which is equal to the inverse.</p>
+</dd>
+<dt><strong>range</strong><span class="classifier"><a class="reference internal" href="odl.discr.discr_space.DiscretizedSpace.html#odl.discr.discr_space.DiscretizedSpace" title="odl.discr.discr_space.DiscretizedSpace"><code class="xref any py py-class docutils literal notranslate"><span class="pre">DiscretizedSpace</span></code></a>, optional</span></dt><dd><p>Range of the Fourier transform. If not given, the range
+is determined from <code class="docutils literal notranslate"><span class="pre">domain</span></code> and the other parameters as
+a <a class="reference internal" href="odl.discr.discr_space.uniform_discr.html#odl.discr.discr_space.uniform_discr" title="odl.discr.discr_space.uniform_discr"><code class="xref any py py-func docutils literal notranslate"><span class="pre">uniform_discr</span></code></a> with unit cell size and exponent
+<code class="docutils literal notranslate"><span class="pre">p</span> <span class="pre">/</span> <span class="pre">(p</span> <span class="pre">-</span> <span class="pre">1)</span></code> (read as ‘inf’ for p=1 and 1 for p=’inf’).</p>
+</dd>
+<dt><strong>axes</strong><span class="classifier">int or sequence of ints, optional</span></dt><dd><p>Dimensions in which a transform is to be calculated. <code class="docutils literal notranslate"><span class="pre">None</span></code>
+means all axes.</p>
+</dd>
+<dt><strong>sign</strong><span class="classifier">{‘-‘, ‘+’}, optional</span></dt><dd><p>Sign of the complex exponent.</p>
+</dd>
+<dt><strong>halfcomplex</strong><span class="classifier">bool, optional</span></dt><dd><p>If <code class="docutils literal notranslate"><span class="pre">True</span></code>, calculate only the negative frequency part
+along the last axis in <code class="docutils literal notranslate"><span class="pre">axes</span></code> for real input. This
+reduces the size of the range to <code class="docutils literal notranslate"><span class="pre">floor(N[i]/2)</span> <span class="pre">+</span> <span class="pre">1</span></code> in
+this axis <code class="docutils literal notranslate"><span class="pre">i</span></code>, where <code class="docutils literal notranslate"><span class="pre">N</span></code> is the shape of the input
+arrays.
+Otherwise, calculate the full complex FFT. If <code class="docutils literal notranslate"><span class="pre">dom_dtype</span></code>
+is a complex type, this option has no effect.</p>
+</dd>
+<dt><strong>impl</strong><span class="classifier">{‘numpy’, ‘pyfftw’}, optional</span></dt><dd><p>Backend for the FFT implementation. The <code class="docutils literal notranslate"><span class="pre">'pyfftw'</span></code> backend
+is faster but requires the <code class="docutils literal notranslate"><span class="pre">pyfftw</span></code> package.
+<code class="docutils literal notranslate"><span class="pre">None</span></code> selects the fastest available backend.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+<p class="rubric">Examples</p>
+<p>Complex-to-complex (default) transforms have the same grids
+in domain and range:</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">domain</span> <span class="o">=</span> <span class="n">odl</span><span class="o">.</span><span class="n">uniform_discr</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="p">[</span><span class="mi">2</span><span class="p">,</span> <span class="mi">4</span><span class="p">],</span> <span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">4</span><span class="p">),</span>
+<span class="gp">... </span>                           <span class="n">nodes_on_bdry</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">fft</span> <span class="o">=</span> <span class="n">DiscreteFourierTransform</span><span class="p">(</span><span class="n">domain</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">fft</span><span class="o">.</span><span class="n">domain</span><span class="o">.</span><span class="n">shape</span>
+<span class="go">(2, 4)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">fft</span><span class="o">.</span><span class="n">range</span><span class="o">.</span><span class="n">shape</span>
+<span class="go">(2, 4)</span>
+</pre></div>
+</div>
+<p>Real-to-complex transforms have a range grid with shape
+<code class="docutils literal notranslate"><span class="pre">n</span> <span class="pre">//</span> <span class="pre">2</span> <span class="pre">+</span> <span class="pre">1</span></code> in the last tranform axis:</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">domain</span> <span class="o">=</span> <span class="n">odl</span><span class="o">.</span><span class="n">uniform_discr</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="p">[</span><span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">],</span> <span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">),</span>
+<span class="gp">... </span>                           <span class="n">nodes_on_bdry</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">axes</span> <span class="o">=</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">fft</span> <span class="o">=</span> <span class="n">DiscreteFourierTransform</span><span class="p">(</span>
+<span class="gp">... </span>    <span class="n">domain</span><span class="p">,</span> <span class="n">halfcomplex</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">axes</span><span class="o">=</span><span class="n">axes</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">fft</span><span class="o">.</span><span class="n">range</span><span class="o">.</span><span class="n">shape</span>   <span class="c1"># shortened in the second axis</span>
+<span class="go">(2, 2, 4)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">fft</span><span class="o">.</span><span class="n">domain</span><span class="o">.</span><span class="n">shape</span>
+<span class="go">(2, 3, 4)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+        <a href="odl.trafos.fourier.DiscreteFourierTransform._call.html" class="btn btn-neutral float-right" title="DiscreteFourierTransform._call" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="../odl.trafos.fourier.html" class="btn btn-neutral float-left" title="fourier" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &#169; Copyright 2014-2020 The ODL Contributors.
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

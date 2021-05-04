@@ -1,0 +1,45 @@
+﻿FunctionalQuotient
+====================================================
+
+.. currentmodule:: odl.solvers.functional.functional
+
+.. autoclass:: FunctionalQuotient
+   :show-inheritance:
+   
+   
+   .. automethod:: __init__
+   
+      
+   
+   .. HACK -- the point here is that we don't want this to appear in the output, but the autosummary should still generate the pages.
+      .. autosummary::
+         :toctree:
+      
+         FunctionalQuotient.__call__
+         FunctionalQuotient.__eq__
+         FunctionalQuotient._call
+         FunctionalQuotient.bregman
+         FunctionalQuotient.derivative
+         FunctionalQuotient.norm
+         FunctionalQuotient.translated
+   
+
+    
+   .. HACK -- the point here is that we don't want this to appear in the output, but the autosummary should still generate the pages.
+      .. autosummary::
+         :toctree:
+      
+         FunctionalQuotient.adjoint
+         FunctionalQuotient.convex_conj
+         FunctionalQuotient.dividend
+         FunctionalQuotient.divisor
+         FunctionalQuotient.domain
+         FunctionalQuotient.grad_lipschitz
+         FunctionalQuotient.gradient
+         FunctionalQuotient.inverse
+         FunctionalQuotient.is_functional
+         FunctionalQuotient.is_linear
+         FunctionalQuotient.proximal
+         FunctionalQuotient.range
+   
+   

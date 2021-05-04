@@ -1,0 +1,8 @@
+:orphan:
+
+TensorSpaceUfuncs.cos
+=====================================
+
+.. currentmodule:: odl.util.ufuncs
+
+.. automethod:: TensorSpaceUfuncs.cos

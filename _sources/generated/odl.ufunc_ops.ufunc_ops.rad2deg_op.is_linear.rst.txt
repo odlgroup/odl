@@ -1,0 +1,6 @@
+rad2deg_op.is_linear
+============================================
+
+.. currentmodule:: odl.ufunc_ops.ufunc_ops
+
+.. autoproperty:: rad2deg_op.is_linear

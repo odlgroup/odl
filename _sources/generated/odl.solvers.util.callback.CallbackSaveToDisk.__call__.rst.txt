@@ -1,0 +1,8 @@
+:orphan:
+
+CallbackSaveToDisk.__call__
+=====================================================
+
+.. currentmodule:: odl.solvers.util.callback
+
+.. automethod:: CallbackSaveToDisk.__call__

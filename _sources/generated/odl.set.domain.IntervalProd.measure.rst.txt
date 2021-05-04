@@ -1,0 +1,8 @@
+:orphan:
+
+IntervalProd.measure
+===================================
+
+.. currentmodule:: odl.set.domain
+
+.. automethod:: IntervalProd.measure

@@ -1,0 +1,6 @@
+ProductSpaceOperator.domain
+===================================================
+
+.. currentmodule:: odl.operator.pspace_ops
+
+.. autoproperty:: ProductSpaceOperator.domain

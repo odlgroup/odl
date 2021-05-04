@@ -1,0 +1,809 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>odl.tomo.analytic.filtered_back_projection &mdash; odl 1.0.0.dev0 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../../../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../../../../_static/custom.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../../../" src="../../../../_static/documentation_options.js"></script>
+        <script src="../../../../_static/jquery.js"></script>
+        <script src="../../../../_static/underscore.js"></script>
+        <script src="../../../../_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="../../../../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../../../index.html" class="icon icon-home"> odl
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                1.0.0.dev0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Getting Started</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../getting_started/getting_started.html">Getting Started</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Working with ODL</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../guide/guide.html">User’s guide – selected topics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../math/math.html">Mathematical Background</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Developer zone</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../dev/dev.html">Contributing to ODL</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Useful facts</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../guide/faq.html">Frequently asked questions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../guide/glossary.html">Glossary</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../release_notes.html">Release Notes</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../refs.html">References</a></li>
+</ul>
+<p class="caption"><span class="caption-text">API Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../odl.html">odl</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../../index.html">odl</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../../../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="../../../index.html">Module code</a> &raquo;</li>
+        
+      <li>odl.tomo.analytic.filtered_back_projection</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for odl.tomo.analytic.filtered_back_projection</h1><div class="highlight"><pre>
+<span></span><span class="c1"># coding: utf-8</span>
+<span class="c1"># Copyright 2014-2019 The ODL contributors</span>
+<span class="c1">#</span>
+<span class="c1"># This file is part of ODL.</span>
+<span class="c1">#</span>
+<span class="c1"># This Source Code Form is subject to the terms of the Mozilla Public License,</span>
+<span class="c1"># v. 2.0. If a copy of the MPL was not distributed with this file, You can</span>
+<span class="c1"># obtain one at https://mozilla.org/MPL/2.0/.</span>
+
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">print_function</span><span class="p">,</span> <span class="n">division</span><span class="p">,</span> <span class="n">absolute_import</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+
+<span class="kn">from</span> <span class="nn">odl.discr</span> <span class="kn">import</span> <span class="n">ResizingOperator</span>
+<span class="kn">from</span> <span class="nn">odl.trafos</span> <span class="kn">import</span> <span class="n">FourierTransform</span><span class="p">,</span> <span class="n">PYFFTW_AVAILABLE</span>
+
+
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;fbp_op&#39;</span><span class="p">,</span> <span class="s1">&#39;fbp_filter_op&#39;</span><span class="p">,</span> <span class="s1">&#39;tam_danielson_window&#39;</span><span class="p">,</span>
+           <span class="s1">&#39;parker_weighting&#39;</span><span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">_axis_in_detector</span><span class="p">(</span><span class="n">geometry</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;A vector in the detector plane that points along the rotation axis.&quot;&quot;&quot;</span>
+    <span class="n">du</span><span class="p">,</span> <span class="n">dv</span> <span class="o">=</span> <span class="n">geometry</span><span class="o">.</span><span class="n">det_axes_init</span>
+    <span class="n">axis</span> <span class="o">=</span> <span class="n">geometry</span><span class="o">.</span><span class="n">axis</span>
+    <span class="n">c</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">np</span><span class="o">.</span><span class="n">vdot</span><span class="p">(</span><span class="n">axis</span><span class="p">,</span> <span class="n">du</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">vdot</span><span class="p">(</span><span class="n">axis</span><span class="p">,</span> <span class="n">dv</span><span class="p">)])</span>
+    <span class="n">cnorm</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">c</span><span class="p">)</span>
+
+    <span class="c1"># Check for numerical errors</span>
+    <span class="k">assert</span> <span class="n">cnorm</span> <span class="o">!=</span> <span class="mi">0</span>
+
+    <span class="k">return</span> <span class="n">c</span> <span class="o">/</span> <span class="n">cnorm</span>
+
+
+<span class="k">def</span> <span class="nf">_rotation_direction_in_detector</span><span class="p">(</span><span class="n">geometry</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;A vector in the detector plane that points in the rotation direction.&quot;&quot;&quot;</span>
+    <span class="n">du</span><span class="p">,</span> <span class="n">dv</span> <span class="o">=</span> <span class="n">geometry</span><span class="o">.</span><span class="n">det_axes_init</span>
+    <span class="n">axis</span> <span class="o">=</span> <span class="n">geometry</span><span class="o">.</span><span class="n">axis</span>
+    <span class="n">det_normal</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">cross</span><span class="p">(</span><span class="n">dv</span><span class="p">,</span> <span class="n">du</span><span class="p">)</span>
+    <span class="n">rot_dir</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">cross</span><span class="p">(</span><span class="n">axis</span><span class="p">,</span> <span class="n">det_normal</span><span class="p">)</span>
+    <span class="n">c</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">np</span><span class="o">.</span><span class="n">vdot</span><span class="p">(</span><span class="n">rot_dir</span><span class="p">,</span> <span class="n">du</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">vdot</span><span class="p">(</span><span class="n">rot_dir</span><span class="p">,</span> <span class="n">dv</span><span class="p">)])</span>
+    <span class="n">cnorm</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">c</span><span class="p">)</span>
+
+    <span class="c1"># Check for numerical errors</span>
+    <span class="k">assert</span> <span class="n">cnorm</span> <span class="o">!=</span> <span class="mi">0</span>
+
+    <span class="k">return</span> <span class="n">c</span> <span class="o">/</span> <span class="n">cnorm</span>
+
+
+<span class="k">def</span> <span class="nf">_fbp_filter</span><span class="p">(</span><span class="n">norm_freq</span><span class="p">,</span> <span class="n">filter_type</span><span class="p">,</span> <span class="n">frequency_scaling</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Create a smoothing filter for FBP.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    norm_freq : `array-like`</span>
+<span class="sd">        Frequencies normalized to lie in the interval [0, 1].</span>
+<span class="sd">    filter_type : {&#39;Ram-Lak&#39;, &#39;Shepp-Logan&#39;, &#39;Cosine&#39;, &#39;Hamming&#39;, &#39;Hann&#39;,</span>
+<span class="sd">                   callable}</span>
+<span class="sd">        The type of filter to be used.</span>
+<span class="sd">        If a string is given, use one of the standard filters with that name.</span>
+<span class="sd">        A callable should take an array of values in [0, 1] and return the</span>
+<span class="sd">        filter for these frequencies.</span>
+<span class="sd">    frequency_scaling : float</span>
+<span class="sd">        Scaling of the frequencies for the filter. All frequencies are scaled</span>
+<span class="sd">        by this number, any relative frequency above ``frequency_scaling`` is</span>
+<span class="sd">        set to 0.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    smoothing_filter : `numpy.ndarray`</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    Create an FBP filter</span>
+
+<span class="sd">    &gt;&gt;&gt; norm_freq = np.linspace(0, 1, 10)</span>
+<span class="sd">    &gt;&gt;&gt; filt = _fbp_filter(norm_freq,</span>
+<span class="sd">    ...                    filter_type=&#39;Hann&#39;,</span>
+<span class="sd">    ...                    frequency_scaling=0.8)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">filter_type</span><span class="p">,</span> <span class="n">filter_type_in</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">filter_type</span><span class="p">)</span><span class="o">.</span><span class="n">lower</span><span class="p">(),</span> <span class="n">filter_type</span>
+    <span class="k">if</span> <span class="n">callable</span><span class="p">(</span><span class="n">filter_type</span><span class="p">):</span>
+        <span class="n">filt</span> <span class="o">=</span> <span class="n">filter_type</span><span class="p">(</span><span class="n">norm_freq</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">filter_type</span> <span class="o">==</span> <span class="s1">&#39;ram-lak&#39;</span><span class="p">:</span>
+        <span class="n">filt</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="n">norm_freq</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">filter_type</span> <span class="o">==</span> <span class="s1">&#39;shepp-logan&#39;</span><span class="p">:</span>
+        <span class="n">filt</span> <span class="o">=</span> <span class="n">norm_freq</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">sinc</span><span class="p">(</span><span class="n">norm_freq</span> <span class="o">/</span> <span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">frequency_scaling</span><span class="p">))</span>
+    <span class="k">elif</span> <span class="n">filter_type</span> <span class="o">==</span> <span class="s1">&#39;cosine&#39;</span><span class="p">:</span>
+        <span class="n">filt</span> <span class="o">=</span> <span class="n">norm_freq</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">norm_freq</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span> <span class="o">/</span> <span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">frequency_scaling</span><span class="p">))</span>
+    <span class="k">elif</span> <span class="n">filter_type</span> <span class="o">==</span> <span class="s1">&#39;hamming&#39;</span><span class="p">:</span>
+        <span class="n">filt</span> <span class="o">=</span> <span class="n">norm_freq</span> <span class="o">*</span> <span class="p">(</span>
+            <span class="mf">0.54</span> <span class="o">+</span> <span class="mf">0.46</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">norm_freq</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span> <span class="o">/</span> <span class="p">(</span><span class="n">frequency_scaling</span><span class="p">)))</span>
+    <span class="k">elif</span> <span class="n">filter_type</span> <span class="o">==</span> <span class="s1">&#39;hann&#39;</span><span class="p">:</span>
+        <span class="n">filt</span> <span class="o">=</span> <span class="n">norm_freq</span> <span class="o">*</span> <span class="p">(</span>
+            <span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">norm_freq</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span> <span class="o">/</span> <span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">frequency_scaling</span><span class="p">))</span> <span class="o">**</span> <span class="mi">2</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;unknown `filter_type` (</span><span class="si">{}</span><span class="s1">)&#39;</span>
+                         <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">filter_type_in</span><span class="p">))</span>
+
+    <span class="n">indicator</span> <span class="o">=</span> <span class="p">(</span><span class="n">norm_freq</span> <span class="o">&lt;=</span> <span class="n">frequency_scaling</span><span class="p">)</span>
+    <span class="n">filt</span> <span class="o">*=</span> <span class="n">indicator</span>
+    <span class="k">return</span> <span class="n">filt</span>
+
+
+<div class="viewcode-block" id="tam_danielson_window"><a class="viewcode-back" href="../../../../generated/odl.tomo.analytic.filtered_back_projection.tam_danielson_window.html#odl.tomo.analytic.filtered_back_projection.tam_danielson_window">[docs]</a><span class="k">def</span> <span class="nf">tam_danielson_window</span><span class="p">(</span><span class="n">ray_trafo</span><span class="p">,</span> <span class="n">smoothing_width</span><span class="o">=</span><span class="mf">0.05</span><span class="p">,</span> <span class="n">n_pi</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Create Tam-Danielson window from a `RayTransform`.</span>
+
+<span class="sd">    The Tam-Danielson window is an indicator function on the minimal set of</span>
+<span class="sd">    data needed to reconstruct a volume from given data. It is useful in</span>
+<span class="sd">    analytic reconstruction methods such as FBP to give a more accurate</span>
+<span class="sd">    reconstruction.</span>
+
+<span class="sd">    See [TAM1998] for more informationon the window.</span>
+<span class="sd">    See [PKGT2000] for information on the ``n_pi`` parameter.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    ray_trafo : `RayTransform`</span>
+<span class="sd">        The ray transform for which to compute the window.</span>
+<span class="sd">    smoothing_width : positive float, optional</span>
+<span class="sd">        Width of the smoothing applied to the window&#39;s edges given as a</span>
+<span class="sd">        fraction of the width of the full window.</span>
+<span class="sd">    n_pi : odd int, optional</span>
+<span class="sd">        Total number of half rotations to include in the window. Values larger</span>
+<span class="sd">        than 1 should be used if the pitch is much smaller than the detector</span>
+<span class="sd">        height.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    tam_danielson_window : ``ray_trafo.range`` element</span>
+
+<span class="sd">    See Also</span>
+<span class="sd">    --------</span>
+<span class="sd">    fbp_op : Filtered back-projection operator from `RayTransform`</span>
+<span class="sd">    tam_danielson_window : Weighting for short scan data</span>
+<span class="sd">    odl.tomo.geometry.conebeam.ConeBeamGeometry :</span>
+<span class="sd">        Primary use case for this window function.</span>
+
+<span class="sd">    References</span>
+<span class="sd">    ----------</span>
+<span class="sd">    [TSS1998] Tam, K C, Samarasekera, S and Sauer, F.</span>
+<span class="sd">    *Exact cone beam CT with a spiral scan*.</span>
+<span class="sd">    Physics in Medicine &amp; Biology 4 (1998), p 1015.</span>
+<span class="sd">    https://dx.doi.org/10.1088/0031-9155/43/4/028</span>
+
+<span class="sd">    [PKGT2000] Proksa R, Köhler T, Grass M, Timmer J.</span>
+<span class="sd">    *The n-PI-method for helical cone-beam CT*</span>
+<span class="sd">    IEEE Trans Med Imaging. 2000 Sep;19(9):848-63.</span>
+<span class="sd">    https://www.ncbi.nlm.nih.gov/pubmed/11127600</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># Extract parameters</span>
+    <span class="n">src_radius</span> <span class="o">=</span> <span class="n">ray_trafo</span><span class="o">.</span><span class="n">geometry</span><span class="o">.</span><span class="n">src_radius</span>
+    <span class="n">det_radius</span> <span class="o">=</span> <span class="n">ray_trafo</span><span class="o">.</span><span class="n">geometry</span><span class="o">.</span><span class="n">det_radius</span>
+    <span class="n">pitch</span> <span class="o">=</span> <span class="n">ray_trafo</span><span class="o">.</span><span class="n">geometry</span><span class="o">.</span><span class="n">pitch</span>
+
+    <span class="k">if</span> <span class="n">pitch</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;Tam-Danielson window is only defined with &#39;</span>
+                         <span class="s1">&#39;`pitch!=0`&#39;</span><span class="p">)</span>
+
+    <span class="n">smoothing_width</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">smoothing_width</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">smoothing_width</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;`smoothing_width` should be a positive float&#39;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">n_pi</span> <span class="o">%</span> <span class="mi">2</span> <span class="o">!=</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;`n_pi` must be odd, got </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">n_pi</span><span class="p">))</span>
+
+    <span class="c1"># Find projection of axis on detector</span>
+    <span class="n">axis_proj</span> <span class="o">=</span> <span class="n">_axis_in_detector</span><span class="p">(</span><span class="n">ray_trafo</span><span class="o">.</span><span class="n">geometry</span><span class="p">)</span>
+    <span class="n">rot_dir</span> <span class="o">=</span> <span class="n">_rotation_direction_in_detector</span><span class="p">(</span><span class="n">ray_trafo</span><span class="o">.</span><span class="n">geometry</span><span class="p">)</span>
+
+    <span class="c1"># Find distance from projection of rotation axis for each pixel</span>
+    <span class="n">dx</span> <span class="o">=</span> <span class="p">(</span><span class="n">rot_dir</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="n">ray_trafo</span><span class="o">.</span><span class="n">range</span><span class="o">.</span><span class="n">meshgrid</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+          <span class="o">+</span> <span class="n">rot_dir</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">*</span> <span class="n">ray_trafo</span><span class="o">.</span><span class="n">range</span><span class="o">.</span><span class="n">meshgrid</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span>
+
+    <span class="n">dx_axis</span> <span class="o">=</span> <span class="n">dx</span> <span class="o">*</span> <span class="n">src_radius</span> <span class="o">/</span> <span class="p">(</span><span class="n">src_radius</span> <span class="o">+</span> <span class="n">det_radius</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">Vn</span><span class="p">(</span><span class="n">u</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">(</span><span class="n">pitch</span> <span class="o">/</span> <span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="p">)</span>
+                <span class="o">*</span> <span class="p">(</span><span class="mi">1</span> <span class="o">+</span> <span class="p">(</span><span class="n">u</span> <span class="o">/</span> <span class="n">src_radius</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span><span class="p">)</span>
+                <span class="o">*</span> <span class="p">(</span><span class="n">n_pi</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span> <span class="o">/</span> <span class="mf">2.0</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">arctan</span><span class="p">(</span><span class="n">u</span> <span class="o">/</span> <span class="n">src_radius</span><span class="p">)))</span>
+
+    <span class="n">lower_proj_axis</span> <span class="o">=</span> <span class="o">-</span><span class="n">Vn</span><span class="p">(</span><span class="n">dx_axis</span><span class="p">)</span>
+    <span class="n">upper_proj_axis</span> <span class="o">=</span> <span class="n">Vn</span><span class="p">(</span><span class="o">-</span><span class="n">dx_axis</span><span class="p">)</span>
+
+    <span class="n">lower_proj</span> <span class="o">=</span> <span class="n">lower_proj_axis</span> <span class="o">*</span> <span class="p">(</span><span class="n">src_radius</span> <span class="o">+</span> <span class="n">det_radius</span><span class="p">)</span> <span class="o">/</span> <span class="n">src_radius</span>
+    <span class="n">upper_proj</span> <span class="o">=</span> <span class="n">upper_proj_axis</span> <span class="o">*</span> <span class="p">(</span><span class="n">src_radius</span> <span class="o">+</span> <span class="n">det_radius</span><span class="p">)</span> <span class="o">/</span> <span class="n">src_radius</span>
+
+    <span class="c1"># Compute a smoothed width</span>
+    <span class="n">interval</span> <span class="o">=</span> <span class="p">(</span><span class="n">upper_proj</span> <span class="o">-</span> <span class="n">lower_proj</span><span class="p">)</span>
+    <span class="n">width</span> <span class="o">=</span> <span class="n">interval</span> <span class="o">*</span> <span class="n">smoothing_width</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+
+    <span class="c1"># Create window function</span>
+    <span class="k">def</span> <span class="nf">window_fcn</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
+        <span class="c1"># Lazy import to improve `import odl` time</span>
+        <span class="kn">import</span> <span class="nn">scipy.special</span>
+
+        <span class="n">x_along_axis</span> <span class="o">=</span> <span class="n">axis_proj</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="n">x</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="n">axis_proj</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">*</span> <span class="n">x</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">smoothing_width</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">lower_wndw</span> <span class="o">=</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="p">(</span>
+                <span class="mi">1</span> <span class="o">+</span> <span class="n">scipy</span><span class="o">.</span><span class="n">special</span><span class="o">.</span><span class="n">erf</span><span class="p">((</span><span class="n">x_along_axis</span> <span class="o">-</span> <span class="n">lower_proj</span><span class="p">)</span> <span class="o">/</span> <span class="n">width</span><span class="p">))</span>
+            <span class="n">upper_wndw</span> <span class="o">=</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="p">(</span>
+                <span class="mi">1</span> <span class="o">+</span> <span class="n">scipy</span><span class="o">.</span><span class="n">special</span><span class="o">.</span><span class="n">erf</span><span class="p">((</span><span class="n">upper_proj</span> <span class="o">-</span> <span class="n">x_along_axis</span><span class="p">)</span> <span class="o">/</span> <span class="n">width</span><span class="p">))</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">lower_wndw</span> <span class="o">=</span> <span class="p">(</span><span class="n">x_along_axis</span> <span class="o">&gt;=</span> <span class="n">lower_proj</span><span class="p">)</span>
+            <span class="n">upper_wndw</span> <span class="o">=</span> <span class="p">(</span><span class="n">x_along_axis</span> <span class="o">&lt;=</span> <span class="n">upper_proj</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">lower_wndw</span> <span class="o">*</span> <span class="n">upper_wndw</span>
+
+    <span class="k">return</span> <span class="n">ray_trafo</span><span class="o">.</span><span class="n">range</span><span class="o">.</span><span class="n">element</span><span class="p">(</span><span class="n">window_fcn</span><span class="p">)</span> <span class="o">/</span> <span class="n">n_pi</span></div>
+
+
+<div class="viewcode-block" id="parker_weighting"><a class="viewcode-back" href="../../../../generated/odl.tomo.analytic.filtered_back_projection.parker_weighting.html#odl.tomo.analytic.filtered_back_projection.parker_weighting">[docs]</a><span class="k">def</span> <span class="nf">parker_weighting</span><span class="p">(</span><span class="n">ray_trafo</span><span class="p">,</span> <span class="n">q</span><span class="o">=</span><span class="mf">0.25</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Create parker weighting for a `RayTransform`.</span>
+
+<span class="sd">    Parker weighting is a weighting function that ensures that oversampled</span>
+<span class="sd">    fan/cone beam data are weighted such that each line has unit weight. It is</span>
+<span class="sd">    useful in analytic reconstruction methods such as FBP to give a more</span>
+<span class="sd">    accurate result and can improve convergence rates for iterative methods.</span>
+
+<span class="sd">    See the article `Parker weights revisited`_ for more information.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    ray_trafo : `RayTransform`</span>
+<span class="sd">        The ray transform for which to compute the weights.</span>
+<span class="sd">    q : float, optional</span>
+<span class="sd">        Parameter controlling the speed of the roll-off at the edges of the</span>
+<span class="sd">        weighting. 1.0 gives the classical Parker weighting, while smaller</span>
+<span class="sd">        values in general lead to lower noise but stronger discretization</span>
+<span class="sd">        artifacts.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    parker_weighting : ``ray_trafo.range`` element</span>
+
+<span class="sd">    See Also</span>
+<span class="sd">    --------</span>
+<span class="sd">    fbp_op : Filtered back-projection operator from `RayTransform`</span>
+<span class="sd">    tam_danielson_window : Indicator function for helical data</span>
+<span class="sd">    odl.tomo.geometry.conebeam.FanBeamGeometry : Use case in 2d</span>
+<span class="sd">    odl.tomo.geometry.conebeam.ConeBeamGeometry : Use case in 3d (for pitch 0)</span>
+
+<span class="sd">    References</span>
+<span class="sd">    ----------</span>
+<span class="sd">    .. _Parker weights revisited: https://www.ncbi.nlm.nih.gov/pubmed/11929021</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># Note: Parameter names taken from WES2002</span>
+
+    <span class="c1"># Extract parameters</span>
+    <span class="n">src_radius</span> <span class="o">=</span> <span class="n">ray_trafo</span><span class="o">.</span><span class="n">geometry</span><span class="o">.</span><span class="n">src_radius</span>
+    <span class="n">det_radius</span> <span class="o">=</span> <span class="n">ray_trafo</span><span class="o">.</span><span class="n">geometry</span><span class="o">.</span><span class="n">det_radius</span>
+    <span class="n">ndim</span> <span class="o">=</span> <span class="n">ray_trafo</span><span class="o">.</span><span class="n">geometry</span><span class="o">.</span><span class="n">ndim</span>
+    <span class="n">angles</span> <span class="o">=</span> <span class="n">ray_trafo</span><span class="o">.</span><span class="n">range</span><span class="o">.</span><span class="n">meshgrid</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">min_rot_angle</span> <span class="o">=</span> <span class="n">ray_trafo</span><span class="o">.</span><span class="n">geometry</span><span class="o">.</span><span class="n">motion_partition</span><span class="o">.</span><span class="n">min_pt</span>
+    <span class="n">alen</span> <span class="o">=</span> <span class="n">ray_trafo</span><span class="o">.</span><span class="n">geometry</span><span class="o">.</span><span class="n">motion_params</span><span class="o">.</span><span class="n">length</span>
+
+    <span class="c1"># Parker weightings are not defined for helical geometries</span>
+    <span class="k">if</span> <span class="n">ray_trafo</span><span class="o">.</span><span class="n">geometry</span><span class="o">.</span><span class="n">ndim</span> <span class="o">!=</span> <span class="mi">2</span><span class="p">:</span>
+        <span class="n">pitch</span> <span class="o">=</span> <span class="n">ray_trafo</span><span class="o">.</span><span class="n">geometry</span><span class="o">.</span><span class="n">pitch</span>
+        <span class="k">if</span> <span class="n">pitch</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;Parker weighting window is only defined with &#39;</span>
+                             <span class="s1">&#39;`pitch==0`&#39;</span><span class="p">)</span>
+
+    <span class="c1"># Find distance from projection of rotation axis for each pixel</span>
+    <span class="k">if</span> <span class="n">ndim</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
+        <span class="n">dx</span> <span class="o">=</span> <span class="n">ray_trafo</span><span class="o">.</span><span class="n">range</span><span class="o">.</span><span class="n">meshgrid</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+    <span class="k">elif</span> <span class="n">ndim</span> <span class="o">==</span> <span class="mi">3</span><span class="p">:</span>
+        <span class="c1"># Find projection of axis on detector</span>
+        <span class="n">rot_dir</span> <span class="o">=</span> <span class="n">_rotation_direction_in_detector</span><span class="p">(</span><span class="n">ray_trafo</span><span class="o">.</span><span class="n">geometry</span><span class="p">)</span>
+        <span class="c1"># If axis is aligned to a coordinate axis, save some memory and time by</span>
+        <span class="c1"># using broadcasting</span>
+        <span class="k">if</span> <span class="n">rot_dir</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">dx</span> <span class="o">=</span> <span class="n">rot_dir</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">*</span> <span class="n">ray_trafo</span><span class="o">.</span><span class="n">range</span><span class="o">.</span><span class="n">meshgrid</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
+        <span class="k">elif</span> <span class="n">rot_dir</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">dx</span> <span class="o">=</span> <span class="n">rot_dir</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="n">ray_trafo</span><span class="o">.</span><span class="n">range</span><span class="o">.</span><span class="n">meshgrid</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">dx</span> <span class="o">=</span> <span class="p">(</span><span class="n">rot_dir</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="n">ray_trafo</span><span class="o">.</span><span class="n">range</span><span class="o">.</span><span class="n">meshgrid</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+                  <span class="o">+</span> <span class="n">rot_dir</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">*</span> <span class="n">ray_trafo</span><span class="o">.</span><span class="n">range</span><span class="o">.</span><span class="n">meshgrid</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span>
+
+    <span class="c1"># Compute parameters</span>
+    <span class="n">dx_abs_max</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">dx</span><span class="p">))</span>
+    <span class="n">max_fan_angle</span> <span class="o">=</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">arctan2</span><span class="p">(</span><span class="n">dx_abs_max</span><span class="p">,</span> <span class="n">src_radius</span> <span class="o">+</span> <span class="n">det_radius</span><span class="p">)</span>
+    <span class="n">delta</span> <span class="o">=</span> <span class="n">max_fan_angle</span> <span class="o">/</span> <span class="mi">2</span>
+    <span class="n">epsilon</span> <span class="o">=</span> <span class="n">alen</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span> <span class="o">-</span> <span class="n">max_fan_angle</span>
+
+    <span class="k">if</span> <span class="n">epsilon</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s1">&#39;data not sufficiently sampled for parker weighting&#39;</span><span class="p">)</span>
+
+    <span class="c1"># Define utility functions</span>
+    <span class="k">def</span> <span class="nf">S</span><span class="p">(</span><span class="n">betap</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">(</span><span class="mf">0.5</span> <span class="o">*</span> <span class="p">(</span><span class="mf">1.0</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span> <span class="o">*</span> <span class="n">betap</span><span class="p">))</span> <span class="o">*</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">betap</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mf">0.5</span><span class="p">)</span>
+                <span class="o">+</span> <span class="p">(</span><span class="n">betap</span> <span class="o">&gt;=</span> <span class="mf">0.5</span><span class="p">))</span>
+
+    <span class="k">def</span> <span class="nf">b</span><span class="p">(</span><span class="n">alpha</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">q</span> <span class="o">*</span> <span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">delta</span> <span class="o">-</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">alpha</span> <span class="o">+</span> <span class="n">epsilon</span><span class="p">)</span>
+
+    <span class="c1"># Create weighting function</span>
+    <span class="n">beta</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">angles</span> <span class="o">-</span> <span class="n">min_rot_angle</span><span class="p">,</span>
+                      <span class="n">dtype</span><span class="o">=</span><span class="n">ray_trafo</span><span class="o">.</span><span class="n">range</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span>  <span class="c1"># rotation angle</span>
+    <span class="n">alpha</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">arctan2</span><span class="p">(</span><span class="n">dx</span><span class="p">,</span> <span class="n">src_radius</span> <span class="o">+</span> <span class="n">det_radius</span><span class="p">),</span>
+                       <span class="n">dtype</span><span class="o">=</span><span class="n">ray_trafo</span><span class="o">.</span><span class="n">range</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span>
+
+    <span class="c1"># Compute sum in place to save memory</span>
+    <span class="n">S_sum</span> <span class="o">=</span> <span class="n">S</span><span class="p">(</span><span class="n">beta</span> <span class="o">/</span> <span class="n">b</span><span class="p">(</span><span class="n">alpha</span><span class="p">)</span> <span class="o">-</span> <span class="mf">0.5</span><span class="p">)</span>
+    <span class="n">S_sum</span> <span class="o">+=</span> <span class="n">S</span><span class="p">((</span><span class="n">beta</span> <span class="o">-</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">delta</span> <span class="o">+</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">alpha</span> <span class="o">-</span> <span class="n">epsilon</span><span class="p">)</span> <span class="o">/</span> <span class="n">b</span><span class="p">(</span><span class="n">alpha</span><span class="p">)</span> <span class="o">+</span> <span class="mf">0.5</span><span class="p">)</span>
+    <span class="n">S_sum</span> <span class="o">-=</span> <span class="n">S</span><span class="p">((</span><span class="n">beta</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span> <span class="o">+</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">alpha</span><span class="p">)</span> <span class="o">/</span> <span class="n">b</span><span class="p">(</span><span class="o">-</span><span class="n">alpha</span><span class="p">)</span> <span class="o">-</span> <span class="mf">0.5</span><span class="p">)</span>
+    <span class="n">S_sum</span> <span class="o">-=</span> <span class="n">S</span><span class="p">((</span><span class="n">beta</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span> <span class="o">-</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">delta</span> <span class="o">-</span> <span class="n">epsilon</span><span class="p">)</span> <span class="o">/</span> <span class="n">b</span><span class="p">(</span><span class="o">-</span><span class="n">alpha</span><span class="p">)</span> <span class="o">+</span> <span class="mf">0.5</span><span class="p">)</span>
+
+    <span class="n">scale</span> <span class="o">=</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="n">alen</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span>
+    <span class="k">return</span> <span class="n">ray_trafo</span><span class="o">.</span><span class="n">range</span><span class="o">.</span><span class="n">element</span><span class="p">(</span>
+        <span class="n">np</span><span class="o">.</span><span class="n">broadcast_to</span><span class="p">(</span><span class="n">S_sum</span> <span class="o">*</span> <span class="n">scale</span><span class="p">,</span> <span class="n">ray_trafo</span><span class="o">.</span><span class="n">range</span><span class="o">.</span><span class="n">shape</span><span class="p">))</span></div>
+
+
+<div class="viewcode-block" id="fbp_filter_op"><a class="viewcode-back" href="../../../../generated/odl.tomo.analytic.filtered_back_projection.fbp_filter_op.html#odl.tomo.analytic.filtered_back_projection.fbp_filter_op">[docs]</a><span class="k">def</span> <span class="nf">fbp_filter_op</span><span class="p">(</span><span class="n">ray_trafo</span><span class="p">,</span> <span class="n">padding</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">filter_type</span><span class="o">=</span><span class="s1">&#39;Ram-Lak&#39;</span><span class="p">,</span>
+                  <span class="n">frequency_scaling</span><span class="o">=</span><span class="mf">1.0</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Create a filter operator for FBP from a `RayTransform`.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    ray_trafo : `RayTransform`</span>
+<span class="sd">        The ray transform (forward operator) whose approximate inverse should</span>
+<span class="sd">        be computed. Its geometry has to be any of the following</span>
+
+<span class="sd">        `Parallel2dGeometry` : Exact reconstruction</span>
+
+<span class="sd">        `Parallel3dAxisGeometry` : Exact reconstruction</span>
+
+<span class="sd">        `FanBeamGeometry` : Approximate reconstruction, correct in limit of</span>
+<span class="sd">        fan angle = 0.</span>
+<span class="sd">        Only flat detectors are supported (det_curvature_radius is None).</span>
+
+<span class="sd">        `ConeBeamGeometry`, pitch = 0 (circular) : Approximate reconstruction,</span>
+<span class="sd">        correct in the limit of fan angle = 0 and cone angle = 0.</span>
+
+<span class="sd">        `ConeBeamGeometry`, pitch &gt; 0 (helical) : Very approximate unless a</span>
+<span class="sd">        `tam_danielson_window` is used. Accurate with the window.</span>
+
+<span class="sd">        Other geometries: Not supported</span>
+
+<span class="sd">    padding : bool, optional</span>
+<span class="sd">        If the data space should be zero padded. Without padding, the data may</span>
+<span class="sd">        be corrupted due to the circular convolution used. Using padding makes</span>
+<span class="sd">        the algorithm slower.</span>
+<span class="sd">    filter_type : optional</span>
+<span class="sd">        The type of filter to be used.</span>
+<span class="sd">        The predefined options are, in approximate order from most noise</span>
+<span class="sd">        senstive to least noise sensitive:</span>
+<span class="sd">        ``&#39;Ram-Lak&#39;``, ``&#39;Shepp-Logan&#39;``, ``&#39;Cosine&#39;``, ``&#39;Hamming&#39;`` and</span>
+<span class="sd">        ``&#39;Hann&#39;``.</span>
+<span class="sd">        A callable can also be provided. It must take an array of values in</span>
+<span class="sd">        [0, 1] and return the filter for these frequencies.</span>
+<span class="sd">    frequency_scaling : float, optional</span>
+<span class="sd">        Relative cutoff frequency for the filter.</span>
+<span class="sd">        The normalized frequencies are rescaled so that they fit into the range</span>
+<span class="sd">        [0, frequency_scaling]. Any frequency above ``frequency_scaling`` is</span>
+<span class="sd">        set to zero.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    filter_op : `Operator`</span>
+<span class="sd">        Filtering operator for FBP based on ``ray_trafo``.</span>
+
+<span class="sd">    See Also</span>
+<span class="sd">    --------</span>
+<span class="sd">    tam_danielson_window : Windowing for helical data</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">impl</span> <span class="o">=</span> <span class="s1">&#39;pyfftw&#39;</span> <span class="k">if</span> <span class="n">PYFFTW_AVAILABLE</span> <span class="k">else</span> <span class="s1">&#39;numpy&#39;</span>
+    <span class="n">alen</span> <span class="o">=</span> <span class="n">ray_trafo</span><span class="o">.</span><span class="n">geometry</span><span class="o">.</span><span class="n">motion_params</span><span class="o">.</span><span class="n">length</span>
+
+    <span class="k">if</span> <span class="n">ray_trafo</span><span class="o">.</span><span class="n">domain</span><span class="o">.</span><span class="n">ndim</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
+        <span class="c1"># Define ramp filter</span>
+        <span class="k">def</span> <span class="nf">fourier_filter</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
+            <span class="n">abs_freq</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+            <span class="n">norm_freq</span> <span class="o">=</span> <span class="n">abs_freq</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">abs_freq</span><span class="p">)</span>
+            <span class="n">filt</span> <span class="o">=</span> <span class="n">_fbp_filter</span><span class="p">(</span><span class="n">norm_freq</span><span class="p">,</span> <span class="n">filter_type</span><span class="p">,</span> <span class="n">frequency_scaling</span><span class="p">)</span>
+            <span class="n">scaling</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">/</span> <span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">alen</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">filt</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">abs_freq</span><span class="p">)</span> <span class="o">*</span> <span class="n">scaling</span>
+
+        <span class="c1"># Define (padded) fourier transform</span>
+        <span class="k">if</span> <span class="n">padding</span><span class="p">:</span>
+            <span class="c1"># Define padding operator</span>
+            <span class="n">ran_shp</span> <span class="o">=</span> <span class="p">(</span><span class="n">ray_trafo</span><span class="o">.</span><span class="n">range</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
+                       <span class="n">ray_trafo</span><span class="o">.</span><span class="n">range</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">*</span> <span class="mi">2</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
+            <span class="n">resizing</span> <span class="o">=</span> <span class="n">ResizingOperator</span><span class="p">(</span><span class="n">ray_trafo</span><span class="o">.</span><span class="n">range</span><span class="p">,</span> <span class="n">ran_shp</span><span class="o">=</span><span class="n">ran_shp</span><span class="p">)</span>
+
+            <span class="n">fourier</span> <span class="o">=</span> <span class="n">FourierTransform</span><span class="p">(</span><span class="n">resizing</span><span class="o">.</span><span class="n">range</span><span class="p">,</span> <span class="n">axes</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">impl</span><span class="o">=</span><span class="n">impl</span><span class="p">)</span>
+            <span class="n">fourier</span> <span class="o">=</span> <span class="n">fourier</span> <span class="o">*</span> <span class="n">resizing</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">fourier</span> <span class="o">=</span> <span class="n">FourierTransform</span><span class="p">(</span><span class="n">ray_trafo</span><span class="o">.</span><span class="n">range</span><span class="p">,</span> <span class="n">axes</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">impl</span><span class="o">=</span><span class="n">impl</span><span class="p">)</span>
+
+    <span class="k">elif</span> <span class="n">ray_trafo</span><span class="o">.</span><span class="n">domain</span><span class="o">.</span><span class="n">ndim</span> <span class="o">==</span> <span class="mi">3</span><span class="p">:</span>
+        <span class="c1"># Find the direction that the filter should be taken in</span>
+        <span class="n">rot_dir</span> <span class="o">=</span> <span class="n">_rotation_direction_in_detector</span><span class="p">(</span><span class="n">ray_trafo</span><span class="o">.</span><span class="n">geometry</span><span class="p">)</span>
+
+        <span class="c1"># Find what axes should be used in the fourier transform</span>
+        <span class="n">used_axes</span> <span class="o">=</span> <span class="p">(</span><span class="n">rot_dir</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">used_axes</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">used_axes</span><span class="p">[</span><span class="mi">1</span><span class="p">]:</span>
+            <span class="n">axes</span> <span class="o">=</span> <span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+        <span class="k">elif</span> <span class="ow">not</span> <span class="n">used_axes</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="ow">and</span> <span class="n">used_axes</span><span class="p">[</span><span class="mi">1</span><span class="p">]:</span>
+            <span class="n">axes</span> <span class="o">=</span> <span class="p">[</span><span class="mi">2</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">axes</span> <span class="o">=</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">]</span>
+
+        <span class="c1"># Add scaling for cone-beam case</span>
+        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">ray_trafo</span><span class="o">.</span><span class="n">geometry</span><span class="p">,</span> <span class="s1">&#39;src_radius&#39;</span><span class="p">):</span>
+            <span class="n">scale</span> <span class="o">=</span> <span class="p">(</span><span class="n">ray_trafo</span><span class="o">.</span><span class="n">geometry</span><span class="o">.</span><span class="n">src_radius</span>
+                     <span class="o">/</span> <span class="p">(</span><span class="n">ray_trafo</span><span class="o">.</span><span class="n">geometry</span><span class="o">.</span><span class="n">src_radius</span>
+                        <span class="o">+</span> <span class="n">ray_trafo</span><span class="o">.</span><span class="n">geometry</span><span class="o">.</span><span class="n">det_radius</span><span class="p">))</span>
+
+            <span class="k">if</span> <span class="n">ray_trafo</span><span class="o">.</span><span class="n">geometry</span><span class="o">.</span><span class="n">pitch</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="c1"># In helical geometry the whole volume is not in each</span>
+                <span class="c1"># projection and we need to use another weighting.</span>
+                <span class="c1"># Ideally each point in the volume effects only</span>
+                <span class="c1"># the projections in a half rotation, so we assume that that</span>
+                <span class="c1"># is the case.</span>
+                <span class="n">scale</span> <span class="o">*=</span> <span class="n">alen</span> <span class="o">/</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">scale</span> <span class="o">=</span> <span class="mf">1.0</span>
+
+        <span class="c1"># Define ramp filter</span>
+        <span class="k">def</span> <span class="nf">fourier_filter</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
+            <span class="c1"># If axis is aligned to a coordinate axis, save some memory and</span>
+            <span class="c1"># time by using broadcasting</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">used_axes</span><span class="p">[</span><span class="mi">0</span><span class="p">]:</span>
+                <span class="n">abs_freq</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">rot_dir</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">*</span> <span class="n">x</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span>
+            <span class="k">elif</span> <span class="ow">not</span> <span class="n">used_axes</span><span class="p">[</span><span class="mi">1</span><span class="p">]:</span>
+                <span class="n">abs_freq</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">rot_dir</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="n">x</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">abs_freq</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">rot_dir</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="n">x</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="n">rot_dir</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">*</span> <span class="n">x</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span>
+            <span class="n">norm_freq</span> <span class="o">=</span> <span class="n">abs_freq</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">abs_freq</span><span class="p">)</span>
+            <span class="n">filt</span> <span class="o">=</span> <span class="n">_fbp_filter</span><span class="p">(</span><span class="n">norm_freq</span><span class="p">,</span> <span class="n">filter_type</span><span class="p">,</span> <span class="n">frequency_scaling</span><span class="p">)</span>
+            <span class="n">scaling</span> <span class="o">=</span> <span class="n">scale</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">abs_freq</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">alen</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">filt</span> <span class="o">*</span> <span class="n">scaling</span>
+
+        <span class="c1"># Define (padded) fourier transform</span>
+        <span class="k">if</span> <span class="n">padding</span><span class="p">:</span>
+            <span class="c1"># Define padding operator</span>
+            <span class="k">if</span> <span class="n">used_axes</span><span class="p">[</span><span class="mi">0</span><span class="p">]:</span>
+                <span class="n">padded_shape_u</span> <span class="o">=</span> <span class="n">ray_trafo</span><span class="o">.</span><span class="n">range</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">*</span> <span class="mi">2</span> <span class="o">-</span> <span class="mi">1</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">padded_shape_u</span> <span class="o">=</span> <span class="n">ray_trafo</span><span class="o">.</span><span class="n">range</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+
+            <span class="k">if</span> <span class="n">used_axes</span><span class="p">[</span><span class="mi">1</span><span class="p">]:</span>
+                <span class="n">padded_shape_v</span> <span class="o">=</span> <span class="n">ray_trafo</span><span class="o">.</span><span class="n">range</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">*</span> <span class="mi">2</span> <span class="o">-</span> <span class="mi">1</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">padded_shape_v</span> <span class="o">=</span> <span class="n">ray_trafo</span><span class="o">.</span><span class="n">range</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
+
+            <span class="n">ran_shp</span> <span class="o">=</span> <span class="p">(</span><span class="n">ray_trafo</span><span class="o">.</span><span class="n">range</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
+                       <span class="n">padded_shape_u</span><span class="p">,</span>
+                       <span class="n">padded_shape_v</span><span class="p">)</span>
+            <span class="n">resizing</span> <span class="o">=</span> <span class="n">ResizingOperator</span><span class="p">(</span><span class="n">ray_trafo</span><span class="o">.</span><span class="n">range</span><span class="p">,</span> <span class="n">ran_shp</span><span class="o">=</span><span class="n">ran_shp</span><span class="p">)</span>
+
+            <span class="n">fourier</span> <span class="o">=</span> <span class="n">FourierTransform</span><span class="p">(</span><span class="n">resizing</span><span class="o">.</span><span class="n">range</span><span class="p">,</span> <span class="n">axes</span><span class="o">=</span><span class="n">axes</span><span class="p">,</span> <span class="n">impl</span><span class="o">=</span><span class="n">impl</span><span class="p">)</span>
+            <span class="n">fourier</span> <span class="o">=</span> <span class="n">fourier</span> <span class="o">*</span> <span class="n">resizing</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">fourier</span> <span class="o">=</span> <span class="n">FourierTransform</span><span class="p">(</span><span class="n">ray_trafo</span><span class="o">.</span><span class="n">range</span><span class="p">,</span> <span class="n">axes</span><span class="o">=</span><span class="n">axes</span><span class="p">,</span> <span class="n">impl</span><span class="o">=</span><span class="n">impl</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s1">&#39;FBP only implemented in 2d and 3d&#39;</span><span class="p">)</span>
+
+    <span class="c1"># Create ramp in the detector direction</span>
+    <span class="n">ramp_function</span> <span class="o">=</span> <span class="n">fourier</span><span class="o">.</span><span class="n">range</span><span class="o">.</span><span class="n">element</span><span class="p">(</span><span class="n">fourier_filter</span><span class="p">)</span>
+
+    <span class="n">weight</span> <span class="o">=</span> <span class="mi">1</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">ray_trafo</span><span class="o">.</span><span class="n">range</span><span class="o">.</span><span class="n">is_weighted</span><span class="p">:</span>
+        <span class="c1"># Compensate for potentially unweighted range of the ray transform</span>
+        <span class="n">weight</span> <span class="o">*=</span> <span class="n">ray_trafo</span><span class="o">.</span><span class="n">range</span><span class="o">.</span><span class="n">cell_volume</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">ray_trafo</span><span class="o">.</span><span class="n">domain</span><span class="o">.</span><span class="n">is_weighted</span><span class="p">:</span>
+        <span class="c1"># Compensate for potentially unweighted domain of the ray transform</span>
+        <span class="n">weight</span> <span class="o">/=</span> <span class="n">ray_trafo</span><span class="o">.</span><span class="n">domain</span><span class="o">.</span><span class="n">cell_volume</span>
+
+    <span class="n">ramp_function</span> <span class="o">*=</span> <span class="n">weight</span>
+
+    <span class="c1"># Create ramp filter via the convolution formula with fourier transforms</span>
+    <span class="k">return</span> <span class="n">fourier</span><span class="o">.</span><span class="n">inverse</span> <span class="o">*</span> <span class="n">ramp_function</span> <span class="o">*</span> <span class="n">fourier</span></div>
+
+
+<div class="viewcode-block" id="fbp_op"><a class="viewcode-back" href="../../../../generated/odl.tomo.analytic.filtered_back_projection.fbp_op.html#odl.tomo.analytic.filtered_back_projection.fbp_op">[docs]</a><span class="k">def</span> <span class="nf">fbp_op</span><span class="p">(</span><span class="n">ray_trafo</span><span class="p">,</span> <span class="n">padding</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">filter_type</span><span class="o">=</span><span class="s1">&#39;Ram-Lak&#39;</span><span class="p">,</span>
+           <span class="n">frequency_scaling</span><span class="o">=</span><span class="mf">1.0</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Create filtered back-projection operator from a `RayTransform`.</span>
+
+<span class="sd">    The filtered back-projection is an approximate inverse to the ray</span>
+<span class="sd">    transform.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    ray_trafo : `RayTransform`</span>
+<span class="sd">        The ray transform (forward operator) whose approximate inverse should</span>
+<span class="sd">        be computed. Its geometry has to be any of the following</span>
+
+<span class="sd">        `Parallel2dGeometry` : Exact reconstruction</span>
+
+<span class="sd">        `Parallel3dAxisGeometry` : Exact reconstruction</span>
+
+<span class="sd">        `FanBeamGeometry` : Approximate reconstruction, correct in limit of fan</span>
+<span class="sd">        angle = 0.</span>
+<span class="sd">        Only flat detectors are supported (det_curvature_radius is None).</span>
+
+<span class="sd">        `ConeBeamGeometry`, pitch = 0 (circular) : Approximate reconstruction,</span>
+<span class="sd">        correct in the limit of fan angle = 0 and cone angle = 0.</span>
+
+<span class="sd">        `ConeBeamGeometry`, pitch &gt; 0 (helical) : Very approximate unless a</span>
+<span class="sd">        `tam_danielson_window` is used. Accurate with the window.</span>
+
+<span class="sd">        Other geometries: Not supported</span>
+
+<span class="sd">    padding : bool, optional</span>
+<span class="sd">        If the data space should be zero padded. Without padding, the data may</span>
+<span class="sd">        be corrupted due to the circular convolution used. Using padding makes</span>
+<span class="sd">        the algorithm slower.</span>
+<span class="sd">    filter_type : optional</span>
+<span class="sd">        The type of filter to be used.</span>
+<span class="sd">        The predefined options are, in approximate order from most noise</span>
+<span class="sd">        senstive to least noise sensitive:</span>
+<span class="sd">        ``&#39;Ram-Lak&#39;``, ``&#39;Shepp-Logan&#39;``, ``&#39;Cosine&#39;``, ``&#39;Hamming&#39;`` and</span>
+<span class="sd">        ``&#39;Hann&#39;``.</span>
+<span class="sd">        A callable can also be provided. It must take an array of values in</span>
+<span class="sd">        [0, 1] and return the filter for these frequencies.</span>
+<span class="sd">    frequency_scaling : float, optional</span>
+<span class="sd">        Relative cutoff frequency for the filter.</span>
+<span class="sd">        The normalized frequencies are rescaled so that they fit into the range</span>
+<span class="sd">        [0, frequency_scaling]. Any frequency above ``frequency_scaling`` is</span>
+<span class="sd">        set to zero.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    fbp_op : `Operator`</span>
+<span class="sd">        Approximate inverse operator of ``ray_trafo``.</span>
+
+<span class="sd">    See Also</span>
+<span class="sd">    --------</span>
+<span class="sd">    tam_danielson_window : Windowing for helical data.</span>
+<span class="sd">    parker_weighting : Windowing for overcomplete fan-beam data.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">ray_trafo</span><span class="o">.</span><span class="n">adjoint</span> <span class="o">*</span> <span class="n">fbp_filter_op</span><span class="p">(</span><span class="n">ray_trafo</span><span class="p">,</span> <span class="n">padding</span><span class="p">,</span> <span class="n">filter_type</span><span class="p">,</span>
+                                             <span class="n">frequency_scaling</span><span class="p">)</span></div>
+
+
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s1">&#39;__main__&#39;</span><span class="p">:</span>
+    <span class="kn">import</span> <span class="nn">odl</span>
+    <span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
+    <span class="kn">from</span> <span class="nn">odl.util.testutils</span> <span class="kn">import</span> <span class="n">run_doctests</span>
+
+    <span class="c1"># Display the various filters</span>
+    <span class="n">x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">100</span><span class="p">)</span>
+    <span class="n">cutoff</span> <span class="o">=</span> <span class="mf">0.7</span>
+
+    <span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">(</span><span class="s1">&#39;fbp filter&#39;</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">filter_name</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;Ram-Lak&#39;</span><span class="p">,</span> <span class="s1">&#39;Shepp-Logan&#39;</span><span class="p">,</span> <span class="s1">&#39;Cosine&#39;</span><span class="p">,</span> <span class="s1">&#39;Hamming&#39;</span><span class="p">,</span> <span class="s1">&#39;Hann&#39;</span><span class="p">,</span>
+                        <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">]:</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">_fbp_filter</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">filter_name</span><span class="p">,</span> <span class="n">cutoff</span><span class="p">),</span> <span class="n">label</span><span class="o">=</span><span class="n">filter_name</span><span class="p">)</span>
+
+    <span class="n">plt</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="s1">&#39;Filters with frequency scaling = </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">cutoff</span><span class="p">))</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">legend</span><span class="p">(</span><span class="n">loc</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+
+    <span class="c1"># Show the Tam-Danielson window</span>
+
+    <span class="c1"># Create Ray Transform in helical geometry</span>
+    <span class="n">reco_space</span> <span class="o">=</span> <span class="n">odl</span><span class="o">.</span><span class="n">uniform_discr</span><span class="p">(</span>
+        <span class="n">min_pt</span><span class="o">=</span><span class="p">[</span><span class="o">-</span><span class="mi">20</span><span class="p">,</span> <span class="o">-</span><span class="mi">20</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="n">max_pt</span><span class="o">=</span><span class="p">[</span><span class="mi">20</span><span class="p">,</span> <span class="mi">20</span><span class="p">,</span> <span class="mi">40</span><span class="p">],</span> <span class="n">shape</span><span class="o">=</span><span class="p">[</span><span class="mi">300</span><span class="p">,</span> <span class="mi">300</span><span class="p">,</span> <span class="mi">300</span><span class="p">])</span>
+    <span class="n">angle_partition</span> <span class="o">=</span> <span class="n">odl</span><span class="o">.</span><span class="n">uniform_partition</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">8</span> <span class="o">*</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="p">,</span> <span class="mi">2000</span><span class="p">)</span>
+    <span class="n">detector_partition</span> <span class="o">=</span> <span class="n">odl</span><span class="o">.</span><span class="n">uniform_partition</span><span class="p">([</span><span class="o">-</span><span class="mi">40</span><span class="p">,</span> <span class="o">-</span><span class="mi">4</span><span class="p">],</span> <span class="p">[</span><span class="mi">40</span><span class="p">,</span> <span class="mi">4</span><span class="p">],</span> <span class="p">[</span><span class="mi">500</span><span class="p">,</span> <span class="mi">500</span><span class="p">])</span>
+    <span class="n">geometry</span> <span class="o">=</span> <span class="n">odl</span><span class="o">.</span><span class="n">tomo</span><span class="o">.</span><span class="n">ConeBeamGeometry</span><span class="p">(</span>
+        <span class="n">angle_partition</span><span class="p">,</span> <span class="n">detector_partition</span><span class="p">,</span> <span class="n">src_radius</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span> <span class="n">det_radius</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span>
+        <span class="n">pitch</span><span class="o">=</span><span class="mf">5.0</span><span class="p">)</span>
+    <span class="n">ray_trafo</span> <span class="o">=</span> <span class="n">odl</span><span class="o">.</span><span class="n">tomo</span><span class="o">.</span><span class="n">RayTransform</span><span class="p">(</span><span class="n">reco_space</span><span class="p">,</span> <span class="n">geometry</span><span class="p">,</span> <span class="n">impl</span><span class="o">=</span><span class="s1">&#39;astra_cuda&#39;</span><span class="p">)</span>
+
+    <span class="c1"># Crete and show TD window</span>
+    <span class="n">td_window</span> <span class="o">=</span> <span class="n">tam_danielson_window</span><span class="p">(</span><span class="n">ray_trafo</span><span class="p">,</span> <span class="n">smoothing_width</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+    <span class="n">td_window</span><span class="o">.</span><span class="n">show</span><span class="p">(</span><span class="s1">&#39;Tam-Danielson window&#39;</span><span class="p">,</span> <span class="n">coords</span><span class="o">=</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">])</span>
+
+    <span class="c1"># Show the Parker weighting</span>
+
+    <span class="c1"># Create Ray Transform in fan beam geometry</span>
+    <span class="n">geometry</span> <span class="o">=</span> <span class="n">odl</span><span class="o">.</span><span class="n">tomo</span><span class="o">.</span><span class="n">cone_beam_geometry</span><span class="p">(</span><span class="n">reco_space</span><span class="p">,</span>
+                                           <span class="n">src_radius</span><span class="o">=</span><span class="mi">40</span><span class="p">,</span> <span class="n">det_radius</span><span class="o">=</span><span class="mi">80</span><span class="p">)</span>
+    <span class="n">ray_trafo</span> <span class="o">=</span> <span class="n">odl</span><span class="o">.</span><span class="n">tomo</span><span class="o">.</span><span class="n">RayTransform</span><span class="p">(</span><span class="n">reco_space</span><span class="p">,</span> <span class="n">geometry</span><span class="p">,</span> <span class="n">impl</span><span class="o">=</span><span class="s1">&#39;astra_cuda&#39;</span><span class="p">)</span>
+
+    <span class="c1"># Crete and show parker weighting</span>
+    <span class="n">parker_weighting</span> <span class="o">=</span> <span class="n">parker_weighting</span><span class="p">(</span><span class="n">ray_trafo</span><span class="p">)</span>
+    <span class="n">parker_weighting</span><span class="o">.</span><span class="n">show</span><span class="p">(</span><span class="s1">&#39;Parker weighting&#39;</span><span class="p">)</span>
+
+    <span class="c1"># Also run the doctests</span>
+    <span class="n">run_doctests</span><span class="p">()</span>
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &#169; Copyright 2014-2020 The ODL Contributors.
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

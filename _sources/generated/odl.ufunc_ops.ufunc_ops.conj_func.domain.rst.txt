@@ -1,0 +1,6 @@
+conj_func.domain
+========================================
+
+.. currentmodule:: odl.ufunc_ops.ufunc_ops
+
+.. autoproperty:: conj_func.domain

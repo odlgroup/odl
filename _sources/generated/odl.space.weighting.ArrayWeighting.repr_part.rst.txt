@@ -1,0 +1,6 @@
+ArrayWeighting.repr_part
+============================================
+
+.. currentmodule:: odl.space.weighting
+
+.. autoproperty:: ArrayWeighting.repr_part

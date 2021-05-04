@@ -1,0 +1,6 @@
+less_op.adjoint
+=======================================
+
+.. currentmodule:: odl.ufunc_ops.ufunc_ops
+
+.. autoproperty:: less_op.adjoint

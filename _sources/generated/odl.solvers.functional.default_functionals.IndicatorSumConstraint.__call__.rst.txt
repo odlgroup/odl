@@ -1,0 +1,8 @@
+:orphan:
+
+IndicatorSumConstraint.__call__
+==========================================================================
+
+.. currentmodule:: odl.solvers.functional.default_functionals
+
+.. automethod:: IndicatorSumConstraint.__call__

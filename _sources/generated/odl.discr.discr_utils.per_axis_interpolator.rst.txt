@@ -1,0 +1,6 @@
+﻿per_axis_interpolator
+===========================================
+
+.. currentmodule:: odl.discr.discr_utils
+
+.. autofunction:: per_axis_interpolator

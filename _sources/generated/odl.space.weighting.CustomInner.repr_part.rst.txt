@@ -1,0 +1,6 @@
+CustomInner.repr_part
+=========================================
+
+.. currentmodule:: odl.space.weighting
+
+.. autoproperty:: CustomInner.repr_part

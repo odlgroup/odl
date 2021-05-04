@@ -1,0 +1,8 @@
+:orphan:
+
+ImagPart.__eq__
+========================================
+
+.. currentmodule:: odl.operator.default_ops
+
+.. automethod:: ImagPart.__eq__

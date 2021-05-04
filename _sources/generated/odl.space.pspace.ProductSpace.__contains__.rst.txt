@@ -1,0 +1,8 @@
+:orphan:
+
+ProductSpace.__contains__
+==========================================
+
+.. currentmodule:: odl.space.pspace
+
+.. automethod:: ProductSpace.__contains__

@@ -1,0 +1,6 @@
+FunctionalTranslation.proximal
+================================================================
+
+.. currentmodule:: odl.solvers.functional.functional
+
+.. autoproperty:: FunctionalTranslation.proximal

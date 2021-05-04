@@ -1,0 +1,29 @@
+﻿CallbackApply
+=======================================
+
+.. currentmodule:: odl.solvers.util.callback
+
+.. autoclass:: CallbackApply
+   :show-inheritance:
+   
+   
+   .. automethod:: __init__
+   
+      
+   
+   .. HACK -- the point here is that we don't want this to appear in the output, but the autosummary should still generate the pages.
+      .. autosummary::
+         :toctree:
+      
+         CallbackApply.__call__
+         CallbackApply.__eq__
+         CallbackApply.reset
+   
+
+    
+   .. HACK -- the point here is that we don't want this to appear in the output, but the autosummary should still generate the pages.
+      .. autosummary::
+         :toctree:
+      
+   
+   

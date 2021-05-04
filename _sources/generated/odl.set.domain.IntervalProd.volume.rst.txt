@@ -1,0 +1,6 @@
+IntervalProd.volume
+==================================
+
+.. currentmodule:: odl.set.domain
+
+.. autoproperty:: IntervalProd.volume

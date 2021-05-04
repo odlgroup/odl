@@ -1,0 +1,602 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>odl.solvers.nonsmooth.primal_dual_hybrid_gradient &mdash; odl 1.0.0.dev0 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../../../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../../../../_static/custom.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../../../" src="../../../../_static/documentation_options.js"></script>
+        <script src="../../../../_static/jquery.js"></script>
+        <script src="../../../../_static/underscore.js"></script>
+        <script src="../../../../_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="../../../../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../../../index.html" class="icon icon-home"> odl
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                1.0.0.dev0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Getting Started</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../getting_started/getting_started.html">Getting Started</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Working with ODL</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../guide/guide.html">User’s guide – selected topics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../math/math.html">Mathematical Background</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Developer zone</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../dev/dev.html">Contributing to ODL</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Useful facts</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../guide/faq.html">Frequently asked questions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../guide/glossary.html">Glossary</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../release_notes.html">Release Notes</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../refs.html">References</a></li>
+</ul>
+<p class="caption"><span class="caption-text">API Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../odl.html">odl</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../../index.html">odl</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../../../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="../../../index.html">Module code</a> &raquo;</li>
+        
+      <li>odl.solvers.nonsmooth.primal_dual_hybrid_gradient</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for odl.solvers.nonsmooth.primal_dual_hybrid_gradient</h1><div class="highlight"><pre>
+<span></span><span class="c1"># Copyright 2014-2019 The ODL contributors</span>
+<span class="c1">#</span>
+<span class="c1"># This file is part of ODL.</span>
+<span class="c1">#</span>
+<span class="c1"># This Source Code Form is subject to the terms of the Mozilla Public License,</span>
+<span class="c1"># v. 2.0. If a copy of the MPL was not distributed with this file, You can</span>
+<span class="c1"># obtain one at https://mozilla.org/MPL/2.0/.</span>
+
+<span class="sd">&quot;&quot;&quot;Primal-dual hybrid gradient (PDHG) algorithm studied by Chambolle and Pock.</span>
+
+<span class="sd">The primal-dual hybrid gradient algorithm is a flexible method well suited for</span>
+<span class="sd">non-smooth convex optimization problems in imaging.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">print_function</span><span class="p">,</span> <span class="n">division</span><span class="p">,</span> <span class="n">absolute_import</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+
+<span class="kn">from</span> <span class="nn">odl.operator</span> <span class="kn">import</span> <span class="n">Operator</span>
+
+
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;pdhg&#39;</span><span class="p">,</span> <span class="s1">&#39;pdhg_stepsize&#39;</span><span class="p">)</span>
+
+
+<span class="c1"># TODO: add dual gap as convergence measure</span>
+<span class="c1"># TODO: diagonal preconditioning</span>
+
+<div class="viewcode-block" id="pdhg"><a class="viewcode-back" href="../../../../generated/odl.solvers.nonsmooth.primal_dual_hybrid_gradient.pdhg.html#odl.solvers.nonsmooth.primal_dual_hybrid_gradient.pdhg">[docs]</a><span class="k">def</span> <span class="nf">pdhg</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">f</span><span class="p">,</span> <span class="n">g</span><span class="p">,</span> <span class="n">L</span><span class="p">,</span> <span class="n">niter</span><span class="p">,</span> <span class="n">tau</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">sigma</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="sa">r</span><span class="sd">&quot;&quot;&quot;Primal-dual hybrid gradient algorithm for convex optimization.</span>
+
+<span class="sd">    First order primal-dual hybrid-gradient method for non-smooth convex</span>
+<span class="sd">    optimization problems with known saddle-point structure. The</span>
+<span class="sd">    primal formulation of the general problem is ::</span>
+
+<span class="sd">        min_{x in X} f(x) + g(L x)</span>
+
+<span class="sd">    where ``L`` is an operator and ``f`` and ``g`` are functionals.</span>
+
+<span class="sd">    The primal-dual hybrid-gradient algorithm is a primal-dual algorithm, and</span>
+<span class="sd">    basically consists of alternating a gradient ascent in the dual variable</span>
+<span class="sd">    and a gradient descent in the primal variable. The proximal operator is</span>
+<span class="sd">    used to generate a ascent direction for the convex conjugate of F and</span>
+<span class="sd">    descent direction for G. Additionally an over-relaxation of the primal</span>
+<span class="sd">    variable is performed.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    x : ``L.domain`` element</span>
+<span class="sd">        Starting point of the iteration, updated in-place.</span>
+<span class="sd">    f : `Functional`</span>
+<span class="sd">        The function ``f`` in the problem definition. Needs to have</span>
+<span class="sd">        ``f.proximal``.</span>
+<span class="sd">    g : `Functional`</span>
+<span class="sd">        The function ``g`` in the problem definition. Needs to have</span>
+<span class="sd">        ``g.convex_conj.proximal``.</span>
+<span class="sd">    L : linear `Operator`</span>
+<span class="sd">        The linear operator that should be applied before ``g``. Its range must</span>
+<span class="sd">        match the domain of ``g`` and its domain must match the domain of</span>
+<span class="sd">        ``f``.</span>
+<span class="sd">    niter : non-negative int</span>
+<span class="sd">        Number of iterations.</span>
+<span class="sd">    tau : float, optional</span>
+<span class="sd">        Step size parameter for ``g``.</span>
+<span class="sd">        Default: Sufficient for convergence, see `pdhg_stepsize`.</span>
+<span class="sd">    sigma : sequence of floats, optional</span>
+<span class="sd">        Step size parameters for ``f``.</span>
+<span class="sd">        Default: Sufficient for convergence, see `pdhg_stepsize`.</span>
+
+<span class="sd">    Other Parameters</span>
+<span class="sd">    ----------------</span>
+<span class="sd">    callback : callable, optional</span>
+<span class="sd">        Function called with the current iterate after each iteration.</span>
+<span class="sd">    theta : float, optional</span>
+<span class="sd">        Relaxation parameter, required to fulfill ``0 &lt;= theta &lt;= 1``.</span>
+<span class="sd">        Default: 1</span>
+<span class="sd">    gamma_primal : non-negative float, optional</span>
+<span class="sd">        Acceleration parameter. If not ``None``, it overrides ``theta`` and</span>
+<span class="sd">        causes variable relaxation parameter and step sizes to be used,</span>
+<span class="sd">        with ``tau`` and ``sigma`` as initial values. Requires ``f`` to be</span>
+<span class="sd">        strongly convex and ``gamma_primal`` being upper bounded by the strong</span>
+<span class="sd">        convexity constant of ``f``. Acceleration can either be done on the</span>
+<span class="sd">        primal part or the dual part but not on both simultaneously.</span>
+<span class="sd">        Default: ``None``</span>
+<span class="sd">    gamma_dual : non-negative float, optional</span>
+<span class="sd">        Acceleration parameter as ``gamma_primal`` but for dual variable.</span>
+<span class="sd">        Requires ``g^*`` to be strongly convex and ``gamma_dual`` being upper</span>
+<span class="sd">        bounded by the strong convexity constant of ``f^*``. Acceleration can</span>
+<span class="sd">        either be done on the primal part or the dual part but not on both</span>
+<span class="sd">        simultaneously.</span>
+<span class="sd">        Default: ``None``</span>
+<span class="sd">    x_relax : ``op.domain`` element, optional</span>
+<span class="sd">        Required to resume iteration. For ``None``, a copy of the primal</span>
+<span class="sd">        variable ``x`` is used.</span>
+<span class="sd">        Default: ``None``</span>
+<span class="sd">    y : ``op.range`` element, optional</span>
+<span class="sd">        Required to resume iteration. For ``None``, ``op.range.zero()``</span>
+<span class="sd">        is used.</span>
+<span class="sd">        Default: ``None``</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    The problem of interest is</span>
+
+<span class="sd">    .. math::</span>
+<span class="sd">        \min_{x \in X} f(x) + g(L x),</span>
+
+<span class="sd">    where the formal conditions are that :math:`L` is an operator</span>
+<span class="sd">    between Hilbert spaces :math:`X` and :math:`Y`.</span>
+<span class="sd">    Further, :math:`f : X \rightarrow [0, +\infty]` and</span>
+<span class="sd">    :math:`g : Y \rightarrow [0, +\infty]` are proper, convex,</span>
+<span class="sd">    lower-semicontinuous functionals.</span>
+
+<span class="sd">    Convergence is only guaranteed if :math:`L` is linear, :math:`X, Y`</span>
+<span class="sd">    are finite dimensional and the step lengths :math:`\sigma` and</span>
+<span class="sd">    :math:`\tau` satisfy</span>
+
+<span class="sd">    .. math::</span>
+<span class="sd">       \tau \sigma \|L\|^2 &lt; 1</span>
+
+<span class="sd">    where :math:`\|L\|` is the operator norm of :math:`L`.</span>
+
+<span class="sd">    It is often of interest to study problems that involve several operators,</span>
+<span class="sd">    for example the classical TV regularized problem</span>
+
+<span class="sd">    .. math::</span>
+<span class="sd">        \min_x \|Ax - b\|_2^2 + \|\nabla x\|_1.</span>
+
+<span class="sd">    Here it is tempting to let :math:`f(x)=\|\nabla x\|_1`, :math:`L=A` and</span>
+<span class="sd">    :math:`g(y)=||y||_2^2`. This is however not feasible since the</span>
+<span class="sd">    proximal of :math:`||\nabla x||_1` has no closed form expression.</span>
+
+<span class="sd">    Instead, the problem can be formulated :math:`f(x)=0`,</span>
+<span class="sd">    :math:`L(x) = (A(x), \nabla x)` and</span>
+<span class="sd">    :math:`g((x_1, x_2)) = \|x_1\|_2^2 + \|x_2\|_1`. See the</span>
+<span class="sd">    examples folder for more information on how to do this.</span>
+
+<span class="sd">    For a more detailed documentation see `the PDHG guide</span>
+<span class="sd">    &lt;https://odlgroup.github.io/odl/guide/pdhg_guide.html&gt;`_ in the online</span>
+<span class="sd">    documentation.</span>
+
+<span class="sd">    References on the algorithm can be found in `[CP2011a]</span>
+<span class="sd">    &lt;https://doi.org/10.1007/s10851-010-0251-1&gt;`_ and `[CP2011b]</span>
+<span class="sd">    &lt;https://doi.org/10.1109/ICCV.2011.6126441&gt;`_.</span>
+
+<span class="sd">    This implementation of the CP algorithm is along the lines of</span>
+<span class="sd">    `[Sid+2012] &lt;https://doi.org/10.1088/0031-9155/57/10/3065&gt;`_.</span>
+
+<span class="sd">    The non-linear case is analyzed in `[Val2014]</span>
+<span class="sd">    &lt;https://doi.org/10.1088/0266-5611/30/5/055012&gt;`_.</span>
+
+<span class="sd">    See Also</span>
+<span class="sd">    --------</span>
+<span class="sd">    odl.solvers.nonsmooth.douglas_rachford.douglas_rachford_pd :</span>
+<span class="sd">        Solver for similar problems which can additionaly handle infimal</span>
+<span class="sd">        convolutions and multiple forward operators.</span>
+<span class="sd">    odl.solvers.nonsmooth.forward_backward.forward_backward_pd :</span>
+<span class="sd">        Solver for similar problems which can additionaly handle infimal</span>
+<span class="sd">        convolutions, multiple forward operators and a differentiable term.</span>
+
+<span class="sd">    References</span>
+<span class="sd">    ----------</span>
+<span class="sd">    [CP2011a] Chambolle, A and Pock, T. *A First-Order</span>
+<span class="sd">    Primal-Dual Algorithm for Convex Problems with Applications to</span>
+<span class="sd">    Imaging*. Journal of Mathematical Imaging and Vision, 40 (2011),</span>
+<span class="sd">    pp 120-145.</span>
+
+<span class="sd">    [CP2011b] Chambolle, A and Pock, T. *Diagonal</span>
+<span class="sd">    preconditioning for first order primal-dual algorithms in convex</span>
+<span class="sd">    optimization*. 2011 IEEE International Conference on Computer Vision</span>
+<span class="sd">    (ICCV), 2011, pp 1762-1769.</span>
+
+<span class="sd">    [Sid+2012] Sidky, E Y, Jorgensen, J H, and Pan, X.</span>
+<span class="sd">    *Convex optimization problem prototyping for image reconstruction in</span>
+<span class="sd">    computed tomography with the Chambolle-Pock algorithm*. Physics in</span>
+<span class="sd">    Medicine and Biology, 57 (2012), pp 3065-3091.</span>
+
+<span class="sd">    [Val2014] Valkonen, T.</span>
+<span class="sd">    *A primal-dual hybrid gradient method for non-linear operators with</span>
+<span class="sd">    applications to MRI*. Inverse Problems, 30 (2014).</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># Forward operator</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">L</span><span class="p">,</span> <span class="n">Operator</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;`op` </span><span class="si">{!r}</span><span class="s1"> is not an `Operator` instance&#39;</span>
+                        <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">L</span><span class="p">))</span>
+
+    <span class="c1"># Starting point</span>
+    <span class="k">if</span> <span class="n">x</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">L</span><span class="o">.</span><span class="n">domain</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;`x` </span><span class="si">{!r}</span><span class="s1"> is not in the domain of `op` </span><span class="si">{!r}</span><span class="s1">&#39;</span>
+                        <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">L</span><span class="o">.</span><span class="n">domain</span><span class="p">))</span>
+
+    <span class="c1"># Spaces</span>
+    <span class="k">if</span> <span class="n">f</span><span class="o">.</span><span class="n">domain</span> <span class="o">!=</span> <span class="n">L</span><span class="o">.</span><span class="n">domain</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;`f.domain` </span><span class="si">{!r}</span><span class="s1"> must equal `op.domain` </span><span class="si">{!r}</span><span class="s1">&#39;</span>
+                        <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">domain</span><span class="p">,</span> <span class="n">L</span><span class="o">.</span><span class="n">domain</span><span class="p">))</span>
+
+    <span class="c1"># Step size parameters</span>
+    <span class="n">tau</span><span class="p">,</span> <span class="n">sigma</span> <span class="o">=</span> <span class="n">pdhg_stepsize</span><span class="p">(</span><span class="n">L</span><span class="p">,</span> <span class="n">tau</span><span class="p">,</span> <span class="n">sigma</span><span class="p">)</span>
+
+    <span class="c1"># Number of iterations</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">niter</span><span class="p">,</span> <span class="nb">int</span><span class="p">)</span> <span class="ow">or</span> <span class="n">niter</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;`niter` </span><span class="si">{}</span><span class="s1"> not understood&#39;</span>
+                         <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">niter</span><span class="p">))</span>
+
+    <span class="c1"># Relaxation parameter</span>
+    <span class="n">theta</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;theta&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+    <span class="n">theta</span><span class="p">,</span> <span class="n">theta_in</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">theta</span><span class="p">),</span> <span class="n">theta</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="mi">0</span> <span class="o">&lt;=</span> <span class="n">theta</span> <span class="o">&lt;=</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;`theta` </span><span class="si">{}</span><span class="s1"> not in [0, 1]&#39;</span>
+                         <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">theta_in</span><span class="p">))</span>
+
+    <span class="c1"># Acceleration parameters</span>
+    <span class="n">gamma_primal</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;gamma_primal&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">gamma_primal</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">gamma_primal</span><span class="p">,</span> <span class="n">gamma_primal_in</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">gamma_primal</span><span class="p">),</span> <span class="n">gamma_primal</span>
+        <span class="k">if</span> <span class="n">gamma_primal</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;`gamma_primal` must be non-negative, got </span><span class="si">{}</span><span class="s1">&#39;</span>
+                             <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">gamma_primal_in</span><span class="p">))</span>
+
+    <span class="n">gamma_dual</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;gamma_dual&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">gamma_dual</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">gamma_dual</span><span class="p">,</span> <span class="n">gamma_dual_in</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">gamma_dual</span><span class="p">),</span> <span class="n">gamma_dual</span>
+        <span class="k">if</span> <span class="n">gamma_dual</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;`gamma_dual` must be non-negative, got </span><span class="si">{}</span><span class="s1">&#39;</span>
+                             <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">gamma_dual_in</span><span class="p">))</span>
+
+    <span class="k">if</span> <span class="n">gamma_primal</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">gamma_dual</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;Only one acceleration parameter can be used&#39;</span><span class="p">)</span>
+
+    <span class="c1"># Callback object</span>
+    <span class="n">callback</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;callback&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">callback</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">callable</span><span class="p">(</span><span class="n">callback</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;`callback` </span><span class="si">{}</span><span class="s1"> is not callable&#39;</span>
+                        <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">callback</span><span class="p">))</span>
+
+    <span class="c1"># Initialize the relaxation variable</span>
+    <span class="n">x_relax</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;x_relax&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">x_relax</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">x_relax</span> <span class="o">=</span> <span class="n">x</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+    <span class="k">elif</span> <span class="n">x_relax</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">L</span><span class="o">.</span><span class="n">domain</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;`x_relax` </span><span class="si">{}</span><span class="s1"> is not in the domain of &#39;</span>
+                        <span class="s1">&#39;`L` </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">x_relax</span><span class="o">.</span><span class="n">space</span><span class="p">,</span> <span class="n">L</span><span class="o">.</span><span class="n">domain</span><span class="p">))</span>
+
+    <span class="c1"># Initialize the dual variable</span>
+    <span class="n">y</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;y&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">y</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">y</span> <span class="o">=</span> <span class="n">L</span><span class="o">.</span><span class="n">range</span><span class="o">.</span><span class="n">zero</span><span class="p">()</span>
+    <span class="k">elif</span> <span class="n">y</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">L</span><span class="o">.</span><span class="n">range</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;`y` </span><span class="si">{}</span><span class="s1"> is not in the range of `L` &#39;</span>
+                        <span class="s1">&#39;</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">y</span><span class="o">.</span><span class="n">space</span><span class="p">,</span> <span class="n">L</span><span class="o">.</span><span class="n">range</span><span class="p">))</span>
+
+    <span class="c1"># Get the proximals</span>
+    <span class="n">proximal_primal</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">proximal</span>
+    <span class="n">proximal_dual</span> <span class="o">=</span> <span class="n">g</span><span class="o">.</span><span class="n">convex_conj</span><span class="o">.</span><span class="n">proximal</span>
+    <span class="n">proximal_constant</span> <span class="o">=</span> <span class="p">(</span><span class="n">gamma_primal</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">)</span> <span class="ow">and</span> <span class="p">(</span><span class="n">gamma_dual</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">proximal_constant</span><span class="p">:</span>
+        <span class="c1"># Pre-compute proximals for efficiency</span>
+        <span class="n">proximal_dual_sigma</span> <span class="o">=</span> <span class="n">proximal_dual</span><span class="p">(</span><span class="n">sigma</span><span class="p">)</span>
+        <span class="n">proximal_primal_tau</span> <span class="o">=</span> <span class="n">proximal_primal</span><span class="p">(</span><span class="n">tau</span><span class="p">)</span>
+
+    <span class="c1"># Temporary copy to store previous iterate</span>
+    <span class="n">x_old</span> <span class="o">=</span> <span class="n">x</span><span class="o">.</span><span class="n">space</span><span class="o">.</span><span class="n">element</span><span class="p">()</span>
+
+    <span class="c1"># Temporaries</span>
+    <span class="n">dual_tmp</span> <span class="o">=</span> <span class="n">L</span><span class="o">.</span><span class="n">range</span><span class="o">.</span><span class="n">element</span><span class="p">()</span>
+    <span class="n">primal_tmp</span> <span class="o">=</span> <span class="n">L</span><span class="o">.</span><span class="n">domain</span><span class="o">.</span><span class="n">element</span><span class="p">()</span>
+
+    <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">niter</span><span class="p">):</span>
+        <span class="c1"># Copy required for relaxation</span>
+        <span class="n">x_old</span><span class="o">.</span><span class="n">assign</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+
+        <span class="c1"># Gradient ascent in the dual variable y</span>
+        <span class="c1"># Compute dual_tmp = y + sigma * L(x_relax)</span>
+        <span class="n">L</span><span class="p">(</span><span class="n">x_relax</span><span class="p">,</span> <span class="n">out</span><span class="o">=</span><span class="n">dual_tmp</span><span class="p">)</span>
+        <span class="n">dual_tmp</span><span class="o">.</span><span class="n">lincomb</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">sigma</span><span class="p">,</span> <span class="n">dual_tmp</span><span class="p">)</span>
+
+        <span class="c1"># Apply the dual proximal</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">proximal_constant</span><span class="p">:</span>
+            <span class="n">proximal_dual_sigma</span> <span class="o">=</span> <span class="n">proximal_dual</span><span class="p">(</span><span class="n">sigma</span><span class="p">)</span>
+        <span class="n">proximal_dual_sigma</span><span class="p">(</span><span class="n">dual_tmp</span><span class="p">,</span> <span class="n">out</span><span class="o">=</span><span class="n">y</span><span class="p">)</span>
+
+        <span class="c1"># Gradient descent in the primal variable x</span>
+        <span class="c1"># Compute primal_tmp = x + (- tau) * L.derivative(x).adjoint(y)</span>
+        <span class="n">L</span><span class="o">.</span><span class="n">derivative</span><span class="p">(</span><span class="n">x</span><span class="p">)</span><span class="o">.</span><span class="n">adjoint</span><span class="p">(</span><span class="n">y</span><span class="p">,</span> <span class="n">out</span><span class="o">=</span><span class="n">primal_tmp</span><span class="p">)</span>
+        <span class="n">primal_tmp</span><span class="o">.</span><span class="n">lincomb</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="o">-</span><span class="n">tau</span><span class="p">,</span> <span class="n">primal_tmp</span><span class="p">)</span>
+
+        <span class="c1"># Apply the primal proximal</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">proximal_constant</span><span class="p">:</span>
+            <span class="n">proximal_primal_tau</span> <span class="o">=</span> <span class="n">proximal_primal</span><span class="p">(</span><span class="n">tau</span><span class="p">)</span>
+        <span class="n">proximal_primal_tau</span><span class="p">(</span><span class="n">primal_tmp</span><span class="p">,</span> <span class="n">out</span><span class="o">=</span><span class="n">x</span><span class="p">)</span>
+
+        <span class="c1"># Acceleration</span>
+        <span class="k">if</span> <span class="n">gamma_primal</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">theta</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="mi">1</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">1</span> <span class="o">+</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">gamma_primal</span> <span class="o">*</span> <span class="n">tau</span><span class="p">))</span>
+            <span class="n">tau</span> <span class="o">*=</span> <span class="n">theta</span>
+            <span class="n">sigma</span> <span class="o">/=</span> <span class="n">theta</span>
+
+        <span class="k">if</span> <span class="n">gamma_dual</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">theta</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="mi">1</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">1</span> <span class="o">+</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">gamma_dual</span> <span class="o">*</span> <span class="n">sigma</span><span class="p">))</span>
+            <span class="n">tau</span> <span class="o">/=</span> <span class="n">theta</span>
+            <span class="n">sigma</span> <span class="o">*=</span> <span class="n">theta</span>
+
+        <span class="c1"># Over-relaxation in the primal variable x</span>
+        <span class="n">x_relax</span><span class="o">.</span><span class="n">lincomb</span><span class="p">(</span><span class="mi">1</span> <span class="o">+</span> <span class="n">theta</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="o">-</span><span class="n">theta</span><span class="p">,</span> <span class="n">x_old</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">callback</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">callback</span><span class="p">(</span><span class="n">x</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="pdhg_stepsize"><a class="viewcode-back" href="../../../../generated/odl.solvers.nonsmooth.primal_dual_hybrid_gradient.pdhg_stepsize.html#odl.solvers.nonsmooth.primal_dual_hybrid_gradient.pdhg_stepsize">[docs]</a><span class="k">def</span> <span class="nf">pdhg_stepsize</span><span class="p">(</span><span class="n">L</span><span class="p">,</span> <span class="n">tau</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">sigma</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="sa">r</span><span class="sd">&quot;&quot;&quot;Default step sizes for `pdhg`.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    L : `Operator` or float</span>
+<span class="sd">        Operator or norm of the operator that are used in the `pdhg` method.</span>
+<span class="sd">        If it is an `Operator`, the norm is computed with</span>
+<span class="sd">        ``Operator.norm(estimate=True)``.</span>
+<span class="sd">    tau : positive float, optional</span>
+<span class="sd">        Use this value for ``tau`` instead of computing it from the</span>
+<span class="sd">        operator norms, see Notes.</span>
+<span class="sd">    sigma : positive float, optional</span>
+<span class="sd">        The ``sigma`` step size parameters for the dual update.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    tau : float</span>
+<span class="sd">        The ``tau`` step size parameter for the primal update.</span>
+<span class="sd">    sigma : tuple of float</span>
+<span class="sd">        The ``sigma`` step size parameter for the dual update.</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    To guarantee convergence, the parameters :math:`\tau`, :math:`\sigma`</span>
+<span class="sd">    and :math:`L` need to satisfy</span>
+
+<span class="sd">    .. math::</span>
+<span class="sd">       \tau \sigma \|L\|^2 &lt; 1</span>
+
+<span class="sd">    This function has 4 options, :math:`\tau`/:math:`\sigma` given or not</span>
+<span class="sd">    given.</span>
+
+<span class="sd">    - Neither :math:`\tau` nor :math:`\sigma` are given, they are chosen as</span>
+
+<span class="sd">      .. math::</span>
+<span class="sd">          \tau = \sigma = \frac{\sqrt{0.9}}{\|L\|}</span>
+
+<span class="sd">    - If only :math:`\sigma` is given, :math:`\tau` is set to</span>
+
+<span class="sd">      .. math::</span>
+<span class="sd">          \tau = \frac{0.9}{\sigma \|L\|^2}</span>
+
+<span class="sd">    - If only :math:`\tau` is given, :math:`\sigma` is set</span>
+<span class="sd">      to</span>
+
+<span class="sd">      .. math::</span>
+<span class="sd">          \sigma = \frac{0.9}{\tau \|L\|^2}</span>
+
+<span class="sd">    - If both are given, they are returned as-is without further validation.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">tau</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">sigma</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">return</span> <span class="nb">float</span><span class="p">(</span><span class="n">tau</span><span class="p">),</span> <span class="nb">float</span><span class="p">(</span><span class="n">sigma</span><span class="p">)</span>
+
+    <span class="n">L_norm</span> <span class="o">=</span> <span class="n">L</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">estimate</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">L</span><span class="p">,</span> <span class="n">Operator</span><span class="p">)</span> <span class="k">else</span> <span class="nb">float</span><span class="p">(</span><span class="n">L</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">tau</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">sigma</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">tau</span> <span class="o">=</span> <span class="n">sigma</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="mf">0.9</span><span class="p">)</span> <span class="o">/</span> <span class="n">L_norm</span>
+        <span class="k">return</span> <span class="n">tau</span><span class="p">,</span> <span class="n">sigma</span>
+    <span class="k">elif</span> <span class="n">tau</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">tau</span> <span class="o">=</span> <span class="mf">0.9</span> <span class="o">/</span> <span class="p">(</span><span class="n">sigma</span> <span class="o">*</span> <span class="n">L_norm</span> <span class="o">**</span> <span class="mi">2</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">tau</span><span class="p">,</span> <span class="nb">float</span><span class="p">(</span><span class="n">sigma</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>  <span class="c1"># sigma is None</span>
+        <span class="n">sigma</span> <span class="o">=</span> <span class="mf">0.9</span> <span class="o">/</span> <span class="p">(</span><span class="n">tau</span> <span class="o">*</span> <span class="n">L_norm</span> <span class="o">**</span> <span class="mi">2</span><span class="p">)</span>
+        <span class="k">return</span> <span class="nb">float</span><span class="p">(</span><span class="n">tau</span><span class="p">),</span> <span class="n">sigma</span></div>
+
+
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s1">&#39;__main__&#39;</span><span class="p">:</span>
+    <span class="kn">from</span> <span class="nn">odl.util.testutils</span> <span class="kn">import</span> <span class="n">run_doctests</span>
+    <span class="n">run_doctests</span><span class="p">()</span>
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &#169; Copyright 2014-2020 The ODL Contributors.
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

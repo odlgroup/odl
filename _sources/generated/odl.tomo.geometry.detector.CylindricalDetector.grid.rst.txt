@@ -1,0 +1,6 @@
+CylindricalDetector.grid
+===================================================
+
+.. currentmodule:: odl.tomo.geometry.detector
+
+.. autoproperty:: CylindricalDetector.grid

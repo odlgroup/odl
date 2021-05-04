@@ -1,0 +1,6 @@
+ProductSpaceCustomNorm.norm
+============================================
+
+.. currentmodule:: odl.space.pspace
+
+.. autoproperty:: ProductSpaceCustomNorm.norm

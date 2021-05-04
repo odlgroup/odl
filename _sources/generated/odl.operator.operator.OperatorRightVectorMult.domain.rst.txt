@@ -1,0 +1,6 @@
+OperatorRightVectorMult.domain
+====================================================
+
+.. currentmodule:: odl.operator.operator
+
+.. autoproperty:: OperatorRightVectorMult.domain

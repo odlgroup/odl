@@ -1,0 +1,6 @@
+PointwiseInnerBase.range
+================================================
+
+.. currentmodule:: odl.operator.tensor_ops
+
+.. autoproperty:: PointwiseInnerBase.range

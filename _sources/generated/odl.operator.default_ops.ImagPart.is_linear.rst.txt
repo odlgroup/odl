@@ -1,0 +1,6 @@
+ImagPart.is_linear
+===========================================
+
+.. currentmodule:: odl.operator.default_ops
+
+.. autoproperty:: ImagPart.is_linear

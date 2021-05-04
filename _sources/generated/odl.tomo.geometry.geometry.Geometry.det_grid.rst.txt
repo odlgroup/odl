@@ -1,0 +1,6 @@
+Geometry.det_grid
+============================================
+
+.. currentmodule:: odl.tomo.geometry.geometry
+
+.. autoproperty:: Geometry.det_grid

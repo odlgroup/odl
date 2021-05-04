@@ -1,0 +1,8 @@
+:orphan:
+
+ProductSpaceUfuncs.sum
+======================================
+
+.. currentmodule:: odl.util.ufuncs
+
+.. automethod:: ProductSpaceUfuncs.sum

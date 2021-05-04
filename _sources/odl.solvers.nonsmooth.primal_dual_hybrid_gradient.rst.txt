@@ -1,0 +1,22 @@
+primal_dual_hybrid_gradient
+===========================
+
+Primal-dual hybrid gradient (PDHG) algorithm studied by Chambolle and Pock.
+
+The primal-dual hybrid gradient algorithm is a flexible method well suited for
+non-smooth convex optimization problems in imaging.
+
+
+.. currentmodule:: odl.solvers.nonsmooth.primal_dual_hybrid_gradient
+
+
+
+
+.. rubric:: Functions
+
+.. autosummary::
+   :toctree: generated/
+
+   ~odl.solvers.nonsmooth.primal_dual_hybrid_gradient.pdhg
+   ~odl.solvers.nonsmooth.primal_dual_hybrid_gradient.pdhg_stepsize
+

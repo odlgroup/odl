@@ -1,0 +1,8 @@
+:orphan:
+
+PointwiseInnerBase.__call__
+===================================================
+
+.. currentmodule:: odl.operator.tensor_ops
+
+.. automethod:: PointwiseInnerBase.__call__

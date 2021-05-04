@@ -1,0 +1,57 @@
+﻿FanBeamGeometry
+==========================================
+
+.. currentmodule:: odl.tomo.geometry.conebeam
+
+.. autoclass:: FanBeamGeometry
+   :show-inheritance:
+   
+   
+   .. automethod:: __init__
+   
+      
+   
+   .. HACK -- the point here is that we don't want this to appear in the output, but the autosummary should still generate the pages.
+      .. autosummary::
+         :toctree:
+      
+         FanBeamGeometry.__eq__
+         FanBeamGeometry.__getitem__
+         FanBeamGeometry.det_axis
+         FanBeamGeometry.det_point_position
+         FanBeamGeometry.det_refpoint
+         FanBeamGeometry.det_to_src
+         FanBeamGeometry.frommatrix
+         FanBeamGeometry.rotation_matrix
+         FanBeamGeometry.src_position
+   
+
+    
+   .. HACK -- the point here is that we don't want this to appear in the output, but the autosummary should still generate the pages.
+      .. autosummary::
+         :toctree:
+      
+         FanBeamGeometry.angles
+         FanBeamGeometry.check_bounds
+         FanBeamGeometry.det_axis_init
+         FanBeamGeometry.det_curvature_radius
+         FanBeamGeometry.det_grid
+         FanBeamGeometry.det_params
+         FanBeamGeometry.det_partition
+         FanBeamGeometry.det_radius
+         FanBeamGeometry.det_shift_func
+         FanBeamGeometry.detector
+         FanBeamGeometry.grid
+         FanBeamGeometry.implementation_cache
+         FanBeamGeometry.motion_grid
+         FanBeamGeometry.motion_params
+         FanBeamGeometry.motion_partition
+         FanBeamGeometry.ndim
+         FanBeamGeometry.params
+         FanBeamGeometry.partition
+         FanBeamGeometry.src_radius
+         FanBeamGeometry.src_shift_func
+         FanBeamGeometry.src_to_det_init
+         FanBeamGeometry.translation
+   
+   

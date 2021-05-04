@@ -1,0 +1,6 @@
+﻿cone_beam_geometry
+=============================================
+
+.. currentmodule:: odl.tomo.geometry.conebeam
+
+.. autofunction:: cone_beam_geometry

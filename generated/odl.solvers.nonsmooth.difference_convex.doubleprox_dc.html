@@ -1,0 +1,340 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>doubleprox_dc &mdash; odl 1.0.0.dev0 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="doubleprox_dc_simple" href="odl.solvers.nonsmooth.difference_convex.doubleprox_dc_simple.html" />
+    <link rel="prev" title="dca" href="odl.solvers.nonsmooth.difference_convex.dca.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../index.html" class="icon icon-home"> odl
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                1.0.0.dev0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Getting Started</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../getting_started/getting_started.html">Getting Started</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Working with ODL</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../guide/guide.html">User’s guide – selected topics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../math/math.html">Mathematical Background</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Developer zone</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../dev/dev.html">Contributing to ODL</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Useful facts</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../guide/faq.html">Frequently asked questions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../guide/glossary.html">Glossary</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../release_notes.html">Release Notes</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../refs.html">References</a></li>
+</ul>
+<p class="caption"><span class="caption-text">API Reference</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../odl.html">odl</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../odl.contrib.html">contrib</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../odl.deform.html">deform</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../odl.diagnostics.html">diagnostics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../odl.discr.html">discr</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../odl.operator.html">operator</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../odl.phantom.html">phantom</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../odl.set.html">set</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="../odl.solvers.html">solvers</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="../odl.solvers.functional.html">functional</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../odl.solvers.iterative.html">iterative</a></li>
+<li class="toctree-l3 current"><a class="reference internal" href="../odl.solvers.nonsmooth.html">nonsmooth</a><ul class="current">
+<li class="toctree-l4"><a class="reference internal" href="../odl.solvers.nonsmooth.admm.html">admm</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../odl.solvers.nonsmooth.alternating_dual_updates.html">alternating_dual_updates</a></li>
+<li class="toctree-l4 current"><a class="reference internal" href="../odl.solvers.nonsmooth.difference_convex.html">difference_convex</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../odl.solvers.nonsmooth.douglas_rachford.html">douglas_rachford</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../odl.solvers.nonsmooth.forward_backward.html">forward_backward</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../odl.solvers.nonsmooth.primal_dual_hybrid_gradient.html">primal_dual_hybrid_gradient</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../odl.solvers.nonsmooth.proximal_gradient_solvers.html">proximal_gradient_solvers</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../odl.solvers.nonsmooth.proximal_operators.html">proximal_operators</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../odl.solvers.smooth.html">smooth</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../odl.solvers.util.html">util</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../odl.space.html">space</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../odl.tomo.html">tomo</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../odl.trafos.html">trafos</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../odl.ufunc_ops.html">ufunc_ops</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../odl.util.html">util</a></li>
+</ul>
+</li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">odl</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="../odl.html">odl</a> &raquo;</li>
+        
+          <li><a href="../odl.solvers.html">solvers</a> &raquo;</li>
+        
+          <li><a href="../odl.solvers.nonsmooth.html">nonsmooth</a> &raquo;</li>
+        
+          <li><a href="../odl.solvers.nonsmooth.difference_convex.html">difference_convex</a> &raquo;</li>
+        
+      <li>doubleprox_dc</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            <a href="../_sources/generated/odl.solvers.nonsmooth.difference_convex.doubleprox_dc.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="doubleprox-dc">
+<h1>doubleprox_dc<a class="headerlink" href="#doubleprox-dc" title="Permalink to this headline">¶</a></h1>
+<dl class="py function">
+<dt id="odl.solvers.nonsmooth.difference_convex.doubleprox_dc">
+<code class="sig-prename descclassname"><span class="pre">odl.solvers.nonsmooth.difference_convex.</span></code><code class="sig-name descname"><span class="pre">doubleprox_dc</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">f</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">phi</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">g</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">K</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">niter</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gamma</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mu</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">callback</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/odl/solvers/nonsmooth/difference_convex.html#doubleprox_dc"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#odl.solvers.nonsmooth.difference_convex.doubleprox_dc" title="Permalink to this definition">¶</a></dt>
+<dd><p>Double-proxmial gradient d.c. algorithm of Banert and Bot.</p>
+<p>This algorithm solves a problem of the form</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">min_x</span> <span class="n">f</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="o">+</span> <span class="n">phi</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="o">-</span> <span class="n">g</span><span class="p">(</span><span class="n">Kx</span><span class="p">)</span><span class="o">.</span>
+</pre></div>
+</div>
+<dl class="field-list">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl>
+<dt><strong>x</strong><span class="classifier"><a class="reference internal" href="odl.set.space.LinearSpaceElement.html#odl.set.space.LinearSpaceElement" title="odl.set.space.LinearSpaceElement"><code class="xref any py py-class docutils literal notranslate"><span class="pre">LinearSpaceElement</span></code></a></span></dt><dd><p>Initial primal guess, updated in-place.</p>
+</dd>
+<dt><strong>y</strong><span class="classifier"><a class="reference internal" href="odl.set.space.LinearSpaceElement.html#odl.set.space.LinearSpaceElement" title="odl.set.space.LinearSpaceElement"><code class="xref any py py-class docutils literal notranslate"><span class="pre">LinearSpaceElement</span></code></a></span></dt><dd><p>Initial dual guess, updated in-place.</p>
+</dd>
+<dt><strong>f</strong><span class="classifier"><a class="reference internal" href="odl.solvers.functional.functional.Functional.html#odl.solvers.functional.functional.Functional" title="odl.solvers.functional.functional.Functional"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Functional</span></code></a></span></dt><dd><p>Convex functional. Needs to implement <code class="docutils literal notranslate"><span class="pre">g.proximal</span></code>.</p>
+</dd>
+<dt><strong>phi</strong><span class="classifier"><a class="reference internal" href="odl.solvers.functional.functional.Functional.html#odl.solvers.functional.functional.Functional" title="odl.solvers.functional.functional.Functional"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Functional</span></code></a></span></dt><dd><p>Convex functional. Needs to implement <code class="docutils literal notranslate"><span class="pre">phi.gradient</span></code>.
+Convergence can be guaranteed if the gradient is Lipschitz continuous.</p>
+</dd>
+<dt><strong>g</strong><span class="classifier"><a class="reference internal" href="odl.solvers.functional.functional.Functional.html#odl.solvers.functional.functional.Functional" title="odl.solvers.functional.functional.Functional"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Functional</span></code></a></span></dt><dd><p>Convex functional. Needs to implement <code class="docutils literal notranslate"><span class="pre">h.convex_conj.proximal</span></code>.</p>
+</dd>
+<dt><strong>K</strong><span class="classifier"><a class="reference internal" href="../guide/glossary.html#term-operator"><code class="xref any std std-term docutils literal notranslate"><span class="pre">Operator</span></code></a></span></dt><dd><p>Linear operator. Needs to implement <code class="docutils literal notranslate"><span class="pre">K.adjoint</span></code></p>
+</dd>
+<dt><strong>niter</strong><span class="classifier">int</span></dt><dd><p>Number of iterations.</p>
+</dd>
+<dt><strong>gamma</strong><span class="classifier">positive float</span></dt><dd><p>Stepsize in the primal updates.</p>
+</dd>
+<dt><strong>mu</strong><span class="classifier">positive float</span></dt><dd><p>Stepsize in the dual updates.</p>
+</dd>
+<dt><strong>callback</strong><span class="classifier">callable, optional</span></dt><dd><p>Function called with the current iterate after each iteration.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+<div class="admonition seealso">
+<p class="admonition-title">See also</p>
+<dl class="simple">
+<dt><a class="reference internal" href="odl.solvers.nonsmooth.difference_convex.dca.html#odl.solvers.nonsmooth.difference_convex.dca" title="odl.solvers.nonsmooth.difference_convex.dca"><code class="xref py py-obj docutils literal notranslate"><span class="pre">dca</span></code></a></dt><dd><p>Solver with subgradient steps for all the functionals.</p>
+</dd>
+<dt><a class="reference internal" href="odl.solvers.nonsmooth.difference_convex.prox_dca.html#odl.solvers.nonsmooth.difference_convex.prox_dca" title="odl.solvers.nonsmooth.difference_convex.prox_dca"><code class="xref py py-obj docutils literal notranslate"><span class="pre">prox_dca</span></code></a></dt><dd><p>Solver with a proximal step for <code class="docutils literal notranslate"><span class="pre">f</span></code> and a subgradient step for <code class="docutils literal notranslate"><span class="pre">g</span></code>.</p>
+</dd>
+</dl>
+</div>
+<p class="rubric">Notes</p>
+<p>This algorithm is proposed in <a class="reference external" href="https://arxiv.org/abs/1610.06538">[BB2016]</a> and solves the d.c. problem</p>
+<div class="math">
+<p><img src="../_images/math/93288a48e834bab4dfc1ab36d739cfc06f8524ec.png" alt="\min_x f(x) + \varphi(x) - g(Kx)"/></p>
+</div><p>together with its Toland dual</p>
+<div class="math">
+<p><img src="../_images/math/de53252bd765bd09e2ffbe162b997cb23047ea96.png" alt="\min_y g^*(y) - (f + \varphi)^*(K^* y)."/></p>
+</div><p>The iterations are given by</p>
+<div class="math">
+<p><img src="../_images/math/277d3f9b2a34a78ba85399cd42049a0f485eb764.png" alt="x_{n+1} &amp;= \mathrm{Prox}_{\gamma f} (x_n + \gamma (K^* y_n
+           - \nabla \varphi(x_n))), \\
+y_{n+1} &amp;= \mathrm{Prox}_{\mu g^*} (y_n + \mu K x_{n+1})."/></p>
+</div><p>To guarantee convergence, the parameter <img class="math" src="../_images/math/34d137cf01c787ecda732761c3f95b0f65a6c3e9.png" alt="\gamma"/> must satisfy
+<img class="math" src="../_images/math/80d322a5866d240eed6f2a360f5d16d68ea9540a.png" alt="0 &lt; \gamma &lt; 2/L"/> where <img class="math" src="../_images/math/19eef1966f7c545af3ac8c0fa486974d873e3c65.png" alt="L"/> is the Lipschitz constant of
+<img class="math" src="../_images/math/007bc2f6e66b12674981fe28a236395983258bba.png" alt="\nabla \varphi"/>.</p>
+<p class="rubric">References</p>
+<p>[BB2016] Banert, S, and Bot, R I. <em>A general double-proximal gradient
+algorithm for d.c. programming</em>. arXiv:1610.06538 [math.OC] (2016).</p>
+</dd></dl>
+
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+        <a href="odl.solvers.nonsmooth.difference_convex.doubleprox_dc_simple.html" class="btn btn-neutral float-right" title="doubleprox_dc_simple" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="odl.solvers.nonsmooth.difference_convex.dca.html" class="btn btn-neutral float-left" title="dca" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &#169; Copyright 2014-2020 The ODL Contributors.
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

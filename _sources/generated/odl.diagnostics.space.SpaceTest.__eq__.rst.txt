@@ -1,0 +1,8 @@
+:orphan:
+
+SpaceTest.__eq__
+======================================
+
+.. currentmodule:: odl.diagnostics.space
+
+.. automethod:: SpaceTest.__eq__

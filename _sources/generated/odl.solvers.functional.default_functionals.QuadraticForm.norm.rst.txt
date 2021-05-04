@@ -1,0 +1,8 @@
+:orphan:
+
+QuadraticForm.norm
+=============================================================
+
+.. currentmodule:: odl.solvers.functional.default_functionals
+
+.. automethod:: QuadraticForm.norm

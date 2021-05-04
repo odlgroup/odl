@@ -1,0 +1,8 @@
+:orphan:
+
+SetUnion.__eq__
+============================
+
+.. currentmodule:: odl.set.sets
+
+.. automethod:: SetUnion.__eq__

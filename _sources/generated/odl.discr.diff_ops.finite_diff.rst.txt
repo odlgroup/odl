@@ -1,0 +1,6 @@
+﻿finite_diff
+==============================
+
+.. currentmodule:: odl.discr.diff_ops
+
+.. autofunction:: finite_diff

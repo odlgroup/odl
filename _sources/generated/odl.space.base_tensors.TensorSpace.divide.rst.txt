@@ -1,0 +1,8 @@
+:orphan:
+
+TensorSpace.divide
+=========================================
+
+.. currentmodule:: odl.space.base_tensors
+
+.. automethod:: TensorSpace.divide

@@ -1,0 +1,8 @@
+:orphan:
+
+OperatorRightScalarMult.derivative
+========================================================
+
+.. currentmodule:: odl.operator.operator
+
+.. automethod:: OperatorRightScalarMult.derivative

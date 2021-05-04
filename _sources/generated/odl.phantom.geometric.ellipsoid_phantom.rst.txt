@@ -1,0 +1,6 @@
+﻿ellipsoid_phantom
+=======================================
+
+.. currentmodule:: odl.phantom.geometric
+
+.. autofunction:: ellipsoid_phantom

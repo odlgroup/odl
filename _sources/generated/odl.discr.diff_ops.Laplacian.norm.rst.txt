@@ -1,0 +1,8 @@
+:orphan:
+
+Laplacian.norm
+=================================
+
+.. currentmodule:: odl.discr.diff_ops
+
+.. automethod:: Laplacian.norm

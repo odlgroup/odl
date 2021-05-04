@@ -1,0 +1,19 @@
+geometry
+========
+
+Geometry base and mixin classes.
+
+.. currentmodule:: odl.tomo.geometry.geometry
+
+
+
+.. rubric:: Classes
+
+.. autosummary::
+   :toctree: generated/
+
+   ~odl.tomo.geometry.geometry.AxisOrientedGeometry
+   ~odl.tomo.geometry.geometry.DivergentBeamGeometry
+   ~odl.tomo.geometry.geometry.Geometry
+
+

@@ -1,0 +1,6 @@
+arccosh_func.gradient
+=============================================
+
+.. currentmodule:: odl.ufunc_ops.ufunc_ops
+
+.. autoproperty:: arccosh_func.gradient

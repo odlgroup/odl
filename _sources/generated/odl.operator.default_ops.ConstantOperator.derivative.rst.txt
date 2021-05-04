@@ -1,0 +1,8 @@
+:orphan:
+
+ConstantOperator.derivative
+====================================================
+
+.. currentmodule:: odl.operator.default_ops
+
+.. automethod:: ConstantOperator.derivative

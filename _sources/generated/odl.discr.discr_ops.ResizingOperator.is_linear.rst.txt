@@ -1,0 +1,6 @@
+ResizingOperator.is_linear
+==============================================
+
+.. currentmodule:: odl.discr.discr_ops
+
+.. autoproperty:: ResizingOperator.is_linear

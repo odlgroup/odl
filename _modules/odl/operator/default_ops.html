@@ -1,0 +1,1987 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>odl.operator.default_ops &mdash; odl 1.0.0.dev0 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/custom.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../../" src="../../../_static/documentation_options.js"></script>
+        <script src="../../../_static/jquery.js"></script>
+        <script src="../../../_static/underscore.js"></script>
+        <script src="../../../_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="../../../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../../index.html" class="icon icon-home"> odl
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                1.0.0.dev0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Getting Started</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../getting_started/getting_started.html">Getting Started</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Working with ODL</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../guide/guide.html">User’s guide – selected topics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../math/math.html">Mathematical Background</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Developer zone</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../dev/dev.html">Contributing to ODL</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Useful facts</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../guide/faq.html">Frequently asked questions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../guide/glossary.html">Glossary</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../release_notes.html">Release Notes</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../refs.html">References</a></li>
+</ul>
+<p class="caption"><span class="caption-text">API Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../odl.html">odl</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">odl</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="../../index.html">Module code</a> &raquo;</li>
+        
+      <li>odl.operator.default_ops</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for odl.operator.default_ops</h1><div class="highlight"><pre>
+<span></span><span class="c1"># coding=utf-8</span>
+
+<span class="c1"># Copyright 2014-2020 The ODL contributors</span>
+<span class="c1">#</span>
+<span class="c1"># This file is part of ODL.</span>
+<span class="c1">#</span>
+<span class="c1"># This Source Code Form is subject to the terms of the Mozilla Public License,</span>
+<span class="c1"># v. 2.0. If a copy of the MPL was not distributed with this file, You can</span>
+<span class="c1"># obtain one at https://mozilla.org/MPL/2.0/.</span>
+
+<span class="sd">&quot;&quot;&quot;Default operators defined on any (reasonable) space.&quot;&quot;&quot;</span>
+
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">absolute_import</span><span class="p">,</span> <span class="n">division</span><span class="p">,</span> <span class="n">print_function</span>
+
+<span class="kn">from</span> <span class="nn">copy</span> <span class="kn">import</span> <span class="n">copy</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+
+<span class="kn">from</span> <span class="nn">odl.operator.operator</span> <span class="kn">import</span> <span class="n">Operator</span>
+<span class="kn">from</span> <span class="nn">odl.set</span> <span class="kn">import</span> <span class="n">ComplexNumbers</span><span class="p">,</span> <span class="n">Field</span><span class="p">,</span> <span class="n">LinearSpace</span><span class="p">,</span> <span class="n">RealNumbers</span>
+<span class="kn">from</span> <span class="nn">odl.set.space</span> <span class="kn">import</span> <span class="n">LinearSpaceElement</span>
+<span class="kn">from</span> <span class="nn">odl.space</span> <span class="kn">import</span> <span class="n">ProductSpace</span>
+
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;ScalingOperator&#39;</span><span class="p">,</span> <span class="s1">&#39;ZeroOperator&#39;</span><span class="p">,</span> <span class="s1">&#39;IdentityOperator&#39;</span><span class="p">,</span>
+           <span class="s1">&#39;LinCombOperator&#39;</span><span class="p">,</span> <span class="s1">&#39;MultiplyOperator&#39;</span><span class="p">,</span> <span class="s1">&#39;PowerOperator&#39;</span><span class="p">,</span>
+           <span class="s1">&#39;InnerProductOperator&#39;</span><span class="p">,</span> <span class="s1">&#39;NormOperator&#39;</span><span class="p">,</span> <span class="s1">&#39;DistOperator&#39;</span><span class="p">,</span>
+           <span class="s1">&#39;ConstantOperator&#39;</span><span class="p">,</span> <span class="s1">&#39;RealPart&#39;</span><span class="p">,</span> <span class="s1">&#39;ImagPart&#39;</span><span class="p">,</span> <span class="s1">&#39;ComplexEmbedding&#39;</span><span class="p">,</span>
+           <span class="s1">&#39;ComplexModulus&#39;</span><span class="p">,</span> <span class="s1">&#39;ComplexModulusSquared&#39;</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="ScalingOperator"><a class="viewcode-back" href="../../../generated/odl.operator.default_ops.ScalingOperator.html#odl.operator.default_ops.ScalingOperator">[docs]</a><span class="k">class</span> <span class="nc">ScalingOperator</span><span class="p">(</span><span class="n">Operator</span><span class="p">):</span>
+
+    <span class="sd">&quot;&quot;&quot;Operator of multiplication with a scalar.</span>
+
+<span class="sd">    Implements::</span>
+
+<span class="sd">        ScalingOperator(s)(x) == s * x</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="ScalingOperator.__init__"><a class="viewcode-back" href="../../../generated/odl.operator.default_ops.ScalingOperator.html#odl.operator.default_ops.ScalingOperator.__init__">[docs]</a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">domain</span><span class="p">,</span> <span class="n">scalar</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Initialize a new instance.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        domain : `LinearSpace` or `Field`</span>
+<span class="sd">            Set of elements on which this operator acts.</span>
+<span class="sd">        scalar : ``domain.field`` element</span>
+<span class="sd">            Fixed scaling factor of this operator.</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        --------</span>
+<span class="sd">        &gt;&gt;&gt; r3 = odl.rn(3)</span>
+<span class="sd">        &gt;&gt;&gt; vec = r3.element([1, 2, 3])</span>
+<span class="sd">        &gt;&gt;&gt; out = r3.element()</span>
+<span class="sd">        &gt;&gt;&gt; op = ScalingOperator(r3, 2.0)</span>
+<span class="sd">        &gt;&gt;&gt; op(vec, out)  # In-place, Returns out</span>
+<span class="sd">        rn(3).element([ 2.,  4.,  6.])</span>
+<span class="sd">        &gt;&gt;&gt; out</span>
+<span class="sd">        rn(3).element([ 2.,  4.,  6.])</span>
+<span class="sd">        &gt;&gt;&gt; op(vec)  # Out-of-place</span>
+<span class="sd">        rn(3).element([ 2.,  4.,  6.])</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">domain</span><span class="p">,</span> <span class="p">(</span><span class="n">LinearSpace</span><span class="p">,</span> <span class="n">Field</span><span class="p">)):</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;`domain` </span><span class="si">{!r}</span><span class="s1"> not a `LinearSpace` or `Field` &#39;</span>
+                            <span class="s1">&#39;instance&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">domain</span><span class="p">))</span>
+
+        <span class="nb">super</span><span class="p">(</span><span class="n">ScalingOperator</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">domain</span><span class="p">,</span> <span class="n">domain</span><span class="p">,</span> <span class="n">linear</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__scalar</span> <span class="o">=</span> <span class="n">domain</span><span class="o">.</span><span class="n">field</span><span class="o">.</span><span class="n">element</span><span class="p">(</span><span class="n">scalar</span><span class="p">)</span></div>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">scalar</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Fixed scaling factor of this operator.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__scalar</span>
+
+<div class="viewcode-block" id="ScalingOperator._call"><a class="viewcode-back" href="../../../generated/odl.operator.default_ops.ScalingOperator._call.html#odl.operator.default_ops.ScalingOperator._call">[docs]</a>    <span class="k">def</span> <span class="nf">_call</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">out</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Scale ``x`` and write to ``out`` if given.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">out</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">out</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">scalar</span> <span class="o">*</span> <span class="n">x</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">out</span><span class="o">.</span><span class="n">lincomb</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">scalar</span><span class="p">,</span> <span class="n">x</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">out</span></div>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">inverse</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return the inverse operator.</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        --------</span>
+<span class="sd">        &gt;&gt;&gt; r3 = odl.rn(3)</span>
+<span class="sd">        &gt;&gt;&gt; vec = r3.element([1, 2, 3])</span>
+<span class="sd">        &gt;&gt;&gt; op = ScalingOperator(r3, 2.0)</span>
+<span class="sd">        &gt;&gt;&gt; inv = op.inverse</span>
+<span class="sd">        &gt;&gt;&gt; inv(op(vec)) == vec</span>
+<span class="sd">        True</span>
+<span class="sd">        &gt;&gt;&gt; op(inv(vec)) == vec</span>
+<span class="sd">        True</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">scalar</span> <span class="o">==</span> <span class="mf">0.0</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ZeroDivisionError</span><span class="p">(</span><span class="s1">&#39;scaling operator not invertible for &#39;</span>
+                                    <span class="s1">&#39;scalar==0&#39;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">ScalingOperator</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">domain</span><span class="p">,</span> <span class="mf">1.0</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">scalar</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">adjoint</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Adjoint, given as scaling with the conjugate of the scalar.</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        --------</span>
+<span class="sd">        In the real case, the adjoint is the same as the operator:</span>
+
+<span class="sd">        &gt;&gt;&gt; r3 = odl.rn(3)</span>
+<span class="sd">        &gt;&gt;&gt; x = r3.element([1, 2, 3])</span>
+<span class="sd">        &gt;&gt;&gt; op = ScalingOperator(r3, 2)</span>
+<span class="sd">        &gt;&gt;&gt; op(x)</span>
+<span class="sd">        rn(3).element([ 2.,  4.,  6.])</span>
+<span class="sd">        &gt;&gt;&gt; op.adjoint(x)  # The same</span>
+<span class="sd">        rn(3).element([ 2.,  4.,  6.])</span>
+
+<span class="sd">        In the complex case, the scalar is conjugated:</span>
+
+<span class="sd">        &gt;&gt;&gt; c3 = odl.cn(3)</span>
+<span class="sd">        &gt;&gt;&gt; x_complex = c3.element([1, 1j, 1-1j])</span>
+<span class="sd">        &gt;&gt;&gt; op = ScalingOperator(c3, 1+1j)</span>
+<span class="sd">        &gt;&gt;&gt; expected_op = ScalingOperator(c3, 1-1j)</span>
+<span class="sd">        &gt;&gt;&gt; op.adjoint(x_complex)</span>
+<span class="sd">        cn(3).element([ 1.-1.j,  1.+1.j,  0.-2.j])</span>
+<span class="sd">        &gt;&gt;&gt; expected_op(x_complex)  # The same</span>
+<span class="sd">        cn(3).element([ 1.-1.j,  1.+1.j,  0.-2.j])</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        adjoint : `ScalingOperator`</span>
+<span class="sd">            ``self`` if `scalar` is real, else `scalar` is conjugated.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="nb">complex</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">scalar</span><span class="p">)</span><span class="o">.</span><span class="n">imag</span> <span class="o">==</span> <span class="mf">0.0</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">ScalingOperator</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">domain</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">scalar</span><span class="o">.</span><span class="n">conjugate</span><span class="p">())</span>
+
+<div class="viewcode-block" id="ScalingOperator.norm"><a class="viewcode-back" href="../../../generated/odl.operator.default_ops.ScalingOperator.norm.html#odl.operator.default_ops.ScalingOperator.norm">[docs]</a>    <span class="k">def</span> <span class="nf">norm</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">estimate</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return the operator norm of this operator.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        estimate, kwargs : bool</span>
+<span class="sd">            Ignored. Present to conform with base-class interface.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        norm : float</span>
+<span class="sd">            The operator norm, absolute value of `scalar`.</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        --------</span>
+<span class="sd">        &gt;&gt;&gt; spc = odl.rn(3)</span>
+<span class="sd">        &gt;&gt;&gt; scaling = odl.ScalingOperator(spc, 3.0)</span>
+<span class="sd">        &gt;&gt;&gt; scaling.norm(True)</span>
+<span class="sd">        3.0</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">scalar</span><span class="p">)</span></div>
+
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return ``repr(self)``.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="s1">&#39;</span><span class="si">{}</span><span class="s1">(</span><span class="si">{!r}</span><span class="s1">, </span><span class="si">{!r}</span><span class="s1">)&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="p">,</span>
+                                       <span class="bp">self</span><span class="o">.</span><span class="n">domain</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">scalar</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return ``str(self)``.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="s1">&#39;</span><span class="si">{}</span><span class="s1"> * I&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">scalar</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="IdentityOperator"><a class="viewcode-back" href="../../../generated/odl.operator.default_ops.IdentityOperator.html#odl.operator.default_ops.IdentityOperator">[docs]</a><span class="k">class</span> <span class="nc">IdentityOperator</span><span class="p">(</span><span class="n">ScalingOperator</span><span class="p">):</span>
+
+    <span class="sd">&quot;&quot;&quot;Operator mapping each element to itself.</span>
+
+<span class="sd">    Implements::</span>
+
+<span class="sd">        IdentityOperator()(x) == x</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="IdentityOperator.__init__"><a class="viewcode-back" href="../../../generated/odl.operator.default_ops.IdentityOperator.html#odl.operator.default_ops.IdentityOperator.__init__">[docs]</a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">space</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Initialize a new instance.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        space : `LinearSpace`</span>
+<span class="sd">            Space of elements which the operator is acting on.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">IdentityOperator</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">space</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span></div>
+
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return ``repr(self)``.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="s1">&#39;</span><span class="si">{}</span><span class="s1">(</span><span class="si">{!r}</span><span class="s1">)&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">domain</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return ``str(self)``.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="s2">&quot;I&quot;</span></div>
+
+
+<div class="viewcode-block" id="LinCombOperator"><a class="viewcode-back" href="../../../generated/odl.operator.default_ops.LinCombOperator.html#odl.operator.default_ops.LinCombOperator">[docs]</a><span class="k">class</span> <span class="nc">LinCombOperator</span><span class="p">(</span><span class="n">Operator</span><span class="p">):</span>
+
+    <span class="sd">&quot;&quot;&quot;Operator mapping two space elements to a linear combination.</span>
+
+<span class="sd">    Implements::</span>
+
+<span class="sd">        LinCombOperator(a, b)([x, y]) == a * x + b * y</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="LinCombOperator.__init__"><a class="viewcode-back" href="../../../generated/odl.operator.default_ops.LinCombOperator.html#odl.operator.default_ops.LinCombOperator.__init__">[docs]</a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">space</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Initialize a new instance.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        space : `LinearSpace`</span>
+<span class="sd">            Space of elements which the operator is acting on.</span>
+<span class="sd">        a, b : ``space.field`` elements</span>
+<span class="sd">            Scalars to multiply ``x[0]`` and ``x[1]`` with, respectively.</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        --------</span>
+<span class="sd">        &gt;&gt;&gt; r3 = odl.rn(3)</span>
+<span class="sd">        &gt;&gt;&gt; r3xr3 = odl.ProductSpace(r3, r3)</span>
+<span class="sd">        &gt;&gt;&gt; xy = r3xr3.element([[1, 2, 3], [1, 2, 3]])</span>
+<span class="sd">        &gt;&gt;&gt; z = r3.element()</span>
+<span class="sd">        &gt;&gt;&gt; op = LinCombOperator(r3, 1.0, 1.0)</span>
+<span class="sd">        &gt;&gt;&gt; op(xy, out=z)  # Returns z</span>
+<span class="sd">        rn(3).element([ 2.,  4.,  6.])</span>
+<span class="sd">        &gt;&gt;&gt; z</span>
+<span class="sd">        rn(3).element([ 2.,  4.,  6.])</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">domain</span> <span class="o">=</span> <span class="n">ProductSpace</span><span class="p">(</span><span class="n">space</span><span class="p">,</span> <span class="n">space</span><span class="p">)</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">LinCombOperator</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">domain</span><span class="p">,</span> <span class="n">space</span><span class="p">,</span> <span class="n">linear</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">a</span> <span class="o">=</span> <span class="n">a</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">b</span> <span class="o">=</span> <span class="n">b</span></div>
+
+<div class="viewcode-block" id="LinCombOperator._call"><a class="viewcode-back" href="../../../generated/odl.operator.default_ops.LinCombOperator._call.html#odl.operator.default_ops.LinCombOperator._call">[docs]</a>    <span class="k">def</span> <span class="nf">_call</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">out</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Linearly combine ``x`` and write to ``out`` if given.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">out</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">out</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">range</span><span class="o">.</span><span class="n">element</span><span class="p">()</span>
+        <span class="n">out</span><span class="o">.</span><span class="n">lincomb</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">a</span><span class="p">,</span> <span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">b</span><span class="p">,</span> <span class="n">x</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+        <span class="k">return</span> <span class="n">out</span></div>
+
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return ``repr(self)``.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="s1">&#39;</span><span class="si">{}</span><span class="s1">(</span><span class="si">{!r}</span><span class="s1">, </span><span class="si">{!r}</span><span class="s1">, </span><span class="si">{!r}</span><span class="s1">)&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="p">,</span>
+                                             <span class="bp">self</span><span class="o">.</span><span class="n">range</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">a</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">b</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return ``str(self)``.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="s2">&quot;</span><span class="si">{}</span><span class="s2">*x + </span><span class="si">{}</span><span class="s2">*y&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">a</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">b</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="MultiplyOperator"><a class="viewcode-back" href="../../../generated/odl.operator.default_ops.MultiplyOperator.html#odl.operator.default_ops.MultiplyOperator">[docs]</a><span class="k">class</span> <span class="nc">MultiplyOperator</span><span class="p">(</span><span class="n">Operator</span><span class="p">):</span>
+
+    <span class="sd">&quot;&quot;&quot;Operator multiplying by a fixed space or field element.</span>
+
+<span class="sd">    Implements::</span>
+
+<span class="sd">        MultiplyOperator(y)(x) == x * y</span>
+
+<span class="sd">    Here, ``y`` is a `LinearSpaceElement` or `Field` element and</span>
+<span class="sd">    ``x`` is a `LinearSpaceElement`.</span>
+<span class="sd">    Hence, this operator can be defined either on a `LinearSpace` or on</span>
+<span class="sd">    a `Field`. In the first case it is the pointwise multiplication,</span>
+<span class="sd">    in the second the scalar multiplication.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="MultiplyOperator.__init__"><a class="viewcode-back" href="../../../generated/odl.operator.default_ops.MultiplyOperator.html#odl.operator.default_ops.MultiplyOperator.__init__">[docs]</a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">multiplicand</span><span class="p">,</span> <span class="n">domain</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="nb">range</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Initialize a new instance.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        multiplicand : `LinearSpaceElement` or scalar</span>
+<span class="sd">            Value to multiply by.</span>
+<span class="sd">        domain : `LinearSpace` or `Field`, optional</span>
+<span class="sd">            Set to which the operator can be applied.</span>
+<span class="sd">            Default: ``multiplicand.space``.</span>
+<span class="sd">        range : `LinearSpace` or `Field`, optional</span>
+<span class="sd">            Set to which the operator maps. Default: ``multiplicand.space``.</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        --------</span>
+<span class="sd">        &gt;&gt;&gt; r3 = odl.rn(3)</span>
+<span class="sd">        &gt;&gt;&gt; x = r3.element([1, 2, 3])</span>
+
+<span class="sd">        Multiply by vector:</span>
+
+<span class="sd">        &gt;&gt;&gt; op = MultiplyOperator(x)</span>
+<span class="sd">        &gt;&gt;&gt; op(x)</span>
+<span class="sd">        rn(3).element([ 1.,  4.,  9.])</span>
+<span class="sd">        &gt;&gt;&gt; out = r3.element()</span>
+<span class="sd">        &gt;&gt;&gt; op(x, out)</span>
+<span class="sd">        rn(3).element([ 1.,  4.,  9.])</span>
+
+<span class="sd">        Multiply by scalar:</span>
+
+<span class="sd">        &gt;&gt;&gt; op2 = MultiplyOperator(x, domain=r3.field)</span>
+<span class="sd">        &gt;&gt;&gt; op2(3)</span>
+<span class="sd">        rn(3).element([ 3.,  6.,  9.])</span>
+<span class="sd">        &gt;&gt;&gt; out = r3.element()</span>
+<span class="sd">        &gt;&gt;&gt; op2(3, out)</span>
+<span class="sd">        rn(3).element([ 3.,  6.,  9.])</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">domain</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">domain</span> <span class="o">=</span> <span class="n">multiplicand</span><span class="o">.</span><span class="n">space</span>
+
+        <span class="k">if</span> <span class="nb">range</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="nb">range</span> <span class="o">=</span> <span class="n">multiplicand</span><span class="o">.</span><span class="n">space</span>
+
+        <span class="nb">super</span><span class="p">(</span><span class="n">MultiplyOperator</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">domain</span><span class="p">,</span> <span class="nb">range</span><span class="p">,</span> <span class="n">linear</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">__multiplicand</span> <span class="o">=</span> <span class="n">multiplicand</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__domain_is_field</span> <span class="o">=</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">domain</span><span class="p">,</span> <span class="n">Field</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__range_is_field</span> <span class="o">=</span> <span class="nb">isinstance</span><span class="p">(</span><span class="nb">range</span><span class="p">,</span> <span class="n">Field</span><span class="p">)</span></div>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">multiplicand</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Value to multiply by.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__multiplicand</span>
+
+<div class="viewcode-block" id="MultiplyOperator._call"><a class="viewcode-back" href="../../../generated/odl.operator.default_ops.MultiplyOperator._call.html#odl.operator.default_ops.MultiplyOperator._call">[docs]</a>    <span class="k">def</span> <span class="nf">_call</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">out</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Multiply ``x`` and write to ``out`` if given.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">out</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">x</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">multiplicand</span>
+        <span class="k">elif</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">__range_is_field</span><span class="p">:</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">__domain_is_field</span><span class="p">:</span>
+                <span class="n">out</span><span class="o">.</span><span class="n">lincomb</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">multiplicand</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">out</span><span class="o">.</span><span class="n">assign</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">multiplicand</span> <span class="o">*</span> <span class="n">x</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;can only use `out` with `LinearSpace` range&#39;</span><span class="p">)</span></div>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">adjoint</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Adjoint of this operator.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        adjoint : `InnerProductOperator` or `MultiplyOperator`</span>
+<span class="sd">            If the domain of this operator is the scalar field of a</span>
+<span class="sd">            `LinearSpace` the adjoint is the inner product with ``y``,</span>
+<span class="sd">            else it is the multiplication with ``y``.</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        --------</span>
+<span class="sd">        &gt;&gt;&gt; r3 = odl.rn(3)</span>
+<span class="sd">        &gt;&gt;&gt; x = r3.element([1, 2, 3])</span>
+
+<span class="sd">        Multiply by a space element:</span>
+
+<span class="sd">        &gt;&gt;&gt; op = MultiplyOperator(x)</span>
+<span class="sd">        &gt;&gt;&gt; out = r3.element()</span>
+<span class="sd">        &gt;&gt;&gt; op.adjoint(x)</span>
+<span class="sd">        rn(3).element([ 1.,  4.,  9.])</span>
+
+<span class="sd">        Multiply scalars with a fixed vector:</span>
+
+<span class="sd">        &gt;&gt;&gt; op2 = MultiplyOperator(x, domain=r3.field)</span>
+<span class="sd">        &gt;&gt;&gt; op2.adjoint(x)</span>
+<span class="sd">        14.0</span>
+
+<span class="sd">        Multiply vectors with a fixed scalar:</span>
+
+<span class="sd">        &gt;&gt;&gt; op2 = MultiplyOperator(3.0, domain=r3, range=r3)</span>
+<span class="sd">        &gt;&gt;&gt; op2.adjoint(x)</span>
+<span class="sd">        rn(3).element([ 3.,  6.,  9.])</span>
+
+<span class="sd">        Multiplication operator with complex space:</span>
+
+<span class="sd">        &gt;&gt;&gt; c3 = odl.cn(3)</span>
+<span class="sd">        &gt;&gt;&gt; x_complex = c3.element([1, 1j, 1-1j])</span>
+<span class="sd">        &gt;&gt;&gt; op3 = MultiplyOperator(x_complex)</span>
+<span class="sd">        &gt;&gt;&gt; op3.adjoint.multiplicand</span>
+<span class="sd">        cn(3).element([ 1.-0.j,  0.-1.j,  1.+1.j])</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">__domain_is_field</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">domain</span><span class="p">,</span> <span class="n">RealNumbers</span><span class="p">):</span>
+                <span class="k">return</span> <span class="n">InnerProductOperator</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">multiplicand</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">domain</span><span class="p">,</span> <span class="n">ComplexNumbers</span><span class="p">):</span>
+                <span class="k">return</span> <span class="n">InnerProductOperator</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">multiplicand</span><span class="o">.</span><span class="n">conjugate</span><span class="p">())</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span>
+                    <span class="s1">&#39;adjoint not implemented for domain</span><span class="si">{!r}</span><span class="s1">&#39;</span>
+                    <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">domain</span><span class="p">))</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">domain</span><span class="o">.</span><span class="n">is_complex</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">MultiplyOperator</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">conj</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">multiplicand</span><span class="p">),</span>
+                                    <span class="n">domain</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">range</span><span class="p">,</span> <span class="nb">range</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">domain</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">MultiplyOperator</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">multiplicand</span><span class="p">,</span>
+                                    <span class="n">domain</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">range</span><span class="p">,</span> <span class="nb">range</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">domain</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return ``repr(self)``.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="s1">&#39;</span><span class="si">{}</span><span class="s1">(</span><span class="si">{!r}</span><span class="s1">)&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">multiplicand</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return ``str(self)``.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="s2">&quot;x * </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">y</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="PowerOperator"><a class="viewcode-back" href="../../../generated/odl.operator.default_ops.PowerOperator.html#odl.operator.default_ops.PowerOperator">[docs]</a><span class="k">class</span> <span class="nc">PowerOperator</span><span class="p">(</span><span class="n">Operator</span><span class="p">):</span>
+
+    <span class="sd">&quot;&quot;&quot;Operator taking a fixed power of a space or field element.</span>
+
+<span class="sd">    Implements::</span>
+
+<span class="sd">        PowerOperator(p)(x) == x ** p</span>
+
+<span class="sd">    Here, ``x`` is a `LinearSpaceElement` or `Field` element and ``p`` is</span>
+<span class="sd">    a number. Hence, this operator can be defined either on a</span>
+<span class="sd">    `LinearSpace` or on a `Field`.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="PowerOperator.__init__"><a class="viewcode-back" href="../../../generated/odl.operator.default_ops.PowerOperator.html#odl.operator.default_ops.PowerOperator.__init__">[docs]</a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">domain</span><span class="p">,</span> <span class="n">exponent</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Initialize a new instance.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        domain : `LinearSpace` or `Field`</span>
+<span class="sd">            Set of elements on which the operator can be applied.</span>
+<span class="sd">        exponent : float</span>
+<span class="sd">            Exponent parameter of the power function applied to an element.</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        --------</span>
+<span class="sd">        Use with vectors</span>
+
+<span class="sd">        &gt;&gt;&gt; op = PowerOperator(odl.rn(3), exponent=2)</span>
+<span class="sd">        &gt;&gt;&gt; op([1, 2, 3])</span>
+<span class="sd">        rn(3).element([ 1.,  4.,  9.])</span>
+
+<span class="sd">        or scalars</span>
+
+<span class="sd">        &gt;&gt;&gt; op = PowerOperator(odl.RealNumbers(), exponent=2)</span>
+<span class="sd">        &gt;&gt;&gt; op(2.0)</span>
+<span class="sd">        4.0</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">PowerOperator</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span>
+            <span class="n">domain</span><span class="p">,</span> <span class="n">domain</span><span class="p">,</span> <span class="n">linear</span><span class="o">=</span><span class="p">(</span><span class="n">exponent</span> <span class="o">==</span> <span class="mi">1</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__exponent</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">exponent</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__domain_is_field</span> <span class="o">=</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">domain</span><span class="p">,</span> <span class="n">Field</span><span class="p">)</span></div>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">exponent</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Power of the input element to take.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__exponent</span>
+
+<div class="viewcode-block" id="PowerOperator._call"><a class="viewcode-back" href="../../../generated/odl.operator.default_ops.PowerOperator._call.html#odl.operator.default_ops.PowerOperator._call">[docs]</a>    <span class="k">def</span> <span class="nf">_call</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">out</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Take the power of ``x`` and write to ``out`` if given.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">out</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">x</span> <span class="o">**</span> <span class="bp">self</span><span class="o">.</span><span class="n">exponent</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">__domain_is_field</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;cannot use `out` with field&#39;</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">out</span><span class="o">.</span><span class="n">assign</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+            <span class="n">out</span> <span class="o">**=</span> <span class="bp">self</span><span class="o">.</span><span class="n">exponent</span></div>
+
+<div class="viewcode-block" id="PowerOperator.derivative"><a class="viewcode-back" href="../../../generated/odl.operator.default_ops.PowerOperator.derivative.html#odl.operator.default_ops.PowerOperator.derivative">[docs]</a>    <span class="k">def</span> <span class="nf">derivative</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">point</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Derivative of this operator.</span>
+
+<span class="sd">            ``PowerOperator(p).derivative(y)(x) == p * y ** (p - 1) * x``</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        point : `domain` element</span>
+<span class="sd">            The point in which to take the derivative</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        derivative : `Operator`</span>
+<span class="sd">            The derivative in ``point``</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        --------</span>
+<span class="sd">        Use on vector spaces:</span>
+
+<span class="sd">        &gt;&gt;&gt; op = PowerOperator(odl.rn(3), exponent=2)</span>
+<span class="sd">        &gt;&gt;&gt; dop = op.derivative(op.domain.element([1, 2, 3]))</span>
+<span class="sd">        &gt;&gt;&gt; dop([1, 1, 1])</span>
+<span class="sd">        rn(3).element([ 2.,  4.,  6.])</span>
+
+<span class="sd">        Use with scalars:</span>
+
+<span class="sd">        &gt;&gt;&gt; op = PowerOperator(odl.RealNumbers(), exponent=2)</span>
+<span class="sd">        &gt;&gt;&gt; dop = op.derivative(2.0)</span>
+<span class="sd">        &gt;&gt;&gt; dop(2.0)</span>
+<span class="sd">        8.0</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">exponent</span> <span class="o">*</span> <span class="n">MultiplyOperator</span><span class="p">(</span><span class="n">point</span> <span class="o">**</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">exponent</span> <span class="o">-</span> <span class="mi">1</span><span class="p">),</span>
+                                                <span class="n">domain</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">domain</span><span class="p">,</span>
+                                                <span class="nb">range</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">range</span><span class="p">)</span></div>
+
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return ``repr(self)``.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="s1">&#39;</span><span class="si">{}</span><span class="s1">(</span><span class="si">{!r}</span><span class="s1">, </span><span class="si">{!r}</span><span class="s1">)&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="p">,</span>
+                                       <span class="bp">self</span><span class="o">.</span><span class="n">domain</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">exponent</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return ``str(self)``.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="s2">&quot;x ** </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">exponent</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="InnerProductOperator"><a class="viewcode-back" href="../../../generated/odl.operator.default_ops.InnerProductOperator.html#odl.operator.default_ops.InnerProductOperator">[docs]</a><span class="k">class</span> <span class="nc">InnerProductOperator</span><span class="p">(</span><span class="n">Operator</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Operator taking the inner product with a fixed space element.</span>
+
+<span class="sd">    Implements::</span>
+
+<span class="sd">        InnerProductOperator(y)(x) &lt;==&gt; y.inner(x)</span>
+
+<span class="sd">    This is only applicable in inner product spaces.</span>
+
+<span class="sd">    See Also</span>
+<span class="sd">    --------</span>
+<span class="sd">    DistOperator : Distance to a fixed space element.</span>
+<span class="sd">    NormOperator : Vector space norm as operator.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="InnerProductOperator.__init__"><a class="viewcode-back" href="../../../generated/odl.operator.default_ops.InnerProductOperator.html#odl.operator.default_ops.InnerProductOperator.__init__">[docs]</a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">vector</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Initialize a new instance.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        vector : `LinearSpaceElement`</span>
+<span class="sd">            The element to take the inner product with.</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        --------</span>
+<span class="sd">        &gt;&gt;&gt; r3 = odl.rn(3)</span>
+<span class="sd">        &gt;&gt;&gt; x = r3.element([1, 2, 3])</span>
+<span class="sd">        &gt;&gt;&gt; op = InnerProductOperator(x)</span>
+<span class="sd">        &gt;&gt;&gt; op(r3.element([1, 2, 3]))</span>
+<span class="sd">        14.0</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">InnerProductOperator</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span>
+            <span class="n">vector</span><span class="o">.</span><span class="n">space</span><span class="p">,</span> <span class="n">vector</span><span class="o">.</span><span class="n">space</span><span class="o">.</span><span class="n">field</span><span class="p">,</span> <span class="n">linear</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__vector</span> <span class="o">=</span> <span class="n">vector</span></div>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">vector</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Element to take the inner product with.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__vector</span>
+
+<div class="viewcode-block" id="InnerProductOperator._call"><a class="viewcode-back" href="../../../generated/odl.operator.default_ops.InnerProductOperator._call.html#odl.operator.default_ops.InnerProductOperator._call">[docs]</a>    <span class="k">def</span> <span class="nf">_call</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return the inner product with ``x``.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">x</span><span class="o">.</span><span class="n">inner</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">vector</span><span class="p">)</span></div>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">adjoint</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Adjoint of this operator.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        adjoint : `MultiplyOperator`</span>
+<span class="sd">            The operator of multiplication with `vector`.</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        --------</span>
+<span class="sd">        &gt;&gt;&gt; r3 = odl.rn(3)</span>
+<span class="sd">        &gt;&gt;&gt; x = r3.element([1, 2, 3])</span>
+<span class="sd">        &gt;&gt;&gt; op = InnerProductOperator(x)</span>
+<span class="sd">        &gt;&gt;&gt; op.adjoint(2.0)</span>
+<span class="sd">        rn(3).element([ 2.,  4.,  6.])</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">MultiplyOperator</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">vector</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">vector</span><span class="o">.</span><span class="n">space</span><span class="o">.</span><span class="n">field</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">T</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Fixed vector of this operator.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        vector : `LinearSpaceElement`</span>
+<span class="sd">            The fixed space element used in this inner product operator.</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        --------</span>
+<span class="sd">        &gt;&gt;&gt; r3 = odl.rn(3)</span>
+<span class="sd">        &gt;&gt;&gt; x = r3.element([1, 2, 3])</span>
+<span class="sd">        &gt;&gt;&gt; x.T</span>
+<span class="sd">        InnerProductOperator(rn(3).element([ 1.,  2.,  3.]))</span>
+<span class="sd">        &gt;&gt;&gt; x.T.T</span>
+<span class="sd">        rn(3).element([ 1.,  2.,  3.])</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">vector</span>
+
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return ``repr(self)``.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="s1">&#39;</span><span class="si">{}</span><span class="s1">(</span><span class="si">{!r}</span><span class="s1">)&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">vector</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return ``str(self)``.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="s1">&#39;</span><span class="si">{}</span><span class="s1">.T&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">vector</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="NormOperator"><a class="viewcode-back" href="../../../generated/odl.operator.default_ops.NormOperator.html#odl.operator.default_ops.NormOperator">[docs]</a><span class="k">class</span> <span class="nc">NormOperator</span><span class="p">(</span><span class="n">Operator</span><span class="p">):</span>
+
+    <span class="sd">&quot;&quot;&quot;Vector space norm as an operator.</span>
+
+<span class="sd">    Implements::</span>
+
+<span class="sd">        NormOperator()(x) &lt;==&gt; x.norm()</span>
+
+<span class="sd">    This is only applicable in normed spaces, i.e., spaces implementing</span>
+<span class="sd">    a ``norm`` method.</span>
+
+<span class="sd">    See Also</span>
+<span class="sd">    --------</span>
+<span class="sd">    InnerProductOperator : Inner product with a fixed space element.</span>
+<span class="sd">    DistOperator : Distance to a fixed space element.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="NormOperator.__init__"><a class="viewcode-back" href="../../../generated/odl.operator.default_ops.NormOperator.html#odl.operator.default_ops.NormOperator.__init__">[docs]</a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">space</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Initialize a new instance.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        space : `LinearSpace`</span>
+<span class="sd">            Space to take the norm in.</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        --------</span>
+<span class="sd">        &gt;&gt;&gt; r2 = odl.rn(2)</span>
+<span class="sd">        &gt;&gt;&gt; op = NormOperator(r2)</span>
+<span class="sd">        &gt;&gt;&gt; op([3, 4])</span>
+<span class="sd">        5.0</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">NormOperator</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">space</span><span class="p">,</span> <span class="n">RealNumbers</span><span class="p">(),</span> <span class="n">linear</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="NormOperator._call"><a class="viewcode-back" href="../../../generated/odl.operator.default_ops.NormOperator._call.html#odl.operator.default_ops.NormOperator._call">[docs]</a>    <span class="k">def</span> <span class="nf">_call</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return the norm of ``x``.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">x</span><span class="o">.</span><span class="n">norm</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="NormOperator.derivative"><a class="viewcode-back" href="../../../generated/odl.operator.default_ops.NormOperator.derivative.html#odl.operator.default_ops.NormOperator.derivative">[docs]</a>    <span class="k">def</span> <span class="nf">derivative</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">point</span><span class="p">):</span>
+        <span class="sa">r</span><span class="sd">&quot;&quot;&quot;Derivative of this operator in ``point``.</span>
+
+<span class="sd">            ``NormOperator().derivative(y)(x) == (y / y.norm()).inner(x)``</span>
+
+<span class="sd">        This is only applicable in inner product spaces.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        point : `domain` `element-like`</span>
+<span class="sd">            Point in which to take the derivative.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        derivative : `InnerProductOperator`</span>
+
+<span class="sd">        Raises</span>
+<span class="sd">        ------</span>
+<span class="sd">        ValueError</span>
+<span class="sd">            If ``point.norm() == 0``, in which case the derivative is not well</span>
+<span class="sd">            defined in the Frechet sense.</span>
+
+<span class="sd">        Notes</span>
+<span class="sd">        -----</span>
+<span class="sd">        The derivative cannot be written in a general sense except in Hilbert</span>
+<span class="sd">        spaces, in which case it is given by</span>
+
+<span class="sd">        .. math::</span>
+<span class="sd">            (D \|\cdot\|)(y)(x) = \langle y / \|y\|, x \rangle</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        --------</span>
+<span class="sd">        &gt;&gt;&gt; r3 = odl.rn(3)</span>
+<span class="sd">        &gt;&gt;&gt; op = NormOperator(r3)</span>
+<span class="sd">        &gt;&gt;&gt; derivative = op.derivative([1, 0, 0])</span>
+<span class="sd">        &gt;&gt;&gt; derivative([1, 0, 0])</span>
+<span class="sd">        1.0</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">point</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">domain</span><span class="o">.</span><span class="n">element</span><span class="p">(</span><span class="n">point</span><span class="p">)</span>
+        <span class="n">norm</span> <span class="o">=</span> <span class="n">point</span><span class="o">.</span><span class="n">norm</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">norm</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;not differentiable in 0&#39;</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">InnerProductOperator</span><span class="p">(</span><span class="n">point</span> <span class="o">/</span> <span class="n">norm</span><span class="p">)</span></div>
+
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return ``repr(self)``.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="s1">&#39;</span><span class="si">{}</span><span class="s1">(</span><span class="si">{!r}</span><span class="s1">)&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">domain</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return ``str(self)``.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="s1">&#39;</span><span class="si">{}</span><span class="s1">(</span><span class="si">{}</span><span class="s1">)&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">domain</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="DistOperator"><a class="viewcode-back" href="../../../generated/odl.operator.default_ops.DistOperator.html#odl.operator.default_ops.DistOperator">[docs]</a><span class="k">class</span> <span class="nc">DistOperator</span><span class="p">(</span><span class="n">Operator</span><span class="p">):</span>
+
+    <span class="sd">&quot;&quot;&quot;Operator taking the distance to a fixed space element.</span>
+
+<span class="sd">    Implements::</span>
+
+<span class="sd">        DistOperator(y)(x) == y.dist(x)</span>
+
+<span class="sd">    This is only applicable in metric spaces, i.e., spaces implementing</span>
+<span class="sd">    a ``dist`` method.</span>
+
+<span class="sd">    See Also</span>
+<span class="sd">    --------</span>
+<span class="sd">    InnerProductOperator : Inner product with fixed space element.</span>
+<span class="sd">    NormOperator : Vector space norm as an operator.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="DistOperator.__init__"><a class="viewcode-back" href="../../../generated/odl.operator.default_ops.DistOperator.html#odl.operator.default_ops.DistOperator.__init__">[docs]</a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">vector</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Initialize a new instance.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        vector : `LinearSpaceElement`</span>
+<span class="sd">            Point to calculate the distance to.</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        --------</span>
+<span class="sd">        &gt;&gt;&gt; r2 = odl.rn(2)</span>
+<span class="sd">        &gt;&gt;&gt; x = r2.element([1, 1])</span>
+<span class="sd">        &gt;&gt;&gt; op = DistOperator(x)</span>
+<span class="sd">        &gt;&gt;&gt; op([4, 5])</span>
+<span class="sd">        5.0</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">DistOperator</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span>
+            <span class="n">vector</span><span class="o">.</span><span class="n">space</span><span class="p">,</span> <span class="n">RealNumbers</span><span class="p">(),</span> <span class="n">linear</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__vector</span> <span class="o">=</span> <span class="n">vector</span></div>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">vector</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Element to which to take the distance.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__vector</span>
+
+<div class="viewcode-block" id="DistOperator._call"><a class="viewcode-back" href="../../../generated/odl.operator.default_ops.DistOperator._call.html#odl.operator.default_ops.DistOperator._call">[docs]</a>    <span class="k">def</span> <span class="nf">_call</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return the distance from ``self.vector`` to ``x``.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">vector</span><span class="o">.</span><span class="n">dist</span><span class="p">(</span><span class="n">x</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="DistOperator.derivative"><a class="viewcode-back" href="../../../generated/odl.operator.default_ops.DistOperator.derivative.html#odl.operator.default_ops.DistOperator.derivative">[docs]</a>    <span class="k">def</span> <span class="nf">derivative</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">point</span><span class="p">):</span>
+        <span class="sa">r</span><span class="sd">&quot;&quot;&quot;The derivative operator.</span>
+
+<span class="sd">            ``DistOperator(y).derivative(z)(x) ==</span>
+<span class="sd">            ((y - z) / y.dist(z)).inner(x)``</span>
+
+<span class="sd">        This is only applicable in inner product spaces.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        x : `domain` `element-like`</span>
+<span class="sd">            Point in which to take the derivative.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        derivative : `InnerProductOperator`</span>
+
+<span class="sd">        Raises</span>
+<span class="sd">        ------</span>
+<span class="sd">        ValueError</span>
+<span class="sd">            If ``point == self.vector``, in which case the derivative is not</span>
+<span class="sd">            well defined in the Frechet sense.</span>
+
+<span class="sd">        Notes</span>
+<span class="sd">        -----</span>
+<span class="sd">        The derivative cannot be written in a general sense except in Hilbert</span>
+<span class="sd">        spaces, in which case it is given by</span>
+
+<span class="sd">        .. math::</span>
+<span class="sd">            (D d(\cdot, y))(z)(x) = \langle (y-z) / d(y, z), x \rangle</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        --------</span>
+<span class="sd">        &gt;&gt;&gt; r2 = odl.rn(2)</span>
+<span class="sd">        &gt;&gt;&gt; x = r2.element([1, 1])</span>
+<span class="sd">        &gt;&gt;&gt; op = DistOperator(x)</span>
+<span class="sd">        &gt;&gt;&gt; derivative = op.derivative([2, 1])</span>
+<span class="sd">        &gt;&gt;&gt; derivative([1, 0])</span>
+<span class="sd">        1.0</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">point</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">domain</span><span class="o">.</span><span class="n">element</span><span class="p">(</span><span class="n">point</span><span class="p">)</span>
+        <span class="n">diff</span> <span class="o">=</span> <span class="n">point</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">vector</span>
+        <span class="n">dist</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">vector</span><span class="o">.</span><span class="n">dist</span><span class="p">(</span><span class="n">point</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">dist</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;not differentiable at the reference vector </span><span class="si">{!r}</span><span class="s1">&#39;</span>
+                             <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">vector</span><span class="p">))</span>
+
+        <span class="k">return</span> <span class="n">InnerProductOperator</span><span class="p">(</span><span class="n">diff</span> <span class="o">/</span> <span class="n">dist</span><span class="p">)</span></div>
+
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return ``repr(self)``.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="s1">&#39;</span><span class="si">{}</span><span class="s1">(</span><span class="si">{!r}</span><span class="s1">)&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">vector</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return ``str(self)``.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="s1">&#39;</span><span class="si">{}</span><span class="s1">(</span><span class="si">{}</span><span class="s1">)&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">vector</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="ConstantOperator"><a class="viewcode-back" href="../../../generated/odl.operator.default_ops.ConstantOperator.html#odl.operator.default_ops.ConstantOperator">[docs]</a><span class="k">class</span> <span class="nc">ConstantOperator</span><span class="p">(</span><span class="n">Operator</span><span class="p">):</span>
+
+    <span class="sd">&quot;&quot;&quot;Operator that always returns the same value.</span>
+
+<span class="sd">    Implements::</span>
+
+<span class="sd">        ConstantOperator(y)(x) == y</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="ConstantOperator.__init__"><a class="viewcode-back" href="../../../generated/odl.operator.default_ops.ConstantOperator.html#odl.operator.default_ops.ConstantOperator.__init__">[docs]</a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">constant</span><span class="p">,</span> <span class="n">domain</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="nb">range</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Initialize a new instance.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        constant : `LinearSpaceElement` or ``range`` `element-like`</span>
+<span class="sd">            The constant space element to be returned. If ``range`` is not</span>
+<span class="sd">            provided, ``constant`` must be a `LinearSpaceElement` since the</span>
+<span class="sd">            operator range is then inferred from it.</span>
+<span class="sd">        domain : `LinearSpace`, optional</span>
+<span class="sd">            Domain of the operator. Default: ``vector.space``</span>
+<span class="sd">        range : `LinearSpace`, optional</span>
+<span class="sd">            Range of the operator. Default: ``vector.space``</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        --------</span>
+<span class="sd">        &gt;&gt;&gt; r3 = odl.rn(3)</span>
+<span class="sd">        &gt;&gt;&gt; x = r3.element([1, 2, 3])</span>
+<span class="sd">        &gt;&gt;&gt; op = ConstantOperator(x)</span>
+<span class="sd">        &gt;&gt;&gt; op(x, out=r3.element())</span>
+<span class="sd">        rn(3).element([ 1.,  2.,  3.])</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="p">((</span><span class="n">domain</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="nb">range</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">)</span> <span class="ow">and</span>
+                <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">constant</span><span class="p">,</span> <span class="n">LinearSpaceElement</span><span class="p">)):</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;If either domain or range is unspecified &#39;</span>
+                            <span class="s1">&#39;`constant` must be LinearSpaceVector, got &#39;</span>
+                            <span class="s1">&#39;</span><span class="si">{!r}</span><span class="s1">.&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">constant</span><span class="p">))</span>
+
+        <span class="k">if</span> <span class="n">domain</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">domain</span> <span class="o">=</span> <span class="n">constant</span><span class="o">.</span><span class="n">space</span>
+        <span class="k">if</span> <span class="nb">range</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="nb">range</span> <span class="o">=</span> <span class="n">constant</span><span class="o">.</span><span class="n">space</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">__constant</span> <span class="o">=</span> <span class="nb">range</span><span class="o">.</span><span class="n">element</span><span class="p">(</span><span class="n">constant</span><span class="p">)</span>
+        <span class="n">linear</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">constant</span><span class="o">.</span><span class="n">norm</span><span class="p">()</span> <span class="o">==</span> <span class="mi">0</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">ConstantOperator</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">domain</span><span class="p">,</span> <span class="nb">range</span><span class="p">,</span> <span class="n">linear</span><span class="o">=</span><span class="n">linear</span><span class="p">)</span></div>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">constant</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Constant space element returned by this operator.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__constant</span>
+
+<div class="viewcode-block" id="ConstantOperator._call"><a class="viewcode-back" href="../../../generated/odl.operator.default_ops.ConstantOperator._call.html#odl.operator.default_ops.ConstantOperator._call">[docs]</a>    <span class="k">def</span> <span class="nf">_call</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">out</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return the constant vector or assign it to ``out``.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">out</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">range</span><span class="o">.</span><span class="n">element</span><span class="p">(</span><span class="n">copy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">constant</span><span class="p">))</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">out</span><span class="o">.</span><span class="n">assign</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">constant</span><span class="p">)</span></div>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">adjoint</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Adjoint of the operator.</span>
+
+<span class="sd">        Only defined if the operator is the constant operator.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="ConstantOperator.derivative"><a class="viewcode-back" href="../../../generated/odl.operator.default_ops.ConstantOperator.derivative.html#odl.operator.default_ops.ConstantOperator.derivative">[docs]</a>    <span class="k">def</span> <span class="nf">derivative</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">point</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Derivative of this operator, always zero.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        derivative : `ZeroOperator`</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        --------</span>
+<span class="sd">        &gt;&gt;&gt; r3 = odl.rn(3)</span>
+<span class="sd">        &gt;&gt;&gt; x = r3.element([1, 2, 3])</span>
+<span class="sd">        &gt;&gt;&gt; op = ConstantOperator(x)</span>
+<span class="sd">        &gt;&gt;&gt; deriv = op.derivative([1, 1, 1])</span>
+<span class="sd">        &gt;&gt;&gt; deriv([2, 2, 2])</span>
+<span class="sd">        rn(3).element([ 0.,  0.,  0.])</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">ZeroOperator</span><span class="p">(</span><span class="n">domain</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">domain</span><span class="p">,</span> <span class="nb">range</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">range</span><span class="p">)</span></div>
+
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return ``repr(self)``.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="s1">&#39;</span><span class="si">{}</span><span class="s1">(</span><span class="si">{!r}</span><span class="s1">)&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">constant</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return ``str(self)``.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="s2">&quot;</span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">constant</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="ZeroOperator"><a class="viewcode-back" href="../../../generated/odl.operator.default_ops.ZeroOperator.html#odl.operator.default_ops.ZeroOperator">[docs]</a><span class="k">class</span> <span class="nc">ZeroOperator</span><span class="p">(</span><span class="n">Operator</span><span class="p">):</span>
+
+    <span class="sd">&quot;&quot;&quot;Operator mapping each element to the zero element.</span>
+
+<span class="sd">    Implements::</span>
+
+<span class="sd">        ZeroOperator(space)(x) == space.zero()</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="ZeroOperator.__init__"><a class="viewcode-back" href="../../../generated/odl.operator.default_ops.ZeroOperator.html#odl.operator.default_ops.ZeroOperator.__init__">[docs]</a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">domain</span><span class="p">,</span> <span class="nb">range</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Initialize a new instance.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        domain : `LinearSpace`</span>
+<span class="sd">            Domain of the operator.</span>
+<span class="sd">        range : `LinearSpace`, optional</span>
+<span class="sd">            Range of the operator. Default: ``domain``</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        --------</span>
+<span class="sd">        &gt;&gt;&gt; op = odl.ZeroOperator(odl.rn(3))</span>
+<span class="sd">        &gt;&gt;&gt; op([1, 2, 3])</span>
+<span class="sd">        rn(3).element([ 0.,  0.,  0.])</span>
+
+<span class="sd">        Also works with domain != range:</span>
+
+<span class="sd">        &gt;&gt;&gt; op = odl.ZeroOperator(odl.rn(3), odl.cn(4))</span>
+<span class="sd">        &gt;&gt;&gt; op([1, 2, 3])</span>
+<span class="sd">        cn(4).element([ 0.+0.j,  0.+0.j,  0.+0.j,  0.+0.j])</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="nb">range</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="nb">range</span> <span class="o">=</span> <span class="n">domain</span>
+
+        <span class="nb">super</span><span class="p">(</span><span class="n">ZeroOperator</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">domain</span><span class="p">,</span> <span class="nb">range</span><span class="p">,</span> <span class="n">linear</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="ZeroOperator._call"><a class="viewcode-back" href="../../../generated/odl.operator.default_ops.ZeroOperator._call.html#odl.operator.default_ops.ZeroOperator._call">[docs]</a>    <span class="k">def</span> <span class="nf">_call</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">out</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return the zero vector or assign it to ``out``.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">domain</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">range</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">out</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">out</span> <span class="o">=</span> <span class="mi">0</span> <span class="o">*</span> <span class="n">x</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">out</span><span class="o">.</span><span class="n">lincomb</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">x</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">result</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">range</span><span class="o">.</span><span class="n">zero</span><span class="p">()</span>
+            <span class="k">if</span> <span class="n">out</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">out</span> <span class="o">=</span> <span class="n">result</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">out</span><span class="o">.</span><span class="n">assign</span><span class="p">(</span><span class="n">result</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">out</span></div>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">adjoint</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Adjoint of the operator.</span>
+
+<span class="sd">        If ``self.domain == self.range`` the zero operator is self-adjoint,</span>
+<span class="sd">        otherwise it is the `ZeroOperator` from `range` to `domain`.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">ZeroOperator</span><span class="p">(</span><span class="n">domain</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">range</span><span class="p">,</span> <span class="nb">range</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">domain</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return ``repr(self)``.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="s1">&#39;</span><span class="si">{}</span><span class="s1">(</span><span class="si">{!r}</span><span class="s1">)&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">domain</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return ``str(self)``.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="s1">&#39;0&#39;</span></div>
+
+
+<div class="viewcode-block" id="RealPart"><a class="viewcode-back" href="../../../generated/odl.operator.default_ops.RealPart.html#odl.operator.default_ops.RealPart">[docs]</a><span class="k">class</span> <span class="nc">RealPart</span><span class="p">(</span><span class="n">Operator</span><span class="p">):</span>
+
+    <span class="sd">&quot;&quot;&quot;Operator that extracts the real part of a vector.</span>
+
+<span class="sd">    Implements::</span>
+
+<span class="sd">        RealPart(x) == x.real</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="RealPart.__init__"><a class="viewcode-back" href="../../../generated/odl.operator.default_ops.RealPart.html#odl.operator.default_ops.RealPart.__init__">[docs]</a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">space</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Initialize a new instance.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        space : `TensorSpace`</span>
+<span class="sd">            Space in which the real part should be taken, needs to implement</span>
+<span class="sd">            ``space.real_space``.</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        --------</span>
+<span class="sd">        Take the real part of complex vector:</span>
+
+<span class="sd">        &gt;&gt;&gt; c3 = odl.cn(3)</span>
+<span class="sd">        &gt;&gt;&gt; op = RealPart(c3)</span>
+<span class="sd">        &gt;&gt;&gt; op([1 + 2j, 2, 3 - 1j])</span>
+<span class="sd">        rn(3).element([ 1.,  2.,  3.])</span>
+
+<span class="sd">        The operator is the identity on real spaces:</span>
+
+<span class="sd">        &gt;&gt;&gt; r3 = odl.rn(3)</span>
+<span class="sd">        &gt;&gt;&gt; op = RealPart(r3)</span>
+<span class="sd">        &gt;&gt;&gt; op([1, 2, 3])</span>
+<span class="sd">        rn(3).element([ 1.,  2.,  3.])</span>
+
+<span class="sd">        The operator also works on other `TensorSpace` spaces such as</span>
+<span class="sd">        `DiscretizedSpace` spaces:</span>
+
+<span class="sd">        &gt;&gt;&gt; r3 = odl.uniform_discr(0, 1, 3, dtype=complex)</span>
+<span class="sd">        &gt;&gt;&gt; op = RealPart(r3)</span>
+<span class="sd">        &gt;&gt;&gt; op([1, 2, 3])</span>
+<span class="sd">        uniform_discr(0.0, 1.0, 3).element([ 1.,  2.,  3.])</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">real_space</span> <span class="o">=</span> <span class="n">space</span><span class="o">.</span><span class="n">real_space</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">space_is_real</span> <span class="o">=</span> <span class="p">(</span><span class="n">space</span> <span class="o">==</span> <span class="n">real_space</span><span class="p">)</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">RealPart</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">space</span><span class="p">,</span> <span class="n">real_space</span><span class="p">,</span> <span class="n">linear</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="RealPart._call"><a class="viewcode-back" href="../../../generated/odl.operator.default_ops.RealPart._call.html#odl.operator.default_ops.RealPart._call">[docs]</a>    <span class="k">def</span> <span class="nf">_call</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return ``self(x)``.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">x</span><span class="o">.</span><span class="n">real</span></div>
+
+<div class="viewcode-block" id="RealPart.derivative"><a class="viewcode-back" href="../../../generated/odl.operator.default_ops.RealPart.derivative.html#odl.operator.default_ops.RealPart.derivative">[docs]</a>    <span class="k">def</span> <span class="nf">derivative</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
+        <span class="sa">r</span><span class="sd">&quot;&quot;&quot;Return the derivative operator in the &quot;C = R^2&quot; sense.</span>
+
+<span class="sd">        The returned operator (``self``) is the derivative of the</span>
+<span class="sd">        operator variant where the complex domain is reinterpreted as</span>
+<span class="sd">        a product of two real spaces.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        x : `domain` element</span>
+<span class="sd">            Point in which to take the derivative, has no effect.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span></div>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">inverse</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return the (pseudo-)inverse.</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        --------</span>
+<span class="sd">        The inverse is its own inverse if its domain is real:</span>
+
+<span class="sd">        &gt;&gt;&gt; r3 = odl.rn(3)</span>
+<span class="sd">        &gt;&gt;&gt; op = RealPart(r3)</span>
+<span class="sd">        &gt;&gt;&gt; op.inverse(op([1, 2, 3]))</span>
+<span class="sd">        rn(3).element([ 1.,  2.,  3.])</span>
+
+<span class="sd">        This is not a true inverse, only a pseudoinverse, the complex part</span>
+<span class="sd">        will by necessity be lost.</span>
+
+<span class="sd">        &gt;&gt;&gt; c3 = odl.cn(3)</span>
+<span class="sd">        &gt;&gt;&gt; op = RealPart(c3)</span>
+<span class="sd">        &gt;&gt;&gt; op.inverse(op([1 + 2j, 2, 3 - 1j]))</span>
+<span class="sd">        cn(3).element([ 1.+0.j,  2.+0.j,  3.+0.j])</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">space_is_real</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">ComplexEmbedding</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">domain</span><span class="p">,</span> <span class="n">scalar</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">adjoint</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sa">r</span><span class="sd">&quot;&quot;&quot;Return the (left) adjoint.</span>
+
+<span class="sd">        Notes</span>
+<span class="sd">        -----</span>
+<span class="sd">        Due to technicalities of operators from a complex space into a real</span>
+<span class="sd">        space, this does not satisfy the usual adjoint equation:</span>
+
+<span class="sd">        .. math::</span>
+<span class="sd">            \langle Ax, y \rangle = \langle x, A^*y \rangle</span>
+
+<span class="sd">        Instead it is an adjoint in a weaker sense as follows:</span>
+
+<span class="sd">        .. math::</span>
+<span class="sd">            \langle AA^*x, y \rangle = \langle A^*x, A^*y \rangle</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        --------</span>
+<span class="sd">        The adjoint satisfies the adjoint equation for real spaces:</span>
+
+<span class="sd">        &gt;&gt;&gt; r3 = odl.rn(3)</span>
+<span class="sd">        &gt;&gt;&gt; op = RealPart(r3)</span>
+<span class="sd">        &gt;&gt;&gt; x = op.domain.element([1, 2, 3])</span>
+<span class="sd">        &gt;&gt;&gt; y = op.range.element([3, 2, 1])</span>
+<span class="sd">        &gt;&gt;&gt; x.inner(op.adjoint(y)) == op(x).inner(y)</span>
+<span class="sd">        True</span>
+
+<span class="sd">        If the domain is complex, it only satisfies the weaker definition:</span>
+
+<span class="sd">        &gt;&gt;&gt; c3 = odl.cn(3)</span>
+<span class="sd">        &gt;&gt;&gt; op = RealPart(c3)</span>
+<span class="sd">        &gt;&gt;&gt; x = op.range.element([1, 2, 3])</span>
+<span class="sd">        &gt;&gt;&gt; y = op.range.element([3, 2, 1])</span>
+<span class="sd">        &gt;&gt;&gt; AtAxy = op(op.adjoint(x)).inner(y)</span>
+<span class="sd">        &gt;&gt;&gt; AtxAty = op.adjoint(x).inner(op.adjoint(y))</span>
+<span class="sd">        &gt;&gt;&gt; AtAxy == AtxAty</span>
+<span class="sd">        True</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">space_is_real</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">ComplexEmbedding</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">domain</span><span class="p">,</span> <span class="n">scalar</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="ImagPart"><a class="viewcode-back" href="../../../generated/odl.operator.default_ops.ImagPart.html#odl.operator.default_ops.ImagPart">[docs]</a><span class="k">class</span> <span class="nc">ImagPart</span><span class="p">(</span><span class="n">Operator</span><span class="p">):</span>
+
+    <span class="sd">&quot;&quot;&quot;Operator that extracts the imaginary part of a vector.</span>
+
+<span class="sd">    Implements::</span>
+
+<span class="sd">        ImagPart(x) == x.imag</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="ImagPart.__init__"><a class="viewcode-back" href="../../../generated/odl.operator.default_ops.ImagPart.html#odl.operator.default_ops.ImagPart.__init__">[docs]</a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">space</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Initialize a new instance.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        space : `TensorSpace`</span>
+<span class="sd">            Space in which the imaginary part should be taken, needs to</span>
+<span class="sd">            implement ``space.real_space``.</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        --------</span>
+<span class="sd">        Take the imaginary part of complex vector:</span>
+
+<span class="sd">        &gt;&gt;&gt; c3 = odl.cn(3)</span>
+<span class="sd">        &gt;&gt;&gt; op = ImagPart(c3)</span>
+<span class="sd">        &gt;&gt;&gt; op([1 + 2j, 2, 3 - 1j])</span>
+<span class="sd">        rn(3).element([ 2.,  0., -1.])</span>
+
+<span class="sd">        The operator is the zero operator on real spaces:</span>
+
+<span class="sd">        &gt;&gt;&gt; r3 = odl.rn(3)</span>
+<span class="sd">        &gt;&gt;&gt; op = ImagPart(r3)</span>
+<span class="sd">        &gt;&gt;&gt; op([1, 2, 3])</span>
+<span class="sd">        rn(3).element([ 0.,  0.,  0.])</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">real_space</span> <span class="o">=</span> <span class="n">space</span><span class="o">.</span><span class="n">real_space</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">space_is_real</span> <span class="o">=</span> <span class="p">(</span><span class="n">space</span> <span class="o">==</span> <span class="n">real_space</span><span class="p">)</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">ImagPart</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">space</span><span class="p">,</span> <span class="n">real_space</span><span class="p">,</span> <span class="n">linear</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="ImagPart._call"><a class="viewcode-back" href="../../../generated/odl.operator.default_ops.ImagPart._call.html#odl.operator.default_ops.ImagPart._call">[docs]</a>    <span class="k">def</span> <span class="nf">_call</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return ``self(x)``.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">x</span><span class="o">.</span><span class="n">imag</span></div>
+
+<div class="viewcode-block" id="ImagPart.derivative"><a class="viewcode-back" href="../../../generated/odl.operator.default_ops.ImagPart.derivative.html#odl.operator.default_ops.ImagPart.derivative">[docs]</a>    <span class="k">def</span> <span class="nf">derivative</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
+        <span class="sa">r</span><span class="sd">&quot;&quot;&quot;Return the derivative operator in the &quot;C = R^2&quot; sense.</span>
+
+<span class="sd">        The returned operator (``self``) is the derivative of the</span>
+<span class="sd">        operator variant where the complex domain is reinterpreted as</span>
+<span class="sd">        a product of two real spaces.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        x : `domain` element</span>
+<span class="sd">            Point in which to take the derivative, has no effect.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span></div>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">inverse</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return the pseudoinverse.</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        --------</span>
+<span class="sd">        The inverse is the zero operator if the domain is real:</span>
+
+<span class="sd">        &gt;&gt;&gt; r3 = odl.rn(3)</span>
+<span class="sd">        &gt;&gt;&gt; op = ImagPart(r3)</span>
+<span class="sd">        &gt;&gt;&gt; op.inverse(op([1, 2, 3]))</span>
+<span class="sd">        rn(3).element([ 0.,  0.,  0.])</span>
+
+<span class="sd">        This is not a true inverse, only a pseudoinverse, the real part</span>
+<span class="sd">        will by necessity be lost.</span>
+
+<span class="sd">        &gt;&gt;&gt; c3 = odl.cn(3)</span>
+<span class="sd">        &gt;&gt;&gt; op = ImagPart(c3)</span>
+<span class="sd">        &gt;&gt;&gt; op.inverse(op([1 + 2j, 2, 3 - 1j]))</span>
+<span class="sd">        cn(3).element([ 0.+2.j,  0.+0.j, -0.-1.j])</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">space_is_real</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">ZeroOperator</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">domain</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">ComplexEmbedding</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">domain</span><span class="p">,</span> <span class="n">scalar</span><span class="o">=</span><span class="mi">1</span><span class="n">j</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">adjoint</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sa">r</span><span class="sd">&quot;&quot;&quot;Return the (left) adjoint.</span>
+
+<span class="sd">        Notes</span>
+<span class="sd">        -----</span>
+<span class="sd">        Due to technicalities of operators from a complex space into a real</span>
+<span class="sd">        space, this does not satisfy the usual adjoint equation:</span>
+
+<span class="sd">        .. math::</span>
+<span class="sd">            \langle Ax, y \rangle = \langle x, A^*y \rangle</span>
+
+<span class="sd">        Instead it is an adjoint in a weaker sense as follows:</span>
+
+<span class="sd">        .. math::</span>
+<span class="sd">            \langle AA^*x, y \rangle = \langle A^*x, A^*y \rangle</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        --------</span>
+<span class="sd">        The adjoint satisfies the adjoint equation for real spaces:</span>
+
+<span class="sd">        &gt;&gt;&gt; r3 = odl.rn(3)</span>
+<span class="sd">        &gt;&gt;&gt; op = ImagPart(r3)</span>
+<span class="sd">        &gt;&gt;&gt; x = op.domain.element([1, 2, 3])</span>
+<span class="sd">        &gt;&gt;&gt; y = op.range.element([3, 2, 1])</span>
+<span class="sd">        &gt;&gt;&gt; x.inner(op.adjoint(y)) == op(x).inner(y)</span>
+<span class="sd">        True</span>
+
+<span class="sd">        If the domain is complex, it only satisfies the weaker definition:</span>
+
+<span class="sd">        &gt;&gt;&gt; c3 = odl.cn(3)</span>
+<span class="sd">        &gt;&gt;&gt; op = ImagPart(c3)</span>
+<span class="sd">        &gt;&gt;&gt; x = op.range.element([1, 2, 3])</span>
+<span class="sd">        &gt;&gt;&gt; y = op.range.element([3, 2, 1])</span>
+<span class="sd">        &gt;&gt;&gt; AtAxy = op(op.adjoint(x)).inner(y)</span>
+<span class="sd">        &gt;&gt;&gt; AtxAty = op.adjoint(x).inner(op.adjoint(y))</span>
+<span class="sd">        &gt;&gt;&gt; AtAxy == AtxAty</span>
+<span class="sd">        True</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">space_is_real</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">ZeroOperator</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">domain</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">ComplexEmbedding</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">domain</span><span class="p">,</span> <span class="n">scalar</span><span class="o">=</span><span class="mi">1</span><span class="n">j</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="ComplexEmbedding"><a class="viewcode-back" href="../../../generated/odl.operator.default_ops.ComplexEmbedding.html#odl.operator.default_ops.ComplexEmbedding">[docs]</a><span class="k">class</span> <span class="nc">ComplexEmbedding</span><span class="p">(</span><span class="n">Operator</span><span class="p">):</span>
+
+    <span class="sd">&quot;&quot;&quot;Operator that embeds a vector into a complex space.</span>
+
+<span class="sd">    Implements::</span>
+
+<span class="sd">        ComplexEmbedding(space)(x) &lt;==&gt; space.complex_space.element(x)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="ComplexEmbedding.__init__"><a class="viewcode-back" href="../../../generated/odl.operator.default_ops.ComplexEmbedding.html#odl.operator.default_ops.ComplexEmbedding.__init__">[docs]</a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">space</span><span class="p">,</span> <span class="n">scalar</span><span class="o">=</span><span class="mf">1.0</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Initialize a new instance.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        space : `TensorSpace`</span>
+<span class="sd">            Space that should be embedded into its complex counterpart.</span>
+<span class="sd">            It must implement `TensorSpace.complex_space`.</span>
+<span class="sd">        scalar : ``space.complex_space.field`` element, optional</span>
+<span class="sd">            Scalar to be multiplied with incoming vectors in order</span>
+<span class="sd">            to get the complex vector.</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        --------</span>
+<span class="sd">        Embed real vector into complex space:</span>
+
+<span class="sd">        &gt;&gt;&gt; r3 = odl.rn(3)</span>
+<span class="sd">        &gt;&gt;&gt; op = ComplexEmbedding(r3)</span>
+<span class="sd">        &gt;&gt;&gt; op([1, 2, 3])</span>
+<span class="sd">        cn(3).element([ 1.+0.j,  2.+0.j,  3.+0.j])</span>
+
+<span class="sd">        Embed real vector as imaginary part into complex space:</span>
+
+<span class="sd">        &gt;&gt;&gt; op = ComplexEmbedding(r3, scalar=1j)</span>
+<span class="sd">        &gt;&gt;&gt; op([1, 2, 3])</span>
+<span class="sd">        cn(3).element([ 0.+1.j,  0.+2.j,  0.+3.j])</span>
+
+<span class="sd">        On complex spaces the operator is the same as simple multiplication by</span>
+<span class="sd">        scalar:</span>
+
+<span class="sd">        &gt;&gt;&gt; c3 = odl.cn(3)</span>
+<span class="sd">        &gt;&gt;&gt; op = ComplexEmbedding(c3, scalar=1 + 2j)</span>
+<span class="sd">        &gt;&gt;&gt; op([1 + 1j, 2 + 2j, 3 + 3j])</span>
+<span class="sd">        cn(3).element([-1.+3.j, -2.+6.j, -3.+9.j])</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">complex_space</span> <span class="o">=</span> <span class="n">space</span><span class="o">.</span><span class="n">complex_space</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">scalar</span> <span class="o">=</span> <span class="n">complex_space</span><span class="o">.</span><span class="n">field</span><span class="o">.</span><span class="n">element</span><span class="p">(</span><span class="n">scalar</span><span class="p">)</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">ComplexEmbedding</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span>
+            <span class="n">space</span><span class="p">,</span> <span class="n">complex_space</span><span class="p">,</span> <span class="n">linear</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="ComplexEmbedding._call"><a class="viewcode-back" href="../../../generated/odl.operator.default_ops.ComplexEmbedding._call.html#odl.operator.default_ops.ComplexEmbedding._call">[docs]</a>    <span class="k">def</span> <span class="nf">_call</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">out</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return ``self(x)``.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">domain</span><span class="o">.</span><span class="n">is_real</span><span class="p">:</span>
+            <span class="c1"># Real domain, multiply separately</span>
+            <span class="n">out</span><span class="o">.</span><span class="n">real</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">scalar</span><span class="o">.</span><span class="n">real</span> <span class="o">*</span> <span class="n">x</span>
+            <span class="n">out</span><span class="o">.</span><span class="n">imag</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">scalar</span><span class="o">.</span><span class="n">imag</span> <span class="o">*</span> <span class="n">x</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># Complex domain</span>
+            <span class="n">out</span><span class="o">.</span><span class="n">lincomb</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">scalar</span><span class="p">,</span> <span class="n">x</span><span class="p">)</span></div>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">inverse</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return the (left) inverse.</span>
+
+<span class="sd">        If the domain is a real space, this is not a true inverse,</span>
+<span class="sd">        only a (left) inverse.</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        --------</span>
+<span class="sd">        &gt;&gt;&gt; r3 = odl.rn(3)</span>
+<span class="sd">        &gt;&gt;&gt; op = ComplexEmbedding(r3, scalar=1)</span>
+<span class="sd">        &gt;&gt;&gt; op.inverse(op([1, 2, 4]))</span>
+<span class="sd">        rn(3).element([ 1.,  2.,  4.])</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">domain</span><span class="o">.</span><span class="n">is_real</span><span class="p">:</span>
+            <span class="c1"># Real domain</span>
+            <span class="c1"># Optimizations for simple cases.</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">scalar</span><span class="o">.</span><span class="n">real</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">scalar</span><span class="p">:</span>
+                <span class="k">return</span> <span class="p">(</span><span class="mi">1</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">scalar</span><span class="o">.</span><span class="n">real</span><span class="p">)</span> <span class="o">*</span> <span class="n">RealPart</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">range</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="mi">1</span><span class="n">j</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">scalar</span><span class="o">.</span><span class="n">imag</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">scalar</span><span class="p">:</span>
+                <span class="k">return</span> <span class="p">(</span><span class="mi">1</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">scalar</span><span class="o">.</span><span class="n">imag</span><span class="p">)</span> <span class="o">*</span> <span class="n">ImagPart</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">range</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="c1"># General case</span>
+                <span class="n">inv_scalar</span> <span class="o">=</span> <span class="p">(</span><span class="mi">1</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">scalar</span><span class="p">)</span><span class="o">.</span><span class="n">conjugate</span><span class="p">()</span>
+                <span class="k">return</span> <span class="p">((</span><span class="n">inv_scalar</span><span class="o">.</span><span class="n">real</span><span class="p">)</span> <span class="o">*</span> <span class="n">RealPart</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">range</span><span class="p">)</span> <span class="o">+</span>
+                        <span class="p">(</span><span class="n">inv_scalar</span><span class="o">.</span><span class="n">imag</span><span class="p">)</span> <span class="o">*</span> <span class="n">ImagPart</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">range</span><span class="p">))</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># Complex domain</span>
+            <span class="k">return</span> <span class="n">ComplexEmbedding</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">range</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">scalar</span><span class="o">.</span><span class="n">conjugate</span><span class="p">())</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">adjoint</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sa">r</span><span class="sd">&quot;&quot;&quot;Return the (right) adjoint.</span>
+
+<span class="sd">        Notes</span>
+<span class="sd">        -----</span>
+<span class="sd">        Due to technicalities of operators from a real space into a complex</span>
+<span class="sd">        space, this does not satisfy the usual adjoint equation:</span>
+
+<span class="sd">        .. math::</span>
+<span class="sd">            \langle Ax, y \rangle = \langle x, A^*y \rangle</span>
+
+<span class="sd">        Instead it is an adjoint in a weaker sense as follows:</span>
+
+<span class="sd">        .. math::</span>
+<span class="sd">            \langle A^*Ax, y \rangle = \langle Ax, Ay \rangle</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        --------</span>
+<span class="sd">        The adjoint satisfies the adjoint equation for complex spaces</span>
+
+<span class="sd">        &gt;&gt;&gt; c3 = odl.cn(3)</span>
+<span class="sd">        &gt;&gt;&gt; op = ComplexEmbedding(c3, scalar=1j)</span>
+<span class="sd">        &gt;&gt;&gt; x = c3.element([1 + 1j, 2 + 2j, 3 + 3j])</span>
+<span class="sd">        &gt;&gt;&gt; y = c3.element([3 + 1j, 2 + 2j, 3 + 1j])</span>
+<span class="sd">        &gt;&gt;&gt; Axy = op(x).inner(y)</span>
+<span class="sd">        &gt;&gt;&gt; xAty = x.inner(op.adjoint(y))</span>
+<span class="sd">        &gt;&gt;&gt; Axy == xAty</span>
+<span class="sd">        True</span>
+
+<span class="sd">        For real domains, it only satisfies the (right) adjoint equation</span>
+
+<span class="sd">        &gt;&gt;&gt; r3 = odl.rn(3)</span>
+<span class="sd">        &gt;&gt;&gt; op = ComplexEmbedding(r3, scalar=1j)</span>
+<span class="sd">        &gt;&gt;&gt; x = r3.element([1, 2, 3])</span>
+<span class="sd">        &gt;&gt;&gt; y = r3.element([3, 2, 3])</span>
+<span class="sd">        &gt;&gt;&gt; AtAxy = op.adjoint(op(x)).inner(y)</span>
+<span class="sd">        &gt;&gt;&gt; AxAy = op(x).inner(op(y))</span>
+<span class="sd">        &gt;&gt;&gt; AtAxy == AxAy</span>
+<span class="sd">        True</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">domain</span><span class="o">.</span><span class="n">is_real</span><span class="p">:</span>
+            <span class="c1"># Real domain</span>
+            <span class="c1"># Optimizations for simple cases.</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">scalar</span><span class="o">.</span><span class="n">real</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">scalar</span><span class="p">:</span>
+                <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">scalar</span><span class="o">.</span><span class="n">real</span> <span class="o">*</span> <span class="n">RealPart</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">range</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="mi">1</span><span class="n">j</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">scalar</span><span class="o">.</span><span class="n">imag</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">scalar</span><span class="p">:</span>
+                <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">scalar</span><span class="o">.</span><span class="n">imag</span> <span class="o">*</span> <span class="n">ImagPart</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">range</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="c1"># General case</span>
+                <span class="k">return</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">scalar</span><span class="o">.</span><span class="n">real</span> <span class="o">*</span> <span class="n">RealPart</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">range</span><span class="p">)</span> <span class="o">+</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">scalar</span><span class="o">.</span><span class="n">imag</span> <span class="o">*</span> <span class="n">ImagPart</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">range</span><span class="p">))</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># Complex domain</span>
+            <span class="k">return</span> <span class="n">ComplexEmbedding</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">range</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">scalar</span><span class="o">.</span><span class="n">conjugate</span><span class="p">())</span></div>
+
+
+<div class="viewcode-block" id="ComplexModulus"><a class="viewcode-back" href="../../../generated/odl.operator.default_ops.ComplexModulus.html#odl.operator.default_ops.ComplexModulus">[docs]</a><span class="k">class</span> <span class="nc">ComplexModulus</span><span class="p">(</span><span class="n">Operator</span><span class="p">):</span>
+
+    <span class="sd">&quot;&quot;&quot;Operator that computes the modulus (absolute value) of a vector.&quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="ComplexModulus.__init__"><a class="viewcode-back" href="../../../generated/odl.operator.default_ops.ComplexModulus.html#odl.operator.default_ops.ComplexModulus.__init__">[docs]</a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">space</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Initialize a new instance.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        space : `TensorSpace`</span>
+<span class="sd">            Space in which the modulus should be taken, needs to implement</span>
+<span class="sd">            ``space.real_space``.</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        --------</span>
+<span class="sd">        Take the modulus of a complex vector:</span>
+
+<span class="sd">        &gt;&gt;&gt; c2 = odl.cn(2)</span>
+<span class="sd">        &gt;&gt;&gt; op = odl.ComplexModulus(c2)</span>
+<span class="sd">        &gt;&gt;&gt; op([3 + 4j, 2])</span>
+<span class="sd">        rn(2).element([ 5.,  2.])</span>
+
+<span class="sd">        The operator is the absolute value on real spaces:</span>
+
+<span class="sd">        &gt;&gt;&gt; r2 = odl.rn(2)</span>
+<span class="sd">        &gt;&gt;&gt; op = odl.ComplexModulus(r2)</span>
+<span class="sd">        &gt;&gt;&gt; op([1, -2])</span>
+<span class="sd">        rn(2).element([ 1.,  2.])</span>
+
+<span class="sd">        The operator also works on other `TensorSpace`&#39;s such as</span>
+<span class="sd">        `DiscretizedSpace`:</span>
+
+<span class="sd">        &gt;&gt;&gt; space = odl.uniform_discr(0, 1, 2, dtype=complex)</span>
+<span class="sd">        &gt;&gt;&gt; op = odl.ComplexModulus(space)</span>
+<span class="sd">        &gt;&gt;&gt; op([3 + 4j, 2])</span>
+<span class="sd">        uniform_discr(0.0, 1.0, 2).element([ 5.,  2.])</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">real_space</span> <span class="o">=</span> <span class="n">space</span><span class="o">.</span><span class="n">real_space</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">ComplexModulus</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">space</span><span class="p">,</span> <span class="n">real_space</span><span class="p">,</span> <span class="n">linear</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="ComplexModulus._call"><a class="viewcode-back" href="../../../generated/odl.operator.default_ops.ComplexModulus._call.html#odl.operator.default_ops.ComplexModulus._call">[docs]</a>    <span class="k">def</span> <span class="nf">_call</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return ``self(x)``.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">real</span> <span class="o">**</span> <span class="mi">2</span> <span class="o">+</span> <span class="n">x</span><span class="o">.</span><span class="n">imag</span> <span class="o">**</span> <span class="mi">2</span><span class="p">)</span><span class="o">.</span><span class="n">ufuncs</span><span class="o">.</span><span class="n">sqrt</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="ComplexModulus.derivative"><a class="viewcode-back" href="../../../generated/odl.operator.default_ops.ComplexModulus.derivative.html#odl.operator.default_ops.ComplexModulus.derivative">[docs]</a>    <span class="k">def</span> <span class="nf">derivative</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
+        <span class="sa">r</span><span class="sd">&quot;&quot;&quot;Return the derivative operator in the &quot;C = R^2&quot; sense.</span>
+
+<span class="sd">        The returned operator (``self``) is the derivative of the</span>
+<span class="sd">        operator variant where the complex domain is reinterpreted as</span>
+<span class="sd">        a product of two real spaces::</span>
+
+<span class="sd">            M&#39;(x) = y --&gt; ((Re(x) * Re(y) + Im(x) * Im(y)) /</span>
+<span class="sd">                           sqrt(Re(x)**2 + Re(y) ** 2))</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        x : `domain` element</span>
+<span class="sd">            Point in which to take the derivative.</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        --------</span>
+<span class="sd">        &gt;&gt;&gt; c2 = odl.cn(2)</span>
+<span class="sd">        &gt;&gt;&gt; op = odl.ComplexModulus(c2)</span>
+<span class="sd">        &gt;&gt;&gt; op([3 + 4j, 2])</span>
+<span class="sd">        rn(2).element([ 5.,  2.])</span>
+<span class="sd">        &gt;&gt;&gt; deriv = op.derivative([3 + 4j, 2])</span>
+<span class="sd">        &gt;&gt;&gt; deriv.domain</span>
+<span class="sd">        cn(2)</span>
+<span class="sd">        &gt;&gt;&gt; deriv.range</span>
+<span class="sd">        rn(2)</span>
+<span class="sd">        &gt;&gt;&gt; deriv([2 + 1j, 4j])  # [(3*2 + 4*1) / 5, (2*0 + 0*4) / 2]</span>
+<span class="sd">        rn(2).element([ 2.,  0.])</span>
+
+<span class="sd">        Notes</span>
+<span class="sd">        -----</span>
+<span class="sd">        The derivative of the complex modulus</span>
+
+<span class="sd">        .. math::</span>
+<span class="sd">            &amp;M: X(\mathbb{C}) \to X(\mathbb{R}), \\</span>
+<span class="sd">            &amp;M(x) = \sqrt{\Re(x)^2 + \Im(x)^2},</span>
+
+<span class="sd">        with :math:`X(\mathbb{F}) = \mathbb{F}^n` or</span>
+<span class="sd">        :math:`L^2(\Omega, \mathbb{F})`, is given as</span>
+
+<span class="sd">        .. math::</span>
+<span class="sd">            &amp;M&#39;(x): X(\mathbb{C}) \to X(\mathbb{R}), \\</span>
+<span class="sd">            &amp;M&#39;(x)(y) = \frac{\Re(x)\,\Re(y) + \Im(x)\,\Im(y)}{M(x)}.</span>
+
+<span class="sd">        It is linear when identifying :math:`\mathbb{C}` with</span>
+<span class="sd">        :math:`\mathbb{R}^2`, but not complex-linear.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">op</span> <span class="o">=</span> <span class="bp">self</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">domain</span><span class="o">.</span><span class="n">element</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+
+        <span class="k">class</span> <span class="nc">ComplexModulusDerivative</span><span class="p">(</span><span class="n">Operator</span><span class="p">):</span>
+
+            <span class="sd">&quot;&quot;&quot;Derivative of the complex modulus operator.&quot;&quot;&quot;</span>
+
+            <span class="k">def</span> <span class="nf">_call</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">out</span><span class="p">):</span>
+                <span class="sd">&quot;&quot;&quot;Return ``self(y)``.&quot;&quot;&quot;</span>
+                <span class="n">out</span><span class="p">[:]</span> <span class="o">=</span> <span class="n">x</span><span class="o">.</span><span class="n">real</span> <span class="o">*</span> <span class="n">y</span><span class="o">.</span><span class="n">real</span>
+                <span class="n">out</span> <span class="o">+=</span> <span class="n">x</span><span class="o">.</span><span class="n">imag</span> <span class="o">*</span> <span class="n">y</span><span class="o">.</span><span class="n">imag</span>
+                <span class="n">out</span> <span class="o">/=</span> <span class="n">op</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+                <span class="k">return</span> <span class="n">out</span>
+
+            <span class="nd">@property</span>
+            <span class="k">def</span> <span class="nf">adjoint</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+                <span class="sa">r</span><span class="sd">&quot;&quot;&quot;Adjoint in the &quot;C = R^2&quot; sense.</span>
+
+<span class="sd">                Examples</span>
+<span class="sd">                --------</span>
+<span class="sd">                Adjoint of the derivative:</span>
+
+<span class="sd">                &gt;&gt;&gt; c2 = odl.cn(2)</span>
+<span class="sd">                &gt;&gt;&gt; op = odl.ComplexModulus(c2)</span>
+<span class="sd">                &gt;&gt;&gt; op([3 + 4j, 2])</span>
+<span class="sd">                rn(2).element([ 5.,  2.])</span>
+<span class="sd">                &gt;&gt;&gt; deriv = op.derivative([3 + 4j, 2])</span>
+<span class="sd">                &gt;&gt;&gt; adj = deriv.adjoint</span>
+<span class="sd">                &gt;&gt;&gt; adj.domain</span>
+<span class="sd">                rn(2)</span>
+<span class="sd">                &gt;&gt;&gt; adj.range</span>
+<span class="sd">                cn(2)</span>
+<span class="sd">                &gt;&gt;&gt; adj([5, 5])  # [5*(3 + 4j)/5, 5*2/2]</span>
+<span class="sd">                cn(2).element([ 3.+4.j,  5.+0.j])</span>
+
+<span class="sd">                Adjointness only holds in the weaker sense that inner products</span>
+<span class="sd">                are the same when testing with vectors from the real space, but</span>
+<span class="sd">                not when testing complex vectors:</span>
+
+<span class="sd">                &gt;&gt;&gt; y1 = deriv.range.element([5, 5])</span>
+<span class="sd">                &gt;&gt;&gt; y2 = deriv.range.element([1, 2])</span>
+<span class="sd">                &gt;&gt;&gt; adj(y1).inner(adj(y2))  # &lt;M^* y1, M^* y2&gt;</span>
+<span class="sd">                (15+0j)</span>
+<span class="sd">                &gt;&gt;&gt; deriv(adj(y1)).inner(y2)  # &lt;M M^* y1, y2&gt;</span>
+<span class="sd">                15.0</span>
+<span class="sd">                &gt;&gt;&gt; x1 = deriv.domain.element([6 + 3j, 2j])</span>
+<span class="sd">                &gt;&gt;&gt; x2 = deriv.domain.element([5, 10 + 4j])</span>
+<span class="sd">                &gt;&gt;&gt; deriv(x1).inner(deriv(x2))  # &lt;M x1, M x2&gt;</span>
+<span class="sd">                18.0</span>
+<span class="sd">                &gt;&gt;&gt; adj(deriv(x1)).inner(x2)  # &lt;M^* M x1, x2&gt;</span>
+<span class="sd">                (18+24j)</span>
+
+<span class="sd">                Notes</span>
+<span class="sd">                -----</span>
+<span class="sd">                The complex modulus derivative is given by</span>
+
+<span class="sd">                .. math::</span>
+<span class="sd">                    &amp;M&#39;(x): X(\mathbb{C}) \to X(\mathbb{R}), \\</span>
+<span class="sd">                    &amp;M&#39;(x)(y) = \frac{\Re(x)\,\Re(y) + \Im(x)\,\Im(y)}{M(x)}.</span>
+
+<span class="sd">                Thus, its adjoint can (formally) be identified as</span>
+
+<span class="sd">                .. math::</span>
+<span class="sd">                    &amp;M&#39;(x)^*: X(\mathbb{R}) \to X(\mathbb{C}), \\</span>
+<span class="sd">                    &amp;M&#39;(x)^*(u) = \frac{(\Re(x)\,u,\ \Im(x)\,u}{M(x)}.</span>
+
+<span class="sd">                The operator :math:`A = M&#39;(x)` has the weak adjointness</span>
+<span class="sd">                property</span>
+
+<span class="sd">                .. math::</span>
+<span class="sd">                    \langle A^* y_1,\ A^* y_2 \rangle_{X(\mathbb{C})} =</span>
+<span class="sd">                    \langle AA^* y_1,\ y_2 \rangle_{X(\mathbb{R})},</span>
+
+<span class="sd">                but in general,</span>
+
+<span class="sd">                .. math::</span>
+<span class="sd">                    \langle A x,\ y \rangle_{X(\mathbb{R})} \neq</span>
+<span class="sd">                    \langle x,\ A^* y \rangle_{X(\mathbb{C})},</span>
+
+<span class="sd">                in particular</span>
+
+<span class="sd">                .. math::</span>
+<span class="sd">                    \langle A x_1,\ A x_2 \rangle_{X(\mathbb{R})} \neq</span>
+<span class="sd">                    \langle A^*A x_1,\ x_2 \rangle_{X(\mathbb{C})}.</span>
+<span class="sd">                &quot;&quot;&quot;</span>
+                <span class="n">deriv</span> <span class="o">=</span> <span class="bp">self</span>
+
+                <span class="k">class</span> <span class="nc">ComplexModulusDerivativeAdjoint</span><span class="p">(</span><span class="n">Operator</span><span class="p">):</span>
+
+                    <span class="k">def</span> <span class="nf">_call</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">u</span><span class="p">,</span> <span class="n">out</span><span class="p">):</span>
+                        <span class="sd">&quot;&quot;&quot;Implement ``self(u, out)``.&quot;&quot;&quot;</span>
+                        <span class="n">out</span><span class="o">.</span><span class="n">assign</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+                        <span class="n">tmp</span> <span class="o">=</span> <span class="n">u</span> <span class="o">/</span> <span class="n">op</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+                        <span class="n">out</span><span class="o">.</span><span class="n">real</span> <span class="o">*=</span> <span class="n">tmp</span>
+                        <span class="n">out</span><span class="o">.</span><span class="n">imag</span> <span class="o">*=</span> <span class="n">tmp</span>
+                        <span class="k">return</span> <span class="n">out</span>
+
+                    <span class="nd">@property</span>
+                    <span class="k">def</span> <span class="nf">adjoint</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+                        <span class="sd">&quot;&quot;&quot;Adjoint in the &quot;C = R^2&quot; sense.&quot;&quot;&quot;</span>
+                        <span class="k">return</span> <span class="n">deriv</span>
+
+                <span class="k">return</span> <span class="n">ComplexModulusDerivativeAdjoint</span><span class="p">(</span>
+                    <span class="n">deriv</span><span class="o">.</span><span class="n">range</span><span class="p">,</span> <span class="n">deriv</span><span class="o">.</span><span class="n">domain</span><span class="p">,</span> <span class="n">linear</span><span class="o">=</span><span class="kc">True</span>
+                <span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">ComplexModulusDerivative</span><span class="p">(</span><span class="n">op</span><span class="o">.</span><span class="n">domain</span><span class="p">,</span> <span class="n">op</span><span class="o">.</span><span class="n">range</span><span class="p">,</span> <span class="n">linear</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span></div></div>
+
+
+<div class="viewcode-block" id="ComplexModulusSquared"><a class="viewcode-back" href="../../../generated/odl.operator.default_ops.ComplexModulusSquared.html#odl.operator.default_ops.ComplexModulusSquared">[docs]</a><span class="k">class</span> <span class="nc">ComplexModulusSquared</span><span class="p">(</span><span class="n">Operator</span><span class="p">):</span>
+
+    <span class="sd">&quot;&quot;&quot;Operator that computes the squared complex modulus (absolute value).&quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="ComplexModulusSquared.__init__"><a class="viewcode-back" href="../../../generated/odl.operator.default_ops.ComplexModulusSquared.html#odl.operator.default_ops.ComplexModulusSquared.__init__">[docs]</a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">space</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Initialize a new instance.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        space : `TensorSpace`</span>
+<span class="sd">            Space in which the modulus should be taken, needs to implement</span>
+<span class="sd">            ``space.real_space``.</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        --------</span>
+<span class="sd">        Take the squared modulus of a complex vector:</span>
+
+<span class="sd">        &gt;&gt;&gt; c2 = odl.cn(2)</span>
+<span class="sd">        &gt;&gt;&gt; op = odl.ComplexModulusSquared(c2)</span>
+<span class="sd">        &gt;&gt;&gt; op([3 + 4j, 2])</span>
+<span class="sd">        rn(2).element([ 25.,   4.])</span>
+
+<span class="sd">        On a real space, this is the same as squaring:</span>
+
+<span class="sd">        &gt;&gt;&gt; r2 = odl.rn(2)</span>
+<span class="sd">        &gt;&gt;&gt; op = odl.ComplexModulusSquared(r2)</span>
+<span class="sd">        &gt;&gt;&gt; op([1, -2])</span>
+<span class="sd">        rn(2).element([ 1.,  4.])</span>
+
+<span class="sd">        The operator also works on other `TensorSpace`&#39;s such as</span>
+<span class="sd">        `DiscretizedSpace`:</span>
+
+<span class="sd">        &gt;&gt;&gt; space = odl.uniform_discr(0, 1, 2, dtype=complex)</span>
+<span class="sd">        &gt;&gt;&gt; op = odl.ComplexModulusSquared(space)</span>
+<span class="sd">        &gt;&gt;&gt; op([3 + 4j, 2])</span>
+<span class="sd">        uniform_discr(0.0, 1.0, 2).element([ 25.,   4.])</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">real_space</span> <span class="o">=</span> <span class="n">space</span><span class="o">.</span><span class="n">real_space</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">ComplexModulusSquared</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span>
+            <span class="n">space</span><span class="p">,</span> <span class="n">real_space</span><span class="p">,</span> <span class="n">linear</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="ComplexModulusSquared._call"><a class="viewcode-back" href="../../../generated/odl.operator.default_ops.ComplexModulusSquared._call.html#odl.operator.default_ops.ComplexModulusSquared._call">[docs]</a>    <span class="k">def</span> <span class="nf">_call</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return ``self(x)``.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">x</span><span class="o">.</span><span class="n">real</span> <span class="o">**</span> <span class="mi">2</span> <span class="o">+</span> <span class="n">x</span><span class="o">.</span><span class="n">imag</span> <span class="o">**</span> <span class="mi">2</span></div>
+
+<div class="viewcode-block" id="ComplexModulusSquared.derivative"><a class="viewcode-back" href="../../../generated/odl.operator.default_ops.ComplexModulusSquared.derivative.html#odl.operator.default_ops.ComplexModulusSquared.derivative">[docs]</a>    <span class="k">def</span> <span class="nf">derivative</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
+        <span class="sa">r</span><span class="sd">&quot;&quot;&quot;Return the derivative operator in the &quot;C = R^2&quot; sense.</span>
+
+<span class="sd">        The returned operator (``self``) is the derivative of the</span>
+<span class="sd">        operator variant where the complex domain is reinterpreted as</span>
+<span class="sd">        a product of two real spaces.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        x : `domain` element</span>
+<span class="sd">            Point in which to take the derivative.</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        --------</span>
+<span class="sd">        &gt;&gt;&gt; c2 = odl.cn(2)</span>
+<span class="sd">        &gt;&gt;&gt; op = odl.ComplexModulusSquared(c2)</span>
+<span class="sd">        &gt;&gt;&gt; op([3 + 4j, 2])</span>
+<span class="sd">        rn(2).element([ 25.,   4.])</span>
+<span class="sd">        &gt;&gt;&gt; deriv = op.derivative([3 + 4j, 2])</span>
+<span class="sd">        &gt;&gt;&gt; deriv.domain</span>
+<span class="sd">        cn(2)</span>
+<span class="sd">        &gt;&gt;&gt; deriv.range</span>
+<span class="sd">        rn(2)</span>
+<span class="sd">        &gt;&gt;&gt; deriv([2 + 1j, 4j])  # [(3*2 + 4*1) * 2, (2*0 + 0*4) * 2]</span>
+<span class="sd">        rn(2).element([ 20.,   0.])</span>
+
+<span class="sd">        Notes</span>
+<span class="sd">        -----</span>
+<span class="sd">        The derivative of the squared complex modulus</span>
+
+<span class="sd">        .. math::</span>
+<span class="sd">            &amp;S: X(\mathbb{C}) \to X(\mathbb{R}), \\</span>
+<span class="sd">            &amp;S(x) = 2\Re(x)^2 + \Im(x)^2,</span>
+
+<span class="sd">        with :math:`X(\mathbb{F}) = \mathbb{F}^n` or</span>
+<span class="sd">        :math:`L^2(\Omega, \mathbb{F})`, is given as</span>
+
+<span class="sd">        .. math::</span>
+<span class="sd">            &amp;S&#39;(x): X(\mathbb{C}) \to X(\mathbb{R}), \\</span>
+<span class="sd">            &amp;S&#39;(x)(y) = 2(\Re(x)\,\Re(y) + \Im(x)\,\Im(y)).</span>
+
+<span class="sd">        It is linear when identifying :math:`\mathbb{C}` with</span>
+<span class="sd">        :math:`\mathbb{R}^2`, but not complex-linear.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">op</span> <span class="o">=</span> <span class="bp">self</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">domain</span><span class="o">.</span><span class="n">element</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+
+        <span class="k">class</span> <span class="nc">ComplexModulusSquaredDerivative</span><span class="p">(</span><span class="n">Operator</span><span class="p">):</span>
+
+            <span class="sd">&quot;&quot;&quot;Derivative of the squared complex modulus operator.&quot;&quot;&quot;</span>
+
+            <span class="k">def</span> <span class="nf">_call</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">out</span><span class="p">):</span>
+                <span class="sd">&quot;&quot;&quot;Return ``self(y)``.&quot;&quot;&quot;</span>
+                <span class="n">x</span><span class="o">.</span><span class="n">real</span><span class="o">.</span><span class="n">multiply</span><span class="p">(</span><span class="n">y</span><span class="o">.</span><span class="n">real</span><span class="p">,</span> <span class="n">out</span><span class="o">=</span><span class="n">out</span><span class="p">)</span>
+                <span class="n">out</span> <span class="o">+=</span> <span class="n">x</span><span class="o">.</span><span class="n">imag</span> <span class="o">*</span> <span class="n">y</span><span class="o">.</span><span class="n">imag</span>
+                <span class="n">out</span> <span class="o">*=</span> <span class="mi">2</span>
+                <span class="k">return</span> <span class="n">out</span>
+
+            <span class="nd">@property</span>
+            <span class="k">def</span> <span class="nf">adjoint</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+                <span class="sa">r</span><span class="sd">&quot;&quot;&quot;Adjoint in the &quot;C = R^2&quot; sense.</span>
+
+<span class="sd">                Adjoint of the derivative:</span>
+
+<span class="sd">                Examples</span>
+<span class="sd">                --------</span>
+<span class="sd">                &gt;&gt;&gt; c2 = odl.cn(2)</span>
+<span class="sd">                &gt;&gt;&gt; op = odl.ComplexModulusSquared(c2)</span>
+<span class="sd">                &gt;&gt;&gt; deriv = op.derivative([3 + 4j, 2])</span>
+<span class="sd">                &gt;&gt;&gt; adj = deriv.adjoint</span>
+<span class="sd">                &gt;&gt;&gt; adj.domain</span>
+<span class="sd">                rn(2)</span>
+<span class="sd">                &gt;&gt;&gt; adj.range</span>
+<span class="sd">                cn(2)</span>
+<span class="sd">                &gt;&gt;&gt; adj([2, 1])  # 2 * [2*(3 + 4j), 1*2]</span>
+<span class="sd">                cn(2).element([ 12.+16.j,   4. +0.j])</span>
+
+<span class="sd">                Adjointness only holds in the weaker sense that inner products</span>
+<span class="sd">                are the same when testing with vectors from the real space, but</span>
+<span class="sd">                not when testing complex vectors:</span>
+
+<span class="sd">                &gt;&gt;&gt; y1 = deriv.range.element([1, 1])</span>
+<span class="sd">                &gt;&gt;&gt; y2 = deriv.range.element([1, -1])</span>
+<span class="sd">                &gt;&gt;&gt; adj(y1).inner(adj(y2))  # &lt;M^* y1, M^* y2&gt;</span>
+<span class="sd">                (84+0j)</span>
+<span class="sd">                &gt;&gt;&gt; deriv(adj(y1)).inner(y2)  # &lt;M M^* y1, y2&gt;</span>
+<span class="sd">                84.0</span>
+<span class="sd">                &gt;&gt;&gt; x1 = deriv.domain.element([1j, 1j])</span>
+<span class="sd">                &gt;&gt;&gt; x2 = deriv.domain.element([1 + 1j, 1j])</span>
+<span class="sd">                &gt;&gt;&gt; deriv(x1).inner(deriv(x2))  # &lt;M x1, M x2&gt;</span>
+<span class="sd">                112.0</span>
+<span class="sd">                &gt;&gt;&gt; adj(deriv(x1)).inner(x2)  # &lt;M^* M x1, x2&gt;</span>
+<span class="sd">                (112+16j)</span>
+
+<span class="sd">                Notes</span>
+<span class="sd">                -----</span>
+<span class="sd">                The squared complex modulus derivative is given by</span>
+
+<span class="sd">                .. math::</span>
+<span class="sd">                    &amp;S&#39;(x): X(\mathbb{C}) \to X(\mathbb{R}), \\</span>
+<span class="sd">                    &amp;S&#39;(x)(y) = 2(\Re(x)\,\Re(y) + \Im(x)\,\Im(y)).</span>
+
+<span class="sd">                Thus, its adjoint can (formally) be identified as</span>
+
+<span class="sd">                .. math::</span>
+<span class="sd">                    &amp;S&#39;(x)^*: X(\mathbb{R}) \to X(\mathbb{C}), \\</span>
+<span class="sd">                    &amp;S&#39;(x)^*(u) = 2(\Re(x)\,u,\ \Im(x)\,u).</span>
+
+<span class="sd">                The operator :math:`A = S&#39;(x)` has the weak adjointness</span>
+<span class="sd">                property</span>
+
+<span class="sd">                .. math::</span>
+<span class="sd">                    \langle A^* y_1,\ A^* y_2 \rangle_{X(\mathbb{C})} =</span>
+<span class="sd">                    \langle AA^* y_1,\ y_2 \rangle_{X(\mathbb{R})},</span>
+
+<span class="sd">                but in general,</span>
+
+<span class="sd">                .. math::</span>
+<span class="sd">                    \langle A x,\ y \rangle_{X(\mathbb{R})} \neq</span>
+<span class="sd">                    \langle x,\ A^* y \rangle_{X(\mathbb{C})},</span>
+
+<span class="sd">                in particular</span>
+
+<span class="sd">                .. math::</span>
+<span class="sd">                    \langle A x_1,\ A x_2 \rangle_{X(\mathbb{R})} \neq</span>
+<span class="sd">                    \langle A^*A x_1,\ x_2 \rangle_{X(\mathbb{C})}.</span>
+<span class="sd">                &quot;&quot;&quot;</span>
+                <span class="n">deriv</span> <span class="o">=</span> <span class="bp">self</span>
+
+                <span class="k">class</span> <span class="nc">ComplexModulusSquaredDerivAdj</span><span class="p">(</span><span class="n">Operator</span><span class="p">):</span>
+
+                    <span class="k">def</span> <span class="nf">_call</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">u</span><span class="p">,</span> <span class="n">out</span><span class="p">):</span>
+                        <span class="sd">&quot;&quot;&quot;Implement ``self(u, out)``.&quot;&quot;&quot;</span>
+                        <span class="n">out</span><span class="o">.</span><span class="n">assign</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+                        <span class="n">out</span><span class="o">.</span><span class="n">real</span> <span class="o">*=</span> <span class="n">u</span>
+                        <span class="n">out</span><span class="o">.</span><span class="n">imag</span> <span class="o">*=</span> <span class="n">u</span>
+                        <span class="n">out</span> <span class="o">*=</span> <span class="mi">2</span>
+                        <span class="k">return</span> <span class="n">out</span>
+
+                    <span class="nd">@property</span>
+                    <span class="k">def</span> <span class="nf">adjoint</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+                        <span class="sd">&quot;&quot;&quot;Adjoint in the &quot;C = R^2&quot; sense.&quot;&quot;&quot;</span>
+                        <span class="k">return</span> <span class="n">deriv</span>
+
+                <span class="k">return</span> <span class="n">ComplexModulusSquaredDerivAdj</span><span class="p">(</span>
+                    <span class="n">deriv</span><span class="o">.</span><span class="n">range</span><span class="p">,</span> <span class="n">deriv</span><span class="o">.</span><span class="n">domain</span><span class="p">,</span> <span class="n">linear</span><span class="o">=</span><span class="kc">True</span>
+                <span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">ComplexModulusSquaredDerivative</span><span class="p">(</span>
+            <span class="n">op</span><span class="o">.</span><span class="n">domain</span><span class="p">,</span> <span class="n">op</span><span class="o">.</span><span class="n">range</span><span class="p">,</span> <span class="n">linear</span><span class="o">=</span><span class="kc">True</span>
+        <span class="p">)</span></div></div>
+
+
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s1">&#39;__main__&#39;</span><span class="p">:</span>
+    <span class="kn">from</span> <span class="nn">odl.util.testutils</span> <span class="kn">import</span> <span class="n">run_doctests</span>
+    <span class="n">run_doctests</span><span class="p">()</span>
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &#169; Copyright 2014-2020 The ODL Contributors.
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

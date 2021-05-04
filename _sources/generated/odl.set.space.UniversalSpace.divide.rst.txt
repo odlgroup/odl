@@ -1,0 +1,8 @@
+:orphan:
+
+UniversalSpace.divide
+===================================
+
+.. currentmodule:: odl.set.space
+
+.. automethod:: UniversalSpace.divide

@@ -1,0 +1,6 @@
+Flat1dDetector.shape
+===============================================
+
+.. currentmodule:: odl.tomo.geometry.detector
+
+.. autoproperty:: Flat1dDetector.shape

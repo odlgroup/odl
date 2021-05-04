@@ -1,0 +1,8 @@
+:orphan:
+
+OperatorTest.log
+=========================================
+
+.. currentmodule:: odl.diagnostics.operator
+
+.. automethod:: OperatorTest.log

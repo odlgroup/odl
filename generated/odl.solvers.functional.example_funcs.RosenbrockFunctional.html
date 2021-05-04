@@ -1,0 +1,389 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>RosenbrockFunctional &mdash; odl 1.0.0.dev0 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="RosenbrockFunctional._call" href="odl.solvers.functional.example_funcs.RosenbrockFunctional._call.html" />
+    <link rel="prev" title="example_funcs" href="../odl.solvers.functional.example_funcs.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../index.html" class="icon icon-home"> odl
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                1.0.0.dev0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Getting Started</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../getting_started/getting_started.html">Getting Started</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Working with ODL</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../guide/guide.html">User’s guide – selected topics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../math/math.html">Mathematical Background</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Developer zone</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../dev/dev.html">Contributing to ODL</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Useful facts</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../guide/faq.html">Frequently asked questions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../guide/glossary.html">Glossary</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../release_notes.html">Release Notes</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../refs.html">References</a></li>
+</ul>
+<p class="caption"><span class="caption-text">API Reference</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../odl.html">odl</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../odl.contrib.html">contrib</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../odl.deform.html">deform</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../odl.diagnostics.html">diagnostics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../odl.discr.html">discr</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../odl.operator.html">operator</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../odl.phantom.html">phantom</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../odl.set.html">set</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="../odl.solvers.html">solvers</a><ul class="current">
+<li class="toctree-l3 current"><a class="reference internal" href="../odl.solvers.functional.html">functional</a><ul class="current">
+<li class="toctree-l4"><a class="reference internal" href="../odl.solvers.functional.default_functionals.html">default_functionals</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../odl.solvers.functional.derivatives.html">derivatives</a></li>
+<li class="toctree-l4 current"><a class="reference internal" href="../odl.solvers.functional.example_funcs.html">example_funcs</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../odl.solvers.functional.functional.html">functional</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../odl.solvers.iterative.html">iterative</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../odl.solvers.nonsmooth.html">nonsmooth</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../odl.solvers.smooth.html">smooth</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../odl.solvers.util.html">util</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../odl.space.html">space</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../odl.tomo.html">tomo</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../odl.trafos.html">trafos</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../odl.ufunc_ops.html">ufunc_ops</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../odl.util.html">util</a></li>
+</ul>
+</li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">odl</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="../odl.html">odl</a> &raquo;</li>
+        
+          <li><a href="../odl.solvers.html">solvers</a> &raquo;</li>
+        
+          <li><a href="../odl.solvers.functional.html">functional</a> &raquo;</li>
+        
+          <li><a href="../odl.solvers.functional.example_funcs.html">example_funcs</a> &raquo;</li>
+        
+      <li>RosenbrockFunctional</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            <a href="../_sources/generated/odl.solvers.functional.example_funcs.RosenbrockFunctional.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="rosenbrockfunctional">
+<h1>RosenbrockFunctional<a class="headerlink" href="#rosenbrockfunctional" title="Permalink to this headline">¶</a></h1>
+<dl class="py class">
+<dt id="odl.solvers.functional.example_funcs.RosenbrockFunctional">
+<em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">odl.solvers.functional.example_funcs.</span></code><code class="sig-name descname"><span class="pre">RosenbrockFunctional</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/odl/solvers/functional/example_funcs.html#RosenbrockFunctional"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#odl.solvers.functional.example_funcs.RosenbrockFunctional" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="odl.solvers.functional.functional.Functional.html#odl.solvers.functional.functional.Functional" title="odl.solvers.functional.functional.Functional"><code class="xref py py-class docutils literal notranslate"><span class="pre">odl.solvers.functional.functional.Functional</span></code></a></p>
+<p>The well-known Rosenbrock function on <code class="docutils literal notranslate"><span class="pre">R^n</span></code>.</p>
+<p>The <a class="reference external" href="https://en.wikipedia.org/wiki/Rosenbrock_function">Rosenbrock function</a> is often used as a test problem in
+smooth optimization.</p>
+<p class="rubric">Notes</p>
+<p>The functional is defined for <img class="math" src="../_images/math/05a735364a6216c0572cfefcf73668ccb28bab72.png" alt="x \\in \\mathbb{R}^n"/>,
+<img class="math" src="../_images/math/07ac10a315b78af0987f40481f9eaae4737e4436.png" alt="n \\geq 2"/>, as</p>
+<div class="math">
+<p><img src="../_images/math/0dfab99e5f0e824bf7ee9ce7c71ad1bb008e6f80.png" alt="\sum_{i=1}^{n - 1} c (x_{i+1} - x_i^2)^2 + (1 - x_i)^2,"/></p>
+</div><p>where <img class="math" src="../_images/math/d520a12f1579170834c32ad5f656de081bbb36fe.png" alt="c"/> is a constant, usually set to 100, which determines how
+“ill-behaved” the function should be.
+The global minimum lies at <img class="math" src="../_images/math/2c6cd646c91636d5498fa619e9168ae383e67700.png" alt="x = (1, \\dots, 1)"/>, independent
+of <img class="math" src="../_images/math/d520a12f1579170834c32ad5f656de081bbb36fe.png" alt="c"/>.</p>
+<p>There are two definitions of the n-dimensional Rosenbrock function found in
+the literature. One is the product of 2-dimensional Rosenbrock functions,
+which is not the one used here. This one extends the pattern of the 2d
+Rosenbrock function so all dimensions depend on each other in sequence.</p>
+<p class="rubric">References</p>
+<dl class="field-list simple">
+<dt class="field-odd">Attributes</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><a class="reference internal" href="odl.solvers.functional.example_funcs.RosenbrockFunctional.adjoint.html#odl.solvers.functional.example_funcs.RosenbrockFunctional.adjoint" title="odl.solvers.functional.example_funcs.RosenbrockFunctional.adjoint"><code class="xref py py-obj docutils literal notranslate"><span class="pre">adjoint</span></code></a></dt><dd><p>Adjoint of this operator (abstract).</p>
+</dd>
+<dt><a class="reference internal" href="odl.solvers.functional.example_funcs.RosenbrockFunctional.convex_conj.html#odl.solvers.functional.example_funcs.RosenbrockFunctional.convex_conj" title="odl.solvers.functional.example_funcs.RosenbrockFunctional.convex_conj"><code class="xref py py-obj docutils literal notranslate"><span class="pre">convex_conj</span></code></a></dt><dd><p>Convex conjugate functional of the functional.</p>
+</dd>
+<dt><a class="reference internal" href="odl.solvers.functional.example_funcs.RosenbrockFunctional.domain.html#odl.solvers.functional.example_funcs.RosenbrockFunctional.domain" title="odl.solvers.functional.example_funcs.RosenbrockFunctional.domain"><code class="xref py py-obj docutils literal notranslate"><span class="pre">domain</span></code></a></dt><dd><p>Set of objects on which this operator can be evaluated.</p>
+</dd>
+<dt><a class="reference internal" href="odl.solvers.functional.example_funcs.RosenbrockFunctional.grad_lipschitz.html#odl.solvers.functional.example_funcs.RosenbrockFunctional.grad_lipschitz" title="odl.solvers.functional.example_funcs.RosenbrockFunctional.grad_lipschitz"><code class="xref py py-obj docutils literal notranslate"><span class="pre">grad_lipschitz</span></code></a></dt><dd><p>Lipschitz constant for the gradient of the functional.</p>
+</dd>
+<dt><a class="reference internal" href="odl.solvers.functional.example_funcs.RosenbrockFunctional.gradient.html#odl.solvers.functional.example_funcs.RosenbrockFunctional.gradient" title="odl.solvers.functional.example_funcs.RosenbrockFunctional.gradient"><code class="xref py py-obj docutils literal notranslate"><span class="pre">gradient</span></code></a></dt><dd><p>Gradient operator of the Rosenbrock functional.</p>
+</dd>
+<dt><a class="reference internal" href="odl.solvers.functional.example_funcs.RosenbrockFunctional.inverse.html#odl.solvers.functional.example_funcs.RosenbrockFunctional.inverse" title="odl.solvers.functional.example_funcs.RosenbrockFunctional.inverse"><code class="xref py py-obj docutils literal notranslate"><span class="pre">inverse</span></code></a></dt><dd><p>Return the operator inverse.</p>
+</dd>
+<dt><a class="reference internal" href="odl.solvers.functional.example_funcs.RosenbrockFunctional.is_functional.html#odl.solvers.functional.example_funcs.RosenbrockFunctional.is_functional" title="odl.solvers.functional.example_funcs.RosenbrockFunctional.is_functional"><code class="xref py py-obj docutils literal notranslate"><span class="pre">is_functional</span></code></a></dt><dd><p><code class="docutils literal notranslate"><span class="pre">True</span></code> if this operator’s range is a <a class="reference internal" href="odl.set.sets.Field.html#odl.set.sets.Field" title="odl.set.sets.Field"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Field</span></code></a>.</p>
+</dd>
+<dt><a class="reference internal" href="odl.solvers.functional.example_funcs.RosenbrockFunctional.is_linear.html#odl.solvers.functional.example_funcs.RosenbrockFunctional.is_linear" title="odl.solvers.functional.example_funcs.RosenbrockFunctional.is_linear"><code class="xref py py-obj docutils literal notranslate"><span class="pre">is_linear</span></code></a></dt><dd><p><code class="docutils literal notranslate"><span class="pre">True</span></code> if this operator is linear.</p>
+</dd>
+<dt><a class="reference internal" href="odl.solvers.functional.example_funcs.RosenbrockFunctional.proximal.html#odl.solvers.functional.example_funcs.RosenbrockFunctional.proximal" title="odl.solvers.functional.example_funcs.RosenbrockFunctional.proximal"><code class="xref py py-obj docutils literal notranslate"><span class="pre">proximal</span></code></a></dt><dd><p>Proximal factory of the functional.</p>
+</dd>
+<dt><a class="reference internal" href="odl.solvers.functional.example_funcs.RosenbrockFunctional.range.html#odl.solvers.functional.example_funcs.RosenbrockFunctional.range" title="odl.solvers.functional.example_funcs.RosenbrockFunctional.range"><code class="xref py py-obj docutils literal notranslate"><span class="pre">range</span></code></a></dt><dd><p>Set in which the result of an evaluation of this operator lies.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+<p class="rubric">Methods</p>
+<table class="longtable docutils align-default">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="odl.solvers.functional.example_funcs.RosenbrockFunctional._call.html#odl.solvers.functional.example_funcs.RosenbrockFunctional._call" title="odl.solvers.functional.example_funcs.RosenbrockFunctional._call"><code class="xref py py-obj docutils literal notranslate"><span class="pre">_call</span></code></a>(self, x)</p></td>
+<td><p>Return <code class="docutils literal notranslate"><span class="pre">self(x)</span></code>.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="odl.solvers.functional.example_funcs.RosenbrockFunctional.bregman.html#odl.solvers.functional.example_funcs.RosenbrockFunctional.bregman" title="odl.solvers.functional.example_funcs.RosenbrockFunctional.bregman"><code class="xref py py-obj docutils literal notranslate"><span class="pre">bregman</span></code></a>(self, point, subgrad)</p></td>
+<td><p>Return the Bregman distance functional.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="odl.solvers.functional.example_funcs.RosenbrockFunctional.derivative.html#odl.solvers.functional.example_funcs.RosenbrockFunctional.derivative" title="odl.solvers.functional.example_funcs.RosenbrockFunctional.derivative"><code class="xref py py-obj docutils literal notranslate"><span class="pre">derivative</span></code></a>(self, point)</p></td>
+<td><p>Return the derivative operator in the given point.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="odl.solvers.functional.example_funcs.RosenbrockFunctional.norm.html#odl.solvers.functional.example_funcs.RosenbrockFunctional.norm" title="odl.solvers.functional.example_funcs.RosenbrockFunctional.norm"><code class="xref py py-obj docutils literal notranslate"><span class="pre">norm</span></code></a>(self[, estimate])</p></td>
+<td><p>Return the operator norm of this operator.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="odl.solvers.functional.example_funcs.RosenbrockFunctional.translated.html#odl.solvers.functional.example_funcs.RosenbrockFunctional.translated" title="odl.solvers.functional.example_funcs.RosenbrockFunctional.translated"><code class="xref py py-obj docutils literal notranslate"><span class="pre">translated</span></code></a>(self, shift)</p></td>
+<td><p>Return a translation of the functional.</p></td>
+</tr>
+</tbody>
+</table>
+<dl class="py method">
+<dt id="odl.solvers.functional.example_funcs.RosenbrockFunctional.__init__">
+<code class="sig-name descname"><span class="pre">__init__</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">space</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">scale</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">100.0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/odl/solvers/functional/example_funcs.html#RosenbrockFunctional.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#odl.solvers.functional.example_funcs.RosenbrockFunctional.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initialize a new instance.</p>
+<dl class="field-list">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl>
+<dt><strong>space</strong><span class="classifier"><a class="reference internal" href="odl.space.base_tensors.TensorSpace.html#odl.space.base_tensors.TensorSpace" title="odl.space.base_tensors.TensorSpace"><code class="xref any py py-class docutils literal notranslate"><span class="pre">TensorSpace</span></code></a></span></dt><dd><p>Domain of the functional.</p>
+</dd>
+<dt><strong>scale</strong><span class="classifier">positive float, optional</span></dt><dd><p>The scale <code class="docutils literal notranslate"><span class="pre">c</span></code> in the functional determining how
+“ill-behaved” the functional should be. Larger value means
+worse behavior.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+<p class="rubric">Examples</p>
+<p>Initialize and call the functional:</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">r2</span> <span class="o">=</span> <span class="n">odl</span><span class="o">.</span><span class="n">rn</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">functional</span> <span class="o">=</span> <span class="n">RosenbrockFunctional</span><span class="p">(</span><span class="n">r2</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">functional</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">])</span>  <span class="c1"># optimum is 0 at [1, 1]</span>
+<span class="go">0.0</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">functional</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">])</span>
+<span class="go">101.0</span>
+</pre></div>
+</div>
+<p>The functional can also be used in higher dimensions:</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">r5</span> <span class="o">=</span> <span class="n">odl</span><span class="o">.</span><span class="n">rn</span><span class="p">(</span><span class="mi">5</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">functional</span> <span class="o">=</span> <span class="n">RosenbrockFunctional</span><span class="p">(</span><span class="n">r5</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">functional</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">])</span>
+<span class="go">0.0</span>
+</pre></div>
+</div>
+<p>We can change how much the function is ill-behaved via <code class="docutils literal notranslate"><span class="pre">scale</span></code>:</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">r2</span> <span class="o">=</span> <span class="n">odl</span><span class="o">.</span><span class="n">rn</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">functional</span> <span class="o">=</span> <span class="n">RosenbrockFunctional</span><span class="p">(</span><span class="n">r2</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">functional</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">])</span>  <span class="c1"># optimum is still 0 at [1, 1]</span>
+<span class="go">0.0</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">functional</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">])</span>  <span class="c1"># much lower variation</span>
+<span class="go">3.0</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+        <a href="odl.solvers.functional.example_funcs.RosenbrockFunctional._call.html" class="btn btn-neutral float-right" title="RosenbrockFunctional._call" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="../odl.solvers.functional.example_funcs.html" class="btn btn-neutral float-left" title="example_funcs" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &#169; Copyright 2014-2020 The ODL Contributors.
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

@@ -1,0 +1,6 @@
+Tensor.nbytes
+====================================
+
+.. currentmodule:: odl.space.base_tensors
+
+.. autoproperty:: Tensor.nbytes

@@ -1,0 +1,6 @@
+FunctionalQuotient.is_functional
+==================================================================
+
+.. currentmodule:: odl.solvers.functional.functional
+
+.. autoproperty:: FunctionalQuotient.is_functional

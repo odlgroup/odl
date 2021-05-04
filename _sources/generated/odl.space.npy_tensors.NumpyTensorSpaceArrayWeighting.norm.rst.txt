@@ -1,0 +1,8 @@
+:orphan:
+
+NumpyTensorSpaceArrayWeighting.norm
+=========================================================
+
+.. currentmodule:: odl.space.npy_tensors
+
+.. automethod:: NumpyTensorSpaceArrayWeighting.norm

@@ -1,0 +1,6 @@
+ParallelBeamGeometry.implementation_cache
+====================================================================
+
+.. currentmodule:: odl.tomo.geometry.parallel
+
+.. autoproperty:: ParallelBeamGeometry.implementation_cache

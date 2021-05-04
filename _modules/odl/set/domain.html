@@ -1,0 +1,1082 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>odl.set.domain &mdash; odl 1.0.0.dev0 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/custom.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../../" src="../../../_static/documentation_options.js"></script>
+        <script src="../../../_static/jquery.js"></script>
+        <script src="../../../_static/underscore.js"></script>
+        <script src="../../../_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="../../../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../../index.html" class="icon icon-home"> odl
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                1.0.0.dev0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Getting Started</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../getting_started/getting_started.html">Getting Started</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Working with ODL</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../guide/guide.html">User’s guide – selected topics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../math/math.html">Mathematical Background</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Developer zone</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../dev/dev.html">Contributing to ODL</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Useful facts</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../guide/faq.html">Frequently asked questions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../guide/glossary.html">Glossary</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../release_notes.html">Release Notes</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../refs.html">References</a></li>
+</ul>
+<p class="caption"><span class="caption-text">API Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../odl.html">odl</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">odl</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="../../index.html">Module code</a> &raquo;</li>
+        
+      <li>odl.set.domain</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for odl.set.domain</h1><div class="highlight"><pre>
+<span></span><span class="c1"># Copyright 2014-2019 The ODL contributors</span>
+<span class="c1">#</span>
+<span class="c1"># This file is part of ODL.</span>
+<span class="c1">#</span>
+<span class="c1"># This Source Code Form is subject to the terms of the Mozilla Public License,</span>
+<span class="c1"># v. 2.0. If a copy of the MPL was not distributed with this file, You can</span>
+<span class="c1"># obtain one at https://mozilla.org/MPL/2.0/.</span>
+
+<span class="sd">&quot;&quot;&quot;Domains for continuous functions. &quot;&quot;&quot;</span>
+
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">print_function</span><span class="p">,</span> <span class="n">division</span><span class="p">,</span> <span class="n">absolute_import</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+
+<span class="kn">from</span> <span class="nn">odl.set.sets</span> <span class="kn">import</span> <span class="n">Set</span>
+<span class="kn">from</span> <span class="nn">odl.util</span> <span class="kn">import</span> <span class="p">(</span>
+    <span class="n">array_str</span><span class="p">,</span> <span class="n">is_valid_input_array</span><span class="p">,</span> <span class="n">is_valid_input_meshgrid</span><span class="p">,</span> <span class="n">safe_int_conv</span><span class="p">)</span>
+
+
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;IntervalProd&#39;</span><span class="p">,)</span>
+
+
+<div class="viewcode-block" id="IntervalProd"><a class="viewcode-back" href="../../../generated/odl.set.domain.IntervalProd.html#odl.set.domain.IntervalProd">[docs]</a><span class="k">class</span> <span class="nc">IntervalProd</span><span class="p">(</span><span class="n">Set</span><span class="p">):</span>
+
+    <span class="sd">&quot;&quot;&quot;An n-dimensional rectangular box.</span>
+
+<span class="sd">    An interval product is a Cartesian product of n intervals, i.e. an</span>
+<span class="sd">    n-dimensional rectangular box aligned with the coordinate axes</span>
+<span class="sd">    as a subset of the n-dimensional Euclidean space.</span>
+
+<span class="sd">    `IntervalProd` objects are immutable, hence all manipulation methods</span>
+<span class="sd">    return a new instance.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="IntervalProd.__init__"><a class="viewcode-back" href="../../../generated/odl.set.domain.IntervalProd.html#odl.set.domain.IntervalProd.__init__">[docs]</a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">min_pt</span><span class="p">,</span> <span class="n">max_pt</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Initialize a new instance.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        min_pt, max_pt : float or `array-like`</span>
+<span class="sd">            Vectors of lower/upper ends of the intervals in the product.</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        --------</span>
+<span class="sd">        &gt;&gt;&gt; min_pt, max_pt = [-1, 2.5, 70], [-0.5, 10, 75]</span>
+<span class="sd">        &gt;&gt;&gt; rbox = odl.IntervalProd(min_pt, max_pt)</span>
+<span class="sd">        &gt;&gt;&gt; rbox</span>
+<span class="sd">        IntervalProd([ -1. ,   2.5,  70. ], [ -0.5,  10. ,  75. ])</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">IntervalProd</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__min_pt</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">atleast_1d</span><span class="p">(</span><span class="n">min_pt</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s1">&#39;float64&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__max_pt</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">atleast_1d</span><span class="p">(</span><span class="n">max_pt</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s1">&#39;float64&#39;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">min_pt</span><span class="o">.</span><span class="n">ndim</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;`min_pt` must be 1-dimensional, got an array &#39;</span>
+                             <span class="s1">&#39;with </span><span class="si">{}</span><span class="s1"> axes&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">min_pt</span><span class="o">.</span><span class="n">ndim</span><span class="p">))</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">max_pt</span><span class="o">.</span><span class="n">ndim</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;`max_pt` must be 1-dimensional, got an array &#39;</span>
+                             <span class="s1">&#39;with </span><span class="si">{}</span><span class="s1"> axes&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">max_pt</span><span class="o">.</span><span class="n">ndim</span><span class="p">))</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">min_pt</span><span class="p">)</span> <span class="o">!=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">max_pt</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;`min_pt` and `max_pt` have different lengths &#39;</span>
+                             <span class="s1">&#39;(</span><span class="si">{}</span><span class="s1"> != </span><span class="si">{}</span><span class="s1">)&#39;</span>
+                             <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">min_pt</span><span class="p">),</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">max_pt</span><span class="p">)))</span>
+
+        <span class="k">for</span> <span class="n">axis</span><span class="p">,</span> <span class="p">(</span><span class="n">xmin</span><span class="p">,</span> <span class="n">xmax</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">min_pt</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">max_pt</span><span class="p">)):</span>
+            <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">xmin</span><span class="p">):</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;in axis </span><span class="si">{}</span><span class="s1">: min_pt is NaN&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">axis</span><span class="p">))</span>
+            <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">xmax</span><span class="p">):</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;in axis </span><span class="si">{}</span><span class="s1">: max_pt is NaN&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">axis</span><span class="p">))</span>
+            <span class="k">if</span> <span class="n">xmax</span> <span class="o">&lt;</span> <span class="n">xmin</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;in axis </span><span class="si">{}</span><span class="s1">: upper end smaller than lower &#39;</span>
+                                 <span class="s1">&#39;end (</span><span class="si">{}</span><span class="s1"> &lt; </span><span class="si">{}</span><span class="s1">)&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">axis</span><span class="p">,</span> <span class="n">xmax</span><span class="p">,</span> <span class="n">xmin</span><span class="p">))</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">__nondegen_byaxis</span> <span class="o">=</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">min_pt</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">max_pt</span><span class="p">)</span></div>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">min_pt</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Left interval boundaries of this interval product.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__min_pt</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">max_pt</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Right interval boundaries of this interval product.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__max_pt</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">ndim</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Number of intervals in the product.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">min_pt</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">true_ndim</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Number of non-degenerate (positive-length) intervals.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">count_nonzero</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">nondegen_byaxis</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">volume</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;`ndim`-dimensional volume of this interval product.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">measure</span><span class="p">(</span><span class="n">ndim</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">ndim</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">length</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Length of this interval (valid for ``ndim == 1``).&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">ndim</span> <span class="o">!=</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s1">&#39;length not defined if `ndim` != 1&#39;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">volume</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">area</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Area of this rectangle (valid if ``ndim == 2``).&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">ndim</span> <span class="o">!=</span> <span class="mi">2</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s1">&#39;area not defined if `ndim` != 2&#39;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">volume</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">mid_pt</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Midpoint of this interval product.&quot;&quot;&quot;</span>
+        <span class="n">midp</span> <span class="o">=</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">max_pt</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">min_pt</span><span class="p">)</span> <span class="o">/</span> <span class="mf">2.</span>
+        <span class="n">midp</span><span class="p">[</span><span class="o">~</span><span class="bp">self</span><span class="o">.</span><span class="n">nondegen_byaxis</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">min_pt</span><span class="p">[</span><span class="o">~</span><span class="bp">self</span><span class="o">.</span><span class="n">nondegen_byaxis</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">midp</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">nondegen_byaxis</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Boolean array with ``True`` entries for non-degenerate axes.</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        --------</span>
+<span class="sd">        &gt;&gt;&gt; intvp = IntervalProd([0, 0], [1, 0])</span>
+<span class="sd">        &gt;&gt;&gt; intvp.nondegen_byaxis</span>
+<span class="sd">        array([ True, False], dtype=bool)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__nondegen_byaxis</span>
+
+<div class="viewcode-block" id="IntervalProd.min"><a class="viewcode-back" href="../../../generated/odl.set.domain.IntervalProd.min.html#odl.set.domain.IntervalProd.min">[docs]</a>    <span class="k">def</span> <span class="nf">min</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return the minimum point of this interval product.</span>
+
+<span class="sd">        Notes</span>
+<span class="sd">        -----</span>
+<span class="sd">        This is a method instead of a property in order to match the numpy</span>
+<span class="sd">        interface. Users should mostly use `min_pt` directly.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">min_pt</span></div>
+
+<div class="viewcode-block" id="IntervalProd.max"><a class="viewcode-back" href="../../../generated/odl.set.domain.IntervalProd.max.html#odl.set.domain.IntervalProd.max">[docs]</a>    <span class="k">def</span> <span class="nf">max</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return the maximum point of this interval product.</span>
+
+<span class="sd">        Notes</span>
+<span class="sd">        -----</span>
+<span class="sd">        This is a method instead of a property in order to match the numpy</span>
+<span class="sd">        interface. Users should mostly use `max_pt` directly.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">max_pt</span></div>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">extent</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return the vector of interval lengths per axis.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">max</span><span class="p">()</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">min</span><span class="p">()</span>
+
+<div class="viewcode-block" id="IntervalProd.element"><a class="viewcode-back" href="../../../generated/odl.set.domain.IntervalProd.element.html#odl.set.domain.IntervalProd.element">[docs]</a>    <span class="k">def</span> <span class="nf">element</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">inp</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return an element of this interval product.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        inp : float or `array-like`, optional</span>
+<span class="sd">            Point to be cast to an element.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        element : `numpy.ndarray` or float</span>
+<span class="sd">            Array (`ndim` &gt; 1) or float version of ``inp`` if provided,</span>
+<span class="sd">            otherwise ``self.mid_pt``.</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        --------</span>
+<span class="sd">        &gt;&gt;&gt; interv = IntervalProd(0, 1)</span>
+<span class="sd">        &gt;&gt;&gt; interv.element(0.5)</span>
+<span class="sd">        0.5</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">inp</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">mid_pt</span>
+        <span class="k">elif</span> <span class="n">inp</span> <span class="ow">in</span> <span class="bp">self</span><span class="p">:</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">ndim</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="k">return</span> <span class="nb">float</span><span class="p">(</span><span class="n">inp</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">inp</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;`inp` </span><span class="si">{!r}</span><span class="s1"> is not a valid element of </span><span class="si">{!r}</span><span class="s1">&#39;</span>
+                            <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">inp</span><span class="p">,</span> <span class="bp">self</span><span class="p">))</span></div>
+
+<div class="viewcode-block" id="IntervalProd.approx_equals"><a class="viewcode-back" href="../../../generated/odl.set.domain.IntervalProd.approx_equals.html#odl.set.domain.IntervalProd.approx_equals">[docs]</a>    <span class="k">def</span> <span class="nf">approx_equals</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">,</span> <span class="n">atol</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return ``True`` if ``other`` is equal to this set up to ``atol``.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        other :</span>
+<span class="sd">            Object to be tested.</span>
+<span class="sd">        atol : float</span>
+<span class="sd">            Maximum allowed difference in maximum norm between the</span>
+<span class="sd">            interval endpoints.</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        --------</span>
+<span class="sd">        &gt;&gt;&gt; rbox1 = IntervalProd(0, 0.5)</span>
+<span class="sd">        &gt;&gt;&gt; rbox2 = IntervalProd(0, np.sqrt(0.5)**2)</span>
+<span class="sd">        &gt;&gt;&gt; rbox1.approx_equals(rbox2, atol=0)  # Numerical error</span>
+<span class="sd">        False</span>
+<span class="sd">        &gt;&gt;&gt; rbox1.approx_equals(rbox2, atol=1e-15)</span>
+<span class="sd">        True</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">other</span> <span class="ow">is</span> <span class="bp">self</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">True</span>
+        <span class="k">elif</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="n">IntervalProd</span><span class="p">):</span>
+            <span class="k">return</span> <span class="kc">False</span>
+
+        <span class="k">return</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">allclose</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">min_pt</span><span class="p">,</span> <span class="n">other</span><span class="o">.</span><span class="n">min_pt</span><span class="p">,</span> <span class="n">atol</span><span class="o">=</span><span class="n">atol</span><span class="p">,</span> <span class="n">rtol</span><span class="o">=</span><span class="mf">0.0</span><span class="p">)</span> <span class="ow">and</span>
+                <span class="n">np</span><span class="o">.</span><span class="n">allclose</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">max_pt</span><span class="p">,</span> <span class="n">other</span><span class="o">.</span><span class="n">max_pt</span><span class="p">,</span> <span class="n">atol</span><span class="o">=</span><span class="n">atol</span><span class="p">,</span> <span class="n">rtol</span><span class="o">=</span><span class="mf">0.0</span><span class="p">))</span></div>
+
+<div class="viewcode-block" id="IntervalProd.__eq__"><a class="viewcode-back" href="../../../generated/odl.set.domain.IntervalProd.__eq__.html#odl.set.domain.IntervalProd.__eq__">[docs]</a>    <span class="k">def</span> <span class="fm">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return ``self == other``.&quot;&quot;&quot;</span>
+        <span class="c1"># Implemented separately for performance reasons</span>
+        <span class="k">if</span> <span class="n">other</span> <span class="ow">is</span> <span class="bp">self</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">True</span>
+        <span class="k">elif</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="n">IntervalProd</span><span class="p">):</span>
+            <span class="k">return</span> <span class="kc">False</span>
+
+        <span class="k">return</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">all</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">min_pt</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">min_pt</span><span class="p">)</span> <span class="ow">and</span>
+                <span class="n">np</span><span class="o">.</span><span class="n">all</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">max_pt</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">max_pt</span><span class="p">))</span></div>
+
+    <span class="k">def</span> <span class="fm">__hash__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return ``hash(self)``.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="nb">hash</span><span class="p">((</span><span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">),</span> <span class="nb">tuple</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">min_pt</span><span class="p">),</span> <span class="nb">tuple</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">max_pt</span><span class="p">)))</span>
+
+<div class="viewcode-block" id="IntervalProd.approx_contains"><a class="viewcode-back" href="../../../generated/odl.set.domain.IntervalProd.approx_contains.html#odl.set.domain.IntervalProd.approx_contains">[docs]</a>    <span class="k">def</span> <span class="nf">approx_contains</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">point</span><span class="p">,</span> <span class="n">atol</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return ``True`` if ``point`` is &quot;almost&quot; contained in this set.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        point : `array-like` or float</span>
+<span class="sd">            Point to be tested. Its length must be equal to `ndim`.</span>
+<span class="sd">            In the 1d case, ``point`` can be given as a float.</span>
+<span class="sd">        atol : float</span>
+<span class="sd">            Maximum allowed distance in maximum norm from ``point``</span>
+<span class="sd">            to ``self``.</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        --------</span>
+<span class="sd">        &gt;&gt;&gt; min_pt, max_pt = [-1, 0, 2], [-0.5, 0, 3]</span>
+<span class="sd">        &gt;&gt;&gt; rbox = IntervalProd(min_pt, max_pt)</span>
+<span class="sd">        &gt;&gt;&gt; # Numerical error</span>
+<span class="sd">        &gt;&gt;&gt; rbox.approx_contains([-1 + np.sqrt(0.5)**2, 0., 2.9], atol=0)</span>
+<span class="sd">        False</span>
+<span class="sd">        &gt;&gt;&gt; rbox.approx_contains([-1 + np.sqrt(0.5)**2, 0., 2.9], atol=1e-9)</span>
+<span class="sd">        True</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="c1"># Duck-typed check of type</span>
+            <span class="n">point</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">point</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float</span><span class="p">,</span> <span class="n">copy</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">ndmin</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+        <span class="k">except</span> <span class="p">(</span><span class="ne">ValueError</span><span class="p">,</span> <span class="ne">TypeError</span><span class="p">):</span>
+            <span class="k">return</span> <span class="kc">False</span>
+
+        <span class="k">if</span> <span class="n">point</span><span class="o">.</span><span class="n">size</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">True</span>
+        <span class="k">elif</span> <span class="n">point</span><span class="o">.</span><span class="n">shape</span> <span class="o">!=</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ndim</span><span class="p">,):</span>
+            <span class="k">return</span> <span class="kc">False</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">dist</span><span class="p">(</span><span class="n">point</span><span class="p">,</span> <span class="n">exponent</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">inf</span><span class="p">)</span> <span class="o">&lt;=</span> <span class="n">atol</span></div>
+
+<div class="viewcode-block" id="IntervalProd.__contains__"><a class="viewcode-back" href="../../../generated/odl.set.domain.IntervalProd.__contains__.html#odl.set.domain.IntervalProd.__contains__">[docs]</a>    <span class="k">def</span> <span class="fm">__contains__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return ``other in self``.</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        --------</span>
+<span class="sd">        &gt;&gt;&gt; interv = IntervalProd(0, 1)</span>
+<span class="sd">        &gt;&gt;&gt; 0.5 in interv</span>
+<span class="sd">        True</span>
+<span class="sd">        &gt;&gt;&gt; 2 in interv</span>
+<span class="sd">        False</span>
+<span class="sd">        &gt;&gt;&gt; &#39;string&#39; in interv</span>
+<span class="sd">        False</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="c1"># Duck-typed check of type</span>
+            <span class="n">point</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float</span><span class="p">,</span> <span class="n">copy</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">ndmin</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+        <span class="k">except</span> <span class="p">(</span><span class="ne">ValueError</span><span class="p">,</span> <span class="ne">TypeError</span><span class="p">):</span>
+            <span class="k">return</span> <span class="kc">False</span>
+
+        <span class="k">if</span> <span class="n">point</span><span class="o">.</span><span class="n">shape</span> <span class="o">!=</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ndim</span><span class="p">,):</span>
+            <span class="k">return</span> <span class="kc">False</span>
+        <span class="k">return</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">min_pt</span> <span class="o">&lt;=</span> <span class="n">point</span><span class="p">)</span><span class="o">.</span><span class="n">all</span><span class="p">()</span> <span class="ow">and</span> <span class="p">(</span><span class="n">point</span> <span class="o">&lt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">max_pt</span><span class="p">)</span><span class="o">.</span><span class="n">all</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="IntervalProd.contains_set"><a class="viewcode-back" href="../../../generated/odl.set.domain.IntervalProd.contains_set.html#odl.set.domain.IntervalProd.contains_set">[docs]</a>    <span class="k">def</span> <span class="nf">contains_set</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">,</span> <span class="n">atol</span><span class="o">=</span><span class="mf">0.0</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return ``True`` if ``other`` is (almost) contained in this set.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        other : `Set`</span>
+<span class="sd">            Set to be tested.</span>
+<span class="sd">        atol : float, optional</span>
+<span class="sd">            Maximum allowed distance in maximum norm from ``other``</span>
+<span class="sd">            to ``self``.</span>
+
+<span class="sd">        Raises</span>
+<span class="sd">        ------</span>
+<span class="sd">        AttributeError</span>
+<span class="sd">            if ``other`` does not have both ``min`` and ``max`` methods.</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        --------</span>
+<span class="sd">        &gt;&gt;&gt; min_pt1, max_pt1 = [-1, 0, 2], [-0.5, 0, 3]</span>
+<span class="sd">        &gt;&gt;&gt; rbox1 = IntervalProd(min_pt1, max_pt1)</span>
+<span class="sd">        &gt;&gt;&gt; min_pt2, max_pt2 = [-0.6, 0, 2.1], [-0.5, 0, 2.5]</span>
+<span class="sd">        &gt;&gt;&gt; rbox2 = IntervalProd(min_pt2, max_pt2)</span>
+<span class="sd">        &gt;&gt;&gt; rbox1.contains_set(rbox2)</span>
+<span class="sd">        True</span>
+<span class="sd">        &gt;&gt;&gt; rbox2.contains_set(rbox1)</span>
+<span class="sd">        False</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span> <span class="ow">is</span> <span class="n">other</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">True</span>
+
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">return</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">approx_contains</span><span class="p">(</span><span class="n">other</span><span class="o">.</span><span class="n">min</span><span class="p">(),</span> <span class="n">atol</span><span class="p">)</span> <span class="ow">and</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">approx_contains</span><span class="p">(</span><span class="n">other</span><span class="o">.</span><span class="n">max</span><span class="p">(),</span> <span class="n">atol</span><span class="p">))</span>
+        <span class="k">except</span> <span class="ne">AttributeError</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">AttributeError</span><span class="p">(</span><span class="s1">&#39;cannot test </span><span class="si">{!r}</span><span class="s1"> without `min` and `max` &#39;</span>
+                                 <span class="s1">&#39;methods&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">other</span><span class="p">))</span></div>
+
+<div class="viewcode-block" id="IntervalProd.contains_all"><a class="viewcode-back" href="../../../generated/odl.set.domain.IntervalProd.contains_all.html#odl.set.domain.IntervalProd.contains_all">[docs]</a>    <span class="k">def</span> <span class="nf">contains_all</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">,</span> <span class="n">atol</span><span class="o">=</span><span class="mf">0.0</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return ``True`` if all points defined by ``other`` are contained.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        other :</span>
+<span class="sd">            Collection of points to be tested. Can be given as a single</span>
+<span class="sd">            point, a ``(d, N)`` array-like where ``d`` is the</span>
+<span class="sd">            number of dimensions, or a length-``d`` `meshgrid` tuple.</span>
+<span class="sd">        atol : float, optional</span>
+<span class="sd">            The maximum allowed distance in &#39;inf&#39;-norm between the</span>
+<span class="sd">            other set and this interval product.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        contains : bool</span>
+<span class="sd">            ``True`` if all points are contained, ``False`` otherwise.</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        --------</span>
+<span class="sd">        &gt;&gt;&gt; min_pt, max_pt = [-1, 0, 2], [-0.5, 0, 3]</span>
+<span class="sd">        &gt;&gt;&gt; rbox = IntervalProd(min_pt, max_pt)</span>
+
+<span class="sd">        Arrays are expected in ``(ndim, npoints)`` shape:</span>
+
+<span class="sd">        &gt;&gt;&gt; arr = np.array([[-1, 0, 2],   # defining one point at a time</span>
+<span class="sd">        ...                 [-0.5, 0, 2]])</span>
+<span class="sd">        &gt;&gt;&gt; rbox.contains_all(arr.T)</span>
+<span class="sd">        True</span>
+
+<span class="sd">        Implicit meshgrids defined by coordinate vectors:</span>
+
+<span class="sd">        &gt;&gt;&gt; from odl.discr.grid import sparse_meshgrid</span>
+<span class="sd">        &gt;&gt;&gt; vec1 = (-1, -0.9, -0.7)</span>
+<span class="sd">        &gt;&gt;&gt; vec2 = (0, 0, 0)</span>
+<span class="sd">        &gt;&gt;&gt; vec3 = (2.5, 2.75, 3)</span>
+<span class="sd">        &gt;&gt;&gt; mg = sparse_meshgrid(vec1, vec2, vec3)</span>
+<span class="sd">        &gt;&gt;&gt; rbox.contains_all(mg)</span>
+<span class="sd">        True</span>
+
+<span class="sd">        Works also with an arbitrary iterable:</span>
+
+<span class="sd">        &gt;&gt;&gt; rbox.contains_all([[-1, -0.5], # define points by axis</span>
+<span class="sd">        ...                    [0, 0],</span>
+<span class="sd">        ...                    [2, 2]])</span>
+<span class="sd">        True</span>
+
+<span class="sd">        Grids are also accepted as input:</span>
+
+<span class="sd">        &gt;&gt;&gt; agrid = odl.uniform_grid(rbox.min_pt, rbox.max_pt, [3, 1, 3])</span>
+<span class="sd">        &gt;&gt;&gt; rbox.contains_all(agrid)</span>
+<span class="sd">        True</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">atol</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">atol</span><span class="p">)</span>
+
+        <span class="c1"># First try optimized methods</span>
+        <span class="k">if</span> <span class="n">other</span> <span class="ow">in</span> <span class="bp">self</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">True</span>
+        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="s1">&#39;meshgrid&#39;</span><span class="p">):</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">contains_all</span><span class="p">(</span><span class="n">other</span><span class="o">.</span><span class="n">meshgrid</span><span class="p">,</span> <span class="n">atol</span><span class="o">=</span><span class="n">atol</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">is_valid_input_meshgrid</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">ndim</span><span class="p">):</span>
+            <span class="n">vecs</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">vec</span><span class="o">.</span><span class="n">squeeze</span><span class="p">()</span> <span class="k">for</span> <span class="n">vec</span> <span class="ow">in</span> <span class="n">other</span><span class="p">)</span>
+            <span class="n">mins</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">fromiter</span><span class="p">((</span><span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">vec</span><span class="p">)</span> <span class="k">for</span> <span class="n">vec</span> <span class="ow">in</span> <span class="n">vecs</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
+            <span class="n">maxs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">fromiter</span><span class="p">((</span><span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">vec</span><span class="p">)</span> <span class="k">for</span> <span class="n">vec</span> <span class="ow">in</span> <span class="n">vecs</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
+            <span class="k">return</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">all</span><span class="p">(</span><span class="n">mins</span> <span class="o">&gt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">min_pt</span> <span class="o">-</span> <span class="n">atol</span><span class="p">)</span> <span class="ow">and</span>
+                    <span class="n">np</span><span class="o">.</span><span class="n">all</span><span class="p">(</span><span class="n">maxs</span> <span class="o">&lt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">max_pt</span> <span class="o">+</span> <span class="n">atol</span><span class="p">))</span>
+
+        <span class="c1"># Convert to array and check each element</span>
+        <span class="n">other</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">other</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">is_valid_input_array</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">ndim</span><span class="p">):</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">ndim</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="n">mins</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">other</span><span class="p">)</span>
+                <span class="n">maxs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">other</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">mins</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+                <span class="n">maxs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">all</span><span class="p">(</span><span class="n">mins</span> <span class="o">&gt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">min_pt</span><span class="p">)</span> <span class="ow">and</span> <span class="n">np</span><span class="o">.</span><span class="n">all</span><span class="p">(</span><span class="n">maxs</span> <span class="o">&lt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">max_pt</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">False</span></div>
+
+<div class="viewcode-block" id="IntervalProd.measure"><a class="viewcode-back" href="../../../generated/odl.set.domain.IntervalProd.measure.html#odl.set.domain.IntervalProd.measure">[docs]</a>    <span class="k">def</span> <span class="nf">measure</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ndim</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return the Lebesgue measure of this interval product.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        ndim : int, optional</span>
+<span class="sd">            Dimension of the measure to apply. ``None`` is interpreted</span>
+<span class="sd">            as `true_ndim`, which always results in a finite and</span>
+<span class="sd">            positive result (unless the set is a single point).</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        --------</span>
+<span class="sd">        &gt;&gt;&gt; min_pt, max_pt = [-1, 2.5, 0], [-0.5, 10, 0]</span>
+<span class="sd">        &gt;&gt;&gt; rbox = IntervalProd(min_pt, max_pt)</span>
+<span class="sd">        &gt;&gt;&gt; rbox.measure()</span>
+<span class="sd">        3.75</span>
+<span class="sd">        &gt;&gt;&gt; rbox.measure(ndim=3)</span>
+<span class="sd">        0.0</span>
+<span class="sd">        &gt;&gt;&gt; rbox.measure(ndim=3) == rbox.volume</span>
+<span class="sd">        True</span>
+<span class="sd">        &gt;&gt;&gt; rbox.measure(ndim=1)</span>
+<span class="sd">        inf</span>
+<span class="sd">        &gt;&gt;&gt; rbox.measure() == rbox.squeeze().volume</span>
+<span class="sd">        True</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">true_ndim</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">return</span> <span class="mf">0.0</span>
+
+        <span class="k">if</span> <span class="n">ndim</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">measure</span><span class="p">(</span><span class="n">ndim</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">true_ndim</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">ndim</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">true_ndim</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">inf</span>
+        <span class="k">elif</span> <span class="n">ndim</span> <span class="o">&gt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">true_ndim</span><span class="p">:</span>
+            <span class="k">return</span> <span class="mf">0.0</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">prod</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">extent</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">nondegen_byaxis</span><span class="p">])</span></div>
+
+<div class="viewcode-block" id="IntervalProd.dist"><a class="viewcode-back" href="../../../generated/odl.set.domain.IntervalProd.dist.html#odl.set.domain.IntervalProd.dist">[docs]</a>    <span class="k">def</span> <span class="nf">dist</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">point</span><span class="p">,</span> <span class="n">exponent</span><span class="o">=</span><span class="mf">2.0</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return the distance of ``point`` to this set.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        point : `array-like` or float</span>
+<span class="sd">            Point whose distance to calculate. Its length must be equal</span>
+<span class="sd">            to the set&#39;s dimension. Can be a float in the 1d case.</span>
+<span class="sd">        exponent : non-zero float or ``float(&#39;inf&#39;)``, optional</span>
+<span class="sd">            Exponent of the norm used in the distance calculation.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        dist : float</span>
+<span class="sd">            Distance to the interior of the IntervalProd.</span>
+<span class="sd">            Points strictly inside have distance ``0.0``, points with</span>
+<span class="sd">            ``NaN`` have distance ``float(&#39;inf&#39;)``.</span>
+
+<span class="sd">        See Also</span>
+<span class="sd">        --------</span>
+<span class="sd">        numpy.linalg.norm : norm used to compute the distance</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        --------</span>
+<span class="sd">        &gt;&gt;&gt; min_pt, max_pt = [-1, 0, 2], [-0.5, 0, 3]</span>
+<span class="sd">        &gt;&gt;&gt; rbox = IntervalProd(min_pt, max_pt)</span>
+<span class="sd">        &gt;&gt;&gt; rbox.dist([-5, 3, 2])</span>
+<span class="sd">        5.0</span>
+<span class="sd">        &gt;&gt;&gt; rbox.dist([-5, 3, 2], exponent=float(&#39;inf&#39;))</span>
+<span class="sd">        4.0</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">point</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">atleast_1d</span><span class="p">(</span><span class="n">point</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">point</span><span class="p">)</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ndim</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;`point` must have length </span><span class="si">{}</span><span class="s1">, got </span><span class="si">{}</span><span class="s1">&#39;</span>
+                             <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ndim</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">point</span><span class="p">)))</span>
+
+        <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">any</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">point</span><span class="p">)):</span>
+            <span class="k">return</span> <span class="nb">float</span><span class="p">(</span><span class="s1">&#39;inf&#39;</span><span class="p">)</span>
+
+        <span class="n">i_larger</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">point</span> <span class="o">&gt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">max_pt</span><span class="p">)</span>
+        <span class="n">i_smaller</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">point</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">min_pt</span><span class="p">)</span>
+
+        <span class="c1"># Access [0] since np.where returns a tuple.</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">i_larger</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="o">==</span> <span class="mi">0</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">i_smaller</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">return</span> <span class="mf">0.0</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">proj</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">((</span><span class="n">point</span><span class="p">[</span><span class="n">i_larger</span><span class="p">],</span> <span class="n">point</span><span class="p">[</span><span class="n">i_smaller</span><span class="p">]))</span>
+            <span class="n">border</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">max_pt</span><span class="p">[</span><span class="n">i_larger</span><span class="p">],</span>
+                                     <span class="bp">self</span><span class="o">.</span><span class="n">min_pt</span><span class="p">[</span><span class="n">i_smaller</span><span class="p">]))</span>
+            <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">proj</span> <span class="o">-</span> <span class="n">border</span><span class="p">,</span> <span class="nb">ord</span><span class="o">=</span><span class="n">exponent</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="IntervalProd.collapse"><a class="viewcode-back" href="../../../generated/odl.set.domain.IntervalProd.collapse.html#odl.set.domain.IntervalProd.collapse">[docs]</a>    <span class="k">def</span> <span class="nf">collapse</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">indices</span><span class="p">,</span> <span class="n">values</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Partly collapse the interval product to single values.</span>
+
+<span class="sd">        Note that no changes are made in-place.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        indices : int or sequence of ints</span>
+<span class="sd">            The indices of the dimensions along which to collapse.</span>
+<span class="sd">        values : `array-like` or float</span>
+<span class="sd">            The values to which to collapse. Must have the same</span>
+<span class="sd">            length as ``indices``. Values must lie within the interval</span>
+<span class="sd">            boundaries.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        collapsed : `IntervalProd`</span>
+<span class="sd">            The collapsed set.</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        --------</span>
+<span class="sd">        &gt;&gt;&gt; min_pt, max_pt = [-1, 0, 2], [-0.5, 1, 3]</span>
+<span class="sd">        &gt;&gt;&gt; rbox = IntervalProd(min_pt, max_pt)</span>
+<span class="sd">        &gt;&gt;&gt; rbox.collapse(1, 0)</span>
+<span class="sd">        IntervalProd([-1.,  0.,  2.], [-0.5,  0. ,  3. ])</span>
+<span class="sd">        &gt;&gt;&gt; rbox.collapse([1, 2], [0, 2.5])</span>
+<span class="sd">        IntervalProd([-1. ,  0. ,  2.5], [-0.5,  0. ,  2.5])</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">indices</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">atleast_1d</span><span class="p">(</span><span class="n">indices</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s1">&#39;int64&#39;</span><span class="p">,</span> <span class="n">casting</span><span class="o">=</span><span class="s1">&#39;safe&#39;</span><span class="p">)</span>
+        <span class="n">values</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">atleast_1d</span><span class="p">(</span><span class="n">values</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">indices</span><span class="p">)</span> <span class="o">!=</span> <span class="nb">len</span><span class="p">(</span><span class="n">values</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;lengths of indices </span><span class="si">{}</span><span class="s1"> and values </span><span class="si">{}</span><span class="s1"> do not &#39;</span>
+                             <span class="s1">&#39;match (</span><span class="si">{}</span><span class="s1"> != </span><span class="si">{}</span><span class="s1">)&#39;</span>
+                             <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">indices</span><span class="p">,</span> <span class="n">values</span><span class="p">,</span>
+                                       <span class="nb">len</span><span class="p">(</span><span class="n">indices</span><span class="p">),</span> <span class="nb">len</span><span class="p">(</span><span class="n">values</span><span class="p">)))</span>
+
+        <span class="k">for</span> <span class="n">axis</span><span class="p">,</span> <span class="n">index</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">indices</span><span class="p">):</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="mi">0</span> <span class="o">&lt;=</span> <span class="n">index</span> <span class="o">&lt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ndim</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">IndexError</span><span class="p">(</span><span class="s1">&#39;in axis </span><span class="si">{}</span><span class="s1">: index </span><span class="si">{}</span><span class="s1"> out of range 0 --&gt; </span><span class="si">{}</span><span class="s1">&#39;</span>
+                                 <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">axis</span><span class="p">,</span> <span class="n">index</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">ndim</span> <span class="o">-</span> <span class="mi">1</span><span class="p">))</span>
+
+        <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">any</span><span class="p">(</span><span class="n">values</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">min_pt</span><span class="p">[</span><span class="n">indices</span><span class="p">]):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;values </span><span class="si">{}</span><span class="s1"> not above the lower interval &#39;</span>
+                             <span class="s1">&#39;boundaries </span><span class="si">{}</span><span class="s1">&#39;</span>
+                             <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">values</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">min_pt</span><span class="p">[</span><span class="n">indices</span><span class="p">]))</span>
+
+        <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">any</span><span class="p">(</span><span class="n">values</span> <span class="o">&gt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">max_pt</span><span class="p">[</span><span class="n">indices</span><span class="p">]):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;values </span><span class="si">{}</span><span class="s1"> not below the upper interval &#39;</span>
+                             <span class="s1">&#39;boundaries </span><span class="si">{}</span><span class="s1">&#39;</span>
+                             <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">values</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">max_pt</span><span class="p">[</span><span class="n">indices</span><span class="p">]))</span>
+
+        <span class="n">b_new</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">min_pt</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+        <span class="n">b_new</span><span class="p">[</span><span class="n">indices</span><span class="p">]</span> <span class="o">=</span> <span class="n">values</span>
+        <span class="n">e_new</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">max_pt</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+        <span class="n">e_new</span><span class="p">[</span><span class="n">indices</span><span class="p">]</span> <span class="o">=</span> <span class="n">values</span>
+
+        <span class="k">return</span> <span class="n">IntervalProd</span><span class="p">(</span><span class="n">b_new</span><span class="p">,</span> <span class="n">e_new</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="IntervalProd.squeeze"><a class="viewcode-back" href="../../../generated/odl.set.domain.IntervalProd.squeeze.html#odl.set.domain.IntervalProd.squeeze">[docs]</a>    <span class="k">def</span> <span class="nf">squeeze</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Remove the degenerate dimensions.</span>
+
+<span class="sd">        Note that no changes are made in-place.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        squeezed : `IntervalProd`</span>
+<span class="sd">            Squeezed set.</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        --------</span>
+<span class="sd">        &gt;&gt;&gt; min_pt, max_pt = [-1, 0, 2], [-0.5, 1, 3]</span>
+<span class="sd">        &gt;&gt;&gt; rbox = IntervalProd(min_pt, max_pt)</span>
+<span class="sd">        &gt;&gt;&gt; rbox.collapse(1, 0).squeeze()</span>
+<span class="sd">        IntervalProd([-1.,  2.], [-0.5,  3. ])</span>
+<span class="sd">        &gt;&gt;&gt; rbox.collapse([1, 2], [0, 2.5]).squeeze()</span>
+<span class="sd">        IntervalProd(-1.0, -0.5)</span>
+<span class="sd">        &gt;&gt;&gt; rbox.collapse([0, 1, 2], [-1, 0, 2.5]).squeeze()</span>
+<span class="sd">        IntervalProd([], [])</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">b_new</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">min_pt</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">nondegen_byaxis</span><span class="p">]</span>
+        <span class="n">e_new</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">max_pt</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">nondegen_byaxis</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">IntervalProd</span><span class="p">(</span><span class="n">b_new</span><span class="p">,</span> <span class="n">e_new</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="IntervalProd.insert"><a class="viewcode-back" href="../../../generated/odl.set.domain.IntervalProd.insert.html#odl.set.domain.IntervalProd.insert">[docs]</a>    <span class="k">def</span> <span class="nf">insert</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">index</span><span class="p">,</span> <span class="o">*</span><span class="n">intvs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return a copy with ``intvs`` inserted before ``index``.</span>
+
+<span class="sd">        The given interval products are inserted (as a block) into ``self``,</span>
+<span class="sd">        yielding a new interval product whose number of dimensions is the</span>
+<span class="sd">        sum of the numbers of dimensions of all involved interval products.</span>
+<span class="sd">        Note that no changes are made in-place.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        index : int</span>
+<span class="sd">            Index of the dimension before which ``other`` is to</span>
+<span class="sd">            be inserted. Must fulfill ``-ndim &lt;= index &lt;= ndim``.</span>
+<span class="sd">            Negative indices count backwards from ``self.ndim``.</span>
+<span class="sd">        intv1, ..., intvN : `IntervalProd`</span>
+<span class="sd">            Interval products to be inserted into ``self``.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        newintvp : `IntervalProd`</span>
+<span class="sd">            The enlarged interval product.</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        --------</span>
+<span class="sd">        &gt;&gt;&gt; intv = IntervalProd([-1, 2], [-0.5, 3])</span>
+<span class="sd">        &gt;&gt;&gt; intv2 = IntervalProd(0, 1)</span>
+<span class="sd">        &gt;&gt;&gt; intv.insert(0, intv2)</span>
+<span class="sd">        IntervalProd([ 0., -1.,  2.], [ 1. , -0.5,  3. ])</span>
+<span class="sd">        &gt;&gt;&gt; intv.insert(-1, intv2)</span>
+<span class="sd">        IntervalProd([-1.,  0.,  2.], [-0.5,  1. ,  3. ])</span>
+<span class="sd">        &gt;&gt;&gt; intv.insert(1, intv2, intv2)</span>
+<span class="sd">        IntervalProd([-1.,  0.,  0.,  2.], [-0.5,  1. ,  1. ,  3. ])</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">index</span><span class="p">,</span> <span class="n">index_in</span> <span class="o">=</span> <span class="n">safe_int_conv</span><span class="p">(</span><span class="n">index</span><span class="p">),</span> <span class="n">index</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="o">-</span><span class="bp">self</span><span class="o">.</span><span class="n">ndim</span> <span class="o">&lt;=</span> <span class="n">index</span> <span class="o">&lt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ndim</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">IndexError</span><span class="p">(</span><span class="s1">&#39;index </span><span class="si">{0}</span><span class="s1"> outside the valid range -</span><span class="si">{1}</span><span class="s1"> ... </span><span class="si">{1}</span><span class="s1">&#39;</span>
+                             <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">index_in</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">ndim</span><span class="p">))</span>
+        <span class="k">if</span> <span class="n">index</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">index</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ndim</span>
+
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">intvs</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="c1"># Copy of `self`</span>
+            <span class="k">return</span> <span class="n">IntervalProd</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">min_pt</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">max_pt</span><span class="p">)</span>
+
+        <span class="k">elif</span> <span class="nb">len</span><span class="p">(</span><span class="n">intvs</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="c1"># Insert single interval product</span>
+            <span class="n">intv</span> <span class="o">=</span> <span class="n">intvs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">intv</span><span class="p">,</span> <span class="n">IntervalProd</span><span class="p">):</span>
+                <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">{!r}</span><span class="s1"> is not a `IntervalProd` instance&#39;</span>
+                                <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">intv</span><span class="p">))</span>
+            <span class="n">new_min_pt</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ndim</span> <span class="o">+</span> <span class="n">intv</span><span class="o">.</span><span class="n">ndim</span><span class="p">)</span>
+            <span class="n">new_max_pt</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ndim</span> <span class="o">+</span> <span class="n">intv</span><span class="o">.</span><span class="n">ndim</span><span class="p">)</span>
+
+            <span class="n">new_min_pt</span><span class="p">[:</span> <span class="n">index</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">min_pt</span><span class="p">[:</span> <span class="n">index</span><span class="p">]</span>
+            <span class="n">new_max_pt</span><span class="p">[:</span> <span class="n">index</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">max_pt</span><span class="p">[:</span> <span class="n">index</span><span class="p">]</span>
+            <span class="n">new_min_pt</span><span class="p">[</span><span class="n">index</span><span class="p">:</span> <span class="n">index</span> <span class="o">+</span> <span class="n">intv</span><span class="o">.</span><span class="n">ndim</span><span class="p">]</span> <span class="o">=</span> <span class="n">intv</span><span class="o">.</span><span class="n">min_pt</span>
+            <span class="n">new_max_pt</span><span class="p">[</span><span class="n">index</span><span class="p">:</span> <span class="n">index</span> <span class="o">+</span> <span class="n">intv</span><span class="o">.</span><span class="n">ndim</span><span class="p">]</span> <span class="o">=</span> <span class="n">intv</span><span class="o">.</span><span class="n">max_pt</span>
+            <span class="k">if</span> <span class="n">index</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">ndim</span><span class="p">:</span>  <span class="c1"># Avoid IndexError</span>
+                <span class="n">new_min_pt</span><span class="p">[</span><span class="n">index</span> <span class="o">+</span> <span class="n">intv</span><span class="o">.</span><span class="n">ndim</span><span class="p">:]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">min_pt</span><span class="p">[</span><span class="n">index</span><span class="p">:]</span>
+                <span class="n">new_max_pt</span><span class="p">[</span><span class="n">index</span> <span class="o">+</span> <span class="n">intv</span><span class="o">.</span><span class="n">ndim</span><span class="p">:]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">max_pt</span><span class="p">[</span><span class="n">index</span><span class="p">:]</span>
+
+            <span class="k">return</span> <span class="n">IntervalProd</span><span class="p">(</span><span class="n">new_min_pt</span><span class="p">,</span> <span class="n">new_max_pt</span><span class="p">)</span>
+
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># Recursively insert one, then rest into the result</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="n">index</span><span class="p">,</span> <span class="n">intvs</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span>
+                <span class="n">index</span> <span class="o">+</span> <span class="n">intvs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">ndim</span><span class="p">,</span> <span class="o">*</span><span class="p">(</span><span class="n">intvs</span><span class="p">[</span><span class="mi">1</span><span class="p">:]))</span></div>
+
+<div class="viewcode-block" id="IntervalProd.append"><a class="viewcode-back" href="../../../generated/odl.set.domain.IntervalProd.append.html#odl.set.domain.IntervalProd.append">[docs]</a>    <span class="k">def</span> <span class="nf">append</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">intvs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Insert ``intvs`` at the end as a block.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        intv1, ..., intvN : `IntervalProd`</span>
+<span class="sd">            Interval products to be appended to ``self``.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        newintvp : `IntervalProd`</span>
+<span class="sd">            The enlarged interval product.</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        --------</span>
+<span class="sd">        &gt;&gt;&gt; intv = IntervalProd([-1, 2], [-0.5, 3])</span>
+<span class="sd">        &gt;&gt;&gt; intv2 = IntervalProd(0, 1)</span>
+<span class="sd">        &gt;&gt;&gt; intv.append(intv2)</span>
+<span class="sd">        IntervalProd([-1.,  2.,  0.], [-0.5,  3. ,  1. ])</span>
+<span class="sd">        &gt;&gt;&gt; intv.append(intv2, intv2)</span>
+<span class="sd">        IntervalProd([-1.,  2.,  0.,  0.], [-0.5,  3. ,  1. ,  1. ])</span>
+
+<span class="sd">        See Also</span>
+<span class="sd">        --------</span>
+<span class="sd">        insert</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ndim</span><span class="p">,</span> <span class="o">*</span><span class="n">intvs</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="IntervalProd.corners"><a class="viewcode-back" href="../../../generated/odl.set.domain.IntervalProd.corners.html#odl.set.domain.IntervalProd.corners">[docs]</a>    <span class="k">def</span> <span class="nf">corners</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">order</span><span class="o">=</span><span class="s1">&#39;C&#39;</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return the corner points as a single array.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        order : {&#39;C&#39;, &#39;F&#39;}, optional</span>
+<span class="sd">            Ordering of the axes in which the corners appear in</span>
+<span class="sd">            the output. ``&#39;C&#39;`` means that the first axis varies slowest</span>
+<span class="sd">            and the last one fastest, vice versa in ``&#39;F&#39;`` ordering.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        corners : `numpy.ndarray`</span>
+<span class="sd">            Array containing the corner coordinates. The size of the</span>
+<span class="sd">            array is ``2^m x ndim``, where ``m`` is the number of</span>
+<span class="sd">            non-degenerate axes, i.e. the corners are stored as rows.</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        --------</span>
+<span class="sd">        &gt;&gt;&gt; intv = IntervalProd([-1, 2, 0], [-0.5, 3, 0.5])</span>
+<span class="sd">        &gt;&gt;&gt; intv.corners()</span>
+<span class="sd">        array([[-1. ,  2. ,  0. ],</span>
+<span class="sd">               [-1. ,  2. ,  0.5],</span>
+<span class="sd">               [-1. ,  3. ,  0. ],</span>
+<span class="sd">               [-1. ,  3. ,  0.5],</span>
+<span class="sd">               [-0.5,  2. ,  0. ],</span>
+<span class="sd">               [-0.5,  2. ,  0.5],</span>
+<span class="sd">               [-0.5,  3. ,  0. ],</span>
+<span class="sd">               [-0.5,  3. ,  0.5]])</span>
+<span class="sd">        &gt;&gt;&gt; intv.corners(order=&#39;F&#39;)</span>
+<span class="sd">        array([[-1. ,  2. ,  0. ],</span>
+<span class="sd">               [-0.5,  2. ,  0. ],</span>
+<span class="sd">               [-1. ,  3. ,  0. ],</span>
+<span class="sd">               [-0.5,  3. ,  0. ],</span>
+<span class="sd">               [-1. ,  2. ,  0.5],</span>
+<span class="sd">               [-0.5,  2. ,  0.5],</span>
+<span class="sd">               [-1. ,  3. ,  0.5],</span>
+<span class="sd">               [-0.5,  3. ,  0.5]])</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="kn">from</span> <span class="nn">odl.discr.grid</span> <span class="kn">import</span> <span class="n">RectGrid</span>
+
+        <span class="n">minmax_vecs</span> <span class="o">=</span> <span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">ndim</span>
+        <span class="k">for</span> <span class="n">axis</span> <span class="ow">in</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="o">~</span><span class="bp">self</span><span class="o">.</span><span class="n">nondegen_byaxis</span><span class="p">)[</span><span class="mi">0</span><span class="p">]:</span>
+            <span class="n">minmax_vecs</span><span class="p">[</span><span class="n">axis</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">min_pt</span><span class="p">[</span><span class="n">axis</span><span class="p">]</span>
+        <span class="k">for</span> <span class="n">axis</span> <span class="ow">in</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">nondegen_byaxis</span><span class="p">)[</span><span class="mi">0</span><span class="p">]:</span>
+            <span class="n">minmax_vecs</span><span class="p">[</span><span class="n">axis</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">min_pt</span><span class="p">[</span><span class="n">axis</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">max_pt</span><span class="p">[</span><span class="n">axis</span><span class="p">])</span>
+
+        <span class="n">minmax_grid</span> <span class="o">=</span> <span class="n">RectGrid</span><span class="p">(</span><span class="o">*</span><span class="n">minmax_vecs</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">minmax_grid</span><span class="o">.</span><span class="n">points</span><span class="p">(</span><span class="n">order</span><span class="o">=</span><span class="n">order</span><span class="p">)</span></div>
+
+    <span class="k">def</span> <span class="fm">__len__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return ``len(self)``.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">ndim</span>
+
+<div class="viewcode-block" id="IntervalProd.__getitem__"><a class="viewcode-back" href="../../../generated/odl.set.domain.IntervalProd.__getitem__.html#odl.set.domain.IntervalProd.__getitem__">[docs]</a>    <span class="k">def</span> <span class="fm">__getitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">indices</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return ``self[indices]``</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        indices : index expression</span>
+<span class="sd">            Object determining which parts of the interval product</span>
+<span class="sd">            to extract.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        subinterval : `IntervalProd`</span>
+<span class="sd">            Interval product corresponding to the given indices.</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        --------</span>
+<span class="sd">        &gt;&gt;&gt; rbox = IntervalProd([-1, 2, 0], [-0.5, 3, 0.5])</span>
+
+<span class="sd">        Indexing by integer selects single axes:</span>
+
+<span class="sd">        &gt;&gt;&gt; rbox[0]</span>
+<span class="sd">        IntervalProd(-1.0, -0.5)</span>
+
+<span class="sd">        With slices, multiple axes can be selected:</span>
+
+<span class="sd">        &gt;&gt;&gt; rbox[:]</span>
+<span class="sd">        IntervalProd([-1.,  2.,  0.], [-0.5,  3. ,  0.5])</span>
+<span class="sd">        &gt;&gt;&gt; rbox[::2]</span>
+<span class="sd">        IntervalProd([-1.,  0.], [-0.5,  0.5])</span>
+
+<span class="sd">        A list of integers can be used for free combinations of axes:</span>
+
+<span class="sd">        &gt;&gt;&gt; rbox[[0, 1, 0]]</span>
+<span class="sd">        IntervalProd([-1.,  2., -1.], [-0.5,  3. , -0.5])</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">IntervalProd</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">min_pt</span><span class="p">[</span><span class="n">indices</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">max_pt</span><span class="p">[</span><span class="n">indices</span><span class="p">])</span></div>
+
+    <span class="k">def</span> <span class="fm">__pos__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return ``+self``.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span>
+
+    <span class="k">def</span> <span class="fm">__neg__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return ``-self``.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">)(</span><span class="o">-</span><span class="bp">self</span><span class="o">.</span><span class="n">max_pt</span><span class="p">,</span> <span class="o">-</span><span class="bp">self</span><span class="o">.</span><span class="n">min_pt</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="fm">__add__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return ``self + other``.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="n">IntervalProd</span><span class="p">):</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">ndim</span> <span class="o">!=</span> <span class="n">other</span><span class="o">.</span><span class="n">ndim</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;addition not possible for </span><span class="si">{}</span><span class="s1"> and </span><span class="si">{}</span><span class="s1">: &#39;</span>
+                                 <span class="s1">&#39;dimension mismatch (</span><span class="si">{}</span><span class="s1"> != </span><span class="si">{}</span><span class="s1">)&#39;</span>
+                                 <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">ndim</span><span class="p">,</span> <span class="n">other</span><span class="o">.</span><span class="n">ndim</span><span class="p">))</span>
+            <span class="k">return</span> <span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">)(</span><span class="bp">self</span><span class="o">.</span><span class="n">min_pt</span> <span class="o">+</span> <span class="n">other</span><span class="o">.</span><span class="n">min_pt</span><span class="p">,</span>
+                              <span class="bp">self</span><span class="o">.</span><span class="n">max_pt</span> <span class="o">+</span> <span class="n">other</span><span class="o">.</span><span class="n">max_pt</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">np</span><span class="o">.</span><span class="n">isscalar</span><span class="p">(</span><span class="n">other</span><span class="p">):</span>
+            <span class="k">return</span> <span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">)(</span><span class="bp">self</span><span class="o">.</span><span class="n">min_pt</span> <span class="o">+</span> <span class="n">other</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">max_pt</span> <span class="o">+</span> <span class="n">other</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">NotImplemented</span>
+
+    <span class="k">def</span> <span class="fm">__sub__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return ``self - other``.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span> <span class="o">+</span> <span class="p">(</span><span class="o">-</span><span class="n">other</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="fm">__mul__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return ``self * other``.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="n">IntervalProd</span><span class="p">):</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">ndim</span> <span class="o">!=</span> <span class="n">other</span><span class="o">.</span><span class="n">ndim</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;multiplication not possible for </span><span class="si">{}</span><span class="s1"> and&#39;</span>
+                                 <span class="s1">&#39;</span><span class="si">{}</span><span class="s1">: dimension mismatch (</span><span class="si">{}</span><span class="s1"> != </span><span class="si">{}</span><span class="s1">)&#39;</span>
+                                 <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">ndim</span><span class="p">,</span> <span class="n">other</span><span class="o">.</span><span class="n">ndim</span><span class="p">))</span>
+
+            <span class="n">comp_mat</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">([</span><span class="bp">self</span><span class="o">.</span><span class="n">ndim</span><span class="p">,</span> <span class="mi">4</span><span class="p">])</span>
+            <span class="n">comp_mat</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">min_pt</span> <span class="o">*</span> <span class="n">other</span><span class="o">.</span><span class="n">min_pt</span>
+            <span class="n">comp_mat</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">min_pt</span> <span class="o">*</span> <span class="n">other</span><span class="o">.</span><span class="n">max_pt</span>
+            <span class="n">comp_mat</span><span class="p">[:,</span> <span class="mi">2</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">max_pt</span> <span class="o">*</span> <span class="n">other</span><span class="o">.</span><span class="n">min_pt</span>
+            <span class="n">comp_mat</span><span class="p">[:,</span> <span class="mi">3</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">max_pt</span> <span class="o">*</span> <span class="n">other</span><span class="o">.</span><span class="n">max_pt</span>
+            <span class="n">new_min_pt</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">comp_mat</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+            <span class="n">new_max_pt</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">comp_mat</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+            <span class="k">return</span> <span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">)(</span><span class="n">new_min_pt</span><span class="p">,</span> <span class="n">new_max_pt</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">np</span><span class="o">.</span><span class="n">isscalar</span><span class="p">(</span><span class="n">other</span><span class="p">):</span>
+            <span class="n">vec1</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">min_pt</span> <span class="o">*</span> <span class="n">other</span>
+            <span class="n">vec2</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">max_pt</span> <span class="o">*</span> <span class="n">other</span>
+            <span class="k">return</span> <span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">)(</span><span class="n">np</span><span class="o">.</span><span class="n">minimum</span><span class="p">(</span><span class="n">vec1</span><span class="p">,</span> <span class="n">vec2</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">maximum</span><span class="p">(</span><span class="n">vec1</span><span class="p">,</span> <span class="n">vec2</span><span class="p">))</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">NotImplemented</span>
+
+    <span class="k">def</span> <span class="nf">__div__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return ``self / other``.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span> <span class="o">*</span> <span class="p">(</span><span class="mf">1.0</span> <span class="o">/</span> <span class="n">other</span><span class="p">)</span>
+
+    <span class="fm">__truediv__</span> <span class="o">=</span> <span class="n">__div__</span>
+
+    <span class="k">def</span> <span class="nf">__rdiv__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return ``other / self``.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">isscalar</span><span class="p">(</span><span class="n">other</span><span class="p">):</span>
+            <span class="k">for</span> <span class="n">axis</span><span class="p">,</span> <span class="p">(</span><span class="n">xmin</span><span class="p">,</span> <span class="n">xmax</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">min_pt</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">max_pt</span><span class="p">)):</span>
+                <span class="k">if</span> <span class="n">xmin</span> <span class="o">&lt;=</span> <span class="mi">0</span> <span class="ow">and</span> <span class="n">xmax</span> <span class="o">&gt;=</span> <span class="mi">0</span><span class="p">:</span>
+                    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;in axis </span><span class="si">{}</span><span class="s1">: interval </span><span class="si">{}</span><span class="s1"> contains 0, &#39;</span>
+                                     <span class="s1">&#39;division not possible&#39;</span>
+                                     <span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">axis</span><span class="p">,</span> <span class="p">[</span><span class="n">xmin</span><span class="p">,</span> <span class="n">xmax</span><span class="p">]))</span>
+
+            <span class="n">vec1</span> <span class="o">=</span> <span class="n">other</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">min_pt</span>
+            <span class="n">vec2</span> <span class="o">=</span> <span class="n">other</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">max_pt</span>
+            <span class="k">return</span> <span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">)(</span><span class="n">np</span><span class="o">.</span><span class="n">minimum</span><span class="p">(</span><span class="n">vec1</span><span class="p">,</span> <span class="n">vec2</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">maximum</span><span class="p">(</span><span class="n">vec1</span><span class="p">,</span> <span class="n">vec2</span><span class="p">))</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">NotImplemented</span>
+
+    <span class="fm">__rtruediv__</span> <span class="o">=</span> <span class="n">__rdiv__</span>
+
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return ``repr(self)``.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">ndim</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">return</span> <span class="s1">&#39;</span><span class="si">{}</span><span class="s1">(</span><span class="si">{:.4}</span><span class="s1">, </span><span class="si">{:.4}</span><span class="s1">)&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="p">,</span>
+                                             <span class="bp">self</span><span class="o">.</span><span class="n">min_pt</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">max_pt</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="s1">&#39;</span><span class="si">{}</span><span class="s1">(</span><span class="si">{}</span><span class="s1">, </span><span class="si">{}</span><span class="s1">)&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="p">,</span>
+                                       <span class="n">array_str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">min_pt</span><span class="p">),</span>
+                                       <span class="n">array_str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">max_pt</span><span class="p">))</span>
+
+    <span class="k">def</span> <span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return ``str(self)``.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="s1">&#39; x &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="s1">&#39;[</span><span class="si">{}</span><span class="s1">, </span><span class="si">{}</span><span class="s1">]&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">xmin</span><span class="p">,</span> <span class="n">xmax</span><span class="p">)</span>
+                          <span class="k">for</span> <span class="n">xmin</span><span class="p">,</span> <span class="n">xmax</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">min_pt</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">max_pt</span><span class="p">))</span></div>
+
+
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s1">&#39;__main__&#39;</span><span class="p">:</span>
+    <span class="kn">from</span> <span class="nn">odl.util.testutils</span> <span class="kn">import</span> <span class="n">run_doctests</span>
+    <span class="n">run_doctests</span><span class="p">()</span>
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &#169; Copyright 2014-2020 The ODL Contributors.
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

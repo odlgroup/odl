@@ -1,0 +1,520 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>odl.solvers.util.steplen &mdash; odl 1.0.0.dev0 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../../../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../../../../_static/custom.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../../../" src="../../../../_static/documentation_options.js"></script>
+        <script src="../../../../_static/jquery.js"></script>
+        <script src="../../../../_static/underscore.js"></script>
+        <script src="../../../../_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="../../../../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../../../index.html" class="icon icon-home"> odl
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                1.0.0.dev0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Getting Started</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../getting_started/getting_started.html">Getting Started</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Working with ODL</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../guide/guide.html">User’s guide – selected topics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../math/math.html">Mathematical Background</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Developer zone</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../dev/dev.html">Contributing to ODL</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Useful facts</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../guide/faq.html">Frequently asked questions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../guide/glossary.html">Glossary</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../release_notes.html">Release Notes</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../refs.html">References</a></li>
+</ul>
+<p class="caption"><span class="caption-text">API Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../odl.html">odl</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../../index.html">odl</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../../../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="../../../index.html">Module code</a> &raquo;</li>
+        
+      <li>odl.solvers.util.steplen</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for odl.solvers.util.steplen</h1><div class="highlight"><pre>
+<span></span><span class="c1"># Copyright 2014-2018 The ODL contributors</span>
+<span class="c1">#</span>
+<span class="c1"># This file is part of ODL.</span>
+<span class="c1">#</span>
+<span class="c1"># This Source Code Form is subject to the terms of the Mozilla Public License,</span>
+<span class="c1"># v. 2.0. If a copy of the MPL was not distributed with this file, You can</span>
+<span class="c1"># obtain one at https://mozilla.org/MPL/2.0/.</span>
+
+<span class="sd">&quot;&quot;&quot;Step length computation for optimization schemes.&quot;&quot;&quot;</span>
+
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">print_function</span><span class="p">,</span> <span class="n">division</span><span class="p">,</span> <span class="n">absolute_import</span>
+<span class="kn">from</span> <span class="nn">builtins</span> <span class="kn">import</span> <span class="nb">object</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+
+
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;LineSearch&#39;</span><span class="p">,</span> <span class="s1">&#39;BacktrackingLineSearch&#39;</span><span class="p">,</span> <span class="s1">&#39;ConstantLineSearch&#39;</span><span class="p">,</span>
+           <span class="s1">&#39;LineSearchFromIterNum&#39;</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="LineSearch"><a class="viewcode-back" href="../../../../generated/odl.solvers.util.steplen.LineSearch.html#odl.solvers.util.steplen.LineSearch">[docs]</a><span class="k">class</span> <span class="nc">LineSearch</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+
+    <span class="sd">&quot;&quot;&quot;Abstract base class for line search step length methods.&quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="LineSearch.__call__"><a class="viewcode-back" href="../../../../generated/odl.solvers.util.steplen.LineSearch.__call__.html#odl.solvers.util.steplen.LineSearch.__call__">[docs]</a>    <span class="k">def</span> <span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">direction</span><span class="p">,</span> <span class="n">dir_derivative</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Calculate step length in direction.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        x : `LinearSpaceElement`</span>
+<span class="sd">            The current point</span>
+<span class="sd">        direction : `LinearSpaceElement`</span>
+<span class="sd">            Search direction in which the line search should be computed</span>
+<span class="sd">        dir_derivative : float</span>
+<span class="sd">            Directional derivative along the ``direction``</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        step : float</span>
+<span class="sd">            Computed step length.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s1">&#39;abstract method&#39;</span><span class="p">)</span></div></div>
+
+
+<div class="viewcode-block" id="BacktrackingLineSearch"><a class="viewcode-back" href="../../../../generated/odl.solvers.util.steplen.BacktrackingLineSearch.html#odl.solvers.util.steplen.BacktrackingLineSearch">[docs]</a><span class="k">class</span> <span class="nc">BacktrackingLineSearch</span><span class="p">(</span><span class="n">LineSearch</span><span class="p">):</span>
+
+    <span class="sd">&quot;&quot;&quot;Backtracking line search for step length calculation.</span>
+
+<span class="sd">    This methods approximately finds the longest step length fulfilling</span>
+<span class="sd">    the Armijo-Goldstein condition.</span>
+
+<span class="sd">    The line search algorithm is described in [BV2004], page 464</span>
+<span class="sd">    (`book available online</span>
+<span class="sd">    &lt;http://stanford.edu/~boyd/cvxbook/bv_cvxbook.pdf&gt;`_) and</span>
+<span class="sd">    [GNS2009], pages 378--379. See also</span>
+<span class="sd">    `Backtracking_line_search</span>
+<span class="sd">    &lt;https://en.wikipedia.org/wiki/Backtracking_line_search&gt;`_.</span>
+
+<span class="sd">    References</span>
+<span class="sd">    ----------</span>
+<span class="sd">    [BV2004] Boyd, S, and Vandenberghe, L. *Convex optimization*.</span>
+<span class="sd">    Cambridge university press, 2004.</span>
+
+<span class="sd">    [GNS2009] Griva, I, Nash, S G, and Sofer, A. *Linear and nonlinear</span>
+<span class="sd">    optimization*. Siam, 2009.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="BacktrackingLineSearch.__init__"><a class="viewcode-back" href="../../../../generated/odl.solvers.util.steplen.BacktrackingLineSearch.html#odl.solvers.util.steplen.BacktrackingLineSearch.__init__">[docs]</a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">function</span><span class="p">,</span> <span class="n">tau</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span> <span class="n">discount</span><span class="o">=</span><span class="mf">0.01</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span>
+                 <span class="n">max_num_iter</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">estimate_step</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Initialize a new instance.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        function : callable</span>
+<span class="sd">            The cost function of the optimization problem to be solved.</span>
+<span class="sd">            If ``function`` is not a `Functional`, calling this class later</span>
+<span class="sd">            requires a value for the ``dir_derivative`` argument.</span>
+<span class="sd">        tau : float, optional</span>
+<span class="sd">            The amount the step length is decreased in each iteration,</span>
+<span class="sd">            as long as it does not fulfill the decrease condition.</span>
+<span class="sd">            The step length is updated as ``step_length *= tau``.</span>
+<span class="sd">        discount : float, optional</span>
+<span class="sd">            The &quot;discount factor&quot; on ``step length * direction derivative``,</span>
+<span class="sd">            yielding the threshold under which the function value must lie to</span>
+<span class="sd">            be accepted (see the references).</span>
+<span class="sd">        alpha : float, optional</span>
+<span class="sd">            The initial guess for the step length.</span>
+<span class="sd">        max_num_iter : int, optional</span>
+<span class="sd">            Maximum number of iterations allowed each time the line</span>
+<span class="sd">            search method is called. If ``None``, this number is calculated</span>
+<span class="sd">            to allow a shortest step length of 10 times machine epsilon.</span>
+<span class="sd">        estimate_step : bool, optional</span>
+<span class="sd">            If the last step should be used as a estimate for the next step.</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        --------</span>
+<span class="sd">        Create line search</span>
+
+<span class="sd">        &gt;&gt;&gt; r3 = odl.rn(3)</span>
+<span class="sd">        &gt;&gt;&gt; func = odl.solvers.L2NormSquared(r3)</span>
+<span class="sd">        &gt;&gt;&gt; line_search = BacktrackingLineSearch(func)</span>
+
+<span class="sd">        Find step in point x and direction d that decreases the function value.</span>
+
+<span class="sd">        &gt;&gt;&gt; x = r3.element([1, 2, 3])</span>
+<span class="sd">        &gt;&gt;&gt; d = r3.element([-1, -1, -1])</span>
+<span class="sd">        &gt;&gt;&gt; step_len = line_search(x, d)</span>
+<span class="sd">        &gt;&gt;&gt; step_len</span>
+<span class="sd">        1.0</span>
+<span class="sd">        &gt;&gt;&gt; func(x + step_len * d) &lt; func(x)</span>
+<span class="sd">        True</span>
+
+<span class="sd">        Also works with non-functionals as arguments, but then the</span>
+<span class="sd">        dir_derivative argument is mandatory</span>
+
+<span class="sd">        &gt;&gt;&gt; r3 = odl.rn(3)</span>
+<span class="sd">        &gt;&gt;&gt; func = lambda x: x[0] ** 2 + x[1] ** 2 + x[2] ** 2</span>
+<span class="sd">        &gt;&gt;&gt; line_search = BacktrackingLineSearch(func)</span>
+<span class="sd">        &gt;&gt;&gt; x = r3.element([1, 2, 3])</span>
+<span class="sd">        &gt;&gt;&gt; d = r3.element([-1, -1, -1])</span>
+<span class="sd">        &gt;&gt;&gt; dir_derivative = -12</span>
+<span class="sd">        &gt;&gt;&gt; step_len = line_search(x, d, dir_derivative=dir_derivative)</span>
+<span class="sd">        &gt;&gt;&gt; step_len</span>
+<span class="sd">        1.0</span>
+<span class="sd">        &gt;&gt;&gt; func(x + step_len * d) &lt; func(x)</span>
+<span class="sd">        True</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">function</span> <span class="o">=</span> <span class="n">function</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">tau</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">tau</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">discount</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">discount</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">estimate_step</span> <span class="o">=</span> <span class="nb">bool</span><span class="p">(</span><span class="n">estimate_step</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">alpha</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">alpha</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">total_num_iter</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="c1"># Use a default value that allows the shortest step to be &lt; 10 times</span>
+        <span class="c1"># machine epsilon.</span>
+        <span class="k">if</span> <span class="n">max_num_iter</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">dtype</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">function</span><span class="o">.</span><span class="n">domain</span><span class="o">.</span><span class="n">dtype</span>
+            <span class="k">except</span> <span class="ne">AttributeError</span><span class="p">:</span>
+                <span class="n">dtype</span> <span class="o">=</span> <span class="nb">float</span>
+            <span class="n">eps</span> <span class="o">=</span> <span class="mi">10</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">finfo</span><span class="p">(</span><span class="n">dtype</span><span class="p">)</span><span class="o">.</span><span class="n">resolution</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">max_num_iter</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">ceil</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">eps</span><span class="p">)</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">tau</span><span class="p">)))</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">max_num_iter</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">max_num_iter</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="BacktrackingLineSearch.__call__"><a class="viewcode-back" href="../../../../generated/odl.solvers.util.steplen.BacktrackingLineSearch.__call__.html#odl.solvers.util.steplen.BacktrackingLineSearch.__call__">[docs]</a>    <span class="k">def</span> <span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">direction</span><span class="p">,</span> <span class="n">dir_derivative</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Calculate the optimal step length along a line.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        x : `LinearSpaceElement`</span>
+<span class="sd">            The current point</span>
+<span class="sd">        direction : `LinearSpaceElement`</span>
+<span class="sd">            Search direction in which the line search should be computed</span>
+<span class="sd">        dir_derivative : float, optional</span>
+<span class="sd">            Directional derivative along the ``direction``</span>
+<span class="sd">            Default: ``function.gradient(x).inner(direction)``</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        step : float</span>
+<span class="sd">            The computed step length</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">fx</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">function</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">dir_derivative</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">gradient</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">function</span><span class="o">.</span><span class="n">gradient</span>
+            <span class="k">except</span> <span class="ne">AttributeError</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;`dir_derivative` only optional if &#39;</span>
+                                 <span class="s1">&#39;`function.gradient exists&#39;</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">dir_derivative</span> <span class="o">=</span> <span class="n">gradient</span><span class="p">(</span><span class="n">x</span><span class="p">)</span><span class="o">.</span><span class="n">inner</span><span class="p">(</span><span class="n">direction</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">dir_derivative</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">dir_derivative</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">dir_derivative</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;dir_derivative == 0, no descent can be found&#39;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">estimate_step</span><span class="p">:</span>
+            <span class="n">alpha</span> <span class="o">=</span> <span class="mf">1.0</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">alpha</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">alpha</span>
+
+        <span class="k">if</span> <span class="n">dir_derivative</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="c1"># We need to move backwards if the direction is an increase</span>
+            <span class="c1"># direction</span>
+            <span class="n">alpha</span> <span class="o">*=</span> <span class="o">-</span><span class="mi">1</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">isfinite</span><span class="p">(</span><span class="n">fx</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;function returned invalid value </span><span class="si">{}</span><span class="s1"> in starting &#39;</span>
+                             <span class="s1">&#39;point (</span><span class="si">{}</span><span class="s1">)&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">fx</span><span class="p">,</span> <span class="n">x</span><span class="p">))</span>
+
+        <span class="c1"># Create temporary</span>
+        <span class="n">point</span> <span class="o">=</span> <span class="n">x</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+
+        <span class="n">num_iter</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">while</span> <span class="kc">True</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">num_iter</span> <span class="o">&gt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">max_num_iter</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;number of iterations exceeded maximum: </span><span class="si">{}</span><span class="s1">, &#39;</span>
+                                 <span class="s1">&#39;step length: </span><span class="si">{}</span><span class="s1">, without finding a &#39;</span>
+                                 <span class="s1">&#39;sufficient decrease&#39;</span>
+                                 <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">max_num_iter</span><span class="p">,</span> <span class="n">alpha</span><span class="p">))</span>
+
+            <span class="n">point</span><span class="o">.</span><span class="n">lincomb</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">alpha</span><span class="p">,</span> <span class="n">direction</span><span class="p">)</span>  <span class="c1"># pt = x + alpha * direction</span>
+            <span class="n">fval</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">function</span><span class="p">(</span><span class="n">point</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">fval</span><span class="p">):</span>
+                <span class="c1"># We do not want to compare against NaN below, and NaN should</span>
+                <span class="c1"># indicate a user error.</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;function returned NaN in point &#39;</span>
+                                 <span class="s1">&#39;point (</span><span class="si">{}</span><span class="s1">)&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">point</span><span class="p">))</span>
+
+            <span class="n">expected_decrease</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">alpha</span> <span class="o">*</span> <span class="n">dir_derivative</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">discount</span><span class="p">)</span>
+            <span class="k">if</span> <span class="p">(</span><span class="n">fval</span> <span class="o">&lt;=</span> <span class="n">fx</span> <span class="o">-</span> <span class="n">expected_decrease</span><span class="p">):</span>
+                <span class="c1"># Stop iterating if the value decreases sufficiently.</span>
+                <span class="k">break</span>
+
+            <span class="n">num_iter</span> <span class="o">+=</span> <span class="mi">1</span>
+            <span class="n">alpha</span> <span class="o">*=</span> <span class="bp">self</span><span class="o">.</span><span class="n">tau</span>
+
+        <span class="k">assert</span> <span class="n">fval</span> <span class="o">&lt;</span> <span class="n">fx</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">total_num_iter</span> <span class="o">+=</span> <span class="n">num_iter</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">alpha</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">alpha</span><span class="p">)</span>  <span class="c1"># Store magnitude</span>
+        <span class="k">return</span> <span class="n">alpha</span></div></div>
+
+
+<div class="viewcode-block" id="ConstantLineSearch"><a class="viewcode-back" href="../../../../generated/odl.solvers.util.steplen.ConstantLineSearch.html#odl.solvers.util.steplen.ConstantLineSearch">[docs]</a><span class="k">class</span> <span class="nc">ConstantLineSearch</span><span class="p">(</span><span class="n">LineSearch</span><span class="p">):</span>
+
+    <span class="sd">&quot;&quot;&quot;Line search object that returns a constant step length.&quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="ConstantLineSearch.__init__"><a class="viewcode-back" href="../../../../generated/odl.solvers.util.steplen.ConstantLineSearch.html#odl.solvers.util.steplen.ConstantLineSearch.__init__">[docs]</a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">constant</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Initialize a new instance.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        constant : float</span>
+<span class="sd">            The constant step length</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">constant</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">constant</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="ConstantLineSearch.__call__"><a class="viewcode-back" href="../../../../generated/odl.solvers.util.steplen.ConstantLineSearch.__call__.html#odl.solvers.util.steplen.ConstantLineSearch.__call__">[docs]</a>    <span class="k">def</span> <span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">direction</span><span class="p">,</span> <span class="n">dir_derivative</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Calculate the step length at a point.</span>
+
+<span class="sd">        All arguments are ignored and are only added to fit the interface.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">constant</span></div></div>
+
+
+<div class="viewcode-block" id="LineSearchFromIterNum"><a class="viewcode-back" href="../../../../generated/odl.solvers.util.steplen.LineSearchFromIterNum.html#odl.solvers.util.steplen.LineSearchFromIterNum">[docs]</a><span class="k">class</span> <span class="nc">LineSearchFromIterNum</span><span class="p">(</span><span class="n">LineSearch</span><span class="p">):</span>
+
+    <span class="sd">&quot;&quot;&quot;Line search object that returns a step length from a function.</span>
+
+<span class="sd">    The returned step length is ``func(iter_count)``.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="LineSearchFromIterNum.__init__"><a class="viewcode-back" href="../../../../generated/odl.solvers.util.steplen.LineSearchFromIterNum.html#odl.solvers.util.steplen.LineSearchFromIterNum.__init__">[docs]</a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">func</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Initialize a new instance.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        func : callable</span>
+<span class="sd">            Function that when called with an iteration count should return the</span>
+<span class="sd">            step length. The iteration count starts at 0.</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        --------</span>
+<span class="sd">        Make a step size that is 1.0 for the first 5 iterations, then 0.1:</span>
+
+<span class="sd">        &gt;&gt;&gt; def step_length(iter):</span>
+<span class="sd">        ...     if iter &lt; 5:</span>
+<span class="sd">        ...         return 1.0</span>
+<span class="sd">        ...     else:</span>
+<span class="sd">        ...         return 0.1</span>
+<span class="sd">        &gt;&gt;&gt; line_search = LineSearchFromIterNum(step_length)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">callable</span><span class="p">(</span><span class="n">func</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;`func` must be a callable.&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">func</span> <span class="o">=</span> <span class="n">func</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">iter_count</span> <span class="o">=</span> <span class="mi">0</span></div>
+
+<div class="viewcode-block" id="LineSearchFromIterNum.__call__"><a class="viewcode-back" href="../../../../generated/odl.solvers.util.steplen.LineSearchFromIterNum.__call__.html#odl.solvers.util.steplen.LineSearchFromIterNum.__call__">[docs]</a>    <span class="k">def</span> <span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">direction</span><span class="p">,</span> <span class="n">dir_derivative</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Calculate the step length at a point.</span>
+
+<span class="sd">        All arguments are ignored and are only added to fit the interface.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">step</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">func</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">iter_count</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">iter_count</span> <span class="o">+=</span> <span class="mi">1</span>
+        <span class="k">return</span> <span class="n">step</span></div></div>
+
+
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s1">&#39;__main__&#39;</span><span class="p">:</span>
+    <span class="kn">from</span> <span class="nn">odl.util.testutils</span> <span class="kn">import</span> <span class="n">run_doctests</span>
+    <span class="n">run_doctests</span><span class="p">()</span>
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &#169; Copyright 2014-2020 The ODL Contributors.
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

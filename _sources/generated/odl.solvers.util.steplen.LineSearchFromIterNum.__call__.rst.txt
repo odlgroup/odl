@@ -1,0 +1,8 @@
+:orphan:
+
+LineSearchFromIterNum.__call__
+=======================================================
+
+.. currentmodule:: odl.solvers.util.steplen
+
+.. automethod:: LineSearchFromIterNum.__call__

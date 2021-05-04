@@ -1,0 +1,6 @@
+﻿dtypes_out
+==================================
+
+.. currentmodule:: odl.ufunc_ops.ufunc_ops
+
+.. autofunction:: dtypes_out

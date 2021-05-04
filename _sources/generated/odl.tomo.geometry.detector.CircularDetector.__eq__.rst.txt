@@ -1,0 +1,8 @@
+:orphan:
+
+CircularDetector.__eq__
+==================================================
+
+.. currentmodule:: odl.tomo.geometry.detector
+
+.. automethod:: CircularDetector.__eq__

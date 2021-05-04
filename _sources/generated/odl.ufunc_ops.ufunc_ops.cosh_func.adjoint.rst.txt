@@ -1,0 +1,6 @@
+cosh_func.adjoint
+=========================================
+
+.. currentmodule:: odl.ufunc_ops.ufunc_ops
+
+.. autoproperty:: cosh_func.adjoint

@@ -1,0 +1,308 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>discr_space &mdash; odl 1.0.0.dev0 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="DiscretizedSpace" href="generated/odl.discr.discr_space.DiscretizedSpace.html" />
+    <link rel="prev" title="ResizingOperator.norm" href="generated/odl.discr.discr_ops.ResizingOperator.norm.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="index.html" class="icon icon-home"> odl
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                1.0.0.dev0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Getting Started</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="getting_started/getting_started.html">Getting Started</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Working with ODL</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="guide/guide.html">User’s guide – selected topics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="math/math.html">Mathematical Background</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Developer zone</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="dev/dev.html">Contributing to ODL</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Useful facts</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="guide/faq.html">Frequently asked questions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="guide/glossary.html">Glossary</a></li>
+<li class="toctree-l1"><a class="reference internal" href="release_notes.html">Release Notes</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="refs.html">References</a></li>
+</ul>
+<p class="caption"><span class="caption-text">API Reference</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="odl.html">odl</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="odl.contrib.html">contrib</a></li>
+<li class="toctree-l2"><a class="reference internal" href="odl.deform.html">deform</a></li>
+<li class="toctree-l2"><a class="reference internal" href="odl.diagnostics.html">diagnostics</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="odl.discr.html">discr</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="odl.discr.diff_ops.html">diff_ops</a></li>
+<li class="toctree-l3"><a class="reference internal" href="odl.discr.discr_ops.html">discr_ops</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#">discr_space</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="generated/odl.discr.discr_space.DiscretizedSpace.html">DiscretizedSpace</a></li>
+<li class="toctree-l4"><a class="reference internal" href="generated/odl.discr.discr_space.DiscretizedSpaceElement.html">DiscretizedSpaceElement</a></li>
+<li class="toctree-l4"><a class="reference internal" href="generated/odl.discr.discr_space.uniform_discr.html">uniform_discr</a></li>
+<li class="toctree-l4"><a class="reference internal" href="generated/odl.discr.discr_space.uniform_discr_fromdiscr.html">uniform_discr_fromdiscr</a></li>
+<li class="toctree-l4"><a class="reference internal" href="generated/odl.discr.discr_space.uniform_discr_fromintv.html">uniform_discr_fromintv</a></li>
+<li class="toctree-l4"><a class="reference internal" href="generated/odl.discr.discr_space.uniform_discr_frompartition.html">uniform_discr_frompartition</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="odl.discr.discr_utils.html">discr_utils</a></li>
+<li class="toctree-l3"><a class="reference internal" href="odl.discr.grid.html">grid</a></li>
+<li class="toctree-l3"><a class="reference internal" href="odl.discr.partition.html">partition</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="odl.operator.html">operator</a></li>
+<li class="toctree-l2"><a class="reference internal" href="odl.phantom.html">phantom</a></li>
+<li class="toctree-l2"><a class="reference internal" href="odl.set.html">set</a></li>
+<li class="toctree-l2"><a class="reference internal" href="odl.solvers.html">solvers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="odl.space.html">space</a></li>
+<li class="toctree-l2"><a class="reference internal" href="odl.tomo.html">tomo</a></li>
+<li class="toctree-l2"><a class="reference internal" href="odl.trafos.html">trafos</a></li>
+<li class="toctree-l2"><a class="reference internal" href="odl.ufunc_ops.html">ufunc_ops</a></li>
+<li class="toctree-l2"><a class="reference internal" href="odl.util.html">util</a></li>
+</ul>
+</li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">odl</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="odl.html">odl</a> &raquo;</li>
+        
+          <li><a href="odl.discr.html">discr</a> &raquo;</li>
+        
+      <li>discr_space</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            <a href="_sources/odl.discr.discr_space.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="discr-space">
+<h1>discr_space<a class="headerlink" href="#discr-space" title="Permalink to this headline">¶</a></h1>
+<p>Lebesgue L^p type discretizations of function spaces.</p>
+<p class="rubric">Classes</p>
+<table class="longtable docutils align-default">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="generated/odl.discr.discr_space.DiscretizedSpace.html#odl.discr.discr_space.DiscretizedSpace" title="odl.discr.discr_space.DiscretizedSpace"><code class="xref py py-obj docutils literal notranslate"><span class="pre">DiscretizedSpace</span></code></a>(partition, tspace, **kwargs)</p></td>
+<td><p>Discretization of a Lebesgue <img class="math" src="_images/math/02fa4b6ed27daa1443d353a67c7f888e284275ee.png" alt="L^p"/> space.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="generated/odl.discr.discr_space.DiscretizedSpaceElement.html#odl.discr.discr_space.DiscretizedSpaceElement" title="odl.discr.discr_space.DiscretizedSpaceElement"><code class="xref py py-obj docutils literal notranslate"><span class="pre">DiscretizedSpaceElement</span></code></a>(space, tensor)</p></td>
+<td><p>Representation of a <a class="reference internal" href="generated/odl.discr.discr_space.DiscretizedSpace.html#odl.discr.discr_space.DiscretizedSpace" title="odl.discr.discr_space.DiscretizedSpace"><code class="xref any py py-class docutils literal notranslate"><span class="pre">DiscretizedSpace</span></code></a> element.</p></td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Functions</p>
+<table class="longtable docutils align-default">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="generated/odl.discr.discr_space.uniform_discr.html#odl.discr.discr_space.uniform_discr" title="odl.discr.discr_space.uniform_discr"><code class="xref py py-obj docutils literal notranslate"><span class="pre">uniform_discr</span></code></a>(min_pt, max_pt, shape[, …])</p></td>
+<td><p>Return a uniformly discretized L^p function space.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="generated/odl.discr.discr_space.uniform_discr_fromdiscr.html#odl.discr.discr_space.uniform_discr_fromdiscr" title="odl.discr.discr_space.uniform_discr_fromdiscr"><code class="xref py py-obj docutils literal notranslate"><span class="pre">uniform_discr_fromdiscr</span></code></a>(discr[, min_pt, …])</p></td>
+<td><p>Return a discretization based on an existing one.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="generated/odl.discr.discr_space.uniform_discr_fromintv.html#odl.discr.discr_space.uniform_discr_fromintv" title="odl.discr.discr_space.uniform_discr_fromintv"><code class="xref py py-obj docutils literal notranslate"><span class="pre">uniform_discr_fromintv</span></code></a>(intv_prod, shape[, …])</p></td>
+<td><p>Return a uniformly discretized L^p function space.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="generated/odl.discr.discr_space.uniform_discr_frompartition.html#odl.discr.discr_space.uniform_discr_frompartition" title="odl.discr.discr_space.uniform_discr_frompartition"><code class="xref py py-obj docutils literal notranslate"><span class="pre">uniform_discr_frompartition</span></code></a>(partition[, …])</p></td>
+<td><p>Return a uniformly discretized L^p function space.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+        <a href="generated/odl.discr.discr_space.DiscretizedSpace.html" class="btn btn-neutral float-right" title="DiscretizedSpace" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="generated/odl.discr.discr_ops.ResizingOperator.norm.html" class="btn btn-neutral float-left" title="ResizingOperator.norm" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &#169; Copyright 2014-2020 The ODL Contributors.
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

@@ -1,0 +1,6 @@
+﻿conjugate_gradient_nonlinear
+============================================================
+
+.. currentmodule:: odl.solvers.smooth.nonlinear_cg
+
+.. autofunction:: conjugate_gradient_nonlinear

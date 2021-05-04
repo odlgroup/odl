@@ -1,0 +1,8 @@
+:orphan:
+
+TensorSpaceUfuncs.signbit
+=========================================
+
+.. currentmodule:: odl.util.ufuncs
+
+.. automethod:: TensorSpaceUfuncs.signbit

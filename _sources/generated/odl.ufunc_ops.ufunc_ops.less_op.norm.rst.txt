@@ -1,0 +1,8 @@
+:orphan:
+
+less_op.norm
+====================================
+
+.. currentmodule:: odl.ufunc_ops.ufunc_ops
+
+.. automethod:: less_op.norm

@@ -1,0 +1,46 @@
+﻿FourierTransformInverse
+==========================================
+
+.. currentmodule:: odl.trafos.fourier
+
+.. autoclass:: FourierTransformInverse
+   :show-inheritance:
+   
+   
+   .. automethod:: __init__
+   
+      
+   
+   .. HACK -- the point here is that we don't want this to appear in the output, but the autosummary should still generate the pages.
+      .. autosummary::
+         :toctree:
+      
+         FourierTransformInverse.__call__
+         FourierTransformInverse.__eq__
+         FourierTransformInverse._call
+         FourierTransformInverse.clear_fftw_plan
+         FourierTransformInverse.clear_temporaries
+         FourierTransformInverse.create_temporaries
+         FourierTransformInverse.derivative
+         FourierTransformInverse.init_fftw_plan
+         FourierTransformInverse.norm
+   
+
+    
+   .. HACK -- the point here is that we don't want this to appear in the output, but the autosummary should still generate the pages.
+      .. autosummary::
+         :toctree:
+      
+         FourierTransformInverse.adjoint
+         FourierTransformInverse.axes
+         FourierTransformInverse.domain
+         FourierTransformInverse.halfcomplex
+         FourierTransformInverse.impl
+         FourierTransformInverse.inverse
+         FourierTransformInverse.is_functional
+         FourierTransformInverse.is_linear
+         FourierTransformInverse.range
+         FourierTransformInverse.shifts
+         FourierTransformInverse.sign
+   
+   

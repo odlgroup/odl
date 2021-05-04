@@ -1,0 +1,6 @@
+isnan_op.adjoint
+========================================
+
+.. currentmodule:: odl.ufunc_ops.ufunc_ops
+
+.. autoproperty:: isnan_op.adjoint

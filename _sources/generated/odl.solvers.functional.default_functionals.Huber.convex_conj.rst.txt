@@ -1,0 +1,6 @@
+Huber.convex_conj
+============================================================
+
+.. currentmodule:: odl.solvers.functional.default_functionals
+
+.. autoproperty:: Huber.convex_conj

@@ -1,0 +1,8 @@
+:orphan:
+
+FunctionalDefaultConvexConjugate.bregman
+==========================================================================
+
+.. currentmodule:: odl.solvers.functional.functional
+
+.. automethod:: FunctionalDefaultConvexConjugate.bregman

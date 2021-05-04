@@ -1,0 +1,8 @@
+:orphan:
+
+SetUnion.contains_set
+==================================
+
+.. currentmodule:: odl.set.sets
+
+.. automethod:: SetUnion.contains_set

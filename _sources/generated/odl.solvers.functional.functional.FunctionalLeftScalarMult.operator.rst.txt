@@ -1,0 +1,6 @@
+FunctionalLeftScalarMult.operator
+===================================================================
+
+.. currentmodule:: odl.solvers.functional.functional
+
+.. autoproperty:: FunctionalLeftScalarMult.operator

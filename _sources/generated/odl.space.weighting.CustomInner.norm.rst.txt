@@ -1,0 +1,8 @@
+:orphan:
+
+CustomInner.norm
+====================================
+
+.. currentmodule:: odl.space.weighting
+
+.. automethod:: CustomInner.norm

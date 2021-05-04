@@ -1,0 +1,6 @@
+EmptySet.examples
+==============================
+
+.. currentmodule:: odl.set.sets
+
+.. autoproperty:: EmptySet.examples

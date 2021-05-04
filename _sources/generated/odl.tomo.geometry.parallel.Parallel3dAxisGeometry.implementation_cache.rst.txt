@@ -1,0 +1,6 @@
+Parallel3dAxisGeometry.implementation_cache
+======================================================================
+
+.. currentmodule:: odl.tomo.geometry.parallel
+
+.. autoproperty:: Parallel3dAxisGeometry.implementation_cache

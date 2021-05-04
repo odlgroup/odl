@@ -1,0 +1,6 @@
+ScalingOperator.inverse
+================================================
+
+.. currentmodule:: odl.operator.default_ops
+
+.. autoproperty:: ScalingOperator.inverse

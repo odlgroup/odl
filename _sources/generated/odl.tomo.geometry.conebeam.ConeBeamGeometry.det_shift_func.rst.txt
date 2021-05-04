@@ -1,0 +1,6 @@
+ConeBeamGeometry.det_shift_func
+==========================================================
+
+.. currentmodule:: odl.tomo.geometry.conebeam
+
+.. autoproperty:: ConeBeamGeometry.det_shift_func

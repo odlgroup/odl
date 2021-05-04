@@ -1,0 +1,6 @@
+DistOperator.inverse
+=============================================
+
+.. currentmodule:: odl.operator.default_ops
+
+.. autoproperty:: DistOperator.inverse

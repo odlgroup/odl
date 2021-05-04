@@ -1,0 +1,8 @@
+:orphan:
+
+ProductSpaceUfuncs.arctan2
+==========================================
+
+.. currentmodule:: odl.util.ufuncs
+
+.. automethod:: ProductSpaceUfuncs.arctan2

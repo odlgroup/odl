@@ -1,0 +1,21 @@
+normalize
+=========
+
+Utilities for normalization of user input.
+
+.. currentmodule:: odl.util.normalize
+
+
+
+
+.. rubric:: Functions
+
+.. autosummary::
+   :toctree: generated/
+
+   ~odl.util.normalize.normalized_axes_tuple
+   ~odl.util.normalize.normalized_index_expression
+   ~odl.util.normalize.normalized_nodes_on_bdry
+   ~odl.util.normalize.normalized_scalar_param_list
+   ~odl.util.normalize.safe_int_conv
+

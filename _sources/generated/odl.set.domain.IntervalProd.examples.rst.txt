@@ -1,0 +1,6 @@
+IntervalProd.examples
+====================================
+
+.. currentmodule:: odl.set.domain
+
+.. autoproperty:: IntervalProd.examples

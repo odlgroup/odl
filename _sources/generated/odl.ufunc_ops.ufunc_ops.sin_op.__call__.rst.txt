@@ -1,0 +1,8 @@
+:orphan:
+
+sin_op.__call__
+=======================================
+
+.. currentmodule:: odl.ufunc_ops.ufunc_ops
+
+.. automethod:: sin_op.__call__

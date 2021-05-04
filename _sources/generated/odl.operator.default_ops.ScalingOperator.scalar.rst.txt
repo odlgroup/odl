@@ -1,0 +1,6 @@
+ScalingOperator.scalar
+===============================================
+
+.. currentmodule:: odl.operator.default_ops
+
+.. autoproperty:: ScalingOperator.scalar

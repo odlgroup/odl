@@ -1,0 +1,6 @@
+WaveletTransformBase.is_functional
+=====================================================
+
+.. currentmodule:: odl.trafos.wavelet
+
+.. autoproperty:: WaveletTransformBase.is_functional

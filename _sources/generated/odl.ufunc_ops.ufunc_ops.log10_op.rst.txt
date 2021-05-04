@@ -1,0 +1,37 @@
+﻿log10_op
+================================
+
+.. currentmodule:: odl.ufunc_ops.ufunc_ops
+
+.. autoclass:: log10_op
+   :show-inheritance:
+   
+   
+   .. automethod:: __init__
+   
+      
+   
+   .. HACK -- the point here is that we don't want this to appear in the output, but the autosummary should still generate the pages.
+      .. autosummary::
+         :toctree:
+      
+         log10_op.__call__
+         log10_op.__eq__
+         log10_op._call
+         log10_op.derivative
+         log10_op.norm
+   
+
+    
+   .. HACK -- the point here is that we don't want this to appear in the output, but the autosummary should still generate the pages.
+      .. autosummary::
+         :toctree:
+      
+         log10_op.adjoint
+         log10_op.domain
+         log10_op.inverse
+         log10_op.is_functional
+         log10_op.is_linear
+         log10_op.range
+   
+   

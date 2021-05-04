@@ -1,0 +1,6 @@
+Divergence.domain
+====================================
+
+.. currentmodule:: odl.discr.diff_ops
+
+.. autoproperty:: Divergence.domain

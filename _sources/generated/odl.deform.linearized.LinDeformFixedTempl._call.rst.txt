@@ -1,0 +1,8 @@
+:orphan:
+
+LinDeformFixedTempl._call
+===============================================
+
+.. currentmodule:: odl.deform.linearized
+
+.. automethod:: LinDeformFixedTempl._call

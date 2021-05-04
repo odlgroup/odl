@@ -1,0 +1,8 @@
+:orphan:
+
+SetIntersection.__getitem__
+========================================
+
+.. currentmodule:: odl.set.sets
+
+.. automethod:: SetIntersection.__getitem__

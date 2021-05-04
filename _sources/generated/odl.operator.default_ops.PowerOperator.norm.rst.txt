@@ -1,0 +1,8 @@
+:orphan:
+
+PowerOperator.norm
+===========================================
+
+.. currentmodule:: odl.operator.default_ops
+
+.. automethod:: PowerOperator.norm

@@ -1,0 +1,6 @@
+IntervalProd.nondegen_byaxis
+===========================================
+
+.. currentmodule:: odl.set.domain
+
+.. autoproperty:: IntervalProd.nondegen_byaxis

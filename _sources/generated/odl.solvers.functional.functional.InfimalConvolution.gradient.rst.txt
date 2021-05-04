@@ -1,0 +1,6 @@
+InfimalConvolution.gradient
+=============================================================
+
+.. currentmodule:: odl.solvers.functional.functional
+
+.. autoproperty:: InfimalConvolution.gradient

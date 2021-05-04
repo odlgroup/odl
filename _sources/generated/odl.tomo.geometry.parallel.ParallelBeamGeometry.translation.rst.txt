@@ -1,0 +1,6 @@
+ParallelBeamGeometry.translation
+===========================================================
+
+.. currentmodule:: odl.tomo.geometry.parallel
+
+.. autoproperty:: ParallelBeamGeometry.translation

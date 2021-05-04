@@ -1,0 +1,6 @@
+MultiplyOperator.multiplicand
+======================================================
+
+.. currentmodule:: odl.operator.default_ops
+
+.. autoproperty:: MultiplyOperator.multiplicand

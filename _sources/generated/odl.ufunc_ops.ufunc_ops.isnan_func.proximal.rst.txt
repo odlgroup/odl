@@ -1,0 +1,6 @@
+isnan_func.proximal
+===========================================
+
+.. currentmodule:: odl.ufunc_ops.ufunc_ops
+
+.. autoproperty:: isnan_func.proximal

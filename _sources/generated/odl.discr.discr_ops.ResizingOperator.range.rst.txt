@@ -1,0 +1,6 @@
+ResizingOperator.range
+==========================================
+
+.. currentmodule:: odl.discr.discr_ops
+
+.. autoproperty:: ResizingOperator.range

@@ -1,0 +1,6 @@
+﻿proximal_composition
+=============================================================
+
+.. currentmodule:: odl.solvers.nonsmooth.proximal_operators
+
+.. autofunction:: proximal_composition

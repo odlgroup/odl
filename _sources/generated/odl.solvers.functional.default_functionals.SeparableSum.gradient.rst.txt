@@ -1,0 +1,6 @@
+SeparableSum.gradient
+================================================================
+
+.. currentmodule:: odl.solvers.functional.default_functionals
+
+.. autoproperty:: SeparableSum.gradient

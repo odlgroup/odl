@@ -1,0 +1,8 @@
+:orphan:
+
+ImagPart.norm
+======================================
+
+.. currentmodule:: odl.operator.default_ops
+
+.. automethod:: ImagPart.norm

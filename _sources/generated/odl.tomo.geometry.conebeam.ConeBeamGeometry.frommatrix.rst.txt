@@ -1,0 +1,8 @@
+:orphan:
+
+ConeBeamGeometry.frommatrix
+======================================================
+
+.. currentmodule:: odl.tomo.geometry.conebeam
+
+.. automethod:: ConeBeamGeometry.frommatrix

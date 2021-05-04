@@ -1,0 +1,43 @@
+﻿sinh_func
+=================================
+
+.. currentmodule:: odl.ufunc_ops.ufunc_ops
+
+.. autoclass:: sinh_func
+   :show-inheritance:
+   
+   
+   .. automethod:: __init__
+   
+      
+   
+   .. HACK -- the point here is that we don't want this to appear in the output, but the autosummary should still generate the pages.
+      .. autosummary::
+         :toctree:
+      
+         sinh_func.__call__
+         sinh_func.__eq__
+         sinh_func._call
+         sinh_func.bregman
+         sinh_func.derivative
+         sinh_func.norm
+         sinh_func.translated
+   
+
+    
+   .. HACK -- the point here is that we don't want this to appear in the output, but the autosummary should still generate the pages.
+      .. autosummary::
+         :toctree:
+      
+         sinh_func.adjoint
+         sinh_func.convex_conj
+         sinh_func.domain
+         sinh_func.grad_lipschitz
+         sinh_func.gradient
+         sinh_func.inverse
+         sinh_func.is_functional
+         sinh_func.is_linear
+         sinh_func.proximal
+         sinh_func.range
+   
+   

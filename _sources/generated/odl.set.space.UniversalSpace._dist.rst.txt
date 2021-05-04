@@ -1,0 +1,8 @@
+:orphan:
+
+UniversalSpace._dist
+==================================
+
+.. currentmodule:: odl.set.space
+
+.. automethod:: UniversalSpace._dist

@@ -1,0 +1,8 @@
+:orphan:
+
+ProductSpaceCustomInner.__eq__
+===============================================
+
+.. currentmodule:: odl.space.pspace
+
+.. automethod:: ProductSpaceCustomInner.__eq__

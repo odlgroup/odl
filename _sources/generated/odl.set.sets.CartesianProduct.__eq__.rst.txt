@@ -1,0 +1,8 @@
+:orphan:
+
+CartesianProduct.__eq__
+====================================
+
+.. currentmodule:: odl.set.sets
+
+.. automethod:: CartesianProduct.__eq__

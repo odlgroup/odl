@@ -1,0 +1,8 @@
+:orphan:
+
+L2Norm.__call__
+==========================================================
+
+.. currentmodule:: odl.solvers.functional.default_functionals
+
+.. automethod:: L2Norm.__call__

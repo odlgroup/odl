@@ -1,0 +1,54 @@
+﻿IntervalProd
+===========================
+
+.. currentmodule:: odl.set.domain
+
+.. autoclass:: IntervalProd
+   :show-inheritance:
+   
+   
+   .. automethod:: __init__
+   
+      
+   
+   .. HACK -- the point here is that we don't want this to appear in the output, but the autosummary should still generate the pages.
+      .. autosummary::
+         :toctree:
+      
+         IntervalProd.__contains__
+         IntervalProd.__eq__
+         IntervalProd.__getitem__
+         IntervalProd.append
+         IntervalProd.approx_contains
+         IntervalProd.approx_equals
+         IntervalProd.collapse
+         IntervalProd.contains_all
+         IntervalProd.contains_set
+         IntervalProd.corners
+         IntervalProd.dist
+         IntervalProd.element
+         IntervalProd.insert
+         IntervalProd.max
+         IntervalProd.measure
+         IntervalProd.min
+         IntervalProd.squeeze
+   
+
+    
+   .. HACK -- the point here is that we don't want this to appear in the output, but the autosummary should still generate the pages.
+      .. autosummary::
+         :toctree:
+      
+         IntervalProd.area
+         IntervalProd.examples
+         IntervalProd.extent
+         IntervalProd.length
+         IntervalProd.max_pt
+         IntervalProd.mid_pt
+         IntervalProd.min_pt
+         IntervalProd.ndim
+         IntervalProd.nondegen_byaxis
+         IntervalProd.true_ndim
+         IntervalProd.volume
+   
+   

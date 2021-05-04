@@ -1,0 +1,6 @@
+sqrt_func.range
+=======================================
+
+.. currentmodule:: odl.ufunc_ops.ufunc_ops
+
+.. autoproperty:: sqrt_func.range

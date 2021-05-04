@@ -1,0 +1,8 @@
+:orphan:
+
+InfimalConvolution.__call__
+=============================================================
+
+.. currentmodule:: odl.solvers.functional.functional
+
+.. automethod:: InfimalConvolution.__call__

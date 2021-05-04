@@ -1,0 +1,8 @@
+:orphan:
+
+KullbackLeibler.bregman
+==================================================================
+
+.. currentmodule:: odl.solvers.functional.default_functionals
+
+.. automethod:: KullbackLeibler.bregman

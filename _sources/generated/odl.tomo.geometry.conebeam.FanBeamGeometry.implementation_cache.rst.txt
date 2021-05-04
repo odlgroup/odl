@@ -1,0 +1,6 @@
+FanBeamGeometry.implementation_cache
+===============================================================
+
+.. currentmodule:: odl.tomo.geometry.conebeam
+
+.. autoproperty:: FanBeamGeometry.implementation_cache

@@ -1,0 +1,6 @@
+ComplexNumbers.field
+=================================
+
+.. currentmodule:: odl.set.sets
+
+.. autoproperty:: ComplexNumbers.field

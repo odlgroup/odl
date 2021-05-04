@@ -1,0 +1,6 @@
+PointwiseInner.base_space
+=================================================
+
+.. currentmodule:: odl.operator.tensor_ops
+
+.. autoproperty:: PointwiseInner.base_space

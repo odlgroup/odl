@@ -1,0 +1,8 @@
+:orphan:
+
+PointwiseNorm._call
+===========================================
+
+.. currentmodule:: odl.operator.tensor_ops
+
+.. automethod:: PointwiseNorm._call

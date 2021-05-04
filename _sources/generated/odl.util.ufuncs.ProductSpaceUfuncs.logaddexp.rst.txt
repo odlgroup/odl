@@ -1,0 +1,8 @@
+:orphan:
+
+ProductSpaceUfuncs.logaddexp
+============================================
+
+.. currentmodule:: odl.util.ufuncs
+
+.. automethod:: ProductSpaceUfuncs.logaddexp

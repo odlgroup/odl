@@ -1,0 +1,6 @@
+FunctionalLeftScalarMult.inverse
+==================================================================
+
+.. currentmodule:: odl.solvers.functional.functional
+
+.. autoproperty:: FunctionalLeftScalarMult.inverse

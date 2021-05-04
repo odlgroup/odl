@@ -1,0 +1,8 @@
+:orphan:
+
+ProgressRange.__eq__
+=======================================
+
+.. currentmodule:: odl.util.testutils
+
+.. automethod:: ProgressRange.__eq__

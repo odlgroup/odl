@@ -1,0 +1,6 @@
+﻿dca
+===========================================
+
+.. currentmodule:: odl.solvers.nonsmooth.difference_convex
+
+.. autofunction:: dca

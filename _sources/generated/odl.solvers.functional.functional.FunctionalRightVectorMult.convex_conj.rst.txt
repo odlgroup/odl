@@ -1,0 +1,6 @@
+FunctionalRightVectorMult.convex_conj
+=======================================================================
+
+.. currentmodule:: odl.solvers.functional.functional
+
+.. autoproperty:: FunctionalRightVectorMult.convex_conj

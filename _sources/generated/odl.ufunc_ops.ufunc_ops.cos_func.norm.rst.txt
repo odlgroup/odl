@@ -1,0 +1,8 @@
+:orphan:
+
+cos_func.norm
+=====================================
+
+.. currentmodule:: odl.ufunc_ops.ufunc_ops
+
+.. automethod:: cos_func.norm

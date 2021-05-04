@@ -1,0 +1,6 @@
+CustomInner.exponent
+========================================
+
+.. currentmodule:: odl.space.weighting
+
+.. autoproperty:: CustomInner.exponent

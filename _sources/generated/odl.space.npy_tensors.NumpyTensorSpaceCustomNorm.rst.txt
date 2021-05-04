@@ -1,0 +1,34 @@
+﻿NumpyTensorSpaceCustomNorm
+================================================
+
+.. currentmodule:: odl.space.npy_tensors
+
+.. autoclass:: NumpyTensorSpaceCustomNorm
+   :show-inheritance:
+   
+   
+   .. automethod:: __init__
+   
+      
+   
+   .. HACK -- the point here is that we don't want this to appear in the output, but the autosummary should still generate the pages.
+      .. autosummary::
+         :toctree:
+      
+         NumpyTensorSpaceCustomNorm.__eq__
+         NumpyTensorSpaceCustomNorm.dist
+         NumpyTensorSpaceCustomNorm.equiv
+         NumpyTensorSpaceCustomNorm.inner
+   
+
+    
+   .. HACK -- the point here is that we don't want this to appear in the output, but the autosummary should still generate the pages.
+      .. autosummary::
+         :toctree:
+      
+         NumpyTensorSpaceCustomNorm.exponent
+         NumpyTensorSpaceCustomNorm.impl
+         NumpyTensorSpaceCustomNorm.norm
+         NumpyTensorSpaceCustomNorm.repr_part
+   
+   

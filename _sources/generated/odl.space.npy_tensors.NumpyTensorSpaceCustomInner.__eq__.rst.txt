@@ -1,0 +1,8 @@
+:orphan:
+
+NumpyTensorSpaceCustomInner.__eq__
+========================================================
+
+.. currentmodule:: odl.space.npy_tensors
+
+.. automethod:: NumpyTensorSpaceCustomInner.__eq__

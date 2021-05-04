@@ -1,0 +1,6 @@
+ParallelHoleCollimatorGeometry.detector
+===============================================================
+
+.. currentmodule:: odl.tomo.geometry.spect
+
+.. autoproperty:: ParallelHoleCollimatorGeometry.detector

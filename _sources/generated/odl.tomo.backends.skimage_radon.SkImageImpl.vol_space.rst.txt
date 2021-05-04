@@ -1,0 +1,6 @@
+SkImageImpl.vol_space
+=====================================================
+
+.. currentmodule:: odl.tomo.backends.skimage_radon
+
+.. autoproperty:: SkImageImpl.vol_space

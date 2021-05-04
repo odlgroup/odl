@@ -1,0 +1,6 @@
+PointwiseSum.range
+==========================================
+
+.. currentmodule:: odl.operator.tensor_ops
+
+.. autoproperty:: PointwiseSum.range

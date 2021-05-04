@@ -1,0 +1,6 @@
+LinDeformFixedDisp.interp
+===============================================
+
+.. currentmodule:: odl.deform.linearized
+
+.. autoproperty:: LinDeformFixedDisp.interp

@@ -1,0 +1,8 @@
+:orphan:
+
+RectGrid.__eq__
+==============================
+
+.. currentmodule:: odl.discr.grid
+
+.. automethod:: RectGrid.__eq__

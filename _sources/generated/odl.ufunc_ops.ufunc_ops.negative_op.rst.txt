@@ -1,0 +1,37 @@
+﻿negative_op
+===================================
+
+.. currentmodule:: odl.ufunc_ops.ufunc_ops
+
+.. autoclass:: negative_op
+   :show-inheritance:
+   
+   
+   .. automethod:: __init__
+   
+      
+   
+   .. HACK -- the point here is that we don't want this to appear in the output, but the autosummary should still generate the pages.
+      .. autosummary::
+         :toctree:
+      
+         negative_op.__call__
+         negative_op.__eq__
+         negative_op._call
+         negative_op.derivative
+         negative_op.norm
+   
+
+    
+   .. HACK -- the point here is that we don't want this to appear in the output, but the autosummary should still generate the pages.
+      .. autosummary::
+         :toctree:
+      
+         negative_op.adjoint
+         negative_op.domain
+         negative_op.inverse
+         negative_op.is_functional
+         negative_op.is_linear
+         negative_op.range
+   
+   

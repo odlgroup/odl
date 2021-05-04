@@ -1,0 +1,23 @@
+weighting
+=========
+
+Weightings for finite-dimensional spaces.
+
+.. currentmodule:: odl.space.weighting
+
+
+
+.. rubric:: Classes
+
+.. autosummary::
+   :toctree: generated/
+
+   ~odl.space.weighting.ArrayWeighting
+   ~odl.space.weighting.ConstWeighting
+   ~odl.space.weighting.CustomDist
+   ~odl.space.weighting.CustomInner
+   ~odl.space.weighting.CustomNorm
+   ~odl.space.weighting.MatrixWeighting
+   ~odl.space.weighting.Weighting
+
+

@@ -1,0 +1,8 @@
+:orphan:
+
+ComponentProjectionAdjoint.derivative
+=============================================================
+
+.. currentmodule:: odl.operator.pspace_ops
+
+.. automethod:: ComponentProjectionAdjoint.derivative

@@ -1,0 +1,6 @@
+RealPart.domain
+========================================
+
+.. currentmodule:: odl.operator.default_ops
+
+.. autoproperty:: RealPart.domain

@@ -1,0 +1,8 @@
+:orphan:
+
+square_func.derivative
+==============================================
+
+.. currentmodule:: odl.ufunc_ops.ufunc_ops
+
+.. automethod:: square_func.derivative

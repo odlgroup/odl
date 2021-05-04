@@ -1,0 +1,8 @@
+:orphan:
+
+MultiplyOperator.norm
+==============================================
+
+.. currentmodule:: odl.operator.default_ops
+
+.. automethod:: MultiplyOperator.norm

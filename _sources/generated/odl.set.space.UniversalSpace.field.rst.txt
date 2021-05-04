@@ -1,0 +1,6 @@
+UniversalSpace.field
+==================================
+
+.. currentmodule:: odl.set.space
+
+.. autoproperty:: UniversalSpace.field

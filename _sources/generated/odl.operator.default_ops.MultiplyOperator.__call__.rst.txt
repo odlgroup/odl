@@ -1,0 +1,8 @@
+:orphan:
+
+MultiplyOperator.__call__
+==================================================
+
+.. currentmodule:: odl.operator.default_ops
+
+.. automethod:: MultiplyOperator.__call__

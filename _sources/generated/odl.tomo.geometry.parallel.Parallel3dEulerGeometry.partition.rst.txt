@@ -1,0 +1,6 @@
+Parallel3dEulerGeometry.partition
+============================================================
+
+.. currentmodule:: odl.tomo.geometry.parallel
+
+.. autoproperty:: Parallel3dEulerGeometry.partition

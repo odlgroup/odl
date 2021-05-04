@@ -1,0 +1,8 @@
+:orphan:
+
+ProductSpaceUfuncs.true_divide
+==============================================
+
+.. currentmodule:: odl.util.ufuncs
+
+.. automethod:: ProductSpaceUfuncs.true_divide

@@ -1,0 +1,6 @@
+﻿tgv_phantom
+=================================
+
+.. currentmodule:: odl.phantom.geometric
+
+.. autofunction:: tgv_phantom

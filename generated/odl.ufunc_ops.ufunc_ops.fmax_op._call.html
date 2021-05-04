@@ -1,0 +1,459 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>fmax_op._call &mdash; odl 1.0.0.dev0 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="fmax_op.derivative" href="odl.ufunc_ops.ufunc_ops.fmax_op.derivative.html" />
+    <link rel="prev" title="fmax_op" href="odl.ufunc_ops.ufunc_ops.fmax_op.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../index.html" class="icon icon-home"> odl
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                1.0.0.dev0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Getting Started</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../getting_started/getting_started.html">Getting Started</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Working with ODL</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../guide/guide.html">User’s guide – selected topics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../math/math.html">Mathematical Background</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Developer zone</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../dev/dev.html">Contributing to ODL</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Useful facts</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../guide/faq.html">Frequently asked questions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../guide/glossary.html">Glossary</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../release_notes.html">Release Notes</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../refs.html">References</a></li>
+</ul>
+<p class="caption"><span class="caption-text">API Reference</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../odl.html">odl</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../odl.contrib.html">contrib</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../odl.deform.html">deform</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../odl.diagnostics.html">diagnostics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../odl.discr.html">discr</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../odl.operator.html">operator</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../odl.phantom.html">phantom</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../odl.set.html">set</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../odl.solvers.html">solvers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../odl.space.html">space</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../odl.tomo.html">tomo</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../odl.trafos.html">trafos</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="../odl.ufunc_ops.html">ufunc_ops</a><ul class="current">
+<li class="toctree-l3 current"><a class="reference internal" href="../odl.ufunc_ops.ufunc_ops.html">ufunc_ops</a><ul class="current">
+<li class="toctree-l4"><a class="reference internal" href="odl.ufunc_ops.ufunc_ops.absolute_func.html">absolute_func</a></li>
+<li class="toctree-l4"><a class="reference internal" href="odl.ufunc_ops.ufunc_ops.absolute_op.html">absolute_op</a></li>
+<li class="toctree-l4"><a class="reference internal" href="odl.ufunc_ops.ufunc_ops.add_op.html">add_op</a></li>
+<li class="toctree-l4"><a class="reference internal" href="odl.ufunc_ops.ufunc_ops.arccos_func.html">arccos_func</a></li>
+<li class="toctree-l4"><a class="reference internal" href="odl.ufunc_ops.ufunc_ops.arccos_op.html">arccos_op</a></li>
+<li class="toctree-l4"><a class="reference internal" href="odl.ufunc_ops.ufunc_ops.arccosh_func.html">arccosh_func</a></li>
+<li class="toctree-l4"><a class="reference internal" href="odl.ufunc_ops.ufunc_ops.arccosh_op.html">arccosh_op</a></li>
+<li class="toctree-l4"><a class="reference internal" href="odl.ufunc_ops.ufunc_ops.arcsin_func.html">arcsin_func</a></li>
+<li class="toctree-l4"><a class="reference internal" href="odl.ufunc_ops.ufunc_ops.arcsin_op.html">arcsin_op</a></li>
+<li class="toctree-l4"><a class="reference internal" href="odl.ufunc_ops.ufunc_ops.arcsinh_func.html">arcsinh_func</a></li>
+<li class="toctree-l4"><a class="reference internal" href="odl.ufunc_ops.ufunc_ops.arcsinh_op.html">arcsinh_op</a></li>
+<li class="toctree-l4"><a class="reference internal" href="odl.ufunc_ops.ufunc_ops.arctan2_op.html">arctan2_op</a></li>
+<li class="toctree-l4"><a class="reference internal" href="odl.ufunc_ops.ufunc_ops.arctan_func.html">arctan_func</a></li>
+<li class="toctree-l4"><a class="reference internal" href="odl.ufunc_ops.ufunc_ops.arctan_op.html">arctan_op</a></li>
+<li class="toctree-l4"><a class="reference internal" href="odl.ufunc_ops.ufunc_ops.arctanh_func.html">arctanh_func</a></li>
+<li class="toctree-l4"><a class="reference internal" href="odl.ufunc_ops.ufunc_ops.arctanh_op.html">arctanh_op</a></li>
+<li class="toctree-l4"><a class="reference internal" href="odl.ufunc_ops.ufunc_ops.bitwise_and_op.html">bitwise_and_op</a></li>
+<li class="toctree-l4"><a class="reference internal" href="odl.ufunc_ops.ufunc_ops.bitwise_or_op.html">bitwise_or_op</a></li>
+<li class="toctree-l4"><a class="reference internal" href="odl.ufunc_ops.ufunc_ops.bitwise_xor_op.html">bitwise_xor_op</a></li>
+<li class="toctree-l4"><a class="reference internal" href="odl.ufunc_ops.ufunc_ops.ceil_func.html">ceil_func</a></li>
+<li class="toctree-l4"><a class="reference internal" href="odl.ufunc_ops.ufunc_ops.ceil_op.html">ceil_op</a></li>
+<li class="toctree-l4"><a class="reference internal" href="odl.ufunc_ops.ufunc_ops.conj_func.html">conj_func</a></li>
+<li class="toctree-l4"><a class="reference internal" href="odl.ufunc_ops.ufunc_ops.conj_op.html">conj_op</a></li>
+<li class="toctree-l4"><a class="reference internal" href="odl.ufunc_ops.ufunc_ops.copysign_op.html">copysign_op</a></li>
+<li class="toctree-l4"><a class="reference internal" href="odl.ufunc_ops.ufunc_ops.cos_func.html">cos_func</a></li>
+<li class="toctree-l4"><a class="reference internal" href="odl.ufunc_ops.ufunc_ops.cos_op.html">cos_op</a></li>
+<li class="toctree-l4"><a class="reference internal" href="odl.ufunc_ops.ufunc_ops.cosh_func.html">cosh_func</a></li>
+<li class="toctree-l4"><a class="reference internal" href="odl.ufunc_ops.ufunc_ops.cosh_op.html">cosh_op</a></li>
+<li class="toctree-l4"><a class="reference internal" href="odl.ufunc_ops.ufunc_ops.deg2rad_func.html">deg2rad_func</a></li>
+<li class="toctree-l4"><a class="reference internal" href="odl.ufunc_ops.ufunc_ops.deg2rad_op.html">deg2rad_op</a></li>
+<li class="toctree-l4"><a class="reference internal" href="odl.ufunc_ops.ufunc_ops.divide_op.html">divide_op</a></li>
+<li class="toctree-l4"><a class="reference internal" href="odl.ufunc_ops.ufunc_ops.equal_op.html">equal_op</a></li>
+<li class="toctree-l4"><a class="reference internal" href="odl.ufunc_ops.ufunc_ops.exp2_func.html">exp2_func</a></li>
+<li class="toctree-l4"><a class="reference internal" href="odl.ufunc_ops.ufunc_ops.exp2_op.html">exp2_op</a></li>
+<li class="toctree-l4"><a class="reference internal" href="odl.ufunc_ops.ufunc_ops.exp_func.html">exp_func</a></li>
+<li class="toctree-l4"><a class="reference internal" href="odl.ufunc_ops.ufunc_ops.exp_op.html">exp_op</a></li>
+<li class="toctree-l4"><a class="reference internal" href="odl.ufunc_ops.ufunc_ops.expm1_func.html">expm1_func</a></li>
+<li class="toctree-l4"><a class="reference internal" href="odl.ufunc_ops.ufunc_ops.expm1_op.html">expm1_op</a></li>
+<li class="toctree-l4"><a class="reference internal" href="odl.ufunc_ops.ufunc_ops.floor_divide_op.html">floor_divide_op</a></li>
+<li class="toctree-l4"><a class="reference internal" href="odl.ufunc_ops.ufunc_ops.floor_func.html">floor_func</a></li>
+<li class="toctree-l4"><a class="reference internal" href="odl.ufunc_ops.ufunc_ops.floor_op.html">floor_op</a></li>
+<li class="toctree-l4 current"><a class="reference internal" href="odl.ufunc_ops.ufunc_ops.fmax_op.html">fmax_op</a></li>
+<li class="toctree-l4"><a class="reference internal" href="odl.ufunc_ops.ufunc_ops.fmin_op.html">fmin_op</a></li>
+<li class="toctree-l4"><a class="reference internal" href="odl.ufunc_ops.ufunc_ops.fmod_op.html">fmod_op</a></li>
+<li class="toctree-l4"><a class="reference internal" href="odl.ufunc_ops.ufunc_ops.greater_equal_op.html">greater_equal_op</a></li>
+<li class="toctree-l4"><a class="reference internal" href="odl.ufunc_ops.ufunc_ops.greater_op.html">greater_op</a></li>
+<li class="toctree-l4"><a class="reference internal" href="odl.ufunc_ops.ufunc_ops.hypot_op.html">hypot_op</a></li>
+<li class="toctree-l4"><a class="reference internal" href="odl.ufunc_ops.ufunc_ops.invert_op.html">invert_op</a></li>
+<li class="toctree-l4"><a class="reference internal" href="odl.ufunc_ops.ufunc_ops.isfinite_func.html">isfinite_func</a></li>
+<li class="toctree-l4"><a class="reference internal" href="odl.ufunc_ops.ufunc_ops.isfinite_op.html">isfinite_op</a></li>
+<li class="toctree-l4"><a class="reference internal" href="odl.ufunc_ops.ufunc_ops.isinf_func.html">isinf_func</a></li>
+<li class="toctree-l4"><a class="reference internal" href="odl.ufunc_ops.ufunc_ops.isinf_op.html">isinf_op</a></li>
+<li class="toctree-l4"><a class="reference internal" href="odl.ufunc_ops.ufunc_ops.isnan_func.html">isnan_func</a></li>
+<li class="toctree-l4"><a class="reference internal" href="odl.ufunc_ops.ufunc_ops.isnan_op.html">isnan_op</a></li>
+<li class="toctree-l4"><a class="reference internal" href="odl.ufunc_ops.ufunc_ops.left_shift_op.html">left_shift_op</a></li>
+<li class="toctree-l4"><a class="reference internal" href="odl.ufunc_ops.ufunc_ops.less_equal_op.html">less_equal_op</a></li>
+<li class="toctree-l4"><a class="reference internal" href="odl.ufunc_ops.ufunc_ops.less_op.html">less_op</a></li>
+<li class="toctree-l4"><a class="reference internal" href="odl.ufunc_ops.ufunc_ops.log10_func.html">log10_func</a></li>
+<li class="toctree-l4"><a class="reference internal" href="odl.ufunc_ops.ufunc_ops.log10_op.html">log10_op</a></li>
+<li class="toctree-l4"><a class="reference internal" href="odl.ufunc_ops.ufunc_ops.log1p_func.html">log1p_func</a></li>
+<li class="toctree-l4"><a class="reference internal" href="odl.ufunc_ops.ufunc_ops.log1p_op.html">log1p_op</a></li>
+<li class="toctree-l4"><a class="reference internal" href="odl.ufunc_ops.ufunc_ops.log2_func.html">log2_func</a></li>
+<li class="toctree-l4"><a class="reference internal" href="odl.ufunc_ops.ufunc_ops.log2_op.html">log2_op</a></li>
+<li class="toctree-l4"><a class="reference internal" href="odl.ufunc_ops.ufunc_ops.log_func.html">log_func</a></li>
+<li class="toctree-l4"><a class="reference internal" href="odl.ufunc_ops.ufunc_ops.log_op.html">log_op</a></li>
+<li class="toctree-l4"><a class="reference internal" href="odl.ufunc_ops.ufunc_ops.logaddexp2_op.html">logaddexp2_op</a></li>
+<li class="toctree-l4"><a class="reference internal" href="odl.ufunc_ops.ufunc_ops.logaddexp_op.html">logaddexp_op</a></li>
+<li class="toctree-l4"><a class="reference internal" href="odl.ufunc_ops.ufunc_ops.logical_and_op.html">logical_and_op</a></li>
+<li class="toctree-l4"><a class="reference internal" href="odl.ufunc_ops.ufunc_ops.logical_not_func.html">logical_not_func</a></li>
+<li class="toctree-l4"><a class="reference internal" href="odl.ufunc_ops.ufunc_ops.logical_not_op.html">logical_not_op</a></li>
+<li class="toctree-l4"><a class="reference internal" href="odl.ufunc_ops.ufunc_ops.logical_or_op.html">logical_or_op</a></li>
+<li class="toctree-l4"><a class="reference internal" href="odl.ufunc_ops.ufunc_ops.logical_xor_op.html">logical_xor_op</a></li>
+<li class="toctree-l4"><a class="reference internal" href="odl.ufunc_ops.ufunc_ops.maximum_op.html">maximum_op</a></li>
+<li class="toctree-l4"><a class="reference internal" href="odl.ufunc_ops.ufunc_ops.minimum_op.html">minimum_op</a></li>
+<li class="toctree-l4"><a class="reference internal" href="odl.ufunc_ops.ufunc_ops.mod_op.html">mod_op</a></li>
+<li class="toctree-l4"><a class="reference internal" href="odl.ufunc_ops.ufunc_ops.modf_op.html">modf_op</a></li>
+<li class="toctree-l4"><a class="reference internal" href="odl.ufunc_ops.ufunc_ops.multiply_op.html">multiply_op</a></li>
+<li class="toctree-l4"><a class="reference internal" href="odl.ufunc_ops.ufunc_ops.negative_func.html">negative_func</a></li>
+<li class="toctree-l4"><a class="reference internal" href="odl.ufunc_ops.ufunc_ops.negative_op.html">negative_op</a></li>
+<li class="toctree-l4"><a class="reference internal" href="odl.ufunc_ops.ufunc_ops.not_equal_op.html">not_equal_op</a></li>
+<li class="toctree-l4"><a class="reference internal" href="odl.ufunc_ops.ufunc_ops.power_op.html">power_op</a></li>
+<li class="toctree-l4"><a class="reference internal" href="odl.ufunc_ops.ufunc_ops.rad2deg_func.html">rad2deg_func</a></li>
+<li class="toctree-l4"><a class="reference internal" href="odl.ufunc_ops.ufunc_ops.rad2deg_op.html">rad2deg_op</a></li>
+<li class="toctree-l4"><a class="reference internal" href="odl.ufunc_ops.ufunc_ops.reciprocal_func.html">reciprocal_func</a></li>
+<li class="toctree-l4"><a class="reference internal" href="odl.ufunc_ops.ufunc_ops.reciprocal_op.html">reciprocal_op</a></li>
+<li class="toctree-l4"><a class="reference internal" href="odl.ufunc_ops.ufunc_ops.remainder_op.html">remainder_op</a></li>
+<li class="toctree-l4"><a class="reference internal" href="odl.ufunc_ops.ufunc_ops.right_shift_op.html">right_shift_op</a></li>
+<li class="toctree-l4"><a class="reference internal" href="odl.ufunc_ops.ufunc_ops.rint_func.html">rint_func</a></li>
+<li class="toctree-l4"><a class="reference internal" href="odl.ufunc_ops.ufunc_ops.rint_op.html">rint_op</a></li>
+<li class="toctree-l4"><a class="reference internal" href="odl.ufunc_ops.ufunc_ops.sign_func.html">sign_func</a></li>
+<li class="toctree-l4"><a class="reference internal" href="odl.ufunc_ops.ufunc_ops.sign_op.html">sign_op</a></li>
+<li class="toctree-l4"><a class="reference internal" href="odl.ufunc_ops.ufunc_ops.signbit_func.html">signbit_func</a></li>
+<li class="toctree-l4"><a class="reference internal" href="odl.ufunc_ops.ufunc_ops.signbit_op.html">signbit_op</a></li>
+<li class="toctree-l4"><a class="reference internal" href="odl.ufunc_ops.ufunc_ops.sin_func.html">sin_func</a></li>
+<li class="toctree-l4"><a class="reference internal" href="odl.ufunc_ops.ufunc_ops.sin_op.html">sin_op</a></li>
+<li class="toctree-l4"><a class="reference internal" href="odl.ufunc_ops.ufunc_ops.sinh_func.html">sinh_func</a></li>
+<li class="toctree-l4"><a class="reference internal" href="odl.ufunc_ops.ufunc_ops.sinh_op.html">sinh_op</a></li>
+<li class="toctree-l4"><a class="reference internal" href="odl.ufunc_ops.ufunc_ops.sqrt_func.html">sqrt_func</a></li>
+<li class="toctree-l4"><a class="reference internal" href="odl.ufunc_ops.ufunc_ops.sqrt_op.html">sqrt_op</a></li>
+<li class="toctree-l4"><a class="reference internal" href="odl.ufunc_ops.ufunc_ops.square_func.html">square_func</a></li>
+<li class="toctree-l4"><a class="reference internal" href="odl.ufunc_ops.ufunc_ops.square_op.html">square_op</a></li>
+<li class="toctree-l4"><a class="reference internal" href="odl.ufunc_ops.ufunc_ops.subtract_op.html">subtract_op</a></li>
+<li class="toctree-l4"><a class="reference internal" href="odl.ufunc_ops.ufunc_ops.tan_func.html">tan_func</a></li>
+<li class="toctree-l4"><a class="reference internal" href="odl.ufunc_ops.ufunc_ops.tan_op.html">tan_op</a></li>
+<li class="toctree-l4"><a class="reference internal" href="odl.ufunc_ops.ufunc_ops.tanh_func.html">tanh_func</a></li>
+<li class="toctree-l4"><a class="reference internal" href="odl.ufunc_ops.ufunc_ops.tanh_op.html">tanh_op</a></li>
+<li class="toctree-l4"><a class="reference internal" href="odl.ufunc_ops.ufunc_ops.true_divide_op.html">true_divide_op</a></li>
+<li class="toctree-l4"><a class="reference internal" href="odl.ufunc_ops.ufunc_ops.trunc_func.html">trunc_func</a></li>
+<li class="toctree-l4"><a class="reference internal" href="odl.ufunc_ops.ufunc_ops.trunc_op.html">trunc_op</a></li>
+<li class="toctree-l4"><a class="reference internal" href="odl.ufunc_ops.ufunc_ops.absolute.html">absolute</a></li>
+<li class="toctree-l4"><a class="reference internal" href="odl.ufunc_ops.ufunc_ops.add.html">add</a></li>
+<li class="toctree-l4"><a class="reference internal" href="odl.ufunc_ops.ufunc_ops.arccos.html">arccos</a></li>
+<li class="toctree-l4"><a class="reference internal" href="odl.ufunc_ops.ufunc_ops.arccosh.html">arccosh</a></li>
+<li class="toctree-l4"><a class="reference internal" href="odl.ufunc_ops.ufunc_ops.arcsin.html">arcsin</a></li>
+<li class="toctree-l4"><a class="reference internal" href="odl.ufunc_ops.ufunc_ops.arcsinh.html">arcsinh</a></li>
+<li class="toctree-l4"><a class="reference internal" href="odl.ufunc_ops.ufunc_ops.arctan.html">arctan</a></li>
+<li class="toctree-l4"><a class="reference internal" href="odl.ufunc_ops.ufunc_ops.arctan2.html">arctan2</a></li>
+<li class="toctree-l4"><a class="reference internal" href="odl.ufunc_ops.ufunc_ops.arctanh.html">arctanh</a></li>
+<li class="toctree-l4"><a class="reference internal" href="odl.ufunc_ops.ufunc_ops.bitwise_and.html">bitwise_and</a></li>
+<li class="toctree-l4"><a class="reference internal" href="odl.ufunc_ops.ufunc_ops.bitwise_or.html">bitwise_or</a></li>
+<li class="toctree-l4"><a class="reference internal" href="odl.ufunc_ops.ufunc_ops.bitwise_xor.html">bitwise_xor</a></li>
+<li class="toctree-l4"><a class="reference internal" href="odl.ufunc_ops.ufunc_ops.ceil.html">ceil</a></li>
+<li class="toctree-l4"><a class="reference internal" href="odl.ufunc_ops.ufunc_ops.conj.html">conj</a></li>
+<li class="toctree-l4"><a class="reference internal" href="odl.ufunc_ops.ufunc_ops.copysign.html">copysign</a></li>
+<li class="toctree-l4"><a class="reference internal" href="odl.ufunc_ops.ufunc_ops.cos.html">cos</a></li>
+<li class="toctree-l4"><a class="reference internal" href="odl.ufunc_ops.ufunc_ops.cosh.html">cosh</a></li>
+<li class="toctree-l4"><a class="reference internal" href="odl.ufunc_ops.ufunc_ops.deg2rad.html">deg2rad</a></li>
+<li class="toctree-l4"><a class="reference internal" href="odl.ufunc_ops.ufunc_ops.derivative_factory.html">derivative_factory</a></li>
+<li class="toctree-l4"><a class="reference internal" href="odl.ufunc_ops.ufunc_ops.divide.html">divide</a></li>
+<li class="toctree-l4"><a class="reference internal" href="odl.ufunc_ops.ufunc_ops.dtypes_out.html">dtypes_out</a></li>
+<li class="toctree-l4"><a class="reference internal" href="odl.ufunc_ops.ufunc_ops.equal.html">equal</a></li>
+<li class="toctree-l4"><a class="reference internal" href="odl.ufunc_ops.ufunc_ops.exp.html">exp</a></li>
+<li class="toctree-l4"><a class="reference internal" href="odl.ufunc_ops.ufunc_ops.exp2.html">exp2</a></li>
+<li class="toctree-l4"><a class="reference internal" href="odl.ufunc_ops.ufunc_ops.expm1.html">expm1</a></li>
+<li class="toctree-l4"><a class="reference internal" href="odl.ufunc_ops.ufunc_ops.find_min_signature.html">find_min_signature</a></li>
+<li class="toctree-l4"><a class="reference internal" href="odl.ufunc_ops.ufunc_ops.floor.html">floor</a></li>
+<li class="toctree-l4"><a class="reference internal" href="odl.ufunc_ops.ufunc_ops.floor_divide.html">floor_divide</a></li>
+<li class="toctree-l4"><a class="reference internal" href="odl.ufunc_ops.ufunc_ops.fmax.html">fmax</a></li>
+<li class="toctree-l4"><a class="reference internal" href="odl.ufunc_ops.ufunc_ops.fmin.html">fmin</a></li>
+<li class="toctree-l4"><a class="reference internal" href="odl.ufunc_ops.ufunc_ops.fmod.html">fmod</a></li>
+<li class="toctree-l4"><a class="reference internal" href="odl.ufunc_ops.ufunc_ops.gradient_factory.html">gradient_factory</a></li>
+<li class="toctree-l4"><a class="reference internal" href="odl.ufunc_ops.ufunc_ops.greater.html">greater</a></li>
+<li class="toctree-l4"><a class="reference internal" href="odl.ufunc_ops.ufunc_ops.greater_equal.html">greater_equal</a></li>
+<li class="toctree-l4"><a class="reference internal" href="odl.ufunc_ops.ufunc_ops.hypot.html">hypot</a></li>
+<li class="toctree-l4"><a class="reference internal" href="odl.ufunc_ops.ufunc_ops.indirection.html">indirection</a></li>
+<li class="toctree-l4"><a class="reference internal" href="odl.ufunc_ops.ufunc_ops.invert.html">invert</a></li>
+<li class="toctree-l4"><a class="reference internal" href="odl.ufunc_ops.ufunc_ops.isfinite.html">isfinite</a></li>
+<li class="toctree-l4"><a class="reference internal" href="odl.ufunc_ops.ufunc_ops.isinf.html">isinf</a></li>
+<li class="toctree-l4"><a class="reference internal" href="odl.ufunc_ops.ufunc_ops.isnan.html">isnan</a></li>
+<li class="toctree-l4"><a class="reference internal" href="odl.ufunc_ops.ufunc_ops.left_shift.html">left_shift</a></li>
+<li class="toctree-l4"><a class="reference internal" href="odl.ufunc_ops.ufunc_ops.less.html">less</a></li>
+<li class="toctree-l4"><a class="reference internal" href="odl.ufunc_ops.ufunc_ops.less_equal.html">less_equal</a></li>
+<li class="toctree-l4"><a class="reference internal" href="odl.ufunc_ops.ufunc_ops.log.html">log</a></li>
+<li class="toctree-l4"><a class="reference internal" href="odl.ufunc_ops.ufunc_ops.log10.html">log10</a></li>
+<li class="toctree-l4"><a class="reference internal" href="odl.ufunc_ops.ufunc_ops.log1p.html">log1p</a></li>
+<li class="toctree-l4"><a class="reference internal" href="odl.ufunc_ops.ufunc_ops.log2.html">log2</a></li>
+<li class="toctree-l4"><a class="reference internal" href="odl.ufunc_ops.ufunc_ops.logaddexp.html">logaddexp</a></li>
+<li class="toctree-l4"><a class="reference internal" href="odl.ufunc_ops.ufunc_ops.logaddexp2.html">logaddexp2</a></li>
+<li class="toctree-l4"><a class="reference internal" href="odl.ufunc_ops.ufunc_ops.logical_and.html">logical_and</a></li>
+<li class="toctree-l4"><a class="reference internal" href="odl.ufunc_ops.ufunc_ops.logical_not.html">logical_not</a></li>
+<li class="toctree-l4"><a class="reference internal" href="odl.ufunc_ops.ufunc_ops.logical_or.html">logical_or</a></li>
+<li class="toctree-l4"><a class="reference internal" href="odl.ufunc_ops.ufunc_ops.logical_xor.html">logical_xor</a></li>
+<li class="toctree-l4"><a class="reference internal" href="odl.ufunc_ops.ufunc_ops.maximum.html">maximum</a></li>
+<li class="toctree-l4"><a class="reference internal" href="odl.ufunc_ops.ufunc_ops.minimum.html">minimum</a></li>
+<li class="toctree-l4"><a class="reference internal" href="odl.ufunc_ops.ufunc_ops.mod.html">mod</a></li>
+<li class="toctree-l4"><a class="reference internal" href="odl.ufunc_ops.ufunc_ops.modf.html">modf</a></li>
+<li class="toctree-l4"><a class="reference internal" href="odl.ufunc_ops.ufunc_ops.multiply.html">multiply</a></li>
+<li class="toctree-l4"><a class="reference internal" href="odl.ufunc_ops.ufunc_ops.negative.html">negative</a></li>
+<li class="toctree-l4"><a class="reference internal" href="odl.ufunc_ops.ufunc_ops.not_equal.html">not_equal</a></li>
+<li class="toctree-l4"><a class="reference internal" href="odl.ufunc_ops.ufunc_ops.power.html">power</a></li>
+<li class="toctree-l4"><a class="reference internal" href="odl.ufunc_ops.ufunc_ops.rad2deg.html">rad2deg</a></li>
+<li class="toctree-l4"><a class="reference internal" href="odl.ufunc_ops.ufunc_ops.reciprocal.html">reciprocal</a></li>
+<li class="toctree-l4"><a class="reference internal" href="odl.ufunc_ops.ufunc_ops.remainder.html">remainder</a></li>
+<li class="toctree-l4"><a class="reference internal" href="odl.ufunc_ops.ufunc_ops.right_shift.html">right_shift</a></li>
+<li class="toctree-l4"><a class="reference internal" href="odl.ufunc_ops.ufunc_ops.rint.html">rint</a></li>
+<li class="toctree-l4"><a class="reference internal" href="odl.ufunc_ops.ufunc_ops.sign.html">sign</a></li>
+<li class="toctree-l4"><a class="reference internal" href="odl.ufunc_ops.ufunc_ops.signbit.html">signbit</a></li>
+<li class="toctree-l4"><a class="reference internal" href="odl.ufunc_ops.ufunc_ops.sin.html">sin</a></li>
+<li class="toctree-l4"><a class="reference internal" href="odl.ufunc_ops.ufunc_ops.sinh.html">sinh</a></li>
+<li class="toctree-l4"><a class="reference internal" href="odl.ufunc_ops.ufunc_ops.sqrt.html">sqrt</a></li>
+<li class="toctree-l4"><a class="reference internal" href="odl.ufunc_ops.ufunc_ops.square.html">square</a></li>
+<li class="toctree-l4"><a class="reference internal" href="odl.ufunc_ops.ufunc_ops.subtract.html">subtract</a></li>
+<li class="toctree-l4"><a class="reference internal" href="odl.ufunc_ops.ufunc_ops.tan.html">tan</a></li>
+<li class="toctree-l4"><a class="reference internal" href="odl.ufunc_ops.ufunc_ops.tanh.html">tanh</a></li>
+<li class="toctree-l4"><a class="reference internal" href="odl.ufunc_ops.ufunc_ops.true_divide.html">true_divide</a></li>
+<li class="toctree-l4"><a class="reference internal" href="odl.ufunc_ops.ufunc_ops.trunc.html">trunc</a></li>
+<li class="toctree-l4"><a class="reference internal" href="odl.ufunc_ops.ufunc_ops.ufunc_class_factory.html">ufunc_class_factory</a></li>
+<li class="toctree-l4"><a class="reference internal" href="odl.ufunc_ops.ufunc_ops.ufunc_factory.html">ufunc_factory</a></li>
+<li class="toctree-l4"><a class="reference internal" href="odl.ufunc_ops.ufunc_ops.ufunc_functional_factory.html">ufunc_functional_factory</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../odl.util.html">util</a></li>
+</ul>
+</li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">odl</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="../odl.html">odl</a> &raquo;</li>
+        
+          <li><a href="../odl.ufunc_ops.html">ufunc_ops</a> &raquo;</li>
+        
+          <li><a href="../odl.ufunc_ops.ufunc_ops.html">ufunc_ops</a> &raquo;</li>
+        
+          <li><a href="odl.ufunc_ops.ufunc_ops.fmax_op.html">fmax_op</a> &raquo;</li>
+        
+      <li>fmax_op._call</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            <a href="../_sources/generated/odl.ufunc_ops.ufunc_ops.fmax_op._call.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="fmax-op-call">
+<h1>fmax_op._call<a class="headerlink" href="#fmax-op-call" title="Permalink to this headline">¶</a></h1>
+<dl class="py method">
+<dt id="odl.ufunc_ops.ufunc_ops.fmax_op._call">
+<code class="sig-prename descclassname"><span class="pre">fmax_op.</span></code><code class="sig-name descname"><span class="pre">_call</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">out</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#odl.ufunc_ops.ufunc_ops.fmax_op._call" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return <code class="docutils literal notranslate"><span class="pre">self(x)</span></code>.</p>
+</dd></dl>
+
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+        <a href="odl.ufunc_ops.ufunc_ops.fmax_op.derivative.html" class="btn btn-neutral float-right" title="fmax_op.derivative" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="odl.ufunc_ops.ufunc_ops.fmax_op.html" class="btn btn-neutral float-left" title="fmax_op" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &#169; Copyright 2014-2020 The ODL Contributors.
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

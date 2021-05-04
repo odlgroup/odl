@@ -1,0 +1,8 @@
+:orphan:
+
+IntervalProd.insert
+==================================
+
+.. currentmodule:: odl.set.domain
+
+.. automethod:: IntervalProd.insert

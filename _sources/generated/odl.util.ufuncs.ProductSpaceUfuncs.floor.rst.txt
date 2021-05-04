@@ -1,0 +1,8 @@
+:orphan:
+
+ProductSpaceUfuncs.floor
+========================================
+
+.. currentmodule:: odl.util.ufuncs
+
+.. automethod:: ProductSpaceUfuncs.floor

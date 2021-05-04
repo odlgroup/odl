@@ -1,0 +1,8 @@
+:orphan:
+
+NumpyTensor.copy
+======================================
+
+.. currentmodule:: odl.space.npy_tensors
+
+.. automethod:: NumpyTensor.copy

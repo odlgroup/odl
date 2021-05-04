@@ -1,0 +1,6 @@
+DiscretizedSpace.min_pt
+=============================================
+
+.. currentmodule:: odl.discr.discr_space
+
+.. autoproperty:: DiscretizedSpace.min_pt

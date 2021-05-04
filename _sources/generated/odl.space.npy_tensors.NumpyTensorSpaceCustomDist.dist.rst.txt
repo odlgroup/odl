@@ -1,0 +1,6 @@
+NumpyTensorSpaceCustomDist.dist
+=====================================================
+
+.. currentmodule:: odl.space.npy_tensors
+
+.. autoproperty:: NumpyTensorSpaceCustomDist.dist

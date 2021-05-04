@@ -1,0 +1,486 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>Linear spaces &mdash; odl 1.0.0.dev0 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Using ODL with NumPy and SciPy" href="numpy_guide.html" />
+    <link rel="prev" title="Operators" href="operator_guide.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../index.html" class="icon icon-home"> odl
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                1.0.0.dev0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Getting Started</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../getting_started/getting_started.html">Getting Started</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Working with ODL</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="guide.html">User’s guide – selected topics</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="operator_guide.html">Operators</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Linear spaces</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#abstract-methods">Abstract methods</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#element-creation">Element creation</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#linear-combination">Linear combination</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#underlying-scalar-field">Underlying scalar field</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#equality-check">Equality check</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#distance-optional">Distance (optional)</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#norm-optional">Norm (optional)</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#inner-product-optional">Inner product (optional)</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pointwise-multiplication-optional">Pointwise multiplication (optional)</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#notes">Notes</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#references">References</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="numpy_guide.html">Using ODL with NumPy and SciPy</a></li>
+<li class="toctree-l2"><a class="reference internal" href="vectorization_guide.html">Vectorized functions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="geometry_guide.html">Tomographic acquisition geometries</a></li>
+<li class="toctree-l2"><a class="reference internal" href="functional_guide.html">Functional</a></li>
+<li class="toctree-l2"><a class="reference internal" href="proximal_lang_guide.html">Using ODL with ProxImaL</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pdhg_guide.html">Primal-Dual Hybrid Gradient algorithm</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../math/math.html">Mathematical Background</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Developer zone</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../dev/dev.html">Contributing to ODL</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Useful facts</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="faq.html">Frequently asked questions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="glossary.html">Glossary</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../release_notes.html">Release Notes</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../refs.html">References</a></li>
+</ul>
+<p class="caption"><span class="caption-text">API Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../odl.html">odl</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">odl</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="guide.html">User’s guide – selected topics</a> &raquo;</li>
+        
+      <li>Linear spaces</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            <a href="../_sources/guide/linearspace_guide.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="linear-spaces">
+<span id="linearspace-in-depth"></span><h1>Linear spaces<a class="headerlink" href="#linear-spaces" title="Permalink to this headline">¶</a></h1>
+<p>The <a class="reference internal" href="../generated/odl.set.space.LinearSpace.html#odl.set.space.LinearSpace" title="odl.set.space.LinearSpace"><code class="xref any py py-class docutils literal notranslate"><span class="pre">LinearSpace</span></code></a> class represent abstract mathematical concepts
+of vector spaces. It cannot be used directly but are rather intended
+to be subclassed by concrete space implementations. The space
+provides default implementations of the most important vector space
+operations. See the documentation of the respective classes for more
+details.</p>
+<p>The concept of linear vector spaces in ODL is largely inspired by
+the <a class="reference external" href="http://www.trip.caam.rice.edu/software/rvl/rvl/doc/html/">Rice Vector Library</a> (RVL).</p>
+<p>The abstract <a class="reference internal" href="../generated/odl.set.space.LinearSpace.html#odl.set.space.LinearSpace" title="odl.set.space.LinearSpace"><code class="xref any py py-class docutils literal notranslate"><span class="pre">LinearSpace</span></code></a> class is intended for quick prototyping.
+It has a number of abstract methods which must be overridden by a
+subclass. On the other hand, it provides automatic error checking
+and numerous attributes and methods for convenience.</p>
+<div class="section" id="abstract-methods">
+<h2>Abstract methods<a class="headerlink" href="#abstract-methods" title="Permalink to this headline">¶</a></h2>
+<p>In the following, the abstract methods are explained in detail.</p>
+<div class="section" id="element-creation">
+<h3>Element creation<a class="headerlink" href="#element-creation" title="Permalink to this headline">¶</a></h3>
+<p><code class="docutils literal notranslate"><span class="pre">element(inp=None)</span></code></p>
+<p>This public method is the factory for the inner
+<a class="reference internal" href="../generated/odl.set.space.LinearSpaceElement.html#odl.set.space.LinearSpaceElement" title="odl.set.space.LinearSpaceElement"><code class="xref any py py-class docutils literal notranslate"><span class="pre">LinearSpaceElement</span></code></a> class. It creates a new element of the space,
+either from scratch or from an existing data container. In the
+simplest possible case, it just delegates the construction to the
+<a class="reference internal" href="../generated/odl.set.space.LinearSpaceElement.html#odl.set.space.LinearSpaceElement" title="odl.set.space.LinearSpaceElement"><code class="xref any py py-class docutils literal notranslate"><span class="pre">LinearSpaceElement</span></code></a> class.</p>
+<p>If no data is provided, the new element is <strong>merely allocated, not
+initialized</strong>, thus it can contain <em>any</em> value.</p>
+<dl>
+<dt><strong>Parameters:</strong></dt><dd><dl>
+<dt>inp<span class="classifier"><a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.9)"><code class="xref any docutils literal notranslate"><span class="pre">object</span></code></a>, optional</span></dt><dd><p>A container for values for the element initialization.</p>
+</dd>
+</dl>
+</dd>
+<dt><strong>Returns:</strong></dt><dd><dl>
+<dt>element<span class="classifier"><a class="reference internal" href="../generated/odl.set.space.LinearSpaceElement.html#odl.set.space.LinearSpaceElement" title="odl.set.space.LinearSpaceElement"><code class="xref any py py-class docutils literal notranslate"><span class="pre">LinearSpaceElement</span></code></a></span></dt><dd><p>The new element.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</div>
+<div class="section" id="linear-combination">
+<h3>Linear combination<a class="headerlink" href="#linear-combination" title="Permalink to this headline">¶</a></h3>
+<p><code class="docutils literal notranslate"><span class="pre">_lincomb(a,</span> <span class="pre">x1,</span> <span class="pre">b,</span> <span class="pre">x2,</span> <span class="pre">out)</span></code></p>
+<p>This private method is the raw implementation (i.e. without error
+checking) of the linear combination <code class="docutils literal notranslate"><span class="pre">out</span> <span class="pre">=</span> <span class="pre">a</span> <span class="pre">*</span> <span class="pre">x1</span> <span class="pre">+</span> <span class="pre">b</span> <span class="pre">*</span> <span class="pre">x2</span></code>.
+<a class="reference internal" href="../generated/odl.set.space.LinearSpace._lincomb.html#odl.set.space.LinearSpace._lincomb" title="odl.set.space.LinearSpace._lincomb"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">LinearSpace._lincomb</span></code></a> and its public counterpart
+<a class="reference internal" href="../generated/odl.set.space.LinearSpace.lincomb.html#odl.set.space.LinearSpace.lincomb" title="odl.set.space.LinearSpace.lincomb"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">LinearSpace.lincomb</span></code></a> are used to cover a range of convenience
+functions, see below.</p>
+<dl>
+<dt><strong>Parameters:</strong></dt><dd><dl>
+<dt>a, b<span class="classifier">scalars, must be members of the space’s <code class="docutils literal notranslate"><span class="pre">field</span></code></span></dt><dd><p>Multiplicative scalar factors for input element <code class="docutils literal notranslate"><span class="pre">x1</span></code> or <code class="docutils literal notranslate"><span class="pre">x2</span></code>,
+respectively.</p>
+</dd>
+<dt>x1, x2<span class="classifier"><a class="reference internal" href="../generated/odl.set.space.LinearSpaceElement.html#odl.set.space.LinearSpaceElement" title="odl.set.space.LinearSpaceElement"><code class="xref any py py-class docutils literal notranslate"><span class="pre">LinearSpaceElement</span></code></a></span></dt><dd><p>Input elements.</p>
+</dd>
+<dt>out<span class="classifier"><a class="reference internal" href="../generated/odl.set.space.LinearSpaceElement.html#odl.set.space.LinearSpaceElement" title="odl.set.space.LinearSpaceElement"><code class="xref any py py-class docutils literal notranslate"><span class="pre">LinearSpaceElement</span></code></a></span></dt><dd><p>Element to which the result of the computation is written.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+<p><strong>Returns:</strong> <a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.9)"><code class="xref any docutils literal notranslate"><span class="pre">None</span></code></a></p>
+<dl class="simple">
+<dt><strong>Requirements:</strong></dt><dd><ul class="simple">
+<li><p>Aliasing of <code class="docutils literal notranslate"><span class="pre">x1</span></code>, <code class="docutils literal notranslate"><span class="pre">x2</span></code> and <code class="docutils literal notranslate"><span class="pre">out</span></code> <strong>must</strong> be allowed.</p></li>
+<li><p>The input elements <code class="docutils literal notranslate"><span class="pre">x1</span></code> and <code class="docutils literal notranslate"><span class="pre">x2</span></code> <strong>must not</strong> be modified.</p></li>
+<li><p>The initial state of the output element <code class="docutils literal notranslate"><span class="pre">out</span></code> <strong>must not</strong>
+influence the result.</p></li>
+</ul>
+</dd>
+</dl>
+</div>
+<div class="section" id="underlying-scalar-field">
+<h3>Underlying scalar field<a class="headerlink" href="#underlying-scalar-field" title="Permalink to this headline">¶</a></h3>
+<p><code class="docutils literal notranslate"><span class="pre">field</span></code></p>
+<p>The public attribute determining the type of scalars which
+underlie the space. Can be instances of either <a class="reference internal" href="../generated/odl.set.sets.RealNumbers.html#odl.set.sets.RealNumbers" title="odl.set.sets.RealNumbers"><code class="xref any py py-class docutils literal notranslate"><span class="pre">RealNumbers</span></code></a> or
+<a class="reference internal" href="../generated/odl.set.sets.ComplexNumbers.html#odl.set.sets.ComplexNumbers" title="odl.set.sets.ComplexNumbers"><code class="xref any py py-class docutils literal notranslate"><span class="pre">ComplexNumbers</span></code></a> (see <a class="reference internal" href="../generated/odl.set.sets.Field.html#odl.set.sets.Field" title="odl.set.sets.Field"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Field</span></code></a>).</p>
+<p>Should be implemented as a <code class="docutils literal notranslate"><span class="pre">&#64;property</span></code> to make it immutable.</p>
+</div>
+<div class="section" id="equality-check">
+<h3>Equality check<a class="headerlink" href="#equality-check" title="Permalink to this headline">¶</a></h3>
+<p><code class="docutils literal notranslate"><span class="pre">__eq__(other)</span></code></p>
+<p><a class="reference internal" href="../generated/odl.set.space.LinearSpace.html#odl.set.space.LinearSpace" title="odl.set.space.LinearSpace"><code class="xref any py py-class docutils literal notranslate"><span class="pre">LinearSpace</span></code></a> inherits this abstract method from <a class="reference internal" href="../generated/odl.set.sets.Set.html#odl.set.sets.Set" title="odl.set.sets.Set"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Set</span></code></a>. Its
+purpose is to check two <a class="reference internal" href="../generated/odl.set.space.LinearSpace.html#odl.set.space.LinearSpace" title="odl.set.space.LinearSpace"><code class="xref any py py-class docutils literal notranslate"><span class="pre">LinearSpace</span></code></a> instances for equality.</p>
+<dl>
+<dt><strong>Parameters:</strong></dt><dd><dl>
+<dt>other<span class="classifier"><a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.9)"><code class="xref any docutils literal notranslate"><span class="pre">object</span></code></a></span></dt><dd><p>The object to compare to.</p>
+</dd>
+</dl>
+</dd>
+<dt><strong>Returns:</strong></dt><dd><dl>
+<dt>equals<span class="classifier"><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.9)"><code class="xref any docutils literal notranslate"><span class="pre">bool</span></code></a></span></dt><dd><p><a class="reference external" href="https://docs.python.org/3/library/constants.html#True" title="(in Python v3.9)"><code class="xref any docutils literal notranslate"><span class="pre">True</span></code></a> if <code class="docutils literal notranslate"><span class="pre">other</span></code> is the same <a class="reference internal" href="../generated/odl.set.space.LinearSpace.html#odl.set.space.LinearSpace" title="odl.set.space.LinearSpace"><code class="xref any py py-class docutils literal notranslate"><span class="pre">LinearSpace</span></code></a>, <a class="reference external" href="https://docs.python.org/3/library/constants.html#False" title="(in Python v3.9)"><code class="xref any docutils literal notranslate"><span class="pre">False</span></code></a>
+otherwise.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</div>
+<div class="section" id="distance-optional">
+<h3>Distance (optional)<a class="headerlink" href="#distance-optional" title="Permalink to this headline">¶</a></h3>
+<p><code class="docutils literal notranslate"><span class="pre">_dist(x1,</span> <span class="pre">x2)</span></code></p>
+<p>A raw (not type-checking) private method measuring the distance
+between two elements <code class="docutils literal notranslate"><span class="pre">x1</span></code> and <code class="docutils literal notranslate"><span class="pre">x2</span></code>.</p>
+<p>A space with a distance is called a <strong>metric space</strong>.</p>
+<dl>
+<dt><strong>Parameters:</strong></dt><dd><dl>
+<dt>x1,x2<span class="classifier"><a class="reference internal" href="../generated/odl.set.space.LinearSpaceElement.html#odl.set.space.LinearSpaceElement" title="odl.set.space.LinearSpaceElement"><code class="xref any py py-class docutils literal notranslate"><span class="pre">LinearSpaceElement</span></code></a></span></dt><dd><p>Elements whose mutual distance to calculate.</p>
+</dd>
+</dl>
+</dd>
+<dt><strong>Returns:</strong></dt><dd><dl>
+<dt>distance<span class="classifier"><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.9)"><code class="xref any docutils literal notranslate"><span class="pre">float</span></code></a></span></dt><dd><p>The distance between <code class="docutils literal notranslate"><span class="pre">x1</span></code> and <code class="docutils literal notranslate"><span class="pre">x2</span></code>, measured in the space’s
+metric</p>
+</dd>
+</dl>
+</dd>
+<dt><strong>Requirements:</strong></dt><dd><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">_dist(x,</span> <span class="pre">y)</span> <span class="pre">==</span> <span class="pre">_dist(y,</span> <span class="pre">x)</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">_dist(x,</span> <span class="pre">y)</span> <span class="pre">&lt;=</span> <span class="pre">_dist(x,</span> <span class="pre">z)</span> <span class="pre">+</span> <span class="pre">_dist(z,</span> <span class="pre">y)</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">_dist(x,</span> <span class="pre">y)</span> <span class="pre">&gt;=</span> <span class="pre">0</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">_dist(x,</span> <span class="pre">y)</span> <span class="pre">==</span> <span class="pre">0</span></code> (approx.) if and only if <code class="docutils literal notranslate"><span class="pre">x</span> <span class="pre">==</span> <span class="pre">y</span></code> (approx.)</p></li>
+</ul>
+</dd>
+</dl>
+</div>
+<div class="section" id="norm-optional">
+<h3>Norm (optional)<a class="headerlink" href="#norm-optional" title="Permalink to this headline">¶</a></h3>
+<p><code class="docutils literal notranslate"><span class="pre">_norm(x)</span></code></p>
+<p>A raw (not type-checking) private method measuring the length of a
+space element <code class="docutils literal notranslate"><span class="pre">x</span></code>.</p>
+<p>A space with a norm is called a <strong>normed space</strong>.</p>
+<dl>
+<dt><strong>Parameters:</strong></dt><dd><dl>
+<dt>x<span class="classifier"><a class="reference internal" href="../generated/odl.set.space.LinearSpaceElement.html#odl.set.space.LinearSpaceElement" title="odl.set.space.LinearSpaceElement"><code class="xref any py py-class docutils literal notranslate"><span class="pre">LinearSpaceElement</span></code></a></span></dt><dd><p>The element to measure.</p>
+</dd>
+</dl>
+</dd>
+<dt><strong>Returns:</strong></dt><dd><dl>
+<dt>norm<span class="classifier"><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.9)"><code class="xref any docutils literal notranslate"><span class="pre">float</span></code></a></span></dt><dd><p>The length of <code class="docutils literal notranslate"><span class="pre">x</span></code> as measured in the space’s norm.</p>
+</dd>
+</dl>
+</dd>
+<dt><strong>Requirements:</strong></dt><dd><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">_norm(s</span> <span class="pre">*</span> <span class="pre">x)</span> <span class="pre">=</span> <span class="pre">|s|</span> <span class="pre">*</span> <span class="pre">_norm(x)</span></code> for any scalar <code class="docutils literal notranslate"><span class="pre">s</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">_norm(x</span> <span class="pre">+</span> <span class="pre">y)</span> <span class="pre">&lt;=</span> <span class="pre">_norm(x)</span> <span class="pre">+</span> <span class="pre">_norm(y)</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">_norm(x)</span> <span class="pre">&gt;=</span> <span class="pre">0</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">_norm(x)</span> <span class="pre">==</span> <span class="pre">0</span></code> (approx.) if and only if <code class="docutils literal notranslate"><span class="pre">x</span> <span class="pre">==</span> <span class="pre">0</span></code> (approx.)</p></li>
+</ul>
+</dd>
+</dl>
+</div>
+<div class="section" id="inner-product-optional">
+<h3>Inner product (optional)<a class="headerlink" href="#inner-product-optional" title="Permalink to this headline">¶</a></h3>
+<p><code class="docutils literal notranslate"><span class="pre">_inner(x,</span> <span class="pre">y)</span></code></p>
+<p>A raw (not type-checking) private method calculating the inner
+product of two space elements <code class="docutils literal notranslate"><span class="pre">x</span></code> and <code class="docutils literal notranslate"><span class="pre">y</span></code>.</p>
+<dl>
+<dt><strong>Parameters:</strong></dt><dd><dl>
+<dt>x,y<span class="classifier"><a class="reference internal" href="../generated/odl.set.space.LinearSpaceElement.html#odl.set.space.LinearSpaceElement" title="odl.set.space.LinearSpaceElement"><code class="xref any py py-class docutils literal notranslate"><span class="pre">LinearSpaceElement</span></code></a></span></dt><dd><p>Elements whose inner product to calculate.</p>
+</dd>
+</dl>
+</dd>
+<dt><strong>Returns:</strong></dt><dd><dl>
+<dt>inner<span class="classifier"><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.9)"><code class="xref any docutils literal notranslate"><span class="pre">float</span></code></a> or <a class="reference external" href="https://docs.python.org/3/library/functions.html#complex" title="(in Python v3.9)"><code class="xref any docutils literal notranslate"><span class="pre">complex</span></code></a></span></dt><dd><p>The inner product of <code class="docutils literal notranslate"><span class="pre">x</span></code> and <code class="docutils literal notranslate"><span class="pre">y</span></code>. If
+<a class="reference internal" href="../generated/odl.set.space.LinearSpace.field.html#odl.set.space.LinearSpace.field" title="odl.set.space.LinearSpace.field"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">LinearSpace.field</span></code></a> is the set of real
+numbers, <code class="docutils literal notranslate"><span class="pre">inner</span></code> is a <a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.9)"><code class="xref any docutils literal notranslate"><span class="pre">float</span></code></a>, otherwise <a class="reference external" href="https://docs.python.org/3/library/functions.html#complex" title="(in Python v3.9)"><code class="xref any docutils literal notranslate"><span class="pre">complex</span></code></a>.</p>
+</dd>
+</dl>
+</dd>
+<dt><strong>Requirements:</strong></dt><dd><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">_inner(x,</span> <span class="pre">y)</span> <span class="pre">==</span> <span class="pre">_inner(y,</span> <span class="pre">x)^*</span></code> with ‘*’ = complex conjugation</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">_inner(s</span> <span class="pre">*</span> <span class="pre">x,</span> <span class="pre">y)</span> <span class="pre">==</span> <span class="pre">s</span> <span class="pre">*</span> <span class="pre">_inner(x,</span> <span class="pre">y)</span></code> for <code class="docutils literal notranslate"><span class="pre">s</span></code> scalar</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">_inner(x</span> <span class="pre">+</span> <span class="pre">z,</span> <span class="pre">y)</span> <span class="pre">==</span> <span class="pre">_inner(x,</span> <span class="pre">y)</span> <span class="pre">+</span> <span class="pre">_inner(z,</span> <span class="pre">y)</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">_inner(x,</span> <span class="pre">x)</span> <span class="pre">==</span> <span class="pre">0</span></code> (approx.) if and only if <code class="docutils literal notranslate"><span class="pre">x</span> <span class="pre">==</span> <span class="pre">0</span></code> (approx.)</p></li>
+</ul>
+</dd>
+</dl>
+</div>
+<div class="section" id="pointwise-multiplication-optional">
+<h3>Pointwise multiplication (optional)<a class="headerlink" href="#pointwise-multiplication-optional" title="Permalink to this headline">¶</a></h3>
+<p><code class="docutils literal notranslate"><span class="pre">_multiply(x1,</span> <span class="pre">x2,</span> <span class="pre">out)</span></code></p>
+<p>A raw (not type-checking) private method multiplying two elements
+<code class="docutils literal notranslate"><span class="pre">x1</span></code> and <code class="docutils literal notranslate"><span class="pre">x2</span></code> point-wise and storing the result in <code class="docutils literal notranslate"><span class="pre">out</span></code>.</p>
+<dl>
+<dt><strong>Parameters:</strong></dt><dd><dl>
+<dt>x1, x2<span class="classifier"><a class="reference internal" href="../generated/odl.set.space.LinearSpaceElement.html#odl.set.space.LinearSpaceElement" title="odl.set.space.LinearSpaceElement"><code class="xref any py py-class docutils literal notranslate"><span class="pre">LinearSpaceElement</span></code></a></span></dt><dd><p>Elements whose point-wise product to calculate.</p>
+</dd>
+<dt>out<span class="classifier"><a class="reference internal" href="../generated/odl.set.space.LinearSpaceElement.html#odl.set.space.LinearSpaceElement" title="odl.set.space.LinearSpaceElement"><code class="xref any py py-class docutils literal notranslate"><span class="pre">LinearSpaceElement</span></code></a></span></dt><dd><p>Element to store the result.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+<p><strong>Returns:</strong> <a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.9)"><code class="xref any docutils literal notranslate"><span class="pre">None</span></code></a></p>
+<dl class="simple">
+<dt><strong>Requirements:</strong></dt><dd><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">_multiply(x,</span> <span class="pre">y,</span> <span class="pre">out)</span> <span class="pre">&lt;==&gt;</span> <span class="pre">_multiply(y,</span> <span class="pre">x,</span> <span class="pre">out)</span></code></p></li>
+<li><dl class="simple">
+<dt><code class="docutils literal notranslate"><span class="pre">_multiply(s</span> <span class="pre">*</span> <span class="pre">x,</span> <span class="pre">y,</span> <span class="pre">out)</span> <span class="pre">&lt;==&gt;</span> <span class="pre">_multiply(x,</span> <span class="pre">y,</span> <span class="pre">out);</span> <span class="pre">out</span> <span class="pre">*=</span> <span class="pre">s</span>&#160; <span class="pre">&lt;==&gt;</span></code></dt><dd><p><code class="docutils literal notranslate"><span class="pre">_multiply(x,</span> <span class="pre">s</span> <span class="pre">*</span> <span class="pre">y,</span> <span class="pre">out)</span></code> for any scalar <code class="docutils literal notranslate"><span class="pre">s</span></code></p>
+</dd>
+</dl>
+</li>
+<li><p>There is a space element <code class="docutils literal notranslate"><span class="pre">one</span></code> with
+<code class="docutils literal notranslate"><span class="pre">out</span></code> after <code class="docutils literal notranslate"><span class="pre">_multiply(one,</span> <span class="pre">x,</span> <span class="pre">out)</span></code> or <code class="docutils literal notranslate"><span class="pre">_multiply(x,</span> <span class="pre">one,</span> <span class="pre">out)</span></code>
+equals <code class="docutils literal notranslate"><span class="pre">x</span></code>.</p></li>
+</ul>
+</dd>
+</dl>
+</div>
+</div>
+<div class="section" id="notes">
+<h2>Notes<a class="headerlink" href="#notes" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li><p>A normed space is automatically a metric space with the distance
+function <code class="docutils literal notranslate"><span class="pre">_dist(x,</span> <span class="pre">y)</span> <span class="pre">=</span> <span class="pre">_norm(x</span> <span class="pre">-</span> <span class="pre">y)</span></code>.</p></li>
+<li><p>A Hilbert space (inner product space) is automatically a normed space
+with the norm function <code class="docutils literal notranslate"><span class="pre">_norm(x)</span> <span class="pre">=</span> <span class="pre">sqrt(_inner(x,</span> <span class="pre">x))</span></code>.</p></li>
+<li><p>The conditions on the pointwise multiplication constitute a
+<em>unital commutative algebra</em> in the mathematical sense.</p></li>
+</ul>
+</div>
+<div class="section" id="references">
+<h2>References<a class="headerlink" href="#references" title="Permalink to this headline">¶</a></h2>
+<p>See Wikipedia’s mathematical overview articles
+<a class="reference external" href="https://en.wikipedia.org/wiki/Vector_space">Vector space</a>, <a class="reference external" href="https://en.wikipedia.org/wiki/Associative_algebra">Algebra</a>.</p>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+        <a href="numpy_guide.html" class="btn btn-neutral float-right" title="Using ODL with NumPy and SciPy" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="operator_guide.html" class="btn btn-neutral float-left" title="Operators" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &#169; Copyright 2014-2020 The ODL Contributors.
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

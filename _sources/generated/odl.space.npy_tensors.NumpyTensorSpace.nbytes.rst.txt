@@ -1,0 +1,6 @@
+NumpyTensorSpace.nbytes
+=============================================
+
+.. currentmodule:: odl.space.npy_tensors
+
+.. autoproperty:: NumpyTensorSpace.nbytes

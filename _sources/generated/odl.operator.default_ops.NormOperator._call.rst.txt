@@ -1,0 +1,8 @@
+:orphan:
+
+NormOperator._call
+===========================================
+
+.. currentmodule:: odl.operator.default_ops
+
+.. automethod:: NormOperator._call

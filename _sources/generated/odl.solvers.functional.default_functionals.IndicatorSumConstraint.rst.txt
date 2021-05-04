@@ -1,0 +1,43 @@
+﻿IndicatorSumConstraint
+=================================================================
+
+.. currentmodule:: odl.solvers.functional.default_functionals
+
+.. autoclass:: IndicatorSumConstraint
+   :show-inheritance:
+   
+   
+   .. automethod:: __init__
+   
+      
+   
+   .. HACK -- the point here is that we don't want this to appear in the output, but the autosummary should still generate the pages.
+      .. autosummary::
+         :toctree:
+      
+         IndicatorSumConstraint.__call__
+         IndicatorSumConstraint.__eq__
+         IndicatorSumConstraint._call
+         IndicatorSumConstraint.bregman
+         IndicatorSumConstraint.derivative
+         IndicatorSumConstraint.norm
+         IndicatorSumConstraint.translated
+   
+
+    
+   .. HACK -- the point here is that we don't want this to appear in the output, but the autosummary should still generate the pages.
+      .. autosummary::
+         :toctree:
+      
+         IndicatorSumConstraint.adjoint
+         IndicatorSumConstraint.convex_conj
+         IndicatorSumConstraint.domain
+         IndicatorSumConstraint.grad_lipschitz
+         IndicatorSumConstraint.gradient
+         IndicatorSumConstraint.inverse
+         IndicatorSumConstraint.is_functional
+         IndicatorSumConstraint.is_linear
+         IndicatorSumConstraint.proximal
+         IndicatorSumConstraint.range
+   
+   

@@ -1,0 +1,8 @@
+:orphan:
+
+ProductSpaceUfuncs.sign
+=======================================
+
+.. currentmodule:: odl.util.ufuncs
+
+.. automethod:: ProductSpaceUfuncs.sign

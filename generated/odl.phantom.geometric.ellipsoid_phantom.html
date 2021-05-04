@@ -1,0 +1,362 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>ellipsoid_phantom &mdash; odl 1.0.0.dev0 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="indicate_proj_axis" href="odl.phantom.geometric.indicate_proj_axis.html" />
+    <link rel="prev" title="defrise_ellipses" href="odl.phantom.geometric.defrise_ellipses.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../index.html" class="icon icon-home"> odl
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                1.0.0.dev0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Getting Started</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../getting_started/getting_started.html">Getting Started</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Working with ODL</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../guide/guide.html">User’s guide – selected topics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../math/math.html">Mathematical Background</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Developer zone</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../dev/dev.html">Contributing to ODL</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Useful facts</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../guide/faq.html">Frequently asked questions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../guide/glossary.html">Glossary</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../release_notes.html">Release Notes</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../refs.html">References</a></li>
+</ul>
+<p class="caption"><span class="caption-text">API Reference</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../odl.html">odl</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../odl.contrib.html">contrib</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../odl.deform.html">deform</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../odl.diagnostics.html">diagnostics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../odl.discr.html">discr</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../odl.operator.html">operator</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="../odl.phantom.html">phantom</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="../odl.phantom.emission.html">emission</a></li>
+<li class="toctree-l3 current"><a class="reference internal" href="../odl.phantom.geometric.html">geometric</a><ul class="current">
+<li class="toctree-l4"><a class="reference internal" href="odl.phantom.geometric.cuboid.html">cuboid</a></li>
+<li class="toctree-l4"><a class="reference internal" href="odl.phantom.geometric.defrise.html">defrise</a></li>
+<li class="toctree-l4"><a class="reference internal" href="odl.phantom.geometric.defrise_ellipses.html">defrise_ellipses</a></li>
+<li class="toctree-l4 current"><a class="current reference internal" href="#">ellipsoid_phantom</a></li>
+<li class="toctree-l4"><a class="reference internal" href="odl.phantom.geometric.indicate_proj_axis.html">indicate_proj_axis</a></li>
+<li class="toctree-l4"><a class="reference internal" href="odl.phantom.geometric.smooth_cuboid.html">smooth_cuboid</a></li>
+<li class="toctree-l4"><a class="reference internal" href="odl.phantom.geometric.tgv_phantom.html">tgv_phantom</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../odl.phantom.misc_phantoms.html">misc_phantoms</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../odl.phantom.noise.html">noise</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../odl.phantom.phantom_utils.html">phantom_utils</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../odl.phantom.transmission.html">transmission</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../odl.set.html">set</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../odl.solvers.html">solvers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../odl.space.html">space</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../odl.tomo.html">tomo</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../odl.trafos.html">trafos</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../odl.ufunc_ops.html">ufunc_ops</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../odl.util.html">util</a></li>
+</ul>
+</li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">odl</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="../odl.html">odl</a> &raquo;</li>
+        
+          <li><a href="../odl.phantom.html">phantom</a> &raquo;</li>
+        
+          <li><a href="../odl.phantom.geometric.html">geometric</a> &raquo;</li>
+        
+      <li>ellipsoid_phantom</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            <a href="../_sources/generated/odl.phantom.geometric.ellipsoid_phantom.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="ellipsoid-phantom">
+<h1>ellipsoid_phantom<a class="headerlink" href="#ellipsoid-phantom" title="Permalink to this headline">¶</a></h1>
+<dl class="py function">
+<dt id="odl.phantom.geometric.ellipsoid_phantom">
+<code class="sig-prename descclassname"><span class="pre">odl.phantom.geometric.</span></code><code class="sig-name descname"><span class="pre">ellipsoid_phantom</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">space</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ellipsoids</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">min_pt</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_pt</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/odl/phantom/geometric.html#ellipsoid_phantom"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#odl.phantom.geometric.ellipsoid_phantom" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return a phantom given by ellipsoids.</p>
+<dl class="field-list">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl>
+<dt><strong>space</strong><span class="classifier"><a class="reference internal" href="odl.discr.discr_space.DiscretizedSpace.html#odl.discr.discr_space.DiscretizedSpace" title="odl.discr.discr_space.DiscretizedSpace"><code class="xref any py py-class docutils literal notranslate"><span class="pre">DiscretizedSpace</span></code></a></span></dt><dd><p>Space in which the phantom should be created, must be 2- or
+3-dimensional. If <code class="docutils literal notranslate"><span class="pre">space.shape</span></code> is 1 in an axis, a corresponding
+slice of the phantom is created (instead of squashing the whole
+phantom into the slice).</p>
+</dd>
+<dt><strong>ellipsoids</strong><span class="classifier">sequence of sequences</span></dt><dd><p>If <code class="docutils literal notranslate"><span class="pre">space</span></code> is 2-dimensional, each row should contain the entries</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="s1">&#39;value&#39;</span><span class="p">,</span>
+<span class="s1">&#39;axis_1&#39;</span><span class="p">,</span> <span class="s1">&#39;axis_2&#39;</span><span class="p">,</span>
+<span class="s1">&#39;center_x&#39;</span><span class="p">,</span> <span class="s1">&#39;center_y&#39;</span><span class="p">,</span>
+<span class="s1">&#39;rotation&#39;</span>
+</pre></div>
+</div>
+<p>If <code class="docutils literal notranslate"><span class="pre">space</span></code> is 3-dimensional, each row should contain the entries</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="s1">&#39;value&#39;</span><span class="p">,</span>
+<span class="s1">&#39;axis_1&#39;</span><span class="p">,</span> <span class="s1">&#39;axis_2&#39;</span><span class="p">,</span> <span class="s1">&#39;axis_3&#39;</span><span class="p">,</span>
+<span class="s1">&#39;center_x&#39;</span><span class="p">,</span> <span class="s1">&#39;center_y&#39;</span><span class="p">,</span> <span class="s1">&#39;center_z&#39;</span><span class="p">,</span>
+<span class="s1">&#39;rotation_phi&#39;</span><span class="p">,</span> <span class="s1">&#39;rotation_theta&#39;</span><span class="p">,</span> <span class="s1">&#39;rotation_psi&#39;</span>
+</pre></div>
+</div>
+<p>The provided ellipsoids need to be specified relative to the
+reference rectangle <code class="docutils literal notranslate"><span class="pre">[-1,</span> <span class="pre">-1]</span> <span class="pre">x</span> <span class="pre">[1,</span> <span class="pre">1]</span></code>, or analogously in 3d.
+The angles are to be given in radians.</p>
+</dd>
+<dt><strong>min_pt, max_pt</strong><span class="classifier">array-like, optional</span></dt><dd><p>If provided, use these vectors to determine the bounding box of the
+phantom instead of <code class="docutils literal notranslate"><span class="pre">space.min_pt</span></code> and <code class="docutils literal notranslate"><span class="pre">space.max_pt</span></code>.
+It is currently required that <code class="docutils literal notranslate"><span class="pre">min_pt</span> <span class="pre">&gt;=</span> <span class="pre">space.min_pt</span></code> and
+<code class="docutils literal notranslate"><span class="pre">max_pt</span> <span class="pre">&lt;=</span> <span class="pre">space.max_pt</span></code>, i.e., shifting or scaling outside the
+original space is not allowed.</p>
+<p>Providing one of them results in a shift, e.g., for <code class="docutils literal notranslate"><span class="pre">min_pt</span></code>:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">new_min_pt</span> <span class="o">=</span> <span class="n">min_pt</span>
+<span class="n">new_max_pt</span> <span class="o">=</span> <span class="n">space</span><span class="o">.</span><span class="n">max_pt</span> <span class="o">+</span> <span class="p">(</span><span class="n">min_pt</span> <span class="o">-</span> <span class="n">space</span><span class="o">.</span><span class="n">min_pt</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Providing both results in a scaled version of the phantom.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+<div class="admonition seealso">
+<p class="admonition-title">See also</p>
+<dl class="simple">
+<dt><a class="reference internal" href="odl.phantom.transmission.shepp_logan.html#odl.phantom.transmission.shepp_logan" title="odl.phantom.transmission.shepp_logan"><code class="xref py py-obj docutils literal notranslate"><span class="pre">odl.phantom.transmission.shepp_logan</span></code></a></dt><dd><p>Classical Shepp-Logan phantom, typically used for transmission imaging</p>
+</dd>
+<dt><a class="reference internal" href="odl.phantom.transmission.shepp_logan_ellipsoids.html#odl.phantom.transmission.shepp_logan_ellipsoids" title="odl.phantom.transmission.shepp_logan_ellipsoids"><code class="xref py py-obj docutils literal notranslate"><span class="pre">odl.phantom.transmission.shepp_logan_ellipsoids</span></code></a></dt><dd><p>Ellipses for the Shepp-Logan phantom</p>
+</dd>
+<dt><a class="reference internal" href="odl.phantom.geometric.defrise_ellipses.html#odl.phantom.geometric.defrise_ellipses" title="odl.phantom.geometric.defrise_ellipses"><code class="xref py py-obj docutils literal notranslate"><span class="pre">odl.phantom.geometric.defrise_ellipses</span></code></a></dt><dd><p>Ellipses for the Defrise phantom</p>
+</dd>
+</dl>
+</div>
+<p class="rubric">Notes</p>
+<p>The phantom is created by adding the values of each ellipse. The
+ellipses are defined by a center point
+<code class="docutils literal notranslate"><span class="pre">(center_x,</span> <span class="pre">center_y,</span> <span class="pre">[center_z])</span></code>, the lengths of its principial
+axes <code class="docutils literal notranslate"><span class="pre">(axis_1,</span> <span class="pre">axis_2,</span> <span class="pre">[axis_2])</span></code>, and a rotation angle <code class="docutils literal notranslate"><span class="pre">rotation</span></code>
+in 2D or Euler angles <code class="docutils literal notranslate"><span class="pre">(rotation_phi,</span> <span class="pre">rotation_theta,</span> <span class="pre">rotation_psi)</span></code>
+in 3D.</p>
+<p>This function is heavily optimized, achieving runtimes about 20 times
+faster than “trivial” implementations. It is therefore recommended to use
+it in all phantoms where applicable.</p>
+<p>The main optimization is that it only considers a subset of all the
+points when updating for each ellipse. It does this by first finding
+a subset of points that could possibly be inside the ellipse. This
+optimization is very good for “spherical” ellipsoids, but not so
+much for elongated or rotated ones.</p>
+<p>It also does calculations wherever possible on the meshgrid instead of
+individual points.</p>
+<p class="rubric">Examples</p>
+<p>Create a circle with a smaller circle inside:</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">space</span> <span class="o">=</span> <span class="n">odl</span><span class="o">.</span><span class="n">uniform_discr</span><span class="p">([</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span> <span class="p">[</span><span class="mi">5</span><span class="p">,</span> <span class="mi">5</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">ellipses</span> <span class="o">=</span> <span class="p">[[</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">],</span>
+<span class="gp">... </span>            <span class="p">[</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">0.6</span><span class="p">,</span> <span class="mf">0.6</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">]]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">ellipsoid_phantom</span><span class="p">(</span><span class="n">space</span><span class="p">,</span> <span class="n">ellipses</span><span class="p">))</span>
+<span class="go">[[ 0.,  0.,  1.,  0.,  0.],</span>
+<span class="go"> [ 0.,  1.,  2.,  1.,  0.],</span>
+<span class="go"> [ 1.,  2.,  2.,  2.,  1.],</span>
+<span class="go"> [ 0.,  1.,  2.,  1.,  0.],</span>
+<span class="go"> [ 0.,  0.,  1.,  0.,  0.]]</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+        <a href="odl.phantom.geometric.indicate_proj_axis.html" class="btn btn-neutral float-right" title="indicate_proj_axis" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="odl.phantom.geometric.defrise_ellipses.html" class="btn btn-neutral float-left" title="defrise_ellipses" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &#169; Copyright 2014-2020 The ODL Contributors.
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

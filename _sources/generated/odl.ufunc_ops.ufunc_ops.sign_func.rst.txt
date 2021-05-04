@@ -1,0 +1,43 @@
+﻿sign_func
+=================================
+
+.. currentmodule:: odl.ufunc_ops.ufunc_ops
+
+.. autoclass:: sign_func
+   :show-inheritance:
+   
+   
+   .. automethod:: __init__
+   
+      
+   
+   .. HACK -- the point here is that we don't want this to appear in the output, but the autosummary should still generate the pages.
+      .. autosummary::
+         :toctree:
+      
+         sign_func.__call__
+         sign_func.__eq__
+         sign_func._call
+         sign_func.bregman
+         sign_func.derivative
+         sign_func.norm
+         sign_func.translated
+   
+
+    
+   .. HACK -- the point here is that we don't want this to appear in the output, but the autosummary should still generate the pages.
+      .. autosummary::
+         :toctree:
+      
+         sign_func.adjoint
+         sign_func.convex_conj
+         sign_func.domain
+         sign_func.grad_lipschitz
+         sign_func.gradient
+         sign_func.inverse
+         sign_func.is_functional
+         sign_func.is_linear
+         sign_func.proximal
+         sign_func.range
+   
+   

@@ -1,0 +1,8 @@
+:orphan:
+
+NumpyTensor.__getitem__
+=============================================
+
+.. currentmodule:: odl.space.npy_tensors
+
+.. automethod:: NumpyTensor.__getitem__

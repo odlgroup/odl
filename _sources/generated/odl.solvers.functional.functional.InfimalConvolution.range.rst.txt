@@ -1,0 +1,6 @@
+InfimalConvolution.range
+==========================================================
+
+.. currentmodule:: odl.solvers.functional.functional
+
+.. autoproperty:: InfimalConvolution.range

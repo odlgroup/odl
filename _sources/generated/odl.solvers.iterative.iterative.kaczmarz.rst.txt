@@ -1,0 +1,6 @@
+﻿kaczmarz
+========================================
+
+.. currentmodule:: odl.solvers.iterative.iterative
+
+.. autofunction:: kaczmarz

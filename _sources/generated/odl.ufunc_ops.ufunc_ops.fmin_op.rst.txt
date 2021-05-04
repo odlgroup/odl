@@ -1,0 +1,37 @@
+﻿fmin_op
+===============================
+
+.. currentmodule:: odl.ufunc_ops.ufunc_ops
+
+.. autoclass:: fmin_op
+   :show-inheritance:
+   
+   
+   .. automethod:: __init__
+   
+      
+   
+   .. HACK -- the point here is that we don't want this to appear in the output, but the autosummary should still generate the pages.
+      .. autosummary::
+         :toctree:
+      
+         fmin_op.__call__
+         fmin_op.__eq__
+         fmin_op._call
+         fmin_op.derivative
+         fmin_op.norm
+   
+
+    
+   .. HACK -- the point here is that we don't want this to appear in the output, but the autosummary should still generate the pages.
+      .. autosummary::
+         :toctree:
+      
+         fmin_op.adjoint
+         fmin_op.domain
+         fmin_op.inverse
+         fmin_op.is_functional
+         fmin_op.is_linear
+         fmin_op.range
+   
+   

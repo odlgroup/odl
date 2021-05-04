@@ -1,0 +1,6 @@
+NumpyTensorSpace.is_complex
+=================================================
+
+.. currentmodule:: odl.space.npy_tensors
+
+.. autoproperty:: NumpyTensorSpace.is_complex

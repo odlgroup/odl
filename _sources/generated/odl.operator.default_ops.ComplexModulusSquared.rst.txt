@@ -1,0 +1,37 @@
+﻿ComplexModulusSquared
+==============================================
+
+.. currentmodule:: odl.operator.default_ops
+
+.. autoclass:: ComplexModulusSquared
+   :show-inheritance:
+   
+   
+   .. automethod:: __init__
+   
+      
+   
+   .. HACK -- the point here is that we don't want this to appear in the output, but the autosummary should still generate the pages.
+      .. autosummary::
+         :toctree:
+      
+         ComplexModulusSquared.__call__
+         ComplexModulusSquared.__eq__
+         ComplexModulusSquared._call
+         ComplexModulusSquared.derivative
+         ComplexModulusSquared.norm
+   
+
+    
+   .. HACK -- the point here is that we don't want this to appear in the output, but the autosummary should still generate the pages.
+      .. autosummary::
+         :toctree:
+      
+         ComplexModulusSquared.adjoint
+         ComplexModulusSquared.domain
+         ComplexModulusSquared.inverse
+         ComplexModulusSquared.is_functional
+         ComplexModulusSquared.is_linear
+         ComplexModulusSquared.range
+   
+   

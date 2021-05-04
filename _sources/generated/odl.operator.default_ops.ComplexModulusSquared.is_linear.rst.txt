@@ -1,0 +1,6 @@
+ComplexModulusSquared.is_linear
+========================================================
+
+.. currentmodule:: odl.operator.default_ops
+
+.. autoproperty:: ComplexModulusSquared.is_linear

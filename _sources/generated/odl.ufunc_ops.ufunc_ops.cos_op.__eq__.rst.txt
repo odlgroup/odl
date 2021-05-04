@@ -1,0 +1,8 @@
+:orphan:
+
+cos_op.__eq__
+=====================================
+
+.. currentmodule:: odl.ufunc_ops.ufunc_ops
+
+.. automethod:: cos_op.__eq__

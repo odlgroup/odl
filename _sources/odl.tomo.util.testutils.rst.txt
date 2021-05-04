@@ -1,0 +1,10 @@
+testutils
+=========
+
+Testing utilities for the ``tomo`` subpackage.
+
+.. currentmodule:: odl.tomo.util.testutils
+
+
+
+

@@ -1,0 +1,8 @@
+:orphan:
+
+RectPartition.approx_equals
+===============================================
+
+.. currentmodule:: odl.discr.partition
+
+.. automethod:: RectPartition.approx_equals

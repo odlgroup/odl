@@ -1,0 +1,48 @@
+﻿UniversalSpace
+============================
+
+.. currentmodule:: odl.set.space
+
+.. autoclass:: UniversalSpace
+   :show-inheritance:
+   
+   
+   .. automethod:: __init__
+   
+      
+   
+   .. HACK -- the point here is that we don't want this to appear in the output, but the autosummary should still generate the pages.
+      .. autosummary::
+         :toctree:
+      
+         UniversalSpace.__contains__
+         UniversalSpace.__eq__
+         UniversalSpace._dist
+         UniversalSpace._divide
+         UniversalSpace._inner
+         UniversalSpace._lincomb
+         UniversalSpace._multiply
+         UniversalSpace._norm
+         UniversalSpace.contains_all
+         UniversalSpace.contains_set
+         UniversalSpace.dist
+         UniversalSpace.divide
+         UniversalSpace.element
+         UniversalSpace.inner
+         UniversalSpace.lincomb
+         UniversalSpace.multiply
+         UniversalSpace.norm
+         UniversalSpace.one
+         UniversalSpace.zero
+   
+
+    
+   .. HACK -- the point here is that we don't want this to appear in the output, but the autosummary should still generate the pages.
+      .. autosummary::
+         :toctree:
+      
+         UniversalSpace.element_type
+         UniversalSpace.examples
+         UniversalSpace.field
+   
+   

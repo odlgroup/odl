@@ -1,0 +1,357 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>SpaceTest &mdash; odl 1.0.0.dev0 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="SpaceTest._lincomb" href="odl.diagnostics.space.SpaceTest._lincomb.html" />
+    <link rel="prev" title="space" href="../odl.diagnostics.space.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../index.html" class="icon icon-home"> odl
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                1.0.0.dev0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Getting Started</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../getting_started/getting_started.html">Getting Started</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Working with ODL</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../guide/guide.html">User’s guide – selected topics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../math/math.html">Mathematical Background</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Developer zone</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../dev/dev.html">Contributing to ODL</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Useful facts</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../guide/faq.html">Frequently asked questions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../guide/glossary.html">Glossary</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../release_notes.html">Release Notes</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../refs.html">References</a></li>
+</ul>
+<p class="caption"><span class="caption-text">API Reference</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../odl.html">odl</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../odl.contrib.html">contrib</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../odl.deform.html">deform</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="../odl.diagnostics.html">diagnostics</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="../odl.diagnostics.examples.html">examples</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../odl.diagnostics.operator.html">operator</a></li>
+<li class="toctree-l3 current"><a class="reference internal" href="../odl.diagnostics.space.html">space</a><ul class="current">
+<li class="toctree-l4 current"><a class="current reference internal" href="#">SpaceTest</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../odl.discr.html">discr</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../odl.operator.html">operator</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../odl.phantom.html">phantom</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../odl.set.html">set</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../odl.solvers.html">solvers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../odl.space.html">space</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../odl.tomo.html">tomo</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../odl.trafos.html">trafos</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../odl.ufunc_ops.html">ufunc_ops</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../odl.util.html">util</a></li>
+</ul>
+</li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">odl</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="../odl.html">odl</a> &raquo;</li>
+        
+          <li><a href="../odl.diagnostics.html">diagnostics</a> &raquo;</li>
+        
+          <li><a href="../odl.diagnostics.space.html">space</a> &raquo;</li>
+        
+      <li>SpaceTest</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            <a href="../_sources/generated/odl.diagnostics.space.SpaceTest.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="spacetest">
+<h1>SpaceTest<a class="headerlink" href="#spacetest" title="Permalink to this headline">¶</a></h1>
+<dl class="py class">
+<dt id="odl.diagnostics.space.SpaceTest">
+<em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">odl.diagnostics.space.</span></code><code class="sig-name descname"><span class="pre">SpaceTest</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">space</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">verbose</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tol</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1e-05</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/odl/diagnostics/space.html#SpaceTest"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#odl.diagnostics.space.SpaceTest" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
+<p>Automated tests for <a class="reference internal" href="odl.set.space.LinearSpace.html#odl.set.space.LinearSpace" title="odl.set.space.LinearSpace"><code class="xref any py py-class docutils literal notranslate"><span class="pre">LinearSpace</span></code></a> instances.</p>
+<p>This class allows users to automatically test various features of a
+<a class="reference internal" href="odl.set.space.LinearSpace.html#odl.set.space.LinearSpace" title="odl.set.space.LinearSpace"><code class="xref any py py-class docutils literal notranslate"><span class="pre">LinearSpace</span></code></a> such as linearity and vector space operations.</p>
+<p class="rubric">Methods</p>
+<table class="longtable docutils align-default">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="odl.diagnostics.space.SpaceTest._lincomb.html#odl.diagnostics.space.SpaceTest._lincomb" title="odl.diagnostics.space.SpaceTest._lincomb"><code class="xref py py-obj docutils literal notranslate"><span class="pre">_lincomb</span></code></a>(self)</p></td>
+<td><p>Verify linear combination.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="odl.diagnostics.space.SpaceTest.contains.html#odl.diagnostics.space.SpaceTest.contains" title="odl.diagnostics.space.SpaceTest.contains"><code class="xref py py-obj docutils literal notranslate"><span class="pre">contains</span></code></a>(self)</p></td>
+<td><p>Verify <a class="reference internal" href="odl.set.space.LinearSpace.__contains__.html#odl.set.space.LinearSpace.__contains__" title="odl.set.space.LinearSpace.__contains__"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">LinearSpace.__contains__</span></code></a>.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="odl.diagnostics.space.SpaceTest.dist.html#odl.diagnostics.space.SpaceTest.dist" title="odl.diagnostics.space.SpaceTest.dist"><code class="xref py py-obj docutils literal notranslate"><span class="pre">dist</span></code></a>(self)</p></td>
+<td><p>Verify <code class="docutils literal notranslate"><span class="pre">LinearSpace.dist</span></code>.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="odl.diagnostics.space.SpaceTest.element.html#odl.diagnostics.space.SpaceTest.element" title="odl.diagnostics.space.SpaceTest.element"><code class="xref py py-obj docutils literal notranslate"><span class="pre">element</span></code></a>(self)</p></td>
+<td><p>Verify <a class="reference internal" href="odl.set.space.LinearSpaceElement.html#odl.set.space.LinearSpaceElement" title="odl.set.space.LinearSpaceElement"><code class="xref any py py-class docutils literal notranslate"><span class="pre">LinearSpaceElement</span></code></a>.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="odl.diagnostics.space.SpaceTest.element_assign.html#odl.diagnostics.space.SpaceTest.element_assign" title="odl.diagnostics.space.SpaceTest.element_assign"><code class="xref py py-obj docutils literal notranslate"><span class="pre">element_assign</span></code></a>(self)</p></td>
+<td><p>Verify <a class="reference internal" href="odl.set.space.LinearSpaceElement.assign.html#odl.set.space.LinearSpaceElement.assign" title="odl.set.space.LinearSpaceElement.assign"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">LinearSpaceElement.assign</span></code></a>.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="odl.diagnostics.space.SpaceTest.element_copy.html#odl.diagnostics.space.SpaceTest.element_copy" title="odl.diagnostics.space.SpaceTest.element_copy"><code class="xref py py-obj docutils literal notranslate"><span class="pre">element_copy</span></code></a>(self)</p></td>
+<td><p>Verify <a class="reference internal" href="odl.set.space.LinearSpaceElement.copy.html#odl.set.space.LinearSpaceElement.copy" title="odl.set.space.LinearSpaceElement.copy"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">LinearSpaceElement.copy</span></code></a>.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="odl.diagnostics.space.SpaceTest.element_equals.html#odl.diagnostics.space.SpaceTest.element_equals" title="odl.diagnostics.space.SpaceTest.element_equals"><code class="xref py py-obj docutils literal notranslate"><span class="pre">element_equals</span></code></a>(self)</p></td>
+<td><p>Verify <a class="reference internal" href="odl.set.space.LinearSpaceElement.__eq__.html#odl.set.space.LinearSpaceElement.__eq__" title="odl.set.space.LinearSpaceElement.__eq__"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">LinearSpaceElement.__eq__</span></code></a>.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="odl.diagnostics.space.SpaceTest.element_method.html#odl.diagnostics.space.SpaceTest.element_method" title="odl.diagnostics.space.SpaceTest.element_method"><code class="xref py py-obj docutils literal notranslate"><span class="pre">element_method</span></code></a>(self)</p></td>
+<td><p>Verify <a class="reference internal" href="odl.set.space.LinearSpace.element.html#odl.set.space.LinearSpace.element" title="odl.set.space.LinearSpace.element"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">LinearSpace.element</span></code></a>.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="odl.diagnostics.space.SpaceTest.element_set_zero.html#odl.diagnostics.space.SpaceTest.element_set_zero" title="odl.diagnostics.space.SpaceTest.element_set_zero"><code class="xref py py-obj docutils literal notranslate"><span class="pre">element_set_zero</span></code></a>(self)</p></td>
+<td><p>Verify <a class="reference internal" href="odl.set.space.LinearSpaceElement.set_zero.html#odl.set.space.LinearSpaceElement.set_zero" title="odl.set.space.LinearSpaceElement.set_zero"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">LinearSpaceElement.set_zero</span></code></a>.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="odl.diagnostics.space.SpaceTest.element_space.html#odl.diagnostics.space.SpaceTest.element_space" title="odl.diagnostics.space.SpaceTest.element_space"><code class="xref py py-obj docutils literal notranslate"><span class="pre">element_space</span></code></a>(self)</p></td>
+<td><p>Verify <a class="reference internal" href="odl.set.space.LinearSpaceElement.space.html#odl.set.space.LinearSpaceElement.space" title="odl.set.space.LinearSpaceElement.space"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">LinearSpaceElement.space</span></code></a>.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="odl.diagnostics.space.SpaceTest.equals.html#odl.diagnostics.space.SpaceTest.equals" title="odl.diagnostics.space.SpaceTest.equals"><code class="xref py py-obj docutils literal notranslate"><span class="pre">equals</span></code></a>(self)</p></td>
+<td><p>Verify <a class="reference internal" href="odl.set.space.LinearSpace.__eq__.html#odl.set.space.LinearSpace.__eq__" title="odl.set.space.LinearSpace.__eq__"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">LinearSpace.__eq__</span></code></a>.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="odl.diagnostics.space.SpaceTest.field.html#odl.diagnostics.space.SpaceTest.field" title="odl.diagnostics.space.SpaceTest.field"><code class="xref py py-obj docutils literal notranslate"><span class="pre">field</span></code></a>(self)</p></td>
+<td><p>Verify <a class="reference internal" href="odl.set.space.LinearSpace.field.html#odl.set.space.LinearSpace.field" title="odl.set.space.LinearSpace.field"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">LinearSpace.field</span></code></a>.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="odl.diagnostics.space.SpaceTest.inner.html#odl.diagnostics.space.SpaceTest.inner" title="odl.diagnostics.space.SpaceTest.inner"><code class="xref py py-obj docutils literal notranslate"><span class="pre">inner</span></code></a>(self)</p></td>
+<td><p>Verify <code class="docutils literal notranslate"><span class="pre">LinearSpace.inner</span></code>.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="odl.diagnostics.space.SpaceTest.linearity.html#odl.diagnostics.space.SpaceTest.linearity" title="odl.diagnostics.space.SpaceTest.linearity"><code class="xref py py-obj docutils literal notranslate"><span class="pre">linearity</span></code></a>(self)</p></td>
+<td><p>Verify the linear space properties by examples.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="odl.diagnostics.space.SpaceTest.log.html#odl.diagnostics.space.SpaceTest.log" title="odl.diagnostics.space.SpaceTest.log"><code class="xref py py-obj docutils literal notranslate"><span class="pre">log</span></code></a>(self, message)</p></td>
+<td><p>Print message if <code class="docutils literal notranslate"><span class="pre">self.verbose</span> <span class="pre">==</span> <span class="pre">True</span></code>.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="odl.diagnostics.space.SpaceTest.multiply.html#odl.diagnostics.space.SpaceTest.multiply" title="odl.diagnostics.space.SpaceTest.multiply"><code class="xref py py-obj docutils literal notranslate"><span class="pre">multiply</span></code></a>(self)</p></td>
+<td><p>Verify <code class="docutils literal notranslate"><span class="pre">LinearSpace.multiply</span></code>.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="odl.diagnostics.space.SpaceTest.norm.html#odl.diagnostics.space.SpaceTest.norm" title="odl.diagnostics.space.SpaceTest.norm"><code class="xref py py-obj docutils literal notranslate"><span class="pre">norm</span></code></a>(self)</p></td>
+<td><p>Verify <code class="docutils literal notranslate"><span class="pre">LinearSpace.norm</span></code>.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="odl.diagnostics.space.SpaceTest.run_tests.html#odl.diagnostics.space.SpaceTest.run_tests" title="odl.diagnostics.space.SpaceTest.run_tests"><code class="xref py py-obj docutils literal notranslate"><span class="pre">run_tests</span></code></a>(self)</p></td>
+<td><p>Run all tests on this space.</p></td>
+</tr>
+</tbody>
+</table>
+<dl class="py method">
+<dt id="odl.diagnostics.space.SpaceTest.__init__">
+<code class="sig-name descname"><span class="pre">__init__</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">space</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">verbose</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tol</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1e-05</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/odl/diagnostics/space.html#SpaceTest.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#odl.diagnostics.space.SpaceTest.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initialize a new instance.</p>
+<dl class="field-list">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl>
+<dt><strong>space</strong><span class="classifier"><a class="reference internal" href="odl.set.space.LinearSpace.html#odl.set.space.LinearSpace" title="odl.set.space.LinearSpace"><code class="xref any py py-class docutils literal notranslate"><span class="pre">LinearSpace</span></code></a></span></dt><dd><p>Space that should be tested.</p>
+</dd>
+<dt><strong>verbose</strong><span class="classifier">bool, optional</span></dt><dd><p>If <code class="docutils literal notranslate"><span class="pre">True</span></code>, print additional info text.</p>
+</dd>
+<dt><strong>tol</strong><span class="classifier">float, optional</span></dt><dd><p>Tolerance parameter used as a base for the actual tolerance
+in the tests. Depending on the expected accuracy, the actual
+tolerance used in a test can be a factor times this number.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+        <a href="odl.diagnostics.space.SpaceTest._lincomb.html" class="btn btn-neutral float-right" title="SpaceTest._lincomb" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="../odl.diagnostics.space.html" class="btn btn-neutral float-left" title="space" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &#169; Copyright 2014-2020 The ODL Contributors.
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

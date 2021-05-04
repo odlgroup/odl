@@ -1,0 +1,6 @@
+Geometry.det_partition
+=================================================
+
+.. currentmodule:: odl.tomo.geometry.geometry
+
+.. autoproperty:: Geometry.det_partition

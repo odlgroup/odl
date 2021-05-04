@@ -1,0 +1,8 @@
+:orphan:
+
+AstraCpuImpl.call_forward
+=====================================================
+
+.. currentmodule:: odl.tomo.backends.astra_cpu
+
+.. automethod:: AstraCpuImpl.call_forward

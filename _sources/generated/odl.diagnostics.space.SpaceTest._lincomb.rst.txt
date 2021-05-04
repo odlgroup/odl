@@ -1,0 +1,8 @@
+:orphan:
+
+SpaceTest._lincomb
+========================================
+
+.. currentmodule:: odl.diagnostics.space
+
+.. automethod:: SpaceTest._lincomb

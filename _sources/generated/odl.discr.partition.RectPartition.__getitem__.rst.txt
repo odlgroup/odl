@@ -1,0 +1,8 @@
+:orphan:
+
+RectPartition.__getitem__
+=============================================
+
+.. currentmodule:: odl.discr.partition
+
+.. automethod:: RectPartition.__getitem__

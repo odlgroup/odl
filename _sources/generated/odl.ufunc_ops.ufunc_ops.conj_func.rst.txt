@@ -1,0 +1,43 @@
+﻿conj_func
+=================================
+
+.. currentmodule:: odl.ufunc_ops.ufunc_ops
+
+.. autoclass:: conj_func
+   :show-inheritance:
+   
+   
+   .. automethod:: __init__
+   
+      
+   
+   .. HACK -- the point here is that we don't want this to appear in the output, but the autosummary should still generate the pages.
+      .. autosummary::
+         :toctree:
+      
+         conj_func.__call__
+         conj_func.__eq__
+         conj_func._call
+         conj_func.bregman
+         conj_func.derivative
+         conj_func.norm
+         conj_func.translated
+   
+
+    
+   .. HACK -- the point here is that we don't want this to appear in the output, but the autosummary should still generate the pages.
+      .. autosummary::
+         :toctree:
+      
+         conj_func.adjoint
+         conj_func.convex_conj
+         conj_func.domain
+         conj_func.grad_lipschitz
+         conj_func.gradient
+         conj_func.inverse
+         conj_func.is_functional
+         conj_func.is_linear
+         conj_func.proximal
+         conj_func.range
+   
+   

@@ -1,0 +1,8 @@
+:orphan:
+
+Parallel3dAxisGeometry.__getitem__
+=============================================================
+
+.. currentmodule:: odl.tomo.geometry.parallel
+
+.. automethod:: Parallel3dAxisGeometry.__getitem__

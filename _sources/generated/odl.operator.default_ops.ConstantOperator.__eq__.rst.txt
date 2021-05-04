@@ -1,0 +1,8 @@
+:orphan:
+
+ConstantOperator.__eq__
+================================================
+
+.. currentmodule:: odl.operator.default_ops
+
+.. automethod:: ConstantOperator.__eq__

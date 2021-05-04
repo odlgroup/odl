@@ -1,0 +1,6 @@
+FlatteningOperator.range
+================================================
+
+.. currentmodule:: odl.operator.tensor_ops
+
+.. autoproperty:: FlatteningOperator.range

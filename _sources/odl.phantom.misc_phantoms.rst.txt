@@ -1,0 +1,18 @@
+misc_phantoms
+=============
+
+Miscellaneous phantoms that do not fit in other categories.
+
+.. currentmodule:: odl.phantom.misc_phantoms
+
+
+
+
+.. rubric:: Functions
+
+.. autosummary::
+   :toctree: generated/
+
+   ~odl.phantom.misc_phantoms.submarine
+   ~odl.phantom.misc_phantoms.text
+

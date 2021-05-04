@@ -1,0 +1,6 @@
+FanBeamGeometry.det_radius
+=====================================================
+
+.. currentmodule:: odl.tomo.geometry.conebeam
+
+.. autoproperty:: FanBeamGeometry.det_radius

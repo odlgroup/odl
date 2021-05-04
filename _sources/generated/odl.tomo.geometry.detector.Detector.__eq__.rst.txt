@@ -1,0 +1,8 @@
+:orphan:
+
+Detector.__eq__
+==========================================
+
+.. currentmodule:: odl.tomo.geometry.detector
+
+.. automethod:: Detector.__eq__

@@ -1,0 +1,6 @@
+OperatorLeftVectorMult.is_linear
+======================================================
+
+.. currentmodule:: odl.operator.operator
+
+.. autoproperty:: OperatorLeftVectorMult.is_linear

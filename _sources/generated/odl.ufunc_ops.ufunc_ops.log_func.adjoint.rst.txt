@@ -1,0 +1,6 @@
+log_func.adjoint
+========================================
+
+.. currentmodule:: odl.ufunc_ops.ufunc_ops
+
+.. autoproperty:: log_func.adjoint

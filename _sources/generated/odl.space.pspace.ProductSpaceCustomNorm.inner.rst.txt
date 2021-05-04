@@ -1,0 +1,8 @@
+:orphan:
+
+ProductSpaceCustomNorm.inner
+=============================================
+
+.. currentmodule:: odl.space.pspace
+
+.. automethod:: ProductSpaceCustomNorm.inner

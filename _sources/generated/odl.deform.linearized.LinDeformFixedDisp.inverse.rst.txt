@@ -1,0 +1,6 @@
+LinDeformFixedDisp.inverse
+================================================
+
+.. currentmodule:: odl.deform.linearized
+
+.. autoproperty:: LinDeformFixedDisp.inverse

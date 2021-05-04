@@ -1,0 +1,8 @@
+:orphan:
+
+Tensor.inner
+===================================
+
+.. currentmodule:: odl.space.base_tensors
+
+.. automethod:: Tensor.inner

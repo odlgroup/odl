@@ -1,0 +1,8 @@
+:orphan:
+
+Callback.__call__
+===========================================
+
+.. currentmodule:: odl.solvers.util.callback
+
+.. automethod:: Callback.__call__

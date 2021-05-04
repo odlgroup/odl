@@ -1,0 +1,17 @@
+analytic
+========
+
+Analytic (i.e. one-step) reconstruction methods.
+
+.. currentmodule:: odl.tomo.analytic
+
+
+.. rubric:: Modules
+
+.. toctree::
+   :maxdepth: 2
+
+   odl.tomo.analytic.filtered_back_projection
+
+
+

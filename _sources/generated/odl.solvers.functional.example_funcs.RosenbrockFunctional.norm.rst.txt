@@ -1,0 +1,8 @@
+:orphan:
+
+RosenbrockFunctional.norm
+==============================================================
+
+.. currentmodule:: odl.solvers.functional.example_funcs
+
+.. automethod:: RosenbrockFunctional.norm

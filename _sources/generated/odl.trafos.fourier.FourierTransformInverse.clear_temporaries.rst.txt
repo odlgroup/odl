@@ -1,0 +1,8 @@
+:orphan:
+
+FourierTransformInverse.clear_temporaries
+============================================================
+
+.. currentmodule:: odl.trafos.fourier
+
+.. automethod:: FourierTransformInverse.clear_temporaries

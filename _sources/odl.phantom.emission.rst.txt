@@ -1,0 +1,17 @@
+emission
+========
+
+Phantoms used in emission tomography.
+
+.. currentmodule:: odl.phantom.emission
+
+
+
+
+.. rubric:: Functions
+
+.. autosummary::
+   :toctree: generated/
+
+   ~odl.phantom.emission.derenzo_sources
+

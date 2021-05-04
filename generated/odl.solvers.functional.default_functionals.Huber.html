@@ -1,0 +1,407 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>Huber &mdash; odl 1.0.0.dev0 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Huber._call" href="odl.solvers.functional.default_functionals.Huber._call.html" />
+    <link rel="prev" title="GroupL1Norm.translated" href="odl.solvers.functional.default_functionals.GroupL1Norm.translated.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../index.html" class="icon icon-home"> odl
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                1.0.0.dev0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Getting Started</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../getting_started/getting_started.html">Getting Started</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Working with ODL</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../guide/guide.html">User’s guide – selected topics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../math/math.html">Mathematical Background</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Developer zone</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../dev/dev.html">Contributing to ODL</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Useful facts</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../guide/faq.html">Frequently asked questions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../guide/glossary.html">Glossary</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../release_notes.html">Release Notes</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../refs.html">References</a></li>
+</ul>
+<p class="caption"><span class="caption-text">API Reference</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../odl.html">odl</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../odl.contrib.html">contrib</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../odl.deform.html">deform</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../odl.diagnostics.html">diagnostics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../odl.discr.html">discr</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../odl.operator.html">operator</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../odl.phantom.html">phantom</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../odl.set.html">set</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="../odl.solvers.html">solvers</a><ul class="current">
+<li class="toctree-l3 current"><a class="reference internal" href="../odl.solvers.functional.html">functional</a><ul class="current">
+<li class="toctree-l4 current"><a class="reference internal" href="../odl.solvers.functional.default_functionals.html">default_functionals</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../odl.solvers.functional.derivatives.html">derivatives</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../odl.solvers.functional.example_funcs.html">example_funcs</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../odl.solvers.functional.functional.html">functional</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../odl.solvers.iterative.html">iterative</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../odl.solvers.nonsmooth.html">nonsmooth</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../odl.solvers.smooth.html">smooth</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../odl.solvers.util.html">util</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../odl.space.html">space</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../odl.tomo.html">tomo</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../odl.trafos.html">trafos</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../odl.ufunc_ops.html">ufunc_ops</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../odl.util.html">util</a></li>
+</ul>
+</li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">odl</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="../odl.html">odl</a> &raquo;</li>
+        
+          <li><a href="../odl.solvers.html">solvers</a> &raquo;</li>
+        
+          <li><a href="../odl.solvers.functional.html">functional</a> &raquo;</li>
+        
+          <li><a href="../odl.solvers.functional.default_functionals.html">default_functionals</a> &raquo;</li>
+        
+      <li>Huber</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            <a href="../_sources/generated/odl.solvers.functional.default_functionals.Huber.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="huber">
+<h1>Huber<a class="headerlink" href="#huber" title="Permalink to this headline">¶</a></h1>
+<dl class="py class">
+<dt id="odl.solvers.functional.default_functionals.Huber">
+<em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">odl.solvers.functional.default_functionals.</span></code><code class="sig-name descname"><span class="pre">Huber</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/odl/solvers/functional/default_functionals.html#Huber"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#odl.solvers.functional.default_functionals.Huber" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="odl.solvers.functional.functional.Functional.html#odl.solvers.functional.functional.Functional" title="odl.solvers.functional.functional.Functional"><code class="xref py py-class docutils literal notranslate"><span class="pre">odl.solvers.functional.functional.Functional</span></code></a></p>
+<p>The Huber functional.</p>
+<p class="rubric">Notes</p>
+<p>The Huber norm is the integral over a smoothed norm. In detail, it is given
+by</p>
+<div class="math">
+<p><img src="../_images/math/4f98c50f86dec7075399a7f819dd105bf585db6c.png" alt="F(x) = \int_\Omega f_{\gamma}(||x(y)||_2) dy"/></p>
+</div><p>where <img class="math" src="../_images/math/f2398f9f0939fccc866cf5871c37804f540fed7d.png" alt="||\cdot||_2"/> denotes the Euclidean norm for vector-valued
+functions which reduces to the absolute value for scalar-valued functions.
+The function <img class="math" src="../_images/math/5b7752c757e0b691a80ab8227eadb8a8389dc58a.png" alt="f"/> with smoothing <img class="math" src="../_images/math/34d137cf01c787ecda732761c3f95b0f65a6c3e9.png" alt="\gamma"/> is given by</p>
+<div class="math">
+<p><img src="../_images/math/5cb8ac421b1723628efdf4403b3043168a98518e.png" alt="f_{\gamma}(t) =
+\begin{cases}
+    \frac{1}{2 \gamma} t^2 &amp; \text{if } |t| \leq \gamma \\
+    |t| - \frac{\gamma}{2} &amp; \text{else}
+\end{cases}."/></p>
+</div><dl class="field-list simple">
+<dt class="field-odd">Attributes</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><a class="reference internal" href="odl.solvers.functional.default_functionals.Huber.adjoint.html#odl.solvers.functional.default_functionals.Huber.adjoint" title="odl.solvers.functional.default_functionals.Huber.adjoint"><code class="xref py py-obj docutils literal notranslate"><span class="pre">adjoint</span></code></a></dt><dd><p>Adjoint of this operator (abstract).</p>
+</dd>
+<dt><a class="reference internal" href="odl.solvers.functional.default_functionals.Huber.convex_conj.html#odl.solvers.functional.default_functionals.Huber.convex_conj" title="odl.solvers.functional.default_functionals.Huber.convex_conj"><code class="xref py py-obj docutils literal notranslate"><span class="pre">convex_conj</span></code></a></dt><dd><p>The convex conjugate</p>
+</dd>
+<dt><a class="reference internal" href="odl.solvers.functional.default_functionals.Huber.domain.html#odl.solvers.functional.default_functionals.Huber.domain" title="odl.solvers.functional.default_functionals.Huber.domain"><code class="xref py py-obj docutils literal notranslate"><span class="pre">domain</span></code></a></dt><dd><p>Set of objects on which this operator can be evaluated.</p>
+</dd>
+<dt><a class="reference internal" href="odl.solvers.functional.default_functionals.Huber.gamma.html#odl.solvers.functional.default_functionals.Huber.gamma" title="odl.solvers.functional.default_functionals.Huber.gamma"><code class="xref py py-obj docutils literal notranslate"><span class="pre">gamma</span></code></a></dt><dd><p>The smoothing parameter of the Huber norm functional.</p>
+</dd>
+<dt><a class="reference internal" href="odl.solvers.functional.default_functionals.Huber.grad_lipschitz.html#odl.solvers.functional.default_functionals.Huber.grad_lipschitz" title="odl.solvers.functional.default_functionals.Huber.grad_lipschitz"><code class="xref py py-obj docutils literal notranslate"><span class="pre">grad_lipschitz</span></code></a></dt><dd><p>Lipschitz constant for the gradient of the functional.</p>
+</dd>
+<dt><a class="reference internal" href="odl.solvers.functional.default_functionals.Huber.gradient.html#odl.solvers.functional.default_functionals.Huber.gradient" title="odl.solvers.functional.default_functionals.Huber.gradient"><code class="xref py py-obj docutils literal notranslate"><span class="pre">gradient</span></code></a></dt><dd><p>Gradient operator of the functional.</p>
+</dd>
+<dt><a class="reference internal" href="odl.solvers.functional.default_functionals.Huber.inverse.html#odl.solvers.functional.default_functionals.Huber.inverse" title="odl.solvers.functional.default_functionals.Huber.inverse"><code class="xref py py-obj docutils literal notranslate"><span class="pre">inverse</span></code></a></dt><dd><p>Return the operator inverse.</p>
+</dd>
+<dt><a class="reference internal" href="odl.solvers.functional.default_functionals.Huber.is_functional.html#odl.solvers.functional.default_functionals.Huber.is_functional" title="odl.solvers.functional.default_functionals.Huber.is_functional"><code class="xref py py-obj docutils literal notranslate"><span class="pre">is_functional</span></code></a></dt><dd><p><code class="docutils literal notranslate"><span class="pre">True</span></code> if this operator’s range is a <a class="reference internal" href="odl.set.sets.Field.html#odl.set.sets.Field" title="odl.set.sets.Field"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Field</span></code></a>.</p>
+</dd>
+<dt><a class="reference internal" href="odl.solvers.functional.default_functionals.Huber.is_linear.html#odl.solvers.functional.default_functionals.Huber.is_linear" title="odl.solvers.functional.default_functionals.Huber.is_linear"><code class="xref py py-obj docutils literal notranslate"><span class="pre">is_linear</span></code></a></dt><dd><p><code class="docutils literal notranslate"><span class="pre">True</span></code> if this operator is linear.</p>
+</dd>
+<dt><a class="reference internal" href="odl.solvers.functional.default_functionals.Huber.proximal.html#odl.solvers.functional.default_functionals.Huber.proximal" title="odl.solvers.functional.default_functionals.Huber.proximal"><code class="xref py py-obj docutils literal notranslate"><span class="pre">proximal</span></code></a></dt><dd><p>Return the <code class="docutils literal notranslate"><span class="pre">proximal</span> <span class="pre">factory</span></code> of the functional.</p>
+</dd>
+<dt><a class="reference internal" href="odl.solvers.functional.default_functionals.Huber.range.html#odl.solvers.functional.default_functionals.Huber.range" title="odl.solvers.functional.default_functionals.Huber.range"><code class="xref py py-obj docutils literal notranslate"><span class="pre">range</span></code></a></dt><dd><p>Set in which the result of an evaluation of this operator lies.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+<p class="rubric">Methods</p>
+<table class="longtable docutils align-default">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="odl.solvers.functional.default_functionals.Huber._call.html#odl.solvers.functional.default_functionals.Huber._call" title="odl.solvers.functional.default_functionals.Huber._call"><code class="xref py py-obj docutils literal notranslate"><span class="pre">_call</span></code></a>(self, x)</p></td>
+<td><p>Return <code class="docutils literal notranslate"><span class="pre">self(x)</span></code>.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="odl.solvers.functional.default_functionals.Huber.bregman.html#odl.solvers.functional.default_functionals.Huber.bregman" title="odl.solvers.functional.default_functionals.Huber.bregman"><code class="xref py py-obj docutils literal notranslate"><span class="pre">bregman</span></code></a>(self, point, subgrad)</p></td>
+<td><p>Return the Bregman distance functional.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="odl.solvers.functional.default_functionals.Huber.derivative.html#odl.solvers.functional.default_functionals.Huber.derivative" title="odl.solvers.functional.default_functionals.Huber.derivative"><code class="xref py py-obj docutils literal notranslate"><span class="pre">derivative</span></code></a>(self, point)</p></td>
+<td><p>Return the derivative operator in the given point.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="odl.solvers.functional.default_functionals.Huber.norm.html#odl.solvers.functional.default_functionals.Huber.norm" title="odl.solvers.functional.default_functionals.Huber.norm"><code class="xref py py-obj docutils literal notranslate"><span class="pre">norm</span></code></a>(self[, estimate])</p></td>
+<td><p>Return the operator norm of this operator.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="odl.solvers.functional.default_functionals.Huber.translated.html#odl.solvers.functional.default_functionals.Huber.translated" title="odl.solvers.functional.default_functionals.Huber.translated"><code class="xref py py-obj docutils literal notranslate"><span class="pre">translated</span></code></a>(self, shift)</p></td>
+<td><p>Return a translation of the functional.</p></td>
+</tr>
+</tbody>
+</table>
+<dl class="py method">
+<dt id="odl.solvers.functional.default_functionals.Huber.__init__">
+<code class="sig-name descname"><span class="pre">__init__</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">space</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gamma</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/odl/solvers/functional/default_functionals.html#Huber.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#odl.solvers.functional.default_functionals.Huber.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initialize a new instance.</p>
+<dl class="field-list">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl>
+<dt><strong>space</strong><span class="classifier"><a class="reference internal" href="odl.space.base_tensors.TensorSpace.html#odl.space.base_tensors.TensorSpace" title="odl.space.base_tensors.TensorSpace"><code class="xref any py py-class docutils literal notranslate"><span class="pre">TensorSpace</span></code></a></span></dt><dd><p>Domain of the functional.</p>
+</dd>
+<dt><strong>gamma</strong><span class="classifier">float</span></dt><dd><p>Smoothing parameter of the Huber functional. If <code class="docutils literal notranslate"><span class="pre">gamma</span> <span class="pre">=</span> <span class="pre">0</span></code>,
+the functional is non-smooth and corresponds to the usual L1 norm.
+For <code class="docutils literal notranslate"><span class="pre">gamma</span> <span class="pre">&gt;</span> <span class="pre">0</span></code>, it has a <code class="docutils literal notranslate"><span class="pre">1/gamma</span></code>-Lipschitz gradient so that
+its convex conjugate is <code class="docutils literal notranslate"><span class="pre">gamma</span></code>-strongly convex.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+<p class="rubric">Examples</p>
+<p>Example of initializing the Huber functional:</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">space</span> <span class="o">=</span> <span class="n">odl</span><span class="o">.</span><span class="n">uniform_discr</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">14</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">gamma</span> <span class="o">=</span> <span class="mf">0.1</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">huber_norm</span> <span class="o">=</span> <span class="n">odl</span><span class="o">.</span><span class="n">solvers</span><span class="o">.</span><span class="n">Huber</span><span class="p">(</span><span class="n">space</span><span class="p">,</span> <span class="n">gamma</span><span class="o">=</span><span class="mf">0.1</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Check that if all elements are &gt; <code class="docutils literal notranslate"><span class="pre">gamma</span></code> we get the L1-norm up to a
+constant:</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">x</span> <span class="o">=</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">gamma</span> <span class="o">*</span> <span class="n">space</span><span class="o">.</span><span class="n">one</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">tol</span> <span class="o">=</span> <span class="mf">1e-5</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">constant</span> <span class="o">=</span> <span class="n">gamma</span> <span class="o">/</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">space</span><span class="o">.</span><span class="n">one</span><span class="p">()</span><span class="o">.</span><span class="n">inner</span><span class="p">(</span><span class="n">space</span><span class="o">.</span><span class="n">one</span><span class="p">())</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">f</span> <span class="o">=</span> <span class="n">odl</span><span class="o">.</span><span class="n">solvers</span><span class="o">.</span><span class="n">L1Norm</span><span class="p">(</span><span class="n">space</span><span class="p">)</span> <span class="o">-</span> <span class="n">constant</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">abs</span><span class="p">(</span><span class="n">huber_norm</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="o">-</span> <span class="n">f</span><span class="p">(</span><span class="n">x</span><span class="p">))</span> <span class="o">&lt;</span> <span class="n">tol</span>
+<span class="go">True</span>
+</pre></div>
+</div>
+<p>Check that if all elements are &lt; <code class="docutils literal notranslate"><span class="pre">gamma</span></code> we get the squared L2-norm
+times the weight <code class="docutils literal notranslate"><span class="pre">1/(2*gamma)</span></code>:</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">x</span> <span class="o">=</span> <span class="n">gamma</span> <span class="o">/</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">space</span><span class="o">.</span><span class="n">one</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">f</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">/</span> <span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">gamma</span><span class="p">)</span> <span class="o">*</span> <span class="n">odl</span><span class="o">.</span><span class="n">solvers</span><span class="o">.</span><span class="n">L2NormSquared</span><span class="p">(</span><span class="n">space</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">abs</span><span class="p">(</span><span class="n">huber_norm</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="o">-</span> <span class="n">f</span><span class="p">(</span><span class="n">x</span><span class="p">))</span> <span class="o">&lt;</span> <span class="n">tol</span>
+<span class="go">True</span>
+</pre></div>
+</div>
+<p>Compare Huber- and L1-norm for vanishing smoothing <code class="docutils literal notranslate"><span class="pre">gamma=0</span></code>:</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">x</span> <span class="o">=</span> <span class="n">odl</span><span class="o">.</span><span class="n">phantom</span><span class="o">.</span><span class="n">white_noise</span><span class="p">(</span><span class="n">space</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">huber_norm</span> <span class="o">=</span> <span class="n">odl</span><span class="o">.</span><span class="n">solvers</span><span class="o">.</span><span class="n">Huber</span><span class="p">(</span><span class="n">space</span><span class="p">,</span> <span class="n">gamma</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">l1_norm</span> <span class="o">=</span> <span class="n">odl</span><span class="o">.</span><span class="n">solvers</span><span class="o">.</span><span class="n">L1Norm</span><span class="p">(</span><span class="n">space</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">abs</span><span class="p">(</span><span class="n">huber_norm</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="o">-</span> <span class="n">l1_norm</span><span class="p">(</span><span class="n">x</span><span class="p">))</span> <span class="o">&lt;</span> <span class="n">tol</span>
+<span class="go">True</span>
+</pre></div>
+</div>
+<p>Redo previous example for a product space in two dimensions:</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">domain</span> <span class="o">=</span> <span class="n">odl</span><span class="o">.</span><span class="n">uniform_discr</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span> <span class="p">[</span><span class="mi">5</span><span class="p">,</span> <span class="mi">5</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">space</span> <span class="o">=</span> <span class="n">odl</span><span class="o">.</span><span class="n">ProductSpace</span><span class="p">(</span><span class="n">domain</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">x</span> <span class="o">=</span> <span class="n">odl</span><span class="o">.</span><span class="n">phantom</span><span class="o">.</span><span class="n">white_noise</span><span class="p">(</span><span class="n">space</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">huber_norm</span> <span class="o">=</span> <span class="n">odl</span><span class="o">.</span><span class="n">solvers</span><span class="o">.</span><span class="n">Huber</span><span class="p">(</span><span class="n">space</span><span class="p">,</span> <span class="n">gamma</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">l1_norm</span> <span class="o">=</span> <span class="n">odl</span><span class="o">.</span><span class="n">solvers</span><span class="o">.</span><span class="n">GroupL1Norm</span><span class="p">(</span><span class="n">space</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">abs</span><span class="p">(</span><span class="n">huber_norm</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="o">-</span> <span class="n">l1_norm</span><span class="p">(</span><span class="n">x</span><span class="p">))</span> <span class="o">&lt;</span> <span class="n">tol</span>
+<span class="go">True</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+        <a href="odl.solvers.functional.default_functionals.Huber._call.html" class="btn btn-neutral float-right" title="Huber._call" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="odl.solvers.functional.default_functionals.GroupL1Norm.translated.html" class="btn btn-neutral float-left" title="GroupL1Norm.translated" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &#169; Copyright 2014-2020 The ODL Contributors.
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

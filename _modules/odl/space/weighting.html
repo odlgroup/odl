@@ -1,0 +1,1102 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>odl.space.weighting &mdash; odl 1.0.0.dev0 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/custom.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../../" src="../../../_static/documentation_options.js"></script>
+        <script src="../../../_static/jquery.js"></script>
+        <script src="../../../_static/underscore.js"></script>
+        <script src="../../../_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="../../../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../../index.html" class="icon icon-home"> odl
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                1.0.0.dev0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Getting Started</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../getting_started/getting_started.html">Getting Started</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Working with ODL</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../guide/guide.html">User’s guide – selected topics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../math/math.html">Mathematical Background</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Developer zone</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../dev/dev.html">Contributing to ODL</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Useful facts</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../guide/faq.html">Frequently asked questions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../guide/glossary.html">Glossary</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../release_notes.html">Release Notes</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../refs.html">References</a></li>
+</ul>
+<p class="caption"><span class="caption-text">API Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../odl.html">odl</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">odl</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="../../index.html">Module code</a> &raquo;</li>
+        
+      <li>odl.space.weighting</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for odl.space.weighting</h1><div class="highlight"><pre>
+<span></span><span class="c1"># Copyright 2014-2019 The ODL contributors</span>
+<span class="c1">#</span>
+<span class="c1"># This file is part of ODL.</span>
+<span class="c1">#</span>
+<span class="c1"># This Source Code Form is subject to the terms of the Mozilla Public License,</span>
+<span class="c1"># v. 2.0. If a copy of the MPL was not distributed with this file, You can</span>
+<span class="c1"># obtain one at https://mozilla.org/MPL/2.0/.</span>
+
+<span class="sd">&quot;&quot;&quot;Weightings for finite-dimensional spaces.&quot;&quot;&quot;</span>
+
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">print_function</span><span class="p">,</span> <span class="n">division</span><span class="p">,</span> <span class="n">absolute_import</span>
+<span class="kn">from</span> <span class="nn">builtins</span> <span class="kn">import</span> <span class="nb">object</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+
+<span class="kn">from</span> <span class="nn">odl.space.base_tensors</span> <span class="kn">import</span> <span class="n">TensorSpace</span>
+<span class="kn">from</span> <span class="nn">odl.util</span> <span class="kn">import</span> <span class="n">array_str</span><span class="p">,</span> <span class="n">signature_string</span><span class="p">,</span> <span class="n">indent</span>
+
+
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;MatrixWeighting&#39;</span><span class="p">,</span> <span class="s1">&#39;ArrayWeighting&#39;</span><span class="p">,</span> <span class="s1">&#39;ConstWeighting&#39;</span><span class="p">,</span>
+           <span class="s1">&#39;CustomInner&#39;</span><span class="p">,</span> <span class="s1">&#39;CustomNorm&#39;</span><span class="p">,</span> <span class="s1">&#39;CustomDist&#39;</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="Weighting"><a class="viewcode-back" href="../../../generated/odl.space.weighting.Weighting.html#odl.space.weighting.Weighting">[docs]</a><span class="k">class</span> <span class="nc">Weighting</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+
+    <span class="sd">&quot;&quot;&quot;Abstract base class for weighting of finite-dimensional spaces.</span>
+
+<span class="sd">    This class and its subclasses serve as a simple means to evaluate</span>
+<span class="sd">    and compare weighted inner products, norms and metrics semantically</span>
+<span class="sd">    rather than by identity on a pure function level.</span>
+
+<span class="sd">    The functions are implemented similarly to `Operator`,</span>
+<span class="sd">    but without extra type checks of input parameters - this is done in</span>
+<span class="sd">    the callers of the `LinearSpace` instance where these</span>
+<span class="sd">    functions are being used.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="Weighting.__init__"><a class="viewcode-back" href="../../../generated/odl.space.weighting.Weighting.html#odl.space.weighting.Weighting.__init__">[docs]</a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">impl</span><span class="p">,</span> <span class="n">exponent</span><span class="o">=</span><span class="mf">2.0</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Initialize a new instance.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        impl : string</span>
+<span class="sd">            Specifier for the implementation backend</span>
+<span class="sd">        exponent : positive float, optional</span>
+<span class="sd">            Exponent of the norm. For values other than 2.0, the inner</span>
+<span class="sd">            product is not defined.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__impl</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">impl</span><span class="p">)</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__exponent</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">exponent</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">exponent</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;only positive exponents or inf supported, &#39;</span>
+                             <span class="s1">&#39;got </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">exponent</span><span class="p">))</span></div>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">impl</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Implementation backend of this weighting.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__impl</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">exponent</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Exponent of this weighting.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__exponent</span>
+
+<div class="viewcode-block" id="Weighting.__eq__"><a class="viewcode-back" href="../../../generated/odl.space.weighting.Weighting.__eq__.html#odl.space.weighting.Weighting.__eq__">[docs]</a>    <span class="k">def</span> <span class="fm">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return ``self == other``.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        equal : bool</span>
+<span class="sd">            ``True`` if ``other`` is a the same weighting, ``False``</span>
+<span class="sd">            otherwise.</span>
+
+<span class="sd">        Notes</span>
+<span class="sd">        -----</span>
+<span class="sd">        This operation must be computationally cheap, i.e. no large</span>
+<span class="sd">        arrays may be compared entry-wise. That is the task of the</span>
+<span class="sd">        `equiv` method.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="n">Weighting</span><span class="p">)</span> <span class="ow">and</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">impl</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">impl</span> <span class="ow">and</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">exponent</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">exponent</span><span class="p">)</span></div>
+
+    <span class="k">def</span> <span class="fm">__hash__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return ``hash(self)``.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="nb">hash</span><span class="p">((</span><span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">impl</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">exponent</span><span class="p">))</span>
+
+<div class="viewcode-block" id="Weighting.equiv"><a class="viewcode-back" href="../../../generated/odl.space.weighting.Weighting.equiv.html#odl.space.weighting.Weighting.equiv">[docs]</a>    <span class="k">def</span> <span class="nf">equiv</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Test if ``other`` is an equivalent weighting.</span>
+
+<span class="sd">        Should be overridden, default tests for equality.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        equivalent : bool</span>
+<span class="sd">            ``True`` if ``other`` is a `Weighting` instance which</span>
+<span class="sd">            yields the same result as this inner product for any</span>
+<span class="sd">            input, ``False`` otherwise.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span> <span class="o">==</span> <span class="n">other</span></div>
+
+<div class="viewcode-block" id="Weighting.inner"><a class="viewcode-back" href="../../../generated/odl.space.weighting.Weighting.inner.html#odl.space.weighting.Weighting.inner">[docs]</a>    <span class="k">def</span> <span class="nf">inner</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x1</span><span class="p">,</span> <span class="n">x2</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return the inner product of two elements.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        x1, x2 : `LinearSpaceElement`</span>
+<span class="sd">            Elements whose inner product is calculated.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        inner : float or complex</span>
+<span class="sd">            The inner product of the two provided elements.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span></div>
+
+<div class="viewcode-block" id="Weighting.norm"><a class="viewcode-back" href="../../../generated/odl.space.weighting.Weighting.norm.html#odl.space.weighting.Weighting.norm">[docs]</a>    <span class="k">def</span> <span class="nf">norm</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Calculate the norm of an element.</span>
+
+<span class="sd">        This is the standard implementation using `inner`.</span>
+<span class="sd">        Subclasses should override it for optimization purposes.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        x1 : `LinearSpaceElement`</span>
+<span class="sd">            Element whose norm is calculated.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        norm : float</span>
+<span class="sd">            The norm of the element.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="nb">float</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">inner</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">x</span><span class="p">)</span><span class="o">.</span><span class="n">real</span><span class="p">))</span></div>
+
+<div class="viewcode-block" id="Weighting.dist"><a class="viewcode-back" href="../../../generated/odl.space.weighting.Weighting.dist.html#odl.space.weighting.Weighting.dist">[docs]</a>    <span class="k">def</span> <span class="nf">dist</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x1</span><span class="p">,</span> <span class="n">x2</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Calculate the distance between two elements.</span>
+
+<span class="sd">        This is the standard implementation using `norm`.</span>
+<span class="sd">        Subclasses should override it for optimization purposes.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        x1, x2 : `LinearSpaceElement`</span>
+<span class="sd">            Elements whose mutual distance is calculated.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        dist : float</span>
+<span class="sd">            The distance between the elements.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">x1</span> <span class="o">-</span> <span class="n">x2</span><span class="p">)</span></div></div>
+
+
+<div class="viewcode-block" id="MatrixWeighting"><a class="viewcode-back" href="../../../generated/odl.space.weighting.MatrixWeighting.html#odl.space.weighting.MatrixWeighting">[docs]</a><span class="k">class</span> <span class="nc">MatrixWeighting</span><span class="p">(</span><span class="n">Weighting</span><span class="p">):</span>
+
+    <span class="sd">&quot;&quot;&quot;Weighting of a space by a matrix.</span>
+
+<span class="sd">    The exact definition of the weighted inner product, norm and</span>
+<span class="sd">    distance functions depend on the concrete space.</span>
+
+<span class="sd">    The matrix must be Hermitian and posivive definite, otherwise it</span>
+<span class="sd">    does not define an inner product or norm, respectively. This is not</span>
+<span class="sd">    checked during initialization.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="MatrixWeighting.__init__"><a class="viewcode-back" href="../../../generated/odl.space.weighting.MatrixWeighting.html#odl.space.weighting.MatrixWeighting.__init__">[docs]</a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">matrix</span><span class="p">,</span> <span class="n">impl</span><span class="p">,</span> <span class="n">exponent</span><span class="o">=</span><span class="mf">2.0</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Initialize a new instance.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        matrix :  `scipy.sparse.spmatrix` or 2-dim. `array-like`</span>
+<span class="sd">            Square weighting matrix of the inner product</span>
+<span class="sd">        impl : string</span>
+<span class="sd">            Specifier for the implementation backend</span>
+<span class="sd">        exponent : positive float, optional</span>
+<span class="sd">            Exponent of the norm. For values other than 2.0, the inner</span>
+<span class="sd">            product is not defined.</span>
+<span class="sd">            If ``matrix`` is a sparse matrix, only 1.0, 2.0 and ``inf``</span>
+<span class="sd">            are allowed.</span>
+<span class="sd">        precomp_mat_pow : bool, optional</span>
+<span class="sd">            If ``True``, precompute the matrix power ``W ** (1/p)``</span>
+<span class="sd">            during initialization. This has no effect if ``exponent``</span>
+<span class="sd">            is 1.0, 2.0 or ``inf``.</span>
+
+<span class="sd">            Default: ``False``</span>
+
+<span class="sd">        cache_mat_pow : bool, optional</span>
+<span class="sd">            If ``True``, cache the matrix power ``W ** (1/p)``. This can</span>
+<span class="sd">            happen either during initialization or in the first call to</span>
+<span class="sd">            ``norm`` or ``dist``, resp. This has no effect if</span>
+<span class="sd">            ``exponent`` is 1.0, 2.0 or ``inf``.</span>
+
+<span class="sd">            Default: ``True``</span>
+
+<span class="sd">        cache_mat_decomp : bool, optional</span>
+<span class="sd">            If ``True``, cache the eigenbasis decomposition of the</span>
+<span class="sd">            matrix. This can happen either during initialization or in</span>
+<span class="sd">            the first call to ``norm`` or ``dist``, resp. This has no</span>
+<span class="sd">            effect if ``exponent`` is 1.0, 2.0 or ``inf``.</span>
+
+<span class="sd">            Default: ``False``</span>
+
+<span class="sd">        Notes</span>
+<span class="sd">        -----</span>
+<span class="sd">        The matrix power ``W ** (1/p)`` is computed by eigenbasis</span>
+<span class="sd">        decomposition::</span>
+
+<span class="sd">            eigval, eigvec = scipy.linalg.eigh(matrix)</span>
+<span class="sd">            mat_pow = (eigval ** p * eigvec).dot(eigvec.conj().T)</span>
+
+<span class="sd">        Depending on the matrix size, this can be rather expensive.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># Lazy import to improve `import odl` time</span>
+        <span class="kn">import</span> <span class="nn">scipy.sparse</span>
+
+        <span class="c1"># TODO: fix dead link `scipy.sparse.spmatrix`</span>
+        <span class="n">precomp_mat_pow</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;precomp_mat_pow&#39;</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_cache_mat_pow</span> <span class="o">=</span> <span class="nb">bool</span><span class="p">(</span><span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;cache_mat_pow&#39;</span><span class="p">,</span> <span class="kc">True</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_cache_mat_decomp</span> <span class="o">=</span> <span class="nb">bool</span><span class="p">(</span><span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;cache_mat_decomp&#39;</span><span class="p">,</span> <span class="kc">False</span><span class="p">))</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">MatrixWeighting</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">impl</span><span class="o">=</span><span class="n">impl</span><span class="p">,</span> <span class="n">exponent</span><span class="o">=</span><span class="n">exponent</span><span class="p">)</span>
+
+        <span class="c1"># Check and set matrix</span>
+        <span class="k">if</span> <span class="n">scipy</span><span class="o">.</span><span class="n">sparse</span><span class="o">.</span><span class="n">isspmatrix</span><span class="p">(</span><span class="n">matrix</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_matrix</span> <span class="o">=</span> <span class="n">matrix</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_matrix</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">matrix</span><span class="p">)</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_matrix</span><span class="o">.</span><span class="n">dtype</span> <span class="o">==</span> <span class="nb">object</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;invalid matrix </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">matrix</span><span class="p">))</span>
+            <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">_matrix</span><span class="o">.</span><span class="n">ndim</span> <span class="o">!=</span> <span class="mi">2</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;matrix </span><span class="si">{}</span><span class="s1"> is </span><span class="si">{}</span><span class="s1">-dimensional instead of &#39;</span>
+                                 <span class="s1">&#39;2-dimensional&#39;</span>
+                                 <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">matrix</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_matrix</span><span class="o">.</span><span class="n">ndim</span><span class="p">))</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_matrix</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_matrix</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;matrix has shape </span><span class="si">{}</span><span class="s1">, expected a square matrix&#39;</span>
+                             <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_matrix</span><span class="o">.</span><span class="n">shape</span><span class="p">))</span>
+
+        <span class="k">if</span> <span class="p">(</span><span class="n">scipy</span><span class="o">.</span><span class="n">sparse</span><span class="o">.</span><span class="n">isspmatrix</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">matrix</span><span class="p">)</span> <span class="ow">and</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">exponent</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">(</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">2.0</span><span class="p">,</span> <span class="nb">float</span><span class="p">(</span><span class="s1">&#39;inf&#39;</span><span class="p">))):</span>
+            <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s1">&#39;sparse matrices only supported for &#39;</span>
+                                      <span class="s1">&#39;exponent 1.0, 2.0 or `inf`&#39;</span><span class="p">)</span>
+
+        <span class="c1"># Compute the power and decomposition if desired</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_eigval</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_eigvec</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">exponent</span> <span class="ow">in</span> <span class="p">(</span><span class="mf">1.0</span><span class="p">,</span> <span class="nb">float</span><span class="p">(</span><span class="s1">&#39;inf&#39;</span><span class="p">)):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_mat_pow</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">matrix</span>
+        <span class="k">elif</span> <span class="n">precomp_mat_pow</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">exponent</span> <span class="o">!=</span> <span class="mf">2.0</span><span class="p">:</span>
+            <span class="n">eigval</span><span class="p">,</span> <span class="n">eigvec</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">matrix_decomp</span><span class="p">()</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cache_mat_decomp</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_eigval</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_eigvec</span> <span class="o">=</span> <span class="n">eigval</span><span class="p">,</span> <span class="n">eigvec</span>
+                <span class="n">eigval_pow</span> <span class="o">=</span> <span class="n">eigval</span> <span class="o">**</span> <span class="p">(</span><span class="mf">1.0</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">exponent</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">eigval_pow</span> <span class="o">=</span> <span class="n">eigval</span>
+                <span class="n">eigval_pow</span> <span class="o">**=</span> <span class="mf">1.0</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">exponent</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_mat_pow</span> <span class="o">=</span> <span class="p">(</span><span class="n">eigval_pow</span> <span class="o">*</span> <span class="n">eigvec</span><span class="p">)</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">eigvec</span><span class="o">.</span><span class="n">conj</span><span class="p">()</span><span class="o">.</span><span class="n">T</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_mat_pow</span> <span class="o">=</span> <span class="kc">None</span></div>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">matrix</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Weighting matrix of this inner product.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_matrix</span>
+
+<div class="viewcode-block" id="MatrixWeighting.is_valid"><a class="viewcode-back" href="../../../generated/odl.space.weighting.MatrixWeighting.is_valid.html#odl.space.weighting.MatrixWeighting.is_valid">[docs]</a>    <span class="k">def</span> <span class="nf">is_valid</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Test if the matrix is positive definite Hermitian.</span>
+
+<span class="sd">        If the matrix decomposition is available, this test checks</span>
+<span class="sd">        if all eigenvalues are positive.</span>
+<span class="sd">        Otherwise, the test tries to calculate a Cholesky decomposition,</span>
+<span class="sd">        which can be very time-consuming for large matrices. Sparse</span>
+<span class="sd">        matrices are not supported.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># Lazy import to improve `import odl` time</span>
+        <span class="kn">import</span> <span class="nn">scipy.sparse</span>
+
+        <span class="k">if</span> <span class="n">scipy</span><span class="o">.</span><span class="n">sparse</span><span class="o">.</span><span class="n">isspmatrix</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">matrix</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s1">&#39;validation not supported for sparse &#39;</span>
+                                      <span class="s1">&#39;matrices&#39;</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">_eigval</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">all</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">greater</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_eigval</span><span class="p">,</span> <span class="mi">0</span><span class="p">))</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">cholesky</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">matrix</span><span class="p">)</span>
+                <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">array_equal</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">matrix</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">matrix</span><span class="o">.</span><span class="n">conj</span><span class="p">()</span><span class="o">.</span><span class="n">T</span><span class="p">)</span>
+            <span class="k">except</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">LinAlgError</span><span class="p">:</span>
+                <span class="k">return</span> <span class="kc">False</span></div>
+
+<div class="viewcode-block" id="MatrixWeighting.matrix_decomp"><a class="viewcode-back" href="../../../generated/odl.space.weighting.MatrixWeighting.matrix_decomp.html#odl.space.weighting.MatrixWeighting.matrix_decomp">[docs]</a>    <span class="k">def</span> <span class="nf">matrix_decomp</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cache</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Compute a Hermitian eigenbasis decomposition of the matrix.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        cache : bool or None, optional</span>
+<span class="sd">            If ``True``, store the decomposition internally. For None,</span>
+<span class="sd">            the ``cache_mat_decomp`` from class initialization is used.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        eigval : `numpy.ndarray`</span>
+<span class="sd">            One-dimensional array of eigenvalues. Its length is equal</span>
+<span class="sd">            to the number of matrix rows.</span>
+<span class="sd">        eigvec : `numpy.ndarray`</span>
+<span class="sd">            Two-dimensional array of eigenvectors. It has the same shape</span>
+<span class="sd">            as the decomposed matrix.</span>
+
+<span class="sd">        See Also</span>
+<span class="sd">        --------</span>
+<span class="sd">        scipy.linalg.decomp.eigh :</span>
+<span class="sd">            Implementation of the decomposition. Standard parameters</span>
+<span class="sd">            are used here.</span>
+
+<span class="sd">        Raises</span>
+<span class="sd">        ------</span>
+<span class="sd">        NotImplementedError</span>
+<span class="sd">            if the matrix is sparse (not supported by scipy 0.17)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># Lazy import to improve `import odl` time</span>
+        <span class="kn">import</span> <span class="nn">scipy.linalg</span>
+        <span class="kn">import</span> <span class="nn">scipy.sparse</span>
+
+        <span class="c1"># TODO: fix dead link `scipy.linalg.decomp.eigh`</span>
+        <span class="k">if</span> <span class="n">scipy</span><span class="o">.</span><span class="n">sparse</span><span class="o">.</span><span class="n">isspmatrix</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">matrix</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s1">&#39;sparse matrix not supported&#39;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">cache</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">cache</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cache_mat_decomp</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_eigval</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">_eigvec</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">eigval</span><span class="p">,</span> <span class="n">eigvec</span> <span class="o">=</span> <span class="n">scipy</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">eigh</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">matrix</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">cache</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_eigval</span> <span class="o">=</span> <span class="n">eigval</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_eigvec</span> <span class="o">=</span> <span class="n">eigvec</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">eigval</span><span class="p">,</span> <span class="n">eigvec</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_eigval</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_eigvec</span>
+
+        <span class="k">return</span> <span class="n">eigval</span><span class="p">,</span> <span class="n">eigvec</span></div>
+
+<div class="viewcode-block" id="MatrixWeighting.__eq__"><a class="viewcode-back" href="../../../generated/odl.space.weighting.MatrixWeighting.__eq__.html#odl.space.weighting.MatrixWeighting.__eq__">[docs]</a>    <span class="k">def</span> <span class="fm">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return ``self == other``.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        equals : bool</span>
+<span class="sd">            ``True`` if other is a `MatrixWeighting` instance</span>
+<span class="sd">            with **identical** matrix, ``False`` otherwise.</span>
+
+<span class="sd">        See Also</span>
+<span class="sd">        --------</span>
+<span class="sd">        equiv : test for equivalent inner products</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">other</span> <span class="ow">is</span> <span class="bp">self</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">True</span>
+
+        <span class="k">return</span> <span class="p">(</span><span class="nb">super</span><span class="p">(</span><span class="n">MatrixWeighting</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__eq__</span><span class="p">(</span><span class="n">other</span><span class="p">)</span> <span class="ow">and</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">matrix</span> <span class="ow">is</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="s1">&#39;matrix&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">))</span></div>
+
+    <span class="k">def</span> <span class="fm">__hash__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return ``hash(self)``.&quot;&quot;&quot;</span>
+        <span class="c1"># TODO: Better hash for matrix?</span>
+        <span class="k">return</span> <span class="nb">hash</span><span class="p">((</span><span class="nb">super</span><span class="p">(</span><span class="n">MatrixWeighting</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__hash__</span><span class="p">(),</span>
+                     <span class="bp">self</span><span class="o">.</span><span class="n">matrix</span><span class="o">.</span><span class="n">tobytes</span><span class="p">()))</span>
+
+<div class="viewcode-block" id="MatrixWeighting.equiv"><a class="viewcode-back" href="../../../generated/odl.space.weighting.MatrixWeighting.equiv.html#odl.space.weighting.MatrixWeighting.equiv">[docs]</a>    <span class="k">def</span> <span class="nf">equiv</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Test if other is an equivalent weighting.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        equivalent : bool</span>
+<span class="sd">            ``True`` if ``other`` is a `Weighting` instance with the same</span>
+<span class="sd">            `Weighting.impl`, which yields the same result as this</span>
+<span class="sd">            weighting for any input, ``False`` otherwise. This is checked</span>
+<span class="sd">            by entry-wise comparison of matrices/arrays/constants.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># Lazy import to improve `import odl` time</span>
+        <span class="kn">import</span> <span class="nn">scipy.sparse</span>
+
+        <span class="c1"># Optimization for equality</span>
+        <span class="k">if</span> <span class="bp">self</span> <span class="o">==</span> <span class="n">other</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">True</span>
+
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">exponent</span> <span class="o">!=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="s1">&#39;exponent&#39;</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">):</span>
+            <span class="k">return</span> <span class="kc">False</span>
+
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="n">MatrixWeighting</span><span class="p">):</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">matrix</span><span class="o">.</span><span class="n">shape</span> <span class="o">!=</span> <span class="n">other</span><span class="o">.</span><span class="n">matrix</span><span class="o">.</span><span class="n">shape</span><span class="p">:</span>
+                <span class="k">return</span> <span class="kc">False</span>
+
+            <span class="k">if</span> <span class="n">scipy</span><span class="o">.</span><span class="n">sparse</span><span class="o">.</span><span class="n">isspmatrix</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">matrix</span><span class="p">):</span>
+                <span class="k">if</span> <span class="n">other</span><span class="o">.</span><span class="n">matrix_issparse</span><span class="p">:</span>
+                    <span class="c1"># Optimization for different number of nonzero elements</span>
+                    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">matrix</span><span class="o">.</span><span class="n">nnz</span> <span class="o">!=</span> <span class="n">other</span><span class="o">.</span><span class="n">matrix</span><span class="o">.</span><span class="n">nnz</span><span class="p">:</span>
+                        <span class="k">return</span> <span class="kc">False</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="c1"># Most efficient out-of-the-box comparison</span>
+                        <span class="k">return</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">matrix</span> <span class="o">!=</span> <span class="n">other</span><span class="o">.</span><span class="n">matrix</span><span class="p">)</span><span class="o">.</span><span class="n">nnz</span> <span class="o">==</span> <span class="mi">0</span>
+                <span class="k">else</span><span class="p">:</span>  <span class="c1"># Worst case: compare against dense matrix</span>
+                    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">array_equal</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">matrix</span><span class="o">.</span><span class="n">todense</span><span class="p">(),</span> <span class="n">other</span><span class="o">.</span><span class="n">matrix</span><span class="p">)</span>
+
+            <span class="k">else</span><span class="p">:</span>  <span class="c1"># matrix of `self` is dense</span>
+                <span class="k">if</span> <span class="n">other</span><span class="o">.</span><span class="n">matrix_issparse</span><span class="p">:</span>
+                    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">array_equal</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">matrix</span><span class="p">,</span> <span class="n">other</span><span class="o">.</span><span class="n">matrix</span><span class="o">.</span><span class="n">todense</span><span class="p">())</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">array_equal</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">matrix</span><span class="p">,</span> <span class="n">other</span><span class="o">.</span><span class="n">matrix</span><span class="p">)</span>
+
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="n">ArrayWeighting</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">scipy</span><span class="o">.</span><span class="n">sparse</span><span class="o">.</span><span class="n">isspmatrix</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">matrix</span><span class="p">):</span>
+                <span class="k">return</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array_equiv</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">matrix</span><span class="o">.</span><span class="n">diagonal</span><span class="p">(),</span>
+                                       <span class="n">other</span><span class="o">.</span><span class="n">array</span><span class="p">)</span> <span class="ow">and</span>
+                        <span class="n">np</span><span class="o">.</span><span class="n">array_equal</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">matrix</span><span class="o">.</span><span class="n">asformat</span><span class="p">(</span><span class="s1">&#39;dia&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">offsets</span><span class="p">,</span>
+                                       <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">0</span><span class="p">])))</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">array_equal</span><span class="p">(</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">matrix</span><span class="p">,</span> <span class="n">other</span><span class="o">.</span><span class="n">array</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">matrix</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]))</span>
+
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="n">ConstWeighting</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">scipy</span><span class="o">.</span><span class="n">sparse</span><span class="o">.</span><span class="n">isspmatrix</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">matrix</span><span class="p">):</span>
+                <span class="k">return</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array_equiv</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">matrix</span><span class="o">.</span><span class="n">diagonal</span><span class="p">(),</span> <span class="n">other</span><span class="o">.</span><span class="n">const</span><span class="p">)</span> <span class="ow">and</span>
+                        <span class="n">np</span><span class="o">.</span><span class="n">array_equal</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">matrix</span><span class="o">.</span><span class="n">asformat</span><span class="p">(</span><span class="s1">&#39;dia&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">offsets</span><span class="p">,</span>
+                                       <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">0</span><span class="p">])))</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">array_equal</span><span class="p">(</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">matrix</span><span class="p">,</span> <span class="n">other</span><span class="o">.</span><span class="n">const</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">matrix</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]))</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">False</span></div>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">repr_part</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return a string usable in a space&#39;s ``__repr__`` method.&quot;&quot;&quot;</span>
+        <span class="c1"># Lazy import to improve `import odl` time</span>
+        <span class="kn">import</span> <span class="nn">scipy.sparse</span>
+
+        <span class="k">if</span> <span class="n">scipy</span><span class="o">.</span><span class="n">sparse</span><span class="o">.</span><span class="n">isspmatrix</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">matrix</span><span class="p">):</span>
+            <span class="n">optargs</span> <span class="o">=</span> <span class="p">[(</span><span class="s1">&#39;matrix&#39;</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">matrix</span><span class="p">),</span> <span class="s1">&#39;&#39;</span><span class="p">)]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">optargs</span> <span class="o">=</span> <span class="p">[(</span><span class="s1">&#39;matrix&#39;</span><span class="p">,</span> <span class="n">array_str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">matrix</span><span class="p">,</span> <span class="n">nprint</span><span class="o">=</span><span class="mi">10</span><span class="p">),</span> <span class="s1">&#39;&#39;</span><span class="p">)]</span>
+
+        <span class="n">optargs</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="s1">&#39;exponent&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">exponent</span><span class="p">,</span> <span class="mf">2.0</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">signature_string</span><span class="p">([],</span> <span class="n">optargs</span><span class="p">,</span> <span class="n">mod</span><span class="o">=</span><span class="p">[[],</span> <span class="p">[</span><span class="s1">&#39;!s&#39;</span><span class="p">,</span> <span class="s1">&#39;:.4&#39;</span><span class="p">]])</span>
+
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return ``repr(self)``.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">matrix_issparse</span><span class="p">:</span>
+            <span class="n">posargs</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;&lt;</span><span class="si">{}</span><span class="s1"> sparse matrix, format </span><span class="si">{}</span><span class="s1">, </span><span class="si">{}</span><span class="s1"> nonzero entries&gt;&#39;</span>
+                       <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">matrix</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">matrix</span><span class="o">.</span><span class="n">format</span><span class="p">,</span>
+                                 <span class="bp">self</span><span class="o">.</span><span class="n">matrix</span><span class="o">.</span><span class="n">nnz</span><span class="p">)]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">posargs</span> <span class="o">=</span> <span class="p">[</span><span class="n">array_str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">matrix</span><span class="p">,</span> <span class="n">nprint</span><span class="o">=</span><span class="mi">10</span><span class="p">)]</span>
+
+        <span class="n">optargs</span> <span class="o">=</span> <span class="p">[(</span><span class="s1">&#39;exponent&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">exponent</span><span class="p">,</span> <span class="mf">2.0</span><span class="p">)]</span>
+        <span class="n">inner_str</span> <span class="o">=</span> <span class="n">signature_string</span><span class="p">(</span><span class="n">posargs</span><span class="p">,</span> <span class="n">optargs</span><span class="p">,</span> <span class="n">sep</span><span class="o">=</span><span class="s1">&#39;,</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">,</span>
+                                     <span class="n">mod</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;!s&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">])</span>
+        <span class="k">return</span> <span class="s1">&#39;</span><span class="si">{}</span><span class="s1">(</span><span class="se">\n</span><span class="si">{}</span><span class="se">\n</span><span class="s1">)&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="p">,</span> <span class="n">indent</span><span class="p">(</span><span class="n">inner_str</span><span class="p">))</span>
+
+    <span class="k">def</span> <span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return ``str(self)``.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="nb">repr</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="ArrayWeighting"><a class="viewcode-back" href="../../../generated/odl.space.weighting.ArrayWeighting.html#odl.space.weighting.ArrayWeighting">[docs]</a><span class="k">class</span> <span class="nc">ArrayWeighting</span><span class="p">(</span><span class="n">Weighting</span><span class="p">):</span>
+
+    <span class="sd">&quot;&quot;&quot;Weighting of a space by an array.</span>
+
+<span class="sd">    The exact definition of the weighted inner product, norm and</span>
+<span class="sd">    distance functions depend on the concrete space.</span>
+
+<span class="sd">    The array may only have positive entries, otherwise it does not</span>
+<span class="sd">    define an inner product or norm, respectively. This is not checked</span>
+<span class="sd">    during initialization.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="ArrayWeighting.__init__"><a class="viewcode-back" href="../../../generated/odl.space.weighting.ArrayWeighting.html#odl.space.weighting.ArrayWeighting.__init__">[docs]</a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">array</span><span class="p">,</span> <span class="n">impl</span><span class="p">,</span> <span class="n">exponent</span><span class="o">=</span><span class="mf">2.0</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Initialize a new instance.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        array : `array-like`</span>
+<span class="sd">            Weighting array of inner product, norm and distance.</span>
+<span class="sd">            Native `Tensor` instances are stored as-is without copying.</span>
+<span class="sd">        impl : string</span>
+<span class="sd">            Specifier for the implementation backend.</span>
+<span class="sd">        exponent : positive float, optional</span>
+<span class="sd">            Exponent of the norm. For values other than 2.0, the inner</span>
+<span class="sd">            product is not defined.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">ArrayWeighting</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">impl</span><span class="o">=</span><span class="n">impl</span><span class="p">,</span> <span class="n">exponent</span><span class="o">=</span><span class="n">exponent</span><span class="p">)</span>
+
+        <span class="c1"># We apply array duck-typing to allow all kinds of Numpy-array-like</span>
+        <span class="c1"># data structures without change</span>
+        <span class="n">array_attrs</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;shape&#39;</span><span class="p">,</span> <span class="s1">&#39;dtype&#39;</span><span class="p">,</span> <span class="s1">&#39;itemsize&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="p">(</span><span class="nb">all</span><span class="p">(</span><span class="nb">hasattr</span><span class="p">(</span><span class="n">array</span><span class="p">,</span> <span class="n">attr</span><span class="p">)</span> <span class="k">for</span> <span class="n">attr</span> <span class="ow">in</span> <span class="n">array_attrs</span><span class="p">)</span> <span class="ow">and</span>
+                <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">array</span><span class="p">,</span> <span class="n">TensorSpace</span><span class="p">)):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">__array</span> <span class="o">=</span> <span class="n">array</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;`array` </span><span class="si">{!r}</span><span class="s1"> does not look like a valid array&#39;</span>
+                            <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">array</span><span class="p">))</span></div>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">array</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Weighting array of this instance.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__array</span>
+
+<div class="viewcode-block" id="ArrayWeighting.is_valid"><a class="viewcode-back" href="../../../generated/odl.space.weighting.ArrayWeighting.is_valid.html#odl.space.weighting.ArrayWeighting.is_valid">[docs]</a>    <span class="k">def</span> <span class="nf">is_valid</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return True if the array is a valid weight, i.e. positive.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">all</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">greater</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">array</span><span class="p">,</span> <span class="mi">0</span><span class="p">))</span></div>
+
+<div class="viewcode-block" id="ArrayWeighting.__eq__"><a class="viewcode-back" href="../../../generated/odl.space.weighting.ArrayWeighting.__eq__.html#odl.space.weighting.ArrayWeighting.__eq__">[docs]</a>    <span class="k">def</span> <span class="fm">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return ``self == other``.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        equals : bool</span>
+<span class="sd">            ``True`` if ``other`` is an `ArrayWeighting` instance with</span>
+<span class="sd">            **identical** array, False otherwise.</span>
+
+<span class="sd">        See Also</span>
+<span class="sd">        --------</span>
+<span class="sd">        equiv : test for equivalent inner products</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">other</span> <span class="ow">is</span> <span class="bp">self</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">True</span>
+
+        <span class="k">return</span> <span class="p">(</span><span class="nb">super</span><span class="p">(</span><span class="n">ArrayWeighting</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__eq__</span><span class="p">(</span><span class="n">other</span><span class="p">)</span> <span class="ow">and</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">array</span> <span class="ow">is</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="s1">&#39;array&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">))</span></div>
+
+    <span class="k">def</span> <span class="fm">__hash__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return ``hash(self)``.&quot;&quot;&quot;</span>
+        <span class="c1"># TODO: Better hash for array?</span>
+        <span class="k">return</span> <span class="nb">hash</span><span class="p">((</span><span class="nb">super</span><span class="p">(</span><span class="n">ArrayWeighting</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__hash__</span><span class="p">(),</span>
+                     <span class="bp">self</span><span class="o">.</span><span class="n">array</span><span class="o">.</span><span class="n">tobytes</span><span class="p">()))</span>
+
+<div class="viewcode-block" id="ArrayWeighting.equiv"><a class="viewcode-back" href="../../../generated/odl.space.weighting.ArrayWeighting.equiv.html#odl.space.weighting.ArrayWeighting.equiv">[docs]</a>    <span class="k">def</span> <span class="nf">equiv</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return True if other is an equivalent weighting.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        equivalent : bool</span>
+<span class="sd">            ``True`` if ``other`` is a `Weighting` instance with the same</span>
+<span class="sd">            `Weighting.impl`, which yields the same result as this</span>
+<span class="sd">            weighting for any input, ``False`` otherwise. This is checked</span>
+<span class="sd">            by entry-wise comparison of arrays/constants.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># Optimization for equality</span>
+        <span class="k">if</span> <span class="bp">self</span> <span class="o">==</span> <span class="n">other</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">True</span>
+        <span class="k">elif</span> <span class="p">(</span><span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="n">Weighting</span><span class="p">)</span> <span class="ow">or</span>
+              <span class="bp">self</span><span class="o">.</span><span class="n">exponent</span> <span class="o">!=</span> <span class="n">other</span><span class="o">.</span><span class="n">exponent</span><span class="p">):</span>
+            <span class="k">return</span> <span class="kc">False</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="n">MatrixWeighting</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">other</span><span class="o">.</span><span class="n">equiv</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="n">ConstWeighting</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">array_equiv</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">array</span><span class="p">,</span> <span class="n">other</span><span class="o">.</span><span class="n">const</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">array_equal</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">array</span><span class="p">,</span> <span class="n">other</span><span class="o">.</span><span class="n">array</span><span class="p">)</span></div>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">repr_part</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;String usable in a space&#39;s ``__repr__`` method.&quot;&quot;&quot;</span>
+        <span class="n">optargs</span> <span class="o">=</span> <span class="p">[(</span><span class="s1">&#39;weighting&#39;</span><span class="p">,</span> <span class="n">array_str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">array</span><span class="p">,</span> <span class="n">nprint</span><span class="o">=</span><span class="mi">10</span><span class="p">),</span> <span class="s1">&#39;&#39;</span><span class="p">),</span>
+                   <span class="p">(</span><span class="s1">&#39;exponent&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">exponent</span><span class="p">,</span> <span class="mf">2.0</span><span class="p">)]</span>
+        <span class="k">return</span> <span class="n">signature_string</span><span class="p">([],</span> <span class="n">optargs</span><span class="p">,</span> <span class="n">sep</span><span class="o">=</span><span class="s1">&#39;,</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">,</span>
+                                <span class="n">mod</span><span class="o">=</span><span class="p">[[],</span> <span class="p">[</span><span class="s1">&#39;!s&#39;</span><span class="p">,</span> <span class="s1">&#39;:.4&#39;</span><span class="p">]])</span>
+
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return ``repr(self)``.&quot;&quot;&quot;</span>
+        <span class="n">posargs</span> <span class="o">=</span> <span class="p">[</span><span class="n">array_str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">array</span><span class="p">)]</span>
+        <span class="n">optargs</span> <span class="o">=</span> <span class="p">[(</span><span class="s1">&#39;exponent&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">exponent</span><span class="p">,</span> <span class="mf">2.0</span><span class="p">)]</span>
+        <span class="n">inner_str</span> <span class="o">=</span> <span class="n">signature_string</span><span class="p">(</span><span class="n">posargs</span><span class="p">,</span> <span class="n">optargs</span><span class="p">,</span> <span class="n">sep</span><span class="o">=</span><span class="s1">&#39;,</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">,</span>
+                                     <span class="n">mod</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;!s&#39;</span><span class="p">,</span> <span class="s1">&#39;:.4&#39;</span><span class="p">])</span>
+        <span class="k">return</span> <span class="s1">&#39;</span><span class="si">{}</span><span class="s1">(</span><span class="se">\n</span><span class="si">{}</span><span class="se">\n</span><span class="s1">)&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="p">,</span> <span class="n">indent</span><span class="p">(</span><span class="n">inner_str</span><span class="p">))</span>
+
+    <span class="k">def</span> <span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return ``str(self)``.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="nb">repr</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="ConstWeighting"><a class="viewcode-back" href="../../../generated/odl.space.weighting.ConstWeighting.html#odl.space.weighting.ConstWeighting">[docs]</a><span class="k">class</span> <span class="nc">ConstWeighting</span><span class="p">(</span><span class="n">Weighting</span><span class="p">):</span>
+
+    <span class="sd">&quot;&quot;&quot;Weighting of a space by a constant.&quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="ConstWeighting.__init__"><a class="viewcode-back" href="../../../generated/odl.space.weighting.ConstWeighting.html#odl.space.weighting.ConstWeighting.__init__">[docs]</a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">const</span><span class="p">,</span> <span class="n">impl</span><span class="p">,</span> <span class="n">exponent</span><span class="o">=</span><span class="mf">2.0</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Initialize a new instance.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        constant : positive float</span>
+<span class="sd">            Weighting constant of the inner product.</span>
+<span class="sd">        impl : string</span>
+<span class="sd">            Specifier for the implementation backend.</span>
+<span class="sd">        exponent : positive float, optional</span>
+<span class="sd">            Exponent of the norm. For values other than 2.0, the inner</span>
+<span class="sd">            product is not defined.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">ConstWeighting</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">impl</span><span class="o">=</span><span class="n">impl</span><span class="p">,</span> <span class="n">exponent</span><span class="o">=</span><span class="n">exponent</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__const</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">const</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">const</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;expected positive constant, got </span><span class="si">{}</span><span class="s1">&#39;</span>
+                             <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">const</span><span class="p">))</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">isfinite</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">const</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;`const` </span><span class="si">{}</span><span class="s1"> is invalid&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">const</span><span class="p">))</span></div>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">const</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Weighting constant of this inner product.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__const</span>
+
+<div class="viewcode-block" id="ConstWeighting.__eq__"><a class="viewcode-back" href="../../../generated/odl.space.weighting.ConstWeighting.__eq__.html#odl.space.weighting.ConstWeighting.__eq__">[docs]</a>    <span class="k">def</span> <span class="fm">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return ``self == other``.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        equal : bool</span>
+<span class="sd">            ``True`` if ``other`` is a `ConstWeighting` instance with the</span>
+<span class="sd">            same constant, ``False`` otherwise.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">other</span> <span class="ow">is</span> <span class="bp">self</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">True</span>
+
+        <span class="k">return</span> <span class="p">(</span><span class="nb">super</span><span class="p">(</span><span class="n">ConstWeighting</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__eq__</span><span class="p">(</span><span class="n">other</span><span class="p">)</span> <span class="ow">and</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">const</span> <span class="o">==</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="s1">&#39;const&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">))</span></div>
+
+    <span class="k">def</span> <span class="fm">__hash__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return ``hash(self)``.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="nb">hash</span><span class="p">((</span><span class="nb">super</span><span class="p">(</span><span class="n">ConstWeighting</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__hash__</span><span class="p">(),</span> <span class="bp">self</span><span class="o">.</span><span class="n">const</span><span class="p">))</span>
+
+<div class="viewcode-block" id="ConstWeighting.equiv"><a class="viewcode-back" href="../../../generated/odl.space.weighting.ConstWeighting.equiv.html#odl.space.weighting.ConstWeighting.equiv">[docs]</a>    <span class="k">def</span> <span class="nf">equiv</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Test if other is an equivalent weighting.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        equivalent : bool</span>
+<span class="sd">            ``True`` if other is a `Weighting` instance with the same</span>
+<span class="sd">            `Weighting.impl`, which yields the same result as this</span>
+<span class="sd">            weighting for any input, ``False`` otherwise. This is checked</span>
+<span class="sd">            by entry-wise comparison of matrices/arrays/constants.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="n">ConstWeighting</span><span class="p">):</span>
+            <span class="k">return</span> <span class="bp">self</span> <span class="o">==</span> <span class="n">other</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="p">(</span><span class="n">ArrayWeighting</span><span class="p">,</span> <span class="n">MatrixWeighting</span><span class="p">)):</span>
+            <span class="k">return</span> <span class="n">other</span><span class="o">.</span><span class="n">equiv</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">False</span></div>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">repr_part</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;String usable in a space&#39;s ``__repr__`` method.&quot;&quot;&quot;</span>
+        <span class="n">optargs</span> <span class="o">=</span> <span class="p">[(</span><span class="s1">&#39;weighting&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">const</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">),</span>
+                   <span class="p">(</span><span class="s1">&#39;exponent&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">exponent</span><span class="p">,</span> <span class="mf">2.0</span><span class="p">)]</span>
+        <span class="k">return</span> <span class="n">signature_string</span><span class="p">([],</span> <span class="n">optargs</span><span class="p">,</span> <span class="n">mod</span><span class="o">=</span><span class="s1">&#39;:.4&#39;</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return ``repr(self)``.&quot;&quot;&quot;</span>
+        <span class="n">posargs</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">const</span><span class="p">]</span>
+        <span class="n">optargs</span> <span class="o">=</span> <span class="p">[(</span><span class="s1">&#39;exponent&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">exponent</span><span class="p">,</span> <span class="mf">2.0</span><span class="p">)]</span>
+        <span class="k">return</span> <span class="s1">&#39;</span><span class="si">{}</span><span class="s1">(</span><span class="si">{}</span><span class="s1">)&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="p">,</span>
+                               <span class="n">signature_string</span><span class="p">(</span><span class="n">posargs</span><span class="p">,</span> <span class="n">optargs</span><span class="p">))</span>
+
+    <span class="k">def</span> <span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return ``str(self)``.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="nb">repr</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="CustomInner"><a class="viewcode-back" href="../../../generated/odl.space.weighting.CustomInner.html#odl.space.weighting.CustomInner">[docs]</a><span class="k">class</span> <span class="nc">CustomInner</span><span class="p">(</span><span class="n">Weighting</span><span class="p">):</span>
+
+    <span class="sd">&quot;&quot;&quot;Class for handling a user-specified inner product.&quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="CustomInner.__init__"><a class="viewcode-back" href="../../../generated/odl.space.weighting.CustomInner.html#odl.space.weighting.CustomInner.__init__">[docs]</a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">inner</span><span class="p">,</span> <span class="n">impl</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Initialize a new instance.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        inner : callable</span>
+<span class="sd">            The inner product implementation. It must accept two</span>
+<span class="sd">            `LinearSpaceElement` arguments, return an element from</span>
+<span class="sd">            their space&#39;s field (real or complex number) and</span>
+<span class="sd">            satisfy the following conditions for all space elements</span>
+<span class="sd">            ``x, y, z`` and scalars ``s``:</span>
+
+<span class="sd">            - ``&lt;x, y&gt; = conj(&lt;y, x&gt;)``</span>
+<span class="sd">            - ``&lt;s*x + y, z&gt; = s * &lt;x, z&gt; + &lt;y, z&gt;``</span>
+<span class="sd">            - ``&lt;x, x&gt; = 0``  if and only if  ``x = 0``</span>
+
+<span class="sd">        impl : string</span>
+<span class="sd">            Specifier for the implementation backend.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">CustomInner</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">impl</span><span class="o">=</span><span class="n">impl</span><span class="p">,</span> <span class="n">exponent</span><span class="o">=</span><span class="mf">2.0</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">callable</span><span class="p">(</span><span class="n">inner</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;`inner` </span><span class="si">{!r}</span><span class="s1"> is not callable&#39;</span>
+                            <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">inner</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__inner</span> <span class="o">=</span> <span class="n">inner</span></div>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">inner</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Custom inner product of this instance..&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__inner</span>
+
+<div class="viewcode-block" id="CustomInner.__eq__"><a class="viewcode-back" href="../../../generated/odl.space.weighting.CustomInner.__eq__.html#odl.space.weighting.CustomInner.__eq__">[docs]</a>    <span class="k">def</span> <span class="fm">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return ``self == other``.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        equal : bool</span>
+<span class="sd">            ``True`` if other is a `CustomInner`</span>
+<span class="sd">            instance with the same inner product, ``False`` otherwise.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="p">(</span><span class="nb">super</span><span class="p">(</span><span class="n">CustomInner</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__eq__</span><span class="p">(</span><span class="n">other</span><span class="p">)</span> <span class="ow">and</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">inner</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">inner</span><span class="p">)</span></div>
+
+    <span class="k">def</span> <span class="fm">__hash__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return ``hash(self)``.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="nb">hash</span><span class="p">((</span><span class="nb">super</span><span class="p">(</span><span class="n">CustomInner</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__hash__</span><span class="p">(),</span> <span class="bp">self</span><span class="o">.</span><span class="n">inner</span><span class="p">))</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">repr_part</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;String usable in a space&#39;s ``__repr__`` method.&quot;&quot;&quot;</span>
+        <span class="n">optargs</span> <span class="o">=</span> <span class="p">[(</span><span class="s1">&#39;inner&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">inner</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">)]</span>
+        <span class="k">return</span> <span class="n">signature_string</span><span class="p">([],</span> <span class="n">optargs</span><span class="p">,</span> <span class="n">mod</span><span class="o">=</span><span class="s1">&#39;!r&#39;</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return ``repr(self)``.&quot;&quot;&quot;</span>
+        <span class="n">posargs</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">inner</span><span class="p">]</span>
+        <span class="n">optargs</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">inner_str</span> <span class="o">=</span> <span class="n">signature_string</span><span class="p">(</span><span class="n">posargs</span><span class="p">,</span> <span class="n">optargs</span><span class="p">,</span> <span class="n">mod</span><span class="o">=</span><span class="s1">&#39;!r&#39;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="s1">&#39;</span><span class="si">{}</span><span class="s1">(</span><span class="si">{}</span><span class="s1">)&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="p">,</span> <span class="n">inner_str</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="CustomNorm"><a class="viewcode-back" href="../../../generated/odl.space.weighting.CustomNorm.html#odl.space.weighting.CustomNorm">[docs]</a><span class="k">class</span> <span class="nc">CustomNorm</span><span class="p">(</span><span class="n">Weighting</span><span class="p">):</span>
+
+    <span class="sd">&quot;&quot;&quot;Class for handling a user-specified norm.</span>
+
+<span class="sd">    Note that this removes ``inner``.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="CustomNorm.__init__"><a class="viewcode-back" href="../../../generated/odl.space.weighting.CustomNorm.html#odl.space.weighting.CustomNorm.__init__">[docs]</a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">norm</span><span class="p">,</span> <span class="n">impl</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Initialize a new instance.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        norm : callable</span>
+<span class="sd">            The norm implementation. It must accept a</span>
+<span class="sd">            `LinearSpaceElement` argument, return a float and satisfy</span>
+<span class="sd">            the following conditions for all space elements</span>
+<span class="sd">            ``x, y`` and scalars ``s``:</span>
+
+<span class="sd">            - ``||x|| &gt;= 0``</span>
+<span class="sd">            - ``||x|| = 0``  if and only if  ``x = 0``</span>
+<span class="sd">            - ``||s * x|| = |s| * ||x||``</span>
+<span class="sd">            - ``||x + y|| &lt;= ||x|| + ||y||``</span>
+<span class="sd">        impl : string</span>
+<span class="sd">            Specifier for the implementation backend</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">CustomNorm</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">impl</span><span class="o">=</span><span class="n">impl</span><span class="p">,</span> <span class="n">exponent</span><span class="o">=</span><span class="mf">1.0</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">callable</span><span class="p">(</span><span class="n">norm</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;`norm` </span><span class="si">{!r}</span><span class="s1"> is not callable&#39;</span>
+                            <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">norm</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__norm</span> <span class="o">=</span> <span class="n">norm</span></div>
+
+<div class="viewcode-block" id="CustomNorm.inner"><a class="viewcode-back" href="../../../generated/odl.space.weighting.CustomNorm.inner.html#odl.space.weighting.CustomNorm.inner">[docs]</a>    <span class="k">def</span> <span class="nf">inner</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x1</span><span class="p">,</span> <span class="n">x2</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Inner product is not defined for custom distance.&quot;&quot;&quot;</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s1">&#39;`inner` not defined for custom norm&#39;</span><span class="p">)</span></div>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">norm</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Custom norm of this instance..&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__norm</span>
+
+<div class="viewcode-block" id="CustomNorm.__eq__"><a class="viewcode-back" href="../../../generated/odl.space.weighting.CustomNorm.__eq__.html#odl.space.weighting.CustomNorm.__eq__">[docs]</a>    <span class="k">def</span> <span class="fm">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return ``self == other``.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        equal : bool</span>
+<span class="sd">            ``True`` if other is a `CustomNorm` instance with the same</span>
+<span class="sd">            norm, ``False`` otherwise.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="p">(</span><span class="nb">super</span><span class="p">(</span><span class="n">CustomNorm</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__eq__</span><span class="p">(</span><span class="n">other</span><span class="p">)</span> <span class="ow">and</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">norm</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">norm</span><span class="p">)</span></div>
+
+    <span class="k">def</span> <span class="fm">__hash__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return ``hash(self)``.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="nb">hash</span><span class="p">((</span><span class="nb">super</span><span class="p">(</span><span class="n">CustomNorm</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__hash__</span><span class="p">(),</span> <span class="bp">self</span><span class="o">.</span><span class="n">norm</span><span class="p">))</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">repr_part</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return a string usable in a space&#39;s ``__repr__`` method.&quot;&quot;&quot;</span>
+        <span class="n">optargs</span> <span class="o">=</span> <span class="p">[(</span><span class="s1">&#39;norm&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">norm</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">),</span>
+                   <span class="p">(</span><span class="s1">&#39;exponent&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">exponent</span><span class="p">,</span> <span class="mf">2.0</span><span class="p">)]</span>
+        <span class="k">return</span> <span class="n">signature_string</span><span class="p">([],</span> <span class="n">optargs</span><span class="p">,</span> <span class="n">mod</span><span class="o">=</span><span class="p">[[],</span> <span class="p">[</span><span class="s1">&#39;!r&#39;</span><span class="p">,</span> <span class="s1">&#39;:.4&#39;</span><span class="p">]])</span>
+
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return ``repr(self)``.&quot;&quot;&quot;</span>
+        <span class="n">posargs</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">norm</span><span class="p">]</span>
+        <span class="n">optargs</span> <span class="o">=</span> <span class="p">[(</span><span class="s1">&#39;exponent&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">exponent</span><span class="p">,</span> <span class="mf">2.0</span><span class="p">)]</span>
+        <span class="n">inner_str</span> <span class="o">=</span> <span class="n">signature_string</span><span class="p">(</span><span class="n">posargs</span><span class="p">,</span> <span class="n">optargs</span><span class="p">,</span> <span class="n">mod</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;!r&#39;</span><span class="p">,</span> <span class="s1">&#39;:.4&#39;</span><span class="p">])</span>
+        <span class="k">return</span> <span class="s1">&#39;</span><span class="si">{}</span><span class="s1">(</span><span class="si">{}</span><span class="s1">)&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="p">,</span> <span class="n">inner_str</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="CustomDist"><a class="viewcode-back" href="../../../generated/odl.space.weighting.CustomDist.html#odl.space.weighting.CustomDist">[docs]</a><span class="k">class</span> <span class="nc">CustomDist</span><span class="p">(</span><span class="n">Weighting</span><span class="p">):</span>
+
+    <span class="sd">&quot;&quot;&quot;Class for handling a user-specified distance.</span>
+
+<span class="sd">    Note that this removes ``inner`` and ``norm``.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="CustomDist.__init__"><a class="viewcode-back" href="../../../generated/odl.space.weighting.CustomDist.html#odl.space.weighting.CustomDist.__init__">[docs]</a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dist</span><span class="p">,</span> <span class="n">impl</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Initialize a new instance.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        dist : callable</span>
+<span class="sd">            The distance function defining a metric on a `LinearSpace`.</span>
+<span class="sd">            It must accept two `LinearSpaceElement` arguments, return a</span>
+<span class="sd">            float and and fulfill the following mathematical conditions</span>
+<span class="sd">            for any three space elements ``x, y, z``:</span>
+
+<span class="sd">            - ``dist(x, y) &gt;= 0``</span>
+<span class="sd">            - ``dist(x, y) = 0``  if and only if  ``x = y``</span>
+<span class="sd">            - ``dist(x, y) = dist(y, x)``</span>
+<span class="sd">            - ``dist(x, y) &lt;= dist(x, z) + dist(z, y)``</span>
+<span class="sd">        impl : string</span>
+<span class="sd">            Specifier for the implementation backend</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">CustomDist</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">impl</span><span class="o">=</span><span class="n">impl</span><span class="p">,</span> <span class="n">exponent</span><span class="o">=</span><span class="mf">1.0</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">callable</span><span class="p">(</span><span class="n">dist</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;`dist` </span><span class="si">{!r}</span><span class="s1"> is not callable&#39;</span>
+                            <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">dist</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__dist</span> <span class="o">=</span> <span class="n">dist</span></div>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">dist</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Custom distance of this instance..&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__dist</span>
+
+<div class="viewcode-block" id="CustomDist.inner"><a class="viewcode-back" href="../../../generated/odl.space.weighting.CustomDist.inner.html#odl.space.weighting.CustomDist.inner">[docs]</a>    <span class="k">def</span> <span class="nf">inner</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x1</span><span class="p">,</span> <span class="n">x2</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Inner product is not defined for custom distance.&quot;&quot;&quot;</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s1">&#39;`inner` not defined for custom distance&#39;</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="CustomDist.norm"><a class="viewcode-back" href="../../../generated/odl.space.weighting.CustomDist.norm.html#odl.space.weighting.CustomDist.norm">[docs]</a>    <span class="k">def</span> <span class="nf">norm</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Norm is not defined for custom distance.&quot;&quot;&quot;</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s1">&#39;`norm` not defined for custom distance&#39;</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="CustomDist.__eq__"><a class="viewcode-back" href="../../../generated/odl.space.weighting.CustomDist.__eq__.html#odl.space.weighting.CustomDist.__eq__">[docs]</a>    <span class="k">def</span> <span class="fm">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return ``self == other``.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        equal : bool</span>
+<span class="sd">            ``True`` if other is a `CustomDist` instance with the same</span>
+<span class="sd">            dist, ``False`` otherwise.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="p">(</span><span class="nb">super</span><span class="p">(</span><span class="n">CustomDist</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__eq__</span><span class="p">(</span><span class="n">other</span><span class="p">)</span> <span class="ow">and</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">dist</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">dist</span><span class="p">)</span></div>
+
+    <span class="k">def</span> <span class="fm">__hash__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return ``hash(self)``.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="nb">hash</span><span class="p">((</span><span class="nb">super</span><span class="p">(</span><span class="n">CustomDist</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__hash__</span><span class="p">(),</span> <span class="bp">self</span><span class="o">.</span><span class="n">dist</span><span class="p">))</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">repr_part</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return a string usable in a space&#39;s ``__repr__`` method.&quot;&quot;&quot;</span>
+        <span class="n">optargs</span> <span class="o">=</span> <span class="p">[(</span><span class="s1">&#39;dist&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">dist</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">)]</span>
+        <span class="k">return</span> <span class="n">signature_string</span><span class="p">([],</span> <span class="n">optargs</span><span class="p">,</span> <span class="n">mod</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="s1">&#39;!r&#39;</span><span class="p">])</span>
+
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return ``repr(self)``.&quot;&quot;&quot;</span>
+        <span class="n">posargs</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">dist</span><span class="p">]</span>
+        <span class="n">optargs</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">inner_str</span> <span class="o">=</span> <span class="n">signature_string</span><span class="p">(</span><span class="n">posargs</span><span class="p">,</span> <span class="n">optargs</span><span class="p">,</span> <span class="n">mod</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;!r&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">])</span>
+        <span class="k">return</span> <span class="s1">&#39;</span><span class="si">{}</span><span class="s1">(</span><span class="si">{}</span><span class="s1">)&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="p">,</span> <span class="n">inner_str</span><span class="p">)</span></div>
+
+
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s1">&#39;__main__&#39;</span><span class="p">:</span>
+    <span class="kn">from</span> <span class="nn">odl.util.testutils</span> <span class="kn">import</span> <span class="n">run_doctests</span>
+    <span class="n">run_doctests</span><span class="p">()</span>
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &#169; Copyright 2014-2020 The ODL Contributors.
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

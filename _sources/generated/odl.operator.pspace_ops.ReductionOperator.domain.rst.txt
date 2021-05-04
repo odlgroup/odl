@@ -1,0 +1,6 @@
+ReductionOperator.domain
+================================================
+
+.. currentmodule:: odl.operator.pspace_ops
+
+.. autoproperty:: ReductionOperator.domain

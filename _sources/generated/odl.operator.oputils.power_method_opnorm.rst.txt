@@ -1,0 +1,6 @@
+﻿power_method_opnorm
+========================================
+
+.. currentmodule:: odl.operator.oputils
+
+.. autofunction:: power_method_opnorm

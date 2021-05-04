@@ -1,0 +1,43 @@
+﻿arccos_func
+===================================
+
+.. currentmodule:: odl.ufunc_ops.ufunc_ops
+
+.. autoclass:: arccos_func
+   :show-inheritance:
+   
+   
+   .. automethod:: __init__
+   
+      
+   
+   .. HACK -- the point here is that we don't want this to appear in the output, but the autosummary should still generate the pages.
+      .. autosummary::
+         :toctree:
+      
+         arccos_func.__call__
+         arccos_func.__eq__
+         arccos_func._call
+         arccos_func.bregman
+         arccos_func.derivative
+         arccos_func.norm
+         arccos_func.translated
+   
+
+    
+   .. HACK -- the point here is that we don't want this to appear in the output, but the autosummary should still generate the pages.
+      .. autosummary::
+         :toctree:
+      
+         arccos_func.adjoint
+         arccos_func.convex_conj
+         arccos_func.domain
+         arccos_func.grad_lipschitz
+         arccos_func.gradient
+         arccos_func.inverse
+         arccos_func.is_functional
+         arccos_func.is_linear
+         arccos_func.proximal
+         arccos_func.range
+   
+   

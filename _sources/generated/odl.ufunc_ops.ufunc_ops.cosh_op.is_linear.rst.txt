@@ -1,0 +1,6 @@
+cosh_op.is_linear
+=========================================
+
+.. currentmodule:: odl.ufunc_ops.ufunc_ops
+
+.. autoproperty:: cosh_op.is_linear

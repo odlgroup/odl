@@ -1,0 +1,6 @@
+DiscretizedSpaceElement.impl
+==================================================
+
+.. currentmodule:: odl.discr.discr_space
+
+.. autoproperty:: DiscretizedSpaceElement.impl

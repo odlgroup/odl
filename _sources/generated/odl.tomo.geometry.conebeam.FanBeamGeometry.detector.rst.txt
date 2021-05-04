@@ -1,0 +1,6 @@
+FanBeamGeometry.detector
+===================================================
+
+.. currentmodule:: odl.tomo.geometry.conebeam
+
+.. autoproperty:: FanBeamGeometry.detector

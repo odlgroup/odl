@@ -1,0 +1,6 @@
+﻿nd_iterator
+============================
+
+.. currentmodule:: odl.util.utility
+
+.. autofunction:: nd_iterator

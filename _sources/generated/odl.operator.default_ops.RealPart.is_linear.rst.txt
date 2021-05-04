@@ -1,0 +1,6 @@
+RealPart.is_linear
+===========================================
+
+.. currentmodule:: odl.operator.default_ops
+
+.. autoproperty:: RealPart.is_linear

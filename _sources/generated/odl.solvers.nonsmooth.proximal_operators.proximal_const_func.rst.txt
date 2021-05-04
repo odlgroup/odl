@@ -1,0 +1,6 @@
+﻿proximal_const_func
+============================================================
+
+.. currentmodule:: odl.solvers.nonsmooth.proximal_operators
+
+.. autofunction:: proximal_const_func

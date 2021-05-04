@@ -1,0 +1,6 @@
+﻿real_dtype
+===========================
+
+.. currentmodule:: odl.util.utility
+
+.. autofunction:: real_dtype

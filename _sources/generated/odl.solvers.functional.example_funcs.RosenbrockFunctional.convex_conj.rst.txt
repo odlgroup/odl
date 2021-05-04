@@ -1,0 +1,6 @@
+RosenbrockFunctional.convex_conj
+=====================================================================
+
+.. currentmodule:: odl.solvers.functional.example_funcs
+
+.. autoproperty:: RosenbrockFunctional.convex_conj

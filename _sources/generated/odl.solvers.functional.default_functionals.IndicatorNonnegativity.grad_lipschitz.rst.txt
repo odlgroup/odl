@@ -1,0 +1,6 @@
+IndicatorNonnegativity.grad_lipschitz
+================================================================================
+
+.. currentmodule:: odl.solvers.functional.default_functionals
+
+.. autoproperty:: IndicatorNonnegativity.grad_lipschitz

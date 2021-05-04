@@ -1,0 +1,6 @@
+trunc_op.domain
+=======================================
+
+.. currentmodule:: odl.ufunc_ops.ufunc_ops
+
+.. autoproperty:: trunc_op.domain

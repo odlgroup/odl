@@ -1,0 +1,6 @@
+OperatorVectorSum.operator
+================================================
+
+.. currentmodule:: odl.operator.operator
+
+.. autoproperty:: OperatorVectorSum.operator

@@ -1,0 +1,6 @@
+RectPartition.meshgrid
+==========================================
+
+.. currentmodule:: odl.discr.partition
+
+.. autoproperty:: RectPartition.meshgrid

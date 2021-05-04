@@ -1,0 +1,8 @@
+:orphan:
+
+RosenbrockFunctional.__eq__
+================================================================
+
+.. currentmodule:: odl.solvers.functional.example_funcs
+
+.. automethod:: RosenbrockFunctional.__eq__

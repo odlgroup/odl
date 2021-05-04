@@ -1,0 +1,37 @@
+functional
+==========
+
+
+
+.. currentmodule:: odl.solvers.functional.functional
+
+
+
+.. rubric:: Classes
+
+.. autosummary::
+   :toctree: generated/
+
+   ~odl.solvers.functional.functional.BregmanDistance
+   ~odl.solvers.functional.functional.Functional
+   ~odl.solvers.functional.functional.FunctionalComp
+   ~odl.solvers.functional.functional.FunctionalDefaultConvexConjugate
+   ~odl.solvers.functional.functional.FunctionalLeftScalarMult
+   ~odl.solvers.functional.functional.FunctionalProduct
+   ~odl.solvers.functional.functional.FunctionalQuadraticPerturb
+   ~odl.solvers.functional.functional.FunctionalQuotient
+   ~odl.solvers.functional.functional.FunctionalRightScalarMult
+   ~odl.solvers.functional.functional.FunctionalRightVectorMult
+   ~odl.solvers.functional.functional.FunctionalScalarSum
+   ~odl.solvers.functional.functional.FunctionalSum
+   ~odl.solvers.functional.functional.FunctionalTranslation
+   ~odl.solvers.functional.functional.InfimalConvolution
+
+
+.. rubric:: Functions
+
+.. autosummary::
+   :toctree: generated/
+
+   ~odl.solvers.functional.functional.simple_functional
+

@@ -1,0 +1,31 @@
+﻿AstraCpuImpl
+========================================
+
+.. currentmodule:: odl.tomo.backends.astra_cpu
+
+.. autoclass:: AstraCpuImpl
+   :show-inheritance:
+   
+   
+   .. automethod:: __init__
+   
+      
+   
+   .. HACK -- the point here is that we don't want this to appear in the output, but the autosummary should still generate the pages.
+      .. autosummary::
+         :toctree:
+      
+         AstraCpuImpl.__eq__
+         AstraCpuImpl.call_backward
+         AstraCpuImpl.call_forward
+   
+
+    
+   .. HACK -- the point here is that we don't want this to appear in the output, but the autosummary should still generate the pages.
+      .. autosummary::
+         :toctree:
+      
+         AstraCpuImpl.proj_space
+         AstraCpuImpl.vol_space
+   
+   

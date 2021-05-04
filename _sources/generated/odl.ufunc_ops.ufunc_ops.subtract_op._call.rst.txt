@@ -1,0 +1,8 @@
+:orphan:
+
+subtract_op._call
+=========================================
+
+.. currentmodule:: odl.ufunc_ops.ufunc_ops
+
+.. automethod:: subtract_op._call

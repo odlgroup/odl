@@ -1,0 +1,6 @@
+Parallel2dGeometry.angles
+====================================================
+
+.. currentmodule:: odl.tomo.geometry.parallel
+
+.. autoproperty:: Parallel2dGeometry.angles

@@ -1,0 +1,23 @@
+pspace
+======
+
+Cartesian products of `LinearSpace` instances.
+
+.. currentmodule:: odl.space.pspace
+
+
+
+.. rubric:: Classes
+
+.. autosummary::
+   :toctree: generated/
+
+   ~odl.space.pspace.ProductSpace
+   ~odl.space.pspace.ProductSpaceArrayWeighting
+   ~odl.space.pspace.ProductSpaceConstWeighting
+   ~odl.space.pspace.ProductSpaceCustomDist
+   ~odl.space.pspace.ProductSpaceCustomInner
+   ~odl.space.pspace.ProductSpaceCustomNorm
+   ~odl.space.pspace.ProductSpaceElement
+
+

@@ -1,0 +1,6 @@
+﻿poisson_log_likelihood
+========================================================
+
+.. currentmodule:: odl.solvers.iterative.statistical
+
+.. autofunction:: poisson_log_likelihood

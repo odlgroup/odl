@@ -1,0 +1,6 @@
+DiscretizedSpaceElement.cell_sides
+========================================================
+
+.. currentmodule:: odl.discr.discr_space
+
+.. autoproperty:: DiscretizedSpaceElement.cell_sides

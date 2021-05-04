@@ -1,0 +1,8 @@
+:orphan:
+
+IdentityFunctional.translated
+========================================================================
+
+.. currentmodule:: odl.solvers.functional.default_functionals
+
+.. automethod:: IdentityFunctional.translated

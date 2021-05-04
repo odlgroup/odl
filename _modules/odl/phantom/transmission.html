@@ -1,0 +1,649 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>odl.phantom.transmission &mdash; odl 1.0.0.dev0 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/custom.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../../" src="../../../_static/documentation_options.js"></script>
+        <script src="../../../_static/jquery.js"></script>
+        <script src="../../../_static/underscore.js"></script>
+        <script src="../../../_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="../../../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../../index.html" class="icon icon-home"> odl
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                1.0.0.dev0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Getting Started</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../getting_started/getting_started.html">Getting Started</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Working with ODL</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../guide/guide.html">User’s guide – selected topics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../math/math.html">Mathematical Background</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Developer zone</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../dev/dev.html">Contributing to ODL</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Useful facts</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../guide/faq.html">Frequently asked questions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../guide/glossary.html">Glossary</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../release_notes.html">Release Notes</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../refs.html">References</a></li>
+</ul>
+<p class="caption"><span class="caption-text">API Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../odl.html">odl</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">odl</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="../../index.html">Module code</a> &raquo;</li>
+        
+      <li>odl.phantom.transmission</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for odl.phantom.transmission</h1><div class="highlight"><pre>
+<span></span><span class="c1"># Copyright 2014-2020 The ODL contributors</span>
+<span class="c1">#</span>
+<span class="c1"># This file is part of ODL.</span>
+<span class="c1">#</span>
+<span class="c1"># This Source Code Form is subject to the terms of the Mozilla Public License,</span>
+<span class="c1"># v. 2.0. If a copy of the MPL was not distributed with this file, You can</span>
+<span class="c1"># obtain one at https://mozilla.org/MPL/2.0/.</span>
+
+<span class="sd">&quot;&quot;&quot;Phantoms typically used in transmission tomography.&quot;&quot;&quot;</span>
+
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">absolute_import</span><span class="p">,</span> <span class="n">division</span><span class="p">,</span> <span class="n">print_function</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+
+<span class="kn">from</span> <span class="nn">odl.discr</span> <span class="kn">import</span> <span class="n">DiscretizedSpace</span>
+<span class="kn">from</span> <span class="nn">odl.phantom.geometric</span> <span class="kn">import</span> <span class="n">ellipsoid_phantom</span>
+
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;shepp_logan_ellipsoids&#39;</span><span class="p">,</span> <span class="s1">&#39;shepp_logan&#39;</span><span class="p">,</span> <span class="s1">&#39;forbild&#39;</span><span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">_shepp_logan_ellipse_2d</span><span class="p">():</span>
+    <span class="sd">&quot;&quot;&quot;Return ellipse parameters for a 2d Shepp-Logan phantom.</span>
+
+<span class="sd">    This assumes that the ellipses are contained in the square</span>
+<span class="sd">    [-1, -1]x[-1, -1].</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">rad18</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">deg2rad</span><span class="p">(</span><span class="mf">18.0</span><span class="p">)</span>
+    <span class="c1">#       value  axisx  axisy     x       y  rotation</span>
+    <span class="k">return</span> <span class="p">[[</span><span class="mf">2.00</span><span class="p">,</span> <span class="mf">.6900</span><span class="p">,</span> <span class="mf">.9200</span><span class="p">,</span> <span class="mf">0.0000</span><span class="p">,</span> <span class="mf">0.0000</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span>
+            <span class="p">[</span><span class="o">-</span><span class="mf">.98</span><span class="p">,</span> <span class="mf">.6624</span><span class="p">,</span> <span class="mf">.8740</span><span class="p">,</span> <span class="mf">0.0000</span><span class="p">,</span> <span class="o">-</span><span class="mf">.0184</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span>
+            <span class="p">[</span><span class="o">-</span><span class="mf">.02</span><span class="p">,</span> <span class="mf">.1100</span><span class="p">,</span> <span class="mf">.3100</span><span class="p">,</span> <span class="mf">0.2200</span><span class="p">,</span> <span class="mf">0.0000</span><span class="p">,</span> <span class="o">-</span><span class="n">rad18</span><span class="p">],</span>
+            <span class="p">[</span><span class="o">-</span><span class="mf">.02</span><span class="p">,</span> <span class="mf">.1600</span><span class="p">,</span> <span class="mf">.4100</span><span class="p">,</span> <span class="o">-</span><span class="mf">.2200</span><span class="p">,</span> <span class="mf">0.0000</span><span class="p">,</span> <span class="n">rad18</span><span class="p">],</span>
+            <span class="p">[</span><span class="mf">0.01</span><span class="p">,</span> <span class="mf">.2100</span><span class="p">,</span> <span class="mf">.2500</span><span class="p">,</span> <span class="mf">0.0000</span><span class="p">,</span> <span class="mf">0.3500</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span>
+            <span class="p">[</span><span class="mf">0.01</span><span class="p">,</span> <span class="mf">.0460</span><span class="p">,</span> <span class="mf">.0460</span><span class="p">,</span> <span class="mf">0.0000</span><span class="p">,</span> <span class="mf">0.1000</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span>
+            <span class="p">[</span><span class="mf">0.01</span><span class="p">,</span> <span class="mf">.0460</span><span class="p">,</span> <span class="mf">.0460</span><span class="p">,</span> <span class="mf">0.0000</span><span class="p">,</span> <span class="o">-</span><span class="mf">.1000</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span>
+            <span class="p">[</span><span class="mf">0.01</span><span class="p">,</span> <span class="mf">.0460</span><span class="p">,</span> <span class="mf">.0230</span><span class="p">,</span> <span class="o">-</span><span class="mf">.0800</span><span class="p">,</span> <span class="o">-</span><span class="mf">.6050</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span>
+            <span class="p">[</span><span class="mf">0.01</span><span class="p">,</span> <span class="mf">.0230</span><span class="p">,</span> <span class="mf">.0230</span><span class="p">,</span> <span class="mf">0.0000</span><span class="p">,</span> <span class="o">-</span><span class="mf">.6060</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span>
+            <span class="p">[</span><span class="mf">0.01</span><span class="p">,</span> <span class="mf">.0230</span><span class="p">,</span> <span class="mf">.0460</span><span class="p">,</span> <span class="mf">0.0600</span><span class="p">,</span> <span class="o">-</span><span class="mf">.6050</span><span class="p">,</span> <span class="mi">0</span><span class="p">]]</span>
+
+
+<span class="k">def</span> <span class="nf">_shepp_logan_ellipsoids_3d</span><span class="p">():</span>
+    <span class="sd">&quot;&quot;&quot;Return ellipsoid parameters for a 3d Shepp-Logan phantom.</span>
+
+<span class="sd">    This assumes that the ellipses are contained in the cube</span>
+<span class="sd">    [-1, -1, -1]x[1, 1, 1].</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">rad18</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">deg2rad</span><span class="p">(</span><span class="mf">18.0</span><span class="p">)</span>
+    <span class="c1">#       value  axisx  axisy  axisz,  x        y      z    rotation</span>
+    <span class="k">return</span> <span class="p">[[</span><span class="mf">2.00</span><span class="p">,</span> <span class="mf">.6900</span><span class="p">,</span> <span class="mf">.9200</span><span class="p">,</span> <span class="mf">.810</span><span class="p">,</span> <span class="mf">0.0000</span><span class="p">,</span> <span class="mf">0.0000</span><span class="p">,</span> <span class="mf">0.00</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span>
+            <span class="p">[</span><span class="o">-</span><span class="mf">.98</span><span class="p">,</span> <span class="mf">.6624</span><span class="p">,</span> <span class="mf">.8740</span><span class="p">,</span> <span class="mf">.780</span><span class="p">,</span> <span class="mf">0.0000</span><span class="p">,</span> <span class="o">-</span><span class="mf">.0184</span><span class="p">,</span> <span class="mf">0.00</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span>
+            <span class="p">[</span><span class="o">-</span><span class="mf">.02</span><span class="p">,</span> <span class="mf">.1100</span><span class="p">,</span> <span class="mf">.3100</span><span class="p">,</span> <span class="mf">.220</span><span class="p">,</span> <span class="mf">0.2200</span><span class="p">,</span> <span class="mf">0.0000</span><span class="p">,</span> <span class="mf">0.00</span><span class="p">,</span> <span class="o">-</span><span class="n">rad18</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span>
+            <span class="p">[</span><span class="o">-</span><span class="mf">.02</span><span class="p">,</span> <span class="mf">.1600</span><span class="p">,</span> <span class="mf">.4100</span><span class="p">,</span> <span class="mf">.280</span><span class="p">,</span> <span class="o">-</span><span class="mf">.2200</span><span class="p">,</span> <span class="mf">0.0000</span><span class="p">,</span> <span class="mf">0.00</span><span class="p">,</span> <span class="n">rad18</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span>
+            <span class="p">[</span><span class="mf">0.01</span><span class="p">,</span> <span class="mf">.2100</span><span class="p">,</span> <span class="mf">.2500</span><span class="p">,</span> <span class="mf">.410</span><span class="p">,</span> <span class="mf">0.0000</span><span class="p">,</span> <span class="mf">0.3500</span><span class="p">,</span> <span class="mf">0.00</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span>
+            <span class="p">[</span><span class="mf">0.01</span><span class="p">,</span> <span class="mf">.0460</span><span class="p">,</span> <span class="mf">.0460</span><span class="p">,</span> <span class="mf">.050</span><span class="p">,</span> <span class="mf">0.0000</span><span class="p">,</span> <span class="mf">0.1000</span><span class="p">,</span> <span class="mf">0.00</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span>
+            <span class="p">[</span><span class="mf">0.01</span><span class="p">,</span> <span class="mf">.0460</span><span class="p">,</span> <span class="mf">.0460</span><span class="p">,</span> <span class="mf">.050</span><span class="p">,</span> <span class="mf">0.0000</span><span class="p">,</span> <span class="o">-</span><span class="mf">.1000</span><span class="p">,</span> <span class="mf">0.00</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span>
+            <span class="p">[</span><span class="mf">0.01</span><span class="p">,</span> <span class="mf">.0460</span><span class="p">,</span> <span class="mf">.0230</span><span class="p">,</span> <span class="mf">.050</span><span class="p">,</span> <span class="o">-</span><span class="mf">.0800</span><span class="p">,</span> <span class="o">-</span><span class="mf">.6050</span><span class="p">,</span> <span class="mf">0.00</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span>
+            <span class="p">[</span><span class="mf">0.01</span><span class="p">,</span> <span class="mf">.0230</span><span class="p">,</span> <span class="mf">.0230</span><span class="p">,</span> <span class="mf">.020</span><span class="p">,</span> <span class="mf">0.0000</span><span class="p">,</span> <span class="o">-</span><span class="mf">.6060</span><span class="p">,</span> <span class="mf">0.00</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span>
+            <span class="p">[</span><span class="mf">0.01</span><span class="p">,</span> <span class="mf">.0230</span><span class="p">,</span> <span class="mf">.0460</span><span class="p">,</span> <span class="mf">.020</span><span class="p">,</span> <span class="mf">0.0600</span><span class="p">,</span> <span class="o">-</span><span class="mf">.6050</span><span class="p">,</span> <span class="mf">0.00</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">]]</span>
+
+
+<span class="k">def</span> <span class="nf">_modified_shepp_logan_ellipsoids</span><span class="p">(</span><span class="n">ellipsoids</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Modify ellipsoids to give the modified Shepp-Logan phantom.</span>
+
+<span class="sd">    Works for both 2d and 3d.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">intensities</span> <span class="o">=</span> <span class="p">[</span><span class="mf">1.0</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.8</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.2</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.2</span><span class="p">,</span> <span class="mf">0.1</span><span class="p">,</span> <span class="mf">0.1</span><span class="p">,</span> <span class="mf">0.1</span><span class="p">,</span> <span class="mf">0.1</span><span class="p">,</span> <span class="mf">0.1</span><span class="p">,</span> <span class="mf">0.1</span><span class="p">]</span>
+
+    <span class="c1"># Add minimal numbers to ensure that the result is nowhere negative.</span>
+    <span class="c1"># This is needed due to numerical issues.</span>
+    <span class="n">intensities</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">+=</span> <span class="mf">5e-17</span>
+    <span class="n">intensities</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span> <span class="o">+=</span> <span class="mf">5e-17</span>
+
+    <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">ellipsoids</span><span class="p">)</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="n">intensities</span><span class="p">)</span>
+
+    <span class="k">for</span> <span class="n">ellipsoid</span><span class="p">,</span> <span class="n">intensity</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">ellipsoids</span><span class="p">,</span> <span class="n">intensities</span><span class="p">):</span>
+        <span class="n">ellipsoid</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">intensity</span>
+
+
+<div class="viewcode-block" id="shepp_logan_ellipsoids"><a class="viewcode-back" href="../../../generated/odl.phantom.transmission.shepp_logan_ellipsoids.html#odl.phantom.transmission.shepp_logan_ellipsoids">[docs]</a><span class="k">def</span> <span class="nf">shepp_logan_ellipsoids</span><span class="p">(</span><span class="n">ndim</span><span class="p">,</span> <span class="n">modified</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Ellipsoids for the standard Shepp-Logan phantom in 2 or 3 dimensions.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    ndim : {2, 3}</span>
+<span class="sd">        Dimension of the space the ellipsoids should be in.</span>
+<span class="sd">    modified : bool, optional</span>
+<span class="sd">        True if the modified Shepp-Logan phantom should be given.</span>
+<span class="sd">        The modified phantom has greatly amplified contrast to aid</span>
+<span class="sd">        visualization.</span>
+
+<span class="sd">    See Also</span>
+<span class="sd">    --------</span>
+<span class="sd">    odl.phantom.geometric.ellipsoid_phantom :</span>
+<span class="sd">        Function for creating arbitrary ellipsoids phantoms</span>
+<span class="sd">    shepp_logan : Create a phantom with these ellipsoids</span>
+
+<span class="sd">    References</span>
+<span class="sd">    ----------</span>
+<span class="sd">    .. _Shepp-Logan phantom: https://en.wikipedia.org/wiki/Shepp-Logan_phantom</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">ndim</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
+        <span class="n">ellipsoids</span> <span class="o">=</span> <span class="n">_shepp_logan_ellipse_2d</span><span class="p">()</span>
+    <span class="k">elif</span> <span class="n">ndim</span> <span class="o">==</span> <span class="mi">3</span><span class="p">:</span>
+        <span class="n">ellipsoids</span> <span class="o">=</span> <span class="n">_shepp_logan_ellipsoids_3d</span><span class="p">()</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;dimension not 2 or 3, no phantom available&#39;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">modified</span><span class="p">:</span>
+        <span class="n">_modified_shepp_logan_ellipsoids</span><span class="p">(</span><span class="n">ellipsoids</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">ellipsoids</span></div>
+
+
+<div class="viewcode-block" id="shepp_logan"><a class="viewcode-back" href="../../../generated/odl.phantom.transmission.shepp_logan.html#odl.phantom.transmission.shepp_logan">[docs]</a><span class="k">def</span> <span class="nf">shepp_logan</span><span class="p">(</span><span class="n">space</span><span class="p">,</span> <span class="n">modified</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">min_pt</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">max_pt</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Standard Shepp-Logan phantom in 2 or 3 dimensions.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    space : `DiscretizedSpace`</span>
+<span class="sd">        Space in which the phantom is created, must be 2- or 3-dimensional.</span>
+<span class="sd">        If ``space.shape`` is 1 in an axis, a corresponding slice of the</span>
+<span class="sd">        phantom is created.</span>
+<span class="sd">    modified : `bool`, optional</span>
+<span class="sd">        True if the modified Shepp-Logan phantom should be given.</span>
+<span class="sd">        The modified phantom has greatly amplified contrast to aid</span>
+<span class="sd">        visualization.</span>
+<span class="sd">    min_pt, max_pt : array-like, optional</span>
+<span class="sd">        If provided, use these vectors to determine the bounding box of the</span>
+<span class="sd">        phantom instead of ``space.min_pt`` and ``space.max_pt``.</span>
+<span class="sd">        It is currently required that ``min_pt &gt;= space.min_pt`` and</span>
+<span class="sd">        ``max_pt &lt;= space.max_pt``, i.e., shifting or scaling outside the</span>
+<span class="sd">        original space is not allowed.</span>
+
+<span class="sd">        Providing one of them results in a shift, e.g., for ``min_pt``::</span>
+
+<span class="sd">            new_min_pt = min_pt</span>
+<span class="sd">            new_max_pt = space.max_pt + (min_pt - space.min_pt)</span>
+
+<span class="sd">        Providing both results in a scaled version of the phantom.</span>
+
+<span class="sd">    See Also</span>
+<span class="sd">    --------</span>
+<span class="sd">    forbild : Similar phantom but with more complexity. Only supports 2d.</span>
+<span class="sd">    odl.phantom.geometric.defrise : Geometry test phantom</span>
+<span class="sd">    shepp_logan_ellipsoids : Get the parameters that define this phantom</span>
+<span class="sd">    odl.phantom.geometric.ellipsoid_phantom :</span>
+<span class="sd">        Function for creating arbitrary ellipsoid phantoms</span>
+
+<span class="sd">    References</span>
+<span class="sd">    ----------</span>
+<span class="sd">    .. _Shepp-Logan phantom: https://en.wikipedia.org/wiki/Shepp-Logan_phantom</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">ellipsoids</span> <span class="o">=</span> <span class="n">shepp_logan_ellipsoids</span><span class="p">(</span><span class="n">space</span><span class="o">.</span><span class="n">ndim</span><span class="p">,</span> <span class="n">modified</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">ellipsoid_phantom</span><span class="p">(</span><span class="n">space</span><span class="p">,</span> <span class="n">ellipsoids</span><span class="p">,</span> <span class="n">min_pt</span><span class="p">,</span> <span class="n">max_pt</span><span class="p">)</span></div>
+
+
+<span class="k">def</span> <span class="nf">_analytical_forbild_phantom</span><span class="p">(</span><span class="n">resolution</span><span class="p">,</span> <span class="n">ear</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Analytical description of FORBILD phantom.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    resolution : bool</span>
+<span class="sd">        If ``True``, insert a small resolution test pattern to the left.</span>
+<span class="sd">    ear : bool</span>
+<span class="sd">        If ``True``, insert an ear-like structure to the right.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">sha</span> <span class="o">=</span> <span class="mf">0.2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
+    <span class="n">y016b</span> <span class="o">=</span> <span class="o">-</span><span class="mf">14.294530834372887</span>
+    <span class="n">a16b</span> <span class="o">=</span> <span class="mf">0.443194085308632</span>
+    <span class="n">b16b</span> <span class="o">=</span> <span class="mf">3.892760834372886</span>
+
+    <span class="n">E</span> <span class="o">=</span> <span class="p">[[</span><span class="o">-</span><span class="mf">4.7</span><span class="p">,</span> <span class="mf">4.3</span><span class="p">,</span> <span class="mf">1.79989</span><span class="p">,</span> <span class="mf">1.79989</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mf">0.010</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span>  <span class="c1"># 1</span>
+         <span class="p">[</span><span class="mf">4.7</span><span class="p">,</span> <span class="mf">4.3</span><span class="p">,</span> <span class="mf">1.79989</span><span class="p">,</span> <span class="mf">1.79989</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mf">0.010</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span>  <span class="c1"># 2</span>
+         <span class="p">[</span><span class="o">-</span><span class="mf">1.08</span><span class="p">,</span> <span class="o">-</span><span class="mi">9</span><span class="p">,</span> <span class="mf">0.4</span><span class="p">,</span> <span class="mf">0.4</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mf">0.0025</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span>  <span class="c1"># 3</span>
+         <span class="p">[</span><span class="mf">1.08</span><span class="p">,</span> <span class="o">-</span><span class="mi">9</span><span class="p">,</span> <span class="mf">0.4</span><span class="p">,</span> <span class="mf">0.4</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.0025</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span>  <span class="c1"># 4</span>
+         <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mf">9.6</span><span class="p">,</span> <span class="mi">12</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mf">1.800</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span>  <span class="c1"># 5</span>
+         <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mf">8.4</span><span class="p">,</span> <span class="mf">1.8</span><span class="p">,</span> <span class="mf">3.0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="mf">1.050</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span>  <span class="c1"># 7</span>
+         <span class="p">[</span><span class="mf">1.9</span><span class="p">,</span> <span class="mf">5.4</span><span class="p">,</span> <span class="mf">0.41633</span><span class="p">,</span> <span class="mf">1.17425</span><span class="p">,</span> <span class="o">-</span><span class="mf">31.07698</span><span class="p">,</span> <span class="mf">0.750</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span>  <span class="c1"># 8</span>
+         <span class="p">[</span><span class="o">-</span><span class="mf">1.9</span><span class="p">,</span> <span class="mf">5.4</span><span class="p">,</span> <span class="mf">0.41633</span><span class="p">,</span> <span class="mf">1.17425</span><span class="p">,</span> <span class="mf">31.07698</span><span class="p">,</span> <span class="mf">0.750</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span>  <span class="c1"># 9</span>
+         <span class="p">[</span><span class="o">-</span><span class="mf">4.3</span><span class="p">,</span> <span class="mf">6.8</span><span class="p">,</span> <span class="mf">1.8</span><span class="p">,</span> <span class="mf">0.24</span><span class="p">,</span> <span class="o">-</span><span class="mi">30</span><span class="p">,</span> <span class="mf">0.750</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span>  <span class="c1"># 10</span>
+         <span class="p">[</span><span class="mf">4.3</span><span class="p">,</span> <span class="mf">6.8</span><span class="p">,</span> <span class="mf">1.8</span><span class="p">,</span> <span class="mf">0.24</span><span class="p">,</span> <span class="mi">30</span><span class="p">,</span> <span class="mf">0.750</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span>  <span class="c1"># 11</span>
+         <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="mf">3.6</span><span class="p">,</span> <span class="mf">1.8</span><span class="p">,</span> <span class="mf">3.6</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.005</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span>  <span class="c1"># 12</span>
+         <span class="p">[</span><span class="mf">6.39395</span><span class="p">,</span> <span class="o">-</span><span class="mf">6.39395</span><span class="p">,</span> <span class="mf">1.2</span><span class="p">,</span> <span class="mf">0.42</span><span class="p">,</span> <span class="mf">58.1</span><span class="p">,</span> <span class="mf">0.005</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span>  <span class="c1"># 13</span>
+         <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mf">3.6</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mf">0.750</span><span class="p">,</span> <span class="mi">4</span><span class="p">],</span>  <span class="c1"># 14</span>
+         <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mf">9.6</span><span class="p">,</span> <span class="mf">1.8</span><span class="p">,</span> <span class="mf">3.0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mf">1.800</span><span class="p">,</span> <span class="mi">4</span><span class="p">],</span>  <span class="c1"># 15</span>
+         <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mf">9.0</span><span class="p">,</span> <span class="mf">11.4</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mf">0.750</span><span class="p">,</span> <span class="mi">3</span><span class="p">],</span>  <span class="c1"># 16a</span>
+         <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="n">y016b</span><span class="p">,</span> <span class="n">a16b</span><span class="p">,</span> <span class="n">b16b</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mf">0.750</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span>  <span class="c1"># 16b</span>
+         <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mf">9.0</span><span class="p">,</span> <span class="mf">11.4</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.750</span><span class="p">,</span> <span class="n">ear</span><span class="p">],</span>  <span class="c1"># 6</span>
+         <span class="p">[</span><span class="mf">9.1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mf">4.2</span><span class="p">,</span> <span class="mf">1.8</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mf">0.750</span><span class="p">,</span> <span class="mi">1</span><span class="p">]]</span>  <span class="c1"># R_ear</span>
+    <span class="n">E</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">E</span><span class="p">)</span>
+
+    <span class="c1"># generate the air cavities in the right ear</span>
+    <span class="n">cavity1</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mf">8.8</span><span class="p">,</span> <span class="mf">5.6</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.4</span><span class="p">)[:,</span> <span class="kc">None</span><span class="p">]</span>
+    <span class="n">cavity2</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">([</span><span class="mi">9</span><span class="p">,</span> <span class="mi">1</span><span class="p">])</span>
+    <span class="n">cavity3_7</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">([</span><span class="mi">53</span><span class="p">,</span> <span class="mi">1</span><span class="p">])</span> <span class="o">*</span> <span class="p">[</span><span class="mf">0.15</span><span class="p">,</span> <span class="mf">0.15</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="mf">1.800</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span>
+
+    <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">4</span><span class="p">):</span>
+        <span class="n">kj</span> <span class="o">=</span> <span class="mi">8</span> <span class="o">-</span> <span class="mi">2</span> <span class="o">*</span> <span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">floor</span><span class="p">(</span><span class="n">j</span> <span class="o">/</span> <span class="mi">3</span><span class="p">))</span>
+        <span class="n">dj</span> <span class="o">=</span> <span class="mf">0.2</span> <span class="o">*</span> <span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">mod</span><span class="p">(</span><span class="n">j</span><span class="p">,</span> <span class="mi">2</span><span class="p">))</span>
+
+        <span class="n">cavity1</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">vstack</span><span class="p">((</span><span class="n">cavity1</span><span class="p">,</span>
+                             <span class="n">cavity1</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="n">kj</span><span class="p">]</span> <span class="o">-</span> <span class="n">dj</span><span class="p">,</span>
+                             <span class="n">cavity1</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="n">kj</span><span class="p">]</span> <span class="o">-</span> <span class="n">dj</span><span class="p">))</span>
+        <span class="n">cavity2</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">vstack</span><span class="p">((</span><span class="n">cavity2</span><span class="p">,</span>
+                             <span class="n">j</span> <span class="o">*</span> <span class="n">sha</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">([</span><span class="n">kj</span><span class="p">,</span> <span class="mi">1</span><span class="p">]),</span>
+                             <span class="o">-</span><span class="n">j</span> <span class="o">*</span> <span class="n">sha</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">([</span><span class="n">kj</span><span class="p">,</span> <span class="mi">1</span><span class="p">])))</span>
+
+    <span class="n">E_cavity</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">hstack</span><span class="p">((</span><span class="n">cavity1</span><span class="p">,</span> <span class="n">cavity2</span><span class="p">,</span> <span class="n">cavity3_7</span><span class="p">))</span>
+
+    <span class="c1"># generate the left ear (resolution pattern)</span>
+    <span class="n">x0</span> <span class="o">=</span> <span class="o">-</span><span class="mf">7.0</span>
+    <span class="n">y0</span> <span class="o">=</span> <span class="o">-</span><span class="mf">1.0</span>
+    <span class="n">d0_xy</span> <span class="o">=</span> <span class="mf">0.04</span>
+
+    <span class="n">d_xy</span> <span class="o">=</span> <span class="p">[</span><span class="mf">0.0357</span><span class="p">,</span> <span class="mf">0.0312</span><span class="p">,</span> <span class="mf">0.0278</span><span class="p">,</span> <span class="mf">0.0250</span><span class="p">]</span>
+    <span class="n">ab</span> <span class="o">=</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">([</span><span class="mi">5</span><span class="p">,</span> <span class="mi">1</span><span class="p">])</span> <span class="o">*</span> <span class="n">d_xy</span>
+    <span class="n">ab</span> <span class="o">=</span> <span class="n">ab</span><span class="o">.</span><span class="n">T</span><span class="o">.</span><span class="n">ravel</span><span class="p">()[:,</span> <span class="kc">None</span><span class="p">]</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span> <span class="mi">4</span><span class="p">])</span>
+    <span class="n">abr</span> <span class="o">=</span> <span class="n">ab</span><span class="o">.</span><span class="n">T</span><span class="o">.</span><span class="n">ravel</span><span class="p">()[:,</span> <span class="kc">None</span><span class="p">]</span>
+
+    <span class="n">leftear4_7</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">hstack</span><span class="p">([</span><span class="n">abr</span><span class="p">,</span> <span class="n">abr</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">([</span><span class="mi">80</span><span class="p">,</span> <span class="mi">1</span><span class="p">])</span> <span class="o">*</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mf">0.75</span><span class="p">,</span> <span class="mi">0</span><span class="p">]])</span>
+
+    <span class="n">x00</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">])</span>
+    <span class="n">y00</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">])</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">5</span><span class="p">):</span>
+        <span class="n">y00</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">vstack</span><span class="p">((</span><span class="n">y00</span><span class="p">,</span>
+                         <span class="p">(</span><span class="n">y0</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">5</span><span class="p">)</span> <span class="o">*</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">d_xy</span><span class="p">[</span><span class="n">i</span> <span class="o">-</span> <span class="mi">1</span><span class="p">])[:,</span> <span class="kc">None</span><span class="p">]))</span>
+        <span class="n">x00</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">vstack</span><span class="p">((</span><span class="n">x00</span><span class="p">,</span>
+                         <span class="p">(</span><span class="n">x0</span> <span class="o">+</span> <span class="mi">2</span> <span class="o">*</span> <span class="p">(</span><span class="n">i</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="n">d0_xy</span><span class="p">)</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">([</span><span class="mi">5</span><span class="p">,</span> <span class="mi">1</span><span class="p">])))</span>
+
+    <span class="n">x00</span> <span class="o">=</span> <span class="n">x00</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span> <span class="mi">4</span><span class="p">])</span>
+    <span class="n">x00</span> <span class="o">=</span> <span class="n">x00</span><span class="o">.</span><span class="n">T</span><span class="o">.</span><span class="n">ravel</span><span class="p">()[:,</span> <span class="kc">None</span><span class="p">]</span>
+    <span class="n">y00</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">vstack</span><span class="p">([</span><span class="n">y00</span><span class="p">,</span> <span class="n">y00</span> <span class="o">+</span> <span class="mi">12</span> <span class="o">*</span> <span class="n">d0_xy</span><span class="p">,</span>
+                     <span class="n">y00</span> <span class="o">+</span> <span class="mi">24</span> <span class="o">*</span> <span class="n">d0_xy</span><span class="p">,</span> <span class="n">y00</span> <span class="o">+</span> <span class="mi">36</span> <span class="o">*</span> <span class="n">d0_xy</span><span class="p">])</span>
+
+    <span class="n">leftear</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">hstack</span><span class="p">([</span><span class="n">x00</span><span class="p">,</span> <span class="n">y00</span><span class="p">,</span> <span class="n">leftear4_7</span><span class="p">])</span>
+    <span class="n">C</span> <span class="o">=</span> <span class="p">[[</span><span class="mf">1.2</span><span class="p">,</span> <span class="mf">1.2</span><span class="p">,</span> <span class="mf">0.27884</span><span class="p">,</span> <span class="mf">0.27884</span><span class="p">,</span> <span class="mf">0.60687</span><span class="p">,</span> <span class="mf">0.60687</span><span class="p">,</span> <span class="mf">0.2</span><span class="p">,</span>
+          <span class="mf">0.2</span><span class="p">,</span> <span class="o">-</span><span class="mf">2.605</span><span class="p">,</span> <span class="o">-</span><span class="mf">2.605</span><span class="p">,</span> <span class="o">-</span><span class="mf">10.71177</span><span class="p">,</span> <span class="n">y016b</span> <span class="o">+</span> <span class="mf">10.71177</span><span class="p">,</span> <span class="mf">8.88740</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.21260</span><span class="p">],</span>
+         <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">180</span><span class="p">,</span> <span class="mi">90</span><span class="p">,</span> <span class="mi">270</span><span class="p">,</span> <span class="mi">90</span><span class="p">,</span> <span class="mi">270</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span>
+          <span class="mi">180</span><span class="p">,</span> <span class="mi">15</span><span class="p">,</span> <span class="mi">165</span><span class="p">,</span> <span class="mi">90</span><span class="p">,</span> <span class="mi">270</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">]]</span>
+    <span class="n">C</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">C</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">resolution</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">ear</span><span class="p">:</span>
+        <span class="n">phantomE</span> <span class="o">=</span> <span class="n">E</span><span class="p">[:</span><span class="mi">17</span><span class="p">,</span> <span class="p">:]</span>
+        <span class="n">phantomC</span> <span class="o">=</span> <span class="n">C</span><span class="p">[:,</span> <span class="p">:</span><span class="mi">12</span><span class="p">]</span>
+    <span class="k">elif</span> <span class="ow">not</span> <span class="n">resolution</span> <span class="ow">and</span> <span class="n">ear</span><span class="p">:</span>
+        <span class="n">phantomE</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">vstack</span><span class="p">([</span><span class="n">E</span><span class="p">,</span> <span class="n">E_cavity</span><span class="p">])</span>
+        <span class="n">phantomC</span> <span class="o">=</span> <span class="n">C</span>
+    <span class="k">elif</span> <span class="n">resolution</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">ear</span><span class="p">:</span>
+        <span class="n">phantomE</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">vstack</span><span class="p">([</span><span class="n">leftear</span><span class="p">,</span> <span class="n">E</span><span class="p">[:</span><span class="mi">17</span><span class="p">,</span> <span class="p">:]])</span>
+        <span class="n">phantomC</span> <span class="o">=</span> <span class="n">C</span><span class="p">[:,</span> <span class="p">:</span><span class="mi">12</span><span class="p">]</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">phantomE</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">vstack</span><span class="p">([</span><span class="n">leftear</span><span class="p">,</span> <span class="n">E</span><span class="p">,</span> <span class="n">E_cavity</span><span class="p">])</span>
+        <span class="n">phantomC</span> <span class="o">=</span> <span class="n">C</span>
+
+    <span class="k">return</span> <span class="n">phantomE</span><span class="p">,</span> <span class="n">phantomC</span>
+
+
+<div class="viewcode-block" id="forbild"><a class="viewcode-back" href="../../../generated/odl.phantom.transmission.forbild.html#odl.phantom.transmission.forbild">[docs]</a><span class="k">def</span> <span class="nf">forbild</span><span class="p">(</span><span class="n">space</span><span class="p">,</span> <span class="n">resolution</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">ear</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">value_type</span><span class="o">=</span><span class="s1">&#39;density&#39;</span><span class="p">,</span>
+            <span class="n">scale</span><span class="o">=</span><span class="s1">&#39;auto&#39;</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Standard FORBILD phantom in 2 dimensions.</span>
+
+<span class="sd">    The FORBILD phantom is intended for testing CT algorithms and is intended</span>
+<span class="sd">    to be similar to a human head.</span>
+
+<span class="sd">    The phantom is defined using the following materials:</span>
+
+<span class="sd">    =========================  =====  ================</span>
+<span class="sd">    Material                   Index  Density (g/cm^3)</span>
+<span class="sd">    =========================  =====  ================</span>
+<span class="sd">    Air                        0      0.0000</span>
+<span class="sd">    Cerebrospinal fluid (CSF)  1      1.0450</span>
+<span class="sd">    Small less dense sphere    2      1.0475</span>
+<span class="sd">    Brain                      3      1.0500</span>
+<span class="sd">    Small more dense sphere    4      1.0525</span>
+<span class="sd">    Blood                      5      1.0550</span>
+<span class="sd">    Eyes                       6      1.0600</span>
+<span class="sd">    Bone                       7      1.8000</span>
+<span class="sd">    =========================  =====  ================</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    space : `DiscretizedSpace`</span>
+<span class="sd">        The space in which the phantom should be corrected. Needs to be two-</span>
+<span class="sd">        dimensional.</span>
+<span class="sd">    resolution : bool, optional</span>
+<span class="sd">        If ``True``, insert a small resolution test pattern to the left.</span>
+<span class="sd">    ear : bool, optional</span>
+<span class="sd">        If ``True``, insert an ear-like structure to the right.</span>
+<span class="sd">    value_type : {&#39;density&#39;, &#39;materials&#39;}, optional</span>
+<span class="sd">        The format the phantom should be given in.</span>
+<span class="sd">        &#39;density&#39; returns floats in the range [0, 1.8] (g/cm^3)</span>
+<span class="sd">        &#39;materials&#39; returns indices in the range [0, 7].</span>
+<span class="sd">    scale : {&#39;auto&#39;, &#39;cm&#39;, &#39;meters&#39;, &#39;mm&#39;}, optional</span>
+<span class="sd">        Controls how ``space`` should be rescaled to fit the definition of</span>
+<span class="sd">        the forbild phantom, which is defined on the square</span>
+<span class="sd">        [-12.8, 12.8] x [-12.8, 12.8] cm.</span>
+
+<span class="sd">        * ``&#39;auto&#39;`` means that space is rescaled to fit exactly. The space is</span>
+<span class="sd">          also centered at [0, 0].</span>
+<span class="sd">        * ``&#39;cm&#39;`` means the dimensions of the space should be used as-is.</span>
+<span class="sd">        * ``&#39;m&#39;`` means all dimensions of the space are multiplied by 100.</span>
+<span class="sd">        * ``&#39;mm&#39;`` means all dimensions of the space are divided by 10.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    forbild : ``space``-element</span>
+<span class="sd">        FORBILD phantom discretized by ``space``.</span>
+
+<span class="sd">    See Also</span>
+<span class="sd">    --------</span>
+<span class="sd">    shepp_logan : A simpler phantom for similar purposes, also working in 3d.</span>
+
+<span class="sd">    References</span>
+<span class="sd">    ----------</span>
+<span class="sd">    .. _FORBILD phantom: www.imp.uni-erlangen.de/phantoms/head/head.html</span>
+<span class="sd">    .. _algorithm: https://www.ncbi.nlm.nih.gov/pmc/articles/PMC3426508/</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">transposeravel</span><span class="p">(</span><span class="n">arr</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Implement MATLAB&#39;s ``transpose(arr(:))``.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">arr</span><span class="o">.</span><span class="n">T</span><span class="o">.</span><span class="n">ravel</span><span class="p">()</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">space</span><span class="p">,</span> <span class="n">DiscretizedSpace</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;`space` must be a `DiscretizedSpace`&#39;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">space</span><span class="o">.</span><span class="n">ndim</span> <span class="o">!=</span> <span class="mi">2</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;`space` must be two-dimensional&#39;</span><span class="p">)</span>
+
+    <span class="n">scale</span><span class="p">,</span> <span class="n">scale_in</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">scale</span><span class="p">)</span><span class="o">.</span><span class="n">lower</span><span class="p">(),</span> <span class="n">scale</span>
+    <span class="n">value_type</span><span class="p">,</span> <span class="n">value_type_in</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">value_type</span><span class="p">)</span><span class="o">.</span><span class="n">lower</span><span class="p">(),</span> <span class="n">value_type</span>
+
+    <span class="c1"># Create analytic description of phantom</span>
+    <span class="n">phantomE</span><span class="p">,</span> <span class="n">phantomC</span> <span class="o">=</span> <span class="n">_analytical_forbild_phantom</span><span class="p">(</span><span class="n">resolution</span><span class="p">,</span> <span class="n">ear</span><span class="p">)</span>
+
+    <span class="c1"># Rescale points to the default grid.</span>
+    <span class="c1"># The forbild phantom is defined on [-12.8, 12.8] x [-12.8, 12.8]</span>
+    <span class="n">xcoord</span><span class="p">,</span> <span class="n">ycoord</span> <span class="o">=</span> <span class="n">space</span><span class="o">.</span><span class="n">points</span><span class="p">()</span><span class="o">.</span><span class="n">T</span>
+    <span class="k">if</span> <span class="n">scale</span> <span class="o">==</span> <span class="s1">&#39;auto&#39;</span><span class="p">:</span>
+        <span class="n">xcoord</span> <span class="o">=</span> <span class="p">((</span><span class="n">xcoord</span> <span class="o">-</span> <span class="n">space</span><span class="o">.</span><span class="n">min_pt</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="o">/</span>
+                  <span class="p">(</span><span class="n">space</span><span class="o">.</span><span class="n">max_pt</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">-</span> <span class="n">space</span><span class="o">.</span><span class="n">min_pt</span><span class="p">[</span><span class="mi">0</span><span class="p">]))</span>
+        <span class="n">xcoord</span> <span class="o">=</span> <span class="mf">25.8</span> <span class="o">*</span> <span class="n">xcoord</span> <span class="o">-</span> <span class="mf">12.8</span>
+        <span class="n">ycoord</span> <span class="o">=</span> <span class="p">((</span><span class="n">ycoord</span> <span class="o">-</span> <span class="n">space</span><span class="o">.</span><span class="n">min_pt</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span> <span class="o">/</span>
+                  <span class="p">(</span><span class="n">space</span><span class="o">.</span><span class="n">max_pt</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">space</span><span class="o">.</span><span class="n">min_pt</span><span class="p">[</span><span class="mi">1</span><span class="p">]))</span>
+        <span class="n">ycoord</span> <span class="o">=</span> <span class="mf">25.8</span> <span class="o">*</span> <span class="n">ycoord</span> <span class="o">-</span> <span class="mf">12.8</span>
+    <span class="k">elif</span> <span class="n">scale</span> <span class="o">==</span> <span class="s1">&#39;cm&#39;</span><span class="p">:</span>
+        <span class="k">pass</span>  <span class="c1"># dimensions already correct.</span>
+    <span class="k">elif</span> <span class="n">scale</span> <span class="o">==</span> <span class="s1">&#39;m&#39;</span><span class="p">:</span>
+        <span class="n">xcoord</span> <span class="o">*=</span> <span class="mf">100.0</span>
+        <span class="n">ycoord</span> <span class="o">*=</span> <span class="mf">100.0</span>
+    <span class="k">elif</span> <span class="n">scale</span> <span class="o">==</span> <span class="s1">&#39;mm&#39;</span><span class="p">:</span>
+        <span class="n">xcoord</span> <span class="o">/=</span> <span class="mf">10.0</span>
+        <span class="n">ycoord</span> <span class="o">/=</span> <span class="mf">10.0</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;unknown `scale` </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">scale_in</span><span class="p">))</span>
+
+    <span class="c1"># Compute the phantom values in each voxel</span>
+    <span class="n">image</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">space</span><span class="o">.</span><span class="n">size</span><span class="p">)</span>
+    <span class="n">nclipinfo</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">phantomE</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]):</span>
+        <span class="c1"># Handle elliptic bounds</span>
+        <span class="n">Vx0</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">transposeravel</span><span class="p">(</span><span class="n">xcoord</span><span class="p">)</span> <span class="o">-</span> <span class="n">phantomE</span><span class="p">[</span><span class="n">k</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span>
+                        <span class="n">transposeravel</span><span class="p">(</span><span class="n">ycoord</span><span class="p">)</span> <span class="o">-</span> <span class="n">phantomE</span><span class="p">[</span><span class="n">k</span><span class="p">,</span> <span class="mi">1</span><span class="p">]])</span>
+        <span class="n">D</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([[</span><span class="mi">1</span> <span class="o">/</span> <span class="n">phantomE</span><span class="p">[</span><span class="n">k</span><span class="p">,</span> <span class="mi">2</span><span class="p">],</span> <span class="mi">0</span><span class="p">],</span>
+                      <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span> <span class="o">/</span> <span class="n">phantomE</span><span class="p">[</span><span class="n">k</span><span class="p">,</span> <span class="mi">3</span><span class="p">]]])</span>
+        <span class="n">phi</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">deg2rad</span><span class="p">(</span><span class="n">phantomE</span><span class="p">[</span><span class="n">k</span><span class="p">,</span> <span class="mi">4</span><span class="p">])</span>
+        <span class="n">Q</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([[</span><span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">phi</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">phi</span><span class="p">)],</span>
+                      <span class="p">[</span><span class="o">-</span><span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">phi</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">phi</span><span class="p">)]])</span>
+        <span class="n">f</span> <span class="o">=</span> <span class="n">phantomE</span><span class="p">[</span><span class="n">k</span><span class="p">,</span> <span class="mi">5</span><span class="p">]</span>
+        <span class="n">nclip</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">phantomE</span><span class="p">[</span><span class="n">k</span><span class="p">,</span> <span class="mi">6</span><span class="p">])</span>
+        <span class="n">equation1</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">D</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">Q</span><span class="p">)</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">Vx0</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+        <span class="n">i</span> <span class="o">=</span> <span class="p">(</span><span class="n">equation1</span> <span class="o">&lt;=</span> <span class="mf">1.0</span><span class="p">)</span>
+
+        <span class="c1"># Handle clipping surfaces</span>
+        <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">nclip</span><span class="p">):</span>  <span class="c1"># note: nclib can be 0</span>
+            <span class="n">d</span> <span class="o">=</span> <span class="n">phantomC</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="n">nclipinfo</span><span class="p">]</span>
+            <span class="n">psi</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">deg2rad</span><span class="p">(</span><span class="n">phantomC</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="n">nclipinfo</span><span class="p">])</span>
+            <span class="n">equation2</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">psi</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">psi</span><span class="p">)])</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">Vx0</span><span class="p">)</span>
+            <span class="n">i</span> <span class="o">&amp;=</span> <span class="p">(</span><span class="n">equation2</span> <span class="o">&lt;</span> <span class="n">d</span><span class="p">)</span>
+            <span class="n">nclipinfo</span> <span class="o">+=</span> <span class="mi">1</span>
+
+        <span class="n">image</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">+=</span> <span class="n">f</span>
+
+    <span class="k">if</span> <span class="n">value_type</span> <span class="o">==</span> <span class="s1">&#39;materials&#39;</span><span class="p">:</span>
+        <span class="n">materials</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">space</span><span class="o">.</span><span class="n">size</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">space</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span>
+        <span class="c1"># csf</span>
+        <span class="n">materials</span><span class="p">[(</span><span class="n">image</span> <span class="o">&gt;</span> <span class="mf">1.043</span><span class="p">)</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">image</span> <span class="o">&lt;=</span> <span class="mf">1.047</span><span class="p">)]</span> <span class="o">=</span> <span class="mi">1</span>
+        <span class="c1"># less_dense_sphere</span>
+        <span class="n">materials</span><span class="p">[(</span><span class="n">image</span> <span class="o">&gt;</span> <span class="mf">1.047</span><span class="p">)</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">image</span> <span class="o">&lt;=</span> <span class="mf">1.048</span><span class="p">)]</span> <span class="o">=</span> <span class="mi">2</span>
+        <span class="c1"># brain</span>
+        <span class="n">materials</span><span class="p">[(</span><span class="n">image</span> <span class="o">&gt;</span> <span class="mf">1.048</span><span class="p">)</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">image</span> <span class="o">&lt;=</span> <span class="mf">1.052</span><span class="p">)]</span> <span class="o">=</span> <span class="mi">3</span>
+        <span class="c1"># denser_sphere</span>
+        <span class="n">materials</span><span class="p">[(</span><span class="n">image</span> <span class="o">&gt;</span> <span class="mf">1.052</span><span class="p">)</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">image</span> <span class="o">&lt;=</span> <span class="mf">1.053</span><span class="p">)]</span> <span class="o">=</span> <span class="mi">4</span>
+        <span class="c1"># blood</span>
+        <span class="n">materials</span><span class="p">[(</span><span class="n">image</span> <span class="o">&gt;</span> <span class="mf">1.053</span><span class="p">)</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">image</span> <span class="o">&lt;=</span> <span class="mf">1.058</span><span class="p">)]</span> <span class="o">=</span> <span class="mi">5</span>
+        <span class="c1"># eye</span>
+        <span class="n">materials</span><span class="p">[(</span><span class="n">image</span> <span class="o">&gt;</span> <span class="mf">1.058</span><span class="p">)</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">image</span> <span class="o">&lt;=</span> <span class="mf">1.062</span><span class="p">)]</span> <span class="o">=</span> <span class="mi">6</span>
+        <span class="c1"># Bone</span>
+        <span class="n">materials</span><span class="p">[</span><span class="n">image</span> <span class="o">&gt;</span> <span class="mf">1.75</span><span class="p">]</span> <span class="o">=</span> <span class="mi">7</span>
+
+        <span class="k">return</span> <span class="n">space</span><span class="o">.</span><span class="n">element</span><span class="p">(</span><span class="n">materials</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">space</span><span class="o">.</span><span class="n">shape</span><span class="p">))</span>
+    <span class="k">elif</span> <span class="n">value_type</span> <span class="o">==</span> <span class="s1">&#39;density&#39;</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">space</span><span class="o">.</span><span class="n">element</span><span class="p">(</span><span class="n">image</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">space</span><span class="o">.</span><span class="n">shape</span><span class="p">))</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;unknown `value_type` </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">value_type_in</span><span class="p">))</span></div>
+
+
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s1">&#39;__main__&#39;</span><span class="p">:</span>
+    <span class="c1"># Show the phantoms</span>
+    <span class="kn">import</span> <span class="nn">odl</span>
+    <span class="kn">from</span> <span class="nn">odl.util.testutils</span> <span class="kn">import</span> <span class="n">run_doctests</span>
+
+    <span class="c1"># 2D</span>
+    <span class="n">discr</span> <span class="o">=</span> <span class="n">odl</span><span class="o">.</span><span class="n">uniform_discr</span><span class="p">([</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span> <span class="p">[</span><span class="mi">1000</span><span class="p">,</span> <span class="mi">1000</span><span class="p">])</span>
+    <span class="n">shepp_logan</span><span class="p">(</span><span class="n">discr</span><span class="p">,</span> <span class="n">modified</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span><span class="o">.</span><span class="n">show</span><span class="p">(</span><span class="s1">&#39;shepp_logan 2d modified=True&#39;</span><span class="p">)</span>
+    <span class="n">shepp_logan</span><span class="p">(</span><span class="n">discr</span><span class="p">,</span> <span class="n">modified</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span><span class="o">.</span><span class="n">show</span><span class="p">(</span><span class="s1">&#39;shepp_logan 2d modified=False&#39;</span><span class="p">)</span>
+    <span class="n">forbild</span><span class="p">(</span><span class="n">discr</span><span class="p">)</span><span class="o">.</span><span class="n">show</span><span class="p">(</span><span class="s1">&#39;FORBILD 2d&#39;</span><span class="p">,</span> <span class="n">clim</span><span class="o">=</span><span class="p">[</span><span class="mf">1.035</span><span class="p">,</span> <span class="mf">1.065</span><span class="p">])</span>
+    <span class="n">forbild</span><span class="p">(</span><span class="n">discr</span><span class="p">,</span> <span class="n">value_type</span><span class="o">=</span><span class="s1">&#39;materials&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">show</span><span class="p">(</span><span class="s1">&#39;FORBILD 2d materials&#39;</span><span class="p">)</span>
+
+    <span class="c1"># 3D</span>
+    <span class="n">discr</span> <span class="o">=</span> <span class="n">odl</span><span class="o">.</span><span class="n">uniform_discr</span><span class="p">([</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span> <span class="p">[</span><span class="mi">300</span><span class="p">,</span> <span class="mi">300</span><span class="p">,</span> <span class="mi">300</span><span class="p">])</span>
+    <span class="n">shepp_logan</span><span class="p">(</span><span class="n">discr</span><span class="p">,</span> <span class="n">modified</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span><span class="o">.</span><span class="n">show</span><span class="p">(</span><span class="s1">&#39;shepp_logan 3d modified=True&#39;</span><span class="p">)</span>
+    <span class="n">shepp_logan</span><span class="p">(</span><span class="n">discr</span><span class="p">,</span> <span class="n">modified</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span><span class="o">.</span><span class="n">show</span><span class="p">(</span><span class="s1">&#39;shepp_logan 3d modified=False&#39;</span><span class="p">)</span>
+
+    <span class="c1"># Run also the doctests</span>
+    <span class="n">run_doctests</span><span class="p">()</span>
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &#169; Copyright 2014-2020 The ODL Contributors.
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

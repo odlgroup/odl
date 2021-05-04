@@ -1,0 +1,6 @@
+BregmanDistance.is_functional
+===============================================================
+
+.. currentmodule:: odl.solvers.functional.functional
+
+.. autoproperty:: BregmanDistance.is_functional

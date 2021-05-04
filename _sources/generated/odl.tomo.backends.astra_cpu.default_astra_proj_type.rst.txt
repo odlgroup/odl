@@ -1,0 +1,6 @@
+﻿default_astra_proj_type
+===================================================
+
+.. currentmodule:: odl.tomo.backends.astra_cpu
+
+.. autofunction:: default_astra_proj_type

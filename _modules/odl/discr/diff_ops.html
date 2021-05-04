@@ -1,0 +1,1361 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>odl.discr.diff_ops &mdash; odl 1.0.0.dev0 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/custom.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../../" src="../../../_static/documentation_options.js"></script>
+        <script src="../../../_static/jquery.js"></script>
+        <script src="../../../_static/underscore.js"></script>
+        <script src="../../../_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="../../../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../../index.html" class="icon icon-home"> odl
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                1.0.0.dev0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Getting Started</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../getting_started/getting_started.html">Getting Started</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Working with ODL</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../guide/guide.html">User’s guide – selected topics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../math/math.html">Mathematical Background</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Developer zone</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../dev/dev.html">Contributing to ODL</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Useful facts</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../guide/faq.html">Frequently asked questions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../guide/glossary.html">Glossary</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../release_notes.html">Release Notes</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../refs.html">References</a></li>
+</ul>
+<p class="caption"><span class="caption-text">API Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../odl.html">odl</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">odl</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="../../index.html">Module code</a> &raquo;</li>
+        
+      <li>odl.discr.diff_ops</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for odl.discr.diff_ops</h1><div class="highlight"><pre>
+<span></span><span class="c1"># Copyright 2014-2020 The ODL contributors</span>
+<span class="c1">#</span>
+<span class="c1"># This file is part of ODL.</span>
+<span class="c1">#</span>
+<span class="c1"># This Source Code Form is subject to the terms of the Mozilla Public License,</span>
+<span class="c1"># v. 2.0. If a copy of the MPL was not distributed with this file, You can</span>
+<span class="c1"># obtain one at https://mozilla.org/MPL/2.0/.</span>
+
+<span class="sd">&quot;&quot;&quot;Operators defined for tensor fields.&quot;&quot;&quot;</span>
+
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">absolute_import</span><span class="p">,</span> <span class="n">division</span><span class="p">,</span> <span class="n">print_function</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+
+<span class="kn">from</span> <span class="nn">odl.discr.discr_space</span> <span class="kn">import</span> <span class="n">DiscretizedSpace</span>
+<span class="kn">from</span> <span class="nn">odl.operator.tensor_ops</span> <span class="kn">import</span> <span class="n">PointwiseTensorFieldOperator</span>
+<span class="kn">from</span> <span class="nn">odl.space</span> <span class="kn">import</span> <span class="n">ProductSpace</span>
+<span class="kn">from</span> <span class="nn">odl.util</span> <span class="kn">import</span> <span class="n">indent</span><span class="p">,</span> <span class="n">signature_string</span><span class="p">,</span> <span class="n">writable_array</span>
+
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;PartialDerivative&#39;</span><span class="p">,</span> <span class="s1">&#39;Gradient&#39;</span><span class="p">,</span> <span class="s1">&#39;Divergence&#39;</span><span class="p">,</span> <span class="s1">&#39;Laplacian&#39;</span><span class="p">)</span>
+
+<span class="n">_SUPPORTED_DIFF_METHODS</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;central&#39;</span><span class="p">,</span> <span class="s1">&#39;forward&#39;</span><span class="p">,</span> <span class="s1">&#39;backward&#39;</span><span class="p">)</span>
+<span class="n">_SUPPORTED_PAD_MODES</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;constant&#39;</span><span class="p">,</span>
+                        <span class="s1">&#39;symmetric&#39;</span><span class="p">,</span> <span class="s1">&#39;symmetric_adjoint&#39;</span><span class="p">,</span>
+                        <span class="s1">&#39;periodic&#39;</span><span class="p">,</span>
+                        <span class="s1">&#39;order0&#39;</span><span class="p">,</span> <span class="s1">&#39;order0_adjoint&#39;</span><span class="p">,</span>
+                        <span class="s1">&#39;order1&#39;</span><span class="p">,</span> <span class="s1">&#39;order1_adjoint&#39;</span><span class="p">,</span>
+                        <span class="s1">&#39;order2&#39;</span><span class="p">,</span> <span class="s1">&#39;order2_adjoint&#39;</span><span class="p">)</span>
+
+<span class="n">_ADJ_METHOD</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;central&#39;</span><span class="p">:</span> <span class="s1">&#39;central&#39;</span><span class="p">,</span>
+               <span class="s1">&#39;forward&#39;</span><span class="p">:</span> <span class="s1">&#39;backward&#39;</span><span class="p">,</span>
+               <span class="s1">&#39;backward&#39;</span><span class="p">:</span> <span class="s1">&#39;forward&#39;</span><span class="p">}</span>
+
+<span class="n">_ADJ_PADDING</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;constant&#39;</span><span class="p">:</span> <span class="s1">&#39;constant&#39;</span><span class="p">,</span>
+                <span class="s1">&#39;symmetric&#39;</span><span class="p">:</span> <span class="s1">&#39;symmetric_adjoint&#39;</span><span class="p">,</span>
+                <span class="s1">&#39;symmetric_adjoint&#39;</span><span class="p">:</span> <span class="s1">&#39;symmetric&#39;</span><span class="p">,</span>
+                <span class="s1">&#39;periodic&#39;</span><span class="p">:</span> <span class="s1">&#39;periodic&#39;</span><span class="p">,</span>
+                <span class="s1">&#39;order0&#39;</span><span class="p">:</span> <span class="s1">&#39;order0_adjoint&#39;</span><span class="p">,</span>
+                <span class="s1">&#39;order0_adjoint&#39;</span><span class="p">:</span> <span class="s1">&#39;order0&#39;</span><span class="p">,</span>
+                <span class="s1">&#39;order1&#39;</span><span class="p">:</span> <span class="s1">&#39;order1_adjoint&#39;</span><span class="p">,</span>
+                <span class="s1">&#39;order1_adjoint&#39;</span><span class="p">:</span> <span class="s1">&#39;order1&#39;</span><span class="p">,</span>
+                <span class="s1">&#39;order2&#39;</span><span class="p">:</span> <span class="s1">&#39;order2_adjoint&#39;</span><span class="p">,</span>
+                <span class="s1">&#39;order2_adjoint&#39;</span><span class="p">:</span> <span class="s1">&#39;order2&#39;</span><span class="p">}</span>
+
+
+<div class="viewcode-block" id="PartialDerivative"><a class="viewcode-back" href="../../../generated/odl.discr.diff_ops.PartialDerivative.html#odl.discr.diff_ops.PartialDerivative">[docs]</a><span class="k">class</span> <span class="nc">PartialDerivative</span><span class="p">(</span><span class="n">PointwiseTensorFieldOperator</span><span class="p">):</span>
+
+    <span class="sd">&quot;&quot;&quot;Calculate the discrete partial derivative along a given axis.</span>
+
+<span class="sd">    Calls helper function `finite_diff` to calculate finite difference.</span>
+<span class="sd">    Preserves the shape of the underlying grid.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="PartialDerivative.__init__"><a class="viewcode-back" href="../../../generated/odl.discr.diff_ops.PartialDerivative.html#odl.discr.diff_ops.PartialDerivative.__init__">[docs]</a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">domain</span><span class="p">,</span> <span class="n">axis</span><span class="p">,</span> <span class="nb">range</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="s1">&#39;forward&#39;</span><span class="p">,</span>
+                 <span class="n">pad_mode</span><span class="o">=</span><span class="s1">&#39;constant&#39;</span><span class="p">,</span> <span class="n">pad_const</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Initialize a new instance.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        domain : `DiscretizedSpace`</span>
+<span class="sd">            Space of elements on which the operator can act.</span>
+<span class="sd">        axis : int</span>
+<span class="sd">            Axis along which the partial derivative is evaluated.</span>
+<span class="sd">        range : `DiscretizedSpace`, optional</span>
+<span class="sd">            Space of elements to which the operator maps, must have the</span>
+<span class="sd">            same shape as ``domain``.</span>
+<span class="sd">            For the default ``None``, the range is the same as ``domain``.</span>
+<span class="sd">        method : {&#39;forward&#39;, &#39;backward&#39;, &#39;central&#39;}, optional</span>
+<span class="sd">            Finite difference method which is used in the interior of the</span>
+<span class="sd">            domain of ``f``.</span>
+<span class="sd">        pad_mode : string, optional</span>
+<span class="sd">            The padding mode to use outside the domain.</span>
+
+<span class="sd">            ``&#39;constant&#39;``: Fill with ``pad_const``.</span>
+
+<span class="sd">            ``&#39;symmetric&#39;``: Reflect at the boundaries, not doubling the</span>
+<span class="sd">            outmost values.</span>
+
+<span class="sd">            ``&#39;periodic&#39;``: Fill in values from the other side, keeping</span>
+<span class="sd">            the order.</span>
+
+<span class="sd">            ``&#39;order0&#39;``: Extend constantly with the outmost values</span>
+<span class="sd">            (ensures continuity).</span>
+
+<span class="sd">            ``&#39;order1&#39;``: Extend with constant slope (ensures continuity of</span>
+<span class="sd">            the first derivative). This requires at least 2 values along</span>
+<span class="sd">            each axis where padding is applied.</span>
+
+<span class="sd">            ``&#39;order2&#39;``: Extend with second order accuracy (ensures continuity</span>
+<span class="sd">            of the second derivative). This requires at least 3 values along</span>
+<span class="sd">            the ``axis`` where padding is applied.</span>
+
+<span class="sd">        pad_const : float, optional</span>
+<span class="sd">            For ``pad_mode == &#39;constant&#39;``, ``f`` assumes</span>
+<span class="sd">            ``pad_const`` for indices outside the domain of ``f``</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        --------</span>
+<span class="sd">        &gt;&gt;&gt; f = np.array([[ 0.,  1.,  2.,  3.,  4.],</span>
+<span class="sd">        ...               [ 0.,  2.,  4.,  6.,  8.]])</span>
+<span class="sd">        &gt;&gt;&gt; discr = odl.uniform_discr([0, 0], [2, 1], f.shape)</span>
+<span class="sd">        &gt;&gt;&gt; par_deriv = PartialDerivative(discr, axis=0, pad_mode=&#39;order1&#39;)</span>
+<span class="sd">        &gt;&gt;&gt; par_deriv(f)</span>
+<span class="sd">        uniform_discr([ 0.,  0.], [ 2.,  1.], (2, 5)).element(</span>
+<span class="sd">            [[ 0.,  1.,  2.,  3.,  4.],</span>
+<span class="sd">             [ 0.,  1.,  2.,  3.,  4.]]</span>
+<span class="sd">        )</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">domain</span><span class="p">,</span> <span class="n">DiscretizedSpace</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;`domain` </span><span class="si">{!r}</span><span class="s1"> is not a DiscretizedSpace instance&#39;</span>
+                            <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">domain</span><span class="p">))</span>
+
+        <span class="k">if</span> <span class="nb">range</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="nb">range</span> <span class="o">=</span> <span class="n">domain</span>
+
+        <span class="c1"># Method is affine if nonzero padding is given.</span>
+        <span class="n">linear</span> <span class="o">=</span> <span class="ow">not</span> <span class="p">(</span><span class="n">pad_mode</span> <span class="o">==</span> <span class="s1">&#39;constant&#39;</span> <span class="ow">and</span> <span class="n">pad_const</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">)</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">PartialDerivative</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span>
+            <span class="n">domain</span><span class="p">,</span> <span class="nb">range</span><span class="p">,</span> <span class="n">base_space</span><span class="o">=</span><span class="n">domain</span><span class="p">,</span> <span class="n">linear</span><span class="o">=</span><span class="n">linear</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">axis</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">axis</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dx</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">domain</span><span class="o">.</span><span class="n">cell_sides</span><span class="p">[</span><span class="n">axis</span><span class="p">]</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">method</span><span class="p">,</span> <span class="n">method_in</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">method</span><span class="p">)</span><span class="o">.</span><span class="n">lower</span><span class="p">(),</span> <span class="n">method</span>
+        <span class="k">if</span> <span class="n">method</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">_SUPPORTED_DIFF_METHODS</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;`method` </span><span class="si">{}</span><span class="s1"> not understood&#39;</span>
+                             <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">method_in</span><span class="p">))</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">pad_mode</span><span class="p">,</span> <span class="n">pad_mode_in</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">pad_mode</span><span class="p">)</span><span class="o">.</span><span class="n">lower</span><span class="p">(),</span> <span class="n">pad_mode</span>
+        <span class="k">if</span> <span class="n">pad_mode</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">_SUPPORTED_PAD_MODES</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;`pad_mode` </span><span class="si">{}</span><span class="s1"> not understood&#39;</span>
+                             <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">pad_mode_in</span><span class="p">))</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">pad_const</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">domain</span><span class="o">.</span><span class="n">field</span><span class="o">.</span><span class="n">element</span><span class="p">(</span><span class="n">pad_const</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="PartialDerivative._call"><a class="viewcode-back" href="../../../generated/odl.discr.diff_ops.PartialDerivative._call.html#odl.discr.diff_ops.PartialDerivative._call">[docs]</a>    <span class="k">def</span> <span class="nf">_call</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">out</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Calculate partial derivative of ``x``.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">out</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">out</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">range</span><span class="o">.</span><span class="n">element</span><span class="p">()</span>
+
+        <span class="c1"># TODO: this pipes CUDA arrays through NumPy. Write native operator.</span>
+        <span class="k">with</span> <span class="n">writable_array</span><span class="p">(</span><span class="n">out</span><span class="p">)</span> <span class="k">as</span> <span class="n">out_arr</span><span class="p">:</span>
+            <span class="n">finite_diff</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">asarray</span><span class="p">(),</span> <span class="n">axis</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">axis</span><span class="p">,</span> <span class="n">dx</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">dx</span><span class="p">,</span>
+                        <span class="n">method</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">method</span><span class="p">,</span> <span class="n">pad_mode</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">pad_mode</span><span class="p">,</span>
+                        <span class="n">pad_const</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">pad_const</span><span class="p">,</span> <span class="n">out</span><span class="o">=</span><span class="n">out_arr</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">out</span></div>
+
+<div class="viewcode-block" id="PartialDerivative.derivative"><a class="viewcode-back" href="../../../generated/odl.discr.diff_ops.PartialDerivative.derivative.html#odl.discr.diff_ops.PartialDerivative.derivative">[docs]</a>    <span class="k">def</span> <span class="nf">derivative</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">point</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return the derivative operator.</span>
+
+<span class="sd">        The partial derivative is usually linear, but in case the &#39;constant&#39;</span>
+<span class="sd">        ``pad_mode`` is used with nonzero ``pad_const``, the</span>
+<span class="sd">        derivative is given by the derivative with 0 ``pad_const``.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        point : `domain` `element-like`, optional</span>
+<span class="sd">            The point to take the derivative in. Does not change the result</span>
+<span class="sd">            since the operator is affine.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">pad_mode</span> <span class="o">==</span> <span class="s1">&#39;constant&#39;</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">pad_const</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">PartialDerivative</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">domain</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">axis</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">range</span><span class="p">,</span>
+                                     <span class="bp">self</span><span class="o">.</span><span class="n">method</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">pad_mode</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span></div>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">adjoint</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return the adjoint operator.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_linear</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;operator with nonzero pad_const (</span><span class="si">{}</span><span class="s1">) is not&#39;</span>
+                             <span class="s1">&#39; linear and has no adjoint&#39;</span>
+                             <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">pad_const</span><span class="p">))</span>
+
+        <span class="k">return</span> <span class="o">-</span><span class="n">PartialDerivative</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">range</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">axis</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">domain</span><span class="p">,</span>
+                                  <span class="n">_ADJ_METHOD</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">method</span><span class="p">],</span>
+                                  <span class="n">_ADJ_PADDING</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">pad_mode</span><span class="p">],</span>
+                                  <span class="bp">self</span><span class="o">.</span><span class="n">pad_const</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return ``repr(self)``.&quot;&quot;&quot;</span>
+        <span class="n">posargs</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">domain</span><span class="p">]</span>
+        <span class="n">optargs</span> <span class="o">=</span> <span class="p">[(</span><span class="s1">&#39;axis&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">axis</span><span class="p">,</span> <span class="kc">None</span><span class="p">),</span>
+                   <span class="p">(</span><span class="s1">&#39;range&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">range</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">domain</span><span class="p">),</span>
+                   <span class="p">(</span><span class="s1">&#39;method&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">method</span><span class="p">,</span> <span class="s1">&#39;forward&#39;</span><span class="p">),</span>
+                   <span class="p">(</span><span class="s1">&#39;pad_mode&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">pad_mode</span><span class="p">,</span> <span class="s1">&#39;constant&#39;</span><span class="p">),</span>
+                   <span class="p">(</span><span class="s1">&#39;pad_const&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">pad_const</span><span class="p">,</span> <span class="mi">0</span><span class="p">)]</span>
+        <span class="n">inner_str</span> <span class="o">=</span> <span class="n">signature_string</span><span class="p">(</span><span class="n">posargs</span><span class="p">,</span> <span class="n">optargs</span><span class="p">,</span>
+                                     <span class="n">sep</span><span class="o">=</span><span class="s1">&#39;,</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">,</span> <span class="n">mod</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;!r&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">])</span>
+        <span class="k">return</span> <span class="s1">&#39;</span><span class="si">{}</span><span class="s1">(</span><span class="se">\n</span><span class="si">{}</span><span class="se">\n</span><span class="s1">)&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="p">,</span> <span class="n">indent</span><span class="p">(</span><span class="n">inner_str</span><span class="p">))</span>
+
+    <span class="k">def</span> <span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return ``str(self)``.&quot;&quot;&quot;</span>
+        <span class="n">dom_ran_str</span> <span class="o">=</span> <span class="s1">&#39;</span><span class="se">\n</span><span class="s1">--&gt;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="nb">repr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">domain</span><span class="p">),</span> <span class="nb">repr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">range</span><span class="p">)])</span>
+        <span class="k">return</span> <span class="s1">&#39;</span><span class="si">{}</span><span class="s1">:</span><span class="se">\n</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="p">,</span> <span class="n">indent</span><span class="p">(</span><span class="n">dom_ran_str</span><span class="p">))</span></div>
+
+
+<div class="viewcode-block" id="Gradient"><a class="viewcode-back" href="../../../generated/odl.discr.diff_ops.Gradient.html#odl.discr.diff_ops.Gradient">[docs]</a><span class="k">class</span> <span class="nc">Gradient</span><span class="p">(</span><span class="n">PointwiseTensorFieldOperator</span><span class="p">):</span>
+
+    <span class="sd">&quot;&quot;&quot;Spatial gradient operator for `DiscretizedSpace` spaces.</span>
+
+<span class="sd">    Calls helper function `finite_diff` to calculate each component of the</span>
+<span class="sd">    resulting product space element. For the adjoint of the `Gradient`</span>
+<span class="sd">    operator, zero padding is assumed to match the negative `Divergence`</span>
+<span class="sd">    operator</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="Gradient.__init__"><a class="viewcode-back" href="../../../generated/odl.discr.diff_ops.Gradient.html#odl.discr.diff_ops.Gradient.__init__">[docs]</a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">domain</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="nb">range</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="s1">&#39;forward&#39;</span><span class="p">,</span>
+                 <span class="n">pad_mode</span><span class="o">=</span><span class="s1">&#39;constant&#39;</span><span class="p">,</span> <span class="n">pad_const</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Initialize a new instance.</span>
+
+<span class="sd">        Zero padding is assumed for the adjoint of the `Gradient`</span>
+<span class="sd">        operator to match negative `Divergence` operator.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        domain : `DiscretizedSpace`, optional</span>
+<span class="sd">            Space of elements which the operator acts on.</span>
+<span class="sd">            This is required if ``range`` is not given.</span>
+<span class="sd">        range : power space of `DiscretizedSpace`, optional</span>
+<span class="sd">            Space of elements to which the operator maps.</span>
+<span class="sd">            This is required if ``domain`` is not given.</span>
+<span class="sd">        method : {&#39;forward&#39;, &#39;backward&#39;, &#39;central&#39;}, optional</span>
+<span class="sd">            Finite difference method to be used.</span>
+<span class="sd">        pad_mode : string, optional</span>
+<span class="sd">            The padding mode to use outside the domain.</span>
+
+<span class="sd">            ``&#39;constant&#39;``: Fill with ``pad_const``.</span>
+
+<span class="sd">            ``&#39;symmetric&#39;``: Reflect at the boundaries, not doubling the</span>
+<span class="sd">            outmost values.</span>
+
+<span class="sd">            ``&#39;periodic&#39;``: Fill in values from the other side, keeping</span>
+<span class="sd">            the order.</span>
+
+<span class="sd">            ``&#39;order0&#39;``: Extend constantly with the outmost values</span>
+<span class="sd">            (ensures continuity).</span>
+
+<span class="sd">            ``&#39;order1&#39;``: Extend with constant slope (ensures continuity of</span>
+<span class="sd">            the first derivative). This requires at least 2 values along</span>
+<span class="sd">            each axis where padding is applied.</span>
+
+<span class="sd">            ``&#39;order2&#39;``: Extend with second order accuracy (ensures continuity</span>
+<span class="sd">            of the second derivative). This requires at least 3 values along</span>
+<span class="sd">            each axis.</span>
+
+<span class="sd">        pad_const : float, optional</span>
+<span class="sd">            For ``pad_mode == &#39;constant&#39;``, ``f`` assumes</span>
+<span class="sd">            ``pad_const`` for indices outside the domain of ``f``</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        --------</span>
+<span class="sd">        Creating a Gradient operator:</span>
+
+<span class="sd">        &gt;&gt;&gt; dom = odl.uniform_discr([0, 0], [1, 1], (10, 20))</span>
+<span class="sd">        &gt;&gt;&gt; ran = odl.ProductSpace(dom, dom.ndim)  # 2-dimensional</span>
+<span class="sd">        &gt;&gt;&gt; grad_op = Gradient(dom)</span>
+<span class="sd">        &gt;&gt;&gt; grad_op.range == ran</span>
+<span class="sd">        True</span>
+<span class="sd">        &gt;&gt;&gt; grad_op2 = Gradient(range=ran)</span>
+<span class="sd">        &gt;&gt;&gt; grad_op2.domain == dom</span>
+<span class="sd">        True</span>
+<span class="sd">        &gt;&gt;&gt; grad_op3 = Gradient(domain=dom, range=ran)</span>
+<span class="sd">        &gt;&gt;&gt; grad_op3.domain == dom</span>
+<span class="sd">        True</span>
+<span class="sd">        &gt;&gt;&gt; grad_op3.range == ran</span>
+<span class="sd">        True</span>
+
+<span class="sd">        Calling the operator:</span>
+
+<span class="sd">        &gt;&gt;&gt; data = np.array([[ 0., 1., 2., 3., 4.],</span>
+<span class="sd">        ...                  [ 0., 2., 4., 6., 8.]])</span>
+<span class="sd">        &gt;&gt;&gt; discr = odl.uniform_discr([0, 0], [2, 5], data.shape)</span>
+<span class="sd">        &gt;&gt;&gt; f = discr.element(data)</span>
+<span class="sd">        &gt;&gt;&gt; grad = Gradient(discr)</span>
+<span class="sd">        &gt;&gt;&gt; grad_f = grad(f)</span>
+<span class="sd">        &gt;&gt;&gt; grad_f[0]</span>
+<span class="sd">        uniform_discr([ 0.,  0.], [ 2.,  5.], (2, 5)).element(</span>
+<span class="sd">            [[ 0.,  1.,  2.,  3.,  4.],</span>
+<span class="sd">             [ 0., -2., -4., -6., -8.]]</span>
+<span class="sd">        )</span>
+<span class="sd">        &gt;&gt;&gt; grad_f[1]</span>
+<span class="sd">        uniform_discr([ 0.,  0.], [ 2.,  5.], (2, 5)).element(</span>
+<span class="sd">            [[ 1.,  1.,  1.,  1., -4.],</span>
+<span class="sd">             [ 2.,  2.,  2.,  2., -8.]]</span>
+<span class="sd">        )</span>
+
+<span class="sd">        Verify adjoint:</span>
+
+<span class="sd">        &gt;&gt;&gt; g = grad.range.element((data, data ** 2))</span>
+<span class="sd">        &gt;&gt;&gt; adj_g = grad.adjoint(g)</span>
+<span class="sd">        &gt;&gt;&gt; adj_g</span>
+<span class="sd">        uniform_discr([ 0.,  0.], [ 2.,  5.], (2, 5)).element(</span>
+<span class="sd">            [[  0.,  -2.,  -5.,  -8., -11.],</span>
+<span class="sd">             [  0.,  -5., -14., -23., -32.]]</span>
+<span class="sd">        )</span>
+<span class="sd">        &gt;&gt;&gt; g.inner(grad_f) / f.inner(adj_g)</span>
+<span class="sd">        1.0</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">domain</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="nb">range</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;either `domain` or `range` must be specified&#39;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">domain</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">domain</span> <span class="o">=</span> <span class="nb">range</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="k">except</span> <span class="ne">TypeError</span><span class="p">:</span>
+                <span class="k">pass</span>
+
+        <span class="k">if</span> <span class="nb">range</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="nb">range</span> <span class="o">=</span> <span class="n">ProductSpace</span><span class="p">(</span><span class="n">domain</span><span class="p">,</span> <span class="n">domain</span><span class="o">.</span><span class="n">ndim</span><span class="p">)</span>
+
+        <span class="c1"># Check range first since `domain` may end up to be `None` in</span>
+        <span class="c1"># the case filtered out here (see above)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="nb">range</span><span class="p">,</span> <span class="n">ProductSpace</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;`range` </span><span class="si">{!r}</span><span class="s1"> is not a `ProductSpace` instance&#39;</span>
+                            <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">range</span><span class="p">))</span>
+        <span class="k">elif</span> <span class="ow">not</span> <span class="nb">range</span><span class="o">.</span><span class="n">is_power_space</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;`range` </span><span class="si">{!r}</span><span class="s1"> is not a power space&#39;</span>
+                             <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">range</span><span class="p">))</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">domain</span><span class="p">,</span> <span class="n">DiscretizedSpace</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;`domain` </span><span class="si">{!r}</span><span class="s1"> is not a `DiscretizedSpace` &#39;</span>
+                            <span class="s1">&#39;instance&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">domain</span><span class="p">))</span>
+
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="nb">range</span><span class="p">)</span> <span class="o">!=</span> <span class="n">domain</span><span class="o">.</span><span class="n">ndim</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;`range` must be a power space of length n = </span><span class="si">{}</span><span class="s1">,&#39;</span>
+                             <span class="s1">&#39;with `n == domain.ndim`, got n = </span><span class="si">{}</span><span class="s1"> instead&#39;</span>
+                             <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">domain</span><span class="o">.</span><span class="n">ndim</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="nb">range</span><span class="p">)))</span>
+
+        <span class="n">linear</span> <span class="o">=</span> <span class="ow">not</span> <span class="p">(</span><span class="n">pad_mode</span> <span class="o">==</span> <span class="s1">&#39;constant&#39;</span> <span class="ow">and</span> <span class="n">pad_const</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">)</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">Gradient</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span>
+            <span class="n">domain</span><span class="p">,</span> <span class="nb">range</span><span class="p">,</span> <span class="n">base_space</span><span class="o">=</span><span class="n">domain</span><span class="p">,</span> <span class="n">linear</span><span class="o">=</span><span class="n">linear</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">method</span><span class="p">,</span> <span class="n">method_in</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">method</span><span class="p">)</span><span class="o">.</span><span class="n">lower</span><span class="p">(),</span> <span class="n">method</span>
+        <span class="k">if</span> <span class="n">method</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">_SUPPORTED_DIFF_METHODS</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;`method` </span><span class="si">{}</span><span class="s1"> not understood&#39;</span>
+                             <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">method_in</span><span class="p">))</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">pad_mode</span><span class="p">,</span> <span class="n">pad_mode_in</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">pad_mode</span><span class="p">)</span><span class="o">.</span><span class="n">lower</span><span class="p">(),</span> <span class="n">pad_mode</span>
+        <span class="k">if</span> <span class="n">pad_mode</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">_SUPPORTED_PAD_MODES</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;`pad_mode` </span><span class="si">{}</span><span class="s1"> not understood&#39;</span>
+                             <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">pad_mode_in</span><span class="p">))</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">pad_const</span> <span class="o">=</span> <span class="n">domain</span><span class="o">.</span><span class="n">field</span><span class="o">.</span><span class="n">element</span><span class="p">(</span><span class="n">pad_const</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Gradient._call"><a class="viewcode-back" href="../../../generated/odl.discr.diff_ops.Gradient._call.html#odl.discr.diff_ops.Gradient._call">[docs]</a>    <span class="k">def</span> <span class="nf">_call</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">out</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Calculate the spatial gradient of ``x``.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">out</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">out</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">range</span><span class="o">.</span><span class="n">element</span><span class="p">()</span>
+
+        <span class="n">x_arr</span> <span class="o">=</span> <span class="n">x</span><span class="o">.</span><span class="n">asarray</span><span class="p">()</span>
+        <span class="n">ndim</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">domain</span><span class="o">.</span><span class="n">ndim</span>
+        <span class="n">dx</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">domain</span><span class="o">.</span><span class="n">cell_sides</span>
+
+        <span class="k">for</span> <span class="n">axis</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">ndim</span><span class="p">):</span>
+            <span class="k">with</span> <span class="n">writable_array</span><span class="p">(</span><span class="n">out</span><span class="p">[</span><span class="n">axis</span><span class="p">])</span> <span class="k">as</span> <span class="n">out_arr</span><span class="p">:</span>
+                <span class="n">finite_diff</span><span class="p">(</span><span class="n">x_arr</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="n">axis</span><span class="p">,</span> <span class="n">dx</span><span class="o">=</span><span class="n">dx</span><span class="p">[</span><span class="n">axis</span><span class="p">],</span> <span class="n">method</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">method</span><span class="p">,</span>
+                            <span class="n">pad_mode</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">pad_mode</span><span class="p">,</span>
+                            <span class="n">pad_const</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">pad_const</span><span class="p">,</span>
+                            <span class="n">out</span><span class="o">=</span><span class="n">out_arr</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">out</span></div>
+
+<div class="viewcode-block" id="Gradient.derivative"><a class="viewcode-back" href="../../../generated/odl.discr.diff_ops.Gradient.derivative.html#odl.discr.diff_ops.Gradient.derivative">[docs]</a>    <span class="k">def</span> <span class="nf">derivative</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">point</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return the derivative operator.</span>
+
+<span class="sd">        The gradient is usually linear, but in case the &#39;constant&#39;</span>
+<span class="sd">        ``pad_mode`` is used with nonzero ``pad_const``, the</span>
+<span class="sd">        derivative is given by the Gradient with ``pad_const=0``.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        point : `domain` element, optional</span>
+<span class="sd">            The point to take the derivative in. Does not change the result</span>
+<span class="sd">            since the operator is affine.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">pad_mode</span> <span class="o">==</span> <span class="s1">&#39;constant&#39;</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">pad_const</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">Gradient</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">domain</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">range</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">method</span><span class="p">,</span>
+                            <span class="n">pad_mode</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">pad_mode</span><span class="p">,</span>
+                            <span class="n">pad_const</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span></div>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">adjoint</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Adjoint of this operator.</span>
+
+<span class="sd">        The adjoint is given by the negative `Divergence` with corrections for</span>
+<span class="sd">        the method and padding.</span>
+
+<span class="sd">        The Divergence is constructed from a ``space`` as a product space</span>
+<span class="sd">        operator ``space^n --&gt; space``, hence we need to provide the domain of</span>
+<span class="sd">        this operator.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_linear</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;operator with nonzero pad_const (</span><span class="si">{}</span><span class="s1">) is not&#39;</span>
+                             <span class="s1">&#39; linear and has no adjoint&#39;</span>
+                             <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">pad_const</span><span class="p">))</span>
+
+        <span class="k">return</span> <span class="o">-</span> <span class="n">Divergence</span><span class="p">(</span><span class="n">domain</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">range</span><span class="p">,</span> <span class="nb">range</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">domain</span><span class="p">,</span>
+                            <span class="n">method</span><span class="o">=</span><span class="n">_ADJ_METHOD</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">method</span><span class="p">],</span>
+                            <span class="n">pad_mode</span><span class="o">=</span><span class="n">_ADJ_PADDING</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">pad_mode</span><span class="p">],</span>
+                            <span class="n">pad_const</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">pad_const</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return ``repr(self)``.&quot;&quot;&quot;</span>
+        <span class="n">posargs</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">domain</span><span class="p">]</span>
+        <span class="n">optargs</span> <span class="o">=</span> <span class="p">[(</span><span class="s1">&#39;range&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">range</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">domain</span> <span class="o">**</span> <span class="bp">self</span><span class="o">.</span><span class="n">domain</span><span class="o">.</span><span class="n">ndim</span><span class="p">),</span>
+                   <span class="p">(</span><span class="s1">&#39;method&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">method</span><span class="p">,</span> <span class="s1">&#39;forward&#39;</span><span class="p">),</span>
+                   <span class="p">(</span><span class="s1">&#39;pad_mode&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">pad_mode</span><span class="p">,</span> <span class="s1">&#39;constant&#39;</span><span class="p">),</span>
+                   <span class="p">(</span><span class="s1">&#39;pad_const&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">pad_const</span><span class="p">,</span> <span class="mi">0</span><span class="p">)]</span>
+        <span class="n">inner_str</span> <span class="o">=</span> <span class="n">signature_string</span><span class="p">(</span><span class="n">posargs</span><span class="p">,</span> <span class="n">optargs</span><span class="p">,</span>
+                                     <span class="n">sep</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;,</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">,</span> <span class="s1">&#39;, &#39;</span><span class="p">,</span> <span class="s1">&#39;,</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">],</span>
+                                     <span class="n">mod</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;!r&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">])</span>
+        <span class="k">return</span> <span class="s1">&#39;</span><span class="si">{}</span><span class="s1">(</span><span class="se">\n</span><span class="si">{}</span><span class="se">\n</span><span class="s1">)&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="p">,</span> <span class="n">indent</span><span class="p">(</span><span class="n">inner_str</span><span class="p">))</span>
+
+    <span class="k">def</span> <span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return ``str(self)``.&quot;&quot;&quot;</span>
+        <span class="n">dom_ran_str</span> <span class="o">=</span> <span class="s1">&#39;</span><span class="se">\n</span><span class="s1">--&gt;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="nb">repr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">domain</span><span class="p">),</span> <span class="nb">repr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">range</span><span class="p">)])</span>
+        <span class="k">return</span> <span class="s1">&#39;</span><span class="si">{}</span><span class="s1">:</span><span class="se">\n</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="p">,</span> <span class="n">indent</span><span class="p">(</span><span class="n">dom_ran_str</span><span class="p">))</span></div>
+
+
+<div class="viewcode-block" id="Divergence"><a class="viewcode-back" href="../../../generated/odl.discr.diff_ops.Divergence.html#odl.discr.diff_ops.Divergence">[docs]</a><span class="k">class</span> <span class="nc">Divergence</span><span class="p">(</span><span class="n">PointwiseTensorFieldOperator</span><span class="p">):</span>
+
+    <span class="sd">&quot;&quot;&quot;Divergence operator for `DiscretizedSpace` spaces.</span>
+
+<span class="sd">    Calls helper function `finite_diff` for each component of the input</span>
+<span class="sd">    product space vector. For the adjoint of the `Divergence` operator to</span>
+<span class="sd">    match the negative `Gradient` operator implicit zero is assumed.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="Divergence.__init__"><a class="viewcode-back" href="../../../generated/odl.discr.diff_ops.Divergence.html#odl.discr.diff_ops.Divergence.__init__">[docs]</a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">domain</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="nb">range</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="s1">&#39;forward&#39;</span><span class="p">,</span>
+                 <span class="n">pad_mode</span><span class="o">=</span><span class="s1">&#39;constant&#39;</span><span class="p">,</span> <span class="n">pad_const</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Initialize a new instance.</span>
+
+<span class="sd">        Zero padding is assumed for the adjoint of the `Divergence`</span>
+<span class="sd">        operator to match the negative `Gradient` operator.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        domain : power space of `DiscretizedSpace`, optional</span>
+<span class="sd">            Space of elements which the operator acts on.</span>
+<span class="sd">            This is required if ``range`` is not given.</span>
+<span class="sd">        range : `DiscretizedSpace`, optional</span>
+<span class="sd">            Space of elements to which the operator maps.</span>
+<span class="sd">            This is required if ``domain`` is not given.</span>
+<span class="sd">        method : {&#39;forward&#39;, &#39;backward&#39;, &#39;central&#39;}, optional</span>
+<span class="sd">            Finite difference method to be used</span>
+<span class="sd">        pad_mode : string, optional</span>
+<span class="sd">            The padding mode to use outside the domain.</span>
+
+<span class="sd">            ``&#39;constant&#39;``: Fill with ``pad_const``.</span>
+
+<span class="sd">            ``&#39;symmetric&#39;``: Reflect at the boundaries, not doubling the</span>
+
+<span class="sd">            ``&#39;periodic&#39;``: Fill in values from the other side, keeping</span>
+<span class="sd">            the order.</span>
+
+<span class="sd">            ``&#39;order0&#39;``: Extend constantly with the outmost values</span>
+<span class="sd">            (ensures continuity).</span>
+
+<span class="sd">            ``&#39;order1&#39;``: Extend with constant slope (ensures continuity of</span>
+<span class="sd">            the first derivative). This requires at least 2 values along</span>
+<span class="sd">            each axis.</span>
+
+<span class="sd">            ``&#39;order2&#39;``: Extend with second order accuracy (ensures continuity</span>
+<span class="sd">            of the second derivative). This requires at least 3 values along</span>
+<span class="sd">            each axis.</span>
+
+<span class="sd">        pad_const : float, optional</span>
+<span class="sd">            For ``pad_mode == &#39;constant&#39;``, ``f`` assumes</span>
+<span class="sd">            ``pad_const`` for indices outside the domain of ``f``</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        --------</span>
+<span class="sd">        Initialize a Divergence opeator:</span>
+
+<span class="sd">        &gt;&gt;&gt; ran = odl.uniform_discr([0, 0], [3, 5], (3, 5))</span>
+<span class="sd">        &gt;&gt;&gt; dom = odl.ProductSpace(ran, ran.ndim)  # 2-dimensional</span>
+<span class="sd">        &gt;&gt;&gt; div = Divergence(dom)</span>
+<span class="sd">        &gt;&gt;&gt; div.range == ran</span>
+<span class="sd">        True</span>
+<span class="sd">        &gt;&gt;&gt; div2 = Divergence(range=ran)</span>
+<span class="sd">        &gt;&gt;&gt; div2.domain == dom</span>
+<span class="sd">        True</span>
+<span class="sd">        &gt;&gt;&gt; div3 = Divergence(domain=dom, range=ran)</span>
+<span class="sd">        &gt;&gt;&gt; div3.domain == dom</span>
+<span class="sd">        True</span>
+<span class="sd">        &gt;&gt;&gt; div3.range == ran</span>
+<span class="sd">        True</span>
+
+<span class="sd">        Call the operator:</span>
+
+<span class="sd">        &gt;&gt;&gt; data = np.array([[0., 1., 2., 3., 4.],</span>
+<span class="sd">        ...                  [1., 2., 3., 4., 5.],</span>
+<span class="sd">        ...                  [2., 3., 4., 5., 6.]])</span>
+<span class="sd">        &gt;&gt;&gt; f = div.domain.element([data, data])</span>
+<span class="sd">        &gt;&gt;&gt; div_f = div(f)</span>
+<span class="sd">        &gt;&gt;&gt; print(div_f)</span>
+<span class="sd">        [[  2.,   2.,   2.,   2.,  -3.],</span>
+<span class="sd">         [  2.,   2.,   2.,   2.,  -4.],</span>
+<span class="sd">         [ -1.,  -2.,  -3.,  -4., -12.]]</span>
+
+<span class="sd">        Verify adjoint:</span>
+
+<span class="sd">        &gt;&gt;&gt; g = div.range.element(data ** 2)</span>
+<span class="sd">        &gt;&gt;&gt; adj_div_g = div.adjoint(g)</span>
+<span class="sd">        &gt;&gt;&gt; g.inner(div_f) / f.inner(adj_div_g)</span>
+<span class="sd">        1.0</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">domain</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="nb">range</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;either `domain` or `range` must be specified&#39;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">domain</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">domain</span> <span class="o">=</span> <span class="n">ProductSpace</span><span class="p">(</span><span class="nb">range</span><span class="p">,</span> <span class="nb">range</span><span class="o">.</span><span class="n">ndim</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="nb">range</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="nb">range</span> <span class="o">=</span> <span class="n">domain</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="k">except</span> <span class="ne">TypeError</span><span class="p">:</span>
+                <span class="k">pass</span>
+
+        <span class="c1"># Check `domain` first since `range` may end up to be `None` in</span>
+        <span class="c1"># the case filtered out here (see above)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">domain</span><span class="p">,</span> <span class="n">ProductSpace</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;`domain` </span><span class="si">{!r}</span><span class="s1"> is not a `ProductSpace` instance&#39;</span>
+                            <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">domain</span><span class="p">))</span>
+        <span class="k">elif</span> <span class="ow">not</span> <span class="n">domain</span><span class="o">.</span><span class="n">is_power_space</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;`domain` </span><span class="si">{!r}</span><span class="s1"> is not a power space&#39;</span>
+                             <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">domain</span><span class="p">))</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="nb">range</span><span class="p">,</span> <span class="n">DiscretizedSpace</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;`range` </span><span class="si">{!r}</span><span class="s1"> is not a `DiscretizedSpace` &#39;</span>
+                            <span class="s1">&#39;instance&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">range</span><span class="p">))</span>
+
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">domain</span><span class="p">)</span> <span class="o">!=</span> <span class="nb">range</span><span class="o">.</span><span class="n">ndim</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;`domain` must be a power space of length n = </span><span class="si">{}</span><span class="s1">,&#39;</span>
+                             <span class="s1">&#39;with `n == range.ndim`, got n = </span><span class="si">{}</span><span class="s1"> instead&#39;</span>
+                             <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">range</span><span class="o">.</span><span class="n">ndim</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">domain</span><span class="p">)))</span>
+
+        <span class="n">linear</span> <span class="o">=</span> <span class="ow">not</span> <span class="p">(</span><span class="n">pad_mode</span> <span class="o">==</span> <span class="s1">&#39;constant&#39;</span> <span class="ow">and</span> <span class="n">pad_const</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">)</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">Divergence</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span>
+            <span class="n">domain</span><span class="p">,</span> <span class="nb">range</span><span class="p">,</span> <span class="n">base_space</span><span class="o">=</span><span class="nb">range</span><span class="p">,</span> <span class="n">linear</span><span class="o">=</span><span class="n">linear</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">method</span><span class="p">,</span> <span class="n">method_in</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">method</span><span class="p">)</span><span class="o">.</span><span class="n">lower</span><span class="p">(),</span> <span class="n">method</span>
+        <span class="k">if</span> <span class="n">method</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">_SUPPORTED_DIFF_METHODS</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;`method` </span><span class="si">{}</span><span class="s1"> not understood&#39;</span>
+                             <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">method_in</span><span class="p">))</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">pad_mode</span><span class="p">,</span> <span class="n">pad_mode_in</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">pad_mode</span><span class="p">)</span><span class="o">.</span><span class="n">lower</span><span class="p">(),</span> <span class="n">pad_mode</span>
+        <span class="k">if</span> <span class="n">pad_mode</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">_SUPPORTED_PAD_MODES</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;`pad_mode` </span><span class="si">{}</span><span class="s1"> not understood&#39;</span>
+                             <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">pad_mode_in</span><span class="p">))</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">pad_const</span> <span class="o">=</span> <span class="nb">range</span><span class="o">.</span><span class="n">field</span><span class="o">.</span><span class="n">element</span><span class="p">(</span><span class="n">pad_const</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Divergence._call"><a class="viewcode-back" href="../../../generated/odl.discr.diff_ops.Divergence._call.html#odl.discr.diff_ops.Divergence._call">[docs]</a>    <span class="k">def</span> <span class="nf">_call</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">out</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Calculate the divergence of ``x``.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">out</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">out</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">range</span><span class="o">.</span><span class="n">element</span><span class="p">()</span>
+
+        <span class="n">ndim</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">range</span><span class="o">.</span><span class="n">ndim</span>
+        <span class="n">dx</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">range</span><span class="o">.</span><span class="n">cell_sides</span>
+
+        <span class="n">tmp</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">(</span><span class="n">out</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="n">out</span><span class="o">.</span><span class="n">dtype</span><span class="p">,</span> <span class="n">order</span><span class="o">=</span><span class="n">out</span><span class="o">.</span><span class="n">space</span><span class="o">.</span><span class="n">default_order</span><span class="p">)</span>
+        <span class="k">with</span> <span class="n">writable_array</span><span class="p">(</span><span class="n">out</span><span class="p">)</span> <span class="k">as</span> <span class="n">out_arr</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">axis</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">ndim</span><span class="p">):</span>
+                <span class="n">finite_diff</span><span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="n">axis</span><span class="p">],</span> <span class="n">axis</span><span class="o">=</span><span class="n">axis</span><span class="p">,</span> <span class="n">dx</span><span class="o">=</span><span class="n">dx</span><span class="p">[</span><span class="n">axis</span><span class="p">],</span>
+                            <span class="n">method</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">method</span><span class="p">,</span> <span class="n">pad_mode</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">pad_mode</span><span class="p">,</span>
+                            <span class="n">pad_const</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">pad_const</span><span class="p">,</span>
+                            <span class="n">out</span><span class="o">=</span><span class="n">tmp</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">axis</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                    <span class="n">out_arr</span><span class="p">[:]</span> <span class="o">=</span> <span class="n">tmp</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">out_arr</span> <span class="o">+=</span> <span class="n">tmp</span>
+
+        <span class="k">return</span> <span class="n">out</span></div>
+
+<div class="viewcode-block" id="Divergence.derivative"><a class="viewcode-back" href="../../../generated/odl.discr.diff_ops.Divergence.derivative.html#odl.discr.diff_ops.Divergence.derivative">[docs]</a>    <span class="k">def</span> <span class="nf">derivative</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">point</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return the derivative operator.</span>
+
+<span class="sd">        The Divergence is usually linear, but in case the &#39;constant&#39;</span>
+<span class="sd">        ``pad_mode`` is used with nonzero ``pad_const``, the</span>
+<span class="sd">        derivative is given by the Divergence with ``pad_const=0``.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        point : `domain` element, optional</span>
+<span class="sd">            The point to take the derivative in. Does not change the result</span>
+<span class="sd">            since the operator is affine.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">pad_mode</span> <span class="o">==</span> <span class="s1">&#39;constant&#39;</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">pad_const</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">Divergence</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">domain</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">range</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">method</span><span class="p">,</span>
+                              <span class="n">pad_mode</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">pad_mode</span><span class="p">,</span> <span class="n">pad_const</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span></div>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">adjoint</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Adjoint of this operator.</span>
+
+<span class="sd">        The adjoint is given by the negative `Gradient` with corrections for</span>
+<span class="sd">        the method and padding.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_linear</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;operator with nonzero pad_const (</span><span class="si">{}</span><span class="s1">) is not&#39;</span>
+                             <span class="s1">&#39; linear and has no adjoint&#39;</span>
+                             <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">pad_const</span><span class="p">))</span>
+
+        <span class="k">return</span> <span class="o">-</span> <span class="n">Gradient</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">range</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">domain</span><span class="p">,</span>
+                          <span class="n">method</span><span class="o">=</span><span class="n">_ADJ_METHOD</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">method</span><span class="p">],</span>
+                          <span class="n">pad_mode</span><span class="o">=</span><span class="n">_ADJ_PADDING</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">pad_mode</span><span class="p">])</span>
+
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return ``repr(self)``.&quot;&quot;&quot;</span>
+        <span class="n">posargs</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">domain</span><span class="p">]</span>
+        <span class="n">optargs</span> <span class="o">=</span> <span class="p">[(</span><span class="s1">&#39;range&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">range</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">domain</span><span class="p">[</span><span class="mi">0</span><span class="p">]),</span>
+                   <span class="p">(</span><span class="s1">&#39;method&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">method</span><span class="p">,</span> <span class="s1">&#39;forward&#39;</span><span class="p">),</span>
+                   <span class="p">(</span><span class="s1">&#39;pad_mode&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">pad_mode</span><span class="p">,</span> <span class="s1">&#39;constant&#39;</span><span class="p">),</span>
+                   <span class="p">(</span><span class="s1">&#39;pad_const&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">pad_const</span><span class="p">,</span> <span class="mi">0</span><span class="p">)]</span>
+        <span class="n">inner_str</span> <span class="o">=</span> <span class="n">signature_string</span><span class="p">(</span><span class="n">posargs</span><span class="p">,</span> <span class="n">optargs</span><span class="p">,</span>
+                                     <span class="n">sep</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;,</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">,</span> <span class="s1">&#39;, &#39;</span><span class="p">,</span> <span class="s1">&#39;,</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">],</span>
+                                     <span class="n">mod</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;!r&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">])</span>
+        <span class="k">return</span> <span class="s1">&#39;</span><span class="si">{}</span><span class="s1">(</span><span class="se">\n</span><span class="si">{}</span><span class="se">\n</span><span class="s1">)&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="p">,</span> <span class="n">indent</span><span class="p">(</span><span class="n">inner_str</span><span class="p">))</span>
+
+    <span class="k">def</span> <span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return ``str(self)``.&quot;&quot;&quot;</span>
+        <span class="n">dom_ran_str</span> <span class="o">=</span> <span class="s1">&#39;</span><span class="se">\n</span><span class="s1">--&gt;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="nb">repr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">domain</span><span class="p">),</span> <span class="nb">repr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">range</span><span class="p">)])</span>
+        <span class="k">return</span> <span class="s1">&#39;</span><span class="si">{}</span><span class="s1">:</span><span class="se">\n</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="p">,</span> <span class="n">indent</span><span class="p">(</span><span class="n">dom_ran_str</span><span class="p">))</span></div>
+
+
+<div class="viewcode-block" id="Laplacian"><a class="viewcode-back" href="../../../generated/odl.discr.diff_ops.Laplacian.html#odl.discr.diff_ops.Laplacian">[docs]</a><span class="k">class</span> <span class="nc">Laplacian</span><span class="p">(</span><span class="n">PointwiseTensorFieldOperator</span><span class="p">):</span>
+
+    <span class="sd">&quot;&quot;&quot;Spatial Laplacian operator for `DiscretizedSpace` spaces.</span>
+
+<span class="sd">    Calls helper function `finite_diff` to calculate each component of the</span>
+<span class="sd">    resulting product space vector.</span>
+
+<span class="sd">    Outside the domain zero padding is assumed.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="Laplacian.__init__"><a class="viewcode-back" href="../../../generated/odl.discr.diff_ops.Laplacian.html#odl.discr.diff_ops.Laplacian.__init__">[docs]</a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">domain</span><span class="p">,</span> <span class="nb">range</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">pad_mode</span><span class="o">=</span><span class="s1">&#39;constant&#39;</span><span class="p">,</span> <span class="n">pad_const</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Initialize a new instance.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        domain : `DiscretizedSpace`</span>
+<span class="sd">            Space of elements which the operator is acting on.</span>
+<span class="sd">        pad_mode : string, optional</span>
+<span class="sd">            The padding mode to use outside the domain.</span>
+
+<span class="sd">            ``&#39;constant&#39;``: Fill with ``pad_const``.</span>
+
+<span class="sd">            ``&#39;symmetric&#39;``: Reflect at the boundaries, not doubling the</span>
+<span class="sd">            outmost values.</span>
+
+<span class="sd">            ``&#39;periodic&#39;``: Fill in values from the other side, keeping</span>
+<span class="sd">            the order.</span>
+
+<span class="sd">            ``&#39;order0&#39;``: Extend constantly with the outmost values</span>
+<span class="sd">            (ensures continuity).</span>
+
+<span class="sd">            ``&#39;order1&#39;``: Extend with constant slope (ensures continuity of</span>
+<span class="sd">            the first derivative). This requires at least 2 values along</span>
+<span class="sd">            each axis.</span>
+
+<span class="sd">            ``&#39;order2&#39;``: Extend with second order accuracy (ensures continuity</span>
+<span class="sd">            of the second derivative). This requires at least 3 values along</span>
+<span class="sd">            each axis where padding is applied.</span>
+
+<span class="sd">        pad_const : float, optional</span>
+<span class="sd">            For ``pad_mode == &#39;constant&#39;``, ``f`` assumes</span>
+<span class="sd">            ``pad_const`` for indices outside the domain of ``f``</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        --------</span>
+<span class="sd">        &gt;&gt;&gt; data = np.array([[ 0., 0., 0.],</span>
+<span class="sd">        ...                  [ 0., 1., 0.],</span>
+<span class="sd">        ...                  [ 0., 0., 0.]])</span>
+<span class="sd">        &gt;&gt;&gt; space = odl.uniform_discr([0, 0], [3, 3], [3, 3])</span>
+<span class="sd">        &gt;&gt;&gt; f = space.element(data)</span>
+<span class="sd">        &gt;&gt;&gt; lap = Laplacian(space)</span>
+<span class="sd">        &gt;&gt;&gt; lap(f)</span>
+<span class="sd">        uniform_discr([ 0.,  0.], [ 3.,  3.], (3, 3)).element(</span>
+<span class="sd">            [[ 0.,  1.,  0.],</span>
+<span class="sd">             [ 1., -4.,  1.],</span>
+<span class="sd">             [ 0.,  1.,  0.]]</span>
+<span class="sd">        )</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">domain</span><span class="p">,</span> <span class="n">DiscretizedSpace</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;`domain` </span><span class="si">{!r}</span><span class="s1"> is not a DiscretizedSpace instance&#39;</span>
+                            <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">domain</span><span class="p">))</span>
+
+        <span class="k">if</span> <span class="nb">range</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="nb">range</span> <span class="o">=</span> <span class="n">domain</span>
+
+        <span class="nb">super</span><span class="p">(</span><span class="n">Laplacian</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span>
+            <span class="n">domain</span><span class="p">,</span> <span class="nb">range</span><span class="p">,</span> <span class="n">base_space</span><span class="o">=</span><span class="n">domain</span><span class="p">,</span> <span class="n">linear</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">pad_mode</span><span class="p">,</span> <span class="n">pad_mode_in</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">pad_mode</span><span class="p">)</span><span class="o">.</span><span class="n">lower</span><span class="p">(),</span> <span class="n">pad_mode</span>
+        <span class="k">if</span> <span class="n">pad_mode</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">_SUPPORTED_PAD_MODES</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;`pad_mode` </span><span class="si">{}</span><span class="s1"> not understood&#39;</span>
+                             <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">pad_mode_in</span><span class="p">))</span>
+        <span class="k">if</span> <span class="n">pad_mode</span> <span class="ow">in</span> <span class="p">(</span><span class="s1">&#39;order1&#39;</span><span class="p">,</span> <span class="s1">&#39;order1_adjoint&#39;</span><span class="p">,</span>
+                        <span class="s1">&#39;order2&#39;</span><span class="p">,</span> <span class="s1">&#39;order2_adjoint&#39;</span><span class="p">):</span>
+            <span class="c1"># TODO: Add these pad modes</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;`pad_mode` </span><span class="si">{}</span><span class="s1"> not implemented for Laplacian.&#39;</span>
+                             <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">pad_mode_in</span><span class="p">))</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">pad_const</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">domain</span><span class="o">.</span><span class="n">field</span><span class="o">.</span><span class="n">element</span><span class="p">(</span><span class="n">pad_const</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Laplacian._call"><a class="viewcode-back" href="../../../generated/odl.discr.diff_ops.Laplacian._call.html#odl.discr.diff_ops.Laplacian._call">[docs]</a>    <span class="k">def</span> <span class="nf">_call</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">out</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Calculate the spatial Laplacian of ``x``.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">out</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">out</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">range</span><span class="o">.</span><span class="n">zero</span><span class="p">()</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">out</span><span class="o">.</span><span class="n">set_zero</span><span class="p">()</span>
+
+        <span class="n">x_arr</span> <span class="o">=</span> <span class="n">x</span><span class="o">.</span><span class="n">asarray</span><span class="p">()</span>
+        <span class="n">out_arr</span> <span class="o">=</span> <span class="n">out</span><span class="o">.</span><span class="n">asarray</span><span class="p">()</span>
+        <span class="n">tmp</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">(</span><span class="n">out</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="n">out</span><span class="o">.</span><span class="n">dtype</span><span class="p">,</span> <span class="n">order</span><span class="o">=</span><span class="n">out</span><span class="o">.</span><span class="n">space</span><span class="o">.</span><span class="n">default_order</span><span class="p">)</span>
+
+        <span class="n">ndim</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">domain</span><span class="o">.</span><span class="n">ndim</span>
+        <span class="n">dx</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">domain</span><span class="o">.</span><span class="n">cell_sides</span>
+
+        <span class="k">with</span> <span class="n">writable_array</span><span class="p">(</span><span class="n">out</span><span class="p">)</span> <span class="k">as</span> <span class="n">out_arr</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">axis</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">ndim</span><span class="p">):</span>
+                <span class="c1"># TODO: this can be optimized</span>
+                <span class="n">finite_diff</span><span class="p">(</span><span class="n">x_arr</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="n">axis</span><span class="p">,</span> <span class="n">dx</span><span class="o">=</span><span class="n">dx</span><span class="p">[</span><span class="n">axis</span><span class="p">]</span> <span class="o">**</span> <span class="mi">2</span><span class="p">,</span>
+                            <span class="n">method</span><span class="o">=</span><span class="s1">&#39;forward&#39;</span><span class="p">,</span>
+                            <span class="n">pad_mode</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">pad_mode</span><span class="p">,</span>
+                            <span class="n">pad_const</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">pad_const</span><span class="p">,</span> <span class="n">out</span><span class="o">=</span><span class="n">tmp</span><span class="p">)</span>
+
+                <span class="n">out_arr</span> <span class="o">+=</span> <span class="n">tmp</span>
+
+                <span class="n">finite_diff</span><span class="p">(</span><span class="n">x_arr</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="n">axis</span><span class="p">,</span> <span class="n">dx</span><span class="o">=</span><span class="n">dx</span><span class="p">[</span><span class="n">axis</span><span class="p">]</span> <span class="o">**</span> <span class="mi">2</span><span class="p">,</span>
+                            <span class="n">method</span><span class="o">=</span><span class="s1">&#39;backward&#39;</span><span class="p">,</span>
+                            <span class="n">pad_mode</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">pad_mode</span><span class="p">,</span>
+                            <span class="n">pad_const</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">pad_const</span><span class="p">,</span> <span class="n">out</span><span class="o">=</span><span class="n">tmp</span><span class="p">)</span>
+
+                <span class="n">out_arr</span> <span class="o">-=</span> <span class="n">tmp</span>
+
+        <span class="k">return</span> <span class="n">out</span></div>
+
+<div class="viewcode-block" id="Laplacian.derivative"><a class="viewcode-back" href="../../../generated/odl.discr.diff_ops.Laplacian.derivative.html#odl.discr.diff_ops.Laplacian.derivative">[docs]</a>    <span class="k">def</span> <span class="nf">derivative</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">point</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return the derivative operator.</span>
+
+<span class="sd">        The Laplacian is usually linear, but in case the &#39;constant&#39;</span>
+<span class="sd">        ``pad_mode`` is used with nonzero ``pad_const``, the</span>
+<span class="sd">        derivative is given by the derivative with 0 ``pad_const``.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        point : ``domain`` element, optional</span>
+<span class="sd">            The point to take the derivative in. Does not change the result</span>
+<span class="sd">            since the operator is affine.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">pad_mode</span> <span class="o">==</span> <span class="s1">&#39;constant&#39;</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">pad_const</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">Laplacian</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">domain</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">range</span><span class="p">,</span>
+                             <span class="n">pad_mode</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">pad_mode</span><span class="p">,</span> <span class="n">pad_const</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span></div>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">adjoint</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return the adjoint operator.</span>
+
+<span class="sd">        The laplacian is self-adjoint, so this returns ``self``.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">Laplacian</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">range</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">domain</span><span class="p">,</span>
+                         <span class="n">pad_mode</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">pad_mode</span><span class="p">,</span> <span class="n">pad_const</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return ``repr(self)``.&quot;&quot;&quot;</span>
+        <span class="n">posargs</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">domain</span><span class="p">]</span>
+        <span class="n">optargs</span> <span class="o">=</span> <span class="p">[(</span><span class="s1">&#39;range&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">range</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">domain</span> <span class="o">**</span> <span class="bp">self</span><span class="o">.</span><span class="n">domain</span><span class="o">.</span><span class="n">ndim</span><span class="p">),</span>
+                   <span class="p">(</span><span class="s1">&#39;pad_mode&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">pad_mode</span><span class="p">,</span> <span class="s1">&#39;constant&#39;</span><span class="p">),</span>
+                   <span class="p">(</span><span class="s1">&#39;pad_const&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">pad_const</span><span class="p">,</span> <span class="mi">0</span><span class="p">)]</span>
+        <span class="n">inner_str</span> <span class="o">=</span> <span class="n">signature_string</span><span class="p">(</span><span class="n">posargs</span><span class="p">,</span> <span class="n">optargs</span><span class="p">,</span>
+                                     <span class="n">sep</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;,</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">,</span> <span class="s1">&#39;, &#39;</span><span class="p">,</span> <span class="s1">&#39;,</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">],</span>
+                                     <span class="n">mod</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;!r&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">])</span>
+        <span class="k">return</span> <span class="s1">&#39;</span><span class="si">{}</span><span class="s1">(</span><span class="se">\n</span><span class="si">{}</span><span class="se">\n</span><span class="s1">)&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="p">,</span> <span class="n">indent</span><span class="p">(</span><span class="n">inner_str</span><span class="p">))</span>
+
+    <span class="k">def</span> <span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return ``str(self)``.&quot;&quot;&quot;</span>
+        <span class="n">dom_ran_str</span> <span class="o">=</span> <span class="s1">&#39;</span><span class="se">\n</span><span class="s1">--&gt;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="nb">repr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">domain</span><span class="p">),</span> <span class="nb">repr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">range</span><span class="p">)])</span>
+        <span class="k">return</span> <span class="s1">&#39;</span><span class="si">{}</span><span class="s1">:</span><span class="se">\n</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="p">,</span> <span class="n">indent</span><span class="p">(</span><span class="n">dom_ran_str</span><span class="p">))</span></div>
+
+
+<div class="viewcode-block" id="finite_diff"><a class="viewcode-back" href="../../../generated/odl.discr.diff_ops.finite_diff.html#odl.discr.diff_ops.finite_diff">[docs]</a><span class="k">def</span> <span class="nf">finite_diff</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">axis</span><span class="p">,</span> <span class="n">dx</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="s1">&#39;forward&#39;</span><span class="p">,</span> <span class="n">out</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                <span class="n">pad_mode</span><span class="o">=</span><span class="s1">&#39;constant&#39;</span><span class="p">,</span> <span class="n">pad_const</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Calculate the partial derivative of ``f`` along a given ``axis``.</span>
+
+<span class="sd">    In the interior of the domain of f, the partial derivative is computed</span>
+<span class="sd">    using first-order accurate forward or backward difference or</span>
+<span class="sd">    second-order accurate central differences.</span>
+
+<span class="sd">    With padding the same method and thus accuracy is used on endpoints as</span>
+<span class="sd">    in the interior i.e. forward and backward differences use first-order</span>
+<span class="sd">    accuracy on edges while central differences use second-order accuracy at</span>
+<span class="sd">    edges.</span>
+
+<span class="sd">    Without padding one-sided forward or backward differences are used at</span>
+<span class="sd">    the boundaries. The accuracy at the endpoints can then also be</span>
+<span class="sd">    triggered by the edge order.</span>
+
+<span class="sd">    The returned array has the same shape as the input array ``f``.</span>
+
+<span class="sd">    Per default forward difference with dx=1 and no padding is used.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    f : `array-like`</span>
+<span class="sd">         An N-dimensional array.</span>
+<span class="sd">    axis : int</span>
+<span class="sd">        The axis along which the partial derivative is evaluated.</span>
+<span class="sd">    dx : float, optional</span>
+<span class="sd">        Scalar specifying the distance between sampling points along ``axis``.</span>
+<span class="sd">    method : {&#39;central&#39;, &#39;forward&#39;, &#39;backward&#39;}, optional</span>
+<span class="sd">        Finite difference method which is used in the interior of the domain</span>
+<span class="sd">         of ``f``.</span>
+<span class="sd">    out : `numpy.ndarray`, optional</span>
+<span class="sd">         An N-dimensional array to which the output is written. Has to have</span>
+<span class="sd">         the same shape as the input array ``f``.</span>
+<span class="sd">    pad_mode : string, optional</span>
+<span class="sd">        The padding mode to use outside the domain.</span>
+
+<span class="sd">        ``&#39;constant&#39;``: Fill with ``pad_const``.</span>
+
+<span class="sd">        ``&#39;symmetric&#39;``: Reflect at the boundaries, not doubling the</span>
+<span class="sd">        outmost values.</span>
+
+<span class="sd">        ``&#39;periodic&#39;``: Fill in values from the other side, keeping</span>
+<span class="sd">        the order.</span>
+
+<span class="sd">        ``&#39;order0&#39;``: Extend constantly with the outmost values</span>
+<span class="sd">        (ensures continuity).</span>
+
+<span class="sd">        ``&#39;order1&#39;``: Extend with constant slope (ensures continuity of</span>
+<span class="sd">        the first derivative). This requires at least 2 values along</span>
+<span class="sd">        each axis where padding is applied.</span>
+
+<span class="sd">        ``&#39;order2&#39;``: Extend with second order accuracy (ensures continuity</span>
+<span class="sd">        of the second derivative). This requires at least 3 values along</span>
+<span class="sd">        each axis where padding is applied.</span>
+
+<span class="sd">    pad_const : float, optional</span>
+<span class="sd">        For ``pad_mode == &#39;constant&#39;``, ``f`` assumes ``pad_const`` for</span>
+<span class="sd">        indices outside the domain of ``f``</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    out : `numpy.ndarray`</span>
+<span class="sd">        N-dimensional array of the same shape as ``f``. If ``out`` was</span>
+<span class="sd">        provided, the returned object is a reference to it.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    &gt;&gt;&gt; f = np.array([ 0., 1., 2., 3., 4., 5., 6., 7., 8., 9.])</span>
+
+<span class="sd">    &gt;&gt;&gt; finite_diff(f, axis=0)</span>
+<span class="sd">    array([ 1.,  1.,  1.,  1.,  1.,  1.,  1.,  1.,  1.,  -9.])</span>
+
+<span class="sd">    Without arguments the above defaults to:</span>
+
+<span class="sd">    &gt;&gt;&gt; finite_diff(f, axis=0, dx=1.0, method=&#39;forward&#39;, pad_mode=&#39;constant&#39;)</span>
+<span class="sd">    array([ 1.,  1.,  1.,  1.,  1.,  1.,  1.,  1.,  1.,  -9.])</span>
+
+<span class="sd">    Parameters can be changed one by one:</span>
+
+<span class="sd">    &gt;&gt;&gt; finite_diff(f, axis=0, dx=0.5)</span>
+<span class="sd">    array([ 2.,  2.,  2.,  2.,  2.,  2.,  2.,  2.,  2.,  -18.])</span>
+<span class="sd">    &gt;&gt;&gt; finite_diff(f, axis=0, pad_mode=&#39;order1&#39;)</span>
+<span class="sd">    array([ 1.,  1.,  1.,  1.,  1.,  1.,  1.,  1.,  1., 1.])</span>
+
+<span class="sd">    Central differences and different edge orders:</span>
+
+<span class="sd">    &gt;&gt;&gt; finite_diff(0.5 * f ** 2, axis=0, method=&#39;central&#39;, pad_mode=&#39;order1&#39;)</span>
+<span class="sd">    array([ 0.5,  1. ,  2. ,  3. ,  4. ,  5. ,  6. ,  7. ,  8. ,  8.5])</span>
+<span class="sd">    &gt;&gt;&gt; finite_diff(0.5 * f ** 2, axis=0, method=&#39;central&#39;, pad_mode=&#39;order2&#39;)</span>
+<span class="sd">    array([-0.,  1.,  2.,  3.,  4.,  5.,  6.,  7.,  8.,  9.])</span>
+
+<span class="sd">    In-place evaluation:</span>
+
+<span class="sd">    &gt;&gt;&gt; out = f.copy()</span>
+<span class="sd">    &gt;&gt;&gt; out is finite_diff(f, axis=0, out=out)</span>
+<span class="sd">    True</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">f_arr</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
+    <span class="n">ndim</span> <span class="o">=</span> <span class="n">f_arr</span><span class="o">.</span><span class="n">ndim</span>
+
+    <span class="k">if</span> <span class="n">f_arr</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="n">axis</span><span class="p">]</span> <span class="o">&lt;</span> <span class="mi">2</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;in axis </span><span class="si">{}</span><span class="s1">: at least two elements required, got </span><span class="si">{}</span><span class="s1">&#39;</span>
+                         <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">axis</span><span class="p">,</span> <span class="n">f_arr</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="n">axis</span><span class="p">]))</span>
+
+    <span class="k">if</span> <span class="n">axis</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="n">axis</span> <span class="o">+=</span> <span class="n">ndim</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="mi">0</span> <span class="o">&lt;=</span> <span class="n">axis</span> <span class="o">&lt;</span> <span class="n">ndim</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">IndexError</span><span class="p">(</span><span class="s1">&#39;`axis` </span><span class="si">{}</span><span class="s1"> outside the valid range 0 ... </span><span class="si">{}</span><span class="s1">&#39;</span>
+                         <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">axis</span><span class="p">,</span> <span class="n">ndim</span> <span class="o">-</span> <span class="mi">1</span><span class="p">))</span>
+
+    <span class="n">dx</span><span class="p">,</span> <span class="n">dx_in</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">dx</span><span class="p">),</span> <span class="n">dx</span>
+    <span class="k">if</span> <span class="n">dx</span> <span class="o">&lt;=</span> <span class="mi">0</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">isfinite</span><span class="p">(</span><span class="n">dx</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;`dx` must be positive, got </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">dx_in</span><span class="p">))</span>
+
+    <span class="n">method</span><span class="p">,</span> <span class="n">method_in</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">method</span><span class="p">)</span><span class="o">.</span><span class="n">lower</span><span class="p">(),</span> <span class="n">method</span>
+    <span class="k">if</span> <span class="n">method</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">_SUPPORTED_DIFF_METHODS</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;`method` </span><span class="si">{}</span><span class="s1"> was not understood&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">method_in</span><span class="p">))</span>
+
+    <span class="k">if</span> <span class="n">pad_mode</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">_SUPPORTED_PAD_MODES</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;`pad_mode` </span><span class="si">{}</span><span class="s1"> not understood&#39;</span>
+                         <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">pad_mode</span><span class="p">))</span>
+
+    <span class="n">pad_const</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">dtype</span><span class="o">.</span><span class="n">type</span><span class="p">(</span><span class="n">pad_const</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">out</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">out</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty_like</span><span class="p">(</span><span class="n">f_arr</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">out</span><span class="o">.</span><span class="n">shape</span> <span class="o">!=</span> <span class="n">f</span><span class="o">.</span><span class="n">shape</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;expected output shape </span><span class="si">{}</span><span class="s1">, got </span><span class="si">{}</span><span class="s1">&#39;</span>
+                             <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="n">out</span><span class="o">.</span><span class="n">shape</span><span class="p">))</span>
+
+    <span class="k">if</span> <span class="n">f_arr</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="n">axis</span><span class="p">]</span> <span class="o">&lt;</span> <span class="mi">2</span> <span class="ow">and</span> <span class="n">pad_mode</span> <span class="o">==</span> <span class="s1">&#39;order1&#39;</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;size of array to small to use &#39;order1&#39;, needs at &quot;</span>
+                         <span class="s2">&quot;least 2 elements along axis </span><span class="si">{}</span><span class="s2">.&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">axis</span><span class="p">))</span>
+    <span class="k">if</span> <span class="n">f_arr</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="n">axis</span><span class="p">]</span> <span class="o">&lt;</span> <span class="mi">3</span> <span class="ow">and</span> <span class="n">pad_mode</span> <span class="o">==</span> <span class="s1">&#39;order2&#39;</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;size of array to small to use &#39;order2&#39;, needs at &quot;</span>
+                         <span class="s2">&quot;least 3 elements along axis </span><span class="si">{}</span><span class="s2">.&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">axis</span><span class="p">))</span>
+
+    <span class="c1"># create slice objects: initially all are [:, :, ..., :]</span>
+
+    <span class="c1"># Swap axes so that the axis of interest is first. This is a O(1)</span>
+    <span class="c1"># operation and is done to simplify the code below.</span>
+    <span class="n">out</span><span class="p">,</span> <span class="n">out_in</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">swapaxes</span><span class="p">(</span><span class="n">out</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">axis</span><span class="p">),</span> <span class="n">out</span>
+    <span class="n">f_arr</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">swapaxes</span><span class="p">(</span><span class="n">f_arr</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">axis</span><span class="p">)</span>
+
+    <span class="c1"># Interior of the domain of f</span>
+    <span class="k">if</span> <span class="n">method</span> <span class="o">==</span> <span class="s1">&#39;central&#39;</span><span class="p">:</span>
+        <span class="c1"># 1D equivalent: out[1:-1] = (f[2:] - f[:-2])/2.0</span>
+        <span class="n">np</span><span class="o">.</span><span class="n">subtract</span><span class="p">(</span><span class="n">f_arr</span><span class="p">[</span><span class="mi">2</span><span class="p">:],</span> <span class="n">f_arr</span><span class="p">[:</span><span class="o">-</span><span class="mi">2</span><span class="p">],</span> <span class="n">out</span><span class="o">=</span><span class="n">out</span><span class="p">[</span><span class="mi">1</span><span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
+        <span class="n">out</span><span class="p">[</span><span class="mi">1</span><span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">/=</span> <span class="mf">2.0</span>
+
+    <span class="k">elif</span> <span class="n">method</span> <span class="o">==</span> <span class="s1">&#39;forward&#39;</span><span class="p">:</span>
+        <span class="c1"># 1D equivalent: out[1:-1] = (f[2:] - f[1:-1])</span>
+        <span class="n">np</span><span class="o">.</span><span class="n">subtract</span><span class="p">(</span><span class="n">f_arr</span><span class="p">[</span><span class="mi">2</span><span class="p">:],</span> <span class="n">f_arr</span><span class="p">[</span><span class="mi">1</span><span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="n">out</span><span class="o">=</span><span class="n">out</span><span class="p">[</span><span class="mi">1</span><span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
+
+    <span class="k">elif</span> <span class="n">method</span> <span class="o">==</span> <span class="s1">&#39;backward&#39;</span><span class="p">:</span>
+        <span class="c1"># 1D equivalent: out[1:-1] = (f[1:-1] - f[:-2])</span>
+        <span class="n">np</span><span class="o">.</span><span class="n">subtract</span><span class="p">(</span><span class="n">f_arr</span><span class="p">[</span><span class="mi">1</span><span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="n">f_arr</span><span class="p">[:</span><span class="o">-</span><span class="mi">2</span><span class="p">],</span> <span class="n">out</span><span class="o">=</span><span class="n">out</span><span class="p">[</span><span class="mi">1</span><span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
+
+    <span class="c1"># Boundaries</span>
+    <span class="k">if</span> <span class="n">pad_mode</span> <span class="o">==</span> <span class="s1">&#39;constant&#39;</span><span class="p">:</span>
+        <span class="c1"># Assume constant value c for indices outside the domain of ``f``</span>
+
+        <span class="c1"># With padding the method used on endpoints is the same as in the</span>
+        <span class="c1"># interior of the domain of f</span>
+
+        <span class="k">if</span> <span class="n">method</span> <span class="o">==</span> <span class="s1">&#39;central&#39;</span><span class="p">:</span>
+            <span class="n">out</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">f_arr</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">pad_const</span><span class="p">)</span> <span class="o">/</span> <span class="mf">2.0</span>
+            <span class="n">out</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">pad_const</span> <span class="o">-</span> <span class="n">f_arr</span><span class="p">[</span><span class="o">-</span><span class="mi">2</span><span class="p">])</span> <span class="o">/</span> <span class="mf">2.0</span>
+
+        <span class="k">elif</span> <span class="n">method</span> <span class="o">==</span> <span class="s1">&#39;forward&#39;</span><span class="p">:</span>
+            <span class="n">out</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">f_arr</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">f_arr</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="n">out</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">pad_const</span> <span class="o">-</span> <span class="n">f_arr</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+
+        <span class="k">elif</span> <span class="n">method</span> <span class="o">==</span> <span class="s1">&#39;backward&#39;</span><span class="p">:</span>
+            <span class="n">out</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">f_arr</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">-</span> <span class="n">pad_const</span>
+            <span class="n">out</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">f_arr</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">f_arr</span><span class="p">[</span><span class="o">-</span><span class="mi">2</span><span class="p">]</span>
+
+    <span class="k">elif</span> <span class="n">pad_mode</span> <span class="o">==</span> <span class="s1">&#39;symmetric&#39;</span><span class="p">:</span>
+        <span class="c1"># Values of f for indices outside the domain of f are replicates of</span>
+        <span class="c1"># the edge values</span>
+
+        <span class="c1"># With padding the method used on endpoints is the same as in the</span>
+        <span class="c1"># interior of the domain of f</span>
+
+        <span class="k">if</span> <span class="n">method</span> <span class="o">==</span> <span class="s1">&#39;central&#39;</span><span class="p">:</span>
+            <span class="n">out</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">f_arr</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">f_arr</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="o">/</span> <span class="mf">2.0</span>
+            <span class="n">out</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">f_arr</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">f_arr</span><span class="p">[</span><span class="o">-</span><span class="mi">2</span><span class="p">])</span> <span class="o">/</span> <span class="mf">2.0</span>
+
+        <span class="k">elif</span> <span class="n">method</span> <span class="o">==</span> <span class="s1">&#39;forward&#39;</span><span class="p">:</span>
+            <span class="n">out</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">f_arr</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">f_arr</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="n">out</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+
+        <span class="k">elif</span> <span class="n">method</span> <span class="o">==</span> <span class="s1">&#39;backward&#39;</span><span class="p">:</span>
+            <span class="n">out</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+            <span class="n">out</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">f_arr</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">f_arr</span><span class="p">[</span><span class="o">-</span><span class="mi">2</span><span class="p">]</span>
+
+    <span class="k">elif</span> <span class="n">pad_mode</span> <span class="o">==</span> <span class="s1">&#39;symmetric_adjoint&#39;</span><span class="p">:</span>
+        <span class="c1"># The adjoint case of symmetric</span>
+
+        <span class="k">if</span> <span class="n">method</span> <span class="o">==</span> <span class="s1">&#39;central&#39;</span><span class="p">:</span>
+            <span class="n">out</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">f_arr</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="n">f_arr</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="o">/</span> <span class="mf">2.0</span>
+            <span class="n">out</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="o">-</span><span class="n">f_arr</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">f_arr</span><span class="p">[</span><span class="o">-</span><span class="mi">2</span><span class="p">])</span> <span class="o">/</span> <span class="mf">2.0</span>
+
+        <span class="k">elif</span> <span class="n">method</span> <span class="o">==</span> <span class="s1">&#39;forward&#39;</span><span class="p">:</span>
+            <span class="n">out</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">f_arr</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+            <span class="n">out</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="o">-</span><span class="n">f_arr</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+
+        <span class="k">elif</span> <span class="n">method</span> <span class="o">==</span> <span class="s1">&#39;backward&#39;</span><span class="p">:</span>
+            <span class="n">out</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">f_arr</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="n">out</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="o">-</span><span class="n">f_arr</span><span class="p">[</span><span class="o">-</span><span class="mi">2</span><span class="p">]</span>
+
+    <span class="k">elif</span> <span class="n">pad_mode</span> <span class="o">==</span> <span class="s1">&#39;periodic&#39;</span><span class="p">:</span>
+        <span class="c1"># Values of f for indices outside the domain of f are replicates of</span>
+        <span class="c1"># the edge values on the other side</span>
+
+        <span class="k">if</span> <span class="n">method</span> <span class="o">==</span> <span class="s1">&#39;central&#39;</span><span class="p">:</span>
+            <span class="n">out</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">f_arr</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">f_arr</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span> <span class="o">/</span> <span class="mf">2.0</span>
+            <span class="n">out</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">f_arr</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">-</span> <span class="n">f_arr</span><span class="p">[</span><span class="o">-</span><span class="mi">2</span><span class="p">])</span> <span class="o">/</span> <span class="mf">2.0</span>
+
+        <span class="k">elif</span> <span class="n">method</span> <span class="o">==</span> <span class="s1">&#39;forward&#39;</span><span class="p">:</span>
+            <span class="n">out</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">f_arr</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">f_arr</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="n">out</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">f_arr</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">-</span> <span class="n">f_arr</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+
+        <span class="k">elif</span> <span class="n">method</span> <span class="o">==</span> <span class="s1">&#39;backward&#39;</span><span class="p">:</span>
+            <span class="n">out</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">f_arr</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">-</span> <span class="n">f_arr</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+            <span class="n">out</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">f_arr</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">f_arr</span><span class="p">[</span><span class="o">-</span><span class="mi">2</span><span class="p">]</span>
+
+    <span class="k">elif</span> <span class="n">pad_mode</span> <span class="o">==</span> <span class="s1">&#39;order0&#39;</span><span class="p">:</span>
+        <span class="c1"># Values of f for indices outside the domain of f are replicates of</span>
+        <span class="c1"># the edge value.</span>
+
+        <span class="k">if</span> <span class="n">method</span> <span class="o">==</span> <span class="s1">&#39;central&#39;</span><span class="p">:</span>
+            <span class="n">out</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">f_arr</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">f_arr</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="o">/</span> <span class="mf">2.0</span>
+            <span class="n">out</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">f_arr</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">f_arr</span><span class="p">[</span><span class="o">-</span><span class="mi">2</span><span class="p">])</span> <span class="o">/</span> <span class="mf">2.0</span>
+
+        <span class="k">elif</span> <span class="n">method</span> <span class="o">==</span> <span class="s1">&#39;forward&#39;</span><span class="p">:</span>
+            <span class="n">out</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">f_arr</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">f_arr</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="n">out</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+
+        <span class="k">elif</span> <span class="n">method</span> <span class="o">==</span> <span class="s1">&#39;backward&#39;</span><span class="p">:</span>
+            <span class="n">out</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+            <span class="n">out</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">f_arr</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">f_arr</span><span class="p">[</span><span class="o">-</span><span class="mi">2</span><span class="p">]</span>
+
+    <span class="k">elif</span> <span class="n">pad_mode</span> <span class="o">==</span> <span class="s1">&#39;order0_adjoint&#39;</span><span class="p">:</span>
+        <span class="c1"># Values of f for indices outside the domain of f are replicates of</span>
+        <span class="c1"># the edge value.</span>
+
+        <span class="k">if</span> <span class="n">method</span> <span class="o">==</span> <span class="s1">&#39;central&#39;</span><span class="p">:</span>
+            <span class="n">out</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">f_arr</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="n">f_arr</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span> <span class="o">/</span> <span class="mf">2.0</span>
+            <span class="n">out</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="o">-</span><span class="p">(</span><span class="n">f_arr</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="n">f_arr</span><span class="p">[</span><span class="o">-</span><span class="mi">2</span><span class="p">])</span> <span class="o">/</span> <span class="mf">2.0</span>
+
+        <span class="k">elif</span> <span class="n">method</span> <span class="o">==</span> <span class="s1">&#39;forward&#39;</span><span class="p">:</span>
+            <span class="n">out</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">f_arr</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+            <span class="n">out</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="o">-</span><span class="n">f_arr</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+
+        <span class="k">elif</span> <span class="n">method</span> <span class="o">==</span> <span class="s1">&#39;backward&#39;</span><span class="p">:</span>
+            <span class="n">out</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">f_arr</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="n">out</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="o">-</span><span class="n">f_arr</span><span class="p">[</span><span class="o">-</span><span class="mi">2</span><span class="p">]</span>
+
+    <span class="k">elif</span> <span class="n">pad_mode</span> <span class="o">==</span> <span class="s1">&#39;order1&#39;</span><span class="p">:</span>
+        <span class="c1"># Values of f for indices outside the domain of f are linearly</span>
+        <span class="c1"># extrapolated from the inside.</span>
+
+        <span class="c1"># independent of ``method``</span>
+
+        <span class="n">out</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">f_arr</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">f_arr</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">out</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">f_arr</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">f_arr</span><span class="p">[</span><span class="o">-</span><span class="mi">2</span><span class="p">]</span>
+
+    <span class="k">elif</span> <span class="n">pad_mode</span> <span class="o">==</span> <span class="s1">&#39;order1_adjoint&#39;</span><span class="p">:</span>
+        <span class="c1"># Values of f for indices outside the domain of f are linearly</span>
+        <span class="c1"># extrapolated from the inside.</span>
+
+        <span class="k">if</span> <span class="n">method</span> <span class="o">==</span> <span class="s1">&#39;central&#39;</span><span class="p">:</span>
+            <span class="n">out</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">f_arr</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="n">f_arr</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">/</span> <span class="mf">2.0</span>
+            <span class="n">out</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="o">-</span><span class="n">f_arr</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">f_arr</span><span class="p">[</span><span class="o">-</span><span class="mi">2</span><span class="p">]</span> <span class="o">/</span> <span class="mf">2.0</span>
+
+            <span class="c1"># Increment in case array is very short and we get aliasing</span>
+            <span class="n">out</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">-=</span> <span class="n">f_arr</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">/</span> <span class="mf">2.0</span>
+            <span class="n">out</span><span class="p">[</span><span class="o">-</span><span class="mi">2</span><span class="p">]</span> <span class="o">+=</span> <span class="n">f_arr</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">/</span> <span class="mf">2.0</span>
+
+        <span class="k">elif</span> <span class="n">method</span> <span class="o">==</span> <span class="s1">&#39;forward&#39;</span><span class="p">:</span>
+            <span class="n">out</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">f_arr</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="n">f_arr</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+            <span class="n">out</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="o">-</span><span class="n">f_arr</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+
+            <span class="c1"># Increment in case array is very short and we get aliasing</span>
+            <span class="n">out</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">-=</span> <span class="n">f_arr</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+        <span class="k">elif</span> <span class="n">method</span> <span class="o">==</span> <span class="s1">&#39;backward&#39;</span><span class="p">:</span>
+            <span class="n">out</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">f_arr</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="n">out</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="o">-</span><span class="n">f_arr</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">f_arr</span><span class="p">[</span><span class="o">-</span><span class="mi">2</span><span class="p">]</span>
+
+            <span class="c1"># Increment in case array is very short and we get aliasing</span>
+            <span class="n">out</span><span class="p">[</span><span class="o">-</span><span class="mi">2</span><span class="p">]</span> <span class="o">+=</span> <span class="n">f_arr</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+
+    <span class="k">elif</span> <span class="n">pad_mode</span> <span class="o">==</span> <span class="s1">&#39;order2&#39;</span><span class="p">:</span>
+        <span class="c1"># 2nd order edges</span>
+
+        <span class="n">out</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="o">-</span><span class="p">(</span><span class="mf">3.0</span> <span class="o">*</span> <span class="n">f_arr</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">-</span> <span class="mf">4.0</span> <span class="o">*</span> <span class="n">f_arr</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="n">f_arr</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span> <span class="o">/</span> <span class="mf">2.0</span>
+        <span class="n">out</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="mf">3.0</span> <span class="o">*</span> <span class="n">f_arr</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="mf">4.0</span> <span class="o">*</span> <span class="n">f_arr</span><span class="p">[</span><span class="o">-</span><span class="mi">2</span><span class="p">]</span> <span class="o">+</span> <span class="n">f_arr</span><span class="p">[</span><span class="o">-</span><span class="mi">3</span><span class="p">])</span> <span class="o">/</span> <span class="mf">2.0</span>
+
+    <span class="k">elif</span> <span class="n">pad_mode</span> <span class="o">==</span> <span class="s1">&#39;order2_adjoint&#39;</span><span class="p">:</span>
+        <span class="c1"># Values of f for indices outside the domain of f are quadratically</span>
+        <span class="c1"># extrapolated from the inside.</span>
+
+        <span class="k">if</span> <span class="n">method</span> <span class="o">==</span> <span class="s1">&#39;central&#39;</span><span class="p">:</span>
+            <span class="n">out</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="mf">1.5</span> <span class="o">*</span> <span class="n">f_arr</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="n">f_arr</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+            <span class="n">out</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="o">-</span><span class="mf">1.5</span> <span class="o">*</span> <span class="n">f_arr</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="n">f_arr</span><span class="p">[</span><span class="o">-</span><span class="mi">2</span><span class="p">]</span>
+
+            <span class="c1"># Increment in case array is very short and we get aliasing</span>
+            <span class="n">out</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">-=</span> <span class="mf">1.5</span> <span class="o">*</span> <span class="n">f_arr</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="n">out</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">+=</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="n">f_arr</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="n">out</span><span class="p">[</span><span class="o">-</span><span class="mi">3</span><span class="p">]</span> <span class="o">-=</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="n">f_arr</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+            <span class="n">out</span><span class="p">[</span><span class="o">-</span><span class="mi">2</span><span class="p">]</span> <span class="o">+=</span> <span class="mf">1.5</span> <span class="o">*</span> <span class="n">f_arr</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+
+        <span class="k">elif</span> <span class="n">method</span> <span class="o">==</span> <span class="s1">&#39;forward&#39;</span><span class="p">:</span>
+            <span class="n">out</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="mf">1.5</span> <span class="o">*</span> <span class="n">f_arr</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="mf">1.0</span> <span class="o">*</span> <span class="n">f_arr</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+            <span class="n">out</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="o">-</span><span class="mf">1.5</span> <span class="o">*</span> <span class="n">f_arr</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+
+            <span class="c1"># Increment in case array is very short and we get aliasing</span>
+            <span class="n">out</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">-=</span> <span class="mf">2.0</span> <span class="o">*</span> <span class="n">f_arr</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="n">out</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">+=</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="n">f_arr</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="n">out</span><span class="p">[</span><span class="o">-</span><span class="mi">3</span><span class="p">]</span> <span class="o">-=</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="n">f_arr</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+            <span class="n">out</span><span class="p">[</span><span class="o">-</span><span class="mi">2</span><span class="p">]</span> <span class="o">+=</span> <span class="mf">1.0</span> <span class="o">*</span> <span class="n">f_arr</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+
+        <span class="k">elif</span> <span class="n">method</span> <span class="o">==</span> <span class="s1">&#39;backward&#39;</span><span class="p">:</span>
+            <span class="n">out</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="mf">1.5</span> <span class="o">*</span> <span class="n">f_arr</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="n">out</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="o">-</span><span class="mf">1.0</span> <span class="o">*</span> <span class="n">f_arr</span><span class="p">[</span><span class="o">-</span><span class="mi">2</span><span class="p">]</span> <span class="o">-</span> <span class="mf">1.5</span> <span class="o">*</span> <span class="n">f_arr</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+
+            <span class="c1"># Increment in case array is very short and we get aliasing</span>
+            <span class="n">out</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">-=</span> <span class="mf">1.0</span> <span class="o">*</span> <span class="n">f_arr</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="n">out</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">+=</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="n">f_arr</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="n">out</span><span class="p">[</span><span class="o">-</span><span class="mi">3</span><span class="p">]</span> <span class="o">-=</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="n">f_arr</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+            <span class="n">out</span><span class="p">[</span><span class="o">-</span><span class="mi">2</span><span class="p">]</span> <span class="o">+=</span> <span class="mf">2.0</span> <span class="o">*</span> <span class="n">f_arr</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s1">&#39;unknown pad_mode&#39;</span><span class="p">)</span>
+
+    <span class="c1"># divide by step size</span>
+    <span class="n">out</span> <span class="o">/=</span> <span class="n">dx</span>
+
+    <span class="k">return</span> <span class="n">out_in</span></div>
+
+
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s1">&#39;__main__&#39;</span><span class="p">:</span>
+    <span class="kn">from</span> <span class="nn">odl.util.testutils</span> <span class="kn">import</span> <span class="n">run_doctests</span>
+    <span class="n">run_doctests</span><span class="p">()</span>
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &#169; Copyright 2014-2020 The ODL Contributors.
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

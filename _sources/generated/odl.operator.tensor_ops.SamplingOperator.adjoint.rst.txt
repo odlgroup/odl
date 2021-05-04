@@ -1,0 +1,6 @@
+SamplingOperator.adjoint
+================================================
+
+.. currentmodule:: odl.operator.tensor_ops
+
+.. autoproperty:: SamplingOperator.adjoint

@@ -1,0 +1,17 @@
+nonlinear_cg
+============
+
+Nonlinear version of the conjugate gradient method.
+
+.. currentmodule:: odl.solvers.smooth.nonlinear_cg
+
+
+
+
+.. rubric:: Functions
+
+.. autosummary::
+   :toctree: generated/
+
+   ~odl.solvers.smooth.nonlinear_cg.conjugate_gradient_nonlinear
+

@@ -1,0 +1,8 @@
+:orphan:
+
+invert_op._call
+=======================================
+
+.. currentmodule:: odl.ufunc_ops.ufunc_ops
+
+.. automethod:: invert_op._call

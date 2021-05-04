@@ -1,0 +1,6 @@
+FanBeamGeometry.motion_grid
+======================================================
+
+.. currentmodule:: odl.tomo.geometry.conebeam
+
+.. autoproperty:: FanBeamGeometry.motion_grid

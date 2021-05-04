@@ -1,0 +1,6 @@
+FanBeamGeometry.translation
+======================================================
+
+.. currentmodule:: odl.tomo.geometry.conebeam
+
+.. autoproperty:: FanBeamGeometry.translation

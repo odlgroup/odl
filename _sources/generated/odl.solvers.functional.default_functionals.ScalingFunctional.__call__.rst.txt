@@ -1,0 +1,8 @@
+:orphan:
+
+ScalingFunctional.__call__
+=====================================================================
+
+.. currentmodule:: odl.solvers.functional.default_functionals
+
+.. automethod:: ScalingFunctional.__call__

@@ -1,0 +1,6 @@
+DivergentBeamGeometry.motion_params
+==============================================================
+
+.. currentmodule:: odl.tomo.geometry.geometry
+
+.. autoproperty:: DivergentBeamGeometry.motion_params

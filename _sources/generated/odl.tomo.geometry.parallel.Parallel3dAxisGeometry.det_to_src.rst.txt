@@ -1,0 +1,8 @@
+:orphan:
+
+Parallel3dAxisGeometry.det_to_src
+============================================================
+
+.. currentmodule:: odl.tomo.geometry.parallel
+
+.. automethod:: Parallel3dAxisGeometry.det_to_src

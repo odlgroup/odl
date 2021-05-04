@@ -1,0 +1,39 @@
+﻿InnerProductOperator
+=============================================
+
+.. currentmodule:: odl.operator.default_ops
+
+.. autoclass:: InnerProductOperator
+   :show-inheritance:
+   
+   
+   .. automethod:: __init__
+   
+      
+   
+   .. HACK -- the point here is that we don't want this to appear in the output, but the autosummary should still generate the pages.
+      .. autosummary::
+         :toctree:
+      
+         InnerProductOperator.__call__
+         InnerProductOperator.__eq__
+         InnerProductOperator._call
+         InnerProductOperator.derivative
+         InnerProductOperator.norm
+   
+
+    
+   .. HACK -- the point here is that we don't want this to appear in the output, but the autosummary should still generate the pages.
+      .. autosummary::
+         :toctree:
+      
+         InnerProductOperator.T
+         InnerProductOperator.adjoint
+         InnerProductOperator.domain
+         InnerProductOperator.inverse
+         InnerProductOperator.is_functional
+         InnerProductOperator.is_linear
+         InnerProductOperator.range
+         InnerProductOperator.vector
+   
+   

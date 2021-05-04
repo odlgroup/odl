@@ -1,0 +1,6 @@
+﻿attribute_repr_string
+======================================
+
+.. currentmodule:: odl.util.utility
+
+.. autofunction:: attribute_repr_string

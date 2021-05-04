@@ -1,0 +1,8 @@
+:orphan:
+
+negative_func.__eq__
+============================================
+
+.. currentmodule:: odl.ufunc_ops.ufunc_ops
+
+.. automethod:: negative_func.__eq__

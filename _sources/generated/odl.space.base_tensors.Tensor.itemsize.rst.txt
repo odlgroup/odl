@@ -1,0 +1,6 @@
+Tensor.itemsize
+======================================
+
+.. currentmodule:: odl.space.base_tensors
+
+.. autoproperty:: Tensor.itemsize

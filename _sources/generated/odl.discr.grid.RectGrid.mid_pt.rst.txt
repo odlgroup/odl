@@ -1,0 +1,6 @@
+RectGrid.mid_pt
+==============================
+
+.. currentmodule:: odl.discr.grid
+
+.. autoproperty:: RectGrid.mid_pt

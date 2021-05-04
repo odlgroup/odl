@@ -1,0 +1,8 @@
+:orphan:
+
+reciprocal_func.bregman
+===============================================
+
+.. currentmodule:: odl.ufunc_ops.ufunc_ops
+
+.. automethod:: reciprocal_func.bregman

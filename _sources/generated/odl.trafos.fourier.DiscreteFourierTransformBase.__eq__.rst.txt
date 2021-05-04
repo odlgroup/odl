@@ -1,0 +1,8 @@
+:orphan:
+
+DiscreteFourierTransformBase.__eq__
+======================================================
+
+.. currentmodule:: odl.trafos.fourier
+
+.. automethod:: DiscreteFourierTransformBase.__eq__

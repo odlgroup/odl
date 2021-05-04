@@ -1,0 +1,6 @@
+ZeroOperator.inverse
+=============================================
+
+.. currentmodule:: odl.operator.default_ops
+
+.. autoproperty:: ZeroOperator.inverse

@@ -1,0 +1,8 @@
+:orphan:
+
+MoreauEnvelope.bregman
+=================================================================
+
+.. currentmodule:: odl.solvers.functional.default_functionals
+
+.. automethod:: MoreauEnvelope.bregman

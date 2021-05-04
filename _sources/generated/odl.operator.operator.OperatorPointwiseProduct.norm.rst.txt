@@ -1,0 +1,8 @@
+:orphan:
+
+OperatorPointwiseProduct.norm
+===================================================
+
+.. currentmodule:: odl.operator.operator
+
+.. automethod:: OperatorPointwiseProduct.norm

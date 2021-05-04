@@ -1,0 +1,6 @@
+Laplacian.inverse
+====================================
+
+.. currentmodule:: odl.discr.diff_ops
+
+.. autoproperty:: Laplacian.inverse

@@ -1,0 +1,6 @@
+WaveletTransform.pad_const
+=============================================
+
+.. currentmodule:: odl.trafos.wavelet
+
+.. autoproperty:: WaveletTransform.pad_const

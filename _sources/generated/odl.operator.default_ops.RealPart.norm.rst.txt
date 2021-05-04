@@ -1,0 +1,8 @@
+:orphan:
+
+RealPart.norm
+======================================
+
+.. currentmodule:: odl.operator.default_ops
+
+.. automethod:: RealPart.norm

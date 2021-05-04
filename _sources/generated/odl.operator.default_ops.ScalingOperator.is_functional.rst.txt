@@ -1,0 +1,6 @@
+ScalingOperator.is_functional
+======================================================
+
+.. currentmodule:: odl.operator.default_ops
+
+.. autoproperty:: ScalingOperator.is_functional

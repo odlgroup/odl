@@ -1,0 +1,6 @@
+ConeBeamGeometry.pitch
+=================================================
+
+.. currentmodule:: odl.tomo.geometry.conebeam
+
+.. autoproperty:: ConeBeamGeometry.pitch

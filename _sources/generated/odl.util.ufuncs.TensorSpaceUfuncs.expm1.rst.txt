@@ -1,0 +1,8 @@
+:orphan:
+
+TensorSpaceUfuncs.expm1
+=======================================
+
+.. currentmodule:: odl.util.ufuncs
+
+.. automethod:: TensorSpaceUfuncs.expm1

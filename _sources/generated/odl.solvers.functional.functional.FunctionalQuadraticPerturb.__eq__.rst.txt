@@ -1,0 +1,8 @@
+:orphan:
+
+FunctionalQuadraticPerturb.__eq__
+===================================================================
+
+.. currentmodule:: odl.solvers.functional.functional
+
+.. automethod:: FunctionalQuadraticPerturb.__eq__

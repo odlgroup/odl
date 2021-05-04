@@ -1,0 +1,8 @@
+:orphan:
+
+LinearSpaceElement.assign
+=======================================
+
+.. currentmodule:: odl.set.space
+
+.. automethod:: LinearSpaceElement.assign

@@ -1,0 +1,8 @@
+:orphan:
+
+fmax_op.__call__
+========================================
+
+.. currentmodule:: odl.ufunc_ops.ufunc_ops
+
+.. automethod:: fmax_op.__call__

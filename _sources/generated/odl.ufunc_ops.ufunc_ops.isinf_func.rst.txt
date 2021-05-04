@@ -1,0 +1,43 @@
+﻿isinf_func
+==================================
+
+.. currentmodule:: odl.ufunc_ops.ufunc_ops
+
+.. autoclass:: isinf_func
+   :show-inheritance:
+   
+   
+   .. automethod:: __init__
+   
+      
+   
+   .. HACK -- the point here is that we don't want this to appear in the output, but the autosummary should still generate the pages.
+      .. autosummary::
+         :toctree:
+      
+         isinf_func.__call__
+         isinf_func.__eq__
+         isinf_func._call
+         isinf_func.bregman
+         isinf_func.derivative
+         isinf_func.norm
+         isinf_func.translated
+   
+
+    
+   .. HACK -- the point here is that we don't want this to appear in the output, but the autosummary should still generate the pages.
+      .. autosummary::
+         :toctree:
+      
+         isinf_func.adjoint
+         isinf_func.convex_conj
+         isinf_func.domain
+         isinf_func.grad_lipschitz
+         isinf_func.gradient
+         isinf_func.inverse
+         isinf_func.is_functional
+         isinf_func.is_linear
+         isinf_func.proximal
+         isinf_func.range
+   
+   

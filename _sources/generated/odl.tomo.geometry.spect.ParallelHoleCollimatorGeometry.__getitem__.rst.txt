@@ -1,0 +1,8 @@
+:orphan:
+
+ParallelHoleCollimatorGeometry.__getitem__
+==================================================================
+
+.. currentmodule:: odl.tomo.geometry.spect
+
+.. automethod:: ParallelHoleCollimatorGeometry.__getitem__

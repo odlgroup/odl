@@ -1,0 +1,6 @@
+Parallel3dEulerGeometry.translation
+==============================================================
+
+.. currentmodule:: odl.tomo.geometry.parallel
+
+.. autoproperty:: Parallel3dEulerGeometry.translation

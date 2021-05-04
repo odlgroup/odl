@@ -1,0 +1,6 @@
+OperatorLeftScalarMult.is_linear
+======================================================
+
+.. currentmodule:: odl.operator.operator
+
+.. autoproperty:: OperatorLeftScalarMult.is_linear

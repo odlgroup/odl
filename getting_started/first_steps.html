@@ -1,0 +1,571 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>First steps &mdash; odl 1.0.0.dev0 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="User’s guide – selected topics" href="../guide/guide.html" />
+    <link rel="prev" title="Installing ODL extensions" href="installing_extensions.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../index.html" class="icon icon-home"> odl
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                1.0.0.dev0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Getting Started</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="getting_started.html">Getting Started</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="about_odl.html">About ODL</a></li>
+<li class="toctree-l2"><a class="reference internal" href="installing.html">Installing ODL</a></li>
+<li class="toctree-l2"><a class="reference internal" href="installing_conda.html">Installing ODL using conda</a></li>
+<li class="toctree-l2"><a class="reference internal" href="installing_pip.html">Installing ODL using pip</a></li>
+<li class="toctree-l2"><a class="reference internal" href="installing_source.html">Installing ODL from source</a></li>
+<li class="toctree-l2"><a class="reference internal" href="installing_extensions.html">Installing ODL extensions</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">First steps</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#example-solving-an-inverse-problem">Example: Solving an inverse problem</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<p class="caption"><span class="caption-text">Working with ODL</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../guide/guide.html">User’s guide – selected topics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../math/math.html">Mathematical Background</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Developer zone</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../dev/dev.html">Contributing to ODL</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Useful facts</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../guide/faq.html">Frequently asked questions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../guide/glossary.html">Glossary</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../release_notes.html">Release Notes</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../refs.html">References</a></li>
+</ul>
+<p class="caption"><span class="caption-text">API Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../odl.html">odl</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">odl</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="getting_started.html">Getting Started</a> &raquo;</li>
+        
+      <li>First steps</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            <a href="../_sources/getting_started/first_steps.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="first-steps">
+<span id="id1"></span><h1>First steps<a class="headerlink" href="#first-steps" title="Permalink to this headline">¶</a></h1>
+<p>This guide is intended to give you a simple introduction to ODL and how to work with it.
+If you need help with a specific function you should look at the <a class="reference external" href="https://odlgroup.github.io/odl/odl.html">ODL API reference</a>.</p>
+<p>The best way to get started with ODL as a user is generally to find one (or more) examples that are relevant to whichever problem you are studying.
+These are available in the <a class="reference external" href="https://github.com/odlgroup/odl/tree/master/examples">examples folder on GitHub</a>.
+They are mostly written to be copy-paste friendly and show how to use the respective operators, solvers and spaces in a correct manner.</p>
+<div class="section" id="example-solving-an-inverse-problem">
+<h2>Example: Solving an inverse problem<a class="headerlink" href="#example-solving-an-inverse-problem" title="Permalink to this headline">¶</a></h2>
+<p>In what follows, we will give an example of the workflow one might have when solving an inverse problem as it is encountered “in real life”.
+The problem we want to solve is</p>
+<div class="math">
+<p><img src="../_images/math/3d58003499be2cf4a23c99b565f212807168978b.png" alt="Af = g"/></p>
+</div><p>Where <img class="math" src="../_images/math/211284f68205c3e66773eaf026f32a0acdd3dfb3.png" alt="A"/> is the <a class="reference external" href="https://en.wikipedia.org/wiki/Convolution">convolution</a> operator</p>
+<div class="math">
+<p><img src="../_images/math/aaf25e64e42fb90cac762da652f63e62ec22cc8d.png" alt="(Af)(x) = \int f(x) k(x-y) dy"/></p>
+</div><p>where <img class="math" src="../_images/math/9630132210b904754c9ab272b61cb527d12263ca.png" alt="k"/> is the convolution kernel, <img class="math" src="../_images/math/5b7752c757e0b691a80ab8227eadb8a8389dc58a.png" alt="f"/> is the unknown solution and <img class="math" src="../_images/math/157ba5711de84b4c715a0478fd8ae440e596d96e.png" alt="g"/> is known data.
+As is typical in applications, the convolution operator may not be available in ODL (we’ll pretend it’s not),
+so we will need to implement it.</p>
+<p>We start by finding a nice implementation of the convolution operator –
+<a class="reference external" href="http://docs.scipy.org/doc/scipy/reference/generated/scipy.signal.fftconvolve.html">SciPy happens to have one</a> –
+and create a wrapping <a class="reference internal" href="../guide/glossary.html#term-operator"><code class="xref any std std-term docutils literal notranslate"><span class="pre">Operator</span></code></a> for it in ODL.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">odl</span>
+<span class="kn">import</span> <span class="nn">scipy.signal</span>
+
+<span class="k">class</span> <span class="nc">Convolution</span><span class="p">(</span><span class="n">odl</span><span class="o">.</span><span class="n">Operator</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Operator calculating the convolution of a kernel with a function.</span>
+
+<span class="sd">    The operator inherits from ``odl.Operator`` to be able to be used with ODL.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">kernel</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Initialize a convolution operator with a known kernel.&quot;&quot;&quot;</span>
+
+        <span class="c1"># Store the kernel</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">kernel</span> <span class="o">=</span> <span class="n">kernel</span>
+
+        <span class="c1"># Initialize the Operator class by calling its __init__ method.</span>
+        <span class="c1"># This sets properties such as domain and range and allows the other</span>
+        <span class="c1"># operator convenience functions to work.</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">Convolution</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span>
+            <span class="n">domain</span><span class="o">=</span><span class="n">kernel</span><span class="o">.</span><span class="n">space</span><span class="p">,</span> <span class="nb">range</span><span class="o">=</span><span class="n">kernel</span><span class="o">.</span><span class="n">space</span><span class="p">,</span> <span class="n">linear</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_call</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Implement calling the operator by calling scipy.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">scipy</span><span class="o">.</span><span class="n">signal</span><span class="o">.</span><span class="n">fftconvolve</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">kernel</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s1">&#39;same&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>We can verify that our operator works by calling it on some data.
+This can either come from an outside source, or from simulations.
+ODL also provides a nice range of standard phantoms such as the <a class="reference internal" href="../generated/odl.phantom.geometric.cuboid.html#odl.phantom.geometric.cuboid" title="odl.phantom.geometric.cuboid"><code class="xref any py py-func docutils literal notranslate"><span class="pre">cuboid</span></code></a> and <a class="reference internal" href="../generated/odl.phantom.transmission.shepp_logan.html#odl.phantom.transmission.shepp_logan" title="odl.phantom.transmission.shepp_logan"><code class="xref any py py-func docutils literal notranslate"><span class="pre">shepp_logan</span></code></a> phantoms:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Define the space the problem should be solved on.</span>
+<span class="c1"># Here the square [-1, 1] x [-1, 1] discretized on a 100x100 grid.</span>
+<span class="n">space</span> <span class="o">=</span> <span class="n">odl</span><span class="o">.</span><span class="n">uniform_discr</span><span class="p">([</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span> <span class="p">[</span><span class="mi">100</span><span class="p">,</span> <span class="mi">100</span><span class="p">])</span>
+
+<span class="c1"># Convolution kernel, a small centered rectangle.</span>
+<span class="n">kernel</span> <span class="o">=</span> <span class="n">odl</span><span class="o">.</span><span class="n">phantom</span><span class="o">.</span><span class="n">cuboid</span><span class="p">(</span><span class="n">space</span><span class="p">,</span> <span class="p">[</span><span class="o">-</span><span class="mf">0.05</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.05</span><span class="p">],</span> <span class="p">[</span><span class="mf">0.05</span><span class="p">,</span> <span class="mf">0.05</span><span class="p">])</span>
+
+<span class="c1"># Create convolution operator</span>
+<span class="n">A</span> <span class="o">=</span> <span class="n">Convolution</span><span class="p">(</span><span class="n">kernel</span><span class="p">)</span>
+
+<span class="c1"># Create phantom (the &quot;unknown&quot; solution)</span>
+<span class="n">phantom</span> <span class="o">=</span> <span class="n">odl</span><span class="o">.</span><span class="n">phantom</span><span class="o">.</span><span class="n">shepp_logan</span><span class="p">(</span><span class="n">space</span><span class="p">,</span> <span class="n">modified</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+<span class="c1"># Apply convolution to phantom to create data</span>
+<span class="n">g</span> <span class="o">=</span> <span class="n">A</span><span class="p">(</span><span class="n">phantom</span><span class="p">)</span>
+
+<span class="c1"># Display the results using the show method</span>
+<span class="n">kernel</span><span class="o">.</span><span class="n">show</span><span class="p">(</span><span class="s1">&#39;kernel&#39;</span><span class="p">)</span>
+<span class="n">phantom</span><span class="o">.</span><span class="n">show</span><span class="p">(</span><span class="s1">&#39;phantom&#39;</span><span class="p">)</span>
+<span class="n">g</span><span class="o">.</span><span class="n">show</span><span class="p">(</span><span class="s1">&#39;convolved phantom&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<img alt="../_images/getting_started_kernel.png" src="../_images/getting_started_kernel.png" />
+<img alt="../_images/getting_started_phantom.png" src="../_images/getting_started_phantom.png" />
+<img alt="../_images/getting_started_convolved.png" src="../_images/getting_started_convolved.png" />
+<p>We can use this as right-hand side in our inverse problem.
+We try one of the most simple solvers, the <a class="reference internal" href="../generated/odl.solvers.iterative.iterative.landweber.html#odl.solvers.iterative.iterative.landweber" title="odl.solvers.iterative.iterative.landweber"><code class="xref any py py-func docutils literal notranslate"><span class="pre">landweber</span></code></a> solver.
+The Landweber solver is an iterative solver that solves</p>
+<div class="math">
+<p><img src="../_images/math/39b016863c7b43a49036cef591b38d58533b6475.png" alt="f_{i+1} = f_i - \omega A^* (A(f_i) - g)"/></p>
+</div><p>where <img class="math" src="../_images/math/3ccc28af695408fa007936b2c007802d9f1b821b.png" alt="\omega &lt; 2/\|A\|"/> is a constant and <img class="math" src="../_images/math/e3a7e0e4efa30b3932068925297f0b5788d60d85.png" alt="A^*"/> is the <a class="reference external" href="https://en.wikipedia.org/wiki/Hermitian_adjoint">adjoint</a> operator associated with <img class="math" src="../_images/math/211284f68205c3e66773eaf026f32a0acdd3dfb3.png" alt="A"/>.
+The adjoint is a generalization of the transpose of a matrix and defined as the (unique) operator such that</p>
+<div class="math">
+<p><img src="../_images/math/d9a311035bc852808039c5d04f33d47ee9819e72.png" alt="\langle Ax, y \rangle = \langle x, A^*y \rangle"/></p>
+</div><p>where <img class="math" src="../_images/math/3810e0143a0338a84885b86ab4abaee33b72132b.png" alt="\langle x, y \rangle"/> is the inner product.
+It is implemented in odl as <code class="xref any docutils literal notranslate"><span class="pre">~odl.operator.operator.Operator.adjoint</span></code>.
+Luckily, the convolution operator is self adjoint if the kernel is symmetric, so we can add:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">Convolution</span><span class="p">(</span><span class="n">odl</span><span class="o">.</span><span class="n">Operator</span><span class="p">):</span>
+    <span class="o">...</span>  <span class="c1"># old code</span>
+
+    <span class="nd">@property</span>  <span class="c1"># making the adjoint a property lets users access it as conv.adjoint</span>
+    <span class="k">def</span> <span class="nf">adjoint</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span>  <span class="c1"># the adjoint is the same as this operator</span>
+</pre></div>
+</div>
+<p>With this addition we are ready to try solving the inverse problem using the <a class="reference internal" href="../generated/odl.solvers.iterative.iterative.landweber.html#odl.solvers.iterative.iterative.landweber" title="odl.solvers.iterative.iterative.landweber"><code class="xref any py py-func docutils literal notranslate"><span class="pre">landweber</span></code></a> solver:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Need operator norm for step length (omega)</span>
+<span class="n">opnorm</span> <span class="o">=</span> <span class="n">odl</span><span class="o">.</span><span class="n">power_method_opnorm</span><span class="p">(</span><span class="n">A</span><span class="p">)</span>
+
+<span class="n">f</span> <span class="o">=</span> <span class="n">space</span><span class="o">.</span><span class="n">zero</span><span class="p">()</span>
+<span class="n">odl</span><span class="o">.</span><span class="n">solvers</span><span class="o">.</span><span class="n">landweber</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">f</span><span class="p">,</span> <span class="n">g</span><span class="p">,</span> <span class="n">niter</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span> <span class="n">omega</span><span class="o">=</span><span class="mi">1</span><span class="o">/</span><span class="n">opnorm</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span>
+<span class="n">f</span><span class="o">.</span><span class="n">show</span><span class="p">(</span><span class="s1">&#39;landweber&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<img alt="../_images/getting_started_landweber.png" src="../_images/getting_started_landweber.png" />
+<p>This solution is not very good, mostly due to the ill-posedness of the convolution operator.
+Other solvers like <a class="reference external" href="https://en.wikipedia.org/wiki/Conjugate_gradient_method#Conjugate_gradient_on_the_normal_equations">conjugate gradient on the normal equations</a> (<a class="reference internal" href="../generated/odl.solvers.iterative.iterative.conjugate_gradient_normal.html#odl.solvers.iterative.iterative.conjugate_gradient_normal" title="odl.solvers.iterative.iterative.conjugate_gradient_normal"><code class="xref any py py-func docutils literal notranslate"><span class="pre">conjugate_gradient_normal</span></code></a>) give similar results:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">f</span> <span class="o">=</span> <span class="n">space</span><span class="o">.</span><span class="n">zero</span><span class="p">()</span>
+<span class="n">odl</span><span class="o">.</span><span class="n">solvers</span><span class="o">.</span><span class="n">conjugate_gradient_normal</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">f</span><span class="p">,</span> <span class="n">g</span><span class="p">,</span> <span class="n">niter</span><span class="o">=</span><span class="mi">100</span><span class="p">)</span>
+<span class="n">f</span><span class="o">.</span><span class="n">show</span><span class="p">(</span><span class="s1">&#39;conjugate gradient&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<img alt="../_images/getting_started_conjugate_gradient.png" src="../_images/getting_started_conjugate_gradient.png" />
+<p>A method to remedy this problem is to instead consider a regularized problem.
+One of the classic regularizers is <a class="reference external" href="https://en.wikipedia.org/wiki/Tikhonov_regularization">Tikhonov regularization</a> where we add regularization to the problem formulation,
+i.e. slightly change the problem such that the obtained solutions have better regularity properties.
+We instead study the problem</p>
+<div class="math">
+<p><img src="../_images/math/f371c61364da93ec3857acdf15575cc0e56c9632.png" alt="\min_f \|Af - g\|_2^2 + a \|Bf\|_2^2,"/></p>
+</div><p>where <img class="math" src="../_images/math/4bc3e94a67870b41b7c20179693e889251e2c136.png" alt="B"/> is a “roughening’ operator and <img class="math" src="../_images/math/b3e65e3b6408fcfa00452530b73f55d1755f9965.png" alt="a"/> is a regularization parameter that determines how strong the regularization should be.
+Basically one wants that <img class="math" src="../_images/math/4a11f2a7ec3336f0b61278b1fda3370439422751.png" alt="Bf"/> is less smooth than <img class="math" src="../_images/math/5b7752c757e0b691a80ab8227eadb8a8389dc58a.png" alt="f"/> so that the optimum solution is more smooth.
+To solve it with the above solvers, we can find the first order optimality conditions</p>
+<div class="math">
+<p><img src="../_images/math/aaab6ef1d643140ccdfe8e64299625ac8a10f920.png" alt="2 A^* (Af - g) + 2 a B^* B f =0"/></p>
+</div><p>This can be rewritten on the form <img class="math" src="../_images/math/17b6b3f41bcd297c5494144a25b1126df69aba8d.png" alt="Tf=b"/>:</p>
+<div class="math">
+<p><img src="../_images/math/66d05e60466a462be463f2627858f7e2d4b473c3.png" alt="\underbrace{(A^* A + a B^* B)}_T f = \underbrace{A^* g}_b"/></p>
+</div><p>We first use a multiple of the <a class="reference internal" href="../generated/odl.operator.default_ops.IdentityOperator.html#odl.operator.default_ops.IdentityOperator" title="odl.operator.default_ops.IdentityOperator"><code class="xref any py py-class docutils literal notranslate"><span class="pre">IdentityOperator</span></code></a> in ODL as <img class="math" src="../_images/math/4bc3e94a67870b41b7c20179693e889251e2c136.png" alt="B"/>,
+which is also known as ‘classical’ Tikhonov regularization.
+Note that since the operator <img class="math" src="../_images/math/e8dea8254118f111b5fb20895b03528c17566f06.png" alt="T"/> above is self-adjoint we can use the classical <a class="reference internal" href="../generated/odl.solvers.iterative.iterative.conjugate_gradient.html#odl.solvers.iterative.iterative.conjugate_gradient" title="odl.solvers.iterative.iterative.conjugate_gradient"><code class="xref any py py-func docutils literal notranslate"><span class="pre">conjugate_gradient</span></code></a> method instead of <a class="reference internal" href="../generated/odl.solvers.iterative.iterative.conjugate_gradient_normal.html#odl.solvers.iterative.iterative.conjugate_gradient_normal" title="odl.solvers.iterative.iterative.conjugate_gradient_normal"><code class="xref any py py-func docutils literal notranslate"><span class="pre">conjugate_gradient_normal</span></code></a>.
+This improves both computation time and numerical stability.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">B</span> <span class="o">=</span> <span class="n">odl</span><span class="o">.</span><span class="n">IdentityOperator</span><span class="p">(</span><span class="n">space</span><span class="p">)</span>
+<span class="n">a</span> <span class="o">=</span> <span class="mf">0.1</span>
+<span class="n">T</span> <span class="o">=</span> <span class="n">A</span><span class="o">.</span><span class="n">adjoint</span> <span class="o">*</span> <span class="n">A</span> <span class="o">+</span> <span class="n">a</span> <span class="o">*</span> <span class="n">B</span><span class="o">.</span><span class="n">adjoint</span> <span class="o">*</span> <span class="n">B</span>
+<span class="n">b</span> <span class="o">=</span> <span class="n">A</span><span class="o">.</span><span class="n">adjoint</span><span class="p">(</span><span class="n">g</span><span class="p">)</span>
+
+<span class="n">f</span> <span class="o">=</span> <span class="n">space</span><span class="o">.</span><span class="n">zero</span><span class="p">()</span>
+<span class="n">odl</span><span class="o">.</span><span class="n">solvers</span><span class="o">.</span><span class="n">conjugate_gradient</span><span class="p">(</span><span class="n">T</span><span class="p">,</span> <span class="n">f</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">niter</span><span class="o">=</span><span class="mi">100</span><span class="p">)</span>
+<span class="n">f</span><span class="o">.</span><span class="n">show</span><span class="p">(</span><span class="s1">&#39;Tikhonov identity conjugate gradient&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<img alt="../_images/getting_started_tikhonov_identity_conjugate_gradient.png" src="../_images/getting_started_tikhonov_identity_conjugate_gradient.png" />
+<p>Slightly better, but no major improvement.
+What about letting <img class="math" src="../_images/math/4bc3e94a67870b41b7c20179693e889251e2c136.png" alt="B"/> be the <a class="reference internal" href="../generated/odl.discr.diff_ops.Gradient.html#odl.discr.diff_ops.Gradient" title="odl.discr.diff_ops.Gradient"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Gradient</span></code></a>?</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">B</span> <span class="o">=</span> <span class="n">odl</span><span class="o">.</span><span class="n">Gradient</span><span class="p">(</span><span class="n">space</span><span class="p">)</span>
+<span class="n">a</span> <span class="o">=</span> <span class="mf">0.0001</span>
+<span class="n">T</span> <span class="o">=</span> <span class="n">A</span><span class="o">.</span><span class="n">adjoint</span> <span class="o">*</span> <span class="n">A</span> <span class="o">+</span> <span class="n">a</span> <span class="o">*</span> <span class="n">B</span><span class="o">.</span><span class="n">adjoint</span> <span class="o">*</span> <span class="n">B</span>
+<span class="n">b</span> <span class="o">=</span> <span class="n">A</span><span class="o">.</span><span class="n">adjoint</span><span class="p">(</span><span class="n">g</span><span class="p">)</span>
+
+<span class="n">f</span> <span class="o">=</span> <span class="n">space</span><span class="o">.</span><span class="n">zero</span><span class="p">()</span>
+<span class="n">odl</span><span class="o">.</span><span class="n">solvers</span><span class="o">.</span><span class="n">conjugate_gradient</span><span class="p">(</span><span class="n">T</span><span class="p">,</span> <span class="n">f</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">niter</span><span class="o">=</span><span class="mi">100</span><span class="p">)</span>
+<span class="n">f</span><span class="o">.</span><span class="n">show</span><span class="p">(</span><span class="s1">&#39;Tikhonov gradient conjugate gradient&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<img alt="../_images/getting_started_tikhonov_gradient_conjugate_gradient.png" src="../_images/getting_started_tikhonov_gradient_conjugate_gradient.png" />
+<p>Perhaps a bit better, but far from excellent.</p>
+<p>Let’s try more modern methods, like <a class="reference external" href="https://en.wikipedia.org/wiki/Total_variation_denoising">TV regularization</a>.
+Here we want to solve the problem</p>
+<div class="math">
+<p><img src="../_images/math/99ed3ad4c6a6b448beca1b71e38282400f2b3b31.png" alt="\min_{0 \leq f \leq 1} \|Af - g\|_2^2 + a \|\nabla f\|_1"/></p>
+</div><p>Since this is a non-differentiable problem we need more advanced solvers to solve it.
+One of the stronger solvers in ODL is the Douglas-Rachford Primal-Dual method (<a class="reference internal" href="../generated/odl.solvers.nonsmooth.douglas_rachford.douglas_rachford_pd.html#odl.solvers.nonsmooth.douglas_rachford.douglas_rachford_pd" title="odl.solvers.nonsmooth.douglas_rachford.douglas_rachford_pd"><code class="xref any py py-func docutils literal notranslate"><span class="pre">douglas_rachford_pd</span></code></a>) which uses <a class="reference internal" href="../math/solvers/nonsmooth/proximal_operators.html#proximal-operators"><span class="std std-ref">Proximal Operators</span></a> to solve the optimization problem.
+However, as a new user you do not need to consider the specifics, instead you only need to assemble the functionals involved in the problem you wish to solve.</p>
+<p>Consulting the <a class="reference internal" href="../generated/odl.solvers.nonsmooth.douglas_rachford.douglas_rachford_pd.html#odl.solvers.nonsmooth.douglas_rachford.douglas_rachford_pd" title="odl.solvers.nonsmooth.douglas_rachford.douglas_rachford_pd"><code class="xref any py py-func docutils literal notranslate"><span class="pre">douglas_rachford_pd</span></code></a> documentation we see that it solves problems of the form</p>
+<div class="math">
+<p><img src="../_images/math/a146b5fc878679a4c71761cc41ac8279a98ff32e.png" alt="\min_x f(x) + \sum_{i=1}^n g_i(L_i x),"/></p>
+</div><p>where <img class="math" src="../_images/math/5b7752c757e0b691a80ab8227eadb8a8389dc58a.png" alt="f"/>, <img class="math" src="../_images/math/c3c0e9ec2081f2ef618ad9de05046301ca287d6c.png" alt="g_i"/> are convex functions, <img class="math" src="../_images/math/ee70e1a1a2cd2143b1fb067fabe96455bd33aa0a.png" alt="L_i"/> are linear <a class="reference internal" href="../guide/glossary.html#term-operator"><code class="xref any std std-term docutils literal notranslate"><span class="pre">Operator</span></code></a>’s.
+By identification, we see that the above problem can be written in this form if we let <img class="math" src="../_images/math/5b7752c757e0b691a80ab8227eadb8a8389dc58a.png" alt="f"/> be the indicator function on <img class="math" src="../_images/math/8027137b3073a7f5ca4e45ba2d030dcff154eca4.png" alt="[0, 1]"/>,
+<img class="math" src="../_images/math/2a80fda9315ae417b21c6c806451bcfea71f2401.png" alt="g_1"/> be the squared l2 distance <img class="math" src="../_images/math/c21794db8fc801a4665c0c1a1839aa262acd0d77.png" alt="\| \cdot - g\|_2^2"/>,
+<img class="math" src="../_images/math/a85d4067ec95f5003e70b98220c8e02d40026d30.png" alt="g_2"/> be the norm <img class="math" src="../_images/math/968e7d0c680cdca5ab644b30d21f499d27aea842.png" alt="\| \cdot \|_1"/>,
+<img class="math" src="../_images/math/b8ca812749edf788341058ad995134da869c353c.png" alt="L_1"/> be the convolution operator and <img class="math" src="../_images/math/fcd0c45a70da7d2399b3fb666759b02c5edd251e.png" alt="L_2"/> be the gradient operator.</p>
+<p>There are several examples available using this solver as well as similar optimization methods,
+e.g. <a class="reference internal" href="../generated/odl.solvers.nonsmooth.forward_backward.forward_backward_pd.html#odl.solvers.nonsmooth.forward_backward.forward_backward_pd" title="odl.solvers.nonsmooth.forward_backward.forward_backward_pd"><code class="xref any py py-func docutils literal notranslate"><span class="pre">forward_backward_pd</span></code></a>, <a class="reference internal" href="../generated/odl.solvers.nonsmooth.primal_dual_hybrid_gradient.pdhg.html#odl.solvers.nonsmooth.primal_dual_hybrid_gradient.pdhg" title="odl.solvers.nonsmooth.primal_dual_hybrid_gradient.pdhg"><code class="xref any py py-func docutils literal notranslate"><span class="pre">pdhg</span></code></a>, etc in the ODL <a class="reference external" href="https://github.com/odlgroup/odl/tree/master/examples/solvers">examples/solvers</a> folder.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Assemble all operators into a list.</span>
+<span class="n">grad</span> <span class="o">=</span> <span class="n">odl</span><span class="o">.</span><span class="n">Gradient</span><span class="p">(</span><span class="n">space</span><span class="p">)</span>
+<span class="n">lin_ops</span> <span class="o">=</span> <span class="p">[</span><span class="n">A</span><span class="p">,</span> <span class="n">grad</span><span class="p">]</span>
+<span class="n">a</span> <span class="o">=</span> <span class="mf">0.001</span>
+
+<span class="c1"># Create functionals for the l2 distance and l1 norm.</span>
+<span class="n">g_funcs</span> <span class="o">=</span> <span class="p">[</span><span class="n">odl</span><span class="o">.</span><span class="n">solvers</span><span class="o">.</span><span class="n">L2NormSquared</span><span class="p">(</span><span class="n">space</span><span class="p">)</span><span class="o">.</span><span class="n">translated</span><span class="p">(</span><span class="n">g</span><span class="p">),</span>
+           <span class="n">a</span> <span class="o">*</span> <span class="n">odl</span><span class="o">.</span><span class="n">solvers</span><span class="o">.</span><span class="n">L1Norm</span><span class="p">(</span><span class="n">grad</span><span class="o">.</span><span class="n">range</span><span class="p">)]</span>
+
+<span class="c1"># Functional of the bound constraint 0 &lt;= x &lt;= 1</span>
+<span class="n">f</span> <span class="o">=</span> <span class="n">odl</span><span class="o">.</span><span class="n">solvers</span><span class="o">.</span><span class="n">IndicatorBox</span><span class="p">(</span><span class="n">space</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+
+<span class="c1"># Find scaling constants so that the solver converges.</span>
+<span class="c1"># See the douglas_rachford_pd documentation for more information.</span>
+<span class="n">opnorm_A</span> <span class="o">=</span> <span class="n">odl</span><span class="o">.</span><span class="n">power_method_opnorm</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">xstart</span><span class="o">=</span><span class="n">g</span><span class="p">)</span>
+<span class="n">opnorm_grad</span> <span class="o">=</span> <span class="n">odl</span><span class="o">.</span><span class="n">power_method_opnorm</span><span class="p">(</span><span class="n">grad</span><span class="p">,</span> <span class="n">xstart</span><span class="o">=</span><span class="n">g</span><span class="p">)</span>
+<span class="n">sigma</span> <span class="o">=</span> <span class="p">[</span><span class="mi">1</span> <span class="o">/</span> <span class="n">opnorm_A</span> <span class="o">**</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">1</span> <span class="o">/</span> <span class="n">opnorm_grad</span> <span class="o">**</span> <span class="mi">2</span><span class="p">]</span>
+<span class="n">tau</span> <span class="o">=</span> <span class="mf">1.0</span>
+
+<span class="c1"># Solve using the Douglas-Rachford Primal-Dual method</span>
+<span class="n">x</span> <span class="o">=</span> <span class="n">space</span><span class="o">.</span><span class="n">zero</span><span class="p">()</span>
+<span class="n">odl</span><span class="o">.</span><span class="n">solvers</span><span class="o">.</span><span class="n">douglas_rachford_pd</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">f</span><span class="p">,</span> <span class="n">g_funcs</span><span class="p">,</span> <span class="n">lin_ops</span><span class="p">,</span>
+                                <span class="n">tau</span><span class="o">=</span><span class="n">tau</span><span class="p">,</span> <span class="n">sigma</span><span class="o">=</span><span class="n">sigma</span><span class="p">,</span> <span class="n">niter</span><span class="o">=</span><span class="mi">100</span><span class="p">)</span>
+<span class="n">x</span><span class="o">.</span><span class="n">show</span><span class="p">(</span><span class="s1">&#39;TV Douglas-Rachford&#39;</span><span class="p">,</span> <span class="n">force_show</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</pre></div>
+</div>
+<img alt="../_images/getting_started_TV_douglas_rachford.png" src="../_images/getting_started_TV_douglas_rachford.png" />
+<p>This solution is almost perfect, and we can happily go on to solving more advanced problems!</p>
+<p>The full code in this example is available below.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="sd">&quot;&quot;&quot;Source code for the getting started example.&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">odl</span>
+<span class="kn">import</span> <span class="nn">scipy.signal</span>
+
+
+<span class="k">class</span> <span class="nc">Convolution</span><span class="p">(</span><span class="n">odl</span><span class="o">.</span><span class="n">Operator</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Operator calculating the convolution of a kernel with a function.</span>
+
+<span class="sd">    The operator inherits from ``odl.Operator`` to be able to be used with ODL.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">kernel</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Initialize a convolution operator with a known kernel.&quot;&quot;&quot;</span>
+
+        <span class="c1"># Store the kernel</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">kernel</span> <span class="o">=</span> <span class="n">kernel</span>
+
+        <span class="c1"># Initialize the Operator class by calling its __init__ method.</span>
+        <span class="c1"># This sets properties such as domain and range and allows the other</span>
+        <span class="c1"># operator convenience functions to work.</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">Convolution</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span>
+            <span class="n">domain</span><span class="o">=</span><span class="n">kernel</span><span class="o">.</span><span class="n">space</span><span class="p">,</span> <span class="nb">range</span><span class="o">=</span><span class="n">kernel</span><span class="o">.</span><span class="n">space</span><span class="p">,</span> <span class="n">linear</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_call</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Implement calling the operator by calling scipy.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">scipy</span><span class="o">.</span><span class="n">signal</span><span class="o">.</span><span class="n">fftconvolve</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">kernel</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s1">&#39;same&#39;</span><span class="p">)</span>
+
+    <span class="nd">@property</span>  <span class="c1"># making adjoint a property lets users access it as A.adjoint</span>
+    <span class="k">def</span> <span class="nf">adjoint</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span>  <span class="c1"># the adjoint is the same as this operator</span>
+
+
+<span class="c1"># Define the space the problem should be solved on.</span>
+<span class="c1"># Here the square [-1, 1] x [-1, 1] discretized on a 100x100 grid.</span>
+<span class="n">space</span> <span class="o">=</span> <span class="n">odl</span><span class="o">.</span><span class="n">uniform_discr</span><span class="p">([</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span> <span class="p">[</span><span class="mi">100</span><span class="p">,</span> <span class="mi">100</span><span class="p">])</span>
+
+<span class="c1"># Convolution kernel, a small centered rectangle.</span>
+<span class="n">kernel</span> <span class="o">=</span> <span class="n">odl</span><span class="o">.</span><span class="n">phantom</span><span class="o">.</span><span class="n">cuboid</span><span class="p">(</span><span class="n">space</span><span class="p">,</span> <span class="p">[</span><span class="o">-</span><span class="mf">0.05</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.05</span><span class="p">],</span> <span class="p">[</span><span class="mf">0.05</span><span class="p">,</span> <span class="mf">0.05</span><span class="p">])</span>
+
+<span class="c1"># Create convolution operator</span>
+<span class="n">A</span> <span class="o">=</span> <span class="n">Convolution</span><span class="p">(</span><span class="n">kernel</span><span class="p">)</span>
+
+<span class="c1"># Create phantom (the &quot;unknown&quot; solution)</span>
+<span class="n">phantom</span> <span class="o">=</span> <span class="n">odl</span><span class="o">.</span><span class="n">phantom</span><span class="o">.</span><span class="n">shepp_logan</span><span class="p">(</span><span class="n">space</span><span class="p">,</span> <span class="n">modified</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+<span class="c1"># Apply convolution to phantom to create data</span>
+<span class="n">g</span> <span class="o">=</span> <span class="n">A</span><span class="p">(</span><span class="n">phantom</span><span class="p">)</span>
+
+<span class="c1"># Display the results using the show method</span>
+<span class="n">kernel</span><span class="o">.</span><span class="n">show</span><span class="p">(</span><span class="s1">&#39;kernel&#39;</span><span class="p">)</span>
+<span class="n">phantom</span><span class="o">.</span><span class="n">show</span><span class="p">(</span><span class="s1">&#39;phantom&#39;</span><span class="p">)</span>
+<span class="n">g</span><span class="o">.</span><span class="n">show</span><span class="p">(</span><span class="s1">&#39;convolved phantom&#39;</span><span class="p">)</span>
+
+<span class="c1"># Landweber</span>
+
+<span class="c1"># Need operator norm for step length (omega)</span>
+<span class="n">opnorm</span> <span class="o">=</span> <span class="n">odl</span><span class="o">.</span><span class="n">power_method_opnorm</span><span class="p">(</span><span class="n">A</span><span class="p">)</span>
+
+<span class="n">f</span> <span class="o">=</span> <span class="n">space</span><span class="o">.</span><span class="n">zero</span><span class="p">()</span>
+<span class="n">odl</span><span class="o">.</span><span class="n">solvers</span><span class="o">.</span><span class="n">landweber</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">f</span><span class="p">,</span> <span class="n">g</span><span class="p">,</span> <span class="n">niter</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span> <span class="n">omega</span><span class="o">=</span><span class="mi">1</span> <span class="o">/</span> <span class="n">opnorm</span> <span class="o">**</span> <span class="mi">2</span><span class="p">)</span>
+<span class="n">f</span><span class="o">.</span><span class="n">show</span><span class="p">(</span><span class="s1">&#39;landweber&#39;</span><span class="p">)</span>
+
+<span class="c1"># Conjugate gradient</span>
+
+<span class="n">f</span> <span class="o">=</span> <span class="n">space</span><span class="o">.</span><span class="n">zero</span><span class="p">()</span>
+<span class="n">odl</span><span class="o">.</span><span class="n">solvers</span><span class="o">.</span><span class="n">conjugate_gradient_normal</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">f</span><span class="p">,</span> <span class="n">g</span><span class="p">,</span> <span class="n">niter</span><span class="o">=</span><span class="mi">100</span><span class="p">)</span>
+<span class="n">f</span><span class="o">.</span><span class="n">show</span><span class="p">(</span><span class="s1">&#39;conjugate gradient&#39;</span><span class="p">)</span>
+
+<span class="c1"># Tikhonov with identity</span>
+
+<span class="n">B</span> <span class="o">=</span> <span class="n">odl</span><span class="o">.</span><span class="n">IdentityOperator</span><span class="p">(</span><span class="n">space</span><span class="p">)</span>
+<span class="n">a</span> <span class="o">=</span> <span class="mf">0.1</span>
+<span class="n">T</span> <span class="o">=</span> <span class="n">A</span><span class="o">.</span><span class="n">adjoint</span> <span class="o">*</span> <span class="n">A</span> <span class="o">+</span> <span class="n">a</span> <span class="o">*</span> <span class="n">B</span><span class="o">.</span><span class="n">adjoint</span> <span class="o">*</span> <span class="n">B</span>
+<span class="n">b</span> <span class="o">=</span> <span class="n">A</span><span class="o">.</span><span class="n">adjoint</span><span class="p">(</span><span class="n">g</span><span class="p">)</span>
+
+<span class="n">f</span> <span class="o">=</span> <span class="n">space</span><span class="o">.</span><span class="n">zero</span><span class="p">()</span>
+<span class="n">odl</span><span class="o">.</span><span class="n">solvers</span><span class="o">.</span><span class="n">conjugate_gradient</span><span class="p">(</span><span class="n">T</span><span class="p">,</span> <span class="n">f</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">niter</span><span class="o">=</span><span class="mi">100</span><span class="p">)</span>
+<span class="n">f</span><span class="o">.</span><span class="n">show</span><span class="p">(</span><span class="s1">&#39;Tikhonov identity conjugate gradient&#39;</span><span class="p">)</span>
+
+<span class="c1"># Tikhonov with gradient</span>
+
+<span class="n">B</span> <span class="o">=</span> <span class="n">odl</span><span class="o">.</span><span class="n">Gradient</span><span class="p">(</span><span class="n">space</span><span class="p">)</span>
+<span class="n">a</span> <span class="o">=</span> <span class="mf">0.0001</span>
+<span class="n">T</span> <span class="o">=</span> <span class="n">A</span><span class="o">.</span><span class="n">adjoint</span> <span class="o">*</span> <span class="n">A</span> <span class="o">+</span> <span class="n">a</span> <span class="o">*</span> <span class="n">B</span><span class="o">.</span><span class="n">adjoint</span> <span class="o">*</span> <span class="n">B</span>
+<span class="n">b</span> <span class="o">=</span> <span class="n">A</span><span class="o">.</span><span class="n">adjoint</span><span class="p">(</span><span class="n">g</span><span class="p">)</span>
+
+<span class="n">f</span> <span class="o">=</span> <span class="n">space</span><span class="o">.</span><span class="n">zero</span><span class="p">()</span>
+<span class="n">odl</span><span class="o">.</span><span class="n">solvers</span><span class="o">.</span><span class="n">conjugate_gradient</span><span class="p">(</span><span class="n">T</span><span class="p">,</span> <span class="n">f</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">niter</span><span class="o">=</span><span class="mi">100</span><span class="p">)</span>
+<span class="n">f</span><span class="o">.</span><span class="n">show</span><span class="p">(</span><span class="s1">&#39;Tikhonov gradient conjugate gradient&#39;</span><span class="p">)</span>
+
+<span class="c1"># Douglas-Rachford</span>
+
+<span class="c1"># Assemble all operators into a list.</span>
+<span class="n">grad</span> <span class="o">=</span> <span class="n">odl</span><span class="o">.</span><span class="n">Gradient</span><span class="p">(</span><span class="n">space</span><span class="p">)</span>
+<span class="n">lin_ops</span> <span class="o">=</span> <span class="p">[</span><span class="n">A</span><span class="p">,</span> <span class="n">grad</span><span class="p">]</span>
+<span class="n">a</span> <span class="o">=</span> <span class="mf">0.001</span>
+
+<span class="c1"># Create functionals for the l2 distance and l1 norm.</span>
+<span class="n">g_funcs</span> <span class="o">=</span> <span class="p">[</span><span class="n">odl</span><span class="o">.</span><span class="n">solvers</span><span class="o">.</span><span class="n">L2NormSquared</span><span class="p">(</span><span class="n">space</span><span class="p">)</span><span class="o">.</span><span class="n">translated</span><span class="p">(</span><span class="n">g</span><span class="p">),</span>
+           <span class="n">a</span> <span class="o">*</span> <span class="n">odl</span><span class="o">.</span><span class="n">solvers</span><span class="o">.</span><span class="n">L1Norm</span><span class="p">(</span><span class="n">grad</span><span class="o">.</span><span class="n">range</span><span class="p">)]</span>
+
+<span class="c1"># Functional of the bound constraint 0 &lt;= f &lt;= 1</span>
+<span class="n">f</span> <span class="o">=</span> <span class="n">odl</span><span class="o">.</span><span class="n">solvers</span><span class="o">.</span><span class="n">IndicatorBox</span><span class="p">(</span><span class="n">space</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+
+<span class="c1"># Find scaling constants so that the solver converges.</span>
+<span class="c1"># See the douglas_rachford_pd documentation for more information.</span>
+<span class="n">opnorm_A</span> <span class="o">=</span> <span class="n">odl</span><span class="o">.</span><span class="n">power_method_opnorm</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">xstart</span><span class="o">=</span><span class="n">g</span><span class="p">)</span>
+<span class="n">opnorm_grad</span> <span class="o">=</span> <span class="n">odl</span><span class="o">.</span><span class="n">power_method_opnorm</span><span class="p">(</span><span class="n">grad</span><span class="p">,</span> <span class="n">xstart</span><span class="o">=</span><span class="n">g</span><span class="p">)</span>
+<span class="n">sigma</span> <span class="o">=</span> <span class="p">[</span><span class="mi">1</span> <span class="o">/</span> <span class="n">opnorm_A</span><span class="o">**</span><span class="mi">2</span><span class="p">,</span> <span class="mi">1</span> <span class="o">/</span> <span class="n">opnorm_grad</span><span class="o">**</span><span class="mi">2</span><span class="p">]</span>
+<span class="n">tau</span> <span class="o">=</span> <span class="mf">1.0</span>
+
+<span class="c1"># Solve using the Douglas-Rachford Primal-Dual method</span>
+<span class="n">x</span> <span class="o">=</span> <span class="n">space</span><span class="o">.</span><span class="n">zero</span><span class="p">()</span>
+<span class="n">odl</span><span class="o">.</span><span class="n">solvers</span><span class="o">.</span><span class="n">douglas_rachford_pd</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">f</span><span class="p">,</span> <span class="n">g_funcs</span><span class="p">,</span> <span class="n">lin_ops</span><span class="p">,</span>
+                                <span class="n">tau</span><span class="o">=</span><span class="n">tau</span><span class="p">,</span> <span class="n">sigma</span><span class="o">=</span><span class="n">sigma</span><span class="p">,</span> <span class="n">niter</span><span class="o">=</span><span class="mi">100</span><span class="p">)</span>
+<span class="n">x</span><span class="o">.</span><span class="n">show</span><span class="p">(</span><span class="s1">&#39;TV Douglas-Rachford&#39;</span><span class="p">,</span> <span class="n">force_show</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+        <a href="../guide/guide.html" class="btn btn-neutral float-right" title="User’s guide – selected topics" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="installing_extensions.html" class="btn btn-neutral float-left" title="Installing ODL extensions" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &#169; Copyright 2014-2020 The ODL Contributors.
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

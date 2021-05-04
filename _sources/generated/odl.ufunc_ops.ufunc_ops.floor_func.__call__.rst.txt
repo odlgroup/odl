@@ -1,0 +1,8 @@
+:orphan:
+
+floor_func.__call__
+===========================================
+
+.. currentmodule:: odl.ufunc_ops.ufunc_ops
+
+.. automethod:: floor_func.__call__

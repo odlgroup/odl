@@ -1,0 +1,6 @@
+FiniteSet.elements
+===============================
+
+.. currentmodule:: odl.set.sets
+
+.. autoproperty:: FiniteSet.elements

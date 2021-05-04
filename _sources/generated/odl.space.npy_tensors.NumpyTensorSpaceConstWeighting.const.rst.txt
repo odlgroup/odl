@@ -1,0 +1,6 @@
+NumpyTensorSpaceConstWeighting.const
+==========================================================
+
+.. currentmodule:: odl.space.npy_tensors
+
+.. autoproperty:: NumpyTensorSpaceConstWeighting.const

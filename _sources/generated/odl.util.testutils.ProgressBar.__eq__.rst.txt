@@ -1,0 +1,8 @@
+:orphan:
+
+ProgressBar.__eq__
+=====================================
+
+.. currentmodule:: odl.util.testutils
+
+.. automethod:: ProgressBar.__eq__

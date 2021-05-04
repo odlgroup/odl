@@ -1,0 +1,8 @@
+:orphan:
+
+ParallelHoleCollimatorGeometry.frommatrix
+=================================================================
+
+.. currentmodule:: odl.tomo.geometry.spect
+
+.. automethod:: ParallelHoleCollimatorGeometry.frommatrix

@@ -1,0 +1,8 @@
+:orphan:
+
+RealPart.__eq__
+========================================
+
+.. currentmodule:: odl.operator.default_ops
+
+.. automethod:: RealPart.__eq__

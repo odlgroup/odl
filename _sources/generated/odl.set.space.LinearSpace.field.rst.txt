@@ -1,0 +1,6 @@
+LinearSpace.field
+===============================
+
+.. currentmodule:: odl.set.space
+
+.. autoproperty:: LinearSpace.field

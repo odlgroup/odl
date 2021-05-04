@@ -1,0 +1,6 @@
+SphericalDetector.grid
+=================================================
+
+.. currentmodule:: odl.tomo.geometry.detector
+
+.. autoproperty:: SphericalDetector.grid

@@ -1,0 +1,6 @@
+rint_func.is_linear
+===========================================
+
+.. currentmodule:: odl.ufunc_ops.ufunc_ops
+
+.. autoproperty:: rint_func.is_linear

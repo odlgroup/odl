@@ -1,0 +1,41 @@
+﻿ResizingOperator
+====================================
+
+.. currentmodule:: odl.discr.discr_ops
+
+.. autoclass:: ResizingOperator
+   :show-inheritance:
+   
+   
+   .. automethod:: __init__
+   
+      
+   
+   .. HACK -- the point here is that we don't want this to appear in the output, but the autosummary should still generate the pages.
+      .. autosummary::
+         :toctree:
+      
+         ResizingOperator.__call__
+         ResizingOperator.__eq__
+         ResizingOperator._call
+         ResizingOperator.derivative
+         ResizingOperator.norm
+   
+
+    
+   .. HACK -- the point here is that we don't want this to appear in the output, but the autosummary should still generate the pages.
+      .. autosummary::
+         :toctree:
+      
+         ResizingOperator.adjoint
+         ResizingOperator.axes
+         ResizingOperator.domain
+         ResizingOperator.inverse
+         ResizingOperator.is_functional
+         ResizingOperator.is_linear
+         ResizingOperator.offset
+         ResizingOperator.pad_const
+         ResizingOperator.pad_mode
+         ResizingOperator.range
+   
+   

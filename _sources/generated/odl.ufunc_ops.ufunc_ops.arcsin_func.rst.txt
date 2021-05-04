@@ -1,0 +1,43 @@
+﻿arcsin_func
+===================================
+
+.. currentmodule:: odl.ufunc_ops.ufunc_ops
+
+.. autoclass:: arcsin_func
+   :show-inheritance:
+   
+   
+   .. automethod:: __init__
+   
+      
+   
+   .. HACK -- the point here is that we don't want this to appear in the output, but the autosummary should still generate the pages.
+      .. autosummary::
+         :toctree:
+      
+         arcsin_func.__call__
+         arcsin_func.__eq__
+         arcsin_func._call
+         arcsin_func.bregman
+         arcsin_func.derivative
+         arcsin_func.norm
+         arcsin_func.translated
+   
+
+    
+   .. HACK -- the point here is that we don't want this to appear in the output, but the autosummary should still generate the pages.
+      .. autosummary::
+         :toctree:
+      
+         arcsin_func.adjoint
+         arcsin_func.convex_conj
+         arcsin_func.domain
+         arcsin_func.grad_lipschitz
+         arcsin_func.gradient
+         arcsin_func.inverse
+         arcsin_func.is_functional
+         arcsin_func.is_linear
+         arcsin_func.proximal
+         arcsin_func.range
+   
+   

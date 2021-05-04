@@ -1,0 +1,8 @@
+:orphan:
+
+SpaceTest.log
+===================================
+
+.. currentmodule:: odl.diagnostics.space
+
+.. automethod:: SpaceTest.log

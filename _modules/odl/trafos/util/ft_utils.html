@@ -1,0 +1,879 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>odl.trafos.util.ft_utils &mdash; odl 1.0.0.dev0 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../../../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../../../../_static/custom.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../../../" src="../../../../_static/documentation_options.js"></script>
+        <script src="../../../../_static/jquery.js"></script>
+        <script src="../../../../_static/underscore.js"></script>
+        <script src="../../../../_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="../../../../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../../../index.html" class="icon icon-home"> odl
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                1.0.0.dev0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Getting Started</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../getting_started/getting_started.html">Getting Started</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Working with ODL</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../guide/guide.html">User’s guide – selected topics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../math/math.html">Mathematical Background</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Developer zone</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../dev/dev.html">Contributing to ODL</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Useful facts</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../guide/faq.html">Frequently asked questions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../guide/glossary.html">Glossary</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../release_notes.html">Release Notes</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../refs.html">References</a></li>
+</ul>
+<p class="caption"><span class="caption-text">API Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../odl.html">odl</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../../index.html">odl</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../../../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="../../../index.html">Module code</a> &raquo;</li>
+        
+      <li>odl.trafos.util.ft_utils</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for odl.trafos.util.ft_utils</h1><div class="highlight"><pre>
+<span></span><span class="c1"># Copyright 2014-2020 The ODL contributors</span>
+<span class="c1">#</span>
+<span class="c1"># This file is part of ODL.</span>
+<span class="c1">#</span>
+<span class="c1"># This Source Code Form is subject to the terms of the Mozilla Public License,</span>
+<span class="c1"># v. 2.0. If a copy of the MPL was not distributed with this file, You can</span>
+<span class="c1"># obtain one at https://mozilla.org/MPL/2.0/.</span>
+
+<span class="sd">&quot;&quot;&quot;Utility functions for Fourier transforms on regularly sampled data.&quot;&quot;&quot;</span>
+
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">absolute_import</span><span class="p">,</span> <span class="n">division</span><span class="p">,</span> <span class="n">print_function</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+
+<span class="kn">from</span> <span class="nn">odl.discr</span> <span class="kn">import</span> <span class="p">(</span>
+    <span class="n">DiscretizedSpace</span><span class="p">,</span> <span class="n">uniform_discr_frompartition</span><span class="p">,</span> <span class="n">uniform_grid</span><span class="p">,</span>
+    <span class="n">uniform_partition_fromgrid</span><span class="p">)</span>
+<span class="kn">from</span> <span class="nn">odl.set</span> <span class="kn">import</span> <span class="n">RealNumbers</span>
+<span class="kn">from</span> <span class="nn">odl.util</span> <span class="kn">import</span> <span class="p">(</span>
+    <span class="n">complex_dtype</span><span class="p">,</span> <span class="n">conj_exponent</span><span class="p">,</span> <span class="n">dtype_repr</span><span class="p">,</span> <span class="n">fast_1d_tensor_mult</span><span class="p">,</span>
+    <span class="n">is_complex_floating_dtype</span><span class="p">,</span> <span class="n">is_numeric_dtype</span><span class="p">,</span> <span class="n">is_real_dtype</span><span class="p">,</span>
+    <span class="n">is_real_floating_dtype</span><span class="p">,</span> <span class="n">is_string</span><span class="p">,</span> <span class="n">normalized_axes_tuple</span><span class="p">,</span>
+    <span class="n">normalized_scalar_param_list</span><span class="p">)</span>
+
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;reciprocal_grid&#39;</span><span class="p">,</span> <span class="s1">&#39;realspace_grid&#39;</span><span class="p">,</span>
+           <span class="s1">&#39;reciprocal_space&#39;</span><span class="p">,</span>
+           <span class="s1">&#39;dft_preprocess_data&#39;</span><span class="p">,</span> <span class="s1">&#39;dft_postprocess_data&#39;</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="reciprocal_grid"><a class="viewcode-back" href="../../../../generated/odl.trafos.util.ft_utils.reciprocal_grid.html#odl.trafos.util.ft_utils.reciprocal_grid">[docs]</a><span class="k">def</span> <span class="nf">reciprocal_grid</span><span class="p">(</span><span class="n">grid</span><span class="p">,</span> <span class="n">shift</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">axes</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">halfcomplex</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Return the reciprocal of the given regular grid.</span>
+
+<span class="sd">    This function calculates the reciprocal (Fourier/frequency space)</span>
+<span class="sd">    grid for a given regular grid defined by the nodes::</span>
+
+<span class="sd">        x[k] = x[0] + k * s,</span>
+
+<span class="sd">    where ``k = (k[0], ..., k[d-1])`` is a ``d``-dimensional index in</span>
+<span class="sd">    the range ``0 &lt;= k &lt; N`` (component-wise). The multi-index</span>
+<span class="sd">    ``N`` is the shape of the input grid.</span>
+<span class="sd">    This grid&#39;s reciprocal is then given by the nodes::</span>
+
+<span class="sd">        xi[j] = xi[0] + j * sigma,</span>
+
+<span class="sd">    with the reciprocal grid stride ``sigma = 2*pi / (s * N)``.</span>
+<span class="sd">    The minimum frequency ``xi[0]`` can in principle be chosen</span>
+<span class="sd">    freely, but usually it is chosen in a such a way that the reciprocal</span>
+<span class="sd">    grid is centered around zero. For this, there are two possibilities:</span>
+
+<span class="sd">    1. Make the grid point-symmetric around 0.</span>
+
+<span class="sd">    2. Make the grid &quot;almost&quot; point-symmetric around zero by shifting</span>
+<span class="sd">       it to the left by half a reciprocal stride.</span>
+
+<span class="sd">    In the first case, the minimum frequency (per axis) is given as::</span>
+
+<span class="sd">        xi_1[0] = -pi/s + pi/(s*n) = -pi/s + sigma/2.</span>
+
+<span class="sd">    For the second case, it is::</span>
+
+<span class="sd">        xi_1[0] = -pi / s.</span>
+
+<span class="sd">    Note that the zero frequency is contained in case 1 for an odd</span>
+<span class="sd">    number of points, while for an even size, the second option</span>
+<span class="sd">    guarantees that 0 is contained.</span>
+
+<span class="sd">    If a real-to-complex (half-complex) transform is to be computed,</span>
+<span class="sd">    the reciprocal grid has the shape ``M[i] = floor(N[i]/2) + 1``</span>
+<span class="sd">    in the last transform axis ``i``.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    grid : uniform `RectGrid`</span>
+<span class="sd">        Original sampling grid,.</span>
+<span class="sd">    shift : bool or sequence of bools, optional</span>
+<span class="sd">        If ``True``, the grid is shifted by half a stride in the negative</span>
+<span class="sd">        direction. With a sequence, this option is applied separately on</span>
+<span class="sd">        each axis.</span>
+<span class="sd">    axes : int or sequence of ints, optional</span>
+<span class="sd">        Dimensions in which to calculate the reciprocal. The sequence</span>
+<span class="sd">        must have the same length as ``shift`` if the latter is given</span>
+<span class="sd">        as a sequence. ``None`` means all axes in ``grid``.</span>
+<span class="sd">    halfcomplex : bool, optional</span>
+<span class="sd">        If ``True``, return the half of the grid with last coordinate</span>
+<span class="sd">        less than zero. This is related to the fact that for real-valued</span>
+<span class="sd">        functions, the other half is the mirrored complex conjugate of</span>
+<span class="sd">        the given half and therefore needs not be stored.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    reciprocal_grid : uniform `RectGrid`</span>
+<span class="sd">        The reciprocal grid.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">axes</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">axes</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="n">grid</span><span class="o">.</span><span class="n">ndim</span><span class="p">))</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">axes</span> <span class="o">=</span> <span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="n">axes</span><span class="p">)]</span>
+        <span class="k">except</span> <span class="ne">TypeError</span><span class="p">:</span>
+            <span class="n">axes</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">axes</span><span class="p">)</span>
+
+    <span class="c1"># List indicating shift or not per &quot;active&quot; axis, same length as axes</span>
+    <span class="n">shift_list</span> <span class="o">=</span> <span class="n">normalized_scalar_param_list</span><span class="p">(</span><span class="n">shift</span><span class="p">,</span> <span class="n">length</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="n">axes</span><span class="p">),</span>
+                                              <span class="n">param_conv</span><span class="o">=</span><span class="nb">bool</span><span class="p">)</span>
+
+    <span class="c1"># Full-length vectors</span>
+    <span class="n">stride</span> <span class="o">=</span> <span class="n">grid</span><span class="o">.</span><span class="n">stride</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+    <span class="n">stride</span><span class="p">[</span><span class="n">stride</span> <span class="o">==</span> <span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span>
+    <span class="n">shape</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">grid</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+    <span class="n">rmin</span> <span class="o">=</span> <span class="n">grid</span><span class="o">.</span><span class="n">min_pt</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+    <span class="n">rmax</span> <span class="o">=</span> <span class="n">grid</span><span class="o">.</span><span class="n">max_pt</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+    <span class="n">rshape</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">shape</span><span class="p">)</span>
+
+    <span class="c1"># Shifted axes (full length to avoid ugly double indexing)</span>
+    <span class="n">shifted</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">grid</span><span class="o">.</span><span class="n">ndim</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">bool</span><span class="p">)</span>
+    <span class="n">shifted</span><span class="p">[</span><span class="n">axes</span><span class="p">]</span> <span class="o">=</span> <span class="n">shift_list</span>
+    <span class="n">rmin</span><span class="p">[</span><span class="n">shifted</span><span class="p">]</span> <span class="o">=</span> <span class="o">-</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span> <span class="o">/</span> <span class="n">stride</span><span class="p">[</span><span class="n">shifted</span><span class="p">]</span>
+    <span class="c1"># Length min-&gt;max increases by double the shift, so we</span>
+    <span class="c1"># have to compensate by a full stride</span>
+    <span class="n">rmax</span><span class="p">[</span><span class="n">shifted</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="o">-</span><span class="n">rmin</span><span class="p">[</span><span class="n">shifted</span><span class="p">]</span> <span class="o">-</span>
+                     <span class="mi">2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span> <span class="o">/</span> <span class="p">(</span><span class="n">stride</span><span class="p">[</span><span class="n">shifted</span><span class="p">]</span> <span class="o">*</span> <span class="n">shape</span><span class="p">[</span><span class="n">shifted</span><span class="p">]))</span>
+
+    <span class="c1"># Non-shifted axes</span>
+    <span class="n">not_shifted</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">grid</span><span class="o">.</span><span class="n">ndim</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">bool</span><span class="p">)</span>
+    <span class="n">not_shifted</span><span class="p">[</span><span class="n">axes</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">logical_not</span><span class="p">(</span><span class="n">shift_list</span><span class="p">)</span>
+    <span class="n">rmin</span><span class="p">[</span><span class="n">not_shifted</span><span class="p">]</span> <span class="o">=</span> <span class="p">((</span><span class="o">-</span><span class="mf">1.0</span> <span class="o">+</span> <span class="mf">1.0</span> <span class="o">/</span> <span class="n">shape</span><span class="p">[</span><span class="n">not_shifted</span><span class="p">])</span> <span class="o">*</span>
+                         <span class="n">np</span><span class="o">.</span><span class="n">pi</span> <span class="o">/</span> <span class="n">stride</span><span class="p">[</span><span class="n">not_shifted</span><span class="p">])</span>
+    <span class="n">rmax</span><span class="p">[</span><span class="n">not_shifted</span><span class="p">]</span> <span class="o">=</span> <span class="o">-</span><span class="n">rmin</span><span class="p">[</span><span class="n">not_shifted</span><span class="p">]</span>
+
+    <span class="c1"># Change last axis shape and max if halfcomplex</span>
+    <span class="k">if</span> <span class="n">halfcomplex</span><span class="p">:</span>
+        <span class="n">rshape</span><span class="p">[</span><span class="n">axes</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]]</span> <span class="o">=</span> <span class="n">shape</span><span class="p">[</span><span class="n">axes</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]]</span> <span class="o">//</span> <span class="mi">2</span> <span class="o">+</span> <span class="mi">1</span>
+
+        <span class="c1"># - Odd and shifted: - stride / 2</span>
+        <span class="c1"># - Even and not shifted: + stride / 2</span>
+        <span class="c1"># - Otherwise: 0</span>
+        <span class="n">last_odd</span> <span class="o">=</span> <span class="n">shape</span><span class="p">[</span><span class="n">axes</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]]</span> <span class="o">%</span> <span class="mi">2</span> <span class="o">==</span> <span class="mi">1</span>
+        <span class="n">last_shifted</span> <span class="o">=</span> <span class="n">shift_list</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+        <span class="n">half_rstride</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span> <span class="o">/</span> <span class="p">(</span><span class="n">shape</span><span class="p">[</span><span class="n">axes</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]]</span> <span class="o">*</span> <span class="n">stride</span><span class="p">[</span><span class="n">axes</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]])</span>
+
+        <span class="k">if</span> <span class="n">last_odd</span> <span class="ow">and</span> <span class="n">last_shifted</span><span class="p">:</span>
+            <span class="n">rmax</span><span class="p">[</span><span class="n">axes</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]]</span> <span class="o">=</span> <span class="o">-</span><span class="n">half_rstride</span>
+        <span class="k">elif</span> <span class="ow">not</span> <span class="n">last_odd</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">last_shifted</span><span class="p">:</span>
+            <span class="n">rmax</span><span class="p">[</span><span class="n">axes</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]]</span> <span class="o">=</span> <span class="n">half_rstride</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">rmax</span><span class="p">[</span><span class="n">axes</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]]</span> <span class="o">=</span> <span class="mi">0</span>
+
+    <span class="k">return</span> <span class="n">uniform_grid</span><span class="p">(</span><span class="n">rmin</span><span class="p">,</span> <span class="n">rmax</span><span class="p">,</span> <span class="n">rshape</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="realspace_grid"><a class="viewcode-back" href="../../../../generated/odl.trafos.util.ft_utils.realspace_grid.html#odl.trafos.util.ft_utils.realspace_grid">[docs]</a><span class="k">def</span> <span class="nf">realspace_grid</span><span class="p">(</span><span class="n">recip_grid</span><span class="p">,</span> <span class="n">x0</span><span class="p">,</span> <span class="n">axes</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">halfcomplex</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                   <span class="n">halfcx_parity</span><span class="o">=</span><span class="s1">&#39;even&#39;</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Return the real space grid from the given reciprocal grid.</span>
+
+<span class="sd">    Given a reciprocal grid::</span>
+
+<span class="sd">        xi[j] = xi[0] + j * sigma,</span>
+
+<span class="sd">    with a multi-index ``j = (j[0], ..., j[d-1])`` in the range</span>
+<span class="sd">    ``0 &lt;= j &lt; M``, this function calculates the original grid::</span>
+
+<span class="sd">        x[k] = x[0] + k * s</span>
+
+<span class="sd">    by using a provided ``x[0]`` and calculating the stride ``s``.</span>
+
+<span class="sd">    If the reciprocal grid is interpreted as coming from a usual</span>
+<span class="sd">    complex-to-complex FFT, it is ``N == M``, and the stride is::</span>
+
+<span class="sd">        s = 2*pi / (sigma * N)</span>
+
+<span class="sd">    For a reciprocal grid from a real-to-complex (half-complex) FFT,</span>
+<span class="sd">    it is ``M[i] = floor(N[i]/2) + 1`` in the last transform axis ``i``.</span>
+<span class="sd">    To resolve the ambiguity regarding the parity of ``N[i]``, the</span>
+<span class="sd">    it must be specified if the output shape should be even or odd,</span>
+<span class="sd">    resulting in::</span>
+
+<span class="sd">        odd : N[i] = 2 * M[i] - 1</span>
+<span class="sd">        even: N[i] = 2 * M[i] - 2</span>
+
+<span class="sd">    The output stride is calculated with this ``N`` as above in this</span>
+<span class="sd">    case.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    recip_grid : uniform `RectGrid`</span>
+<span class="sd">        Sampling grid in reciprocal space.</span>
+<span class="sd">    x0 : `array-like`</span>
+<span class="sd">        Desired minimum point of the real space grid.</span>
+<span class="sd">    axes : int or sequence of ints, optional</span>
+<span class="sd">        Dimensions in which to calculate the real space grid. The sequence</span>
+<span class="sd">        must have the same length as ``shift`` if the latter is given</span>
+<span class="sd">        as a sequence. ``None`` means &quot;all axes&quot;.</span>
+<span class="sd">    halfcomplex : bool, optional</span>
+<span class="sd">        If ``True``, interpret the given grid as the reciprocal as used</span>
+<span class="sd">        in a half-complex FFT (see above). Otherwise, the grid is</span>
+<span class="sd">        regarded as being used in a complex-to-complex transform.</span>
+<span class="sd">    halfcx_parity : {&#39;even&#39;, &#39;odd&#39;}</span>
+<span class="sd">        Use this parity for the shape of the returned grid in the</span>
+<span class="sd">        last axis of ``axes`` in the case ``halfcomplex=True``</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    irecip : uniform `RectGrid`</span>
+<span class="sd">        The inverse reciprocal grid.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">axes</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">axes</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="n">recip_grid</span><span class="o">.</span><span class="n">ndim</span><span class="p">))</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">axes</span> <span class="o">=</span> <span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="n">axes</span><span class="p">)]</span>
+        <span class="k">except</span> <span class="ne">TypeError</span><span class="p">:</span>
+            <span class="n">axes</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">axes</span><span class="p">)</span>
+
+    <span class="n">rstride</span> <span class="o">=</span> <span class="n">recip_grid</span><span class="o">.</span><span class="n">stride</span>
+    <span class="n">rshape</span> <span class="o">=</span> <span class="n">recip_grid</span><span class="o">.</span><span class="n">shape</span>
+
+    <span class="c1"># Calculate shape of the output grid by adjusting in axes[-1]</span>
+    <span class="n">irshape</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">rshape</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">halfcomplex</span><span class="p">:</span>
+        <span class="k">if</span> <span class="nb">str</span><span class="p">(</span><span class="n">halfcx_parity</span><span class="p">)</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="o">==</span> <span class="s1">&#39;even&#39;</span><span class="p">:</span>
+            <span class="n">irshape</span><span class="p">[</span><span class="n">axes</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]]</span> <span class="o">=</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">rshape</span><span class="p">[</span><span class="n">axes</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]]</span> <span class="o">-</span> <span class="mi">2</span>
+        <span class="k">elif</span> <span class="nb">str</span><span class="p">(</span><span class="n">halfcx_parity</span><span class="p">)</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="o">==</span> <span class="s1">&#39;odd&#39;</span><span class="p">:</span>
+            <span class="n">irshape</span><span class="p">[</span><span class="n">axes</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]]</span> <span class="o">=</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">rshape</span><span class="p">[</span><span class="n">axes</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]]</span> <span class="o">-</span> <span class="mi">1</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;`halfcomplex` parity &#39;</span><span class="si">{}</span><span class="s2">&#39; not understood&quot;</span>
+                             <span class="s2">&quot;&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">halfcx_parity</span><span class="p">))</span>
+
+    <span class="n">irmin</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">x0</span><span class="p">)</span>
+    <span class="n">irshape</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">irshape</span><span class="p">)</span>
+    <span class="n">irstride</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="n">rstride</span><span class="p">)</span>
+    <span class="n">irstride</span><span class="p">[</span><span class="n">axes</span><span class="p">]</span> <span class="o">=</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span> <span class="o">/</span> <span class="p">(</span><span class="n">irshape</span><span class="p">[</span><span class="n">axes</span><span class="p">]</span> <span class="o">*</span> <span class="n">rstride</span><span class="p">[</span><span class="n">axes</span><span class="p">])</span>
+    <span class="n">irmax</span> <span class="o">=</span> <span class="n">irmin</span> <span class="o">+</span> <span class="p">(</span><span class="n">irshape</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="n">irstride</span>
+
+    <span class="k">return</span> <span class="n">uniform_grid</span><span class="p">(</span><span class="n">irmin</span><span class="p">,</span> <span class="n">irmax</span><span class="p">,</span> <span class="n">irshape</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="dft_preprocess_data"><a class="viewcode-back" href="../../../../generated/odl.trafos.util.ft_utils.dft_preprocess_data.html#odl.trafos.util.ft_utils.dft_preprocess_data">[docs]</a><span class="k">def</span> <span class="nf">dft_preprocess_data</span><span class="p">(</span><span class="n">arr</span><span class="p">,</span> <span class="n">shift</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">axes</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">sign</span><span class="o">=</span><span class="s1">&#39;-&#39;</span><span class="p">,</span> <span class="n">out</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Pre-process the real-space data before DFT.</span>
+
+<span class="sd">    This function multiplies the given data with the separable</span>
+<span class="sd">    function::</span>
+
+<span class="sd">        p(x) = exp(+- 1j * dot(x - x[0], xi[0]))</span>
+
+<span class="sd">    where ``x[0]`` and ``xi[0]`` are the minimum coodinates of</span>
+<span class="sd">    the real-space and reciprocal grids, respectively. The sign of</span>
+<span class="sd">    the exponent depends on the choice of ``sign``. In discretized</span>
+<span class="sd">    form, this function becomes an array::</span>
+
+<span class="sd">        p[k] = exp(+- 1j * k * s * xi[0])</span>
+
+<span class="sd">    If the reciprocal grid is not shifted, i.e. symmetric around 0,</span>
+<span class="sd">    it is ``xi[0] =  pi/s * (-1 + 1/N)``, hence::</span>
+
+<span class="sd">        p[k] = exp(-+ 1j * pi * k * (1 - 1/N))</span>
+
+<span class="sd">    For a shifted grid, we have :math:``xi[0] =  -pi/s``, thus the</span>
+<span class="sd">    array is given by::</span>
+
+<span class="sd">        p[k] = (-1)**k</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    arr : `array-like`</span>
+<span class="sd">        Array to be pre-processed. If its data type is a real</span>
+<span class="sd">        non-floating type, it is converted to &#39;float64&#39;.</span>
+<span class="sd">    shift : bool or or sequence of bools, optional</span>
+<span class="sd">        If ``True``, the grid is shifted by half a stride in the negative</span>
+<span class="sd">        direction. With a sequence, this option is applied separately on</span>
+<span class="sd">        each axis.</span>
+<span class="sd">    axes : int or sequence of ints, optional</span>
+<span class="sd">        Dimensions in which to calculate the reciprocal. The sequence</span>
+<span class="sd">        must have the same length as ``shift`` if the latter is given</span>
+<span class="sd">        as a sequence.</span>
+<span class="sd">        Default: all axes.</span>
+<span class="sd">    sign : {&#39;-&#39;, &#39;+&#39;}, optional</span>
+<span class="sd">        Sign of the complex exponent.</span>
+<span class="sd">    out : `numpy.ndarray`, optional</span>
+<span class="sd">        Array in which the result is stored. If ``out is arr``,</span>
+<span class="sd">        an in-place modification is performed. For real data type,</span>
+<span class="sd">        this is only possible for ``shift=True`` since the factors are</span>
+<span class="sd">        complex otherwise.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    out : `numpy.ndarray`</span>
+<span class="sd">        Result of the pre-processing. If ``out`` was given, the returned</span>
+<span class="sd">        object is a reference to it.</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    If ``out`` is not specified, the data type of the returned array</span>
+<span class="sd">    is the same as that of ``arr`` except when ``arr`` has real data</span>
+<span class="sd">    type and ``shift`` is not ``True``. In this case, the return type</span>
+<span class="sd">    is the complex counterpart of ``arr.dtype``.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">arr</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">arr</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">is_numeric_dtype</span><span class="p">(</span><span class="n">arr</span><span class="o">.</span><span class="n">dtype</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;array has non-numeric data type </span><span class="si">{}</span><span class="s1">&#39;</span>
+                         <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">dtype_repr</span><span class="p">(</span><span class="n">arr</span><span class="o">.</span><span class="n">dtype</span><span class="p">)))</span>
+    <span class="k">elif</span> <span class="n">is_real_dtype</span><span class="p">(</span><span class="n">arr</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">is_real_floating_dtype</span><span class="p">(</span><span class="n">arr</span><span class="o">.</span><span class="n">dtype</span><span class="p">):</span>
+        <span class="n">arr</span> <span class="o">=</span> <span class="n">arr</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s1">&#39;float64&#39;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">axes</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">axes</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="n">arr</span><span class="o">.</span><span class="n">ndim</span><span class="p">))</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">axes</span> <span class="o">=</span> <span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="n">axes</span><span class="p">)]</span>
+        <span class="k">except</span> <span class="ne">TypeError</span><span class="p">:</span>
+            <span class="n">axes</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">axes</span><span class="p">)</span>
+
+    <span class="n">shape</span> <span class="o">=</span> <span class="n">arr</span><span class="o">.</span><span class="n">shape</span>
+    <span class="n">shift_list</span> <span class="o">=</span> <span class="n">normalized_scalar_param_list</span><span class="p">(</span><span class="n">shift</span><span class="p">,</span> <span class="n">length</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="n">axes</span><span class="p">),</span>
+                                              <span class="n">param_conv</span><span class="o">=</span><span class="nb">bool</span><span class="p">)</span>
+
+    <span class="c1"># Make a copy of arr with correct data type if necessary, or copy values.</span>
+    <span class="k">if</span> <span class="n">out</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">is_real_dtype</span><span class="p">(</span><span class="n">arr</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span> <span class="ow">and</span> <span class="ow">not</span> <span class="nb">all</span><span class="p">(</span><span class="n">shift_list</span><span class="p">):</span>
+            <span class="n">out</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">arr</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">complex_dtype</span><span class="p">(</span><span class="n">arr</span><span class="o">.</span><span class="n">dtype</span><span class="p">),</span> <span class="n">copy</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">out</span> <span class="o">=</span> <span class="n">arr</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">out</span><span class="p">[:]</span> <span class="o">=</span> <span class="n">arr</span>
+
+    <span class="k">if</span> <span class="n">is_real_dtype</span><span class="p">(</span><span class="n">out</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">shift</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;cannot pre-process real input in-place without &#39;</span>
+                         <span class="s1">&#39;shift&#39;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">sign</span> <span class="o">==</span> <span class="s1">&#39;-&#39;</span><span class="p">:</span>
+        <span class="n">imag</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span><span class="n">j</span>
+    <span class="k">elif</span> <span class="n">sign</span> <span class="o">==</span> <span class="s1">&#39;+&#39;</span><span class="p">:</span>
+        <span class="n">imag</span> <span class="o">=</span> <span class="mi">1</span><span class="n">j</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;`sign` &#39;</span><span class="si">{}</span><span class="s2">&#39; not understood&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">sign</span><span class="p">))</span>
+
+    <span class="k">def</span> <span class="nf">_onedim_arr</span><span class="p">(</span><span class="n">length</span><span class="p">,</span> <span class="n">shift</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">shift</span><span class="p">:</span>
+            <span class="c1"># (-1)^indices</span>
+            <span class="n">factor</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="n">length</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">out</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span>
+            <span class="n">factor</span><span class="p">[</span><span class="mi">1</span><span class="p">::</span><span class="mi">2</span><span class="p">]</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">factor</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">length</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">out</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span>
+            <span class="n">factor</span> <span class="o">*=</span> <span class="o">-</span><span class="n">imag</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span> <span class="o">*</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="mf">1.0</span> <span class="o">/</span> <span class="n">length</span><span class="p">)</span>
+            <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="n">factor</span><span class="p">,</span> <span class="n">out</span><span class="o">=</span><span class="n">factor</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">factor</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">out</span><span class="o">.</span><span class="n">dtype</span><span class="p">,</span> <span class="n">copy</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+
+    <span class="n">onedim_arrs</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">axis</span><span class="p">,</span> <span class="n">shift</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">axes</span><span class="p">,</span> <span class="n">shift_list</span><span class="p">):</span>
+        <span class="n">length</span> <span class="o">=</span> <span class="n">shape</span><span class="p">[</span><span class="n">axis</span><span class="p">]</span>
+        <span class="n">onedim_arrs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">_onedim_arr</span><span class="p">(</span><span class="n">length</span><span class="p">,</span> <span class="n">shift</span><span class="p">))</span>
+
+    <span class="n">fast_1d_tensor_mult</span><span class="p">(</span><span class="n">out</span><span class="p">,</span> <span class="n">onedim_arrs</span><span class="p">,</span> <span class="n">axes</span><span class="o">=</span><span class="n">axes</span><span class="p">,</span> <span class="n">out</span><span class="o">=</span><span class="n">out</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">out</span></div>
+
+
+<span class="k">def</span> <span class="nf">_interp_kernel_ft</span><span class="p">(</span><span class="n">norm_freqs</span><span class="p">,</span> <span class="n">interp</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Scaled FT of a one-dimensional interpolation kernel.</span>
+
+<span class="sd">    For normalized frequencies ``-1/2 &lt;= xi &lt;= 1/2``, this</span>
+<span class="sd">    function returns::</span>
+
+<span class="sd">        sinc(pi * xi)**k / sqrt(2 * pi)</span>
+
+<span class="sd">    where ``k=1`` for &#39;nearest&#39; and ``k=2`` for &#39;linear&#39; interpolation.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    norm_freqs : `numpy.ndarray`</span>
+<span class="sd">        Normalized frequencies between -1/2 and 1/2</span>
+<span class="sd">    interp : {&#39;nearest&#39;, &#39;linear&#39;}</span>
+<span class="sd">        Type of interpolation kernel</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    ker_ft : `numpy.ndarray`</span>
+<span class="sd">        Values of the kernel FT at the given frequencies</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># Numpy&#39;s sinc(x) is equal to the &#39;math&#39; sinc(pi * x)</span>
+    <span class="n">ker_ft</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sinc</span><span class="p">(</span><span class="n">norm_freqs</span><span class="p">)</span>
+    <span class="n">interp_</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">interp</span><span class="p">)</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
+    <span class="k">if</span> <span class="n">interp_</span> <span class="o">==</span> <span class="s1">&#39;nearest&#39;</span><span class="p">:</span>
+        <span class="k">pass</span>
+    <span class="k">elif</span> <span class="n">interp_</span> <span class="o">==</span> <span class="s1">&#39;linear&#39;</span><span class="p">:</span>
+        <span class="n">ker_ft</span> <span class="o">*=</span> <span class="n">ker_ft</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;`interp` &#39;</span><span class="si">{}</span><span class="s2">&#39; not understood&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">interp</span><span class="p">))</span>
+
+    <span class="n">ker_ft</span> <span class="o">/=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">ker_ft</span>
+
+
+<div class="viewcode-block" id="dft_postprocess_data"><a class="viewcode-back" href="../../../../generated/odl.trafos.util.ft_utils.dft_postprocess_data.html#odl.trafos.util.ft_utils.dft_postprocess_data">[docs]</a><span class="k">def</span> <span class="nf">dft_postprocess_data</span><span class="p">(</span><span class="n">arr</span><span class="p">,</span> <span class="n">real_grid</span><span class="p">,</span> <span class="n">recip_grid</span><span class="p">,</span> <span class="n">shift</span><span class="p">,</span> <span class="n">axes</span><span class="p">,</span>
+                         <span class="n">interp</span><span class="p">,</span> <span class="n">sign</span><span class="o">=</span><span class="s1">&#39;-&#39;</span><span class="p">,</span> <span class="n">op</span><span class="o">=</span><span class="s1">&#39;multiply&#39;</span><span class="p">,</span> <span class="n">out</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Post-process the Fourier-space data after DFT.</span>
+
+<span class="sd">    This function multiplies the given data with the separable</span>
+<span class="sd">    function::</span>
+
+<span class="sd">        q(xi) = exp(+- 1j * dot(x[0], xi)) * s * phi_hat(xi_bar)</span>
+
+<span class="sd">    where ``x[0]`` and ``s`` are the minimum point and the stride of</span>
+<span class="sd">    the real-space grid, respectively, and ``phi_hat(xi_bar)`` is the FT</span>
+<span class="sd">    of the interpolation kernel. The sign of the exponent depends on the</span>
+<span class="sd">    choice of ``sign``. Note that for ``op=&#39;divide&#39;`` the</span>
+<span class="sd">    multiplication with ``s * phi_hat(xi_bar)`` is replaced by a</span>
+<span class="sd">    division with the same array.</span>
+
+<span class="sd">    In discretized form on the reciprocal grid, the exponential part</span>
+<span class="sd">    of this function becomes an array::</span>
+
+<span class="sd">        q[k] = exp(+- 1j * dot(x[0], xi[k]))</span>
+
+<span class="sd">    and the arguments ``xi_bar`` to the interpolation kernel</span>
+<span class="sd">    are the normalized frequencies::</span>
+
+<span class="sd">        for &#39;shift=True&#39;  : xi_bar[k] = -pi + pi * (2*k) / N</span>
+<span class="sd">        for &#39;shift=False&#39; : xi_bar[k] = -pi + pi * (2*k+1) / N</span>
+
+<span class="sd">    See [Pre+2007], Section 13.9 &quot;Computing Fourier Integrals Using</span>
+<span class="sd">    the FFT&quot; for a similar approach.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    arr : `array-like`</span>
+<span class="sd">        Array to be pre-processed. An array with real data type is</span>
+<span class="sd">        converted to its complex counterpart.</span>
+<span class="sd">    real_grid : uniform `RectGrid`</span>
+<span class="sd">        Real space grid in the transform.</span>
+<span class="sd">    recip_grid : uniform `RectGrid`</span>
+<span class="sd">        Reciprocal grid in the transform</span>
+<span class="sd">    shift : bool or sequence of bools</span>
+<span class="sd">        If ``True``, the grid is shifted by half a stride in the negative</span>
+<span class="sd">        direction in the corresponding axes. The sequence must have the</span>
+<span class="sd">        same length as ``axes``.</span>
+<span class="sd">    axes : int or sequence of ints</span>
+<span class="sd">        Dimensions along which to take the transform. The sequence must</span>
+<span class="sd">        have the same length as ``shifts``.</span>
+<span class="sd">    interp : string or sequence of strings</span>
+<span class="sd">        Interpolation scheme used in the real-space.</span>
+<span class="sd">    sign : {&#39;-&#39;, &#39;+&#39;}, optional</span>
+<span class="sd">        Sign of the complex exponent.</span>
+<span class="sd">    op : {&#39;multiply&#39;, &#39;divide&#39;}, optional</span>
+<span class="sd">        Operation to perform with the stride times the interpolation</span>
+<span class="sd">        kernel FT</span>
+<span class="sd">    out : `numpy.ndarray`, optional</span>
+<span class="sd">        Array in which the result is stored. If ``out is arr``, an</span>
+<span class="sd">        in-place modification is performed.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    out : `numpy.ndarray`</span>
+<span class="sd">        Result of the post-processing. If ``out`` was given, the returned</span>
+<span class="sd">        object is a reference to it.</span>
+
+<span class="sd">    References</span>
+<span class="sd">    ----------</span>
+<span class="sd">    [Pre+2007] Press, W H, Teukolsky, S A, Vetterling, W T, and Flannery, B P.</span>
+<span class="sd">    *Numerical Recipes in C - The Art of Scientific Computing* (Volume 3).</span>
+<span class="sd">    Cambridge University Press, 2007.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">arr</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">arr</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">is_real_floating_dtype</span><span class="p">(</span><span class="n">arr</span><span class="o">.</span><span class="n">dtype</span><span class="p">):</span>
+        <span class="n">arr</span> <span class="o">=</span> <span class="n">arr</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">complex_dtype</span><span class="p">(</span><span class="n">arr</span><span class="o">.</span><span class="n">dtype</span><span class="p">))</span>
+    <span class="k">elif</span> <span class="ow">not</span> <span class="n">is_complex_floating_dtype</span><span class="p">(</span><span class="n">arr</span><span class="o">.</span><span class="n">dtype</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;array data type </span><span class="si">{}</span><span class="s1"> is not a complex floating point &#39;</span>
+                         <span class="s1">&#39;data type&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">dtype_repr</span><span class="p">(</span><span class="n">arr</span><span class="o">.</span><span class="n">dtype</span><span class="p">)))</span>
+
+    <span class="k">if</span> <span class="n">out</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">out</span> <span class="o">=</span> <span class="n">arr</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+    <span class="k">elif</span> <span class="n">out</span> <span class="ow">is</span> <span class="ow">not</span> <span class="n">arr</span><span class="p">:</span>
+        <span class="n">out</span><span class="p">[:]</span> <span class="o">=</span> <span class="n">arr</span>
+
+    <span class="k">if</span> <span class="n">axes</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">axes</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="n">arr</span><span class="o">.</span><span class="n">ndim</span><span class="p">))</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">axes</span> <span class="o">=</span> <span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="n">axes</span><span class="p">)]</span>
+        <span class="k">except</span> <span class="ne">TypeError</span><span class="p">:</span>
+            <span class="n">axes</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">axes</span><span class="p">)</span>
+
+    <span class="n">shift_list</span> <span class="o">=</span> <span class="n">normalized_scalar_param_list</span><span class="p">(</span><span class="n">shift</span><span class="p">,</span> <span class="n">length</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="n">axes</span><span class="p">),</span>
+                                              <span class="n">param_conv</span><span class="o">=</span><span class="nb">bool</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">sign</span> <span class="o">==</span> <span class="s1">&#39;-&#39;</span><span class="p">:</span>
+        <span class="n">imag</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span><span class="n">j</span>
+    <span class="k">elif</span> <span class="n">sign</span> <span class="o">==</span> <span class="s1">&#39;+&#39;</span><span class="p">:</span>
+        <span class="n">imag</span> <span class="o">=</span> <span class="mi">1</span><span class="n">j</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;`sign` &#39;</span><span class="si">{}</span><span class="s2">&#39; not understood&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">sign</span><span class="p">))</span>
+
+    <span class="n">op</span><span class="p">,</span> <span class="n">op_in</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">op</span><span class="p">)</span><span class="o">.</span><span class="n">lower</span><span class="p">(),</span> <span class="n">op</span>
+    <span class="k">if</span> <span class="n">op</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">(</span><span class="s1">&#39;multiply&#39;</span><span class="p">,</span> <span class="s1">&#39;divide&#39;</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;kernel `op` &#39;</span><span class="si">{}</span><span class="s2">&#39; not understood&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">op_in</span><span class="p">))</span>
+
+    <span class="c1"># Make a list from interp if that&#39;s not the case already</span>
+    <span class="k">if</span> <span class="n">is_string</span><span class="p">(</span><span class="n">interp</span><span class="p">):</span>
+        <span class="n">interp</span> <span class="o">=</span> <span class="p">[</span><span class="nb">str</span><span class="p">(</span><span class="n">interp</span><span class="p">)</span><span class="o">.</span><span class="n">lower</span><span class="p">()]</span> <span class="o">*</span> <span class="n">arr</span><span class="o">.</span><span class="n">ndim</span>
+
+    <span class="n">onedim_arrs</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">ax</span><span class="p">,</span> <span class="n">shift</span><span class="p">,</span> <span class="n">intp</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">axes</span><span class="p">,</span> <span class="n">shift_list</span><span class="p">,</span> <span class="n">interp</span><span class="p">):</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="n">real_grid</span><span class="o">.</span><span class="n">min_pt</span><span class="p">[</span><span class="n">ax</span><span class="p">]</span>
+        <span class="n">xi</span> <span class="o">=</span> <span class="n">recip_grid</span><span class="o">.</span><span class="n">coord_vectors</span><span class="p">[</span><span class="n">ax</span><span class="p">]</span>
+
+        <span class="c1"># First part: exponential array</span>
+        <span class="n">onedim_arr</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="n">imag</span> <span class="o">*</span> <span class="n">x</span> <span class="o">*</span> <span class="n">xi</span><span class="p">)</span>
+
+        <span class="c1"># Second part: interpolation kernel</span>
+        <span class="n">len_dft</span> <span class="o">=</span> <span class="n">recip_grid</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="n">ax</span><span class="p">]</span>
+        <span class="n">len_orig</span> <span class="o">=</span> <span class="n">real_grid</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="n">ax</span><span class="p">]</span>
+        <span class="n">halfcomplex</span> <span class="o">=</span> <span class="p">(</span><span class="n">len_dft</span> <span class="o">&lt;</span> <span class="n">len_orig</span><span class="p">)</span>
+        <span class="n">odd</span> <span class="o">=</span> <span class="n">len_orig</span> <span class="o">%</span> <span class="mi">2</span>
+
+        <span class="n">fmin</span> <span class="o">=</span> <span class="o">-</span><span class="mf">0.5</span> <span class="k">if</span> <span class="n">shift</span> <span class="k">else</span> <span class="o">-</span><span class="mf">0.5</span> <span class="o">+</span> <span class="mf">1.0</span> <span class="o">/</span> <span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">len_orig</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">halfcomplex</span><span class="p">:</span>
+            <span class="c1"># maximum lies around 0, possibly half a cell left or right of it</span>
+            <span class="k">if</span> <span class="n">shift</span> <span class="ow">and</span> <span class="n">odd</span><span class="p">:</span>
+                <span class="n">fmax</span> <span class="o">=</span> <span class="o">-</span> <span class="mf">1.0</span> <span class="o">/</span> <span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">len_orig</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="ow">not</span> <span class="n">shift</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">odd</span><span class="p">:</span>
+                <span class="n">fmax</span> <span class="o">=</span> <span class="mf">1.0</span> <span class="o">/</span> <span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">len_orig</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">fmax</span> <span class="o">=</span> <span class="mf">0.0</span>
+
+        <span class="k">else</span><span class="p">:</span>  <span class="c1"># not halfcomplex</span>
+            <span class="c1"># maximum lies close to 0.5, half or full cell left of it</span>
+            <span class="k">if</span> <span class="n">shift</span><span class="p">:</span>
+                <span class="c1"># -0.5 + (N-1)/N = 0.5 - 1/N</span>
+                <span class="n">fmax</span> <span class="o">=</span> <span class="mf">0.5</span> <span class="o">-</span> <span class="mf">1.0</span> <span class="o">/</span> <span class="n">len_orig</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="c1"># -0.5 + 1/(2*N) + (N-1)/N = 0.5 - 1/(2*N)</span>
+                <span class="n">fmax</span> <span class="o">=</span> <span class="mf">0.5</span> <span class="o">-</span> <span class="mf">1.0</span> <span class="o">/</span> <span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">len_orig</span><span class="p">)</span>
+
+        <span class="n">freqs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="n">fmin</span><span class="p">,</span> <span class="n">fmax</span><span class="p">,</span> <span class="n">num</span><span class="o">=</span><span class="n">len_dft</span><span class="p">)</span>
+        <span class="n">stride</span> <span class="o">=</span> <span class="n">real_grid</span><span class="o">.</span><span class="n">stride</span><span class="p">[</span><span class="n">ax</span><span class="p">]</span>
+
+        <span class="n">interp_kernel</span> <span class="o">=</span> <span class="n">_interp_kernel_ft</span><span class="p">(</span><span class="n">freqs</span><span class="p">,</span> <span class="n">intp</span><span class="p">)</span>
+        <span class="n">interp_kernel</span> <span class="o">*=</span> <span class="n">stride</span>
+
+        <span class="k">if</span> <span class="n">op</span> <span class="o">==</span> <span class="s1">&#39;multiply&#39;</span><span class="p">:</span>
+            <span class="n">onedim_arr</span> <span class="o">*=</span> <span class="n">interp_kernel</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">onedim_arr</span> <span class="o">/=</span> <span class="n">interp_kernel</span>
+
+        <span class="n">onedim_arrs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">onedim_arr</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">out</span><span class="o">.</span><span class="n">dtype</span><span class="p">,</span> <span class="n">copy</span><span class="o">=</span><span class="kc">False</span><span class="p">))</span>
+
+    <span class="n">fast_1d_tensor_mult</span><span class="p">(</span><span class="n">out</span><span class="p">,</span> <span class="n">onedim_arrs</span><span class="p">,</span> <span class="n">axes</span><span class="o">=</span><span class="n">axes</span><span class="p">,</span> <span class="n">out</span><span class="o">=</span><span class="n">out</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">out</span></div>
+
+
+<div class="viewcode-block" id="reciprocal_space"><a class="viewcode-back" href="../../../../generated/odl.trafos.util.ft_utils.reciprocal_space.html#odl.trafos.util.ft_utils.reciprocal_space">[docs]</a><span class="k">def</span> <span class="nf">reciprocal_space</span><span class="p">(</span><span class="n">space</span><span class="p">,</span> <span class="n">axes</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">halfcomplex</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">shift</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                     <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Return the range of the Fourier transform on ``space``.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    space : `DiscretizedSpace`</span>
+<span class="sd">        Real space whose reciprocal is calculated. It must be</span>
+<span class="sd">        uniformly discretized.</span>
+<span class="sd">    axes : sequence of ints, optional</span>
+<span class="sd">        Dimensions along which the Fourier transform is taken.</span>
+<span class="sd">        Default: all axes</span>
+<span class="sd">    halfcomplex : bool, optional</span>
+<span class="sd">        If ``True``, take only the negative frequency part along the last</span>
+<span class="sd">        axis for. For ``False``, use the full frequency space.</span>
+<span class="sd">        This option can only be used if ``space`` is a space of</span>
+<span class="sd">        real-valued functions.</span>
+<span class="sd">    shift : bool or sequence of bools, optional</span>
+<span class="sd">        If ``True``, the reciprocal grid is shifted by half a stride in</span>
+<span class="sd">        the negative direction. With a boolean sequence, this option</span>
+<span class="sd">        is applied separately to each axis.</span>
+<span class="sd">        If a sequence is provided, it must have the same length as</span>
+<span class="sd">        ``axes`` if supplied. Note that this must be set to ``True``</span>
+<span class="sd">        in the halved axis in half-complex transforms.</span>
+<span class="sd">        Default: ``True``</span>
+<span class="sd">    impl : string, optional</span>
+<span class="sd">        Implementation back-end for the created space.</span>
+<span class="sd">        Default: ``&#39;numpy&#39;``</span>
+<span class="sd">    exponent : float, optional</span>
+<span class="sd">        Create a space with this exponent. By default, the conjugate</span>
+<span class="sd">        exponent ``q = p / (p - 1)`` of the exponent of ``space`` is</span>
+<span class="sd">        used, where ``q = inf`` for ``p = 1`` and vice versa.</span>
+<span class="sd">    dtype : optional</span>
+<span class="sd">        Complex data type of the created space. By default, the</span>
+<span class="sd">        complex counterpart of ``space.dtype`` is used.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    rspace : `DiscretizedSpace`</span>
+<span class="sd">        Reciprocal of the input ``space``. If ``halfcomplex=True``, the</span>
+<span class="sd">        upper end of the domain (where the half space ends) is chosen to</span>
+<span class="sd">        coincide with the grid node.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">space</span><span class="p">,</span> <span class="n">DiscretizedSpace</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;`space` </span><span class="si">{!r}</span><span class="s1"> is not a `DiscretizedSpace` instance&#39;</span>
+                        <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">space</span><span class="p">))</span>
+    <span class="k">if</span> <span class="n">axes</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">axes</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="n">space</span><span class="o">.</span><span class="n">ndim</span><span class="p">))</span>
+    <span class="n">axes</span> <span class="o">=</span> <span class="n">normalized_axes_tuple</span><span class="p">(</span><span class="n">axes</span><span class="p">,</span> <span class="n">space</span><span class="o">.</span><span class="n">ndim</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">all</span><span class="p">(</span><span class="n">space</span><span class="o">.</span><span class="n">is_uniform_byaxis</span><span class="p">[</span><span class="n">axis</span><span class="p">]</span> <span class="k">for</span> <span class="n">axis</span> <span class="ow">in</span> <span class="n">axes</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;`space` is not uniformly discretized in the &#39;</span>
+                         <span class="s1">&#39;`axes` of the transform&#39;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">halfcomplex</span> <span class="ow">and</span> <span class="n">space</span><span class="o">.</span><span class="n">field</span> <span class="o">!=</span> <span class="n">RealNumbers</span><span class="p">():</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;`halfcomplex` option can only be used with real &#39;</span>
+                         <span class="s1">&#39;spaces&#39;</span><span class="p">)</span>
+
+    <span class="n">exponent</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;exponent&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">exponent</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">exponent</span> <span class="o">=</span> <span class="n">conj_exponent</span><span class="p">(</span><span class="n">space</span><span class="o">.</span><span class="n">exponent</span><span class="p">)</span>
+
+    <span class="n">dtype</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;dtype&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">dtype</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">dtype</span> <span class="o">=</span> <span class="n">complex_dtype</span><span class="p">(</span><span class="n">space</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">is_complex_floating_dtype</span><span class="p">(</span><span class="n">dtype</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">{}</span><span class="s1"> is not a complex data type&#39;</span>
+                             <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">dtype_repr</span><span class="p">(</span><span class="n">dtype</span><span class="p">)))</span>
+
+    <span class="n">impl</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;impl&#39;</span><span class="p">,</span> <span class="s1">&#39;numpy&#39;</span><span class="p">)</span>
+
+    <span class="c1"># Calculate range</span>
+    <span class="n">recip_grid</span> <span class="o">=</span> <span class="n">reciprocal_grid</span><span class="p">(</span><span class="n">space</span><span class="o">.</span><span class="n">grid</span><span class="p">,</span> <span class="n">shift</span><span class="o">=</span><span class="n">shift</span><span class="p">,</span>
+                                 <span class="n">halfcomplex</span><span class="o">=</span><span class="n">halfcomplex</span><span class="p">,</span> <span class="n">axes</span><span class="o">=</span><span class="n">axes</span><span class="p">)</span>
+
+    <span class="c1"># Need to do this for axes of length 1 that are not transformed</span>
+    <span class="n">non_axes</span> <span class="o">=</span> <span class="p">[</span><span class="n">i</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">space</span><span class="o">.</span><span class="n">ndim</span><span class="p">)</span> <span class="k">if</span> <span class="n">i</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">axes</span><span class="p">]</span>
+    <span class="n">min_pt</span> <span class="o">=</span> <span class="p">{</span><span class="n">i</span><span class="p">:</span> <span class="n">space</span><span class="o">.</span><span class="n">min_pt</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">non_axes</span><span class="p">}</span>
+    <span class="n">max_pt</span> <span class="o">=</span> <span class="p">{</span><span class="n">i</span><span class="p">:</span> <span class="n">space</span><span class="o">.</span><span class="n">max_pt</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">non_axes</span><span class="p">}</span>
+
+    <span class="c1"># Make a partition with nodes on the boundary in the last transform axis</span>
+    <span class="c1"># if `halfcomplex == True`, otherwise a standard partition.</span>
+    <span class="k">if</span> <span class="n">halfcomplex</span><span class="p">:</span>
+        <span class="n">max_pt</span><span class="p">[</span><span class="n">axes</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]]</span> <span class="o">=</span> <span class="n">recip_grid</span><span class="o">.</span><span class="n">max_pt</span><span class="p">[</span><span class="n">axes</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]]</span>
+
+    <span class="n">part</span> <span class="o">=</span> <span class="n">uniform_partition_fromgrid</span><span class="p">(</span><span class="n">recip_grid</span><span class="p">,</span> <span class="n">min_pt</span><span class="p">,</span> <span class="n">max_pt</span><span class="p">)</span>
+
+    <span class="c1"># Use convention of adding a hat to represent fourier transform of variable</span>
+    <span class="n">axis_labels</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">space</span><span class="o">.</span><span class="n">axis_labels</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">axes</span><span class="p">:</span>
+        <span class="c1"># Avoid double math</span>
+        <span class="n">label</span> <span class="o">=</span> <span class="n">axis_labels</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;$&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">)</span>
+        <span class="n">axis_labels</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;$</span><span class="se">\\</span><span class="s1">^{{</span><span class="si">{}</span><span class="s1">}}$&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">label</span><span class="p">)</span>
+
+    <span class="n">recip_spc</span> <span class="o">=</span> <span class="n">uniform_discr_frompartition</span><span class="p">(</span><span class="n">part</span><span class="p">,</span> <span class="n">exponent</span><span class="o">=</span><span class="n">exponent</span><span class="p">,</span>
+                                            <span class="n">dtype</span><span class="o">=</span><span class="n">dtype</span><span class="p">,</span> <span class="n">impl</span><span class="o">=</span><span class="n">impl</span><span class="p">,</span>
+                                            <span class="n">axis_labels</span><span class="o">=</span><span class="n">axis_labels</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">recip_spc</span></div>
+
+
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s1">&#39;__main__&#39;</span><span class="p">:</span>
+    <span class="kn">from</span> <span class="nn">doctest</span> <span class="kn">import</span> <span class="n">testmod</span><span class="p">,</span> <span class="n">NORMALIZE_WHITESPACE</span>
+    <span class="n">testmod</span><span class="p">(</span><span class="n">optionflags</span><span class="o">=</span><span class="n">NORMALIZE_WHITESPACE</span><span class="p">)</span>
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &#169; Copyright 2014-2020 The ODL Contributors.
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

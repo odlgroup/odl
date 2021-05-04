@@ -1,0 +1,8 @@
+:orphan:
+
+Parallel3dEulerGeometry.__eq__
+=========================================================
+
+.. currentmodule:: odl.tomo.geometry.parallel
+
+.. automethod:: Parallel3dEulerGeometry.__eq__

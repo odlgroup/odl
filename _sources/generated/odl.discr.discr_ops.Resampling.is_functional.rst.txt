@@ -1,0 +1,6 @@
+Resampling.is_functional
+============================================
+
+.. currentmodule:: odl.discr.discr_ops
+
+.. autoproperty:: Resampling.is_functional

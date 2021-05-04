@@ -1,0 +1,6 @@
+ComplexEmbedding.adjoint
+=================================================
+
+.. currentmodule:: odl.operator.default_ops
+
+.. autoproperty:: ComplexEmbedding.adjoint

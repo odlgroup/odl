@@ -1,0 +1,6 @@
+RectGrid.min_pt
+==============================
+
+.. currentmodule:: odl.discr.grid
+
+.. autoproperty:: RectGrid.min_pt

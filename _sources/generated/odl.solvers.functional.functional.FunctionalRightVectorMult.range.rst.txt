@@ -1,0 +1,6 @@
+FunctionalRightVectorMult.range
+=================================================================
+
+.. currentmodule:: odl.solvers.functional.functional
+
+.. autoproperty:: FunctionalRightVectorMult.range

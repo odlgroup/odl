@@ -1,0 +1,8 @@
+:orphan:
+
+OperatorComp._call
+========================================
+
+.. currentmodule:: odl.operator.operator
+
+.. automethod:: OperatorComp._call

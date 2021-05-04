@@ -1,0 +1,8 @@
+:orphan:
+
+IdentityFunctional.norm
+==================================================================
+
+.. currentmodule:: odl.solvers.functional.default_functionals
+
+.. automethod:: IdentityFunctional.norm

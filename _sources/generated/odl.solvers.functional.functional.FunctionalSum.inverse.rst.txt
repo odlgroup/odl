@@ -1,0 +1,6 @@
+FunctionalSum.inverse
+=======================================================
+
+.. currentmodule:: odl.solvers.functional.functional
+
+.. autoproperty:: FunctionalSum.inverse

@@ -1,0 +1,8 @@
+:orphan:
+
+CylindricalDetector.surface_deriv
+============================================================
+
+.. currentmodule:: odl.tomo.geometry.detector
+
+.. automethod:: CylindricalDetector.surface_deriv

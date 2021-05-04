@@ -1,0 +1,6 @@
+NumpyTensorSpace.examples
+===============================================
+
+.. currentmodule:: odl.space.npy_tensors
+
+.. autoproperty:: NumpyTensorSpace.examples

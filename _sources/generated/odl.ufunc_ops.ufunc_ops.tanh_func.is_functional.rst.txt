@@ -1,0 +1,6 @@
+tanh_func.is_functional
+===============================================
+
+.. currentmodule:: odl.ufunc_ops.ufunc_ops
+
+.. autoproperty:: tanh_func.is_functional

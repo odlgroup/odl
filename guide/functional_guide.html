@@ -1,0 +1,566 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>Functional &mdash; odl 1.0.0.dev0 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Using ODL with ProxImaL" href="proximal_lang_guide.html" />
+    <link rel="prev" title="Tomographic acquisition geometries" href="geometry_guide.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../index.html" class="icon icon-home"> odl
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                1.0.0.dev0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Getting Started</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../getting_started/getting_started.html">Getting Started</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Working with ODL</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="guide.html">User’s guide – selected topics</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="operator_guide.html">Operators</a></li>
+<li class="toctree-l2"><a class="reference internal" href="linearspace_guide.html">Linear spaces</a></li>
+<li class="toctree-l2"><a class="reference internal" href="numpy_guide.html">Using ODL with NumPy and SciPy</a></li>
+<li class="toctree-l2"><a class="reference internal" href="vectorization_guide.html">Vectorized functions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="geometry_guide.html">Tomographic acquisition geometries</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Functional</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#implementation-of-functionals">Implementation of functionals</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#functional-arithmetic">Functional arithmetic</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#code-example">Code example</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="proximal_lang_guide.html">Using ODL with ProxImaL</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pdhg_guide.html">Primal-Dual Hybrid Gradient algorithm</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../math/math.html">Mathematical Background</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Developer zone</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../dev/dev.html">Contributing to ODL</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Useful facts</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="faq.html">Frequently asked questions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="glossary.html">Glossary</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../release_notes.html">Release Notes</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../refs.html">References</a></li>
+</ul>
+<p class="caption"><span class="caption-text">API Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../odl.html">odl</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">odl</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="guide.html">User’s guide – selected topics</a> &raquo;</li>
+        
+      <li>Functional</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            <a href="../_sources/guide/functional_guide.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="functional">
+<span id="functional-guide"></span><h1>Functional<a class="headerlink" href="#functional" title="Permalink to this headline">¶</a></h1>
+<p>A <em>functional</em> is an operator <img class="math" src="../_images/math/4f61663d4e0b724213cfd2aa7c2b7d0fab1d53ca.png" alt="S: X \to \mathbb{F}"/> that maps that maps from some vector space <img class="math" src="../_images/math/ed38fa24f1c94891bd312012aab3f6673be3eb83.png" alt="X"/> to the field of scalars <img class="math" src="../_images/math/df00656702b70b4b6f7ffbf6a9aa9a334bab1914.png" alt="F"/>.</p>
+<p>In the ODL <a class="reference internal" href="../math/solvers/solvers.html#solvers"><span class="std std-ref">Solvers</span></a> package, functionals are implemented in the <a class="reference internal" href="../generated/odl.solvers.functional.functional.Functional.html#odl.solvers.functional.functional.Functional" title="odl.solvers.functional.functional.Functional"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Functional</span></code></a> class, a subclass to <a class="reference internal" href="glossary.html#term-operator"><code class="xref any std std-term docutils literal notranslate"><span class="pre">Operator</span></code></a>.</p>
+<p>From a mathematical perspective, the above is a valid definition of a functional.
+However, since these functionals are primarily to be used for solving optimization problems, the following assumptions are made:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>the vector space <img class="math" src="../_images/math/ed38fa24f1c94891bd312012aab3f6673be3eb83.png" alt="X"/> is a Hilbert space.</p></li>
+<li><p>the field of scalars <img class="math" src="../_images/math/df00656702b70b4b6f7ffbf6a9aa9a334bab1914.png" alt="F"/> are the real numbers.</p></li>
+</ul>
+</div></blockquote>
+<p>The first assumption is made in order to simplify the concept of <em>convex conjugate functional</em>, see <code class="docutils literal notranslate"><span class="pre">convex_conj</span></code> under <a class="reference internal" href="#functional-guide-implementation"><span class="std std-ref">Implementation of functionals</span></a> for more details, or the Wikipedia articles on <a class="reference external" href="https://en.wikipedia.org/wiki/Convex_conjugate">convex conjugate</a> and <a class="reference external" href="https://en.wikipedia.org/wiki/Legendre_transformation">Legendre transformation</a>.</p>
+<p>The second assumption is made in order to guarantee that we use a well-ordered set (in contrast to e.g. the complex numbers) over which optimization problems can be meaningfully defined, and that optimal solutions are in fact obtained.
+See, for example, the Wikipedia articles on <a class="reference external" href="https://en.wikipedia.org/wiki/Field_(mathematics)">field</a>, <a class="reference external" href="https://en.wikipedia.org/wiki/Ordered_field">ordered field</a> and <a class="reference external" href="https://en.wikipedia.org/wiki/Least-upper-bound_property">least-upper-bound property</a>.</p>
+<p>Note that these conditions are not explicitly checked.
+However, using the class in violation to the above assumptions might lead to unknown behavior since some of the mathematical results might not hold.
+Also note that most of the theory, and most solvers, requires the functional to be convex.
+However this property is not stored or checked anywhere in the class.
+It is therefore the users responsibility to ensure that a functional has the properties required for a given optimization method.</p>
+<p>The intended use of the <a class="reference internal" href="../generated/odl.solvers.functional.functional.Functional.html#odl.solvers.functional.functional.Functional" title="odl.solvers.functional.functional.Functional"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Functional</span></code></a> class is, as mentioned above, to be used when formulating and solving optimization problems.
+One main difference with the <a class="reference internal" href="glossary.html#term-operator"><code class="xref any std std-term docutils literal notranslate"><span class="pre">Operator</span></code></a> class is thus that it contains notions specially intended for optimization, such as <em>convex conjugate functional</em> and <em>proximal operator</em>.
+For more information on these concepts, see <code class="docutils literal notranslate"><span class="pre">convex_conj</span></code> and <code class="docutils literal notranslate"><span class="pre">proximal</span></code> under <a class="reference internal" href="#functional-guide-implementation"><span class="std std-ref">Implementation of functionals</span></a>.
+There is also a certain type of arithmetics associated with functionals, for more on this see <a class="reference internal" href="#functional-guide-arithmetic"><span class="std std-ref">Functional arithmetic</span></a>.</p>
+<div class="section" id="implementation-of-functionals">
+<span id="functional-guide-implementation"></span><h2>Implementation of functionals<a class="headerlink" href="#implementation-of-functionals" title="Permalink to this headline">¶</a></h2>
+<p>To define your own functional, start by writing:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">MyFunctional</span><span class="p">(</span><span class="n">odl</span><span class="o">.</span><span class="n">solvers</span><span class="o">.</span><span class="n">Functional</span><span class="p">):</span>
+
+    <span class="sd">&quot;&quot;&quot;Docstring goes here.&quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">space</span><span class="p">):</span>
+        <span class="c1"># Sets `Operator.domain` to `space` and `Operator.range` to `space.field`</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">MyFunctional</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">space</span><span class="p">)</span>
+
+    <span class="o">...</span>
+</pre></div>
+</div>
+<p><a class="reference internal" href="../generated/odl.solvers.functional.functional.Functional.html#odl.solvers.functional.functional.Functional" title="odl.solvers.functional.functional.Functional"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Functional</span></code></a> needs to be provided with a space, i.e., the domain on which it is defined, from which it infers the range.</p>
+<blockquote>
+<div><ul class="simple">
+<li><dl class="simple">
+<dt><code class="docutils literal notranslate"><span class="pre">space</span></code>: <a class="reference internal" href="../generated/odl.set.space.LinearSpace.html#odl.set.space.LinearSpace" title="odl.set.space.LinearSpace"><code class="xref any py py-class docutils literal notranslate"><span class="pre">LinearSpace</span></code></a></dt><dd><p>The domain of this functional, i.e., the set of elements to
+which this functional can be applied.</p>
+</dd>
+</dl>
+</li>
+</ul>
+</div></blockquote>
+<p>Moreover, there are two optional parameters that can be provided in the initializer.
+These are <code class="docutils literal notranslate"><span class="pre">linear</span></code>, which indicates whether the functional is linear or not, and <code class="docutils literal notranslate"><span class="pre">grad_lipschitz</span></code>, which is the Lipschitz constant of the gradient.</p>
+<blockquote>
+<div><ul class="simple">
+<li><dl class="simple">
+<dt><code class="docutils literal notranslate"><span class="pre">linear</span></code>: bool, optional</dt><dd><p>If <a class="reference external" href="https://docs.python.org/3/library/constants.html#True" title="(in Python v3.9)"><code class="xref any docutils literal notranslate"><span class="pre">True</span></code></a>, the functional is considered as linear.</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt><code class="docutils literal notranslate"><span class="pre">grad_lipschitz</span></code>: float, optional</dt><dd><p>The Lipschitz constant of the gradient.</p>
+</dd>
+</dl>
+</li>
+</ul>
+</div></blockquote>
+<p>A functional also has three optional properties and one optional method associated with it.
+The properties are:</p>
+<blockquote>
+<div><ul>
+<li><p><code class="docutils literal notranslate"><span class="pre">functional.gradient</span></code>. This returns the gradient operator of the functional, i.e., the operator that corresponds to the mapping</p>
+<div class="math">
+<p><img src="../_images/math/bb9e533d99d1e247020bbb2887a3cffa502dcf9d.png" alt="x \to \nabla S(x),"/></p>
+</div><p>where <img class="math" src="../_images/math/e3772c42efc53fec425c186fcc40acddae1f9286.png" alt="\nabla S(x)"/> is the the space element representing the Frechet derivative (directional derivative) at the point <img class="math" src="../_images/math/888f7c323ac0341871e867220ae2d76467d74d6e.png" alt="x"/></p>
+<div class="math">
+<p><img src="../_images/math/bad30eebe54fc9ad40f9cae7ffb056cf3e0a2a3f.png" alt="S'(x)(g) = \langle \nabla S(x), g \rangle \quad \text{for all } g \in X."/></p>
+</div><p>See also <a class="reference internal" href="../generated/odl.solvers.functional.functional.Functional.derivative.html#odl.solvers.functional.functional.Functional.derivative" title="odl.solvers.functional.functional.Functional.derivative"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">Functional.derivative</span></code></a>.</p>
+</li>
+<li><p><code class="docutils literal notranslate"><span class="pre">functional.convex_conj</span></code>. This is the convex conjugate of the functional, itself again a functional, which is also known as the <a class="reference external" href="https://en.wikipedia.org/wiki/Legendre_transformation">Legendre transform</a> or <a class="reference external" href="https://en.wikipedia.org/wiki/Convex_conjugate">Fenchel conjugate</a>.
+It is defined as</p>
+<div class="math">
+<p><img src="../_images/math/27afffd85bfa92e0887e7db60a903b0f92e7a045.png" alt="S^*(x^*) = \sup_{x \in X} \{ \langle x^*,x \rangle - S(x)  \},"/></p>
+</div><p>where <img class="math" src="../_images/math/925772f900ec788197f113f9bc8e42e656e5ccb3.png" alt="x^*"/> is an element in <img class="math" src="../_images/math/ed38fa24f1c94891bd312012aab3f6673be3eb83.png" alt="X"/> and <img class="math" src="../_images/math/caf7cfc1c7e70f89cca38dff6144e863349be083.png" alt="\langle x^*,x \rangle"/> is the inner product.
+(Note that <img class="math" src="../_images/math/925772f900ec788197f113f9bc8e42e656e5ccb3.png" alt="x^*"/> should live in the space <img class="math" src="../_images/math/99fae140d4794fc8ca645dc9392d01f6bea8a154.png" alt="X^*"/>, the (continuous/normed) <a class="reference external" href="https://en.wikipedia.org/wiki/Dual_space">dual space</a> of <img class="math" src="../_images/math/ed38fa24f1c94891bd312012aab3f6673be3eb83.png" alt="X"/>, however since we assume that <img class="math" src="../_images/math/ed38fa24f1c94891bd312012aab3f6673be3eb83.png" alt="X"/> is a Hilbert space we have <img class="math" src="../_images/math/605ab11b5ad2d6f838be9bb33142bef8a0623706.png" alt="X^* = X"/>).</p>
+</li>
+<li><p><code class="docutils literal notranslate"><span class="pre">proximal</span></code>. This returns a <a class="reference internal" href="glossary.html#term-proximal-factory"><code class="xref any std std-term docutils literal notranslate"><span class="pre">proximal</span> <span class="pre">factory</span></code></a> for the proximal operator of the functional.
+The proximal operator is defined as</p>
+<div class="math">
+<p><img src="../_images/math/e6a3984744fe5d31882dd5c4949f7154b8b5da5d.png" alt="\text{prox}_{\sigma S}(x) = \text{arg min}_{y \in X} \{ S(y) + \frac{1}{2\sigma} \|y - x\|_2^2 \}."/></p>
+</div></li>
+</ul>
+</div></blockquote>
+<p>The default behavior of these is to raise a <code class="docutils literal notranslate"><span class="pre">NotImplemetedError</span></code>.</p>
+<p>The <a class="reference internal" href="../generated/odl.solvers.functional.functional.Functional.html#odl.solvers.functional.functional.Functional" title="odl.solvers.functional.functional.Functional"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Functional</span></code></a> class also contains default implementations of two helper functions:</p>
+<blockquote>
+<div><ul>
+<li><p><code class="docutils literal notranslate"><span class="pre">derivative(point)</span></code>. Given an implementation of the gradient, this method returns the (directional) derivative operator in <code class="docutils literal notranslate"><span class="pre">point</span></code>.
+This is the linear operator</p>
+<div class="math">
+<p><img src="../_images/math/1d18d4462092f4c8eae3959d255feca96f9e127a.png" alt="x \to \langle x, \nabla S(p) \rangle,"/></p>
+</div><p>where <img class="math" src="../_images/math/e899fe22aa2ce7612a566f234218e1b21133a266.png" alt="\nabla S(p)"/> is the gradient of the functional in the point <img class="math" src="../_images/math/141bbefb74014fc5e43499901bf78607ae335583.png" alt="p"/>.</p>
+</li>
+<li><p><code class="docutils literal notranslate"><span class="pre">translated(shift)</span></code>. Given a functional <img class="math" src="../_images/math/b988975be41fd13b4d091c10202ba19374643586.png" alt="S"/> and a shift <img class="math" src="../_images/math/1b5e577d6216dca3af7d87aa122a0b9b360d6cb3.png" alt="y"/>, this method creates the functional <img class="math" src="../_images/math/d8c481d46008161be7980ed5da0298a8f6f65431.png" alt="S(\cdot - y)"/>.</p></li>
+</ul>
+</div></blockquote>
+</div>
+<div class="section" id="functional-arithmetic">
+<span id="functional-guide-arithmetic"></span><h2>Functional arithmetic<a class="headerlink" href="#functional-arithmetic" title="Permalink to this headline">¶</a></h2>
+<p>It is common in applications to perform arithmetic operations with functionals, for example adding two functionals <img class="math" src="../_images/math/b988975be41fd13b4d091c10202ba19374643586.png" alt="S"/> and <img class="math" src="../_images/math/e8dea8254118f111b5fb20895b03528c17566f06.png" alt="T"/>:</p>
+<div class="math">
+<p><img src="../_images/math/57b2e8c7d818e677429233d1c6c4db8010fef776.png" alt="[S+T](x) = S(x) + T(x),"/></p>
+</div><p>or multiplication of a functional by a scalar:</p>
+<div class="math">
+<p><img src="../_images/math/2d733bf544111a910322c9b9e1cf0d72f9578257.png" alt="[\alpha S](x) = \alpha S (x)."/></p>
+</div><p>Another example is translating a functional with a vector <img class="math" src="../_images/math/1b5e577d6216dca3af7d87aa122a0b9b360d6cb3.png" alt="y"/>:</p>
+<div class="math">
+<p><img src="../_images/math/667f6ecadc5ecae06fd406f02466c09f96ec4c71.png" alt="translate(S(x), y) = S(x - y),"/></p>
+</div><p>or given an <a class="reference internal" href="glossary.html#term-operator"><code class="xref any std std-term docutils literal notranslate"><span class="pre">Operator</span></code></a> <img class="math" src="../_images/math/211284f68205c3e66773eaf026f32a0acdd3dfb3.png" alt="A"/> whose range is the same as the domain of the functional we also have composition:</p>
+<div class="math">
+<p><img src="../_images/math/bb1b4158bf2dfbba900ec1a69aff8802f08e735c.png" alt="[S * A](x) = S(A(x))."/></p>
+</div><p>In some of these cases, properties and methods such as <code class="docutils literal notranslate"><span class="pre">gradient</span></code>, <code class="docutils literal notranslate"><span class="pre">convex_conjugate</span></code> and <code class="docutils literal notranslate"><span class="pre">proximal</span></code> can be calculated automatically given a default implementation of the corresponding property in <img class="math" src="../_images/math/b988975be41fd13b4d091c10202ba19374643586.png" alt="S"/> and <img class="math" src="../_images/math/e8dea8254118f111b5fb20895b03528c17566f06.png" alt="T"/>.</p>
+<p>All available functional arithmetic, including which properties and methods that automatically can be calculated, is shown below.
+<code class="docutils literal notranslate"><span class="pre">S</span></code>, <code class="docutils literal notranslate"><span class="pre">T</span></code> represent <a class="reference internal" href="../generated/odl.solvers.functional.functional.Functional.html#odl.solvers.functional.functional.Functional" title="odl.solvers.functional.functional.Functional"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Functional</span></code></a>’s with common domain and range, and <code class="docutils literal notranslate"><span class="pre">A</span></code> an <a class="reference internal" href="glossary.html#term-operator"><code class="xref any std std-term docutils literal notranslate"><span class="pre">Operator</span></code></a> whose range is the same as the domain of the functional.
+<code class="docutils literal notranslate"><span class="pre">a</span></code> is a scalar in the field of the domain of <code class="docutils literal notranslate"><span class="pre">S</span></code> and <code class="docutils literal notranslate"><span class="pre">T</span></code>, and <code class="docutils literal notranslate"><span class="pre">y</span></code> is a vector in the domain of <code class="docutils literal notranslate"><span class="pre">S</span></code> and <code class="docutils literal notranslate"><span class="pre">T</span></code>.</p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 18%" />
+<col style="width: 14%" />
+<col style="width: 68%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Code</p></th>
+<th class="head"><p>Meaning</p></th>
+<th class="head"><p>Class</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">(S</span> <span class="pre">+</span> <span class="pre">T)(x)</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">S(x)</span> <span class="pre">+</span> <span class="pre">T(x)</span></code></p></td>
+<td><p><a class="reference internal" href="../generated/odl.solvers.functional.functional.FunctionalSum.html#odl.solvers.functional.functional.FunctionalSum" title="odl.solvers.functional.functional.FunctionalSum"><code class="xref any py py-class docutils literal notranslate"><span class="pre">FunctionalSum</span></code></a>
+- Retains <a class="reference internal" href="../generated/odl.solvers.functional.functional.Functional.gradient.html#odl.solvers.functional.functional.Functional.gradient" title="odl.solvers.functional.functional.Functional.gradient"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">Functional.gradient</span></code></a>.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">(S</span> <span class="pre">+</span> <span class="pre">a)(x)</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">S(x)</span> <span class="pre">+</span> <span class="pre">a</span></code></p></td>
+<td><p><a class="reference internal" href="../generated/odl.solvers.functional.functional.FunctionalScalarSum.html#odl.solvers.functional.functional.FunctionalScalarSum" title="odl.solvers.functional.functional.FunctionalScalarSum"><code class="xref any py py-class docutils literal notranslate"><span class="pre">FunctionalScalarSum</span></code></a>
+- Retains all properties.
+Note that this never means scaling of the argument.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">(S</span> <span class="pre">*</span> <span class="pre">A)(x)</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">S(A(x))</span></code></p></td>
+<td><p><a class="reference internal" href="../generated/odl.solvers.functional.functional.FunctionalComp.html#odl.solvers.functional.functional.FunctionalComp" title="odl.solvers.functional.functional.FunctionalComp"><code class="xref any py py-class docutils literal notranslate"><span class="pre">FunctionalComp</span></code></a>
+- Retains <a class="reference internal" href="../generated/odl.solvers.functional.functional.Functional.gradient.html#odl.solvers.functional.functional.Functional.gradient" title="odl.solvers.functional.functional.Functional.gradient"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">Functional.gradient</span></code></a>.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">(a</span> <span class="pre">*</span> <span class="pre">S)(x)</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">a</span> <span class="pre">*</span> <span class="pre">S(x)</span></code></p></td>
+<td><p><a class="reference internal" href="../generated/odl.solvers.functional.functional.FunctionalLeftScalarMult.html#odl.solvers.functional.functional.FunctionalLeftScalarMult" title="odl.solvers.functional.functional.FunctionalLeftScalarMult"><code class="xref any py py-class docutils literal notranslate"><span class="pre">FunctionalLeftScalarMult</span></code></a>
+- Retains all properties if <code class="docutils literal notranslate"><span class="pre">a</span></code> is positive.
+Otherwise only <a class="reference internal" href="../generated/odl.solvers.functional.functional.Functional.gradient.html#odl.solvers.functional.functional.Functional.gradient" title="odl.solvers.functional.functional.Functional.gradient"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">Functional.gradient</span></code></a> and <a class="reference internal" href="../generated/odl.solvers.functional.functional.Functional.derivative.html#odl.solvers.functional.functional.Functional.derivative" title="odl.solvers.functional.functional.Functional.derivative"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">Functional.derivative</span></code></a> are retained.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">(S</span> <span class="pre">*</span> <span class="pre">a)(x)</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">S(a</span> <span class="pre">*</span> <span class="pre">x)</span></code></p></td>
+<td><p><a class="reference internal" href="../generated/odl.solvers.functional.functional.FunctionalRightScalarMult.html#odl.solvers.functional.functional.FunctionalRightScalarMult" title="odl.solvers.functional.functional.FunctionalRightScalarMult"><code class="xref any py py-class docutils literal notranslate"><span class="pre">FunctionalRightScalarMult</span></code></a>
+- Retains all properties.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">(v</span> <span class="pre">*</span> <span class="pre">S)(x)</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">v</span> <span class="pre">*</span> <span class="pre">S(x)</span></code></p></td>
+<td><p><a class="reference internal" href="../generated/odl.operator.operator.FunctionalLeftVectorMult.html#odl.operator.operator.FunctionalLeftVectorMult" title="odl.operator.operator.FunctionalLeftVectorMult"><code class="xref any py py-class docutils literal notranslate"><span class="pre">FunctionalLeftVectorMult</span></code></a>
+- Results in an operator rather than a functional.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">(S</span> <span class="pre">*</span> <span class="pre">v)(x)</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">S(v</span> <span class="pre">*</span> <span class="pre">x)</span></code></p></td>
+<td><p><a class="reference internal" href="../generated/odl.solvers.functional.functional.FunctionalRightVectorMult.html#odl.solvers.functional.functional.FunctionalRightVectorMult" title="odl.solvers.functional.functional.FunctionalRightVectorMult"><code class="xref any py py-class docutils literal notranslate"><span class="pre">FunctionalRightVectorMult</span></code></a>
+- Retains gradient and convex conjugate.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">f.translated(y)</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">f(.</span> <span class="pre">-</span> <span class="pre">y)</span></code></p></td>
+<td><p><a class="reference internal" href="../generated/odl.solvers.functional.functional.FunctionalTranslation.html#odl.solvers.functional.functional.FunctionalTranslation" title="odl.solvers.functional.functional.FunctionalTranslation"><code class="xref any py py-class docutils literal notranslate"><span class="pre">FunctionalTranslation</span></code></a>
+- Retains all properties.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section" id="code-example">
+<h2>Code example<a class="headerlink" href="#code-example" title="Permalink to this headline">¶</a></h2>
+<p>This section contains an example of an implementation of a functional, namely the functional <img class="math" src="../_images/math/8e848d62ebf4d6e80e361f03555a77d650b5d3a1.png" alt="\|x\|_2^2 + \langle x, y \rangle"/>.
+Another example can be found in <a class="reference external" href="https://github.com/odlgroup/odl/blob/master/examples/solvers/functional_basic_example.py">functional_basic_example.py</a>, and more implementations of other functionals can be found in <a class="reference external" href="https://github.com/odlgroup/odl/blob/master/odl/solvers/functional/default_functionals.py">default_functionals.py</a>.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="sd">&quot;&quot;&quot;Example of how to implement and use functionals.&quot;&quot;&quot;</span>
+
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">division</span><span class="p">,</span> <span class="n">print_function</span>
+<span class="kn">import</span> <span class="nn">odl</span>
+
+
+<span class="c1"># Here we define the functional</span>
+<span class="k">class</span> <span class="nc">MyFunctional</span><span class="p">(</span><span class="n">odl</span><span class="o">.</span><span class="n">solvers</span><span class="o">.</span><span class="n">Functional</span><span class="p">):</span>
+
+    <span class="sd">&quot;&quot;&quot;This is my functional: ``||x||_2^2 + &lt;x, y&gt;``.&quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">space</span><span class="p">,</span> <span class="n">y</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Initialize a new instance.&quot;&quot;&quot;</span>
+        <span class="c1"># This comand calls the init of Functional and sets a number of</span>
+        <span class="c1"># parameters associated with a functional. All but domain have default</span>
+        <span class="c1"># values if not set.</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">MyFunctional</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span>
+            <span class="n">space</span><span class="o">=</span><span class="n">space</span><span class="p">,</span> <span class="n">linear</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">grad_lipschitz</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+
+        <span class="c1"># We need to check that linear_term is in the domain. Then we store the</span>
+        <span class="c1"># value of linear_term for future use.</span>
+        <span class="k">if</span> <span class="n">y</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">space</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;linear_term is not in the domain!&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">y</span> <span class="o">=</span> <span class="n">y</span>
+
+    <span class="c1"># Defining the _call function. This method is used for evaluation of</span>
+    <span class="c1"># the functional and always needs to be implemented.</span>
+    <span class="k">def</span> <span class="nf">_call</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Evaluate the functional.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">x</span><span class="o">.</span><span class="n">norm</span><span class="p">()</span> <span class="o">**</span> <span class="mi">2</span> <span class="o">+</span> <span class="n">x</span><span class="o">.</span><span class="n">inner</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">y</span><span class="p">)</span>
+
+    <span class="c1"># Next we define the gradient. Note that this is a property.</span>
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">gradient</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;The gradient operator.&quot;&quot;&quot;</span>
+
+        <span class="c1"># First we store the functional in a variable</span>
+        <span class="n">functional</span> <span class="o">=</span> <span class="bp">self</span>
+
+        <span class="c1"># The class corresponding to the gradient operator.</span>
+        <span class="k">class</span> <span class="nc">MyGradientOperator</span><span class="p">(</span><span class="n">odl</span><span class="o">.</span><span class="n">Operator</span><span class="p">):</span>
+
+            <span class="sd">&quot;&quot;&quot;Class implementing the gradient operator.&quot;&quot;&quot;</span>
+
+            <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+                <span class="sd">&quot;&quot;&quot;Initialize a new instance.&quot;&quot;&quot;</span>
+                <span class="nb">super</span><span class="p">(</span><span class="n">MyGradientOperator</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span>
+                    <span class="n">domain</span><span class="o">=</span><span class="n">functional</span><span class="o">.</span><span class="n">domain</span><span class="p">,</span> <span class="nb">range</span><span class="o">=</span><span class="n">functional</span><span class="o">.</span><span class="n">domain</span><span class="p">)</span>
+
+            <span class="k">def</span> <span class="nf">_call</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
+                <span class="sd">&quot;&quot;&quot;Evaluate the gradient.&quot;&quot;&quot;</span>
+                <span class="c1"># Here we can access the store functional from a few lines</span>
+                <span class="c1"># above</span>
+                <span class="k">return</span> <span class="mf">2.0</span> <span class="o">*</span> <span class="n">x</span> <span class="o">+</span> <span class="n">functional</span><span class="o">.</span><span class="n">y</span>
+
+        <span class="k">return</span> <span class="n">MyGradientOperator</span><span class="p">()</span>
+
+    <span class="c1"># Next we define the convex conjugate functional.</span>
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">convex_conj</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;The convex conjugate functional.&quot;&quot;&quot;</span>
+        <span class="c1"># This functional is implemented below.</span>
+        <span class="k">return</span> <span class="n">MyFunctionalConjugate</span><span class="p">(</span><span class="n">space</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">domain</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">y</span><span class="p">)</span>
+
+
+<span class="c1"># Here is the conjugate functional. Note that this is a separate class, in</span>
+<span class="c1"># contrast to the gradient which was implemented as an inner class. One</span>
+<span class="c1"># advantage with the inner class it that we don&#39;t have to pass as many</span>
+<span class="c1"># parameters when initializing, on the other hand having separate classes</span>
+<span class="c1"># normally improves readibility of the code. Both methods are use throughout</span>
+<span class="c1"># the odl package.</span>
+<span class="k">class</span> <span class="nc">MyFunctionalConjugate</span><span class="p">(</span><span class="n">odl</span><span class="o">.</span><span class="n">solvers</span><span class="o">.</span><span class="n">Functional</span><span class="p">):</span>
+
+    <span class="sd">&quot;&quot;&quot;Conjugate functional to ``||x||_2^2 + &lt;x,y&gt;``.</span>
+
+<span class="sd">    This funtional has the analytic expression</span>
+
+<span class="sd">        ``f^*(x) = ||x-y||^2/4``.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">space</span><span class="p">,</span> <span class="n">y</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;initialize a new instance.&quot;&quot;&quot;</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">MyFunctionalConjugate</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span>
+            <span class="n">space</span><span class="o">=</span><span class="n">space</span><span class="p">,</span> <span class="n">linear</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">grad_lipschitz</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">y</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">space</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;y is not in the domain!&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">y</span> <span class="o">=</span> <span class="n">y</span>
+
+    <span class="k">def</span> <span class="nf">_call</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Evaluate the functional.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="p">(</span><span class="n">x</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">y</span><span class="p">)</span><span class="o">.</span><span class="n">norm</span><span class="p">()</span><span class="o">**</span><span class="mi">2</span> <span class="o">/</span> <span class="mf">4.0</span>
+
+
+<span class="c1"># Create a functional</span>
+<span class="n">space</span> <span class="o">=</span> <span class="n">odl</span><span class="o">.</span><span class="n">uniform_discr</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span>
+<span class="n">linear_term</span> <span class="o">=</span> <span class="n">space</span><span class="o">.</span><span class="n">element</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">4</span><span class="p">,</span> <span class="mi">7</span><span class="p">])</span>
+<span class="n">my_func</span> <span class="o">=</span> <span class="n">MyFunctional</span><span class="p">(</span><span class="n">space</span><span class="o">=</span><span class="n">space</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="n">linear_term</span><span class="p">)</span>
+
+<span class="c1"># Now we evaluate the functional in a random point</span>
+<span class="n">point</span> <span class="o">=</span> <span class="n">odl</span><span class="o">.</span><span class="n">util</span><span class="o">.</span><span class="n">testutils</span><span class="o">.</span><span class="n">noise_element</span><span class="p">(</span><span class="n">space</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Value of the functional in a random point: </span><span class="si">{}</span><span class="s1">&#39;</span>
+      <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">my_func</span><span class="p">(</span><span class="n">point</span><span class="p">)))</span>
+
+<span class="c1"># Now we use the steepest-decent solver and backtracking linesearch in order to</span>
+<span class="c1"># find the minimum of the functional.</span>
+
+<span class="c1"># Create a starting guess. Also used by the solver to update in-place.</span>
+<span class="n">x</span> <span class="o">=</span> <span class="n">space</span><span class="o">.</span><span class="n">one</span><span class="p">()</span>
+
+<span class="c1"># Create the linesearch object</span>
+<span class="n">line_search</span> <span class="o">=</span> <span class="n">odl</span><span class="o">.</span><span class="n">solvers</span><span class="o">.</span><span class="n">BacktrackingLineSearch</span><span class="p">(</span><span class="n">my_func</span><span class="p">,</span> <span class="n">max_num_iter</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
+
+<span class="c1"># Call the solver</span>
+<span class="n">odl</span><span class="o">.</span><span class="n">solvers</span><span class="o">.</span><span class="n">steepest_descent</span><span class="p">(</span><span class="n">my_func</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">maxiter</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">line_search</span><span class="o">=</span><span class="n">line_search</span><span class="p">)</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Expected value: </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">((</span><span class="o">-</span><span class="mf">1.0</span> <span class="o">/</span> <span class="mi">2</span><span class="p">)</span> <span class="o">*</span> <span class="n">linear_term</span><span class="p">))</span>
+<span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Found value: </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">x</span><span class="p">))</span>
+
+<span class="c1"># Create the convex conjugate functional of a scaled and translated functional</span>
+<span class="n">scalar</span> <span class="o">=</span> <span class="mf">3.2</span>
+<span class="n">translation</span> <span class="o">=</span> <span class="n">space</span><span class="o">.</span><span class="n">one</span><span class="p">()</span>
+<span class="n">scal_trans_cc_func</span> <span class="o">=</span> <span class="p">(</span><span class="n">scalar</span> <span class="o">*</span> <span class="n">my_func</span><span class="p">)</span><span class="o">.</span><span class="n">translated</span><span class="p">(</span><span class="n">translation</span><span class="p">)</span><span class="o">.</span><span class="n">convex_conj</span>
+
+<span class="c1"># Evaluating the new functional in the random point.</span>
+<span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Value of the new functional in a random point: </span><span class="si">{}</span><span class="s1">&#39;</span>
+      <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">scal_trans_cc_func</span><span class="p">(</span><span class="n">point</span><span class="p">)))</span>
+</pre></div>
+</div>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+        <a href="proximal_lang_guide.html" class="btn btn-neutral float-right" title="Using ODL with ProxImaL" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="geometry_guide.html" class="btn btn-neutral float-left" title="Tomographic acquisition geometries" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &#169; Copyright 2014-2020 The ODL Contributors.
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

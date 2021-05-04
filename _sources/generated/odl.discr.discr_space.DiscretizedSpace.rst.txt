@@ -1,0 +1,85 @@
+﻿DiscretizedSpace
+======================================
+
+.. currentmodule:: odl.discr.discr_space
+
+.. autoclass:: DiscretizedSpace
+   :show-inheritance:
+   
+   
+   .. automethod:: __init__
+   
+      
+   
+   .. HACK -- the point here is that we don't want this to appear in the output, but the autosummary should still generate the pages.
+      .. autosummary::
+         :toctree:
+      
+         DiscretizedSpace.__contains__
+         DiscretizedSpace.__eq__
+         DiscretizedSpace._dist
+         DiscretizedSpace._divide
+         DiscretizedSpace._inner
+         DiscretizedSpace._lincomb
+         DiscretizedSpace._multiply
+         DiscretizedSpace._norm
+         DiscretizedSpace.astype
+         DiscretizedSpace.available_dtypes
+         DiscretizedSpace.contains_all
+         DiscretizedSpace.contains_set
+         DiscretizedSpace.default_dtype
+         DiscretizedSpace.dist
+         DiscretizedSpace.divide
+         DiscretizedSpace.element
+         DiscretizedSpace.inner
+         DiscretizedSpace.lincomb
+         DiscretizedSpace.multiply
+         DiscretizedSpace.norm
+         DiscretizedSpace.one
+         DiscretizedSpace.points
+         DiscretizedSpace.zero
+   
+
+    
+   .. HACK -- the point here is that we don't want this to appear in the output, but the autosummary should still generate the pages.
+      .. autosummary::
+         :toctree:
+      
+         DiscretizedSpace.axis_labels
+         DiscretizedSpace.byaxis_in
+         DiscretizedSpace.cell_sides
+         DiscretizedSpace.cell_volume
+         DiscretizedSpace.complex_dtype
+         DiscretizedSpace.complex_space
+         DiscretizedSpace.default_order
+         DiscretizedSpace.domain
+         DiscretizedSpace.dtype
+         DiscretizedSpace.element_type
+         DiscretizedSpace.examples
+         DiscretizedSpace.exponent
+         DiscretizedSpace.field
+         DiscretizedSpace.grid
+         DiscretizedSpace.impl
+         DiscretizedSpace.is_complex
+         DiscretizedSpace.is_real
+         DiscretizedSpace.is_uniform
+         DiscretizedSpace.is_uniform_byaxis
+         DiscretizedSpace.is_uniformly_weighted
+         DiscretizedSpace.is_weighted
+         DiscretizedSpace.itemsize
+         DiscretizedSpace.max_pt
+         DiscretizedSpace.meshgrid
+         DiscretizedSpace.min_pt
+         DiscretizedSpace.nbytes
+         DiscretizedSpace.ndim
+         DiscretizedSpace.partition
+         DiscretizedSpace.real_dtype
+         DiscretizedSpace.real_space
+         DiscretizedSpace.shape
+         DiscretizedSpace.size
+         DiscretizedSpace.tangent_bundle
+         DiscretizedSpace.tspace
+         DiscretizedSpace.tspace_type
+         DiscretizedSpace.weighting
+   
+   

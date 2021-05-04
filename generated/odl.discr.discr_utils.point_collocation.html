@@ -1,0 +1,403 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>point_collocation &mdash; odl 1.0.0.dev0 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="sampling_function" href="odl.discr.discr_utils.sampling_function.html" />
+    <link rel="prev" title="per_axis_interpolator" href="odl.discr.discr_utils.per_axis_interpolator.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../index.html" class="icon icon-home"> odl
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                1.0.0.dev0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Getting Started</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../getting_started/getting_started.html">Getting Started</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Working with ODL</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../guide/guide.html">User’s guide – selected topics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../math/math.html">Mathematical Background</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Developer zone</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../dev/dev.html">Contributing to ODL</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Useful facts</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../guide/faq.html">Frequently asked questions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../guide/glossary.html">Glossary</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../release_notes.html">Release Notes</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../refs.html">References</a></li>
+</ul>
+<p class="caption"><span class="caption-text">API Reference</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../odl.html">odl</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../odl.contrib.html">contrib</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../odl.deform.html">deform</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../odl.diagnostics.html">diagnostics</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="../odl.discr.html">discr</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="../odl.discr.diff_ops.html">diff_ops</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../odl.discr.discr_ops.html">discr_ops</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../odl.discr.discr_space.html">discr_space</a></li>
+<li class="toctree-l3 current"><a class="reference internal" href="../odl.discr.discr_utils.html">discr_utils</a><ul class="current">
+<li class="toctree-l4"><a class="reference internal" href="odl.discr.discr_utils.linear_interpolator.html">linear_interpolator</a></li>
+<li class="toctree-l4"><a class="reference internal" href="odl.discr.discr_utils.nearest_interpolator.html">nearest_interpolator</a></li>
+<li class="toctree-l4"><a class="reference internal" href="odl.discr.discr_utils.per_axis_interpolator.html">per_axis_interpolator</a></li>
+<li class="toctree-l4 current"><a class="current reference internal" href="#">point_collocation</a></li>
+<li class="toctree-l4"><a class="reference internal" href="odl.discr.discr_utils.sampling_function.html">sampling_function</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../odl.discr.grid.html">grid</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../odl.discr.partition.html">partition</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../odl.operator.html">operator</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../odl.phantom.html">phantom</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../odl.set.html">set</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../odl.solvers.html">solvers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../odl.space.html">space</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../odl.tomo.html">tomo</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../odl.trafos.html">trafos</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../odl.ufunc_ops.html">ufunc_ops</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../odl.util.html">util</a></li>
+</ul>
+</li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">odl</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="../odl.html">odl</a> &raquo;</li>
+        
+          <li><a href="../odl.discr.html">discr</a> &raquo;</li>
+        
+          <li><a href="../odl.discr.discr_utils.html">discr_utils</a> &raquo;</li>
+        
+      <li>point_collocation</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            <a href="../_sources/generated/odl.discr.discr_utils.point_collocation.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="point-collocation">
+<h1>point_collocation<a class="headerlink" href="#point-collocation" title="Permalink to this headline">¶</a></h1>
+<dl class="py function">
+<dt id="odl.discr.discr_utils.point_collocation">
+<code class="sig-prename descclassname"><span class="pre">odl.discr.discr_utils.</span></code><code class="sig-name descname"><span class="pre">point_collocation</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="pre">func</span></em>, <em class="sig-param"><span class="pre">points</span></em>, <em class="sig-param"><span class="pre">out=None</span></em>, <em class="sig-param"><span class="pre">\*\*kwargs</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/odl/discr/discr_utils.html#point_collocation"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#odl.discr.discr_utils.point_collocation" title="Permalink to this definition">¶</a></dt>
+<dd><p>Sample a function on a grid of points.</p>
+<p>This function represents the simplest way of discretizing a function.
+It does little more than calling the function on a single point or a
+set of points, and returning the result.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>func</strong><span class="classifier">callable</span></dt><dd><p>Function to be sampled. It is expected to work with single points,
+meshgrids and point arrays, and to support an optional <code class="docutils literal notranslate"><span class="pre">out</span></code>
+argument.
+Usually, <code class="docutils literal notranslate"><span class="pre">func</span></code> is the return value of <code class="xref any docutils literal notranslate"><span class="pre">make_func_for_sampling</span></code>.</p>
+</dd>
+<dt><strong>points</strong><span class="classifier">point, meshgrid or array of points</span></dt><dd><p>The point(s) where to sample.</p>
+</dd>
+<dt><strong>out</strong><span class="classifier">numpy.ndarray, optional</span></dt><dd><p>Array to which the result should be written.</p>
+</dd>
+<dt><strong>kwargs :</strong></dt><dd><p>Additional arguments that are passed on to <code class="docutils literal notranslate"><span class="pre">func</span></code>.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><dl class="simple">
+<dt><strong>out</strong><span class="classifier">numpy.ndarray</span></dt><dd><p>Array holding the values of <code class="docutils literal notranslate"><span class="pre">func</span></code> at <code class="docutils literal notranslate"><span class="pre">points</span></code>. If <code class="docutils literal notranslate"><span class="pre">out</span></code> was
+given, the returned object is a reference to it.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+<div class="admonition seealso">
+<p class="admonition-title">See also</p>
+<dl class="simple">
+<dt><code class="xref py py-obj docutils literal notranslate"><span class="pre">make_func_for_sampling</span></code></dt><dd><p>wrap a function</p>
+</dd>
+<dt><a class="reference internal" href="odl.discr.grid.RectGrid.meshgrid.html#odl.discr.grid.RectGrid.meshgrid" title="odl.discr.grid.RectGrid.meshgrid"><code class="xref py py-obj docutils literal notranslate"><span class="pre">odl.discr.grid.RectGrid.meshgrid</span></code></a></dt><dd></dd>
+<dt><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.meshgrid.html#numpy.meshgrid" title="(in NumPy v1.20)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">numpy.meshgrid</span></code></a></dt><dd></dd>
+</dl>
+</div>
+<p class="rubric">Notes</p>
+<p>This function expects its input functions to be written in a
+vectorization-conforming manner to ensure fast evaluation.
+See the <a class="reference external" href="https://odlgroup.github.io/odl/guide/in_depth/vectorization_guide.html">ODL vectorization guide</a> for a detailed introduction.</p>
+<p class="rubric">References</p>
+<p class="rubric">Examples</p>
+<p>Sample a 1D function:</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">odl.discr.grid</span> <span class="kn">import</span> <span class="n">sparse_meshgrid</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">domain</span> <span class="o">=</span> <span class="n">odl</span><span class="o">.</span><span class="n">IntervalProd</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">5</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">func</span> <span class="o">=</span> <span class="n">sampling_function</span><span class="p">(</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span> <span class="o">**</span> <span class="mi">2</span><span class="p">,</span> <span class="n">domain</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mesh</span> <span class="o">=</span> <span class="n">sparse_meshgrid</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">point_collocation</span><span class="p">(</span><span class="n">func</span><span class="p">,</span> <span class="n">mesh</span><span class="p">)</span>
+<span class="go">array([ 1.,  4.,  9.])</span>
+</pre></div>
+</div>
+<p>By default, inputs are checked against <code class="docutils literal notranslate"><span class="pre">domain</span></code> to be in bounds. This
+can be switched off by passing <code class="docutils literal notranslate"><span class="pre">bounds_check=False</span></code>:</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">mesh</span> <span class="o">=</span> <span class="n">sparse_meshgrid</span><span class="p">([</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">4</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">point_collocation</span><span class="p">(</span><span class="n">func</span><span class="p">,</span> <span class="n">mesh</span><span class="p">,</span> <span class="n">bounds_check</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+<span class="go">array([  1.,   0.,  16.])</span>
+</pre></div>
+</div>
+<p>In two or more dimensions, the function to be sampled can be written as
+if its arguments were the components of a point, and an implicit loop
+around the call would iterate over all points:</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">domain</span> <span class="o">=</span> <span class="n">odl</span><span class="o">.</span><span class="n">IntervalProd</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="p">[</span><span class="mi">5</span><span class="p">,</span> <span class="mi">5</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">xs</span> <span class="o">=</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">ys</span> <span class="o">=</span> <span class="p">[</span><span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">5</span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mesh</span> <span class="o">=</span> <span class="n">sparse_meshgrid</span><span class="p">(</span><span class="n">xs</span><span class="p">,</span> <span class="n">ys</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">func</span> <span class="o">=</span> <span class="n">sampling_function</span><span class="p">(</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">-</span> <span class="n">x</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">domain</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">point_collocation</span><span class="p">(</span><span class="n">func</span><span class="p">,</span> <span class="n">mesh</span><span class="p">)</span>
+<span class="go">array([[-2., -3., -4.],</span>
+<span class="go">       [-1., -2., -3.]])</span>
+</pre></div>
+</div>
+<p>It is possible to return results that require broadcasting, and to use
+<em>optional</em> function parameters:</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="k">def</span> <span class="nf">f</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">c</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+<span class="gp">... </span>    <span class="k">return</span> <span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="n">c</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">func</span> <span class="o">=</span> <span class="n">sampling_function</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">domain</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">point_collocation</span><span class="p">(</span><span class="n">func</span><span class="p">,</span> <span class="n">mesh</span><span class="p">)</span>  <span class="c1"># uses default c=0</span>
+<span class="go">array([[ 1.,  1.,  1.],</span>
+<span class="go">       [ 2.,  2.,  2.]])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">point_collocation</span><span class="p">(</span><span class="n">func</span><span class="p">,</span> <span class="n">mesh</span><span class="p">,</span> <span class="n">c</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+<span class="go">array([[ 3.,  3.,  3.],</span>
+<span class="go">       [ 4.,  4.,  4.]])</span>
+</pre></div>
+</div>
+<p>The <code class="docutils literal notranslate"><span class="pre">point_collocation</span></code> function also supports vector- and tensor-valued
+functions. They can be given either as a single function returning an
+array-like of results, or as an array-like of member functions:</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">domain</span> <span class="o">=</span> <span class="n">odl</span><span class="o">.</span><span class="n">IntervalProd</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="p">[</span><span class="mi">5</span><span class="p">,</span> <span class="mi">5</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">xs</span> <span class="o">=</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">ys</span> <span class="o">=</span> <span class="p">[</span><span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mesh</span> <span class="o">=</span> <span class="n">sparse_meshgrid</span><span class="p">(</span><span class="n">xs</span><span class="p">,</span> <span class="n">ys</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">def</span> <span class="nf">vec_valued</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
+<span class="gp">... </span>    <span class="k">return</span> <span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="n">x</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>  <span class="c1"># broadcasting</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># For a function with several output components, we must specify the</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># shape explicitly in the `out_dtype` parameter</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">func1</span> <span class="o">=</span> <span class="n">sampling_function</span><span class="p">(</span>
+<span class="gp">... </span>    <span class="n">vec_valued</span><span class="p">,</span> <span class="n">domain</span><span class="p">,</span> <span class="n">out_dtype</span><span class="o">=</span><span class="p">(</span><span class="nb">float</span><span class="p">,</span> <span class="p">(</span><span class="mi">3</span><span class="p">,))</span>
+<span class="gp">... </span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">point_collocation</span><span class="p">(</span><span class="n">func1</span><span class="p">,</span> <span class="n">mesh</span><span class="p">)</span>
+<span class="go">array([[[ 0.,  0.],</span>
+<span class="go">        [ 1.,  1.]],</span>
+
+<span class="go">       [[ 0.,  0.],</span>
+<span class="go">        [ 0.,  0.]],</span>
+
+<span class="go">       [[ 4.,  5.],</span>
+<span class="go">        [ 5.,  6.]]])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">list_of_funcs</span> <span class="o">=</span> <span class="p">[</span>  <span class="c1"># equivalent to `vec_valued`</span>
+<span class="gp">... </span>    <span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span>
+<span class="gp">... </span>    <span class="mi">0</span><span class="p">,</span>                   <span class="c1"># constants are allowed</span>
+<span class="gp">... </span>    <span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="n">x</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+<span class="gp">... </span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># For an array of functions, the output shape can be inferred</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">func2</span> <span class="o">=</span> <span class="n">sampling_function</span><span class="p">(</span><span class="n">list_of_funcs</span><span class="p">,</span> <span class="n">domain</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">point_collocation</span><span class="p">(</span><span class="n">func2</span><span class="p">,</span> <span class="n">mesh</span><span class="p">)</span>
+<span class="go">array([[[ 0.,  0.],</span>
+<span class="go">        [ 1.,  1.]],</span>
+
+<span class="go">       [[ 0.,  0.],</span>
+<span class="go">        [ 0.,  0.]],</span>
+
+<span class="go">       [[ 4.,  5.],</span>
+<span class="go">        [ 5.,  6.]]])</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+        <a href="odl.discr.discr_utils.sampling_function.html" class="btn btn-neutral float-right" title="sampling_function" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="odl.discr.discr_utils.per_axis_interpolator.html" class="btn btn-neutral float-left" title="per_axis_interpolator" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &#169; Copyright 2014-2020 The ODL Contributors.
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

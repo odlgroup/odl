@@ -1,0 +1,6 @@
+BroadcastOperator.is_linear
+===================================================
+
+.. currentmodule:: odl.operator.pspace_ops
+
+.. autoproperty:: BroadcastOperator.is_linear

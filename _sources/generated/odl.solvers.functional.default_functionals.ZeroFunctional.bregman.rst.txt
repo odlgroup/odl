@@ -1,0 +1,8 @@
+:orphan:
+
+ZeroFunctional.bregman
+=================================================================
+
+.. currentmodule:: odl.solvers.functional.default_functionals
+
+.. automethod:: ZeroFunctional.bregman

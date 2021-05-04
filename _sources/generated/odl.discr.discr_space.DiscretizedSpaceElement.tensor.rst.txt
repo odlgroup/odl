@@ -1,0 +1,6 @@
+DiscretizedSpaceElement.tensor
+====================================================
+
+.. currentmodule:: odl.discr.discr_space
+
+.. autoproperty:: DiscretizedSpaceElement.tensor

@@ -1,0 +1,6 @@
+FunctionalProduct.is_functional
+=================================================================
+
+.. currentmodule:: odl.solvers.functional.functional
+
+.. autoproperty:: FunctionalProduct.is_functional

@@ -1,0 +1,6 @@
+FunctionalTranslation.is_functional
+=====================================================================
+
+.. currentmodule:: odl.solvers.functional.functional
+
+.. autoproperty:: FunctionalTranslation.is_functional

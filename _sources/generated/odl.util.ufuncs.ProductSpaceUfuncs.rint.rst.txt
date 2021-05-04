@@ -1,0 +1,8 @@
+:orphan:
+
+ProductSpaceUfuncs.rint
+=======================================
+
+.. currentmodule:: odl.util.ufuncs
+
+.. automethod:: ProductSpaceUfuncs.rint

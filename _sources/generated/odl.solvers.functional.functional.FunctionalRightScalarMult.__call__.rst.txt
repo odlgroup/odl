@@ -1,0 +1,8 @@
+:orphan:
+
+FunctionalRightScalarMult.__call__
+====================================================================
+
+.. currentmodule:: odl.solvers.functional.functional
+
+.. automethod:: FunctionalRightScalarMult.__call__

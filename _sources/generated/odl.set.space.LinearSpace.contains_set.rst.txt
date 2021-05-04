@@ -1,0 +1,8 @@
+:orphan:
+
+LinearSpace.contains_set
+======================================
+
+.. currentmodule:: odl.set.space
+
+.. automethod:: LinearSpace.contains_set

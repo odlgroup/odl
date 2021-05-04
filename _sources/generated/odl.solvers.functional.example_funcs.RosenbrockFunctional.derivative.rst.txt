@@ -1,0 +1,8 @@
+:orphan:
+
+RosenbrockFunctional.derivative
+====================================================================
+
+.. currentmodule:: odl.solvers.functional.example_funcs
+
+.. automethod:: RosenbrockFunctional.derivative

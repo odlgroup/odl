@@ -1,0 +1,6 @@
+DivergentBeamGeometry.detector
+=========================================================
+
+.. currentmodule:: odl.tomo.geometry.geometry
+
+.. autoproperty:: DivergentBeamGeometry.detector

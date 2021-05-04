@@ -1,0 +1,8 @@
+:orphan:
+
+CallbackPrintIteration.reset
+======================================================
+
+.. currentmodule:: odl.solvers.util.callback
+
+.. automethod:: CallbackPrintIteration.reset

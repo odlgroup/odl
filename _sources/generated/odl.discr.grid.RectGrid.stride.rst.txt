@@ -1,0 +1,6 @@
+RectGrid.stride
+==============================
+
+.. currentmodule:: odl.discr.grid
+
+.. autoproperty:: RectGrid.stride

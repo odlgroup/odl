@@ -1,0 +1,8 @@
+:orphan:
+
+FunctionalLeftScalarMult.norm
+===============================================================
+
+.. currentmodule:: odl.solvers.functional.functional
+
+.. automethod:: FunctionalLeftScalarMult.norm

@@ -1,0 +1,954 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>odl.util.testutils &mdash; odl 1.0.0.dev0 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/custom.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../../" src="../../../_static/documentation_options.js"></script>
+        <script src="../../../_static/jquery.js"></script>
+        <script src="../../../_static/underscore.js"></script>
+        <script src="../../../_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="../../../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../../index.html" class="icon icon-home"> odl
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                1.0.0.dev0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Getting Started</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../getting_started/getting_started.html">Getting Started</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Working with ODL</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../guide/guide.html">User’s guide – selected topics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../math/math.html">Mathematical Background</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Developer zone</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../dev/dev.html">Contributing to ODL</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Useful facts</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../guide/faq.html">Frequently asked questions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../guide/glossary.html">Glossary</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../release_notes.html">Release Notes</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../refs.html">References</a></li>
+</ul>
+<p class="caption"><span class="caption-text">API Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../odl.html">odl</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">odl</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="../../index.html">Module code</a> &raquo;</li>
+        
+      <li>odl.util.testutils</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for odl.util.testutils</h1><div class="highlight"><pre>
+<span></span><span class="c1"># Copyright 2014-2019 The ODL contributors</span>
+<span class="c1">#</span>
+<span class="c1"># This file is part of ODL.</span>
+<span class="c1">#</span>
+<span class="c1"># This Source Code Form is subject to the terms of the Mozilla Public License,</span>
+<span class="c1"># v. 2.0. If a copy of the MPL was not distributed with this file, You can</span>
+<span class="c1"># obtain one at https://mozilla.org/MPL/2.0/.</span>
+
+<span class="sd">&quot;&quot;&quot;Testing utilities.&quot;&quot;&quot;</span>
+
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">absolute_import</span><span class="p">,</span> <span class="n">division</span><span class="p">,</span> <span class="n">print_function</span>
+
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">sys</span>
+<span class="kn">import</span> <span class="nn">warnings</span>
+<span class="kn">from</span> <span class="nn">builtins</span> <span class="kn">import</span> <span class="nb">object</span>
+<span class="kn">from</span> <span class="nn">contextlib</span> <span class="kn">import</span> <span class="n">contextmanager</span>
+<span class="kn">from</span> <span class="nn">time</span> <span class="kn">import</span> <span class="n">time</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">future.moves.itertools</span> <span class="kn">import</span> <span class="n">zip_longest</span>
+
+<span class="kn">from</span> <span class="nn">odl.util.utility</span> <span class="kn">import</span> <span class="n">is_string</span><span class="p">,</span> <span class="n">run_from_ipython</span>
+
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">(</span>
+    <span class="s1">&#39;dtype_ndigits&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;dtype_tol&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;all_equal&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;all_almost_equal&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;is_subdict&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;skip_if_no_pyfftw&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;skip_if_no_pywavelets&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;simple_fixture&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;noise_array&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;noise_element&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;noise_elements&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;fail_counter&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;timer&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;timeit&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;ProgressBar&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;ProgressRange&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;test&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;run_doctests&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;test_file&#39;</span><span class="p">,</span>
+<span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">_ndigits</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Return number of expected correct digits comparing ``a`` and ``b``.</span>
+
+<span class="sd">    The returned number is the minimum `dtype_ndigits` of the two objects.</span>
+
+<span class="sd">    See Also</span>
+<span class="sd">    --------</span>
+<span class="sd">    dtype_ndigits</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">dtype1</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="s1">&#39;dtype&#39;</span><span class="p">,</span> <span class="nb">object</span><span class="p">)</span>
+    <span class="n">dtype2</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">b</span><span class="p">,</span> <span class="s1">&#39;dtype&#39;</span><span class="p">,</span> <span class="nb">object</span><span class="p">)</span>
+    <span class="k">return</span> <span class="nb">min</span><span class="p">(</span><span class="n">dtype_ndigits</span><span class="p">(</span><span class="n">dtype1</span><span class="p">,</span> <span class="n">default</span><span class="p">),</span> <span class="n">dtype_ndigits</span><span class="p">(</span><span class="n">dtype2</span><span class="p">,</span> <span class="n">default</span><span class="p">))</span>
+
+
+<div class="viewcode-block" id="dtype_ndigits"><a class="viewcode-back" href="../../../generated/odl.util.testutils.dtype_ndigits.html#odl.util.testutils.dtype_ndigits">[docs]</a><span class="k">def</span> <span class="nf">dtype_ndigits</span><span class="p">(</span><span class="n">dtype</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Return the number of correct digits expected for a given dtype.</span>
+
+<span class="sd">    This is intended as a somewhat generous default (relative) precision for</span>
+<span class="sd">    results of more or less stable computations.</span>
+
+<span class="sd">    Returned numbers:</span>
+
+<span class="sd">    - ``np.float16``: ``1``</span>
+<span class="sd">    - ``np.float32`` or ``np.complex64``: ``3``</span>
+<span class="sd">    - Others: ``default`` if given, otherwise ``5``</span>
+
+<span class="sd">    See Also</span>
+<span class="sd">    --------</span>
+<span class="sd">    dtype_tol : Same precision expressed as tolerance</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">small_dtypes</span> <span class="o">=</span> <span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">complex64</span><span class="p">]</span>
+    <span class="n">tiny_dtypes</span> <span class="o">=</span> <span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float16</span><span class="p">]</span>
+
+    <span class="k">if</span> <span class="n">dtype</span> <span class="ow">in</span> <span class="n">tiny_dtypes</span><span class="p">:</span>
+        <span class="k">return</span> <span class="mi">1</span>
+    <span class="k">elif</span> <span class="n">dtype</span> <span class="ow">in</span> <span class="n">small_dtypes</span><span class="p">:</span>
+        <span class="k">return</span> <span class="mi">3</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">default</span> <span class="k">if</span> <span class="n">default</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="mi">5</span></div>
+
+
+<div class="viewcode-block" id="dtype_tol"><a class="viewcode-back" href="../../../generated/odl.util.testutils.dtype_tol.html#odl.util.testutils.dtype_tol">[docs]</a><span class="k">def</span> <span class="nf">dtype_tol</span><span class="p">(</span><span class="n">dtype</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Return a tolerance for a given dtype.</span>
+
+<span class="sd">    This is intended as a somewhat generous default (relative) tolerance for</span>
+<span class="sd">    results of more or less stable computations.</span>
+
+<span class="sd">    Returned numbers:</span>
+
+<span class="sd">    - ``np.float16``: ``1e-1``</span>
+<span class="sd">    - ``np.float32`` or ``np.complex64``: ``1e-3``</span>
+<span class="sd">    - Others: ``default`` if given, otherwise ``1e-5``</span>
+
+<span class="sd">    See Also</span>
+<span class="sd">    --------</span>
+<span class="sd">    dtype_ndigits : Same tolerance expressed in number of digits.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="mi">10</span> <span class="o">**</span> <span class="o">-</span><span class="n">dtype_ndigits</span><span class="p">(</span><span class="n">dtype</span><span class="p">,</span> <span class="n">default</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="all_equal"><a class="viewcode-back" href="../../../generated/odl.util.testutils.all_equal.html#odl.util.testutils.all_equal">[docs]</a><span class="k">def</span> <span class="nf">all_equal</span><span class="p">(</span><span class="n">iter1</span><span class="p">,</span> <span class="n">iter2</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Return ``True`` if all elements in ``a`` and ``b`` are equal.&quot;&quot;&quot;</span>
+    <span class="c1"># Direct comparison for scalars, tuples or lists</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">iter1</span> <span class="o">==</span> <span class="n">iter2</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">True</span>
+    <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>  <span class="c1"># Raised by NumPy when comparing arrays</span>
+        <span class="k">pass</span>
+
+    <span class="c1"># Special case for None</span>
+    <span class="k">if</span> <span class="n">iter1</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">iter2</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">True</span>
+
+    <span class="c1"># If one nested iterator is exhausted, go to direct comparison</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">it1</span> <span class="o">=</span> <span class="nb">iter</span><span class="p">(</span><span class="n">iter1</span><span class="p">)</span>
+        <span class="n">it2</span> <span class="o">=</span> <span class="nb">iter</span><span class="p">(</span><span class="n">iter2</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">TypeError</span><span class="p">:</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">iter1</span> <span class="o">==</span> <span class="n">iter2</span>
+        <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>  <span class="c1"># Raised by NumPy when comparing arrays</span>
+            <span class="k">return</span> <span class="kc">False</span>
+
+    <span class="n">diff_length_sentinel</span> <span class="o">=</span> <span class="nb">object</span><span class="p">()</span>
+
+    <span class="c1"># Compare element by element and return False if the sequences have</span>
+    <span class="c1"># different lengths</span>
+    <span class="k">for</span> <span class="p">[</span><span class="n">ip1</span><span class="p">,</span> <span class="n">ip2</span><span class="p">]</span> <span class="ow">in</span> <span class="n">zip_longest</span><span class="p">(</span><span class="n">it1</span><span class="p">,</span> <span class="n">it2</span><span class="p">,</span>
+                                  <span class="n">fillvalue</span><span class="o">=</span><span class="n">diff_length_sentinel</span><span class="p">):</span>
+        <span class="c1"># Verify that none of the lists has ended (then they are not the</span>
+        <span class="c1"># same size)</span>
+        <span class="k">if</span> <span class="n">ip1</span> <span class="ow">is</span> <span class="n">diff_length_sentinel</span> <span class="ow">or</span> <span class="n">ip2</span> <span class="ow">is</span> <span class="n">diff_length_sentinel</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">False</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">all_equal</span><span class="p">(</span><span class="n">ip1</span><span class="p">,</span> <span class="n">ip2</span><span class="p">):</span>
+            <span class="k">return</span> <span class="kc">False</span>
+
+    <span class="k">return</span> <span class="kc">True</span></div>
+
+
+<div class="viewcode-block" id="all_almost_equal_array"><a class="viewcode-back" href="../../../generated/odl.util.testutils.all_almost_equal_array.html#odl.util.testutils.all_almost_equal_array">[docs]</a><span class="k">def</span> <span class="nf">all_almost_equal_array</span><span class="p">(</span><span class="n">v1</span><span class="p">,</span> <span class="n">v2</span><span class="p">,</span> <span class="n">ndigits</span><span class="p">):</span>
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">allclose</span><span class="p">(</span><span class="n">v1</span><span class="p">,</span> <span class="n">v2</span><span class="p">,</span>
+                       <span class="n">rtol</span><span class="o">=</span><span class="mi">10</span> <span class="o">**</span> <span class="o">-</span><span class="n">ndigits</span><span class="p">,</span> <span class="n">atol</span><span class="o">=</span><span class="mi">10</span> <span class="o">**</span> <span class="o">-</span><span class="n">ndigits</span><span class="p">,</span>
+                       <span class="n">equal_nan</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="all_almost_equal"><a class="viewcode-back" href="../../../generated/odl.util.testutils.all_almost_equal.html#odl.util.testutils.all_almost_equal">[docs]</a><span class="k">def</span> <span class="nf">all_almost_equal</span><span class="p">(</span><span class="n">iter1</span><span class="p">,</span> <span class="n">iter2</span><span class="p">,</span> <span class="n">ndigits</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Return ``True`` if all elements in ``a`` and ``b`` are almost equal.&quot;&quot;&quot;</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">iter1</span> <span class="ow">is</span> <span class="n">iter2</span> <span class="ow">or</span> <span class="n">iter1</span> <span class="o">==</span> <span class="n">iter2</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">True</span>
+    <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+        <span class="k">pass</span>
+
+    <span class="k">if</span> <span class="n">iter1</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">iter2</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">True</span>
+
+    <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">iter1</span><span class="p">,</span> <span class="s1">&#39;__array__&#39;</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">iter2</span><span class="p">,</span> <span class="s1">&#39;__array__&#39;</span><span class="p">):</span>
+        <span class="c1"># Only get default ndigits if comparing arrays, need to keep `None`</span>
+        <span class="c1"># otherwise for recursive calls.</span>
+        <span class="k">if</span> <span class="n">ndigits</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">ndigits</span> <span class="o">=</span> <span class="n">_ndigits</span><span class="p">(</span><span class="n">iter1</span><span class="p">,</span> <span class="n">iter2</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">all_almost_equal_array</span><span class="p">(</span><span class="n">iter1</span><span class="p">,</span> <span class="n">iter2</span><span class="p">,</span> <span class="n">ndigits</span><span class="p">)</span>
+
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">it1</span> <span class="o">=</span> <span class="nb">iter</span><span class="p">(</span><span class="n">iter1</span><span class="p">)</span>
+        <span class="n">it2</span> <span class="o">=</span> <span class="nb">iter</span><span class="p">(</span><span class="n">iter2</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">TypeError</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">ndigits</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">ndigits</span> <span class="o">=</span> <span class="n">_ndigits</span><span class="p">(</span><span class="n">iter1</span><span class="p">,</span> <span class="n">iter2</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">isclose</span><span class="p">(</span><span class="n">iter1</span><span class="p">,</span> <span class="n">iter2</span><span class="p">,</span>
+                          <span class="n">atol</span><span class="o">=</span><span class="mi">10</span> <span class="o">**</span> <span class="o">-</span><span class="n">ndigits</span><span class="p">,</span> <span class="n">rtol</span><span class="o">=</span><span class="mi">10</span> <span class="o">**</span> <span class="o">-</span><span class="n">ndigits</span><span class="p">,</span>
+                          <span class="n">equal_nan</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+    <span class="n">diff_length_sentinel</span> <span class="o">=</span> <span class="nb">object</span><span class="p">()</span>
+    <span class="k">for</span> <span class="p">[</span><span class="n">ip1</span><span class="p">,</span> <span class="n">ip2</span><span class="p">]</span> <span class="ow">in</span> <span class="n">zip_longest</span><span class="p">(</span><span class="n">it1</span><span class="p">,</span> <span class="n">it2</span><span class="p">,</span>
+                                  <span class="n">fillvalue</span><span class="o">=</span><span class="n">diff_length_sentinel</span><span class="p">):</span>
+        <span class="c1"># Verify that none of the lists has ended (then they are not the</span>
+        <span class="c1"># same size)</span>
+        <span class="k">if</span> <span class="n">ip1</span> <span class="ow">is</span> <span class="n">diff_length_sentinel</span> <span class="ow">or</span> <span class="n">ip2</span> <span class="ow">is</span> <span class="n">diff_length_sentinel</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">False</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">all_almost_equal</span><span class="p">(</span><span class="n">ip1</span><span class="p">,</span> <span class="n">ip2</span><span class="p">,</span> <span class="n">ndigits</span><span class="p">):</span>
+            <span class="k">return</span> <span class="kc">False</span>
+
+    <span class="k">return</span> <span class="kc">True</span></div>
+
+
+<div class="viewcode-block" id="is_subdict"><a class="viewcode-back" href="../../../generated/odl.util.testutils.is_subdict.html#odl.util.testutils.is_subdict">[docs]</a><span class="k">def</span> <span class="nf">is_subdict</span><span class="p">(</span><span class="n">subdict</span><span class="p">,</span> <span class="n">dictionary</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Return ``True`` if all items of ``subdict`` are in ``dictionary``.&quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="nb">all</span><span class="p">(</span><span class="n">item</span> <span class="ow">in</span> <span class="n">dictionary</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">subdict</span><span class="o">.</span><span class="n">items</span><span class="p">())</span></div>
+
+
+<span class="k">try</span><span class="p">:</span>
+    <span class="kn">import</span> <span class="nn">pytest</span>
+
+<span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
+
+    <span class="k">def</span> <span class="nf">identity</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">args</span> <span class="ow">and</span> <span class="n">callable</span><span class="p">(</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]):</span>
+            <span class="k">return</span> <span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">identity</span>
+
+    <span class="n">skip_if_no_pyfftw</span> <span class="o">=</span> <span class="n">identity</span>
+    <span class="n">skip_if_no_pywavelets</span> <span class="o">=</span> <span class="n">identity</span>
+
+<span class="k">else</span><span class="p">:</span>
+    <span class="c1"># Mark decorators for test parameters</span>
+    <span class="n">skip_if_no_pyfftw</span> <span class="o">=</span> <span class="n">pytest</span><span class="o">.</span><span class="n">mark</span><span class="o">.</span><span class="n">skipif</span><span class="p">(</span>
+        <span class="s1">&#39;not odl.trafos.PYFFTW_AVAILABLE&#39;</span><span class="p">,</span>
+        <span class="n">reason</span><span class="o">=</span><span class="s1">&#39;pyFFTW not available&#39;</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">skip_if_no_pywavelets</span> <span class="o">=</span> <span class="n">pytest</span><span class="o">.</span><span class="n">mark</span><span class="o">.</span><span class="n">skipif</span><span class="p">(</span>
+        <span class="s1">&#39;not odl.trafos.PYWT_AVAILABLE&#39;</span><span class="p">,</span>
+        <span class="n">reason</span><span class="o">=</span><span class="s1">&#39;PyWavelets not available&#39;</span><span class="p">,</span>
+    <span class="p">)</span>
+
+
+<div class="viewcode-block" id="simple_fixture"><a class="viewcode-back" href="../../../generated/odl.util.testutils.simple_fixture.html#odl.util.testutils.simple_fixture">[docs]</a><span class="k">def</span> <span class="nf">simple_fixture</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">params</span><span class="p">,</span> <span class="n">fmt</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Helper to create a pytest fixture using only name and params.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    name : str</span>
+<span class="sd">        Name of the parameters used for the ``ids`` argument</span>
+<span class="sd">        to `pytest.fixture`.</span>
+<span class="sd">    params : sequence</span>
+<span class="sd">        Values to be taken as parameters in the fixture. They are</span>
+<span class="sd">        used as ``params`` argument to `_pytest.fixtures.fixture`.</span>
+<span class="sd">        Arguments wrapped in a ``pytest.skipif`` decorator are</span>
+<span class="sd">        unwrapped for the generation of the test IDs.</span>
+<span class="sd">    fmt : str, optional</span>
+<span class="sd">        Use this format string for the generation of the ``ids``.</span>
+<span class="sd">        For each value, the id string is generated as ::</span>
+
+<span class="sd">            fmt.format(name=name, value=value)</span>
+
+<span class="sd">        hence the format string must use ``{name}`` and ``{value}``.</span>
+<span class="sd">        Default format strings are:</span>
+
+<span class="sd">            - ``&quot; {name}=&#39;{value}&#39; &quot;`` for string parameters,</span>
+<span class="sd">            - ``&quot; {name}={value} &quot;`` for other types.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="kn">import</span> <span class="nn">_pytest</span>
+
+    <span class="k">if</span> <span class="n">fmt</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="c1"># Use some intelligence to make good format strings</span>
+        <span class="n">fmt_str</span> <span class="o">=</span> <span class="s2">&quot; </span><span class="si">{name}</span><span class="s2">=&#39;</span><span class="si">{value}</span><span class="s2">&#39; &quot;</span>
+        <span class="n">fmt_default</span> <span class="o">=</span> <span class="s2">&quot; </span><span class="si">{name}</span><span class="s2">=</span><span class="si">{value}</span><span class="s2"> &quot;</span>
+
+        <span class="n">ids</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">params</span><span class="p">:</span>
+            <span class="c1"># TODO: other types of decorators?</span>
+            <span class="k">if</span> <span class="p">(</span>
+                <span class="nb">isinstance</span><span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="n">_pytest</span><span class="o">.</span><span class="n">mark</span><span class="o">.</span><span class="n">MarkDecorator</span><span class="p">)</span>
+                <span class="ow">and</span> <span class="n">p</span><span class="o">.</span><span class="n">name</span> <span class="o">==</span> <span class="s1">&#39;skipif&#39;</span>
+            <span class="p">):</span>
+                <span class="c1"># Unwrap the wrapped object in the decorator</span>
+                <span class="k">if</span> <span class="n">is_string</span><span class="p">(</span><span class="n">p</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">1</span><span class="p">]):</span>
+                    <span class="n">ids</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">fmt_str</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span><span class="n">p</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">1</span><span class="p">]))</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">ids</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">fmt_default</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span><span class="n">p</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">1</span><span class="p">]))</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">is_string</span><span class="p">(</span><span class="n">p</span><span class="p">):</span>
+                    <span class="n">ids</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">fmt_str</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span><span class="n">p</span><span class="p">))</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">ids</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">fmt_default</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span><span class="n">p</span><span class="p">))</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="c1"># Use provided `fmt` for everything</span>
+        <span class="n">ids</span> <span class="o">=</span> <span class="p">[</span><span class="n">fmt</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span><span class="n">p</span><span class="p">)</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">params</span><span class="p">]</span>
+
+    <span class="n">wrapper</span> <span class="o">=</span> <span class="n">pytest</span><span class="o">.</span><span class="n">fixture</span><span class="p">(</span><span class="n">scope</span><span class="o">=</span><span class="s1">&#39;module&#39;</span><span class="p">,</span> <span class="n">ids</span><span class="o">=</span><span class="n">ids</span><span class="p">,</span> <span class="n">params</span><span class="o">=</span><span class="n">params</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">wrapper</span><span class="p">(</span><span class="k">lambda</span> <span class="n">request</span><span class="p">:</span> <span class="n">request</span><span class="o">.</span><span class="n">param</span><span class="p">)</span></div>
+
+
+<span class="c1"># Helpers to generate data</span>
+<div class="viewcode-block" id="noise_array"><a class="viewcode-back" href="../../../generated/odl.util.testutils.noise_array.html#odl.util.testutils.noise_array">[docs]</a><span class="k">def</span> <span class="nf">noise_array</span><span class="p">(</span><span class="n">space</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Generate a white noise array that is compatible with ``space``.</span>
+
+<span class="sd">    The array contains white noise with standard deviation 1 in the case of</span>
+<span class="sd">    floating point dtypes and uniformly spaced values between -10 and 10 in</span>
+<span class="sd">    the case of integer dtypes.</span>
+
+<span class="sd">    For product spaces the method is called recursively for all sub-spaces.</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    This method is intended for internal testing purposes. For more explicit</span>
+<span class="sd">    example elements see ``odl.phantoms`` and ``LinearSpaceElement.examples``.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    space : `LinearSpace`</span>
+<span class="sd">        Space from which to derive the array data type and size.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    noise_array : `numpy.ndarray` element</span>
+<span class="sd">        Array with white noise such that ``space.element``&#39;s can be created</span>
+<span class="sd">        from it.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    Create single noise array:</span>
+
+<span class="sd">    &gt;&gt;&gt; space = odl.rn(3)</span>
+<span class="sd">    &gt;&gt;&gt; array = noise_array(space)</span>
+
+<span class="sd">    See Also</span>
+<span class="sd">    --------</span>
+<span class="sd">    noise_element</span>
+<span class="sd">    noise_elements</span>
+<span class="sd">    odl.set.space.LinearSpace.examples : Examples of elements</span>
+<span class="sd">        typical to the space.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="kn">from</span> <span class="nn">odl.space</span> <span class="kn">import</span> <span class="n">ProductSpace</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">space</span><span class="p">,</span> <span class="n">ProductSpace</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">noise_array</span><span class="p">(</span><span class="n">si</span><span class="p">)</span> <span class="k">for</span> <span class="n">si</span> <span class="ow">in</span> <span class="n">space</span><span class="p">])</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">space</span><span class="o">.</span><span class="n">dtype</span> <span class="o">==</span> <span class="nb">bool</span><span class="p">:</span>
+            <span class="n">arr</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">randint</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="n">space</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">bool</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">np</span><span class="o">.</span><span class="n">issubdtype</span><span class="p">(</span><span class="n">space</span><span class="o">.</span><span class="n">dtype</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">unsignedinteger</span><span class="p">):</span>
+            <span class="n">arr</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">randint</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="n">space</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">np</span><span class="o">.</span><span class="n">issubdtype</span><span class="p">(</span><span class="n">space</span><span class="o">.</span><span class="n">dtype</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">signedinteger</span><span class="p">):</span>
+            <span class="n">arr</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">randint</span><span class="p">(</span><span class="o">-</span><span class="mi">10</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="n">space</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">np</span><span class="o">.</span><span class="n">issubdtype</span><span class="p">(</span><span class="n">space</span><span class="o">.</span><span class="n">dtype</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">floating</span><span class="p">):</span>
+            <span class="n">arr</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">randn</span><span class="p">(</span><span class="o">*</span><span class="n">space</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">np</span><span class="o">.</span><span class="n">issubdtype</span><span class="p">(</span><span class="n">space</span><span class="o">.</span><span class="n">dtype</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">complexfloating</span><span class="p">):</span>
+            <span class="n">arr</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">randn</span><span class="p">(</span><span class="o">*</span><span class="n">space</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+                <span class="o">+</span> <span class="mi">1</span><span class="n">j</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">randn</span><span class="p">(</span><span class="o">*</span><span class="n">space</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+            <span class="p">)</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="mf">2.0</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;bad dtype </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">space</span><span class="o">.</span><span class="n">dtype</span><span class="p">))</span>
+
+        <span class="k">return</span> <span class="n">arr</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">space</span><span class="o">.</span><span class="n">dtype</span><span class="p">,</span> <span class="n">copy</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="noise_element"><a class="viewcode-back" href="../../../generated/odl.util.testutils.noise_element.html#odl.util.testutils.noise_element">[docs]</a><span class="k">def</span> <span class="nf">noise_element</span><span class="p">(</span><span class="n">space</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Create a white noise element in ``space``.</span>
+
+<span class="sd">    The element contains white noise with standard deviation 1 in the case of</span>
+<span class="sd">    floating point dtypes and uniformly spaced values between -10 and 10 in</span>
+<span class="sd">    the case of integer dtypes.</span>
+
+<span class="sd">    For product spaces the method is called recursively for all sub-spaces.</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    This method is intended for internal testing purposes. For more explicit</span>
+<span class="sd">    example elements see ``odl.phantoms`` and ``LinearSpaceElement.examples``.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    space : `LinearSpace`</span>
+<span class="sd">        Space in which to create an element. The</span>
+<span class="sd">        `odl.set.space.LinearSpace.element` method of the space needs to</span>
+<span class="sd">        accept input of `numpy.ndarray` type.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    noise_element : ``space`` element</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    Create single noise element:</span>
+
+<span class="sd">    &gt;&gt;&gt; space = odl.rn(3)</span>
+<span class="sd">    &gt;&gt;&gt; vector = noise_element(space)</span>
+
+<span class="sd">    See Also</span>
+<span class="sd">    --------</span>
+<span class="sd">    noise_array</span>
+<span class="sd">    noise_elements</span>
+<span class="sd">    odl.set.space.LinearSpace.examples : Examples of elements typical</span>
+<span class="sd">        to the space.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">space</span><span class="o">.</span><span class="n">element</span><span class="p">(</span><span class="n">noise_array</span><span class="p">(</span><span class="n">space</span><span class="p">))</span></div>
+
+
+<div class="viewcode-block" id="noise_elements"><a class="viewcode-back" href="../../../generated/odl.util.testutils.noise_elements.html#odl.util.testutils.noise_elements">[docs]</a><span class="k">def</span> <span class="nf">noise_elements</span><span class="p">(</span><span class="n">space</span><span class="p">,</span> <span class="n">n</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Create a list of ``n`` noise arrays and elements in ``space``.</span>
+
+<span class="sd">    The arrays contain white noise with standard deviation 1 in the case of</span>
+<span class="sd">    floating point dtypes and uniformly spaced values between -10 and 10 in</span>
+<span class="sd">    the case of integer dtypes.</span>
+
+<span class="sd">    The returned elements have the same values as the arrays.</span>
+
+<span class="sd">    For product spaces the method is called recursively for all sub-spaces.</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    This method is intended for internal testing purposes. For more explicit</span>
+<span class="sd">    example elements see ``odl.phantoms`` and ``LinearSpaceElement.examples``.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    space : `LinearSpace`</span>
+<span class="sd">        Space in which to create an element. The</span>
+<span class="sd">        `odl.set.space.LinearSpace.element` method of the space needs to</span>
+<span class="sd">        accept input of `numpy.ndarray` type.</span>
+<span class="sd">    n : int, optional</span>
+<span class="sd">        Number of elements to create.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    arrays : `numpy.ndarray` or tuple of `numpy.ndarray`</span>
+<span class="sd">        A single array if ``n == 1``, otherwise a tuple of arrays.</span>
+<span class="sd">    elements : ``space`` element or tuple of ``space`` elements</span>
+<span class="sd">        A single element if ``n == 1``, otherwise a tuple of elements.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    Create single noise element:</span>
+
+<span class="sd">    &gt;&gt;&gt; space = odl.rn(3)</span>
+<span class="sd">    &gt;&gt;&gt; arr, vector = noise_elements(space)</span>
+
+<span class="sd">    Create multiple noise elements:</span>
+
+<span class="sd">    &gt;&gt;&gt; [arr1, arr2], [vector1, vector2] = noise_elements(space, n=2)</span>
+
+<span class="sd">    See Also</span>
+<span class="sd">    --------</span>
+<span class="sd">    noise_array</span>
+<span class="sd">    noise_element</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">arrs</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">noise_array</span><span class="p">(</span><span class="n">space</span><span class="p">)</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n</span><span class="p">))</span>
+
+    <span class="c1"># Make space elements from arrays</span>
+    <span class="n">elems</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">space</span><span class="o">.</span><span class="n">element</span><span class="p">(</span><span class="n">arr</span><span class="o">.</span><span class="n">copy</span><span class="p">())</span> <span class="k">for</span> <span class="n">arr</span> <span class="ow">in</span> <span class="n">arrs</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">n</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">arrs</span> <span class="o">+</span> <span class="n">elems</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">arrs</span><span class="p">,</span> <span class="n">elems</span></div>
+
+
+<div class="viewcode-block" id="fail_counter"><a class="viewcode-back" href="../../../generated/odl.util.testutils.fail_counter.html#odl.util.testutils.fail_counter">[docs]</a><span class="nd">@contextmanager</span>
+<span class="k">def</span> <span class="nf">fail_counter</span><span class="p">(</span><span class="n">test_name</span><span class="p">,</span> <span class="n">err_msg</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">logger</span><span class="o">=</span><span class="nb">print</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Used to count the number of failures of something.</span>
+
+<span class="sd">    Usage::</span>
+
+<span class="sd">        with fail_counter(&quot;my_test&quot;) as counter:</span>
+<span class="sd">            # Do stuff</span>
+
+<span class="sd">            counter.fail()</span>
+
+<span class="sd">    When done, it prints ::</span>
+
+<span class="sd">        my_test</span>
+<span class="sd">        *** FAILED 1 TEST CASE(S) ***</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">class</span> <span class="nc">_FailCounter</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+
+        <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">num_failed</span> <span class="o">=</span> <span class="mi">0</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">fail_strings</span> <span class="o">=</span> <span class="p">[]</span>
+
+        <span class="k">def</span> <span class="nf">fail</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">string</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+            <span class="sd">&quot;&quot;&quot;Add failure with reason as string.&quot;&quot;&quot;</span>
+            <span class="c1"># TODO: possibly limit number of printed strings</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">num_failed</span> <span class="o">+=</span> <span class="mi">1</span>
+            <span class="k">if</span> <span class="n">string</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">fail_strings</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">string</span><span class="p">))</span>
+
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">counter</span> <span class="o">=</span> <span class="n">_FailCounter</span><span class="p">()</span>
+        <span class="k">yield</span> <span class="n">counter</span>
+    <span class="k">finally</span><span class="p">:</span>
+
+        <span class="k">if</span> <span class="n">counter</span><span class="o">.</span><span class="n">num_failed</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">logger</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">{:&lt;70}</span><span class="s1">: Completed all test cases.&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">test_name</span><span class="p">))</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="n">test_name</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">fail_string</span> <span class="ow">in</span> <span class="n">counter</span><span class="o">.</span><span class="n">fail_strings</span><span class="p">:</span>
+                <span class="nb">print</span><span class="p">(</span><span class="n">fail_string</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">err_msg</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="nb">print</span><span class="p">(</span><span class="n">err_msg</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;*** FAILED </span><span class="si">{}</span><span class="s1"> TEST CASE(S) ***&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">counter</span><span class="o">.</span><span class="n">num_failed</span><span class="p">))</span></div>
+
+
+<div class="viewcode-block" id="timer"><a class="viewcode-back" href="../../../generated/odl.util.testutils.timer.html#odl.util.testutils.timer">[docs]</a><span class="nd">@contextmanager</span>
+<span class="k">def</span> <span class="nf">timer</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;A timer context manager.</span>
+
+<span class="sd">    Usage::</span>
+
+<span class="sd">        with timer(&#39;name&#39;):</span>
+<span class="sd">            # Do stuff</span>
+
+<span class="sd">    Prints the time stuff took to execute.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">name</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">name</span> <span class="o">=</span> <span class="s2">&quot;Elapsed&quot;</span>
+
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">tstart</span> <span class="o">=</span> <span class="n">time</span><span class="p">()</span>
+        <span class="k">yield</span>
+    <span class="k">finally</span><span class="p">:</span>
+        <span class="n">time_str</span> <span class="o">=</span> <span class="s1">&#39;</span><span class="si">{:.3f}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">time</span><span class="p">()</span> <span class="o">-</span> <span class="n">tstart</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">{:&gt;30s}</span><span class="s1"> : </span><span class="si">{:&gt;10s}</span><span class="s1"> &#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">time_str</span><span class="p">))</span></div>
+
+
+<div class="viewcode-block" id="timeit"><a class="viewcode-back" href="../../../generated/odl.util.testutils.timeit.html#odl.util.testutils.timeit">[docs]</a><span class="k">def</span> <span class="nf">timeit</span><span class="p">(</span><span class="n">arg</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;A timer decorator.</span>
+
+<span class="sd">    Usage::</span>
+
+<span class="sd">        @timeit</span>
+<span class="sd">        def myfunction(...):</span>
+<span class="sd">            ...</span>
+
+<span class="sd">        @timeit(&#39;info string&#39;)</span>
+<span class="sd">        def myfunction(...):</span>
+<span class="sd">            ...</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">if</span> <span class="n">callable</span><span class="p">(</span><span class="n">arg</span><span class="p">):</span>
+        <span class="k">def</span> <span class="nf">timed_function</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+            <span class="k">with</span> <span class="n">timer</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">arg</span><span class="p">)):</span>
+                <span class="k">return</span> <span class="n">arg</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">timed_function</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">def</span> <span class="nf">_timeit_helper</span><span class="p">(</span><span class="n">func</span><span class="p">):</span>
+            <span class="k">def</span> <span class="nf">timed_function</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+                <span class="k">with</span> <span class="n">timer</span><span class="p">(</span><span class="n">arg</span><span class="p">):</span>
+                    <span class="k">return</span> <span class="n">func</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">timed_function</span>
+        <span class="k">return</span> <span class="n">_timeit_helper</span></div>
+
+
+<div class="viewcode-block" id="ProgressBar"><a class="viewcode-back" href="../../../generated/odl.util.testutils.ProgressBar.html#odl.util.testutils.ProgressBar">[docs]</a><span class="k">class</span> <span class="nc">ProgressBar</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+
+    <span class="sd">&quot;&quot;&quot;A simple command-line progress bar.</span>
+
+<span class="sd">    Usage:</span>
+
+<span class="sd">    &gt;&gt;&gt; progress = ProgressBar(&#39;Reading data&#39;, 10)</span>
+<span class="sd">    \rReading data: [                              ] Starting</span>
+<span class="sd">    &gt;&gt;&gt; progress.update(4) #halfway, zero indexing</span>
+<span class="sd">    \rReading data: [###############               ] 50.0%</span>
+
+<span class="sd">    Multi-indices, from slowest to fastest:</span>
+
+<span class="sd">    &gt;&gt;&gt; progress = ProgressBar(&#39;Reading data&#39;, 10, 10)</span>
+<span class="sd">    \rReading data: [                              ] Starting</span>
+<span class="sd">    &gt;&gt;&gt; progress.update(9, 8)</span>
+<span class="sd">    \rReading data: [############################# ] 99.0%</span>
+
+<span class="sd">    Supports simply calling update, which moves the counter forward:</span>
+
+<span class="sd">    &gt;&gt;&gt; progress = ProgressBar(&#39;Reading data&#39;, 10, 10)</span>
+<span class="sd">    \rReading data: [                              ] Starting</span>
+<span class="sd">    &gt;&gt;&gt; progress.update()</span>
+<span class="sd">    \rReading data: [                              ]  1.0%</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="ProgressBar.__init__"><a class="viewcode-back" href="../../../generated/odl.util.testutils.ProgressBar.html#odl.util.testutils.ProgressBar.__init__">[docs]</a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">text</span><span class="o">=</span><span class="s1">&#39;progress&#39;</span><span class="p">,</span> <span class="o">*</span><span class="n">njobs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Initialize a new instance.&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">text</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">text</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">njobs</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;need to provide at least one job&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">njobs</span> <span class="o">=</span> <span class="n">njobs</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">current_progress</span> <span class="o">=</span> <span class="mf">0.0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">index</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">done</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">start</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="ProgressBar.start"><a class="viewcode-back" href="../../../generated/odl.util.testutils.ProgressBar.start.html#odl.util.testutils.ProgressBar.start">[docs]</a>    <span class="k">def</span> <span class="nf">start</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Print the initial bar.&quot;&quot;&quot;</span>
+        <span class="n">sys</span><span class="o">.</span><span class="n">stdout</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\r</span><span class="si">{0}</span><span class="s1">: [</span><span class="si">{1:30s}</span><span class="s1">] Starting&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">text</span><span class="p">,</span>
+                                                            <span class="s1">&#39; &#39;</span> <span class="o">*</span> <span class="mi">30</span><span class="p">))</span>
+
+        <span class="n">sys</span><span class="o">.</span><span class="n">stdout</span><span class="o">.</span><span class="n">flush</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="ProgressBar.update"><a class="viewcode-back" href="../../../generated/odl.util.testutils.ProgressBar.update.html#odl.util.testutils.ProgressBar.update">[docs]</a>    <span class="k">def</span> <span class="nf">update</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">indices</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Update the bar according to ``indices``.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">indices</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">indices</span><span class="p">)</span> <span class="o">!=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">njobs</span><span class="p">):</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;number of indices not correct&#39;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">index</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ravel_multi_index</span><span class="p">(</span><span class="n">indices</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">njobs</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">index</span> <span class="o">+=</span> <span class="mi">1</span>
+
+        <span class="c1"># Find progress as ratio between 0 and 1</span>
+        <span class="c1"># offset by 1 for zero indexing</span>
+        <span class="n">progress</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">index</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">prod</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">njobs</span><span class="p">)</span>
+
+        <span class="c1"># Write a progressbar and percent</span>
+        <span class="k">if</span> <span class="n">progress</span> <span class="o">&lt;</span> <span class="mf">1.0</span><span class="p">:</span>
+            <span class="c1"># Only update on 0.1% intervals</span>
+            <span class="k">if</span> <span class="n">progress</span> <span class="o">&gt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">current_progress</span> <span class="o">+</span> <span class="mf">0.001</span><span class="p">:</span>
+                <span class="n">sys</span><span class="o">.</span><span class="n">stdout</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\r</span><span class="si">{0}</span><span class="s1">: [</span><span class="si">{1:30s}</span><span class="s1">] </span><span class="si">{2:4.1f}</span><span class="s1">%   &#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">text</span><span class="p">,</span> <span class="s1">&#39;#&#39;</span> <span class="o">*</span> <span class="nb">int</span><span class="p">(</span><span class="mi">30</span> <span class="o">*</span> <span class="n">progress</span><span class="p">),</span> <span class="mi">100</span> <span class="o">*</span> <span class="n">progress</span><span class="p">))</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">current_progress</span> <span class="o">=</span> <span class="n">progress</span>
+        <span class="k">else</span><span class="p">:</span>  <span class="c1"># Special message when done</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">done</span><span class="p">:</span>
+                <span class="n">sys</span><span class="o">.</span><span class="n">stdout</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\r</span><span class="si">{0}</span><span class="s1">: [</span><span class="si">{1:30s}</span><span class="s1">] Done      </span><span class="se">\n</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">text</span><span class="p">,</span> <span class="s1">&#39;#&#39;</span> <span class="o">*</span> <span class="mi">30</span><span class="p">))</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">done</span> <span class="o">=</span> <span class="kc">True</span>
+
+        <span class="n">sys</span><span class="o">.</span><span class="n">stdout</span><span class="o">.</span><span class="n">flush</span><span class="p">()</span></div></div>
+
+
+<div class="viewcode-block" id="ProgressRange"><a class="viewcode-back" href="../../../generated/odl.util.testutils.ProgressRange.html#odl.util.testutils.ProgressRange">[docs]</a><span class="k">class</span> <span class="nc">ProgressRange</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+
+    <span class="sd">&quot;&quot;&quot;Simple range sequence with progress bar output&quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="ProgressRange.__init__"><a class="viewcode-back" href="../../../generated/odl.util.testutils.ProgressRange.html#odl.util.testutils.ProgressRange.__init__">[docs]</a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">text</span><span class="p">,</span> <span class="n">n</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Initialize a new instance.&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">current</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">n</span> <span class="o">=</span> <span class="n">n</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">bar</span> <span class="o">=</span> <span class="n">ProgressBar</span><span class="p">(</span><span class="n">text</span><span class="p">,</span> <span class="n">n</span><span class="p">)</span></div>
+
+    <span class="k">def</span> <span class="fm">__iter__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span>
+
+    <span class="k">def</span> <span class="fm">__next__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">current</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">n</span><span class="p">:</span>
+            <span class="n">val</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">current</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">current</span> <span class="o">+=</span> <span class="mi">1</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">bar</span><span class="o">.</span><span class="n">update</span><span class="p">()</span>
+            <span class="k">return</span> <span class="n">val</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">StopIteration</span><span class="p">()</span></div>
+
+
+<div class="viewcode-block" id="test"><a class="viewcode-back" href="../../../generated/odl.util.testutils.test.html#odl.util.testutils.test">[docs]</a><span class="k">def</span> <span class="nf">test</span><span class="p">(</span><span class="n">arguments</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Run ODL tests given by arguments.&quot;&quot;&quot;</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="kn">import</span> <span class="nn">pytest</span>
+    <span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ImportError</span><span class="p">(</span>
+            <span class="s1">&#39;ODL tests cannot be run without `pytest` installed.</span><span class="se">\n</span><span class="s1">&#39;</span>
+            <span class="s1">&#39;Run `$ pip install [--user] odl[testing]` in order to install &#39;</span>
+            <span class="s1">&#39;`pytest`.&#39;</span>
+        <span class="p">)</span>
+
+    <span class="kn">from</span> <span class="nn">.pytest_config</span> <span class="kn">import</span> <span class="n">collect_ignore</span>
+
+    <span class="n">this_dir</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="vm">__file__</span><span class="p">)</span>
+    <span class="n">odl_root</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">abspath</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">this_dir</span><span class="p">,</span> <span class="n">os</span><span class="o">.</span><span class="n">pardir</span><span class="p">,</span> <span class="n">os</span><span class="o">.</span><span class="n">pardir</span><span class="p">))</span>
+
+    <span class="n">args</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;</span><span class="si">{root}</span><span class="s1">/odl&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">root</span><span class="o">=</span><span class="n">odl_root</span><span class="p">)]</span>
+
+    <span class="n">ignores</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;--ignore=</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">file</span><span class="p">)</span> <span class="k">for</span> <span class="n">file</span> <span class="ow">in</span> <span class="n">collect_ignore</span><span class="p">]</span>
+    <span class="n">args</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">ignores</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">arguments</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">args</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">arguments</span><span class="p">)</span>
+
+    <span class="n">pytest</span><span class="o">.</span><span class="n">main</span><span class="p">(</span><span class="n">args</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="run_doctests"><a class="viewcode-back" href="../../../generated/odl.util.testutils.run_doctests.html#odl.util.testutils.run_doctests">[docs]</a><span class="k">def</span> <span class="nf">run_doctests</span><span class="p">(</span><span class="n">skip_if</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Run all doctests in the current module.</span>
+
+<span class="sd">    This function calls ``doctest.testmod()``, by default with the options</span>
+<span class="sd">    ``optionflags=doctest.NORMALIZE_WHITESPACE`` and</span>
+<span class="sd">    ``extraglobs={&#39;odl&#39;: odl, &#39;np&#39;: np}``. This can be changed with</span>
+<span class="sd">    keyword arguments.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    skip_if : bool</span>
+<span class="sd">        For ``True``, skip the doctests in this module.</span>
+<span class="sd">    kwargs :</span>
+<span class="sd">        Extra keyword arguments passed on to the ``doctest.testmod``</span>
+<span class="sd">        function.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="kn">from</span> <span class="nn">doctest</span> <span class="kn">import</span> <span class="n">testmod</span><span class="p">,</span> <span class="n">NORMALIZE_WHITESPACE</span><span class="p">,</span> <span class="n">SKIP</span>
+    <span class="kn">from</span> <span class="nn">packaging.version</span> <span class="kn">import</span> <span class="n">parse</span> <span class="k">as</span> <span class="n">parse_version</span>
+    <span class="kn">import</span> <span class="nn">odl</span>
+    <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+
+    <span class="n">optionflags</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;optionflags&#39;</span><span class="p">,</span> <span class="n">NORMALIZE_WHITESPACE</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">skip_if</span><span class="p">:</span>
+        <span class="n">optionflags</span> <span class="o">|=</span> <span class="n">SKIP</span>
+
+    <span class="n">extraglobs</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;extraglobs&#39;</span><span class="p">,</span> <span class="p">{</span><span class="s1">&#39;odl&#39;</span><span class="p">:</span> <span class="n">odl</span><span class="p">,</span> <span class="s1">&#39;np&#39;</span><span class="p">:</span> <span class="n">np</span><span class="p">})</span>
+
+    <span class="k">if</span> <span class="n">run_from_ipython</span><span class="p">():</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="kn">import</span> <span class="nn">spyder</span>
+        <span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
+            <span class="k">pass</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">parse_version</span><span class="p">(</span><span class="n">spyder</span><span class="o">.</span><span class="n">__version__</span><span class="p">)</span> <span class="o">&lt;</span> <span class="n">parse_version</span><span class="p">(</span><span class="s1">&#39;3.1.4&#39;</span><span class="p">):</span>
+                <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s1">&#39;A bug with IPython and Spyder &lt; 3.1.4 &#39;</span>
+                              <span class="s1">&#39;sometimes causes doctests to fail to run. &#39;</span>
+                              <span class="s1">&#39;Please upgrade Spyder or use another &#39;</span>
+                              <span class="s1">&#39;interpreter if the doctests do not work.&#39;</span><span class="p">,</span>
+                              <span class="ne">RuntimeWarning</span><span class="p">)</span>
+
+    <span class="n">testmod</span><span class="p">(</span><span class="n">optionflags</span><span class="o">=</span><span class="n">optionflags</span><span class="p">,</span> <span class="n">extraglobs</span><span class="o">=</span><span class="n">extraglobs</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="test_file"><a class="viewcode-back" href="../../../generated/odl.util.testutils.test_file.html#odl.util.testutils.test_file">[docs]</a><span class="k">def</span> <span class="nf">test_file</span><span class="p">(</span><span class="n">file</span><span class="p">,</span> <span class="n">args</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Run tests in file with proper default arguments.&quot;&quot;&quot;</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="kn">import</span> <span class="nn">pytest</span>
+    <span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ImportError</span><span class="p">(</span><span class="s1">&#39;ODL tests cannot be run without `pytest` installed.&#39;</span>
+                          <span class="s1">&#39;</span><span class="se">\n</span><span class="s1">Run `$ pip install [--user] odl[testing]` in &#39;</span>
+                          <span class="s1">&#39;order to install `pytest`.&#39;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">args</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">args</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="n">args</span><span class="o">.</span><span class="n">extend</span><span class="p">([</span><span class="nb">str</span><span class="p">(</span><span class="n">file</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\\</span><span class="s1">&#39;</span><span class="p">,</span> <span class="s1">&#39;/&#39;</span><span class="p">)),</span> <span class="s1">&#39;-v&#39;</span><span class="p">,</span> <span class="s1">&#39;--capture=sys&#39;</span><span class="p">])</span>
+
+    <span class="n">pytest</span><span class="o">.</span><span class="n">main</span><span class="p">(</span><span class="n">args</span><span class="p">)</span></div>
+
+
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s1">&#39;__main__&#39;</span><span class="p">:</span>
+    <span class="n">run_doctests</span><span class="p">()</span>
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &#169; Copyright 2014-2020 The ODL Contributors.
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

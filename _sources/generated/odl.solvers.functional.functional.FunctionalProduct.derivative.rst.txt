@@ -1,0 +1,8 @@
+:orphan:
+
+FunctionalProduct.derivative
+==============================================================
+
+.. currentmodule:: odl.solvers.functional.functional
+
+.. automethod:: FunctionalProduct.derivative

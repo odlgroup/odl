@@ -1,0 +1,8 @@
+:orphan:
+
+DiscretizedSpaceElement.set_zero
+======================================================
+
+.. currentmodule:: odl.discr.discr_space
+
+.. automethod:: DiscretizedSpaceElement.set_zero

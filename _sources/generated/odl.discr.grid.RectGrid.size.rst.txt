@@ -1,0 +1,6 @@
+RectGrid.size
+============================
+
+.. currentmodule:: odl.discr.grid
+
+.. autoproperty:: RectGrid.size

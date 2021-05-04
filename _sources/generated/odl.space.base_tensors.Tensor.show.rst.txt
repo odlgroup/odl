@@ -1,0 +1,8 @@
+:orphan:
+
+Tensor.show
+==================================
+
+.. currentmodule:: odl.space.base_tensors
+
+.. automethod:: Tensor.show

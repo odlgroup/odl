@@ -1,0 +1,6 @@
+copysign_op.adjoint
+===========================================
+
+.. currentmodule:: odl.ufunc_ops.ufunc_ops
+
+.. autoproperty:: copysign_op.adjoint

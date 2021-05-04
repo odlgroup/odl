@@ -1,0 +1,28 @@
+vectorization
+=============
+
+Utilities for internal functionality connected to vectorization.
+
+.. currentmodule:: odl.util.vectorization
+
+
+
+.. rubric:: Classes
+
+.. autosummary::
+   :toctree: generated/
+
+   ~odl.util.vectorization.OptionalArgDecorator
+   ~odl.util.vectorization.vectorize
+
+
+.. rubric:: Functions
+
+.. autosummary::
+   :toctree: generated/
+
+   ~odl.util.vectorization.is_valid_input_array
+   ~odl.util.vectorization.is_valid_input_meshgrid
+   ~odl.util.vectorization.out_shape_from_array
+   ~odl.util.vectorization.out_shape_from_meshgrid
+

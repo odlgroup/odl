@@ -1,0 +1,6 @@
+GroupL1Norm.inverse
+==============================================================
+
+.. currentmodule:: odl.solvers.functional.default_functionals
+
+.. autoproperty:: GroupL1Norm.inverse

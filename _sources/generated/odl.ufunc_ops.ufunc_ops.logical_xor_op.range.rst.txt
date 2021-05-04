@@ -1,0 +1,6 @@
+logical_xor_op.range
+============================================
+
+.. currentmodule:: odl.ufunc_ops.ufunc_ops
+
+.. autoproperty:: logical_xor_op.range

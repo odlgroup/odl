@@ -1,0 +1,8 @@
+:orphan:
+
+CustomDist.__eq__
+=====================================
+
+.. currentmodule:: odl.space.weighting
+
+.. automethod:: CustomDist.__eq__

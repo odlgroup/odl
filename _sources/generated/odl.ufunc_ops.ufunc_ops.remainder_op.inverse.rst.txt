@@ -1,0 +1,6 @@
+remainder_op.inverse
+============================================
+
+.. currentmodule:: odl.ufunc_ops.ufunc_ops
+
+.. autoproperty:: remainder_op.inverse

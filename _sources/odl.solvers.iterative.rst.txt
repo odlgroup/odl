@@ -1,0 +1,18 @@
+iterative
+=========
+
+Iterative solvers for equation systems ``Ax = b``.
+
+.. currentmodule:: odl.solvers.iterative
+
+
+.. rubric:: Modules
+
+.. toctree::
+   :maxdepth: 2
+
+   odl.solvers.iterative.iterative
+   odl.solvers.iterative.statistical
+
+
+

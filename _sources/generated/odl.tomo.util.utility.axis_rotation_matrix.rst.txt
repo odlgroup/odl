@@ -1,0 +1,6 @@
+﻿axis_rotation_matrix
+==========================================
+
+.. currentmodule:: odl.tomo.util.utility
+
+.. autofunction:: axis_rotation_matrix

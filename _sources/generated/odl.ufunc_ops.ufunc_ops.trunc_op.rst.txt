@@ -1,0 +1,37 @@
+﻿trunc_op
+================================
+
+.. currentmodule:: odl.ufunc_ops.ufunc_ops
+
+.. autoclass:: trunc_op
+   :show-inheritance:
+   
+   
+   .. automethod:: __init__
+   
+      
+   
+   .. HACK -- the point here is that we don't want this to appear in the output, but the autosummary should still generate the pages.
+      .. autosummary::
+         :toctree:
+      
+         trunc_op.__call__
+         trunc_op.__eq__
+         trunc_op._call
+         trunc_op.derivative
+         trunc_op.norm
+   
+
+    
+   .. HACK -- the point here is that we don't want this to appear in the output, but the autosummary should still generate the pages.
+      .. autosummary::
+         :toctree:
+      
+         trunc_op.adjoint
+         trunc_op.domain
+         trunc_op.inverse
+         trunc_op.is_functional
+         trunc_op.is_linear
+         trunc_op.range
+   
+   

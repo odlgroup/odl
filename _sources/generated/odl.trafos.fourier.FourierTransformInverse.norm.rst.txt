@@ -1,0 +1,8 @@
+:orphan:
+
+FourierTransformInverse.norm
+===============================================
+
+.. currentmodule:: odl.trafos.fourier
+
+.. automethod:: FourierTransformInverse.norm

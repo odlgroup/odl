@@ -1,0 +1,6 @@
+﻿dtype_tol
+============================
+
+.. currentmodule:: odl.util.testutils
+
+.. autofunction:: dtype_tol

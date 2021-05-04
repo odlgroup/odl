@@ -1,0 +1,38 @@
+﻿PowerOperator
+======================================
+
+.. currentmodule:: odl.operator.default_ops
+
+.. autoclass:: PowerOperator
+   :show-inheritance:
+   
+   
+   .. automethod:: __init__
+   
+      
+   
+   .. HACK -- the point here is that we don't want this to appear in the output, but the autosummary should still generate the pages.
+      .. autosummary::
+         :toctree:
+      
+         PowerOperator.__call__
+         PowerOperator.__eq__
+         PowerOperator._call
+         PowerOperator.derivative
+         PowerOperator.norm
+   
+
+    
+   .. HACK -- the point here is that we don't want this to appear in the output, but the autosummary should still generate the pages.
+      .. autosummary::
+         :toctree:
+      
+         PowerOperator.adjoint
+         PowerOperator.domain
+         PowerOperator.exponent
+         PowerOperator.inverse
+         PowerOperator.is_functional
+         PowerOperator.is_linear
+         PowerOperator.range
+   
+   

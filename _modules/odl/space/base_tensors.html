@@ -1,0 +1,1222 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>odl.space.base_tensors &mdash; odl 1.0.0.dev0 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/custom.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../../" src="../../../_static/documentation_options.js"></script>
+        <script src="../../../_static/jquery.js"></script>
+        <script src="../../../_static/underscore.js"></script>
+        <script src="../../../_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="../../../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../../index.html" class="icon icon-home"> odl
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                1.0.0.dev0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Getting Started</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../getting_started/getting_started.html">Getting Started</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Working with ODL</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../guide/guide.html">User’s guide – selected topics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../math/math.html">Mathematical Background</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Developer zone</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../dev/dev.html">Contributing to ODL</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Useful facts</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../guide/faq.html">Frequently asked questions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../guide/glossary.html">Glossary</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../release_notes.html">Release Notes</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../refs.html">References</a></li>
+</ul>
+<p class="caption"><span class="caption-text">API Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../odl.html">odl</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">odl</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="../../index.html">Module code</a> &raquo;</li>
+        
+      <li>odl.space.base_tensors</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for odl.space.base_tensors</h1><div class="highlight"><pre>
+<span></span><span class="c1"># Copyright 2014-2020 The ODL contributors</span>
+<span class="c1">#</span>
+<span class="c1"># This file is part of ODL.</span>
+<span class="c1">#</span>
+<span class="c1"># This Source Code Form is subject to the terms of the Mozilla Public License,</span>
+<span class="c1"># v. 2.0. If a copy of the MPL was not distributed with this file, You can</span>
+<span class="c1"># obtain one at https://mozilla.org/MPL/2.0/.</span>
+
+<span class="sd">&quot;&quot;&quot;Base classes for implementations of tensor spaces.&quot;&quot;&quot;</span>
+
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">absolute_import</span><span class="p">,</span> <span class="n">division</span><span class="p">,</span> <span class="n">print_function</span>
+
+<span class="kn">from</span> <span class="nn">numbers</span> <span class="kn">import</span> <span class="n">Integral</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+
+<span class="kn">from</span> <span class="nn">odl.set.sets</span> <span class="kn">import</span> <span class="n">ComplexNumbers</span><span class="p">,</span> <span class="n">RealNumbers</span>
+<span class="kn">from</span> <span class="nn">odl.set.space</span> <span class="kn">import</span> <span class="n">LinearSpace</span><span class="p">,</span> <span class="n">LinearSpaceElement</span>
+<span class="kn">from</span> <span class="nn">odl.util</span> <span class="kn">import</span> <span class="p">(</span>
+    <span class="n">array_str</span><span class="p">,</span> <span class="n">dtype_str</span><span class="p">,</span> <span class="n">indent</span><span class="p">,</span> <span class="n">is_complex_floating_dtype</span><span class="p">,</span> <span class="n">is_floating_dtype</span><span class="p">,</span>
+    <span class="n">is_numeric_dtype</span><span class="p">,</span> <span class="n">is_real_dtype</span><span class="p">,</span> <span class="n">is_real_floating_dtype</span><span class="p">,</span> <span class="n">safe_int_conv</span><span class="p">,</span>
+    <span class="n">signature_string</span><span class="p">,</span> <span class="n">writable_array</span><span class="p">)</span>
+<span class="kn">from</span> <span class="nn">odl.util.ufuncs</span> <span class="kn">import</span> <span class="n">TensorSpaceUfuncs</span>
+<span class="kn">from</span> <span class="nn">odl.util.utility</span> <span class="kn">import</span> <span class="n">TYPE_MAP_C2R</span><span class="p">,</span> <span class="n">TYPE_MAP_R2C</span><span class="p">,</span> <span class="n">nullcontext</span>
+
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;TensorSpace&#39;</span><span class="p">,)</span>
+
+
+<div class="viewcode-block" id="TensorSpace"><a class="viewcode-back" href="../../../generated/odl.space.base_tensors.TensorSpace.html#odl.space.base_tensors.TensorSpace">[docs]</a><span class="k">class</span> <span class="nc">TensorSpace</span><span class="p">(</span><span class="n">LinearSpace</span><span class="p">):</span>
+
+    <span class="sd">&quot;&quot;&quot;Base class for sets of tensors of arbitrary data type.</span>
+
+<span class="sd">    A tensor is, in the most general sense, a multi-dimensional array</span>
+<span class="sd">    that allows operations per entry (keep the rank constant),</span>
+<span class="sd">    reductions / contractions (reduce the rank) and broadcasting</span>
+<span class="sd">    (raises the rank).</span>
+<span class="sd">    For non-numeric data type like ``object``, the range of valid</span>
+<span class="sd">    operations is rather limited since such a set of tensors does not</span>
+<span class="sd">    define a vector space.</span>
+<span class="sd">    Any numeric data type, on the other hand, is considered valid for</span>
+<span class="sd">    a tensor space, although certain operations - like division with</span>
+<span class="sd">    integer dtype - are not guaranteed to yield reasonable results.</span>
+
+<span class="sd">    Under these restrictions, all basic vector space operations are</span>
+<span class="sd">    supported by this class, along with reductions based on arithmetic</span>
+<span class="sd">    or comparison, and element-wise mathematical functions (&quot;ufuncs&quot;).</span>
+
+<span class="sd">    See the `Wikipedia article on tensors`_ for further details.</span>
+<span class="sd">    See also [Hac2012] &quot;Part I Algebraic Tensors&quot; for a rigorous</span>
+<span class="sd">    treatment of tensors with a definition close to this one.</span>
+
+<span class="sd">    Note also that this notion of tensors is the same as in popular</span>
+<span class="sd">    Deep Learning frameworks.</span>
+
+<span class="sd">    References</span>
+<span class="sd">    ----------</span>
+<span class="sd">    [Hac2012] Hackbusch, W. *Tensor Spaces and Numerical Tensor Calculus*.</span>
+<span class="sd">    Springer, 2012.</span>
+
+<span class="sd">    .. _Wikipedia article on tensors: https://en.wikipedia.org/wiki/Tensor</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="TensorSpace.__init__"><a class="viewcode-back" href="../../../generated/odl.space.base_tensors.TensorSpace.html#odl.space.base_tensors.TensorSpace.__init__">[docs]</a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">shape</span><span class="p">,</span> <span class="n">dtype</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Initialize a new instance.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        shape : nonnegative int or sequence of nonnegative ints</span>
+<span class="sd">            Number of entries of type ``dtype`` per axis in this space. A</span>
+<span class="sd">            single integer results in a space with rank 1, i.e., 1 axis.</span>
+<span class="sd">        dtype :</span>
+<span class="sd">            Data type of elements in this space. Can be provided</span>
+<span class="sd">            in any way the `numpy.dtype` constructor understands, e.g.</span>
+<span class="sd">            as built-in type or as a string.</span>
+<span class="sd">            For a data type with a ``dtype.shape``, these extra dimensions</span>
+<span class="sd">            are added *to the left* of ``shape``.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># Handle shape and dtype, taking care also of dtypes with shape</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">shape</span><span class="p">,</span> <span class="n">shape_in</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">safe_int_conv</span><span class="p">(</span><span class="n">s</span><span class="p">)</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">shape</span><span class="p">),</span> <span class="n">shape</span>
+        <span class="k">except</span> <span class="ne">TypeError</span><span class="p">:</span>
+            <span class="n">shape</span><span class="p">,</span> <span class="n">shape_in</span> <span class="o">=</span> <span class="p">(</span><span class="n">safe_int_conv</span><span class="p">(</span><span class="n">shape</span><span class="p">),),</span> <span class="n">shape</span>
+        <span class="k">if</span> <span class="nb">any</span><span class="p">(</span><span class="n">s</span> <span class="o">&lt;</span> <span class="mi">0</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">shape</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;`shape` must have only nonnegative entries, got &#39;</span>
+                             <span class="s1">&#39;</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">shape_in</span><span class="p">))</span>
+        <span class="n">dtype</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dtype</span><span class="p">(</span><span class="n">dtype</span><span class="p">)</span>
+
+        <span class="c1"># We choose this order in contrast to Numpy, since we usually want</span>
+        <span class="c1"># to represent discretizations of vector- or tensor-valued functions,</span>
+        <span class="c1"># i.e., if dtype.shape == (3,) we expect f[0] to have shape `shape`.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__shape</span> <span class="o">=</span> <span class="n">dtype</span><span class="o">.</span><span class="n">shape</span> <span class="o">+</span> <span class="n">shape</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__dtype</span> <span class="o">=</span> <span class="n">dtype</span><span class="o">.</span><span class="n">base</span>
+
+        <span class="k">if</span> <span class="n">is_real_dtype</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dtype</span><span class="p">):</span>
+            <span class="c1"># real includes non-floating-point like integers</span>
+            <span class="n">field</span> <span class="o">=</span> <span class="n">RealNumbers</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">__real_dtype</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">dtype</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">__real_space</span> <span class="o">=</span> <span class="bp">self</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">__complex_dtype</span> <span class="o">=</span> <span class="n">TYPE_MAP_R2C</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dtype</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">__complex_space</span> <span class="o">=</span> <span class="kc">None</span>  <span class="c1"># Set in first call of astype</span>
+        <span class="k">elif</span> <span class="n">is_complex_floating_dtype</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dtype</span><span class="p">):</span>
+            <span class="n">field</span> <span class="o">=</span> <span class="n">ComplexNumbers</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">__real_dtype</span> <span class="o">=</span> <span class="n">TYPE_MAP_C2R</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">dtype</span><span class="p">]</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">__real_space</span> <span class="o">=</span> <span class="kc">None</span>  <span class="c1"># Set in first call of astype</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">__complex_dtype</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">dtype</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">__complex_space</span> <span class="o">=</span> <span class="bp">self</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">field</span> <span class="o">=</span> <span class="kc">None</span>
+
+        <span class="n">LinearSpace</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">field</span><span class="p">)</span></div>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">impl</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Name of the implementation back-end of this tensor set.</span>
+
+<span class="sd">        This property should be overridden by subclasses.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s1">&#39;abstract method&#39;</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">shape</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Number of scalar elements per axis.</span>
+
+<span class="sd">        .. note::</span>
+<span class="sd">            If `dtype` has a shape, we add it to the **left** of the given</span>
+<span class="sd">            ``shape`` in the class creation. This is in contrast to NumPy,</span>
+<span class="sd">            which adds extra axes to the **right**. We do this since we</span>
+<span class="sd">            usually want to represent discretizations of vector- or</span>
+<span class="sd">            tensor-valued functions by this, i.e., if</span>
+<span class="sd">            ``dtype.shape == (3,)`` we expect ``f[0]`` to have shape</span>
+<span class="sd">            ``shape``.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__shape</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">dtype</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Scalar data type of each entry in an element of this space.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__dtype</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">is_real</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;True if this is a space of real tensors.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">is_real_floating_dtype</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">is_complex</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;True if this is a space of complex tensors.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">is_complex_floating_dtype</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">real_dtype</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;The real dtype corresponding to this space&#39;s `dtype`.</span>
+
+<span class="sd">        Raises</span>
+<span class="sd">        ------</span>
+<span class="sd">        NotImplementedError</span>
+<span class="sd">            If `dtype` is not a numeric data type.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">is_numeric_dtype</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dtype</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span>
+                <span class="s1">&#39;`real_dtype` not defined for non-numeric `dtype`&#39;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__real_dtype</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">complex_dtype</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;The complex dtype corresponding to this space&#39;s `dtype`.</span>
+
+<span class="sd">        Raises</span>
+<span class="sd">        ------</span>
+<span class="sd">        NotImplementedError</span>
+<span class="sd">            If `dtype` is not a numeric data type.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">is_numeric_dtype</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dtype</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span>
+                <span class="s1">&#39;`complex_dtype` not defined for non-numeric `dtype`&#39;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__complex_dtype</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">real_space</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;The space corresponding to this space&#39;s `real_dtype`.</span>
+
+<span class="sd">        Raises</span>
+<span class="sd">        ------</span>
+<span class="sd">        ValueError</span>
+<span class="sd">            If `dtype` is not a numeric data type.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">is_numeric_dtype</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dtype</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s1">&#39;`real_space` not defined for non-numeric `dtype`&#39;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">real_dtype</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">complex_space</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;The space corresponding to this space&#39;s `complex_dtype`.</span>
+
+<span class="sd">        Raises</span>
+<span class="sd">        ------</span>
+<span class="sd">        ValueError</span>
+<span class="sd">            If `dtype` is not a numeric data type.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">is_numeric_dtype</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dtype</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s1">&#39;`complex_space` not defined for non-numeric `dtype`&#39;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">complex_dtype</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_astype</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dtype</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Internal helper for `astype`.</span>
+
+<span class="sd">        Subclasses with differing init parameters should overload this</span>
+<span class="sd">        method.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">kwargs</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">if</span> <span class="n">is_floating_dtype</span><span class="p">(</span><span class="n">dtype</span><span class="p">):</span>
+            <span class="c1"># Use weighting only for floating-point types, otherwise, e.g.,</span>
+            <span class="c1"># `space.astype(bool)` would fail</span>
+            <span class="n">weighting</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;weighting&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">weighting</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">kwargs</span><span class="p">[</span><span class="s1">&#39;weighting&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">weighting</span>
+
+        <span class="k">return</span> <span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">)(</span><span class="bp">self</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">dtype</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+<div class="viewcode-block" id="TensorSpace.astype"><a class="viewcode-back" href="../../../generated/odl.space.base_tensors.TensorSpace.astype.html#odl.space.base_tensors.TensorSpace.astype">[docs]</a>    <span class="k">def</span> <span class="nf">astype</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dtype</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return a copy of this space with new ``dtype``.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        dtype :</span>
+<span class="sd">            Scalar data type of the returned space. Can be provided</span>
+<span class="sd">            in any way the `numpy.dtype` constructor understands, e.g.</span>
+<span class="sd">            as built-in type or as a string. Data types with non-trivial</span>
+<span class="sd">            shapes are not allowed.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        newspace : `TensorSpace`</span>
+<span class="sd">            Version of this space with given data type.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">dtype</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="c1"># Need to filter this out since Numpy iterprets it as &#39;float&#39;</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;`None` is not a valid data type&#39;</span><span class="p">)</span>
+
+        <span class="n">dtype</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dtype</span><span class="p">(</span><span class="n">dtype</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">dtype</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">dtype</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span>
+
+        <span class="k">if</span> <span class="n">is_numeric_dtype</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dtype</span><span class="p">):</span>
+            <span class="c1"># Caching for real and complex versions (exact dtype mappings)</span>
+            <span class="k">if</span> <span class="n">dtype</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">__real_dtype</span><span class="p">:</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">__real_space</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">__real_space</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_astype</span><span class="p">(</span><span class="n">dtype</span><span class="p">)</span>
+                <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__real_space</span>
+            <span class="k">elif</span> <span class="n">dtype</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">__complex_dtype</span><span class="p">:</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">__complex_space</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">__complex_space</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_astype</span><span class="p">(</span><span class="n">dtype</span><span class="p">)</span>
+                <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__complex_space</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_astype</span><span class="p">(</span><span class="n">dtype</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_astype</span><span class="p">(</span><span class="n">dtype</span><span class="p">)</span></div>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">default_order</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Default storage order for new elements in this space.</span>
+
+<span class="sd">        This property should be overridden by subclasses.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s1">&#39;abstract method&#39;</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">size</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Total number of entries in an element of this space.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="p">(</span><span class="mi">0</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">shape</span> <span class="o">==</span> <span class="p">()</span> <span class="k">else</span>
+                <span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">prod</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="s1">&#39;int64&#39;</span><span class="p">)))</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">ndim</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Number of axes (=dimensions) of this space, also called &quot;rank&quot;.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="fm">__len__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Number of tensor entries along the first axis.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">itemsize</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Size in bytes of one entry in an element of this space.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dtype</span><span class="o">.</span><span class="n">itemsize</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">nbytes</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Total number of bytes in memory used by an element of this space.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">size</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">itemsize</span>
+
+<div class="viewcode-block" id="TensorSpace.__contains__"><a class="viewcode-back" href="../../../generated/odl.space.base_tensors.TensorSpace.__contains__.html#odl.space.base_tensors.TensorSpace.__contains__">[docs]</a>    <span class="k">def</span> <span class="fm">__contains__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return ``other in self``.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        contains : bool</span>
+<span class="sd">            ``True`` if ``other`` has a ``space`` attribute that is equal</span>
+<span class="sd">            to this space, ``False`` otherwise.</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        --------</span>
+<span class="sd">        Elements created with the `TensorSpace.element` method are</span>
+<span class="sd">        guaranteed to be contained in the same space:</span>
+
+<span class="sd">        &gt;&gt;&gt; spc = odl.tensor_space((2, 3), dtype=&#39;uint64&#39;)</span>
+<span class="sd">        &gt;&gt;&gt; spc.element() in spc</span>
+<span class="sd">        True</span>
+<span class="sd">        &gt;&gt;&gt; x = spc.element([[0, 1, 2],</span>
+<span class="sd">        ...                  [3, 4, 5]])</span>
+<span class="sd">        &gt;&gt;&gt; x in spc</span>
+<span class="sd">        True</span>
+
+<span class="sd">        Sizes, data types and other essential properties characterize</span>
+<span class="sd">        spaces and decide about membership:</span>
+
+<span class="sd">        &gt;&gt;&gt; smaller_spc = odl.tensor_space((2, 2), dtype=&#39;uint64&#39;)</span>
+<span class="sd">        &gt;&gt;&gt; y = smaller_spc.element([[0, 1],</span>
+<span class="sd">        ...                          [2, 3]])</span>
+<span class="sd">        &gt;&gt;&gt; y in spc</span>
+<span class="sd">        False</span>
+<span class="sd">        &gt;&gt;&gt; x in smaller_spc</span>
+<span class="sd">        False</span>
+<span class="sd">        &gt;&gt;&gt; other_dtype_spc = odl.tensor_space((2, 3), dtype=&#39;uint32&#39;)</span>
+<span class="sd">        &gt;&gt;&gt; z = other_dtype_spc.element([[0, 1, 2],</span>
+<span class="sd">        ...                              [3, 4, 5]])</span>
+<span class="sd">        &gt;&gt;&gt; z in spc</span>
+<span class="sd">        False</span>
+<span class="sd">        &gt;&gt;&gt; x in other_dtype_spc</span>
+<span class="sd">        False</span>
+
+<span class="sd">        On the other hand, spaces are not unique:</span>
+
+<span class="sd">        &gt;&gt;&gt; spc2 = odl.tensor_space((2, 3), dtype=&#39;uint64&#39;)</span>
+<span class="sd">        &gt;&gt;&gt; spc2 == spc</span>
+<span class="sd">        True</span>
+<span class="sd">        &gt;&gt;&gt; x2 = spc2.element([[5, 4, 3],</span>
+<span class="sd">        ...                    [2, 1, 0]])</span>
+<span class="sd">        &gt;&gt;&gt; x2 in spc</span>
+<span class="sd">        True</span>
+<span class="sd">        &gt;&gt;&gt; x in spc2</span>
+<span class="sd">        True</span>
+
+<span class="sd">        Of course, random garbage is not in the space:</span>
+
+<span class="sd">        &gt;&gt;&gt; spc = odl.tensor_space((2, 3), dtype=&#39;uint64&#39;)</span>
+<span class="sd">        &gt;&gt;&gt; None in spc</span>
+<span class="sd">        False</span>
+<span class="sd">        &gt;&gt;&gt; object in spc</span>
+<span class="sd">        False</span>
+<span class="sd">        &gt;&gt;&gt; False in spc</span>
+<span class="sd">        False</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="s1">&#39;space&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span> <span class="o">==</span> <span class="bp">self</span></div>
+
+<div class="viewcode-block" id="TensorSpace.__eq__"><a class="viewcode-back" href="../../../generated/odl.space.base_tensors.TensorSpace.__eq__.html#odl.space.base_tensors.TensorSpace.__eq__">[docs]</a>    <span class="k">def</span> <span class="fm">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return ``self == other``.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        equals : bool</span>
+<span class="sd">            True if ``self`` and ``other`` have the same type, `shape`</span>
+<span class="sd">            and `dtype`, otherwise ``False``.</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        --------</span>
+<span class="sd">        Sizes, data types and other essential properties characterize</span>
+<span class="sd">        spaces and decide about equality:</span>
+
+<span class="sd">        &gt;&gt;&gt; spc = odl.tensor_space(3, dtype=&#39;uint64&#39;)</span>
+<span class="sd">        &gt;&gt;&gt; spc == spc</span>
+<span class="sd">        True</span>
+<span class="sd">        &gt;&gt;&gt; spc2 = odl.tensor_space(3, dtype=&#39;uint64&#39;)</span>
+<span class="sd">        &gt;&gt;&gt; spc2 == spc</span>
+<span class="sd">        True</span>
+<span class="sd">        &gt;&gt;&gt; smaller_spc = odl.tensor_space(2, dtype=&#39;uint64&#39;)</span>
+<span class="sd">        &gt;&gt;&gt; spc == smaller_spc</span>
+<span class="sd">        False</span>
+<span class="sd">        &gt;&gt;&gt; other_dtype_spc = odl.tensor_space(3, dtype=&#39;uint32&#39;)</span>
+<span class="sd">        &gt;&gt;&gt; spc == other_dtype_spc</span>
+<span class="sd">        False</span>
+<span class="sd">        &gt;&gt;&gt; other_shape_spc = odl.tensor_space((3, 1), dtype=&#39;uint64&#39;)</span>
+<span class="sd">        &gt;&gt;&gt; spc == other_shape_spc</span>
+<span class="sd">        False</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">other</span> <span class="ow">is</span> <span class="bp">self</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">True</span>
+
+        <span class="k">return</span> <span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">other</span><span class="p">)</span> <span class="ow">is</span> <span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="ow">and</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">shape</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">shape</span> <span class="ow">and</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">dtype</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span></div>
+
+    <span class="k">def</span> <span class="fm">__hash__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return ``hash(self)``.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="nb">hash</span><span class="p">((</span><span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">dtype</span><span class="p">))</span>
+
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return ``repr(self)``.&quot;&quot;&quot;</span>
+        <span class="n">posargs</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="n">dtype_str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dtype</span><span class="p">)]</span>
+        <span class="k">return</span> <span class="s2">&quot;</span><span class="si">{}</span><span class="s2">(</span><span class="si">{}</span><span class="s2">)&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="p">,</span>
+                               <span class="n">signature_string</span><span class="p">(</span><span class="n">posargs</span><span class="p">,</span> <span class="p">[]))</span>
+
+    <span class="k">def</span> <span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return ``str(self)``.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="nb">repr</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">examples</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return example random vectors.&quot;&quot;&quot;</span>
+        <span class="c1"># Always return the same numbers</span>
+        <span class="n">rand_state</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">get_state</span><span class="p">()</span>
+        <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">seed</span><span class="p">(</span><span class="mi">1337</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">is_numeric_dtype</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dtype</span><span class="p">):</span>
+            <span class="k">yield</span> <span class="p">(</span><span class="s1">&#39;Linearly spaced samples&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">element</span><span class="p">(</span>
+                <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">size</span><span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">shape</span><span class="p">)))</span>
+            <span class="k">yield</span> <span class="p">(</span><span class="s1">&#39;Normally distributed noise&#39;</span><span class="p">,</span>
+                   <span class="bp">self</span><span class="o">.</span><span class="n">element</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">standard_normal</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">shape</span><span class="p">)))</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_real</span><span class="p">:</span>
+            <span class="k">yield</span> <span class="p">(</span><span class="s1">&#39;Uniformly distributed noise&#39;</span><span class="p">,</span>
+                   <span class="bp">self</span><span class="o">.</span><span class="n">element</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="n">size</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">shape</span><span class="p">)))</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_complex</span><span class="p">:</span>
+            <span class="k">yield</span> <span class="p">(</span><span class="s1">&#39;Uniformly distributed noise&#39;</span><span class="p">,</span>
+                   <span class="bp">self</span><span class="o">.</span><span class="n">element</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="n">size</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span> <span class="o">+</span>
+                                <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="n">size</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span> <span class="o">*</span> <span class="mi">1</span><span class="n">j</span><span class="p">))</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># TODO: return something that always works, like zeros or ones?</span>
+            <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s1">&#39;no examples available for non-numeric&#39;</span>
+                                      <span class="s1">&#39;data type&#39;</span><span class="p">)</span>
+
+        <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">set_state</span><span class="p">(</span><span class="n">rand_state</span><span class="p">)</span>
+
+<div class="viewcode-block" id="TensorSpace.zero"><a class="viewcode-back" href="../../../generated/odl.space.base_tensors.TensorSpace.zero.html#odl.space.base_tensors.TensorSpace.zero">[docs]</a>    <span class="k">def</span> <span class="nf">zero</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return a tensor of all zeros.</span>
+
+<span class="sd">        This method should be overridden by subclasses.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        zero : `Tensor`</span>
+<span class="sd">            A tensor of all zeros.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s1">&#39;abstract method&#39;</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="TensorSpace.one"><a class="viewcode-back" href="../../../generated/odl.space.base_tensors.TensorSpace.one.html#odl.space.base_tensors.TensorSpace.one">[docs]</a>    <span class="k">def</span> <span class="nf">one</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return a tensor of all ones.</span>
+
+<span class="sd">        This method should be overridden by subclasses.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        one : `Tensor`</span>
+<span class="sd">            A tensor of all one.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s1">&#39;abstract method&#39;</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="TensorSpace._multiply"><a class="viewcode-back" href="../../../generated/odl.space.base_tensors.TensorSpace._multiply.html#odl.space.base_tensors.TensorSpace._multiply">[docs]</a>    <span class="k">def</span> <span class="nf">_multiply</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x1</span><span class="p">,</span> <span class="n">x2</span><span class="p">,</span> <span class="n">out</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;The entry-wise product of two tensors, assigned to ``out``.</span>
+
+<span class="sd">        This method should be overridden by subclasses.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s1">&#39;abstract method&#39;</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="TensorSpace._divide"><a class="viewcode-back" href="../../../generated/odl.space.base_tensors.TensorSpace._divide.html#odl.space.base_tensors.TensorSpace._divide">[docs]</a>    <span class="k">def</span> <span class="nf">_divide</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x1</span><span class="p">,</span> <span class="n">x2</span><span class="p">,</span> <span class="n">out</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;The entry-wise quotient of two tensors, assigned to ``out``.</span>
+
+<span class="sd">        This method should be overridden by subclasses.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s1">&#39;abstract method&#39;</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="TensorSpace.default_dtype"><a class="viewcode-back" href="../../../generated/odl.space.base_tensors.TensorSpace.default_dtype.html#odl.space.base_tensors.TensorSpace.default_dtype">[docs]</a>    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">default_dtype</span><span class="p">(</span><span class="n">field</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return the default data type for a given field.</span>
+
+<span class="sd">        This method should be overridden by subclasses.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        field : `Field`, optional</span>
+<span class="sd">            Set of numbers to be represented by a data type.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        dtype :</span>
+<span class="sd">            Numpy data type specifier.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s1">&#39;abstract method&#39;</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="TensorSpace.available_dtypes"><a class="viewcode-back" href="../../../generated/odl.space.base_tensors.TensorSpace.available_dtypes.html#odl.space.base_tensors.TensorSpace.available_dtypes">[docs]</a>    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">available_dtypes</span><span class="p">():</span>
+        <span class="sd">&quot;&quot;&quot;Return the set of data types available in this implementation.</span>
+
+<span class="sd">        This method should be overridden by subclasses.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s1">&#39;abstract method&#39;</span><span class="p">)</span></div>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">element_type</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Type of elements in this space: `Tensor`.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">Tensor</span></div>
+
+
+<div class="viewcode-block" id="Tensor"><a class="viewcode-back" href="../../../generated/odl.space.base_tensors.Tensor.html#odl.space.base_tensors.Tensor">[docs]</a><span class="k">class</span> <span class="nc">Tensor</span><span class="p">(</span><span class="n">LinearSpaceElement</span><span class="p">):</span>
+
+    <span class="sd">&quot;&quot;&quot;Abstract class for representation of `TensorSpace` elements.&quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="Tensor.asarray"><a class="viewcode-back" href="../../../generated/odl.space.base_tensors.Tensor.asarray.html#odl.space.base_tensors.Tensor.asarray">[docs]</a>    <span class="k">def</span> <span class="nf">asarray</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">out</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Extract the data of this tensor as a Numpy array.</span>
+
+<span class="sd">        This method should be overridden by subclasses.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        out : `numpy.ndarray`, optional</span>
+<span class="sd">            Array to write the result to.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        asarray : `numpy.ndarray`</span>
+<span class="sd">            Numpy array of the same data type and shape as the space.</span>
+<span class="sd">            If ``out`` was given, the returned object is a reference</span>
+<span class="sd">            to it.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s1">&#39;abstract method&#39;</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Tensor.__getitem__"><a class="viewcode-back" href="../../../generated/odl.space.base_tensors.Tensor.__getitem__.html#odl.space.base_tensors.Tensor.__getitem__">[docs]</a>    <span class="k">def</span> <span class="fm">__getitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">indices</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return ``self[indices]``.</span>
+
+<span class="sd">        This method should be overridden by subclasses.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        indices : index expression</span>
+<span class="sd">            Integer, slice or sequence of these, defining the positions</span>
+<span class="sd">            of the data array which should be accessed.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        values : `TensorSpace.dtype` or `Tensor`</span>
+<span class="sd">            The value(s) at the given indices. Note that depending on</span>
+<span class="sd">            the implementation, the returned object may be a (writable)</span>
+<span class="sd">            view into the original array.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s1">&#39;abstract method&#39;</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Tensor.__setitem__"><a class="viewcode-back" href="../../../generated/odl.space.base_tensors.Tensor.__setitem__.html#odl.space.base_tensors.Tensor.__setitem__">[docs]</a>    <span class="k">def</span> <span class="fm">__setitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">indices</span><span class="p">,</span> <span class="n">values</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Implement ``self[indices] = values``.</span>
+
+<span class="sd">        This method should be overridden by subclasses.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        indices : index expression</span>
+<span class="sd">            Integer, slice or sequence of these, defining the positions</span>
+<span class="sd">            of the data array which should be written to.</span>
+<span class="sd">        values : scalar, `array-like` or `Tensor`</span>
+<span class="sd">            The value(s) that are to be assigned.</span>
+
+<span class="sd">            If ``index`` is an integer, ``value`` must be a scalar.</span>
+
+<span class="sd">            If ``index`` is a slice or a sequence of slices, ``value``</span>
+<span class="sd">            must be broadcastable to the shape of the slice.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s1">&#39;abstract method&#39;</span><span class="p">)</span></div>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">impl</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Name of the implementation back-end of this tensor.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">space</span><span class="o">.</span><span class="n">impl</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">shape</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Number of elements per axis.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">space</span><span class="o">.</span><span class="n">shape</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">dtype</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Data type of each entry.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">space</span><span class="o">.</span><span class="n">dtype</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">size</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Total number of entries.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">space</span><span class="o">.</span><span class="n">size</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">ndim</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Number of axes (=dimensions) of this tensor.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">space</span><span class="o">.</span><span class="n">ndim</span>
+
+    <span class="k">def</span> <span class="fm">__len__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return ``len(self)``.</span>
+
+<span class="sd">        The length is equal to the number of entries along axis 0.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">space</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">itemsize</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Size in bytes of one tensor entry.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">space</span><span class="o">.</span><span class="n">itemsize</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">nbytes</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Total number of bytes in memory occupied by this tensor.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">space</span><span class="o">.</span><span class="n">nbytes</span>
+
+<div class="viewcode-block" id="Tensor.astype"><a class="viewcode-back" href="../../../generated/odl.space.base_tensors.Tensor.astype.html#odl.space.base_tensors.Tensor.astype">[docs]</a>    <span class="k">def</span> <span class="nf">astype</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dtype</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return a copy of this element with new ``dtype``.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        dtype :</span>
+<span class="sd">            Scalar data type of the returned space. Can be provided</span>
+<span class="sd">            in any way the `numpy.dtype` constructor understands, e.g.</span>
+<span class="sd">            as built-in type or as a string. Data types with non-trivial</span>
+<span class="sd">            shapes are not allowed.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        newelem : `Tensor`</span>
+<span class="sd">            Version of this element with given data type.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s1">&#39;abstract method&#39;</span><span class="p">)</span></div>
+
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return ``repr(self)``.&quot;&quot;&quot;</span>
+        <span class="n">maxsize_full_print</span> <span class="o">=</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">get_printoptions</span><span class="p">()[</span><span class="s1">&#39;edgeitems&#39;</span><span class="p">]</span>
+        <span class="n">self_str</span> <span class="o">=</span> <span class="n">array_str</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">nprint</span><span class="o">=</span><span class="n">maxsize_full_print</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">ndim</span> <span class="o">==</span> <span class="mi">1</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">size</span> <span class="o">&lt;=</span> <span class="n">maxsize_full_print</span><span class="p">:</span>
+            <span class="k">return</span> <span class="s1">&#39;</span><span class="si">{!r}</span><span class="s1">.element(</span><span class="si">{}</span><span class="s1">)&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">space</span><span class="p">,</span> <span class="n">self_str</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="s1">&#39;</span><span class="si">{!r}</span><span class="s1">.element(</span><span class="se">\n</span><span class="si">{}</span><span class="se">\n</span><span class="s1">)&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">space</span><span class="p">,</span> <span class="n">indent</span><span class="p">(</span><span class="n">self_str</span><span class="p">))</span>
+
+    <span class="k">def</span> <span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return ``str(self)``.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">array_str</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="fm">__bool__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return ``bool(self)``.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">size</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;The truth value of an array with more than one &#39;</span>
+                             <span class="s1">&#39;element is ambiguous. &#39;</span>
+                             <span class="s1">&#39;Use np.any(a) or np.all(a)&#39;</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="nb">bool</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">asarray</span><span class="p">())</span>
+
+    <span class="k">def</span> <span class="nf">__array__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return a Numpy array from this tensor.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        dtype :</span>
+<span class="sd">            Specifier for the data type of the output array.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        array : `numpy.ndarray`</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">dtype</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">asarray</span><span class="p">()</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">asarray</span><span class="p">()</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">dtype</span><span class="p">,</span> <span class="n">copy</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__array_wrap__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">array</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return a new tensor wrapping the ``array``.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        array : `numpy.ndarray`</span>
+<span class="sd">            Array to be wrapped.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        wrapper : `Tensor`</span>
+<span class="sd">            Tensor wrapping ``array``.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">array</span><span class="o">.</span><span class="n">ndim</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">space</span><span class="o">.</span><span class="n">field</span><span class="o">.</span><span class="n">element</span><span class="p">(</span><span class="n">array</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">space</span><span class="o">.</span><span class="n">element</span><span class="p">(</span><span class="n">array</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__array_ufunc__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ufunc</span><span class="p">,</span> <span class="n">method</span><span class="p">,</span> <span class="o">*</span><span class="n">inputs</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Interface to Numpy&#39;s ufunc machinery.</span>
+
+<span class="sd">        This method is called by Numpy version 1.13 and higher as a single</span>
+<span class="sd">        point for the ufunc dispatch logic. An object implementing</span>
+<span class="sd">        ``__array_ufunc__`` takes over control when a `numpy.ufunc` is</span>
+<span class="sd">        called on it, allowing it to use custom implementations and</span>
+<span class="sd">        output types.</span>
+
+<span class="sd">        This includes handling of in-place arithmetic like</span>
+<span class="sd">        ``npy_array += custom_obj``. In this case, the custom object&#39;s</span>
+<span class="sd">        ``__array_ufunc__`` takes precedence over the baseline</span>
+<span class="sd">        `numpy.ndarray` implementation. It will be called with</span>
+<span class="sd">        ``npy_array`` as ``out`` argument, which ensures that the</span>
+<span class="sd">        returned object is a Numpy array. For this to work properly,</span>
+<span class="sd">        ``__array_ufunc__`` has to accept Numpy arrays as ``out`` arguments.</span>
+
+<span class="sd">        See the `corresponding NEP`_ and the `interface documentation`_</span>
+<span class="sd">        for further details. See also the `general documentation on</span>
+<span class="sd">        Numpy ufuncs`_.</span>
+
+<span class="sd">        .. note::</span>
+<span class="sd">            This basic implementation casts inputs and</span>
+<span class="sd">            outputs to Numpy arrays and evaluates ``ufunc`` on those.</span>
+<span class="sd">            For `numpy.ndarray` based data storage, this incurs no</span>
+<span class="sd">            significant overhead compared to direct usage of Numpy arrays.</span>
+
+<span class="sd">            For other (in particular non-local) implementations, e.g.,</span>
+<span class="sd">            GPU arrays or distributed memory, overhead is significant due</span>
+<span class="sd">            to copies to CPU main memory. In those classes, the</span>
+<span class="sd">            ``__array_ufunc__`` mechanism should be overridden in favor of</span>
+<span class="sd">            a native implementations if possible.</span>
+
+<span class="sd">        .. note::</span>
+<span class="sd">            If no ``out`` parameter is provided, this implementation</span>
+<span class="sd">            just returns the raw array and does not attempt to wrap the</span>
+<span class="sd">            result in any kind of space.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        ufunc : `numpy.ufunc`</span>
+<span class="sd">            Ufunc that should be called on ``self``.</span>
+<span class="sd">        method : str</span>
+<span class="sd">            Method on ``ufunc`` that should be called on ``self``.</span>
+<span class="sd">            Possible values:</span>
+
+<span class="sd">            ``&#39;__call__&#39;``, ``&#39;accumulate&#39;``, ``&#39;at&#39;``, ``&#39;outer&#39;``,</span>
+<span class="sd">            ``&#39;reduce&#39;``, ``&#39;reduceat&#39;``</span>
+
+<span class="sd">        input1, ..., inputN:</span>
+<span class="sd">            Positional arguments to ``ufunc.method``.</span>
+<span class="sd">        kwargs:</span>
+<span class="sd">            Keyword arguments to ``ufunc.method``.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        ufunc_result : `Tensor`, `numpy.ndarray` or tuple</span>
+<span class="sd">            Result of the ufunc evaluation. If no ``out`` keyword argument</span>
+<span class="sd">            was given, the result is a `Tensor` or a tuple</span>
+<span class="sd">            of such, depending on the number of outputs of ``ufunc``.</span>
+<span class="sd">            If ``out`` was provided, the returned object or tuple entries</span>
+<span class="sd">            refer(s) to ``out``.</span>
+
+<span class="sd">        References</span>
+<span class="sd">        ----------</span>
+<span class="sd">        .. _corresponding NEP:</span>
+<span class="sd">           https://docs.scipy.org/doc/numpy/neps/ufunc-overrides.html</span>
+
+<span class="sd">        .. _interface documentation:</span>
+<span class="sd">           https://docs.scipy.org/doc/numpy/reference/arrays.classes.html\</span>
+<span class="sd">#numpy.class.__array_ufunc__</span>
+
+<span class="sd">        .. _general documentation on Numpy ufuncs:</span>
+<span class="sd">           https://docs.scipy.org/doc/numpy/reference/ufuncs.html</span>
+
+<span class="sd">        .. _reduceat documentation:</span>
+<span class="sd">           https://docs.scipy.org/doc/numpy/reference/generated/\</span>
+<span class="sd">numpy.ufunc.reduceat.html</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># --- Process `out` --- #</span>
+
+        <span class="c1"># Unwrap out if provided. The output parameters are all wrapped</span>
+        <span class="c1"># in one tuple, even if there is only one.</span>
+        <span class="n">out_tuple</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;out&#39;</span><span class="p">,</span> <span class="p">())</span>
+
+        <span class="c1"># Check number of `out` args, depending on `method`</span>
+        <span class="k">if</span> <span class="n">method</span> <span class="o">==</span> <span class="s1">&#39;__call__&#39;</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">out_tuple</span><span class="p">)</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">ufunc</span><span class="o">.</span><span class="n">nout</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s2">&quot;ufunc </span><span class="si">{}</span><span class="s2">: need 0 or </span><span class="si">{}</span><span class="s2"> `out` arguments for &quot;</span>
+                <span class="s2">&quot;`method=&#39;__call__&#39;`, got </span><span class="si">{}</span><span class="s2">&quot;</span>
+                <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">ufunc</span><span class="o">.</span><span class="vm">__name__</span><span class="p">,</span> <span class="n">ufunc</span><span class="o">.</span><span class="n">nout</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">out_tuple</span><span class="p">)))</span>
+        <span class="k">elif</span> <span class="n">method</span> <span class="o">!=</span> <span class="s1">&#39;__call__&#39;</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">out_tuple</span><span class="p">)</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s1">&#39;ufunc </span><span class="si">{}</span><span class="s1">: need 0 or 1 `out` arguments for `method=</span><span class="si">{!r}</span><span class="s1">`, &#39;</span>
+                <span class="s1">&#39;got </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">ufunc</span><span class="o">.</span><span class="vm">__name__</span><span class="p">,</span> <span class="n">method</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">out_tuple</span><span class="p">)))</span>
+
+        <span class="c1"># We allow our own tensors, the data container type and</span>
+        <span class="c1"># `numpy.ndarray` objects as `out` (see docs for reason for the</span>
+        <span class="c1"># latter)</span>
+        <span class="n">valid_types</span> <span class="o">=</span> <span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">),</span> <span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">all</span><span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">o</span><span class="p">,</span> <span class="n">valid_types</span><span class="p">)</span> <span class="ow">or</span> <span class="n">o</span> <span class="ow">is</span> <span class="kc">None</span>
+                   <span class="k">for</span> <span class="n">o</span> <span class="ow">in</span> <span class="n">out_tuple</span><span class="p">):</span>
+            <span class="k">return</span> <span class="bp">NotImplemented</span>
+
+        <span class="c1"># Assign to `out` or `out1` and `out2`, respectively</span>
+        <span class="n">out</span> <span class="o">=</span> <span class="n">out1</span> <span class="o">=</span> <span class="n">out2</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">out_tuple</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">out</span> <span class="o">=</span> <span class="n">out_tuple</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="k">elif</span> <span class="nb">len</span><span class="p">(</span><span class="n">out_tuple</span><span class="p">)</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
+            <span class="n">out1</span> <span class="o">=</span> <span class="n">out_tuple</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="n">out2</span> <span class="o">=</span> <span class="n">out_tuple</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+
+        <span class="c1"># --- Process `inputs` --- #</span>
+
+        <span class="c1"># Convert inputs that are ODL tensors or their data containers to</span>
+        <span class="c1"># Numpy arrays so that the native Numpy ufunc is called later</span>
+        <span class="n">inputs</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span>
+            <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">inp</span><span class="p">)</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">inp</span><span class="p">,</span> <span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">),</span> <span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">)))</span>
+            <span class="k">else</span> <span class="n">inp</span>
+            <span class="k">for</span> <span class="n">inp</span> <span class="ow">in</span> <span class="n">inputs</span><span class="p">)</span>
+
+        <span class="c1"># --- Get some parameters for later --- #</span>
+
+        <span class="c1"># Arguments for `writable_array` and/or space constructors</span>
+        <span class="n">out_dtype</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;dtype&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">out_dtype</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">array_kwargs</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">array_kwargs</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;dtype&#39;</span><span class="p">:</span> <span class="n">out_dtype</span><span class="p">}</span>
+
+        <span class="c1"># --- Evaluate ufunc --- #</span>
+
+        <span class="k">if</span> <span class="n">method</span> <span class="o">==</span> <span class="s1">&#39;__call__&#39;</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">ufunc</span><span class="o">.</span><span class="n">nout</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="c1"># Make context for output (trivial one returns `None`)</span>
+                <span class="k">if</span> <span class="n">out</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="n">out_ctx</span> <span class="o">=</span> <span class="n">nullcontext</span><span class="p">()</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">out_ctx</span> <span class="o">=</span> <span class="n">writable_array</span><span class="p">(</span><span class="n">out</span><span class="p">,</span> <span class="o">**</span><span class="n">array_kwargs</span><span class="p">)</span>
+
+                <span class="c1"># Evaluate ufunc</span>
+                <span class="k">with</span> <span class="n">out_ctx</span> <span class="k">as</span> <span class="n">out_arr</span><span class="p">:</span>
+                    <span class="n">kwargs</span><span class="p">[</span><span class="s1">&#39;out&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">out_arr</span>
+                    <span class="n">res</span> <span class="o">=</span> <span class="n">ufunc</span><span class="p">(</span><span class="o">*</span><span class="n">inputs</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+                <span class="c1"># Return result (may be a raw array or a space element)</span>
+                <span class="k">return</span> <span class="n">res</span>
+
+            <span class="k">elif</span> <span class="n">ufunc</span><span class="o">.</span><span class="n">nout</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
+                <span class="c1"># Make contexts for outputs (trivial ones return `None`)</span>
+                <span class="k">if</span> <span class="n">out1</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="n">out1_ctx</span> <span class="o">=</span> <span class="n">writable_array</span><span class="p">(</span><span class="n">out1</span><span class="p">,</span> <span class="o">**</span><span class="n">array_kwargs</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">out1_ctx</span> <span class="o">=</span> <span class="n">nullcontext</span><span class="p">()</span>
+                <span class="k">if</span> <span class="n">out2</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="n">out2_ctx</span> <span class="o">=</span> <span class="n">writable_array</span><span class="p">(</span><span class="n">out2</span><span class="p">,</span> <span class="o">**</span><span class="n">array_kwargs</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">out2_ctx</span> <span class="o">=</span> <span class="n">nullcontext</span><span class="p">()</span>
+
+                <span class="c1"># Evaluate ufunc</span>
+                <span class="k">with</span> <span class="n">out1_ctx</span> <span class="k">as</span> <span class="n">out1_arr</span><span class="p">,</span> <span class="n">out2_ctx</span> <span class="k">as</span> <span class="n">out2_arr</span><span class="p">:</span>
+                    <span class="n">kwargs</span><span class="p">[</span><span class="s1">&#39;out&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">out1_arr</span><span class="p">,</span> <span class="n">out2_arr</span><span class="p">)</span>
+                    <span class="n">res1</span><span class="p">,</span> <span class="n">res2</span> <span class="o">=</span> <span class="n">ufunc</span><span class="p">(</span><span class="o">*</span><span class="n">inputs</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+                <span class="c1"># Return results (may be raw arrays or space elements)</span>
+                <span class="k">return</span> <span class="n">res1</span><span class="p">,</span> <span class="n">res2</span>
+
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s1">&#39;nout = </span><span class="si">{}</span><span class="s1"> not supported&#39;</span>
+                                          <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">ufunc</span><span class="o">.</span><span class="n">nout</span><span class="p">))</span>
+
+        <span class="k">else</span><span class="p">:</span>  <span class="c1"># method != &#39;__call__&#39;</span>
+            <span class="c1"># Make context for output (trivial one returns `None`)</span>
+            <span class="k">if</span> <span class="n">out</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">out_ctx</span> <span class="o">=</span> <span class="n">nullcontext</span><span class="p">()</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">out_ctx</span> <span class="o">=</span> <span class="n">writable_array</span><span class="p">(</span><span class="n">out</span><span class="p">,</span> <span class="o">**</span><span class="n">array_kwargs</span><span class="p">)</span>
+
+            <span class="c1"># Evaluate ufunc method</span>
+            <span class="k">if</span> <span class="n">method</span> <span class="o">==</span> <span class="s1">&#39;at&#39;</span><span class="p">:</span>
+                <span class="k">with</span> <span class="n">writable_array</span><span class="p">(</span><span class="n">inputs</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="k">as</span> <span class="n">inp_arr</span><span class="p">:</span>
+                    <span class="n">res</span> <span class="o">=</span> <span class="n">ufunc</span><span class="o">.</span><span class="n">at</span><span class="p">(</span><span class="n">inp_arr</span><span class="p">,</span> <span class="o">*</span><span class="n">inputs</span><span class="p">[</span><span class="mi">1</span><span class="p">:],</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">with</span> <span class="n">out_ctx</span> <span class="k">as</span> <span class="n">out_arr</span><span class="p">:</span>
+                    <span class="n">kwargs</span><span class="p">[</span><span class="s1">&#39;out&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">out_arr</span>
+                    <span class="n">res</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">ufunc</span><span class="p">,</span> <span class="n">method</span><span class="p">)(</span><span class="o">*</span><span class="n">inputs</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+            <span class="c1"># Return result (may be scalar, raw array or space element)</span>
+            <span class="k">return</span> <span class="n">res</span>
+
+    <span class="c1"># Old ufuncs interface, will be deprecated when Numpy 1.13 becomes minimum</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">ufuncs</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Access to Numpy style universal functions.</span>
+
+<span class="sd">        These default ufuncs are always available, but may or may not be</span>
+<span class="sd">        optimized for the specific space in use.</span>
+
+<span class="sd">        .. note::</span>
+<span class="sd">            This interface is will be deprecated when Numpy 1.13 becomes</span>
+<span class="sd">            the minimum required version. Use Numpy ufuncs directly, e.g.,</span>
+<span class="sd">            ``np.sqrt(x)`` instead of ``x.ufuncs.sqrt()``.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">TensorSpaceUfuncs</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+
+<div class="viewcode-block" id="Tensor.show"><a class="viewcode-back" href="../../../generated/odl.space.base_tensors.Tensor.show.html#odl.space.base_tensors.Tensor.show">[docs]</a>    <span class="k">def</span> <span class="nf">show</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">title</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="n">indices</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">force_show</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+             <span class="n">fig</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Display the function graphically.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        title : string, optional</span>
+<span class="sd">            Set the title of the figure</span>
+
+<span class="sd">        method : string, optional</span>
+<span class="sd">            1d methods:</span>
+
+<span class="sd">                ``&#39;plot&#39;`` : graph plot</span>
+
+<span class="sd">                ``&#39;scatter&#39;`` : scattered 2d points (2nd axis &lt;-&gt; value)</span>
+
+<span class="sd">            2d methods:</span>
+
+<span class="sd">                ``&#39;imshow&#39;`` : image plot with coloring according to</span>
+<span class="sd">                value, including a colorbar.</span>
+
+<span class="sd">                ``&#39;scatter&#39;`` : cloud of scattered 3d points</span>
+<span class="sd">                (3rd axis &lt;-&gt; value)</span>
+
+<span class="sd">        indices : index expression, optional</span>
+<span class="sd">            Display a slice of the array instead of the full array. The</span>
+<span class="sd">            index expression is most easily created with the `numpy.s_`</span>
+<span class="sd">            constructor, i.e. supply ``np.s_[:, 1, :]`` to display the</span>
+<span class="sd">            first slice along the second axis.</span>
+<span class="sd">            For data with 3 or more dimensions, the 2d slice in the first</span>
+<span class="sd">            two axes at the &quot;middle&quot; along the remaining axes is shown</span>
+<span class="sd">            (semantically ``[:, :, shape[2:] // 2]``).</span>
+<span class="sd">            This option is mutually exclusive to ``coords``.</span>
+
+<span class="sd">        force_show : bool, optional</span>
+<span class="sd">            Whether the plot should be forced to be shown now or deferred until</span>
+<span class="sd">            later. Note that some backends always displays the plot, regardless</span>
+<span class="sd">            of this value.</span>
+
+<span class="sd">        fig : `matplotlib.figure.Figure`, optional</span>
+<span class="sd">            The figure to show in. Expected to be of same &quot;style&quot;, as</span>
+<span class="sd">            the figure given by this function. The most common use case</span>
+<span class="sd">            is that ``fig`` is the return value of an earlier call to</span>
+<span class="sd">            this function.</span>
+
+<span class="sd">        kwargs : {&#39;figsize&#39;, &#39;saveto&#39;, &#39;clim&#39;, ...}, optional</span>
+<span class="sd">            Extra keyword arguments passed on to the display method.</span>
+<span class="sd">            See the Matplotlib functions for documentation of extra</span>
+<span class="sd">            options.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        fig : `matplotlib.figure.Figure`</span>
+<span class="sd">            The resulting figure. It is also shown to the user.</span>
+
+<span class="sd">        See Also</span>
+<span class="sd">        --------</span>
+<span class="sd">        odl.util.graphics.show_discrete_data : Underlying implementation</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="kn">from</span> <span class="nn">odl.discr</span> <span class="kn">import</span> <span class="n">uniform_grid</span>
+        <span class="kn">from</span> <span class="nn">odl.util.graphics</span> <span class="kn">import</span> <span class="n">show_discrete_data</span>
+
+        <span class="c1"># Default to showing x-y slice &quot;in the middle&quot;</span>
+        <span class="k">if</span> <span class="n">indices</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">ndim</span> <span class="o">&gt;=</span> <span class="mi">3</span><span class="p">:</span>
+            <span class="n">indices</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span>
+                <span class="p">[</span><span class="nb">slice</span><span class="p">(</span><span class="kc">None</span><span class="p">)]</span> <span class="o">*</span> <span class="mi">2</span> <span class="o">+</span> <span class="p">[</span><span class="n">n</span> <span class="o">//</span> <span class="mi">2</span> <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">space</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">2</span><span class="p">:]]</span>
+            <span class="p">)</span>
+
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">indices</span><span class="p">,</span> <span class="p">(</span><span class="n">Integral</span><span class="p">,</span> <span class="nb">slice</span><span class="p">)):</span>
+            <span class="n">indices</span> <span class="o">=</span> <span class="p">(</span><span class="n">indices</span><span class="p">,)</span>
+        <span class="k">elif</span> <span class="n">indices</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">indices</span> <span class="o">==</span> <span class="bp">Ellipsis</span><span class="p">:</span>
+            <span class="n">indices</span> <span class="o">=</span> <span class="p">(</span><span class="nb">slice</span><span class="p">(</span><span class="kc">None</span><span class="p">),)</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">ndim</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">indices</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">indices</span><span class="p">)</span>
+
+        <span class="c1"># Replace None by slice(None)</span>
+        <span class="n">indices</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="nb">slice</span><span class="p">(</span><span class="kc">None</span><span class="p">)</span> <span class="k">if</span> <span class="n">idx</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">idx</span> <span class="k">for</span> <span class="n">idx</span> <span class="ow">in</span> <span class="n">indices</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">Ellipsis</span> <span class="ow">in</span> <span class="n">indices</span><span class="p">:</span>
+            <span class="c1"># Replace Ellipsis with the correct number of [:] expressions</span>
+            <span class="n">pos</span> <span class="o">=</span> <span class="n">indices</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="bp">Ellipsis</span><span class="p">)</span>
+            <span class="n">indices</span> <span class="o">=</span> <span class="p">(</span><span class="n">indices</span><span class="p">[:</span><span class="n">pos</span><span class="p">]</span> <span class="o">+</span>
+                       <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">s_</span><span class="p">[:],</span> <span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ndim</span> <span class="o">-</span> <span class="nb">len</span><span class="p">(</span><span class="n">indices</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">+</span>
+                       <span class="n">indices</span><span class="p">[</span><span class="n">pos</span> <span class="o">+</span> <span class="mi">1</span><span class="p">:])</span>
+
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">indices</span><span class="p">)</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">ndim</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;too few axes (</span><span class="si">{}</span><span class="s1"> &lt; </span><span class="si">{}</span><span class="s1">)&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">indices</span><span class="p">),</span>
+                                                             <span class="bp">self</span><span class="o">.</span><span class="n">ndim</span><span class="p">))</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">indices</span><span class="p">)</span> <span class="o">&gt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">ndim</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;too many axes (</span><span class="si">{}</span><span class="s1"> &gt; </span><span class="si">{}</span><span class="s1">)&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">indices</span><span class="p">),</span>
+                                                              <span class="bp">self</span><span class="o">.</span><span class="n">ndim</span><span class="p">))</span>
+
+        <span class="c1"># Squeeze grid and values according to the index expression</span>
+        <span class="n">full_grid</span> <span class="o">=</span> <span class="n">uniform_grid</span><span class="p">([</span><span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">ndim</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span>
+                                 <span class="bp">self</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+        <span class="n">grid</span> <span class="o">=</span> <span class="n">full_grid</span><span class="p">[</span><span class="n">indices</span><span class="p">]</span><span class="o">.</span><span class="n">squeeze</span><span class="p">()</span>
+        <span class="n">values</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">asarray</span><span class="p">()[</span><span class="n">indices</span><span class="p">]</span><span class="o">.</span><span class="n">squeeze</span><span class="p">()</span>
+
+        <span class="k">return</span> <span class="n">show_discrete_data</span><span class="p">(</span><span class="n">values</span><span class="p">,</span> <span class="n">grid</span><span class="p">,</span> <span class="n">title</span><span class="o">=</span><span class="n">title</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="n">method</span><span class="p">,</span>
+                                  <span class="n">force_show</span><span class="o">=</span><span class="n">force_show</span><span class="p">,</span> <span class="n">fig</span><span class="o">=</span><span class="n">fig</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div></div>
+
+
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s1">&#39;__main__&#39;</span><span class="p">:</span>
+    <span class="kn">from</span> <span class="nn">odl.util.testutils</span> <span class="kn">import</span> <span class="n">run_doctests</span>
+    <span class="n">run_doctests</span><span class="p">()</span>
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &#169; Copyright 2014-2020 The ODL Contributors.
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

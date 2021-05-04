@@ -1,0 +1,417 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>WaveletTransformBase &mdash; odl 1.0.0.dev0 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="WaveletTransformBase._call" href="odl.trafos.wavelet.WaveletTransformBase._call.html" />
+    <link rel="prev" title="WaveletTransform.scales" href="odl.trafos.wavelet.WaveletTransform.scales.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../index.html" class="icon icon-home"> odl
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                1.0.0.dev0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Getting Started</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../getting_started/getting_started.html">Getting Started</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Working with ODL</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../guide/guide.html">User’s guide – selected topics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../math/math.html">Mathematical Background</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Developer zone</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../dev/dev.html">Contributing to ODL</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Useful facts</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../guide/faq.html">Frequently asked questions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../guide/glossary.html">Glossary</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../release_notes.html">Release Notes</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../refs.html">References</a></li>
+</ul>
+<p class="caption"><span class="caption-text">API Reference</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../odl.html">odl</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../odl.contrib.html">contrib</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../odl.deform.html">deform</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../odl.diagnostics.html">diagnostics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../odl.discr.html">discr</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../odl.operator.html">operator</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../odl.phantom.html">phantom</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../odl.set.html">set</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../odl.solvers.html">solvers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../odl.space.html">space</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../odl.tomo.html">tomo</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="../odl.trafos.html">trafos</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="../odl.trafos.backends.html">backends</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../odl.trafos.fourier.html">fourier</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../odl.trafos.util.html">util</a></li>
+<li class="toctree-l3 current"><a class="reference internal" href="../odl.trafos.wavelet.html">wavelet</a><ul class="current">
+<li class="toctree-l4"><a class="reference internal" href="odl.trafos.wavelet.WaveletTransform.html">WaveletTransform</a></li>
+<li class="toctree-l4 current"><a class="current reference internal" href="#">WaveletTransformBase</a></li>
+<li class="toctree-l4"><a class="reference internal" href="odl.trafos.wavelet.WaveletTransformInverse.html">WaveletTransformInverse</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../odl.ufunc_ops.html">ufunc_ops</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../odl.util.html">util</a></li>
+</ul>
+</li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">odl</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="../odl.html">odl</a> &raquo;</li>
+        
+          <li><a href="../odl.trafos.html">trafos</a> &raquo;</li>
+        
+          <li><a href="../odl.trafos.wavelet.html">wavelet</a> &raquo;</li>
+        
+      <li>WaveletTransformBase</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            <a href="../_sources/generated/odl.trafos.wavelet.WaveletTransformBase.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="wavelettransformbase">
+<h1>WaveletTransformBase<a class="headerlink" href="#wavelettransformbase" title="Permalink to this headline">¶</a></h1>
+<dl class="py class">
+<dt id="odl.trafos.wavelet.WaveletTransformBase">
+<em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">odl.trafos.wavelet.</span></code><code class="sig-name descname"><span class="pre">WaveletTransformBase</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/odl/trafos/wavelet.html#WaveletTransformBase"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#odl.trafos.wavelet.WaveletTransformBase" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="odl.operator.operator.Operator.html#odl.operator.operator.Operator" title="odl.operator.operator.Operator"><code class="xref py py-class docutils literal notranslate"><span class="pre">odl.operator.operator.Operator</span></code></a></p>
+<p>Base class for discrete wavelet transforms.</p>
+<p>This abstract class is intended to share code between the forward,
+inverse and adjoint wavelet transforms.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Attributes</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><a class="reference internal" href="odl.trafos.wavelet.WaveletTransformBase.adjoint.html#odl.trafos.wavelet.WaveletTransformBase.adjoint" title="odl.trafos.wavelet.WaveletTransformBase.adjoint"><code class="xref py py-obj docutils literal notranslate"><span class="pre">adjoint</span></code></a></dt><dd><p>Adjoint of this operator (abstract).</p>
+</dd>
+<dt><a class="reference internal" href="odl.trafos.wavelet.WaveletTransformBase.domain.html#odl.trafos.wavelet.WaveletTransformBase.domain" title="odl.trafos.wavelet.WaveletTransformBase.domain"><code class="xref py py-obj docutils literal notranslate"><span class="pre">domain</span></code></a></dt><dd><p>Set of objects on which this operator can be evaluated.</p>
+</dd>
+<dt><a class="reference internal" href="odl.trafos.wavelet.WaveletTransformBase.impl.html#odl.trafos.wavelet.WaveletTransformBase.impl" title="odl.trafos.wavelet.WaveletTransformBase.impl"><code class="xref py py-obj docutils literal notranslate"><span class="pre">impl</span></code></a></dt><dd><p>Implementation back-end of this wavelet transform.</p>
+</dd>
+<dt><a class="reference internal" href="odl.trafos.wavelet.WaveletTransformBase.inverse.html#odl.trafos.wavelet.WaveletTransformBase.inverse" title="odl.trafos.wavelet.WaveletTransformBase.inverse"><code class="xref py py-obj docutils literal notranslate"><span class="pre">inverse</span></code></a></dt><dd><p>Return the operator inverse.</p>
+</dd>
+<dt><a class="reference internal" href="odl.trafos.wavelet.WaveletTransformBase.is_biorthogonal.html#odl.trafos.wavelet.WaveletTransformBase.is_biorthogonal" title="odl.trafos.wavelet.WaveletTransformBase.is_biorthogonal"><code class="xref py py-obj docutils literal notranslate"><span class="pre">is_biorthogonal</span></code></a></dt><dd><p>Whether or not the wavelet basis is bi-orthogonal.</p>
+</dd>
+<dt><a class="reference internal" href="odl.trafos.wavelet.WaveletTransformBase.is_functional.html#odl.trafos.wavelet.WaveletTransformBase.is_functional" title="odl.trafos.wavelet.WaveletTransformBase.is_functional"><code class="xref py py-obj docutils literal notranslate"><span class="pre">is_functional</span></code></a></dt><dd><p><code class="docutils literal notranslate"><span class="pre">True</span></code> if this operator’s range is a <a class="reference internal" href="odl.set.sets.Field.html#odl.set.sets.Field" title="odl.set.sets.Field"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Field</span></code></a>.</p>
+</dd>
+<dt><a class="reference internal" href="odl.trafos.wavelet.WaveletTransformBase.is_linear.html#odl.trafos.wavelet.WaveletTransformBase.is_linear" title="odl.trafos.wavelet.WaveletTransformBase.is_linear"><code class="xref py py-obj docutils literal notranslate"><span class="pre">is_linear</span></code></a></dt><dd><p><code class="docutils literal notranslate"><span class="pre">True</span></code> if this operator is linear.</p>
+</dd>
+<dt><a class="reference internal" href="odl.trafos.wavelet.WaveletTransformBase.is_orthogonal.html#odl.trafos.wavelet.WaveletTransformBase.is_orthogonal" title="odl.trafos.wavelet.WaveletTransformBase.is_orthogonal"><code class="xref py py-obj docutils literal notranslate"><span class="pre">is_orthogonal</span></code></a></dt><dd><p>Whether or not the wavelet basis is orthogonal.</p>
+</dd>
+<dt><a class="reference internal" href="odl.trafos.wavelet.WaveletTransformBase.nlevels.html#odl.trafos.wavelet.WaveletTransformBase.nlevels" title="odl.trafos.wavelet.WaveletTransformBase.nlevels"><code class="xref py py-obj docutils literal notranslate"><span class="pre">nlevels</span></code></a></dt><dd><p>Number of scaling levels in this wavelet transform.</p>
+</dd>
+<dt><a class="reference internal" href="odl.trafos.wavelet.WaveletTransformBase.pad_const.html#odl.trafos.wavelet.WaveletTransformBase.pad_const" title="odl.trafos.wavelet.WaveletTransformBase.pad_const"><code class="xref py py-obj docutils literal notranslate"><span class="pre">pad_const</span></code></a></dt><dd><p>Value for extension used in <code class="docutils literal notranslate"><span class="pre">'constant'</span></code> padding mode.</p>
+</dd>
+<dt><a class="reference internal" href="odl.trafos.wavelet.WaveletTransformBase.pad_mode.html#odl.trafos.wavelet.WaveletTransformBase.pad_mode" title="odl.trafos.wavelet.WaveletTransformBase.pad_mode"><code class="xref py py-obj docutils literal notranslate"><span class="pre">pad_mode</span></code></a></dt><dd><p>Padding mode used for extending input beyond its boundary.</p>
+</dd>
+<dt><a class="reference internal" href="odl.trafos.wavelet.WaveletTransformBase.range.html#odl.trafos.wavelet.WaveletTransformBase.range" title="odl.trafos.wavelet.WaveletTransformBase.range"><code class="xref py py-obj docutils literal notranslate"><span class="pre">range</span></code></a></dt><dd><p>Set in which the result of an evaluation of this operator lies.</p>
+</dd>
+<dt><a class="reference internal" href="odl.trafos.wavelet.WaveletTransformBase.wavelet.html#odl.trafos.wavelet.WaveletTransformBase.wavelet" title="odl.trafos.wavelet.WaveletTransformBase.wavelet"><code class="xref py py-obj docutils literal notranslate"><span class="pre">wavelet</span></code></a></dt><dd><p>Name of the wavelet used in this wavelet transform.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+<p class="rubric">Methods</p>
+<table class="longtable docutils align-default">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="odl.trafos.wavelet.WaveletTransformBase._call.html#odl.trafos.wavelet.WaveletTransformBase._call" title="odl.trafos.wavelet.WaveletTransformBase._call"><code class="xref py py-obj docutils literal notranslate"><span class="pre">_call</span></code></a>(self, x[, out])</p></td>
+<td><p>Implementation of the operator evaluation.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="odl.trafos.wavelet.WaveletTransformBase.derivative.html#odl.trafos.wavelet.WaveletTransformBase.derivative" title="odl.trafos.wavelet.WaveletTransformBase.derivative"><code class="xref py py-obj docutils literal notranslate"><span class="pre">derivative</span></code></a>(self, point)</p></td>
+<td><p>Return the operator derivative at <code class="docutils literal notranslate"><span class="pre">point</span></code>.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="odl.trafos.wavelet.WaveletTransformBase.norm.html#odl.trafos.wavelet.WaveletTransformBase.norm" title="odl.trafos.wavelet.WaveletTransformBase.norm"><code class="xref py py-obj docutils literal notranslate"><span class="pre">norm</span></code></a>(self[, estimate])</p></td>
+<td><p>Return the operator norm of this operator.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="odl.trafos.wavelet.WaveletTransformBase.scales.html#odl.trafos.wavelet.WaveletTransformBase.scales" title="odl.trafos.wavelet.WaveletTransformBase.scales"><code class="xref py py-obj docutils literal notranslate"><span class="pre">scales</span></code></a>(self)</p></td>
+<td><p>Get the scales of each coefficient.</p></td>
+</tr>
+</tbody>
+</table>
+<dl class="py method">
+<dt id="odl.trafos.wavelet.WaveletTransformBase.__init__">
+<code class="sig-name descname"><span class="pre">__init__</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">space</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">wavelet</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nlevels</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">variant</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pad_mode</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'constant'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pad_const</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">impl</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'pywt'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">axes</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/odl/trafos/wavelet.html#WaveletTransformBase.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#odl.trafos.wavelet.WaveletTransformBase.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initialize a new instance.</p>
+<dl class="field-list">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl>
+<dt><strong>space</strong><span class="classifier"><a class="reference internal" href="odl.discr.discr_space.DiscretizedSpace.html#odl.discr.discr_space.DiscretizedSpace" title="odl.discr.discr_space.DiscretizedSpace"><code class="xref any py py-class docutils literal notranslate"><span class="pre">DiscretizedSpace</span></code></a></span></dt><dd><p>Domain of the forward wavelet transform (the “image domain”).
+In the case of <code class="docutils literal notranslate"><span class="pre">variant</span> <span class="pre">in</span> <span class="pre">('inverse',</span> <span class="pre">'adjoint')</span></code>, this
+space is the range of the operator.</p>
+</dd>
+<dt><strong>wavelet</strong><span class="classifier">string or <a class="reference external" href="https://pywavelets.readthedocs.io/en/latest/ref/wavelets.html#pywt.Wavelet" title="(in PyWavelets v1.2.0.dev)"><code class="xref any docutils literal notranslate"><span class="pre">pywt.Wavelet</span></code></a></span></dt><dd><p>Specification of the wavelet to be used in the transform.
+If a string is given, it is converted to a <a class="reference external" href="https://pywavelets.readthedocs.io/en/latest/ref/wavelets.html#pywt.Wavelet" title="(in PyWavelets v1.2.0.dev)"><code class="xref any docutils literal notranslate"><span class="pre">pywt.Wavelet</span></code></a>.
+Use <a class="reference external" href="https://pywavelets.readthedocs.io/en/latest/ref/wavelets.html#pywt.wavelist" title="(in PyWavelets v1.2.0.dev)"><code class="xref any docutils literal notranslate"><span class="pre">pywt.wavelist</span></code></a> to get a list of available wavelets.</p>
+<p>Possible wavelet families are:</p>
+<p><code class="docutils literal notranslate"><span class="pre">'haar'</span></code>: Haar</p>
+<p><code class="docutils literal notranslate"><span class="pre">'db'</span></code>: Daubechies</p>
+<p><code class="docutils literal notranslate"><span class="pre">'sym'</span></code>: Symlets</p>
+<p><code class="docutils literal notranslate"><span class="pre">'coif'</span></code>: Coiflets</p>
+<p><code class="docutils literal notranslate"><span class="pre">'bior'</span></code>: Biorthogonal</p>
+<p><code class="docutils literal notranslate"><span class="pre">'rbio'</span></code>: Reverse biorthogonal</p>
+<p><code class="docutils literal notranslate"><span class="pre">'dmey'</span></code>: Discrete FIR approximation of the Meyer wavelet</p>
+</dd>
+<dt><strong>variant</strong><span class="classifier">{‘forward’, ‘inverse’, ‘adjoint’}</span></dt><dd><p>Wavelet transform variant to be created.</p>
+</dd>
+<dt><strong>nlevels</strong><span class="classifier">positive int, optional</span></dt><dd><p>Number of scaling levels to be used in the decomposition. The
+maximum number of levels can be calculated with
+<a class="reference external" href="https://pywavelets.readthedocs.io/en/latest/ref/dwt-discrete-wavelet-transform.html#pywt.dwtn_max_level" title="(in PyWavelets v1.2.0.dev)"><code class="xref any docutils literal notranslate"><span class="pre">pywt.dwtn_max_level</span></code></a>.
+Default: Use maximum number of levels.</p>
+</dd>
+<dt><strong>pad_mode</strong><span class="classifier">string, optional</span></dt><dd><p>Method to be used to extend the signal.</p>
+<p><code class="docutils literal notranslate"><span class="pre">'constant'</span></code>: Fill with <code class="docutils literal notranslate"><span class="pre">pad_const</span></code>.</p>
+<p><code class="docutils literal notranslate"><span class="pre">'symmetric'</span></code>: Reflect at the boundaries, not repeating the
+outmost values.</p>
+<p><code class="docutils literal notranslate"><span class="pre">'periodic'</span></code>: Fill in values from the other side, keeping
+the order.</p>
+<p><code class="docutils literal notranslate"><span class="pre">'order0'</span></code>: Extend constantly with the outmost values
+(ensures continuity).</p>
+<p><code class="docutils literal notranslate"><span class="pre">'order1'</span></code>: Extend with constant slope (ensures continuity of
+the first derivative). This requires at least 2 values along
+each axis where padding is applied.</p>
+<p><code class="docutils literal notranslate"><span class="pre">'pywt_per'</span></code>:  like <code class="docutils literal notranslate"><span class="pre">'periodic'</span></code>-padding but gives the smallest
+possible number of decomposition coefficients.
+Only available with <code class="docutils literal notranslate"><span class="pre">impl='pywt'</span></code>, See <code class="docutils literal notranslate"><span class="pre">pywt.Modes.modes</span></code>.</p>
+<p><code class="docutils literal notranslate"><span class="pre">'reflect'</span></code>: Reflect at the boundary, without repeating the
+outmost values.</p>
+<p><code class="docutils literal notranslate"><span class="pre">'antisymmetric'</span></code>: Anti-symmetric variant of <code class="docutils literal notranslate"><span class="pre">symmetric</span></code>.</p>
+<p><code class="docutils literal notranslate"><span class="pre">'antireflect'</span></code>: Anti-symmetric variant of <code class="docutils literal notranslate"><span class="pre">reflect</span></code>.</p>
+<p>For reference, the following table compares the naming conventions
+for the modes in ODL vs. PyWavelets:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">=======================</span> <span class="o">==================</span>
+          <span class="n">ODL</span>               <span class="n">PyWavelets</span>
+<span class="o">=======================</span> <span class="o">==================</span>
+<span class="n">symmetric</span>               <span class="n">symmetric</span>
+<span class="n">reflect</span>                 <span class="n">reflect</span>
+<span class="n">order1</span>                  <span class="n">smooth</span>
+<span class="n">order0</span>                  <span class="n">constant</span>
+<span class="n">constant</span><span class="p">,</span> <span class="n">pad_const</span><span class="o">=</span><span class="mi">0</span>   <span class="n">zero</span>
+<span class="n">periodic</span>                <span class="n">periodic</span>
+<span class="n">pywt_per</span>                <span class="n">periodization</span>
+<span class="n">antisymmetric</span>           <span class="n">antisymmetric</span>
+<span class="n">antireflect</span>             <span class="n">antireflect</span>
+<span class="o">=======================</span> <span class="o">==================</span>
+</pre></div>
+</div>
+<p>See <a class="reference external" href="https://pywavelets.readthedocs.io/en/latest/ref/signal-extension-modes.html">signal extension modes</a> for an illustration of the modes
+(under the PyWavelets naming conventions).</p>
+</dd>
+<dt><strong>pad_const</strong><span class="classifier">float, optional</span></dt><dd><p>Constant value to use if <code class="docutils literal notranslate"><span class="pre">pad_mode</span> <span class="pre">==</span> <span class="pre">'constant'</span></code>. Ignored
+otherwise. Constants other than 0 are not supported by the
+<code class="docutils literal notranslate"><span class="pre">pywt</span></code> back-end.</p>
+</dd>
+<dt><strong>impl</strong><span class="classifier">{‘pywt’}, optional</span></dt><dd><p>Back-end for the wavelet transform.</p>
+</dd>
+<dt><strong>axes</strong><span class="classifier">sequence of ints, optional</span></dt><dd><p>Axes over which the DWT that created <code class="docutils literal notranslate"><span class="pre">coeffs</span></code> was performed.  The
+default value of <code class="docutils literal notranslate"><span class="pre">None</span></code> corresponds to all axes. When not all
+axes are included this is analagous to a batch transform in
+<code class="docutils literal notranslate"><span class="pre">len(axes)</span></code> dimensions looped over the non-transformed axes. In
+orther words, filtering and decimation does not occur along any
+axes not in <code class="docutils literal notranslate"><span class="pre">axes</span></code>.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+<p class="rubric">References</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+        <a href="odl.trafos.wavelet.WaveletTransformBase._call.html" class="btn btn-neutral float-right" title="WaveletTransformBase._call" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="odl.trafos.wavelet.WaveletTransform.scales.html" class="btn btn-neutral float-left" title="WaveletTransform.scales" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &#169; Copyright 2014-2020 The ODL Contributors.
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

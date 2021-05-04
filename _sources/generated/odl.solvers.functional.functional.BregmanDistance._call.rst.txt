@@ -1,0 +1,8 @@
+:orphan:
+
+BregmanDistance._call
+=======================================================
+
+.. currentmodule:: odl.solvers.functional.functional
+
+.. automethod:: BregmanDistance._call

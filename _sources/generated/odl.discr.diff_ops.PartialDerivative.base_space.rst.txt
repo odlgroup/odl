@@ -1,0 +1,6 @@
+PartialDerivative.base_space
+===============================================
+
+.. currentmodule:: odl.discr.diff_ops
+
+.. autoproperty:: PartialDerivative.base_space

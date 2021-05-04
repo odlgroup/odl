@@ -1,0 +1,427 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>TensorSpace &mdash; odl 1.0.0.dev0 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="TensorSpace._dist" href="odl.space.base_tensors.TensorSpace._dist.html" />
+    <link rel="prev" title="Tensor.show" href="odl.space.base_tensors.Tensor.show.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../index.html" class="icon icon-home"> odl
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                1.0.0.dev0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Getting Started</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../getting_started/getting_started.html">Getting Started</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Working with ODL</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../guide/guide.html">User’s guide – selected topics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../math/math.html">Mathematical Background</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Developer zone</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../dev/dev.html">Contributing to ODL</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Useful facts</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../guide/faq.html">Frequently asked questions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../guide/glossary.html">Glossary</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../release_notes.html">Release Notes</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../refs.html">References</a></li>
+</ul>
+<p class="caption"><span class="caption-text">API Reference</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../odl.html">odl</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../odl.contrib.html">contrib</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../odl.deform.html">deform</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../odl.diagnostics.html">diagnostics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../odl.discr.html">discr</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../odl.operator.html">operator</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../odl.phantom.html">phantom</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../odl.set.html">set</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../odl.solvers.html">solvers</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="../odl.space.html">space</a><ul class="current">
+<li class="toctree-l3 current"><a class="reference internal" href="../odl.space.base_tensors.html">base_tensors</a><ul class="current">
+<li class="toctree-l4"><a class="reference internal" href="odl.space.base_tensors.Tensor.html">Tensor</a></li>
+<li class="toctree-l4 current"><a class="current reference internal" href="#">TensorSpace</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../odl.space.entry_points.html">entry_points</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../odl.space.npy_tensors.html">npy_tensors</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../odl.space.pspace.html">pspace</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../odl.space.space_utils.html">space_utils</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../odl.space.weighting.html">weighting</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../odl.tomo.html">tomo</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../odl.trafos.html">trafos</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../odl.ufunc_ops.html">ufunc_ops</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../odl.util.html">util</a></li>
+</ul>
+</li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">odl</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="../odl.html">odl</a> &raquo;</li>
+        
+          <li><a href="../odl.space.html">space</a> &raquo;</li>
+        
+          <li><a href="../odl.space.base_tensors.html">base_tensors</a> &raquo;</li>
+        
+      <li>TensorSpace</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            <a href="../_sources/generated/odl.space.base_tensors.TensorSpace.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="tensorspace">
+<h1>TensorSpace<a class="headerlink" href="#tensorspace" title="Permalink to this headline">¶</a></h1>
+<dl class="py class">
+<dt id="odl.space.base_tensors.TensorSpace">
+<em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">odl.space.base_tensors.</span></code><code class="sig-name descname"><span class="pre">TensorSpace</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">shape</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dtype</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/odl/space/base_tensors.html#TensorSpace"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#odl.space.base_tensors.TensorSpace" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="odl.set.space.LinearSpace.html#odl.set.space.LinearSpace" title="odl.set.space.LinearSpace"><code class="xref py py-class docutils literal notranslate"><span class="pre">odl.set.space.LinearSpace</span></code></a></p>
+<p>Base class for sets of tensors of arbitrary data type.</p>
+<p>A tensor is, in the most general sense, a multi-dimensional array
+that allows operations per entry (keep the rank constant),
+reductions / contractions (reduce the rank) and broadcasting
+(raises the rank).
+For non-numeric data type like <code class="docutils literal notranslate"><span class="pre">object</span></code>, the range of valid
+operations is rather limited since such a set of tensors does not
+define a vector space.
+Any numeric data type, on the other hand, is considered valid for
+a tensor space, although certain operations - like division with
+integer dtype - are not guaranteed to yield reasonable results.</p>
+<p>Under these restrictions, all basic vector space operations are
+supported by this class, along with reductions based on arithmetic
+or comparison, and element-wise mathematical functions (“ufuncs”).</p>
+<p>See the <a class="reference external" href="https://en.wikipedia.org/wiki/Tensor">Wikipedia article on tensors</a> for further details.
+See also [Hac2012] “Part I Algebraic Tensors” for a rigorous
+treatment of tensors with a definition close to this one.</p>
+<p>Note also that this notion of tensors is the same as in popular
+Deep Learning frameworks.</p>
+<p class="rubric">References</p>
+<p>[Hac2012] Hackbusch, W. <em>Tensor Spaces and Numerical Tensor Calculus</em>.
+Springer, 2012.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Attributes</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><a class="reference internal" href="odl.space.base_tensors.TensorSpace.complex_dtype.html#odl.space.base_tensors.TensorSpace.complex_dtype" title="odl.space.base_tensors.TensorSpace.complex_dtype"><code class="xref py py-obj docutils literal notranslate"><span class="pre">complex_dtype</span></code></a></dt><dd><p>The complex dtype corresponding to this space’s <a class="reference internal" href="../guide/glossary.html#term-dtype"><code class="xref any std std-term docutils literal notranslate"><span class="pre">dtype</span></code></a>.</p>
+</dd>
+<dt><a class="reference internal" href="odl.space.base_tensors.TensorSpace.complex_space.html#odl.space.base_tensors.TensorSpace.complex_space" title="odl.space.base_tensors.TensorSpace.complex_space"><code class="xref py py-obj docutils literal notranslate"><span class="pre">complex_space</span></code></a></dt><dd><p>The space corresponding to this space’s <a class="reference internal" href="odl.space.base_tensors.TensorSpace.complex_dtype.html#odl.space.base_tensors.TensorSpace.complex_dtype" title="odl.space.base_tensors.TensorSpace.complex_dtype"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">complex_dtype</span></code></a>.</p>
+</dd>
+<dt><a class="reference internal" href="odl.space.base_tensors.TensorSpace.default_order.html#odl.space.base_tensors.TensorSpace.default_order" title="odl.space.base_tensors.TensorSpace.default_order"><code class="xref py py-obj docutils literal notranslate"><span class="pre">default_order</span></code></a></dt><dd><p>Default storage order for new elements in this space.</p>
+</dd>
+<dt><a class="reference internal" href="odl.space.base_tensors.TensorSpace.dtype.html#odl.space.base_tensors.TensorSpace.dtype" title="odl.space.base_tensors.TensorSpace.dtype"><code class="xref py py-obj docutils literal notranslate"><span class="pre">dtype</span></code></a></dt><dd><p>Scalar data type of each entry in an element of this space.</p>
+</dd>
+<dt><a class="reference internal" href="odl.space.base_tensors.TensorSpace.element_type.html#odl.space.base_tensors.TensorSpace.element_type" title="odl.space.base_tensors.TensorSpace.element_type"><code class="xref py py-obj docutils literal notranslate"><span class="pre">element_type</span></code></a></dt><dd><p>Type of elements in this space: <a class="reference internal" href="odl.space.base_tensors.Tensor.html#odl.space.base_tensors.Tensor" title="odl.space.base_tensors.Tensor"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Tensor</span></code></a>.</p>
+</dd>
+<dt><a class="reference internal" href="odl.space.base_tensors.TensorSpace.examples.html#odl.space.base_tensors.TensorSpace.examples" title="odl.space.base_tensors.TensorSpace.examples"><code class="xref py py-obj docutils literal notranslate"><span class="pre">examples</span></code></a></dt><dd><p>Return example random vectors.</p>
+</dd>
+<dt><a class="reference internal" href="odl.space.base_tensors.TensorSpace.field.html#odl.space.base_tensors.TensorSpace.field" title="odl.space.base_tensors.TensorSpace.field"><code class="xref py py-obj docutils literal notranslate"><span class="pre">field</span></code></a></dt><dd><p>Scalar field of numbers for this vector space.</p>
+</dd>
+<dt><a class="reference internal" href="odl.space.base_tensors.TensorSpace.impl.html#odl.space.base_tensors.TensorSpace.impl" title="odl.space.base_tensors.TensorSpace.impl"><code class="xref py py-obj docutils literal notranslate"><span class="pre">impl</span></code></a></dt><dd><p>Name of the implementation back-end of this tensor set.</p>
+</dd>
+<dt><a class="reference internal" href="odl.space.base_tensors.TensorSpace.is_complex.html#odl.space.base_tensors.TensorSpace.is_complex" title="odl.space.base_tensors.TensorSpace.is_complex"><code class="xref py py-obj docutils literal notranslate"><span class="pre">is_complex</span></code></a></dt><dd><p>True if this is a space of complex tensors.</p>
+</dd>
+<dt><a class="reference internal" href="odl.space.base_tensors.TensorSpace.is_real.html#odl.space.base_tensors.TensorSpace.is_real" title="odl.space.base_tensors.TensorSpace.is_real"><code class="xref py py-obj docutils literal notranslate"><span class="pre">is_real</span></code></a></dt><dd><p>True if this is a space of real tensors.</p>
+</dd>
+<dt><a class="reference internal" href="odl.space.base_tensors.TensorSpace.itemsize.html#odl.space.base_tensors.TensorSpace.itemsize" title="odl.space.base_tensors.TensorSpace.itemsize"><code class="xref py py-obj docutils literal notranslate"><span class="pre">itemsize</span></code></a></dt><dd><p>Size in bytes of one entry in an element of this space.</p>
+</dd>
+<dt><a class="reference internal" href="odl.space.base_tensors.TensorSpace.nbytes.html#odl.space.base_tensors.TensorSpace.nbytes" title="odl.space.base_tensors.TensorSpace.nbytes"><code class="xref py py-obj docutils literal notranslate"><span class="pre">nbytes</span></code></a></dt><dd><p>Total number of bytes in memory used by an element of this space.</p>
+</dd>
+<dt><a class="reference internal" href="odl.space.base_tensors.TensorSpace.ndim.html#odl.space.base_tensors.TensorSpace.ndim" title="odl.space.base_tensors.TensorSpace.ndim"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ndim</span></code></a></dt><dd><p>Number of axes (=dimensions) of this space, also called “rank”.</p>
+</dd>
+<dt><a class="reference internal" href="odl.space.base_tensors.TensorSpace.real_dtype.html#odl.space.base_tensors.TensorSpace.real_dtype" title="odl.space.base_tensors.TensorSpace.real_dtype"><code class="xref py py-obj docutils literal notranslate"><span class="pre">real_dtype</span></code></a></dt><dd><p>The real dtype corresponding to this space’s <a class="reference internal" href="../guide/glossary.html#term-dtype"><code class="xref any std std-term docutils literal notranslate"><span class="pre">dtype</span></code></a>.</p>
+</dd>
+<dt><a class="reference internal" href="odl.space.base_tensors.TensorSpace.real_space.html#odl.space.base_tensors.TensorSpace.real_space" title="odl.space.base_tensors.TensorSpace.real_space"><code class="xref py py-obj docutils literal notranslate"><span class="pre">real_space</span></code></a></dt><dd><p>The space corresponding to this space’s <a class="reference internal" href="odl.space.base_tensors.TensorSpace.real_dtype.html#odl.space.base_tensors.TensorSpace.real_dtype" title="odl.space.base_tensors.TensorSpace.real_dtype"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">real_dtype</span></code></a>.</p>
+</dd>
+<dt><a class="reference internal" href="odl.space.base_tensors.TensorSpace.shape.html#odl.space.base_tensors.TensorSpace.shape" title="odl.space.base_tensors.TensorSpace.shape"><code class="xref py py-obj docutils literal notranslate"><span class="pre">shape</span></code></a></dt><dd><p>Number of scalar elements per axis.</p>
+</dd>
+<dt><a class="reference internal" href="odl.space.base_tensors.TensorSpace.size.html#odl.space.base_tensors.TensorSpace.size" title="odl.space.base_tensors.TensorSpace.size"><code class="xref py py-obj docutils literal notranslate"><span class="pre">size</span></code></a></dt><dd><p>Total number of entries in an element of this space.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+<p class="rubric">Methods</p>
+<table class="longtable docutils align-default">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="odl.space.base_tensors.TensorSpace._dist.html#odl.space.base_tensors.TensorSpace._dist" title="odl.space.base_tensors.TensorSpace._dist"><code class="xref py py-obj docutils literal notranslate"><span class="pre">_dist</span></code></a>(self, x1, x2)</p></td>
+<td><p>Return the distance between <code class="docutils literal notranslate"><span class="pre">x1</span></code> and <code class="docutils literal notranslate"><span class="pre">x2</span></code>.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="odl.space.base_tensors.TensorSpace._divide.html#odl.space.base_tensors.TensorSpace._divide" title="odl.space.base_tensors.TensorSpace._divide"><code class="xref py py-obj docutils literal notranslate"><span class="pre">_divide</span></code></a>(self, x1, x2, out)</p></td>
+<td><p>The entry-wise quotient of two tensors, assigned to <code class="docutils literal notranslate"><span class="pre">out</span></code>.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="odl.space.base_tensors.TensorSpace._inner.html#odl.space.base_tensors.TensorSpace._inner" title="odl.space.base_tensors.TensorSpace._inner"><code class="xref py py-obj docutils literal notranslate"><span class="pre">_inner</span></code></a>(self, x1, x2)</p></td>
+<td><p>Return the inner product of <code class="docutils literal notranslate"><span class="pre">x1</span></code> and <code class="docutils literal notranslate"><span class="pre">x2</span></code>.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="odl.space.base_tensors.TensorSpace._lincomb.html#odl.space.base_tensors.TensorSpace._lincomb" title="odl.space.base_tensors.TensorSpace._lincomb"><code class="xref py py-obj docutils literal notranslate"><span class="pre">_lincomb</span></code></a>(self, a, x1, b, x2, out)</p></td>
+<td><p>Implement <code class="docutils literal notranslate"><span class="pre">out[:]</span> <span class="pre">=</span> <span class="pre">a</span> <span class="pre">*</span> <span class="pre">x1</span> <span class="pre">+</span> <span class="pre">b</span> <span class="pre">*</span> <span class="pre">x2</span></code>.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="odl.space.base_tensors.TensorSpace._multiply.html#odl.space.base_tensors.TensorSpace._multiply" title="odl.space.base_tensors.TensorSpace._multiply"><code class="xref py py-obj docutils literal notranslate"><span class="pre">_multiply</span></code></a>(self, x1, x2, out)</p></td>
+<td><p>The entry-wise product of two tensors, assigned to <code class="docutils literal notranslate"><span class="pre">out</span></code>.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="odl.space.base_tensors.TensorSpace._norm.html#odl.space.base_tensors.TensorSpace._norm" title="odl.space.base_tensors.TensorSpace._norm"><code class="xref py py-obj docutils literal notranslate"><span class="pre">_norm</span></code></a>(self, x)</p></td>
+<td><p>Return the norm of <code class="docutils literal notranslate"><span class="pre">x</span></code>.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="odl.space.base_tensors.TensorSpace.astype.html#odl.space.base_tensors.TensorSpace.astype" title="odl.space.base_tensors.TensorSpace.astype"><code class="xref py py-obj docutils literal notranslate"><span class="pre">astype</span></code></a>(self, dtype)</p></td>
+<td><p>Return a copy of this space with new <code class="docutils literal notranslate"><span class="pre">dtype</span></code>.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="odl.space.base_tensors.TensorSpace.available_dtypes.html#odl.space.base_tensors.TensorSpace.available_dtypes" title="odl.space.base_tensors.TensorSpace.available_dtypes"><code class="xref py py-obj docutils literal notranslate"><span class="pre">available_dtypes</span></code></a>()</p></td>
+<td><p>Return the set of data types available in this implementation.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="odl.space.base_tensors.TensorSpace.contains_all.html#odl.space.base_tensors.TensorSpace.contains_all" title="odl.space.base_tensors.TensorSpace.contains_all"><code class="xref py py-obj docutils literal notranslate"><span class="pre">contains_all</span></code></a>(self, other)</p></td>
+<td><p>Test if all elements in <code class="docutils literal notranslate"><span class="pre">other</span></code> are contained in this set.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="odl.space.base_tensors.TensorSpace.contains_set.html#odl.space.base_tensors.TensorSpace.contains_set" title="odl.space.base_tensors.TensorSpace.contains_set"><code class="xref py py-obj docutils literal notranslate"><span class="pre">contains_set</span></code></a>(self, other)</p></td>
+<td><p>Test if <code class="docutils literal notranslate"><span class="pre">other</span></code> is a subset of this set.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="odl.space.base_tensors.TensorSpace.default_dtype.html#odl.space.base_tensors.TensorSpace.default_dtype" title="odl.space.base_tensors.TensorSpace.default_dtype"><code class="xref py py-obj docutils literal notranslate"><span class="pre">default_dtype</span></code></a>([field])</p></td>
+<td><p>Return the default data type for a given field.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="odl.space.base_tensors.TensorSpace.dist.html#odl.space.base_tensors.TensorSpace.dist" title="odl.space.base_tensors.TensorSpace.dist"><code class="xref py py-obj docutils literal notranslate"><span class="pre">dist</span></code></a>(self, x1, x2)</p></td>
+<td><p>Return the distance between <code class="docutils literal notranslate"><span class="pre">x1</span></code> and <code class="docutils literal notranslate"><span class="pre">x2</span></code>.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="odl.space.base_tensors.TensorSpace.divide.html#odl.space.base_tensors.TensorSpace.divide" title="odl.space.base_tensors.TensorSpace.divide"><code class="xref py py-obj docutils literal notranslate"><span class="pre">divide</span></code></a>(self, x1, x2[, out])</p></td>
+<td><p>Return the pointwise quotient of <code class="docutils literal notranslate"><span class="pre">x1</span></code> and <code class="docutils literal notranslate"><span class="pre">x2</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="odl.space.base_tensors.TensorSpace.element.html#odl.space.base_tensors.TensorSpace.element" title="odl.space.base_tensors.TensorSpace.element"><code class="xref py py-obj docutils literal notranslate"><span class="pre">element</span></code></a>(self[, inp])</p></td>
+<td><p>Create a <a class="reference internal" href="odl.set.space.LinearSpaceElement.html#odl.set.space.LinearSpaceElement" title="odl.set.space.LinearSpaceElement"><code class="xref any py py-class docutils literal notranslate"><span class="pre">LinearSpaceElement</span></code></a> from <code class="docutils literal notranslate"><span class="pre">inp</span></code> or from scratch.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="odl.space.base_tensors.TensorSpace.inner.html#odl.space.base_tensors.TensorSpace.inner" title="odl.space.base_tensors.TensorSpace.inner"><code class="xref py py-obj docutils literal notranslate"><span class="pre">inner</span></code></a>(self, x1, x2)</p></td>
+<td><p>Return the inner product of <code class="docutils literal notranslate"><span class="pre">x1</span></code> and <code class="docutils literal notranslate"><span class="pre">x2</span></code>.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="odl.space.base_tensors.TensorSpace.lincomb.html#odl.space.base_tensors.TensorSpace.lincomb" title="odl.space.base_tensors.TensorSpace.lincomb"><code class="xref py py-obj docutils literal notranslate"><span class="pre">lincomb</span></code></a>(self, a, x1[, b, x2, out])</p></td>
+<td><p>Implement <code class="docutils literal notranslate"><span class="pre">out[:]</span> <span class="pre">=</span> <span class="pre">a</span> <span class="pre">*</span> <span class="pre">x1</span> <span class="pre">+</span> <span class="pre">b</span> <span class="pre">*</span> <span class="pre">x2</span></code>.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="odl.space.base_tensors.TensorSpace.multiply.html#odl.space.base_tensors.TensorSpace.multiply" title="odl.space.base_tensors.TensorSpace.multiply"><code class="xref py py-obj docutils literal notranslate"><span class="pre">multiply</span></code></a>(self, x1, x2[, out])</p></td>
+<td><p>Return the pointwise product of <code class="docutils literal notranslate"><span class="pre">x1</span></code> and <code class="docutils literal notranslate"><span class="pre">x2</span></code>.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="odl.space.base_tensors.TensorSpace.norm.html#odl.space.base_tensors.TensorSpace.norm" title="odl.space.base_tensors.TensorSpace.norm"><code class="xref py py-obj docutils literal notranslate"><span class="pre">norm</span></code></a>(self, x)</p></td>
+<td><p>Return the norm of <code class="docutils literal notranslate"><span class="pre">x</span></code>.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="odl.space.base_tensors.TensorSpace.one.html#odl.space.base_tensors.TensorSpace.one" title="odl.space.base_tensors.TensorSpace.one"><code class="xref py py-obj docutils literal notranslate"><span class="pre">one</span></code></a>(self)</p></td>
+<td><p>Return a tensor of all ones.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="odl.space.base_tensors.TensorSpace.zero.html#odl.space.base_tensors.TensorSpace.zero" title="odl.space.base_tensors.TensorSpace.zero"><code class="xref py py-obj docutils literal notranslate"><span class="pre">zero</span></code></a>(self)</p></td>
+<td><p>Return a tensor of all zeros.</p></td>
+</tr>
+</tbody>
+</table>
+<dl class="py method">
+<dt id="odl.space.base_tensors.TensorSpace.__init__">
+<code class="sig-name descname"><span class="pre">__init__</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">shape</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dtype</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/odl/space/base_tensors.html#TensorSpace.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#odl.space.base_tensors.TensorSpace.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initialize a new instance.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>shape</strong><span class="classifier">nonnegative int or sequence of nonnegative ints</span></dt><dd><p>Number of entries of type <code class="docutils literal notranslate"><span class="pre">dtype</span></code> per axis in this space. A
+single integer results in a space with rank 1, i.e., 1 axis.</p>
+</dd>
+<dt><strong>dtype :</strong></dt><dd><p>Data type of elements in this space. Can be provided
+in any way the <a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.dtype.html#numpy.dtype" title="(in NumPy v1.20)"><code class="xref any docutils literal notranslate"><span class="pre">numpy.dtype</span></code></a> constructor understands, e.g.
+as built-in type or as a string.
+For a data type with a <code class="docutils literal notranslate"><span class="pre">dtype.shape</span></code>, these extra dimensions
+are added <em>to the left</em> of <code class="docutils literal notranslate"><span class="pre">shape</span></code>.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+        <a href="odl.space.base_tensors.TensorSpace._dist.html" class="btn btn-neutral float-right" title="TensorSpace._dist" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="odl.space.base_tensors.Tensor.show.html" class="btn btn-neutral float-left" title="Tensor.show" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &#169; Copyright 2014-2020 The ODL Contributors.
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

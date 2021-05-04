@@ -1,0 +1,8 @@
+:orphan:
+
+ProductSpaceOperator.__eq__
+===================================================
+
+.. currentmodule:: odl.operator.pspace_ops
+
+.. automethod:: ProductSpaceOperator.__eq__

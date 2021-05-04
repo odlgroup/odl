@@ -1,0 +1,8 @@
+:orphan:
+
+CallbackPrintNorm.__call__
+====================================================
+
+.. currentmodule:: odl.solvers.util.callback
+
+.. automethod:: CallbackPrintNorm.__call__

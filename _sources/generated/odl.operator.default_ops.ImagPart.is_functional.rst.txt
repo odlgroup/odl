@@ -1,0 +1,6 @@
+ImagPart.is_functional
+===============================================
+
+.. currentmodule:: odl.operator.default_ops
+
+.. autoproperty:: ImagPart.is_functional

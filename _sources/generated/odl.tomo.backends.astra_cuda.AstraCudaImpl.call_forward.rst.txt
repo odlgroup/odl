@@ -1,0 +1,8 @@
+:orphan:
+
+AstraCudaImpl.call_forward
+=======================================================
+
+.. currentmodule:: odl.tomo.backends.astra_cuda
+
+.. automethod:: AstraCudaImpl.call_forward

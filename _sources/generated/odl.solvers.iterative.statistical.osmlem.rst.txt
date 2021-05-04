@@ -1,0 +1,6 @@
+﻿osmlem
+========================================
+
+.. currentmodule:: odl.solvers.iterative.statistical
+
+.. autofunction:: osmlem

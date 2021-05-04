@@ -1,0 +1,8 @@
+:orphan:
+
+RectGrid.squeeze
+===============================
+
+.. currentmodule:: odl.discr.grid
+
+.. automethod:: RectGrid.squeeze

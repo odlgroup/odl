@@ -1,0 +1,8 @@
+:orphan:
+
+FunctionalLeftScalarMult.bregman
+==================================================================
+
+.. currentmodule:: odl.solvers.functional.functional
+
+.. automethod:: FunctionalLeftScalarMult.bregman

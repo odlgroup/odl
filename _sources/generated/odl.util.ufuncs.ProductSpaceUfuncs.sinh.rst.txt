@@ -1,0 +1,8 @@
+:orphan:
+
+ProductSpaceUfuncs.sinh
+=======================================
+
+.. currentmodule:: odl.util.ufuncs
+
+.. automethod:: ProductSpaceUfuncs.sinh

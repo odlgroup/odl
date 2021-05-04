@@ -1,0 +1,6 @@
+﻿cylinders_from_ellipses
+=================================================
+
+.. currentmodule:: odl.phantom.phantom_utils
+
+.. autofunction:: cylinders_from_ellipses

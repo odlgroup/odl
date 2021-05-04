@@ -1,0 +1,370 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>Set &mdash; odl 1.0.0.dev0 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Set.contains_all" href="odl.set.sets.Set.contains_all.html" />
+    <link rel="prev" title="RealNumbers.element" href="odl.set.sets.RealNumbers.element.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../index.html" class="icon icon-home"> odl
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                1.0.0.dev0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Getting Started</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../getting_started/getting_started.html">Getting Started</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Working with ODL</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../guide/guide.html">User’s guide – selected topics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../math/math.html">Mathematical Background</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Developer zone</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../dev/dev.html">Contributing to ODL</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Useful facts</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../guide/faq.html">Frequently asked questions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../guide/glossary.html">Glossary</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../release_notes.html">Release Notes</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../refs.html">References</a></li>
+</ul>
+<p class="caption"><span class="caption-text">API Reference</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../odl.html">odl</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../odl.contrib.html">contrib</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../odl.deform.html">deform</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../odl.diagnostics.html">diagnostics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../odl.discr.html">discr</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../odl.operator.html">operator</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../odl.phantom.html">phantom</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="../odl.set.html">set</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="../odl.set.domain.html">domain</a></li>
+<li class="toctree-l3 current"><a class="reference internal" href="../odl.set.sets.html">sets</a><ul class="current">
+<li class="toctree-l4"><a class="reference internal" href="odl.set.sets.CartesianProduct.html">CartesianProduct</a></li>
+<li class="toctree-l4"><a class="reference internal" href="odl.set.sets.ComplexNumbers.html">ComplexNumbers</a></li>
+<li class="toctree-l4"><a class="reference internal" href="odl.set.sets.EmptySet.html">EmptySet</a></li>
+<li class="toctree-l4"><a class="reference internal" href="odl.set.sets.Field.html">Field</a></li>
+<li class="toctree-l4"><a class="reference internal" href="odl.set.sets.FiniteSet.html">FiniteSet</a></li>
+<li class="toctree-l4"><a class="reference internal" href="odl.set.sets.Integers.html">Integers</a></li>
+<li class="toctree-l4"><a class="reference internal" href="odl.set.sets.RealNumbers.html">RealNumbers</a></li>
+<li class="toctree-l4 current"><a class="current reference internal" href="#">Set</a></li>
+<li class="toctree-l4"><a class="reference internal" href="odl.set.sets.SetIntersection.html">SetIntersection</a></li>
+<li class="toctree-l4"><a class="reference internal" href="odl.set.sets.SetUnion.html">SetUnion</a></li>
+<li class="toctree-l4"><a class="reference internal" href="odl.set.sets.Strings.html">Strings</a></li>
+<li class="toctree-l4"><a class="reference internal" href="odl.set.sets.UniversalSet.html">UniversalSet</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../odl.set.space.html">space</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../odl.solvers.html">solvers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../odl.space.html">space</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../odl.tomo.html">tomo</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../odl.trafos.html">trafos</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../odl.ufunc_ops.html">ufunc_ops</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../odl.util.html">util</a></li>
+</ul>
+</li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">odl</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="../odl.html">odl</a> &raquo;</li>
+        
+          <li><a href="../odl.set.html">set</a> &raquo;</li>
+        
+          <li><a href="../odl.set.sets.html">sets</a> &raquo;</li>
+        
+      <li>Set</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            <a href="../_sources/generated/odl.set.sets.Set.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="set">
+<h1>Set<a class="headerlink" href="#set" title="Permalink to this headline">¶</a></h1>
+<dl class="py class">
+<dt id="odl.set.sets.Set">
+<em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">odl.set.sets.</span></code><code class="sig-name descname"><span class="pre">Set</span></code><a class="reference internal" href="../_modules/odl/set/sets.html#Set"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#odl.set.sets.Set" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
+<p>An abstract set.</p>
+<p><strong>Abstract Methods</strong></p>
+<p>Each subclass of <a class="reference internal" href="#odl.set.sets.Set" title="odl.set.sets.Set"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Set</span></code></a> must implement two methods: one to
+check if an object is contained in the set and one to test if two
+sets are equal.</p>
+<p><strong>Membership test:</strong> <code class="docutils literal notranslate"><span class="pre">__contains__(self,</span> <span class="pre">other)</span></code></p>
+<p>Test if <code class="docutils literal notranslate"><span class="pre">other</span></code> is a member of this set. This function provides
+the operator overload for <code class="docutils literal notranslate"><span class="pre">in</span></code>.</p>
+<dl class="simple">
+<dt><strong>Parameters:</strong></dt><dd><dl class="simple">
+<dt>other :</dt><dd><p>Object to be tested for membership</p>
+</dd>
+</dl>
+</dd>
+<dt><strong>Returns:</strong></dt><dd><dl class="simple">
+<dt>contains<span class="classifier">bool</span></dt><dd><p><code class="docutils literal notranslate"><span class="pre">True</span></code> if <code class="docutils literal notranslate"><span class="pre">other</span></code> is a member of this set, <code class="docutils literal notranslate"><span class="pre">False</span></code>
+otherwise.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+<p><strong>Equality test:</strong> <code class="docutils literal notranslate"><span class="pre">__eq__(self,</span> <span class="pre">other)</span></code></p>
+<p>Test if <code class="docutils literal notranslate"><span class="pre">other</span></code> is the same set as this set, i.e. both sets are
+of the same type and contain the same elements. This function
+provides the operator overload for <code class="docutils literal notranslate"><span class="pre">==</span></code>.</p>
+<dl class="simple">
+<dt><strong>Parameters:</strong></dt><dd><dl class="simple">
+<dt>other :</dt><dd><p>Object to be tested for equality.</p>
+</dd>
+</dl>
+</dd>
+<dt><strong>Returns:</strong></dt><dd><dl class="simple">
+<dt>equals<span class="classifier">bool</span></dt><dd><p><code class="docutils literal notranslate"><span class="pre">True</span></code> if both sets are of the same type and contain the
+same elements, <code class="docutils literal notranslate"><span class="pre">False</span></code> otherwise.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+<p>A default implementation of the operator overload for <code class="docutils literal notranslate"><span class="pre">!=</span></code> via
+<code class="docutils literal notranslate"><span class="pre">__ne__(self,</span> <span class="pre">other)</span></code> is provided as <code class="docutils literal notranslate"><span class="pre">not</span> <span class="pre">self.__eq__(other)</span></code>.</p>
+<p><strong>Element creation (optional)</strong>: <code class="docutils literal notranslate"><span class="pre">element(self,</span> <span class="pre">inp=None)</span></code></p>
+<p>Create an element of this set, either from scratch or from an
+input parameter.</p>
+<dl class="simple">
+<dt><strong>Parameters:</strong></dt><dd><dl class="simple">
+<dt>inp<span class="classifier">optional</span></dt><dd><p>Object from which to create the new element</p>
+</dd>
+</dl>
+</dd>
+<dt><strong>Returns:</strong></dt><dd><dl class="simple">
+<dt>element<span class="classifier">member of this set</span></dt><dd><p>If <code class="docutils literal notranslate"><span class="pre">inp</span></code> is None, return an arbitrary element.
+Otherwise, return the element created from <code class="docutils literal notranslate"><span class="pre">inp</span></code>.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+<dl class="field-list simple">
+<dt class="field-odd">Attributes</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><a class="reference internal" href="odl.set.sets.Set.examples.html#odl.set.sets.Set.examples" title="odl.set.sets.Set.examples"><code class="xref py py-obj docutils literal notranslate"><span class="pre">examples</span></code></a></dt><dd><p>Generator creating name-value pairs of set elements.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+<p class="rubric">Methods</p>
+<table class="longtable docutils align-default">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="odl.set.sets.Set.contains_all.html#odl.set.sets.Set.contains_all" title="odl.set.sets.Set.contains_all"><code class="xref py py-obj docutils literal notranslate"><span class="pre">contains_all</span></code></a>(self, other)</p></td>
+<td><p>Test if all elements in <code class="docutils literal notranslate"><span class="pre">other</span></code> are contained in this set.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="odl.set.sets.Set.contains_set.html#odl.set.sets.Set.contains_set" title="odl.set.sets.Set.contains_set"><code class="xref py py-obj docutils literal notranslate"><span class="pre">contains_set</span></code></a>(self, other)</p></td>
+<td><p>Test if <code class="docutils literal notranslate"><span class="pre">other</span></code> is a subset of this set.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="odl.set.sets.Set.element.html#odl.set.sets.Set.element" title="odl.set.sets.Set.element"><code class="xref py py-obj docutils literal notranslate"><span class="pre">element</span></code></a>(self[, inp])</p></td>
+<td><p>Return an element from <code class="docutils literal notranslate"><span class="pre">inp</span></code> or from scratch.</p></td>
+</tr>
+</tbody>
+</table>
+<dl class="py method">
+<dt id="odl.set.sets.Set.__init__">
+<code class="sig-name descname"><span class="pre">__init__</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="pre">self</span></em>, <em class="sig-param"><span class="pre">/</span></em>, <em class="sig-param"><span class="pre">\*args</span></em>, <em class="sig-param"><span class="pre">\*\*kwargs</span></em><span class="sig-paren">)</span><a class="headerlink" href="#odl.set.sets.Set.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initialize self.  See help(type(self)) for accurate signature.</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+        <a href="odl.set.sets.Set.contains_all.html" class="btn btn-neutral float-right" title="Set.contains_all" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="odl.set.sets.RealNumbers.element.html" class="btn btn-neutral float-left" title="RealNumbers.element" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &#169; Copyright 2014-2020 The ODL Contributors.
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

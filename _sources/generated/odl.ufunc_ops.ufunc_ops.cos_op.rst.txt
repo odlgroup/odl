@@ -1,0 +1,37 @@
+﻿cos_op
+==============================
+
+.. currentmodule:: odl.ufunc_ops.ufunc_ops
+
+.. autoclass:: cos_op
+   :show-inheritance:
+   
+   
+   .. automethod:: __init__
+   
+      
+   
+   .. HACK -- the point here is that we don't want this to appear in the output, but the autosummary should still generate the pages.
+      .. autosummary::
+         :toctree:
+      
+         cos_op.__call__
+         cos_op.__eq__
+         cos_op._call
+         cos_op.derivative
+         cos_op.norm
+   
+
+    
+   .. HACK -- the point here is that we don't want this to appear in the output, but the autosummary should still generate the pages.
+      .. autosummary::
+         :toctree:
+      
+         cos_op.adjoint
+         cos_op.domain
+         cos_op.inverse
+         cos_op.is_functional
+         cos_op.is_linear
+         cos_op.range
+   
+   

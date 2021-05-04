@@ -1,0 +1,361 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>odl.solvers.smooth.nonlinear_cg &mdash; odl 1.0.0.dev0 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../../../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../../../../_static/custom.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../../../" src="../../../../_static/documentation_options.js"></script>
+        <script src="../../../../_static/jquery.js"></script>
+        <script src="../../../../_static/underscore.js"></script>
+        <script src="../../../../_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="../../../../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../../../index.html" class="icon icon-home"> odl
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                1.0.0.dev0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Getting Started</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../getting_started/getting_started.html">Getting Started</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Working with ODL</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../guide/guide.html">User’s guide – selected topics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../math/math.html">Mathematical Background</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Developer zone</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../dev/dev.html">Contributing to ODL</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Useful facts</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../guide/faq.html">Frequently asked questions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../guide/glossary.html">Glossary</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../release_notes.html">Release Notes</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../refs.html">References</a></li>
+</ul>
+<p class="caption"><span class="caption-text">API Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../odl.html">odl</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../../index.html">odl</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../../../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="../../../index.html">Module code</a> &raquo;</li>
+        
+      <li>odl.solvers.smooth.nonlinear_cg</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for odl.solvers.smooth.nonlinear_cg</h1><div class="highlight"><pre>
+<span></span><span class="c1"># Copyright 2014-2019 The ODL contributors</span>
+<span class="c1">#</span>
+<span class="c1"># This file is part of ODL.</span>
+<span class="c1">#</span>
+<span class="c1"># This Source Code Form is subject to the terms of the Mozilla Public License,</span>
+<span class="c1"># v. 2.0. If a copy of the MPL was not distributed with this file, You can</span>
+<span class="c1"># obtain one at https://mozilla.org/MPL/2.0/.</span>
+
+<span class="sd">&quot;&quot;&quot;Nonlinear version of the conjugate gradient method.&quot;&quot;&quot;</span>
+
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">print_function</span><span class="p">,</span> <span class="n">division</span><span class="p">,</span> <span class="n">absolute_import</span>
+
+<span class="kn">from</span> <span class="nn">odl.solvers.util</span> <span class="kn">import</span> <span class="n">ConstantLineSearch</span>
+
+
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;conjugate_gradient_nonlinear&#39;</span><span class="p">,)</span>
+
+
+<div class="viewcode-block" id="conjugate_gradient_nonlinear"><a class="viewcode-back" href="../../../../generated/odl.solvers.smooth.nonlinear_cg.conjugate_gradient_nonlinear.html#odl.solvers.smooth.nonlinear_cg.conjugate_gradient_nonlinear">[docs]</a><span class="k">def</span> <span class="nf">conjugate_gradient_nonlinear</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">line_search</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">maxiter</span><span class="o">=</span><span class="mi">1000</span><span class="p">,</span> <span class="n">nreset</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+                                 <span class="n">tol</span><span class="o">=</span><span class="mf">1e-16</span><span class="p">,</span> <span class="n">beta_method</span><span class="o">=</span><span class="s1">&#39;FR&#39;</span><span class="p">,</span>
+                                 <span class="n">callback</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="sa">r</span><span class="sd">&quot;&quot;&quot;Conjugate gradient for nonlinear problems.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    f : `Functional`</span>
+<span class="sd">        Functional with ``f.gradient``.</span>
+<span class="sd">    x : ``op.domain`` element</span>
+<span class="sd">        Vector to which the result is written. Its initial value is</span>
+<span class="sd">        used as starting point of the iteration, and its values are</span>
+<span class="sd">        updated in each iteration step.</span>
+<span class="sd">    line_search : float or `LineSearch`, optional</span>
+<span class="sd">        Strategy to choose the step length. If a float is given, it is used as</span>
+<span class="sd">        a fixed step length.</span>
+<span class="sd">    maxiter : int, optional</span>
+<span class="sd">        Maximum number of iterations to perform.</span>
+<span class="sd">    nreset : int, optional</span>
+<span class="sd">        Number of times the solver should be reset. Default: no reset.</span>
+<span class="sd">    tol : float, optional</span>
+<span class="sd">        Tolerance that should be used to terminating the iteration.</span>
+<span class="sd">    beta_method : {&#39;FR&#39;, &#39;PR&#39;, &#39;HS&#39;, &#39;DY&#39;}, optional</span>
+<span class="sd">        Method to calculate ``beta`` in the iterates.</span>
+
+<span class="sd">        - ``&#39;FR&#39;`` : Fletcher-Reeves</span>
+<span class="sd">        - ``&#39;PR&#39;`` : Polak-Ribiere</span>
+<span class="sd">        - ``&#39;HS&#39;`` : Hestenes-Stiefel</span>
+<span class="sd">        - ``&#39;DY&#39;`` : Dai-Yuan</span>
+
+<span class="sd">    callback : callable, optional</span>
+<span class="sd">        Object executing code per iteration, e.g. plotting each iterate.</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    This is a general and optimized implementation of the nonlinear conjguate</span>
+<span class="sd">    gradient method for solving a general unconstrained optimization problem</span>
+
+<span class="sd">    .. math::</span>
+<span class="sd">        \min f(x)</span>
+
+<span class="sd">    for a differentiable functional</span>
+<span class="sd">    :math:`f: \mathcal{X}\to \mathbb{R}` on a Hilbert space</span>
+<span class="sd">    :math:`\mathcal{X}`. It does so by finding a zero of the gradient</span>
+
+<span class="sd">    .. math::</span>
+<span class="sd">        \nabla f: \mathcal{X} \to \mathcal{X}.</span>
+
+<span class="sd">    The method is described in a</span>
+<span class="sd">    `Wikipedia article</span>
+<span class="sd">    &lt;https://en.wikipedia.org/wiki/Nonlinear_conjugate_gradient_method&gt;`_.</span>
+
+<span class="sd">    See Also</span>
+<span class="sd">    --------</span>
+<span class="sd">    odl.solvers.smooth.newton.bfgs_method :</span>
+<span class="sd">        Quasi-Newton solver for the same problem</span>
+<span class="sd">    odl.solvers.iterative.iterative.conjugate_gradient :</span>
+<span class="sd">        Optimized solver for least-squares problem with linear and symmetric</span>
+<span class="sd">        operator</span>
+<span class="sd">    odl.solvers.iterative.iterative.conjugate_gradient_normal :</span>
+<span class="sd">        Equivalent solver but for least-squares problem with linear operator</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">x</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">f</span><span class="o">.</span><span class="n">domain</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;`x` </span><span class="si">{!r}</span><span class="s1"> is not in the domain of `f` </span><span class="si">{!r}</span><span class="s1">&#39;</span>
+                        <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">f</span><span class="o">.</span><span class="n">domain</span><span class="p">))</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">callable</span><span class="p">(</span><span class="n">line_search</span><span class="p">):</span>
+        <span class="n">line_search</span> <span class="o">=</span> <span class="n">ConstantLineSearch</span><span class="p">(</span><span class="n">line_search</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">beta_method</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;FR&#39;</span><span class="p">,</span> <span class="s1">&#39;PR&#39;</span><span class="p">,</span> <span class="s1">&#39;HS&#39;</span><span class="p">,</span> <span class="s1">&#39;DY&#39;</span><span class="p">]:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;unknown ``beta_method``&#39;</span><span class="p">)</span>
+
+    <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">nreset</span> <span class="o">+</span> <span class="mi">1</span><span class="p">):</span>
+        <span class="c1"># First iteration is done without beta</span>
+        <span class="n">dx</span> <span class="o">=</span> <span class="o">-</span><span class="n">f</span><span class="o">.</span><span class="n">gradient</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+        <span class="n">dir_derivative</span> <span class="o">=</span> <span class="o">-</span><span class="n">dx</span><span class="o">.</span><span class="n">inner</span><span class="p">(</span><span class="n">dx</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">abs</span><span class="p">(</span><span class="n">dir_derivative</span><span class="p">)</span> <span class="o">&lt;</span> <span class="n">tol</span><span class="p">:</span>
+            <span class="k">return</span>
+        <span class="n">a</span> <span class="o">=</span> <span class="n">line_search</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">dx</span><span class="p">,</span> <span class="n">dir_derivative</span><span class="p">)</span>
+        <span class="n">x</span><span class="o">.</span><span class="n">lincomb</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">dx</span><span class="p">)</span>  <span class="c1"># x = x + a * dx</span>
+
+        <span class="n">s</span> <span class="o">=</span> <span class="n">dx</span>  <span class="c1"># for &#39;HS&#39; and &#39;DY&#39; beta methods</span>
+
+        <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">maxiter</span> <span class="o">//</span> <span class="p">(</span><span class="n">nreset</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)):</span>
+            <span class="c1"># Compute dx as -grad f</span>
+            <span class="n">dx</span><span class="p">,</span> <span class="n">dx_old</span> <span class="o">=</span> <span class="o">-</span><span class="n">f</span><span class="o">.</span><span class="n">gradient</span><span class="p">(</span><span class="n">x</span><span class="p">),</span> <span class="n">dx</span>
+
+            <span class="c1"># Calculate &quot;beta&quot;</span>
+            <span class="k">if</span> <span class="n">beta_method</span> <span class="o">==</span> <span class="s1">&#39;FR&#39;</span><span class="p">:</span>
+                <span class="n">beta</span> <span class="o">=</span> <span class="n">dx</span><span class="o">.</span><span class="n">inner</span><span class="p">(</span><span class="n">dx</span><span class="p">)</span> <span class="o">/</span> <span class="n">dx_old</span><span class="o">.</span><span class="n">inner</span><span class="p">(</span><span class="n">dx_old</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="n">beta_method</span> <span class="o">==</span> <span class="s1">&#39;PR&#39;</span><span class="p">:</span>
+                <span class="n">beta</span> <span class="o">=</span> <span class="n">dx</span><span class="o">.</span><span class="n">inner</span><span class="p">(</span><span class="n">dx</span> <span class="o">-</span> <span class="n">dx_old</span><span class="p">)</span> <span class="o">/</span> <span class="n">dx_old</span><span class="o">.</span><span class="n">inner</span><span class="p">(</span><span class="n">dx_old</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="n">beta_method</span> <span class="o">==</span> <span class="s1">&#39;HS&#39;</span><span class="p">:</span>
+                <span class="n">beta</span> <span class="o">=</span> <span class="o">-</span> <span class="n">dx</span><span class="o">.</span><span class="n">inner</span><span class="p">(</span><span class="n">dx</span> <span class="o">-</span> <span class="n">dx_old</span><span class="p">)</span> <span class="o">/</span> <span class="n">s</span><span class="o">.</span><span class="n">inner</span><span class="p">(</span><span class="n">dx</span> <span class="o">-</span> <span class="n">dx_old</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="n">beta_method</span> <span class="o">==</span> <span class="s1">&#39;DY&#39;</span><span class="p">:</span>
+                <span class="n">beta</span> <span class="o">=</span> <span class="o">-</span> <span class="n">dx</span><span class="o">.</span><span class="n">inner</span><span class="p">(</span><span class="n">dx</span><span class="p">)</span> <span class="o">/</span> <span class="n">s</span><span class="o">.</span><span class="n">inner</span><span class="p">(</span><span class="n">dx</span> <span class="o">-</span> <span class="n">dx_old</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s1">&#39;unknown ``beta_method``&#39;</span><span class="p">)</span>
+
+            <span class="c1"># Reset beta if negative.</span>
+            <span class="n">beta</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">beta</span><span class="p">)</span>
+
+            <span class="c1"># Update search direction</span>
+            <span class="n">s</span><span class="o">.</span><span class="n">lincomb</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">dx</span><span class="p">,</span> <span class="n">beta</span><span class="p">,</span> <span class="n">s</span><span class="p">)</span>  <span class="c1"># s = dx + beta * s</span>
+
+            <span class="c1"># Find optimal step along s</span>
+            <span class="n">dir_derivative</span> <span class="o">=</span> <span class="o">-</span><span class="n">dx</span><span class="o">.</span><span class="n">inner</span><span class="p">(</span><span class="n">s</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="nb">abs</span><span class="p">(</span><span class="n">dir_derivative</span><span class="p">)</span> <span class="o">&lt;=</span> <span class="n">tol</span><span class="p">:</span>
+                <span class="k">return</span>
+            <span class="n">a</span> <span class="o">=</span> <span class="n">line_search</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">s</span><span class="p">,</span> <span class="n">dir_derivative</span><span class="p">)</span>
+
+            <span class="c1"># Update position</span>
+            <span class="n">x</span><span class="o">.</span><span class="n">lincomb</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">s</span><span class="p">)</span>  <span class="c1"># x = x + a * s</span>
+
+            <span class="k">if</span> <span class="n">callback</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">callback</span><span class="p">(</span><span class="n">x</span><span class="p">)</span></div>
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &#169; Copyright 2014-2020 The ODL Contributors.
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

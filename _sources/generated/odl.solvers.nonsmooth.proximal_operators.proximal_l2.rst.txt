@@ -1,0 +1,6 @@
+﻿proximal_l2
+====================================================
+
+.. currentmodule:: odl.solvers.nonsmooth.proximal_operators
+
+.. autofunction:: proximal_l2

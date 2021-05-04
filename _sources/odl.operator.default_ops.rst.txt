@@ -1,0 +1,31 @@
+default_ops
+===========
+
+Default operators defined on any (reasonable) space.
+
+.. currentmodule:: odl.operator.default_ops
+
+
+
+.. rubric:: Classes
+
+.. autosummary::
+   :toctree: generated/
+
+   ~odl.operator.default_ops.ComplexEmbedding
+   ~odl.operator.default_ops.ComplexModulus
+   ~odl.operator.default_ops.ComplexModulusSquared
+   ~odl.operator.default_ops.ConstantOperator
+   ~odl.operator.default_ops.DistOperator
+   ~odl.operator.default_ops.IdentityOperator
+   ~odl.operator.default_ops.ImagPart
+   ~odl.operator.default_ops.InnerProductOperator
+   ~odl.operator.default_ops.LinCombOperator
+   ~odl.operator.default_ops.MultiplyOperator
+   ~odl.operator.default_ops.NormOperator
+   ~odl.operator.default_ops.PowerOperator
+   ~odl.operator.default_ops.RealPart
+   ~odl.operator.default_ops.ScalingOperator
+   ~odl.operator.default_ops.ZeroOperator
+
+

@@ -1,0 +1,8 @@
+:orphan:
+
+NumpyTensorSpace.default_dtype
+====================================================
+
+.. currentmodule:: odl.space.npy_tensors
+
+.. automethod:: NumpyTensorSpace.default_dtype

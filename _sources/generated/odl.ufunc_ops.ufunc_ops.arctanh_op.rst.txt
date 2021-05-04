@@ -1,0 +1,37 @@
+﻿arctanh_op
+==================================
+
+.. currentmodule:: odl.ufunc_ops.ufunc_ops
+
+.. autoclass:: arctanh_op
+   :show-inheritance:
+   
+   
+   .. automethod:: __init__
+   
+      
+   
+   .. HACK -- the point here is that we don't want this to appear in the output, but the autosummary should still generate the pages.
+      .. autosummary::
+         :toctree:
+      
+         arctanh_op.__call__
+         arctanh_op.__eq__
+         arctanh_op._call
+         arctanh_op.derivative
+         arctanh_op.norm
+   
+
+    
+   .. HACK -- the point here is that we don't want this to appear in the output, but the autosummary should still generate the pages.
+      .. autosummary::
+         :toctree:
+      
+         arctanh_op.adjoint
+         arctanh_op.domain
+         arctanh_op.inverse
+         arctanh_op.is_functional
+         arctanh_op.is_linear
+         arctanh_op.range
+   
+   

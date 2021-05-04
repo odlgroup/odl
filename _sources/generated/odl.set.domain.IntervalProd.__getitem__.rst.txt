@@ -1,0 +1,8 @@
+:orphan:
+
+IntervalProd.__getitem__
+=======================================
+
+.. currentmodule:: odl.set.domain
+
+.. automethod:: IntervalProd.__getitem__

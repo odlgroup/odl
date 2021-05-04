@@ -1,0 +1,8 @@
+:orphan:
+
+InnerProductOperator.derivative
+========================================================
+
+.. currentmodule:: odl.operator.default_ops
+
+.. automethod:: InnerProductOperator.derivative

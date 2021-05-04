@@ -1,0 +1,6 @@
+Geometry.implementation_cache
+========================================================
+
+.. currentmodule:: odl.tomo.geometry.geometry
+
+.. autoproperty:: Geometry.implementation_cache

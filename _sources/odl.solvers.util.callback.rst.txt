@@ -1,0 +1,36 @@
+callback
+========
+
+Callback objects for per-iterate actions in iterative methods.
+
+.. currentmodule:: odl.solvers.util.callback
+
+
+
+.. rubric:: Classes
+
+.. autosummary::
+   :toctree: generated/
+
+   ~odl.solvers.util.callback.Callback
+   ~odl.solvers.util.callback.CallbackApply
+   ~odl.solvers.util.callback.CallbackPrint
+   ~odl.solvers.util.callback.CallbackPrintHardwareUsage
+   ~odl.solvers.util.callback.CallbackPrintIteration
+   ~odl.solvers.util.callback.CallbackPrintNorm
+   ~odl.solvers.util.callback.CallbackPrintTiming
+   ~odl.solvers.util.callback.CallbackProgressBar
+   ~odl.solvers.util.callback.CallbackSaveToDisk
+   ~odl.solvers.util.callback.CallbackShow
+   ~odl.solvers.util.callback.CallbackShowConvergence
+   ~odl.solvers.util.callback.CallbackSleep
+   ~odl.solvers.util.callback.CallbackStore
+
+
+.. rubric:: Functions
+
+.. autosummary::
+   :toctree: generated/
+
+   ~odl.solvers.util.callback.save_animation
+

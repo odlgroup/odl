@@ -1,0 +1,8 @@
+:orphan:
+
+PointwiseInnerBase.norm
+===============================================
+
+.. currentmodule:: odl.operator.tensor_ops
+
+.. automethod:: PointwiseInnerBase.norm

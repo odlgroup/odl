@@ -1,0 +1,39 @@
+﻿Resampling
+==============================
+
+.. currentmodule:: odl.discr.discr_ops
+
+.. autoclass:: Resampling
+   :show-inheritance:
+   
+   
+   .. automethod:: __init__
+   
+      
+   
+   .. HACK -- the point here is that we don't want this to appear in the output, but the autosummary should still generate the pages.
+      .. autosummary::
+         :toctree:
+      
+         Resampling.__call__
+         Resampling.__eq__
+         Resampling._call
+         Resampling.derivative
+         Resampling.norm
+   
+
+    
+   .. HACK -- the point here is that we don't want this to appear in the output, but the autosummary should still generate the pages.
+      .. autosummary::
+         :toctree:
+      
+         Resampling.adjoint
+         Resampling.domain
+         Resampling.interp
+         Resampling.interp_byaxis
+         Resampling.inverse
+         Resampling.is_functional
+         Resampling.is_linear
+         Resampling.range
+   
+   

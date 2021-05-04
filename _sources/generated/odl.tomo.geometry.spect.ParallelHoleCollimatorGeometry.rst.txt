@@ -1,0 +1,54 @@
+﻿ParallelHoleCollimatorGeometry
+======================================================
+
+.. currentmodule:: odl.tomo.geometry.spect
+
+.. autoclass:: ParallelHoleCollimatorGeometry
+   :show-inheritance:
+   
+   
+   .. automethod:: __init__
+   
+      
+   
+   .. HACK -- the point here is that we don't want this to appear in the output, but the autosummary should still generate the pages.
+      .. autosummary::
+         :toctree:
+      
+         ParallelHoleCollimatorGeometry.__eq__
+         ParallelHoleCollimatorGeometry.__getitem__
+         ParallelHoleCollimatorGeometry.det_axes
+         ParallelHoleCollimatorGeometry.det_point_position
+         ParallelHoleCollimatorGeometry.det_refpoint
+         ParallelHoleCollimatorGeometry.det_to_src
+         ParallelHoleCollimatorGeometry.frommatrix
+         ParallelHoleCollimatorGeometry.rotation_matrix
+   
+
+    
+   .. HACK -- the point here is that we don't want this to appear in the output, but the autosummary should still generate the pages.
+      .. autosummary::
+         :toctree:
+      
+         ParallelHoleCollimatorGeometry.angles
+         ParallelHoleCollimatorGeometry.axis
+         ParallelHoleCollimatorGeometry.check_bounds
+         ParallelHoleCollimatorGeometry.det_axes_init
+         ParallelHoleCollimatorGeometry.det_grid
+         ParallelHoleCollimatorGeometry.det_params
+         ParallelHoleCollimatorGeometry.det_partition
+         ParallelHoleCollimatorGeometry.det_pos_init
+         ParallelHoleCollimatorGeometry.det_radius
+         ParallelHoleCollimatorGeometry.detector
+         ParallelHoleCollimatorGeometry.grid
+         ParallelHoleCollimatorGeometry.implementation_cache
+         ParallelHoleCollimatorGeometry.motion_grid
+         ParallelHoleCollimatorGeometry.motion_params
+         ParallelHoleCollimatorGeometry.motion_partition
+         ParallelHoleCollimatorGeometry.ndim
+         ParallelHoleCollimatorGeometry.orig_to_det_init
+         ParallelHoleCollimatorGeometry.params
+         ParallelHoleCollimatorGeometry.partition
+         ParallelHoleCollimatorGeometry.translation
+   
+   

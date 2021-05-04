@@ -1,0 +1,6 @@
+LinDeformFixedDisp.domain
+===============================================
+
+.. currentmodule:: odl.deform.linearized
+
+.. autoproperty:: LinDeformFixedDisp.domain

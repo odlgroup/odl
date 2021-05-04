@@ -1,0 +1,8 @@
+:orphan:
+
+Set.__contains__
+=============================
+
+.. currentmodule:: odl.set.sets
+
+.. automethod:: Set.__contains__

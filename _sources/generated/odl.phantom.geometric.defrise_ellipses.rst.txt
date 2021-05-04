@@ -1,0 +1,6 @@
+﻿defrise_ellipses
+======================================
+
+.. currentmodule:: odl.phantom.geometric
+
+.. autofunction:: defrise_ellipses

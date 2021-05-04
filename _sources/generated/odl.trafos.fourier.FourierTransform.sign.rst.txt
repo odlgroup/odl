@@ -1,0 +1,6 @@
+FourierTransform.sign
+========================================
+
+.. currentmodule:: odl.trafos.fourier
+
+.. autoproperty:: FourierTransform.sign

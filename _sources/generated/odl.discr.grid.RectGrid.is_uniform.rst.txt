@@ -1,0 +1,6 @@
+RectGrid.is_uniform
+==================================
+
+.. currentmodule:: odl.discr.grid
+
+.. autoproperty:: RectGrid.is_uniform

@@ -1,0 +1,34 @@
+﻿ProductSpaceCustomInner
+========================================
+
+.. currentmodule:: odl.space.pspace
+
+.. autoclass:: ProductSpaceCustomInner
+   :show-inheritance:
+   
+   
+   .. automethod:: __init__
+   
+      
+   
+   .. HACK -- the point here is that we don't want this to appear in the output, but the autosummary should still generate the pages.
+      .. autosummary::
+         :toctree:
+      
+         ProductSpaceCustomInner.__eq__
+         ProductSpaceCustomInner.dist
+         ProductSpaceCustomInner.equiv
+         ProductSpaceCustomInner.norm
+   
+
+    
+   .. HACK -- the point here is that we don't want this to appear in the output, but the autosummary should still generate the pages.
+      .. autosummary::
+         :toctree:
+      
+         ProductSpaceCustomInner.exponent
+         ProductSpaceCustomInner.impl
+         ProductSpaceCustomInner.inner
+         ProductSpaceCustomInner.repr_part
+   
+   

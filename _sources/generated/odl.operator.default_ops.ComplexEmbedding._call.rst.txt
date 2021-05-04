@@ -1,0 +1,8 @@
+:orphan:
+
+ComplexEmbedding._call
+===============================================
+
+.. currentmodule:: odl.operator.default_ops
+
+.. automethod:: ComplexEmbedding._call

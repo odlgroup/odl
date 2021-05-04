@@ -1,0 +1,8 @@
+:orphan:
+
+ConstantFunctional._call
+===================================================================
+
+.. currentmodule:: odl.solvers.functional.default_functionals
+
+.. automethod:: ConstantFunctional._call

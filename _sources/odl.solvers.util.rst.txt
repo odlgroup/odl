@@ -1,0 +1,18 @@
+util
+====
+
+Utilities for optimization.
+
+.. currentmodule:: odl.solvers.util
+
+
+.. rubric:: Modules
+
+.. toctree::
+   :maxdepth: 2
+
+   odl.solvers.util.callback
+   odl.solvers.util.steplen
+
+
+

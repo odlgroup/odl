@@ -1,0 +1,8 @@
+:orphan:
+
+ArrayWeighting.is_valid
+===========================================
+
+.. currentmodule:: odl.space.weighting
+
+.. automethod:: ArrayWeighting.is_valid

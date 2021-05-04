@@ -1,0 +1,8 @@
+:orphan:
+
+ProductSpaceOperator.__getitem__
+========================================================
+
+.. currentmodule:: odl.operator.pspace_ops
+
+.. automethod:: ProductSpaceOperator.__getitem__

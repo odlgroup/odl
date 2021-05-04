@@ -1,0 +1,8 @@
+:orphan:
+
+CustomInner.equiv
+=====================================
+
+.. currentmodule:: odl.space.weighting
+
+.. automethod:: CustomInner.equiv

@@ -1,0 +1,6 @@
+NumpyTensorSpaceCustomNorm.impl
+=====================================================
+
+.. currentmodule:: odl.space.npy_tensors
+
+.. autoproperty:: NumpyTensorSpaceCustomNorm.impl

@@ -1,0 +1,8 @@
+:orphan:
+
+MoreauEnvelope._call
+===============================================================
+
+.. currentmodule:: odl.solvers.functional.default_functionals
+
+.. automethod:: MoreauEnvelope._call

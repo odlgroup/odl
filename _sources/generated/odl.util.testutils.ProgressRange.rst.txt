@@ -1,0 +1,27 @@
+﻿ProgressRange
+================================
+
+.. currentmodule:: odl.util.testutils
+
+.. autoclass:: ProgressRange
+   :show-inheritance:
+   
+   
+   .. automethod:: __init__
+   
+      
+   
+   .. HACK -- the point here is that we don't want this to appear in the output, but the autosummary should still generate the pages.
+      .. autosummary::
+         :toctree:
+      
+         ProgressRange.__eq__
+   
+
+    
+   .. HACK -- the point here is that we don't want this to appear in the output, but the autosummary should still generate the pages.
+      .. autosummary::
+         :toctree:
+      
+   
+   

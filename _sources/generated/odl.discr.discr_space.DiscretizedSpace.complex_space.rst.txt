@@ -1,0 +1,6 @@
+DiscretizedSpace.complex_space
+====================================================
+
+.. currentmodule:: odl.discr.discr_space
+
+.. autoproperty:: DiscretizedSpace.complex_space

@@ -1,0 +1,6 @@
+RectPartition.mid_pt
+========================================
+
+.. currentmodule:: odl.discr.partition
+
+.. autoproperty:: RectPartition.mid_pt

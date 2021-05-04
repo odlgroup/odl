@@ -1,0 +1,6 @@
+IdentityFunctional.scalar
+====================================================================
+
+.. currentmodule:: odl.solvers.functional.default_functionals
+
+.. autoproperty:: IdentityFunctional.scalar

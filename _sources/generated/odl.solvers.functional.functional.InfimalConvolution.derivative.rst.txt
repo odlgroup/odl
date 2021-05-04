@@ -1,0 +1,8 @@
+:orphan:
+
+InfimalConvolution.derivative
+===============================================================
+
+.. currentmodule:: odl.solvers.functional.functional
+
+.. automethod:: InfimalConvolution.derivative

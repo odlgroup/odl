@@ -1,0 +1,8 @@
+:orphan:
+
+Parallel2dGeometry.det_point_position
+================================================================
+
+.. currentmodule:: odl.tomo.geometry.parallel
+
+.. automethod:: Parallel2dGeometry.det_point_position

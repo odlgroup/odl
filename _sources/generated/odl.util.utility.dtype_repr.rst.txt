@@ -1,0 +1,6 @@
+﻿dtype_repr
+===========================
+
+.. currentmodule:: odl.util.utility
+
+.. autofunction:: dtype_repr

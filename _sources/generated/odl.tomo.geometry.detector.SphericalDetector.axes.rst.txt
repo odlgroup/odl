@@ -1,0 +1,6 @@
+SphericalDetector.axes
+=================================================
+
+.. currentmodule:: odl.tomo.geometry.detector
+
+.. autoproperty:: SphericalDetector.axes

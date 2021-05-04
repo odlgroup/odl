@@ -1,0 +1,6 @@
+FunctionalProduct.convex_conj
+===============================================================
+
+.. currentmodule:: odl.solvers.functional.functional
+
+.. autoproperty:: FunctionalProduct.convex_conj

@@ -1,0 +1,6 @@
+RosenbrockFunctional.range
+===============================================================
+
+.. currentmodule:: odl.solvers.functional.example_funcs
+
+.. autoproperty:: RosenbrockFunctional.range

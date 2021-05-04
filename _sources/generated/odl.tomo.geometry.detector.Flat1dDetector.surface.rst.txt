@@ -1,0 +1,8 @@
+:orphan:
+
+Flat1dDetector.surface
+=================================================
+
+.. currentmodule:: odl.tomo.geometry.detector
+
+.. automethod:: Flat1dDetector.surface

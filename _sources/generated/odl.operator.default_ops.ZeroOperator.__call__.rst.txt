@@ -1,0 +1,8 @@
+:orphan:
+
+ZeroOperator.__call__
+==============================================
+
+.. currentmodule:: odl.operator.default_ops
+
+.. automethod:: ZeroOperator.__call__

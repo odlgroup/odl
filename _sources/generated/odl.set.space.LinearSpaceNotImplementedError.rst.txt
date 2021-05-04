@@ -1,0 +1,6 @@
+﻿LinearSpaceNotImplementedError
+============================================
+
+.. currentmodule:: odl.set.space
+
+.. autoexception:: LinearSpaceNotImplementedError

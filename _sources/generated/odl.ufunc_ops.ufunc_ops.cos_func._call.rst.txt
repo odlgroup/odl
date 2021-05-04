@@ -1,0 +1,8 @@
+:orphan:
+
+cos_func._call
+======================================
+
+.. currentmodule:: odl.ufunc_ops.ufunc_ops
+
+.. automethod:: cos_func._call

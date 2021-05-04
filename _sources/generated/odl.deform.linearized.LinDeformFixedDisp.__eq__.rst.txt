@@ -1,0 +1,8 @@
+:orphan:
+
+LinDeformFixedDisp.__eq__
+===============================================
+
+.. currentmodule:: odl.deform.linearized
+
+.. automethod:: LinDeformFixedDisp.__eq__

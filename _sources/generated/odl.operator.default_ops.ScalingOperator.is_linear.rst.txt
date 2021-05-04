@@ -1,0 +1,6 @@
+ScalingOperator.is_linear
+==================================================
+
+.. currentmodule:: odl.operator.default_ops
+
+.. autoproperty:: ScalingOperator.is_linear

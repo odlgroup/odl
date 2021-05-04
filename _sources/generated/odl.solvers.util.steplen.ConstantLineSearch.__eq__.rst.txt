@@ -1,0 +1,8 @@
+:orphan:
+
+ConstantLineSearch.__eq__
+==================================================
+
+.. currentmodule:: odl.solvers.util.steplen
+
+.. automethod:: ConstantLineSearch.__eq__

@@ -1,0 +1,6 @@
+FunctionalQuotient.divisor
+============================================================
+
+.. currentmodule:: odl.solvers.functional.functional
+
+.. autoproperty:: FunctionalQuotient.divisor

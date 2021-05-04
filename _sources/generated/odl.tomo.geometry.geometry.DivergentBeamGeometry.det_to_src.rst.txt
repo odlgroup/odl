@@ -1,0 +1,8 @@
+:orphan:
+
+DivergentBeamGeometry.det_to_src
+===========================================================
+
+.. currentmodule:: odl.tomo.geometry.geometry
+
+.. automethod:: DivergentBeamGeometry.det_to_src

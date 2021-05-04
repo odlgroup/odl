@@ -1,0 +1,8 @@
+:orphan:
+
+LinearSpace.__eq__
+================================
+
+.. currentmodule:: odl.set.space
+
+.. automethod:: LinearSpace.__eq__

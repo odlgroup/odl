@@ -1,0 +1,8 @@
+:orphan:
+
+DiscreteFourierTransformBase.norm
+====================================================
+
+.. currentmodule:: odl.trafos.fourier
+
+.. automethod:: DiscreteFourierTransformBase.norm

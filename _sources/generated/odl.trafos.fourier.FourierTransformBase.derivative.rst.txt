@@ -1,0 +1,8 @@
+:orphan:
+
+FourierTransformBase.derivative
+==================================================
+
+.. currentmodule:: odl.trafos.fourier
+
+.. automethod:: FourierTransformBase.derivative

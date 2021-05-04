@@ -1,0 +1,8 @@
+:orphan:
+
+ProductSpaceUfuncs.reciprocal
+=============================================
+
+.. currentmodule:: odl.util.ufuncs
+
+.. automethod:: ProductSpaceUfuncs.reciprocal

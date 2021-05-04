@@ -1,0 +1,8 @@
+:orphan:
+
+PointwiseInnerAdjoint.norm
+==================================================
+
+.. currentmodule:: odl.operator.tensor_ops
+
+.. automethod:: PointwiseInnerAdjoint.norm

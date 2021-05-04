@@ -1,0 +1,8 @@
+:orphan:
+
+negative_func._call
+===========================================
+
+.. currentmodule:: odl.ufunc_ops.ufunc_ops
+
+.. automethod:: negative_func._call

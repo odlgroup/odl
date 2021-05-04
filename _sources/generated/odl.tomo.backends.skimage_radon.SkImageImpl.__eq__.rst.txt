@@ -1,0 +1,8 @@
+:orphan:
+
+SkImageImpl.__eq__
+==================================================
+
+.. currentmodule:: odl.tomo.backends.skimage_radon
+
+.. automethod:: SkImageImpl.__eq__

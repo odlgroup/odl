@@ -1,0 +1,1269 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>odl.diagnostics.space &mdash; odl 1.0.0.dev0 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/custom.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../../" src="../../../_static/documentation_options.js"></script>
+        <script src="../../../_static/jquery.js"></script>
+        <script src="../../../_static/underscore.js"></script>
+        <script src="../../../_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="../../../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../../index.html" class="icon icon-home"> odl
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                1.0.0.dev0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Getting Started</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../getting_started/getting_started.html">Getting Started</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Working with ODL</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../guide/guide.html">User’s guide – selected topics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../math/math.html">Mathematical Background</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Developer zone</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../dev/dev.html">Contributing to ODL</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Useful facts</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../guide/faq.html">Frequently asked questions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../guide/glossary.html">Glossary</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../release_notes.html">Release Notes</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../refs.html">References</a></li>
+</ul>
+<p class="caption"><span class="caption-text">API Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../odl.html">odl</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">odl</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="../../index.html">Module code</a> &raquo;</li>
+        
+      <li>odl.diagnostics.space</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for odl.diagnostics.space</h1><div class="highlight"><pre>
+<span></span><span class="c1"># Copyright 2014-2019 The ODL contributors</span>
+<span class="c1">#</span>
+<span class="c1"># This file is part of ODL.</span>
+<span class="c1">#</span>
+<span class="c1"># This Source Code Form is subject to the terms of the Mozilla Public License,</span>
+<span class="c1"># v. 2.0. If a copy of the MPL was not distributed with this file, You can</span>
+<span class="c1"># obtain one at https://mozilla.org/MPL/2.0/.</span>
+
+<span class="sd">&quot;&quot;&quot;Standardized tests for ``LinearSpace``.&quot;&quot;&quot;</span>
+
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">absolute_import</span><span class="p">,</span> <span class="n">division</span><span class="p">,</span> <span class="n">print_function</span>
+
+<span class="kn">from</span> <span class="nn">builtins</span> <span class="kn">import</span> <span class="nb">object</span>
+<span class="kn">from</span> <span class="nn">copy</span> <span class="kn">import</span> <span class="n">copy</span><span class="p">,</span> <span class="n">deepcopy</span>
+
+<span class="kn">from</span> <span class="nn">odl.diagnostics.examples</span> <span class="kn">import</span> <span class="n">samples</span>
+<span class="kn">from</span> <span class="nn">odl.set</span> <span class="kn">import</span> <span class="n">Field</span>
+<span class="kn">from</span> <span class="nn">odl.util.testutils</span> <span class="kn">import</span> <span class="n">fail_counter</span>
+
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;SpaceTest&#39;</span><span class="p">,)</span>
+
+
+<span class="k">def</span> <span class="nf">_approx_equal</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">eps</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Test if elements ``x`` and ``y`` are approximately equal.</span>
+
+<span class="sd">    ``eps`` is a given absolute tolerance.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">x</span><span class="o">.</span><span class="n">space</span> <span class="o">!=</span> <span class="n">y</span><span class="o">.</span><span class="n">space</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">False</span>
+
+    <span class="k">if</span> <span class="n">x</span> <span class="ow">is</span> <span class="n">y</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">True</span>
+
+    <span class="k">try</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">x</span><span class="o">.</span><span class="n">dist</span><span class="p">(</span><span class="n">y</span><span class="p">)</span> <span class="o">&lt;=</span> <span class="n">eps</span>
+    <span class="k">except</span> <span class="ne">NotImplementedError</span><span class="p">:</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">x</span> <span class="o">==</span> <span class="n">y</span>
+        <span class="k">except</span> <span class="ne">NotImplementedError</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">False</span>
+
+
+<div class="viewcode-block" id="SpaceTest"><a class="viewcode-back" href="../../../generated/odl.diagnostics.space.SpaceTest.html#odl.diagnostics.space.SpaceTest">[docs]</a><span class="k">class</span> <span class="nc">SpaceTest</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+
+    <span class="sd">&quot;&quot;&quot;Automated tests for `LinearSpace` instances.</span>
+
+<span class="sd">    This class allows users to automatically test various features of a</span>
+<span class="sd">    `LinearSpace` such as linearity and vector space operations.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="SpaceTest.__init__"><a class="viewcode-back" href="../../../generated/odl.diagnostics.space.SpaceTest.html#odl.diagnostics.space.SpaceTest.__init__">[docs]</a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">space</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">tol</span><span class="o">=</span><span class="mf">1e-5</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Initialize a new instance.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        space : `LinearSpace`</span>
+<span class="sd">            Space that should be tested.</span>
+<span class="sd">        verbose : bool, optional</span>
+<span class="sd">            If ``True``, print additional info text.</span>
+<span class="sd">        tol : float, optional</span>
+<span class="sd">            Tolerance parameter used as a base for the actual tolerance</span>
+<span class="sd">            in the tests. Depending on the expected accuracy, the actual</span>
+<span class="sd">            tolerance used in a test can be a factor times this number.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">space</span> <span class="o">=</span> <span class="n">space</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">verbose</span> <span class="o">=</span> <span class="nb">bool</span><span class="p">(</span><span class="n">verbose</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">tol</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">tol</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="SpaceTest.log"><a class="viewcode-back" href="../../../generated/odl.diagnostics.space.SpaceTest.log.html#odl.diagnostics.space.SpaceTest.log">[docs]</a>    <span class="k">def</span> <span class="nf">log</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">message</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Print message if ``self.verbose == True``.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbose</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="n">message</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="SpaceTest.element_method"><a class="viewcode-back" href="../../../generated/odl.diagnostics.space.SpaceTest.element_method.html#odl.diagnostics.space.SpaceTest.element_method">[docs]</a>    <span class="k">def</span> <span class="nf">element_method</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Verify `LinearSpace.element`.&quot;&quot;&quot;</span>
+        <span class="k">with</span> <span class="n">fail_counter</span><span class="p">(</span>
+            <span class="n">test_name</span><span class="o">=</span><span class="s1">&#39;Verifying element method&#39;</span><span class="p">,</span> <span class="n">logger</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">log</span>
+        <span class="p">)</span> <span class="k">as</span> <span class="n">counter</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">elem</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">space</span><span class="o">.</span><span class="n">element</span><span class="p">()</span>
+            <span class="k">except</span> <span class="ne">NotImplementedError</span><span class="p">:</span>
+                <span class="n">counter</span><span class="o">.</span><span class="n">fail</span><span class="p">(</span><span class="s1">&#39;*** element failed ***&#39;</span><span class="p">)</span>
+                <span class="k">return</span>
+
+            <span class="k">if</span> <span class="n">elem</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">space</span><span class="p">:</span>
+                <span class="n">counter</span><span class="o">.</span><span class="n">fail</span><span class="p">(</span><span class="s1">&#39;*** space.element() not in space ***&#39;</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="SpaceTest.field"><a class="viewcode-back" href="../../../generated/odl.diagnostics.space.SpaceTest.field.html#odl.diagnostics.space.SpaceTest.field">[docs]</a>    <span class="k">def</span> <span class="nf">field</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Verify `LinearSpace.field`.&quot;&quot;&quot;</span>
+        <span class="k">with</span> <span class="n">fail_counter</span><span class="p">(</span>
+            <span class="n">test_name</span><span class="o">=</span><span class="s1">&#39;Verifying field property&#39;</span><span class="p">,</span> <span class="n">logger</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">log</span>
+        <span class="p">)</span> <span class="k">as</span> <span class="n">counter</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">field</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">space</span><span class="o">.</span><span class="n">field</span>
+            <span class="k">except</span> <span class="ne">NotImplementedError</span><span class="p">:</span>
+                <span class="n">counter</span><span class="o">.</span><span class="n">fail</span><span class="p">(</span><span class="s1">&#39;*** field failed ***&#39;</span><span class="p">)</span>
+                <span class="k">return</span>
+
+            <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">field</span><span class="p">,</span> <span class="n">Field</span><span class="p">):</span>
+                <span class="n">counter</span><span class="o">.</span><span class="n">fail</span><span class="p">(</span><span class="s1">&#39;*** space.field not a `Field` ***&#39;</span><span class="p">)</span>
+                <span class="k">return</span>
+
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">zero</span> <span class="o">=</span> <span class="n">field</span><span class="o">.</span><span class="n">element</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+            <span class="k">except</span> <span class="ne">NotImplementedError</span><span class="p">:</span>
+                <span class="n">counter</span><span class="o">.</span><span class="n">fail</span><span class="p">(</span><span class="s1">&#39;*** field.element(0) failed ***&#39;</span><span class="p">)</span>
+                <span class="n">zero</span> <span class="o">=</span> <span class="kc">None</span>
+
+            <span class="k">if</span> <span class="n">zero</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">zero</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="n">counter</span><span class="o">.</span><span class="n">fail</span><span class="p">(</span><span class="s1">&#39;*** field.element(0) != 0 ***&#39;</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="n">zero</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">zero</span> <span class="o">!=</span> <span class="mf">0.0</span><span class="p">:</span>
+                <span class="n">counter</span><span class="o">.</span><span class="n">fail</span><span class="p">(</span><span class="s1">&#39;*** field.element(0) != 0.0 ***&#39;</span><span class="p">)</span>
+
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">one</span> <span class="o">=</span> <span class="n">field</span><span class="o">.</span><span class="n">element</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+            <span class="k">except</span> <span class="ne">NotImplementedError</span><span class="p">:</span>
+                <span class="n">counter</span><span class="o">.</span><span class="n">fail</span><span class="p">(</span><span class="s1">&#39;*** field.element(1) failed ***&#39;</span><span class="p">)</span>
+                <span class="n">one</span> <span class="o">=</span> <span class="kc">None</span>
+
+            <span class="k">if</span> <span class="n">one</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">one</span> <span class="o">!=</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="n">counter</span><span class="o">.</span><span class="n">fail</span><span class="p">(</span><span class="s1">&#39;*** field.element(1) != 1 ***&#39;</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="n">one</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">one</span> <span class="o">!=</span> <span class="mf">1.0</span><span class="p">:</span>
+                <span class="n">counter</span><span class="o">.</span><span class="n">fail</span><span class="p">(</span><span class="s1">&#39;*** field.element(1) != 1.0 ***&#39;</span><span class="p">)</span>
+
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">minus_one</span> <span class="o">=</span> <span class="n">field</span><span class="o">.</span><span class="n">element</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+            <span class="k">except</span> <span class="ne">NotImplementedError</span><span class="p">:</span>
+                <span class="n">counter</span><span class="o">.</span><span class="n">fail</span><span class="p">(</span><span class="s1">&#39;field.element(-1) failed&#39;</span><span class="p">)</span>
+                <span class="n">minus_one</span> <span class="o">=</span> <span class="kc">None</span>
+
+            <span class="k">if</span> <span class="n">minus_one</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">minus_one</span> <span class="o">!=</span> <span class="o">-</span><span class="mi">1</span><span class="p">:</span>
+                <span class="n">counter</span><span class="o">.</span><span class="n">fail</span><span class="p">(</span><span class="s1">&#39;field.element(-1) != -1&#39;</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="n">minus_one</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">minus_one</span> <span class="o">!=</span> <span class="o">-</span><span class="mf">1.0</span><span class="p">:</span>
+                <span class="n">counter</span><span class="o">.</span><span class="n">fail</span><span class="p">(</span><span class="s1">&#39;field.element(-1) != -1.0&#39;</span><span class="p">)</span></div>
+
+    <span class="k">def</span> <span class="nf">_associativity_of_addition</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Verify addition associativity.&quot;&quot;&quot;</span>
+        <span class="k">with</span> <span class="n">fail_counter</span><span class="p">(</span>
+            <span class="n">test_name</span><span class="o">=</span><span class="s1">&#39;Verifying associativity of addition&#39;</span><span class="p">,</span>
+            <span class="n">err_msg</span><span class="o">=</span><span class="s1">&#39;error = dist(x + (y + z), (x + y) + z)&#39;</span><span class="p">,</span>
+            <span class="n">logger</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">log</span>
+        <span class="p">)</span> <span class="k">as</span> <span class="n">counter</span><span class="p">:</span>
+
+            <span class="k">for</span> <span class="p">[</span><span class="n">n_x</span><span class="p">,</span> <span class="n">x</span><span class="p">],</span> <span class="p">[</span><span class="n">n_y</span><span class="p">,</span> <span class="n">y</span><span class="p">],</span> <span class="p">[</span><span class="n">n_z</span><span class="p">,</span> <span class="n">z</span><span class="p">]</span> <span class="ow">in</span> <span class="n">samples</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">space</span><span class="p">,</span>
+                                                        <span class="bp">self</span><span class="o">.</span><span class="n">space</span><span class="p">,</span>
+                                                        <span class="bp">self</span><span class="o">.</span><span class="n">space</span><span class="p">):</span>
+                <span class="n">correct</span> <span class="o">=</span> <span class="n">_approx_equal</span><span class="p">(</span><span class="n">x</span> <span class="o">+</span> <span class="p">(</span><span class="n">y</span> <span class="o">+</span> <span class="n">z</span><span class="p">),</span> <span class="p">(</span><span class="n">x</span> <span class="o">+</span> <span class="n">y</span><span class="p">)</span> <span class="o">+</span> <span class="n">z</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">tol</span><span class="p">)</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="n">correct</span><span class="p">:</span>
+                    <span class="n">counter</span><span class="o">.</span><span class="n">fail</span><span class="p">(</span><span class="s1">&#39;failed with x=</span><span class="si">{:25s}</span><span class="s1"> y=</span><span class="si">{:25s}</span><span class="s1"> z=</span><span class="si">{:25s}</span><span class="s1">&#39;</span>
+                                 <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">n_x</span><span class="p">,</span> <span class="n">n_y</span><span class="p">,</span> <span class="n">n_z</span><span class="p">))</span>
+
+    <span class="k">def</span> <span class="nf">_commutativity_of_addition</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Verify addition commutativity.&quot;&quot;&quot;</span>
+        <span class="k">with</span> <span class="n">fail_counter</span><span class="p">(</span>
+            <span class="n">test_name</span><span class="o">=</span><span class="s1">&#39;Verifying commutativity of addition&#39;</span><span class="p">,</span>
+            <span class="n">err_msg</span><span class="o">=</span><span class="s1">&#39;error = dist(x + y, y + x)&#39;</span><span class="p">,</span>
+            <span class="n">logger</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">log</span>
+        <span class="p">)</span> <span class="k">as</span> <span class="n">counter</span><span class="p">:</span>
+
+            <span class="k">for</span> <span class="p">[</span><span class="n">n_x</span><span class="p">,</span> <span class="n">x</span><span class="p">],</span> <span class="p">[</span><span class="n">n_y</span><span class="p">,</span> <span class="n">y</span><span class="p">]</span> <span class="ow">in</span> <span class="n">samples</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">space</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">space</span><span class="p">):</span>
+                <span class="n">correct</span> <span class="o">=</span> <span class="n">_approx_equal</span><span class="p">(</span><span class="n">x</span> <span class="o">+</span> <span class="n">y</span><span class="p">,</span> <span class="n">y</span> <span class="o">+</span> <span class="n">x</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">tol</span><span class="p">)</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="n">correct</span><span class="p">:</span>
+                    <span class="n">counter</span><span class="o">.</span><span class="n">fail</span><span class="p">(</span><span class="s1">&#39;failed with x=</span><span class="si">{:25s}</span><span class="s1"> y=</span><span class="si">{:25s}</span><span class="s1">&#39;</span>
+                                 <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">n_x</span><span class="p">,</span> <span class="n">n_y</span><span class="p">))</span>
+
+    <span class="k">def</span> <span class="nf">_identity_of_addition</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Verify additive neutral element (&#39;zero&#39;).&quot;&quot;&quot;</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">zero</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">space</span><span class="o">.</span><span class="n">zero</span><span class="p">()</span>
+        <span class="k">except</span> <span class="p">(</span><span class="ne">AttributeError</span><span class="p">,</span> <span class="ne">NotImplementedError</span><span class="p">):</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;*** SPACE HAS NO ZERO VECTOR ***&#39;</span><span class="p">)</span>
+            <span class="k">return</span>
+
+        <span class="k">with</span> <span class="n">fail_counter</span><span class="p">(</span>
+            <span class="n">test_name</span><span class="o">=</span><span class="s1">&#39;Verifying identity element of addition&#39;</span><span class="p">,</span>
+            <span class="n">err_msg</span><span class="o">=</span><span class="s1">&#39;error = dist(x + 0, x)&#39;</span><span class="p">,</span>
+            <span class="n">logger</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">log</span>
+        <span class="p">)</span> <span class="k">as</span> <span class="n">counter</span><span class="p">:</span>
+
+            <span class="k">for</span> <span class="p">[</span><span class="n">n_x</span><span class="p">,</span> <span class="n">x</span><span class="p">]</span> <span class="ow">in</span> <span class="n">samples</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">space</span><span class="p">):</span>
+                <span class="n">correct</span> <span class="o">=</span> <span class="n">_approx_equal</span><span class="p">(</span><span class="n">x</span> <span class="o">+</span> <span class="n">zero</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">tol</span><span class="p">)</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="n">correct</span><span class="p">:</span>
+                    <span class="n">counter</span><span class="o">.</span><span class="n">fail</span><span class="p">(</span><span class="s1">&#39;failed with x=</span><span class="si">{:25s}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">n_x</span><span class="p">))</span>
+
+    <span class="k">def</span> <span class="nf">_inverse_element_of_addition</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Verify additive inverse.&quot;&quot;&quot;</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">zero</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">space</span><span class="o">.</span><span class="n">zero</span><span class="p">()</span>
+        <span class="k">except</span> <span class="p">(</span><span class="ne">AttributeError</span><span class="p">,</span> <span class="ne">NotImplementedError</span><span class="p">):</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;*** SPACE HAS NO ZERO VECTOR ***&#39;</span><span class="p">)</span>
+            <span class="k">return</span>
+
+        <span class="k">with</span> <span class="n">fail_counter</span><span class="p">(</span>
+            <span class="n">test_name</span><span class="o">=</span><span class="s1">&#39;Verifying inverse element of addition&#39;</span><span class="p">,</span>
+            <span class="n">err_msg</span><span class="o">=</span><span class="s1">&#39;error = dist(x + (-x), 0)&#39;</span><span class="p">,</span>
+            <span class="n">logger</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">log</span>
+        <span class="p">)</span> <span class="k">as</span> <span class="n">counter</span><span class="p">:</span>
+
+            <span class="k">for</span> <span class="p">[</span><span class="n">n_x</span><span class="p">,</span> <span class="n">x</span><span class="p">]</span> <span class="ow">in</span> <span class="n">samples</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">space</span><span class="p">):</span>
+                <span class="n">correct</span> <span class="o">=</span> <span class="n">_approx_equal</span><span class="p">(</span><span class="n">x</span> <span class="o">+</span> <span class="p">(</span><span class="o">-</span><span class="n">x</span><span class="p">),</span> <span class="n">zero</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">tol</span><span class="p">)</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="n">correct</span><span class="p">:</span>
+                    <span class="n">counter</span><span class="o">.</span><span class="n">fail</span><span class="p">(</span><span class="s1">&#39;failed with x=</span><span class="si">{:25s}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">n_x</span><span class="p">))</span>
+
+    <span class="k">def</span> <span class="nf">_commutativity_of_scalar_mult</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Verify scalar multiplication commutativity.&quot;&quot;&quot;</span>
+        <span class="k">with</span> <span class="n">fail_counter</span><span class="p">(</span>
+            <span class="n">test_name</span><span class="o">=</span><span class="s1">&#39;Verifying commutativity of scalar multiplication&#39;</span><span class="p">,</span>
+            <span class="n">err_msg</span><span class="o">=</span><span class="s1">&#39;error = dist(a * (b * x), (a * b) * x)&#39;</span><span class="p">,</span>
+            <span class="n">logger</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">log</span>
+        <span class="p">)</span> <span class="k">as</span> <span class="n">counter</span><span class="p">:</span>
+
+            <span class="k">for</span> <span class="p">[</span><span class="n">n_x</span><span class="p">,</span> <span class="n">x</span><span class="p">],</span> <span class="p">[</span><span class="n">_</span><span class="p">,</span> <span class="n">a</span><span class="p">],</span> <span class="p">[</span><span class="n">_</span><span class="p">,</span> <span class="n">b</span><span class="p">]</span> <span class="ow">in</span> <span class="n">samples</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">space</span><span class="p">,</span>
+                                                    <span class="bp">self</span><span class="o">.</span><span class="n">space</span><span class="o">.</span><span class="n">field</span><span class="p">,</span>
+                                                    <span class="bp">self</span><span class="o">.</span><span class="n">space</span><span class="o">.</span><span class="n">field</span><span class="p">):</span>
+                <span class="n">correct</span> <span class="o">=</span> <span class="n">_approx_equal</span><span class="p">(</span><span class="n">a</span> <span class="o">*</span> <span class="p">(</span><span class="n">b</span> <span class="o">*</span> <span class="n">x</span><span class="p">),</span> <span class="p">(</span><span class="n">a</span> <span class="o">*</span> <span class="n">b</span><span class="p">)</span> <span class="o">*</span> <span class="n">x</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">tol</span><span class="p">)</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="n">correct</span><span class="p">:</span>
+                    <span class="n">counter</span><span class="o">.</span><span class="n">fail</span><span class="p">(</span><span class="s1">&#39;failed with x=</span><span class="si">{:25s}</span><span class="s1">, a=</span><span class="si">{}</span><span class="s1">, b=</span><span class="si">{}</span><span class="s1">&#39;</span>
+                                 <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">n_x</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">))</span>
+
+    <span class="k">def</span> <span class="nf">_identity_of_mult</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Verify multiplicative neutral element (&#39;one&#39;).&quot;&quot;&quot;</span>
+        <span class="k">with</span> <span class="n">fail_counter</span><span class="p">(</span>
+            <span class="n">test_name</span><span class="o">=</span><span class="s1">&#39;Verifying identity element of multiplication&#39;</span><span class="p">,</span>
+            <span class="n">err_msg</span><span class="o">=</span><span class="s1">&#39;error = dist(1 * x, x)&#39;</span><span class="p">,</span>
+            <span class="n">logger</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">log</span>
+        <span class="p">)</span> <span class="k">as</span> <span class="n">counter</span><span class="p">:</span>
+
+            <span class="k">for</span> <span class="p">[</span><span class="n">n_x</span><span class="p">,</span> <span class="n">x</span><span class="p">]</span> <span class="ow">in</span> <span class="n">samples</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">space</span><span class="p">):</span>
+                <span class="n">correct</span> <span class="o">=</span> <span class="n">_approx_equal</span><span class="p">(</span><span class="mi">1</span> <span class="o">*</span> <span class="n">x</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">tol</span><span class="p">)</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="n">correct</span><span class="p">:</span>
+                    <span class="n">counter</span><span class="o">.</span><span class="n">fail</span><span class="p">(</span><span class="s1">&#39;failed with x=</span><span class="si">{:25s}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">n_x</span><span class="p">))</span>
+
+    <span class="k">def</span> <span class="nf">_distributivity_of_mult_vector</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Verify scalar multiplication distributivity wrt vector addition.&quot;&quot;&quot;</span>
+        <span class="k">with</span> <span class="n">fail_counter</span><span class="p">(</span>
+            <span class="n">test_name</span><span class="o">=</span><span class="s1">&#39;Verifying distributivity of scalar multiplication &#39;</span>
+                      <span class="s1">&#39;under vector addition&#39;</span><span class="p">,</span>
+            <span class="n">err_msg</span><span class="o">=</span><span class="s1">&#39;error = dist(a * (x + y), a * x + a * y)&#39;</span><span class="p">,</span>
+            <span class="n">logger</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">log</span>
+        <span class="p">)</span> <span class="k">as</span> <span class="n">counter</span><span class="p">:</span>
+
+            <span class="k">for</span> <span class="p">[</span><span class="n">n_x</span><span class="p">,</span> <span class="n">x</span><span class="p">],</span> <span class="p">[</span><span class="n">n_y</span><span class="p">,</span> <span class="n">y</span><span class="p">],</span> <span class="p">[</span><span class="n">_</span><span class="p">,</span> <span class="n">a</span><span class="p">]</span> <span class="ow">in</span> <span class="n">samples</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">space</span><span class="p">,</span>
+                                                      <span class="bp">self</span><span class="o">.</span><span class="n">space</span><span class="p">,</span>
+                                                      <span class="bp">self</span><span class="o">.</span><span class="n">space</span><span class="o">.</span><span class="n">field</span><span class="p">):</span>
+                <span class="n">correct</span> <span class="o">=</span> <span class="n">_approx_equal</span><span class="p">(</span><span class="n">a</span> <span class="o">*</span> <span class="p">(</span><span class="n">x</span> <span class="o">+</span> <span class="n">y</span><span class="p">),</span> <span class="n">a</span> <span class="o">*</span> <span class="n">x</span> <span class="o">+</span> <span class="n">a</span> <span class="o">*</span> <span class="n">y</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">tol</span><span class="p">)</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="n">correct</span><span class="p">:</span>
+                    <span class="n">counter</span><span class="o">.</span><span class="n">fail</span><span class="p">(</span><span class="s1">&#39;failed with x=</span><span class="si">{:25s}</span><span class="s1">, y=</span><span class="si">{:25s}</span><span class="s1">, a=</span><span class="si">{}</span><span class="s1">&#39;</span>
+                                 <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">n_x</span><span class="p">,</span> <span class="n">n_y</span><span class="p">,</span> <span class="n">a</span><span class="p">))</span>
+
+    <span class="k">def</span> <span class="nf">_distributivity_of_mult_scalar</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Verify scalar multiplication distributivity wrt scalar addition.&quot;&quot;&quot;</span>
+        <span class="k">with</span> <span class="n">fail_counter</span><span class="p">(</span>
+            <span class="n">test_name</span><span class="o">=</span><span class="s1">&#39;Verifying distributivity of scalar multiplication &#39;</span>
+                      <span class="s1">&#39;under scalar addition&#39;</span><span class="p">,</span>
+            <span class="n">err_msg</span><span class="o">=</span><span class="s1">&#39;error = dist((a + b) * x, a * x + b * x)&#39;</span><span class="p">,</span>
+            <span class="n">logger</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">log</span>
+        <span class="p">)</span> <span class="k">as</span> <span class="n">counter</span><span class="p">:</span>
+
+            <span class="k">for</span> <span class="p">[</span><span class="n">n_x</span><span class="p">,</span> <span class="n">x</span><span class="p">],</span> <span class="p">[</span><span class="n">_</span><span class="p">,</span> <span class="n">a</span><span class="p">],</span> <span class="p">[</span><span class="n">_</span><span class="p">,</span> <span class="n">b</span><span class="p">]</span> <span class="ow">in</span> <span class="n">samples</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">space</span><span class="p">,</span>
+                                                    <span class="bp">self</span><span class="o">.</span><span class="n">space</span><span class="o">.</span><span class="n">field</span><span class="p">,</span>
+                                                    <span class="bp">self</span><span class="o">.</span><span class="n">space</span><span class="o">.</span><span class="n">field</span><span class="p">):</span>
+                <span class="n">correct</span> <span class="o">=</span> <span class="n">_approx_equal</span><span class="p">((</span><span class="n">a</span> <span class="o">+</span> <span class="n">b</span><span class="p">)</span> <span class="o">*</span> <span class="n">x</span><span class="p">,</span> <span class="n">a</span> <span class="o">*</span> <span class="n">x</span> <span class="o">+</span> <span class="n">b</span> <span class="o">*</span> <span class="n">x</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">tol</span><span class="p">)</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="n">correct</span><span class="p">:</span>
+                    <span class="n">counter</span><span class="o">.</span><span class="n">fail</span><span class="p">(</span><span class="s1">&#39;failed with x=</span><span class="si">{:25s}</span><span class="s1">, a=</span><span class="si">{}</span><span class="s1">, b=</span><span class="si">{}</span><span class="s1">&#39;</span>
+                                 <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">n_x</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">))</span>
+
+    <span class="k">def</span> <span class="nf">_subtraction</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Verify element subtraction as addition of additive inverse.&quot;&quot;&quot;</span>
+        <span class="k">with</span> <span class="n">fail_counter</span><span class="p">(</span>
+            <span class="n">test_name</span><span class="o">=</span><span class="s1">&#39;Verifying element subtraction&#39;</span><span class="p">,</span>
+            <span class="n">err_msg</span><span class="o">=</span><span class="s1">&#39;error = dist(x - y, x + (-1 * y))&#39;</span><span class="p">,</span>
+            <span class="n">logger</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">log</span>
+        <span class="p">)</span> <span class="k">as</span> <span class="n">counter</span><span class="p">:</span>
+
+            <span class="k">for</span> <span class="p">[</span><span class="n">n_x</span><span class="p">,</span> <span class="n">x</span><span class="p">],</span> <span class="p">[</span><span class="n">n_y</span><span class="p">,</span> <span class="n">y</span><span class="p">]</span> <span class="ow">in</span> <span class="n">samples</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">space</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">space</span><span class="p">):</span>
+                <span class="n">correct</span> <span class="o">=</span> <span class="p">(</span><span class="n">_approx_equal</span><span class="p">(</span><span class="n">x</span> <span class="o">-</span> <span class="n">y</span><span class="p">,</span> <span class="n">x</span> <span class="o">+</span> <span class="p">(</span><span class="o">-</span><span class="mi">1</span> <span class="o">*</span> <span class="n">y</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">tol</span><span class="p">)</span> <span class="ow">and</span>
+                           <span class="n">_approx_equal</span><span class="p">(</span><span class="n">x</span> <span class="o">-</span> <span class="n">y</span><span class="p">,</span> <span class="n">x</span> <span class="o">+</span> <span class="p">(</span><span class="o">-</span><span class="n">y</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">tol</span><span class="p">))</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="n">correct</span><span class="p">:</span>
+                    <span class="n">counter</span><span class="o">.</span><span class="n">fail</span><span class="p">(</span><span class="s1">&#39;failed with x=</span><span class="si">{:25s}</span><span class="s1">, y=</span><span class="si">{:25s}</span><span class="s1">&#39;</span>
+                                 <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">n_x</span><span class="p">,</span> <span class="n">n_y</span><span class="p">))</span>
+
+    <span class="k">def</span> <span class="nf">_division</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Verify scalar division as multiplication with mult. inverse.&quot;&quot;&quot;</span>
+        <span class="k">with</span> <span class="n">fail_counter</span><span class="p">(</span>
+            <span class="n">test_name</span><span class="o">=</span><span class="s1">&#39;Verifying scalar division&#39;</span><span class="p">,</span>
+            <span class="n">err_msg</span><span class="o">=</span><span class="s1">&#39;error = dist(x / a, x * (1/a))&#39;</span><span class="p">,</span>
+            <span class="n">logger</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">log</span>
+        <span class="p">)</span> <span class="k">as</span> <span class="n">counter</span><span class="p">:</span>
+
+            <span class="k">for</span> <span class="p">[</span><span class="n">n_x</span><span class="p">,</span> <span class="n">x</span><span class="p">],</span> <span class="p">[</span><span class="n">_</span><span class="p">,</span> <span class="n">a</span><span class="p">]</span> <span class="ow">in</span> <span class="n">samples</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">space</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">space</span><span class="o">.</span><span class="n">field</span><span class="p">):</span>
+                <span class="k">if</span> <span class="n">a</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+                    <span class="n">correct</span> <span class="o">=</span> <span class="n">_approx_equal</span><span class="p">(</span><span class="n">x</span> <span class="o">/</span> <span class="n">a</span><span class="p">,</span> <span class="n">x</span> <span class="o">*</span> <span class="p">(</span><span class="mf">1.0</span> <span class="o">/</span> <span class="n">a</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">tol</span><span class="p">)</span>
+                    <span class="k">if</span> <span class="ow">not</span> <span class="n">correct</span><span class="p">:</span>
+                        <span class="n">counter</span><span class="o">.</span><span class="n">fail</span><span class="p">(</span><span class="s1">&#39;failed with x=</span><span class="si">{:25s}</span><span class="s1">, a=</span><span class="si">{}</span><span class="s1">&#39;</span>
+                                     <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">n_x</span><span class="p">,</span> <span class="n">a</span><span class="p">))</span>
+
+    <span class="k">def</span> <span class="nf">_lincomb_aliased</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Verify several scenarios of aliased linear combination.&quot;&quot;&quot;</span>
+        <span class="k">with</span> <span class="n">fail_counter</span><span class="p">(</span>
+            <span class="n">test_name</span><span class="o">=</span><span class="s1">&#39;Verifying linear combination with aliased input&#39;</span><span class="p">,</span>
+            <span class="n">err_msg</span><span class="o">=</span><span class="s1">&#39;error = dist(aliased, non-aliased)&#39;</span><span class="p">,</span>
+            <span class="n">logger</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">log</span>
+        <span class="p">)</span> <span class="k">as</span> <span class="n">counter</span><span class="p">:</span>
+
+            <span class="k">for</span> <span class="p">[</span><span class="n">n_x</span><span class="p">,</span> <span class="n">x_in</span><span class="p">],</span> <span class="p">[</span><span class="n">n_y</span><span class="p">,</span> <span class="n">y</span><span class="p">]</span> <span class="ow">in</span> <span class="n">samples</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">space</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">space</span><span class="p">):</span>
+                <span class="n">x</span> <span class="o">=</span> <span class="n">x_in</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+                <span class="n">x</span><span class="o">.</span><span class="n">lincomb</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span>
+                <span class="n">correct</span> <span class="o">=</span> <span class="n">_approx_equal</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">x_in</span> <span class="o">+</span> <span class="n">y</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">tol</span><span class="p">)</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="n">correct</span><span class="p">:</span>
+                    <span class="n">counter</span><span class="o">.</span><span class="n">fail</span><span class="p">(</span><span class="s1">&#39;failed with x.lincomb(1, x, 1, y),&#39;</span>
+                                 <span class="s1">&#39;x=</span><span class="si">{:25s}</span><span class="s1"> y=</span><span class="si">{:25s}</span><span class="s1"> &#39;</span>
+                                 <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">n_x</span><span class="p">,</span> <span class="n">n_y</span><span class="p">))</span>
+
+                <span class="n">x</span> <span class="o">=</span> <span class="n">x_in</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+                <span class="n">x</span><span class="o">.</span><span class="n">lincomb</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">x</span><span class="p">)</span>
+                <span class="n">correct</span> <span class="o">=</span> <span class="n">_approx_equal</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">x_in</span> <span class="o">+</span> <span class="n">x_in</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">tol</span><span class="p">)</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="n">correct</span><span class="p">:</span>
+                    <span class="n">counter</span><span class="o">.</span><span class="n">fail</span><span class="p">(</span><span class="s1">&#39;failed with x.lincomb(1, x, 1, x),&#39;</span>
+                                 <span class="s1">&#39;x=</span><span class="si">{:25s}</span><span class="s1"> &#39;</span>
+                                 <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">n_x</span><span class="p">))</span>
+
+<div class="viewcode-block" id="SpaceTest._lincomb"><a class="viewcode-back" href="../../../generated/odl.diagnostics.space.SpaceTest._lincomb.html#odl.diagnostics.space.SpaceTest._lincomb">[docs]</a>    <span class="k">def</span> <span class="nf">_lincomb</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Verify linear combination.&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">Testing lincomb&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_lincomb_aliased</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="SpaceTest.linearity"><a class="viewcode-back" href="../../../generated/odl.diagnostics.space.SpaceTest.linearity.html#odl.diagnostics.space.SpaceTest.linearity">[docs]</a>    <span class="k">def</span> <span class="nf">linearity</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Verify the linear space properties by examples.</span>
+
+<span class="sd">        These properties include things such as associativity</span>
+
+<span class="sd">            ``x + y = y + x``</span>
+
+<span class="sd">        and identity of the ``LinearSpace.zero`` element</span>
+
+<span class="sd">            ``x + 0 = x``</span>
+
+<span class="sd">        References</span>
+<span class="sd">        ----------</span>
+<span class="sd">        Wikipedia article on `Vector space`_.</span>
+
+<span class="sd">        .. _Vector space: https://en.wikipedia.org/wiki/Vector_space</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">== Verifying linear space properties ==</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_associativity_of_addition</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_commutativity_of_addition</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_identity_of_addition</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_inverse_element_of_addition</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_commutativity_of_scalar_mult</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_identity_of_mult</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_distributivity_of_mult_vector</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_distributivity_of_mult_scalar</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_subtraction</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_division</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_lincomb</span><span class="p">()</span></div>
+
+    <span class="k">def</span> <span class="nf">_inner_linear_scalar</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Verify homogeneity of the inner product in the first argument.&quot;&quot;&quot;</span>
+        <span class="k">with</span> <span class="n">fail_counter</span><span class="p">(</span>
+            <span class="n">test_name</span><span class="o">=</span><span class="s1">&#39;Verifying homogeneity of the inner product in the &#39;</span>
+                      <span class="s1">&#39;first argument&#39;</span><span class="p">,</span>
+            <span class="n">err_msg</span><span class="o">=</span><span class="s1">&#39;error = |&lt;a*x, y&gt; - a*&lt;x, y&gt;|&#39;</span><span class="p">,</span>
+            <span class="n">logger</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">log</span>
+        <span class="p">)</span> <span class="k">as</span> <span class="n">counter</span><span class="p">:</span>
+
+            <span class="k">for</span> <span class="p">[</span><span class="n">n_x</span><span class="p">,</span> <span class="n">x</span><span class="p">],</span> <span class="p">[</span><span class="n">n_y</span><span class="p">,</span> <span class="n">y</span><span class="p">],</span> <span class="p">[</span><span class="n">_</span><span class="p">,</span> <span class="n">a</span><span class="p">]</span> <span class="ow">in</span> <span class="n">samples</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">space</span><span class="p">,</span>
+                                                      <span class="bp">self</span><span class="o">.</span><span class="n">space</span><span class="p">,</span>
+                                                      <span class="bp">self</span><span class="o">.</span><span class="n">space</span><span class="o">.</span><span class="n">field</span><span class="p">):</span>
+                <span class="n">error</span> <span class="o">=</span> <span class="nb">abs</span><span class="p">((</span><span class="n">a</span> <span class="o">*</span> <span class="n">x</span><span class="p">)</span><span class="o">.</span><span class="n">inner</span><span class="p">(</span><span class="n">y</span><span class="p">)</span> <span class="o">-</span> <span class="n">a</span> <span class="o">*</span> <span class="n">x</span><span class="o">.</span><span class="n">inner</span><span class="p">(</span><span class="n">y</span><span class="p">))</span>
+                <span class="k">if</span> <span class="n">error</span> <span class="o">&gt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">tol</span><span class="p">:</span>
+                    <span class="n">counter</span><span class="o">.</span><span class="n">fail</span><span class="p">(</span><span class="s1">&#39;x=</span><span class="si">{:25s}</span><span class="s1">, y=</span><span class="si">{:25s}</span><span class="s1">, a=</span><span class="si">{}</span><span class="s1">: error=</span><span class="si">{}</span><span class="s1">&#39;</span>
+                                 <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">n_x</span><span class="p">,</span> <span class="n">n_y</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">error</span><span class="p">))</span>
+
+    <span class="k">def</span> <span class="nf">_inner_conjugate_symmetry</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Verify conjugate symmetry of the inner product.&quot;&quot;&quot;</span>
+        <span class="k">with</span> <span class="n">fail_counter</span><span class="p">(</span>
+            <span class="n">test_name</span><span class="o">=</span><span class="s1">&#39;Verifying conjugate symmetry of the inner product&#39;</span><span class="p">,</span>
+            <span class="n">err_msg</span><span class="o">=</span><span class="s1">&#39;error = |&lt;x, y&gt; - &lt;y, x&gt;.conj()|&#39;</span><span class="p">,</span>
+            <span class="n">logger</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">log</span>
+        <span class="p">)</span> <span class="k">as</span> <span class="n">counter</span><span class="p">:</span>
+
+            <span class="k">for</span> <span class="p">[</span><span class="n">n_x</span><span class="p">,</span> <span class="n">x</span><span class="p">],</span> <span class="p">[</span><span class="n">n_y</span><span class="p">,</span> <span class="n">y</span><span class="p">]</span> <span class="ow">in</span> <span class="n">samples</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">space</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">space</span><span class="p">):</span>
+                <span class="n">error</span> <span class="o">=</span> <span class="nb">abs</span><span class="p">((</span><span class="n">x</span><span class="p">)</span><span class="o">.</span><span class="n">inner</span><span class="p">(</span><span class="n">y</span><span class="p">)</span> <span class="o">-</span> <span class="n">y</span><span class="o">.</span><span class="n">inner</span><span class="p">(</span><span class="n">x</span><span class="p">)</span><span class="o">.</span><span class="n">conjugate</span><span class="p">())</span>
+                <span class="k">if</span> <span class="n">error</span> <span class="o">&gt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">tol</span><span class="p">:</span>
+                    <span class="n">counter</span><span class="o">.</span><span class="n">fail</span><span class="p">(</span><span class="s1">&#39;x=</span><span class="si">{:25s}</span><span class="s1">, y=</span><span class="si">{:25s}</span><span class="s1">: error=</span><span class="si">{}</span><span class="s1">&#39;</span>
+                                 <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">n_x</span><span class="p">,</span> <span class="n">n_y</span><span class="p">,</span> <span class="n">error</span><span class="p">))</span>
+
+    <span class="k">def</span> <span class="nf">_inner_linear_sum</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Verify distributivity of the inner product in the first argument.&quot;&quot;&quot;</span>
+        <span class="k">with</span> <span class="n">fail_counter</span><span class="p">(</span>
+            <span class="n">test_name</span><span class="o">=</span><span class="s1">&#39;Verifying distributivity of the inner product&#39;</span>
+                      <span class="s1">&#39;in the first argument&#39;</span><span class="p">,</span>
+            <span class="n">err_msg</span><span class="o">=</span><span class="s1">&#39;error = |&lt;x+y, z&gt; - (&lt;x, z&gt; + &lt;y, z&gt;)|&#39;</span><span class="p">,</span>
+            <span class="n">logger</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">log</span>
+        <span class="p">)</span> <span class="k">as</span> <span class="n">counter</span><span class="p">:</span>
+
+            <span class="k">for</span> <span class="p">[</span><span class="n">n_x</span><span class="p">,</span> <span class="n">x</span><span class="p">],</span> <span class="p">[</span><span class="n">n_y</span><span class="p">,</span> <span class="n">y</span><span class="p">],</span> <span class="p">[</span><span class="n">n_z</span><span class="p">,</span> <span class="n">z</span><span class="p">]</span> <span class="ow">in</span> <span class="n">samples</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">space</span><span class="p">,</span>
+                                                        <span class="bp">self</span><span class="o">.</span><span class="n">space</span><span class="p">,</span>
+                                                        <span class="bp">self</span><span class="o">.</span><span class="n">space</span><span class="p">):</span>
+                <span class="n">error</span> <span class="o">=</span> <span class="nb">abs</span><span class="p">((</span><span class="n">x</span> <span class="o">+</span> <span class="n">y</span><span class="p">)</span><span class="o">.</span><span class="n">inner</span><span class="p">(</span><span class="n">z</span><span class="p">)</span> <span class="o">-</span> <span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">inner</span><span class="p">(</span><span class="n">z</span><span class="p">)</span> <span class="o">+</span> <span class="n">y</span><span class="o">.</span><span class="n">inner</span><span class="p">(</span><span class="n">z</span><span class="p">)))</span>
+                <span class="k">if</span> <span class="n">error</span> <span class="o">&gt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">tol</span><span class="p">:</span>
+                    <span class="n">counter</span><span class="o">.</span><span class="n">fail</span><span class="p">(</span><span class="s1">&#39;x=</span><span class="si">{:25s}</span><span class="s1">, y=</span><span class="si">{:25s}</span><span class="s1">, z=</span><span class="si">{:25s}</span><span class="s1">: error=</span><span class="si">{}</span><span class="s1">&#39;</span>
+                                 <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">n_x</span><span class="p">,</span> <span class="n">n_y</span><span class="p">,</span> <span class="n">n_z</span><span class="p">,</span> <span class="n">error</span><span class="p">))</span>
+
+    <span class="k">def</span> <span class="nf">_inner_positive</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Verify positive definiteness of the inner product.&quot;&quot;&quot;</span>
+        <span class="k">with</span> <span class="n">fail_counter</span><span class="p">(</span>
+            <span class="n">test_name</span><span class="o">=</span><span class="s1">&#39;Verifying positive definiteness of the inner &#39;</span>
+                      <span class="s1">&#39;product&#39;</span><span class="p">,</span>
+            <span class="n">logger</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">log</span>
+        <span class="p">)</span> <span class="k">as</span> <span class="n">counter</span><span class="p">:</span>
+
+            <span class="k">for</span> <span class="p">[</span><span class="n">n_x</span><span class="p">,</span> <span class="n">x</span><span class="p">]</span> <span class="ow">in</span> <span class="n">samples</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">space</span><span class="p">):</span>
+                <span class="n">inner</span> <span class="o">=</span> <span class="n">x</span><span class="o">.</span><span class="n">inner</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+
+                <span class="k">if</span> <span class="nb">abs</span><span class="p">(</span><span class="n">inner</span><span class="o">.</span><span class="n">imag</span><span class="p">)</span> <span class="o">&gt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">tol</span><span class="p">:</span>
+                    <span class="n">counter</span><span class="o">.</span><span class="n">fail</span><span class="p">(</span><span class="s1">&#39;&lt;x, x&gt;.imag != 0, x=</span><span class="si">{:25s}</span><span class="s1">, &lt;x, x&gt;.imag = </span><span class="si">{}</span><span class="s1">&#39;</span>
+                                 <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">n_x</span><span class="p">,</span> <span class="n">inner</span><span class="o">.</span><span class="n">imag</span><span class="p">))</span>
+
+                <span class="k">if</span> <span class="n">n_x</span> <span class="o">==</span> <span class="s1">&#39;Zero&#39;</span> <span class="ow">and</span> <span class="n">inner</span><span class="o">.</span><span class="n">real</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+                    <span class="n">counter</span><span class="o">.</span><span class="n">fail</span><span class="p">(</span><span class="s1">&#39;&lt;0, 0&gt; != 0.0, x=</span><span class="si">{:25s}</span><span class="s1">: &lt;0, 0&gt;=</span><span class="si">{}</span><span class="s1">&#39;</span>
+                                 <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">n_x</span><span class="p">,</span> <span class="n">inner</span><span class="p">))</span>
+
+                <span class="k">elif</span> <span class="n">n_x</span> <span class="o">!=</span> <span class="s1">&#39;Zero&#39;</span> <span class="ow">and</span> <span class="n">inner</span><span class="o">.</span><span class="n">real</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">:</span>
+                    <span class="n">counter</span><span class="o">.</span><span class="n">fail</span><span class="p">(</span><span class="s1">&#39;&lt;x, x&gt; &lt;= 0,   x=</span><span class="si">{:25s}</span><span class="s1">: &lt;x, x&gt;=</span><span class="si">{}</span><span class="s1">&#39;</span>
+                                 <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">n_x</span><span class="p">,</span> <span class="n">inner</span><span class="p">))</span>
+
+<div class="viewcode-block" id="SpaceTest.inner"><a class="viewcode-back" href="../../../generated/odl.diagnostics.space.SpaceTest.inner.html#odl.diagnostics.space.SpaceTest.inner">[docs]</a>    <span class="k">def</span> <span class="nf">inner</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Verify ``LinearSpace.inner``.</span>
+
+<span class="sd">        The inner product is checked for the following properties:</span>
+
+<span class="sd">        - conjugate symmetry:</span>
+
+<span class="sd">            ``&lt;x, y&gt; = &lt;y, x&gt;^*`` (^* complex conjugate)</span>
+
+<span class="sd">        - linearity:</span>
+
+<span class="sd">            ``&lt;a * x, y&gt; = a * &lt;x, y&gt;``</span>
+
+<span class="sd">            ``&lt;x + y, z&gt; = &lt;x, z&gt; + &lt;y, z&gt;``</span>
+
+<span class="sd">        - positive definiteness:</span>
+
+<span class="sd">            ``&lt;x, x&gt; &gt;= 0``</span>
+
+<span class="sd">        References</span>
+<span class="sd">        ----------</span>
+<span class="sd">        Wikipedia article on `inner product`_.</span>
+
+<span class="sd">        .. _inner product: https://en.wikipedia.org/wiki/Inner_product_space</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">== Verifying inner product ==</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
+
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">zero</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">space</span><span class="o">.</span><span class="n">zero</span><span class="p">()</span>
+            <span class="n">zero</span><span class="o">.</span><span class="n">inner</span><span class="p">(</span><span class="n">zero</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">NotImplementedError</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="s1">&#39;Space has no inner product&#39;</span><span class="p">)</span>
+            <span class="k">return</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_inner_conjugate_symmetry</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_inner_linear_scalar</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_inner_linear_sum</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_inner_positive</span><span class="p">()</span></div>
+
+    <span class="k">def</span> <span class="nf">_norm_positive</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Verify positive definiteness of the norm.&quot;&quot;&quot;</span>
+        <span class="k">with</span> <span class="n">fail_counter</span><span class="p">(</span>
+            <span class="n">test_name</span><span class="o">=</span><span class="s1">&#39;Verifying positive definiteness of the norm&#39;</span><span class="p">,</span>
+            <span class="n">logger</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">log</span>
+        <span class="p">)</span> <span class="k">as</span> <span class="n">counter</span><span class="p">:</span>
+
+            <span class="k">for</span> <span class="p">[</span><span class="n">n_x</span><span class="p">,</span> <span class="n">x</span><span class="p">]</span> <span class="ow">in</span> <span class="n">samples</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">space</span><span class="p">):</span>
+                <span class="n">norm</span> <span class="o">=</span> <span class="n">x</span><span class="o">.</span><span class="n">norm</span><span class="p">()</span>
+
+                <span class="k">if</span> <span class="n">n_x</span> <span class="o">==</span> <span class="s1">&#39;Zero&#39;</span> <span class="ow">and</span> <span class="n">norm</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+                    <span class="n">counter</span><span class="o">.</span><span class="n">fail</span><span class="p">(</span><span class="s1">&#39;||0|| != 0.0, x=</span><span class="si">{:25s}</span><span class="s1">: ||x||=</span><span class="si">{}</span><span class="s1">&#39;</span>
+                                 <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">n_x</span><span class="p">,</span> <span class="n">norm</span><span class="p">))</span>
+
+                <span class="k">elif</span> <span class="n">n_x</span> <span class="o">!=</span> <span class="s1">&#39;Zero&#39;</span> <span class="ow">and</span> <span class="n">norm</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">:</span>
+                    <span class="n">counter</span><span class="o">.</span><span class="n">fail</span><span class="p">(</span><span class="s1">&#39;||x|| &lt;= 0,   x=</span><span class="si">{:25s}</span><span class="s1">: ||x||=</span><span class="si">{}</span><span class="s1">&#39;</span>
+                                 <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">n_x</span><span class="p">,</span> <span class="n">norm</span><span class="p">))</span>
+
+    <span class="k">def</span> <span class="nf">_norm_subadditive</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Verify subadditivity of the norm.&quot;&quot;&quot;</span>
+        <span class="k">with</span> <span class="n">fail_counter</span><span class="p">(</span>
+            <span class="n">test_name</span><span class="o">=</span><span class="s1">&#39;Verifying sub-additivity of the norm&#39;</span><span class="p">,</span>
+            <span class="n">err_msg</span><span class="o">=</span><span class="s1">&#39;error = max(||x+y|| - (||x|| + ||y||), 0)&#39;</span><span class="p">,</span>
+            <span class="n">logger</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">log</span>
+        <span class="p">)</span> <span class="k">as</span> <span class="n">counter</span><span class="p">:</span>
+
+            <span class="k">for</span> <span class="p">[</span><span class="n">n_x</span><span class="p">,</span> <span class="n">x</span><span class="p">],</span> <span class="p">[</span><span class="n">n_y</span><span class="p">,</span> <span class="n">y</span><span class="p">]</span> <span class="ow">in</span> <span class="n">samples</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">space</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">space</span><span class="p">):</span>
+                <span class="n">norm_x</span> <span class="o">=</span> <span class="n">x</span><span class="o">.</span><span class="n">norm</span><span class="p">()</span>
+                <span class="n">norm_y</span> <span class="o">=</span> <span class="n">y</span><span class="o">.</span><span class="n">norm</span><span class="p">()</span>
+                <span class="n">norm_xy</span> <span class="o">=</span> <span class="p">(</span><span class="n">x</span> <span class="o">+</span> <span class="n">y</span><span class="p">)</span><span class="o">.</span><span class="n">norm</span><span class="p">()</span>
+
+                <span class="n">error</span> <span class="o">=</span> <span class="n">norm_xy</span> <span class="o">-</span> <span class="n">norm_x</span> <span class="o">-</span> <span class="n">norm_y</span>
+
+                <span class="k">if</span> <span class="n">error</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                    <span class="n">counter</span><span class="o">.</span><span class="n">fail</span><span class="p">(</span><span class="s1">&#39;x=</span><span class="si">{:25s}</span><span class="s1"> y=</span><span class="si">{:25s}</span><span class="s1">: error=</span><span class="si">{}</span><span class="s1">&#39;</span>
+                                 <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">n_x</span><span class="p">,</span> <span class="n">n_y</span><span class="p">,</span> <span class="n">error</span><span class="p">))</span>
+
+    <span class="k">def</span> <span class="nf">_norm_homogeneity</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Verify positive homogeneity of the norm.&quot;&quot;&quot;</span>
+        <span class="k">with</span> <span class="n">fail_counter</span><span class="p">(</span>
+            <span class="n">test_name</span><span class="o">=</span><span class="s1">&#39;Verifying positive homogeneity of the norm&#39;</span><span class="p">,</span>
+            <span class="n">err_msg</span><span class="o">=</span><span class="s1">&#39;error = | ||a*x|| - |a|*||x|| |&#39;</span><span class="p">,</span>
+            <span class="n">logger</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">log</span>
+        <span class="p">)</span> <span class="k">as</span> <span class="n">counter</span><span class="p">:</span>
+
+            <span class="k">for</span> <span class="p">[</span><span class="n">n_x</span><span class="p">,</span> <span class="n">x</span><span class="p">],</span> <span class="p">[</span><span class="n">_</span><span class="p">,</span> <span class="n">a</span><span class="p">]</span> <span class="ow">in</span> <span class="n">samples</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">space</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">space</span><span class="o">.</span><span class="n">field</span><span class="p">):</span>
+                <span class="n">error</span> <span class="o">=</span> <span class="nb">abs</span><span class="p">((</span><span class="n">a</span> <span class="o">*</span> <span class="n">x</span><span class="p">)</span><span class="o">.</span><span class="n">norm</span><span class="p">()</span> <span class="o">-</span> <span class="nb">abs</span><span class="p">(</span><span class="n">a</span><span class="p">)</span> <span class="o">*</span> <span class="n">x</span><span class="o">.</span><span class="n">norm</span><span class="p">())</span>
+                <span class="k">if</span> <span class="n">error</span> <span class="o">&gt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">tol</span><span class="p">:</span>
+                    <span class="n">counter</span><span class="o">.</span><span class="n">fail</span><span class="p">(</span><span class="s1">&#39;x=</span><span class="si">{:25s}</span><span class="s1"> a=</span><span class="si">{}</span><span class="s1">: error=</span><span class="si">{}</span><span class="s1">&#39;</span>
+                                 <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">n_x</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">error</span><span class="p">))</span>
+
+    <span class="k">def</span> <span class="nf">_norm_inner_compatible</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Verify compatibility of norm and inner product.&quot;&quot;&quot;</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">zero</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">space</span><span class="o">.</span><span class="n">zero</span><span class="p">()</span>
+            <span class="n">zero</span><span class="o">.</span><span class="n">inner</span><span class="p">(</span><span class="n">zero</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">NotImplementedError</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="s1">&#39;Space has no inner product&#39;</span><span class="p">)</span>
+            <span class="k">return</span>
+
+        <span class="k">with</span> <span class="n">fail_counter</span><span class="p">(</span>
+            <span class="n">test_name</span><span class="o">=</span><span class="s1">&#39;Verifying compatibility of norm and inner product&#39;</span><span class="p">,</span>
+            <span class="n">err_msg</span><span class="o">=</span><span class="s1">&#39;error = | ||x||^2 - &lt;x, x&gt; |&#39;</span><span class="p">,</span>
+            <span class="n">logger</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">log</span>
+        <span class="p">)</span> <span class="k">as</span> <span class="n">counter</span><span class="p">:</span>
+
+            <span class="k">for</span> <span class="p">[</span><span class="n">n_x</span><span class="p">,</span> <span class="n">x</span><span class="p">]</span> <span class="ow">in</span> <span class="n">samples</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">space</span><span class="p">):</span>
+                <span class="n">error</span> <span class="o">=</span> <span class="nb">abs</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">norm</span><span class="p">()</span> <span class="o">**</span> <span class="mi">2</span> <span class="o">-</span> <span class="n">x</span><span class="o">.</span><span class="n">inner</span><span class="p">(</span><span class="n">x</span><span class="p">))</span>
+
+                <span class="k">if</span> <span class="n">error</span> <span class="o">&gt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">tol</span><span class="p">:</span>
+                    <span class="n">counter</span><span class="o">.</span><span class="n">fail</span><span class="p">(</span><span class="s1">&#39;x=</span><span class="si">{:25s}</span><span class="s1">: error=</span><span class="si">{}</span><span class="s1">&#39;</span>
+                                 <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">n_x</span><span class="p">,</span> <span class="n">error</span><span class="p">))</span>
+
+<div class="viewcode-block" id="SpaceTest.norm"><a class="viewcode-back" href="../../../generated/odl.diagnostics.space.SpaceTest.norm.html#odl.diagnostics.space.SpaceTest.norm">[docs]</a>    <span class="k">def</span> <span class="nf">norm</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Verify ``LinearSpace.norm``.</span>
+
+<span class="sd">        The norm is checked for the following properties:</span>
+
+<span class="sd">        - linearity:</span>
+
+<span class="sd">            ``||a * x|| = |a| * ||x||``</span>
+
+<span class="sd">        - subadditivity:</span>
+
+<span class="sd">            ``||x + y|| &lt;= ||x|| + ||y||``</span>
+
+<span class="sd">        - positive homogeneity:</span>
+
+<span class="sd">            ``||a * x|| = |a| * ||x||``</span>
+
+<span class="sd">        - positive definiteness:</span>
+
+<span class="sd">            ``||x|| &gt;= 0``</span>
+
+<span class="sd">            ``||x|| = 0`` iff ``x = 0``</span>
+
+<span class="sd">        - compatibility with the inner product (if available):</span>
+
+<span class="sd">            ``||x||^2 = &lt;x, x&gt;``</span>
+
+<span class="sd">        References</span>
+<span class="sd">        ----------</span>
+<span class="sd">        Wikipedia article on norm_.</span>
+
+<span class="sd">        .. _norm: https://en.wikipedia.org/wiki/Norm_(mathematics)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">== Verifying norm ==</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
+
+        <span class="k">try</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">space</span><span class="o">.</span><span class="n">zero</span><span class="p">()</span><span class="o">.</span><span class="n">norm</span><span class="p">()</span>
+        <span class="k">except</span> <span class="ne">NotImplementedError</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="s1">&#39;Space has no norm&#39;</span><span class="p">)</span>
+            <span class="k">return</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_norm_positive</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_norm_subadditive</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_norm_homogeneity</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_norm_inner_compatible</span><span class="p">()</span></div>
+
+    <span class="k">def</span> <span class="nf">_dist_positivity</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Verify nonnegativity of the distance.&quot;&quot;&quot;</span>
+
+        <span class="k">with</span> <span class="n">fail_counter</span><span class="p">(</span>
+            <span class="n">test_name</span><span class="o">=</span><span class="s1">&#39;Verifying nonnegativity of the distance&#39;</span><span class="p">,</span>
+            <span class="n">logger</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">log</span>
+        <span class="p">)</span> <span class="k">as</span> <span class="n">counter</span><span class="p">:</span>
+
+            <span class="k">for</span> <span class="p">[</span><span class="n">n_x</span><span class="p">,</span> <span class="n">x</span><span class="p">],</span> <span class="p">[</span><span class="n">n_y</span><span class="p">,</span> <span class="n">y</span><span class="p">]</span> <span class="ow">in</span> <span class="n">samples</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">space</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">space</span><span class="p">):</span>
+                <span class="n">dist</span> <span class="o">=</span> <span class="n">x</span><span class="o">.</span><span class="n">dist</span><span class="p">(</span><span class="n">y</span><span class="p">)</span>
+
+                <span class="k">if</span> <span class="n">n_x</span> <span class="o">==</span> <span class="n">n_y</span> <span class="ow">and</span> <span class="n">dist</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+                    <span class="n">counter</span><span class="o">.</span><span class="n">fail</span><span class="p">(</span><span class="s1">&#39;d(x, x) != 0.0, x=</span><span class="si">{:25s}</span><span class="s1">: dist=</span><span class="si">{}</span><span class="s1">&#39;</span>
+                                 <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">n_x</span><span class="p">,</span> <span class="n">dist</span><span class="p">))</span>
+                <span class="k">elif</span> <span class="n">n_x</span> <span class="o">!=</span> <span class="n">n_y</span> <span class="ow">and</span> <span class="n">dist</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">:</span>
+                    <span class="n">counter</span><span class="o">.</span><span class="n">fail</span><span class="p">(</span><span class="s1">&#39;d(x, y) &lt;= 0,   x=</span><span class="si">{:25s}</span><span class="s1"> y=</span><span class="si">{:25s}</span><span class="s1">: dist=</span><span class="si">{}</span><span class="s1">&#39;</span>
+                                 <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">n_x</span><span class="p">,</span> <span class="n">n_y</span><span class="p">,</span> <span class="n">dist</span><span class="p">))</span>
+
+    <span class="k">def</span> <span class="nf">_dist_symmetric</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Verify symmetry of the distance.&quot;&quot;&quot;</span>
+        <span class="k">with</span> <span class="n">fail_counter</span><span class="p">(</span>
+            <span class="n">test_name</span><span class="o">=</span><span class="s1">&#39;Verifying symmetry of the distance&#39;</span><span class="p">,</span>
+            <span class="n">err_msg</span><span class="o">=</span><span class="s1">&#39;error = |d(x, y) - d(y, x)|&#39;</span><span class="p">,</span>
+            <span class="n">logger</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">log</span>
+        <span class="p">)</span> <span class="k">as</span> <span class="n">counter</span><span class="p">:</span>
+
+            <span class="k">for</span> <span class="p">[</span><span class="n">n_x</span><span class="p">,</span> <span class="n">x</span><span class="p">],</span> <span class="p">[</span><span class="n">n_y</span><span class="p">,</span> <span class="n">y</span><span class="p">]</span> <span class="ow">in</span> <span class="n">samples</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">space</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">space</span><span class="p">):</span>
+                <span class="n">dist_1</span> <span class="o">=</span> <span class="n">x</span><span class="o">.</span><span class="n">dist</span><span class="p">(</span><span class="n">y</span><span class="p">)</span>
+                <span class="n">dist_2</span> <span class="o">=</span> <span class="n">y</span><span class="o">.</span><span class="n">dist</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+                <span class="n">error</span> <span class="o">=</span> <span class="nb">abs</span><span class="p">(</span><span class="n">dist_1</span> <span class="o">-</span> <span class="n">dist_2</span><span class="p">)</span>
+
+                <span class="k">if</span> <span class="n">error</span> <span class="o">&gt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">tol</span><span class="p">:</span>
+                    <span class="n">counter</span><span class="o">.</span><span class="n">fail</span><span class="p">(</span><span class="s1">&#39;x=</span><span class="si">{:25s}</span><span class="s1">, y=</span><span class="si">{:25s}</span><span class="s1">: error=</span><span class="si">{}</span><span class="s1">&#39;</span>
+                                 <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">n_x</span><span class="p">,</span> <span class="n">n_y</span><span class="p">,</span> <span class="n">error</span><span class="p">))</span>
+
+    <span class="k">def</span> <span class="nf">_dist_subtransitive</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Verify sub-transitivity of the distance.&quot;&quot;&quot;</span>
+        <span class="k">with</span> <span class="n">fail_counter</span><span class="p">(</span>
+            <span class="n">test_name</span><span class="o">=</span><span class="s1">&#39;Verifying sub-additivity of the distance&#39;</span><span class="p">,</span>
+            <span class="n">err_msg</span><span class="o">=</span><span class="s1">&#39;error = max(d(x,z) - (d(x, y) + d(y, z)), 0)&#39;</span><span class="p">,</span>
+            <span class="n">logger</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">log</span>
+        <span class="p">)</span> <span class="k">as</span> <span class="n">counter</span><span class="p">:</span>
+
+            <span class="k">for</span> <span class="p">[</span><span class="n">n_x</span><span class="p">,</span> <span class="n">x</span><span class="p">],</span> <span class="p">[</span><span class="n">n_y</span><span class="p">,</span> <span class="n">y</span><span class="p">],</span> <span class="p">[</span><span class="n">n_z</span><span class="p">,</span> <span class="n">z</span><span class="p">]</span> <span class="ow">in</span> <span class="n">samples</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">space</span><span class="p">,</span>
+                                                        <span class="bp">self</span><span class="o">.</span><span class="n">space</span><span class="p">,</span>
+                                                        <span class="bp">self</span><span class="o">.</span><span class="n">space</span><span class="p">):</span>
+                <span class="n">dxz</span> <span class="o">=</span> <span class="n">x</span><span class="o">.</span><span class="n">dist</span><span class="p">(</span><span class="n">z</span><span class="p">)</span>
+                <span class="n">dxy</span> <span class="o">=</span> <span class="n">x</span><span class="o">.</span><span class="n">dist</span><span class="p">(</span><span class="n">y</span><span class="p">)</span>
+                <span class="n">dyz</span> <span class="o">=</span> <span class="n">y</span><span class="o">.</span><span class="n">dist</span><span class="p">(</span><span class="n">z</span><span class="p">)</span>
+                <span class="n">error</span> <span class="o">=</span> <span class="n">dxz</span> <span class="o">-</span> <span class="p">(</span><span class="n">dxy</span> <span class="o">+</span> <span class="n">dyz</span><span class="p">)</span>
+
+                <span class="k">if</span> <span class="n">error</span> <span class="o">&gt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">tol</span><span class="p">:</span>
+                    <span class="n">counter</span><span class="o">.</span><span class="n">fail</span><span class="p">(</span><span class="s1">&#39;x=</span><span class="si">{:25s}</span><span class="s1">, y=</span><span class="si">{:25s}</span><span class="s1">, z=</span><span class="si">{:25s}</span><span class="s1">: error=</span><span class="si">{}</span><span class="s1">&#39;</span>
+                                 <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">n_x</span><span class="p">,</span> <span class="n">n_y</span><span class="p">,</span> <span class="n">n_z</span><span class="p">,</span> <span class="n">error</span><span class="p">))</span>
+
+    <span class="k">def</span> <span class="nf">_dist_norm_compatible</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Verify compatibility of distance and norm.&quot;&quot;&quot;</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">space</span><span class="o">.</span><span class="n">zero</span><span class="p">()</span><span class="o">.</span><span class="n">norm</span><span class="p">()</span>
+        <span class="k">except</span> <span class="ne">NotImplementedError</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="s1">&#39;Space has no norm&#39;</span><span class="p">)</span>
+            <span class="k">return</span>
+
+        <span class="k">with</span> <span class="n">fail_counter</span><span class="p">(</span>
+            <span class="n">test_name</span><span class="o">=</span><span class="s1">&#39;Verifying compatibility of distance and norm&#39;</span><span class="p">,</span>
+            <span class="n">err_msg</span><span class="o">=</span><span class="s1">&#39;error = |d(x, y) - ||x-y|| |&#39;</span><span class="p">,</span>
+            <span class="n">logger</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">log</span>
+        <span class="p">)</span> <span class="k">as</span> <span class="n">counter</span><span class="p">:</span>
+
+            <span class="k">for</span> <span class="p">[</span><span class="n">n_x</span><span class="p">,</span> <span class="n">x</span><span class="p">],</span> <span class="p">[</span><span class="n">n_y</span><span class="p">,</span> <span class="n">y</span><span class="p">]</span> <span class="ow">in</span> <span class="n">samples</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">space</span><span class="p">,</span>
+                                              <span class="bp">self</span><span class="o">.</span><span class="n">space</span><span class="p">):</span>
+                <span class="n">error</span> <span class="o">=</span> <span class="nb">abs</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">dist</span><span class="p">(</span><span class="n">y</span><span class="p">)</span> <span class="o">-</span> <span class="p">(</span><span class="n">x</span> <span class="o">-</span> <span class="n">y</span><span class="p">)</span><span class="o">.</span><span class="n">norm</span><span class="p">())</span>
+
+                <span class="k">if</span> <span class="n">error</span> <span class="o">&gt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">tol</span><span class="p">:</span>
+                    <span class="n">counter</span><span class="o">.</span><span class="n">fail</span><span class="p">(</span><span class="s1">&#39;x=</span><span class="si">{:25s}</span><span class="s1">, y=</span><span class="si">{:25s}</span><span class="s1">: error=</span><span class="si">{}</span><span class="s1">&#39;</span>
+                                 <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">n_x</span><span class="p">,</span> <span class="n">n_y</span><span class="p">,</span> <span class="n">error</span><span class="p">))</span>
+
+<div class="viewcode-block" id="SpaceTest.dist"><a class="viewcode-back" href="../../../generated/odl.diagnostics.space.SpaceTest.dist.html#odl.diagnostics.space.SpaceTest.dist">[docs]</a>    <span class="k">def</span> <span class="nf">dist</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Verify ``LinearSpace.dist``.</span>
+
+<span class="sd">        The distance metric is checked for the following properties:</span>
+
+<span class="sd">        - positive definiteness:</span>
+
+<span class="sd">            ``d(x, y) &gt;= 0``</span>
+
+<span class="sd">            ``d(x, y) = 0`` iff ``x = y``</span>
+
+<span class="sd">        - symmetry:</span>
+
+<span class="sd">            ``d(x, y) = d(y, x)``</span>
+
+<span class="sd">        - sub-transitivity:</span>
+
+<span class="sd">            ``d(x, z) &lt;= d(x, y) + d(y, z)``</span>
+
+<span class="sd">        - compatibility with the norm (if available):</span>
+
+<span class="sd">            ``d(x, y) = ||x - y||``</span>
+
+<span class="sd">        References</span>
+<span class="sd">        ----------</span>
+<span class="sd">        Wikipedia article on metric_</span>
+
+<span class="sd">        .. _metric: https://en.wikipedia.org/wiki/Metric_(mathematics)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">== Verifying dist ==</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
+
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">zero</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">space</span><span class="o">.</span><span class="n">zero</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">space</span><span class="o">.</span><span class="n">dist</span><span class="p">(</span><span class="n">zero</span><span class="p">,</span> <span class="n">zero</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">NotImplementedError</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="s1">&#39;Space has no distance metric&#39;</span><span class="p">)</span>
+            <span class="k">return</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_dist_positivity</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_dist_symmetric</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_dist_subtransitive</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_dist_norm_compatible</span><span class="p">()</span></div>
+
+    <span class="k">def</span> <span class="nf">_multiply_zero</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Verify that vector multiplication with zero is zero.&quot;&quot;&quot;</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">zero</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">space</span><span class="o">.</span><span class="n">zero</span><span class="p">()</span>
+        <span class="k">except</span> <span class="ne">NotImplementedError</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;*** SPACE HAS NO ZERO VECTOR ***&#39;</span><span class="p">)</span>
+            <span class="k">return</span>
+
+        <span class="k">with</span> <span class="n">fail_counter</span><span class="p">(</span>
+            <span class="n">test_name</span><span class="o">=</span><span class="s1">&#39;Verifying vector multiplication with zero&#39;</span><span class="p">,</span>
+            <span class="n">err_msg</span><span class="o">=</span><span class="s1">&#39;error = ||x * 0||&#39;</span><span class="p">,</span>
+            <span class="n">logger</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">log</span>
+        <span class="p">)</span> <span class="k">as</span> <span class="n">counter</span><span class="p">:</span>
+            <span class="k">for</span> <span class="p">[</span><span class="n">n_x</span><span class="p">,</span> <span class="n">x</span><span class="p">]</span> <span class="ow">in</span> <span class="n">samples</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">space</span><span class="p">):</span>
+                <span class="n">error</span> <span class="o">=</span> <span class="p">(</span><span class="n">zero</span> <span class="o">*</span> <span class="n">x</span><span class="p">)</span><span class="o">.</span><span class="n">norm</span><span class="p">()</span>
+
+                <span class="k">if</span> <span class="n">error</span> <span class="o">&gt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">tol</span><span class="p">:</span>
+                    <span class="n">counter</span><span class="o">.</span><span class="n">fail</span><span class="p">(</span><span class="s1">&#39;x=</span><span class="si">{:25s}</span><span class="s1">,: error=</span><span class="si">{}</span><span class="s1">&#39;</span>
+                                 <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">n_x</span><span class="p">,</span> <span class="n">error</span><span class="p">))</span>
+
+    <span class="k">def</span> <span class="nf">_multiply_commutative</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Verify commutativity of vector multiplication.&quot;&quot;&quot;</span>
+        <span class="k">with</span> <span class="n">fail_counter</span><span class="p">(</span>
+            <span class="n">test_name</span><span class="o">=</span><span class="s1">&#39;Verifying commutativity of vector multiplication&#39;</span><span class="p">,</span>
+            <span class="n">err_msg</span><span class="o">=</span><span class="s1">&#39;error = dist(x * y, y * x)&#39;</span><span class="p">,</span>
+            <span class="n">logger</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">log</span>
+        <span class="p">)</span> <span class="k">as</span> <span class="n">counter</span><span class="p">:</span>
+
+            <span class="k">for</span> <span class="p">[</span><span class="n">n_x</span><span class="p">,</span> <span class="n">x</span><span class="p">],</span> <span class="p">[</span><span class="n">n_y</span><span class="p">,</span> <span class="n">y</span><span class="p">],</span> <span class="n">_</span> <span class="ow">in</span> <span class="n">samples</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">space</span><span class="p">,</span>
+                                                 <span class="bp">self</span><span class="o">.</span><span class="n">space</span><span class="p">,</span>
+                                                 <span class="bp">self</span><span class="o">.</span><span class="n">space</span><span class="p">):</span>
+                <span class="n">correct</span> <span class="o">=</span> <span class="n">_approx_equal</span><span class="p">(</span><span class="n">x</span> <span class="o">*</span> <span class="n">y</span><span class="p">,</span> <span class="n">y</span> <span class="o">*</span> <span class="n">x</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">tol</span><span class="p">)</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="n">correct</span><span class="p">:</span>
+                    <span class="n">counter</span><span class="o">.</span><span class="n">fail</span><span class="p">(</span><span class="s1">&#39;failed with x=</span><span class="si">{:25s}</span><span class="s1"> y=</span><span class="si">{:25s}</span><span class="s1">&#39;</span>
+                                 <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">n_x</span><span class="p">,</span> <span class="n">n_y</span><span class="p">))</span>
+
+    <span class="k">def</span> <span class="nf">_multiply_associative</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Verify associativity of vector multiplication.&quot;&quot;&quot;</span>
+        <span class="k">with</span> <span class="n">fail_counter</span><span class="p">(</span>
+            <span class="n">test_name</span><span class="o">=</span><span class="s1">&#39;Verifying associativity of vector multiplication&#39;</span><span class="p">,</span>
+            <span class="n">err_msg</span><span class="o">=</span><span class="s1">&#39;error = dist(x * (y * z), (x * y) * z)&#39;</span><span class="p">,</span>
+            <span class="n">logger</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">log</span>
+        <span class="p">)</span> <span class="k">as</span> <span class="n">counter</span><span class="p">:</span>
+
+            <span class="k">for</span> <span class="p">[</span><span class="n">n_x</span><span class="p">,</span> <span class="n">x</span><span class="p">],</span> <span class="p">[</span><span class="n">n_y</span><span class="p">,</span> <span class="n">y</span><span class="p">],</span> <span class="p">[</span><span class="n">n_z</span><span class="p">,</span> <span class="n">z</span><span class="p">]</span> <span class="ow">in</span> <span class="n">samples</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">space</span><span class="p">,</span>
+                                                        <span class="bp">self</span><span class="o">.</span><span class="n">space</span><span class="p">,</span>
+                                                        <span class="bp">self</span><span class="o">.</span><span class="n">space</span><span class="p">):</span>
+                <span class="n">correct</span> <span class="o">=</span> <span class="n">_approx_equal</span><span class="p">(</span><span class="n">x</span> <span class="o">*</span> <span class="p">(</span><span class="n">y</span> <span class="o">*</span> <span class="n">z</span><span class="p">),</span> <span class="p">(</span><span class="n">x</span> <span class="o">*</span> <span class="n">y</span><span class="p">)</span> <span class="o">*</span> <span class="n">z</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">tol</span><span class="p">)</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="n">correct</span><span class="p">:</span>
+                    <span class="n">counter</span><span class="o">.</span><span class="n">fail</span><span class="p">(</span><span class="s1">&#39;failed with x=</span><span class="si">{:25s}</span><span class="s1"> y=</span><span class="si">{:25s}</span><span class="s1"> z=</span><span class="si">{:25s}</span><span class="s1">&#39;</span>
+                                 <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">n_x</span><span class="p">,</span> <span class="n">n_y</span><span class="p">,</span> <span class="n">n_z</span><span class="p">))</span>
+
+    <span class="k">def</span> <span class="nf">_multiply_distributive_scalar</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Verify distributivity of scalar multiplication.&quot;&quot;&quot;</span>
+        <span class="k">with</span> <span class="n">fail_counter</span><span class="p">(</span>
+            <span class="n">test_name</span><span class="o">=</span><span class="s1">&#39;Verifying distributivity of vector multiplication &#39;</span>
+                      <span class="s1">&#39;under scalar multiplication&#39;</span><span class="p">,</span>
+            <span class="n">err_msg</span><span class="o">=</span><span class="s1">&#39;error = dist(a * (x + y), a * x + a * y)&#39;</span><span class="p">,</span>
+            <span class="n">logger</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">log</span>
+        <span class="p">)</span> <span class="k">as</span> <span class="n">counter</span><span class="p">:</span>
+
+            <span class="k">for</span> <span class="p">[</span><span class="n">n_x</span><span class="p">,</span> <span class="n">x</span><span class="p">],</span> <span class="p">[</span><span class="n">n_y</span><span class="p">,</span> <span class="n">y</span><span class="p">],</span> <span class="p">[</span><span class="n">_</span><span class="p">,</span> <span class="n">a</span><span class="p">]</span> <span class="ow">in</span> <span class="n">samples</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">space</span><span class="p">,</span>
+                                                      <span class="bp">self</span><span class="o">.</span><span class="n">space</span><span class="p">,</span>
+                                                      <span class="bp">self</span><span class="o">.</span><span class="n">space</span><span class="o">.</span><span class="n">field</span><span class="p">):</span>
+                <span class="n">correct</span> <span class="o">=</span> <span class="n">_approx_equal</span><span class="p">(</span><span class="n">a</span> <span class="o">*</span> <span class="p">(</span><span class="n">x</span> <span class="o">+</span> <span class="n">y</span><span class="p">),</span> <span class="n">a</span> <span class="o">*</span> <span class="n">x</span> <span class="o">+</span> <span class="n">a</span> <span class="o">*</span> <span class="n">y</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">tol</span><span class="p">)</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="n">correct</span><span class="p">:</span>
+                    <span class="n">counter</span><span class="o">.</span><span class="n">fail</span><span class="p">(</span><span class="s1">&#39;failed with x=</span><span class="si">{:25s}</span><span class="s1"> y=</span><span class="si">{:25s}</span><span class="s1"> a=</span><span class="si">{}</span><span class="s1">&#39;</span>
+                                 <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">n_x</span><span class="p">,</span> <span class="n">n_y</span><span class="p">,</span> <span class="n">a</span><span class="p">))</span>
+
+    <span class="k">def</span> <span class="nf">_multiply_distributive_vector</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Verify distributivity of vector multiplication.&quot;&quot;&quot;</span>
+        <span class="k">with</span> <span class="n">fail_counter</span><span class="p">(</span>
+            <span class="n">test_name</span><span class="o">=</span><span class="s1">&#39;Verifying distributivity of vector multiplication &#39;</span>
+                      <span class="s1">&#39;under vector multiplication&#39;</span><span class="p">,</span>
+            <span class="n">err_msg</span><span class="o">=</span><span class="s1">&#39;error = dist(x * (y + z), x * y + x * z)&#39;</span><span class="p">,</span>
+            <span class="n">logger</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">log</span>
+        <span class="p">)</span> <span class="k">as</span> <span class="n">counter</span><span class="p">:</span>
+
+            <span class="k">for</span> <span class="p">[</span><span class="n">n_x</span><span class="p">,</span> <span class="n">x</span><span class="p">],</span> <span class="p">[</span><span class="n">n_y</span><span class="p">,</span> <span class="n">y</span><span class="p">],</span> <span class="p">[</span><span class="n">n_z</span><span class="p">,</span> <span class="n">z</span><span class="p">]</span> <span class="ow">in</span> <span class="n">samples</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">space</span><span class="p">,</span>
+                                                        <span class="bp">self</span><span class="o">.</span><span class="n">space</span><span class="p">,</span>
+                                                        <span class="bp">self</span><span class="o">.</span><span class="n">space</span><span class="p">):</span>
+                <span class="n">correct</span> <span class="o">=</span> <span class="n">_approx_equal</span><span class="p">(</span><span class="n">x</span> <span class="o">*</span> <span class="p">(</span><span class="n">y</span> <span class="o">+</span> <span class="n">z</span><span class="p">),</span> <span class="n">x</span> <span class="o">*</span> <span class="n">y</span> <span class="o">+</span> <span class="n">x</span> <span class="o">*</span> <span class="n">z</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">tol</span><span class="p">)</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="n">correct</span><span class="p">:</span>
+                    <span class="n">counter</span><span class="o">.</span><span class="n">fail</span><span class="p">(</span><span class="s1">&#39;failed with x=</span><span class="si">{:25s}</span><span class="s1"> y=</span><span class="si">{:25s}</span><span class="s1"> z=</span><span class="si">{:25s}</span><span class="s1">&#39;</span>
+                                 <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">n_x</span><span class="p">,</span> <span class="n">n_y</span><span class="p">,</span> <span class="n">n_z</span><span class="p">))</span>
+
+<div class="viewcode-block" id="SpaceTest.multiply"><a class="viewcode-back" href="../../../generated/odl.diagnostics.space.SpaceTest.multiply.html#odl.diagnostics.space.SpaceTest.multiply">[docs]</a>    <span class="k">def</span> <span class="nf">multiply</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Verify ``LinearSpace.multiply``.</span>
+
+<span class="sd">        The vector multiplication is checked for the following properties:</span>
+
+<span class="sd">        - Zero element:</span>
+
+<span class="sd">            ``0 * x = 0``</span>
+
+<span class="sd">        - Commutativity:</span>
+
+<span class="sd">            ``x * y = y * x``</span>
+
+<span class="sd">        - Associativity:</span>
+
+<span class="sd">            ``x * (y * z) = (x * y) * z``</span>
+
+<span class="sd">        - Distributivity:</span>
+
+<span class="sd">            ``a * (x + y) = a * x + a * y``</span>
+
+<span class="sd">            ``x * (y + z) = x * y + x * z``</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">== Verifying multiplication ==</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
+
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">zero</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">space</span><span class="o">.</span><span class="n">zero</span><span class="p">()</span>
+        <span class="k">except</span> <span class="ne">NotImplementedError</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;*** SPACE HAS NO ZERO VECTOR ***&#39;</span><span class="p">)</span>
+            <span class="k">return</span>
+
+        <span class="k">try</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">space</span><span class="o">.</span><span class="n">multiply</span><span class="p">(</span><span class="n">zero</span><span class="p">,</span> <span class="n">zero</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">NotImplementedError</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="s1">&#39;Space has no vector multiplication.&#39;</span><span class="p">)</span>
+            <span class="k">return</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_multiply_zero</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_multiply_commutative</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_multiply_associative</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_multiply_distributive_scalar</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_multiply_distributive_vector</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="SpaceTest.equals"><a class="viewcode-back" href="../../../generated/odl.diagnostics.space.SpaceTest.equals.html#odl.diagnostics.space.SpaceTest.equals">[docs]</a>    <span class="k">def</span> <span class="nf">equals</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Verify `LinearSpace.__eq__`.&quot;&quot;&quot;</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">== Verifying __eq__ ==</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">space</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">space</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;** space == space failed ***&#39;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">space</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">space</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;** not space != space failed***&#39;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">space</span> <span class="o">!=</span> <span class="n">copy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">space</span><span class="p">):</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;** space == copy(space) failed***&#39;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">space</span> <span class="o">!=</span> <span class="n">deepcopy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">space</span><span class="p">):</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;** space == deepcopy(space) failed***&#39;</span><span class="p">)</span>
+
+        <span class="k">with</span> <span class="n">fail_counter</span><span class="p">(</span>
+            <span class="n">test_name</span><span class="o">=</span><span class="s1">&#39;Verify behavior of `space == obj` when `obj` &#39;</span>
+                      <span class="s1">&#39;is not a space&#39;</span><span class="p">,</span>
+            <span class="n">logger</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">log</span>
+        <span class="p">)</span> <span class="k">as</span> <span class="n">counter</span><span class="p">:</span>
+
+            <span class="k">for</span> <span class="n">obj</span> <span class="ow">in</span> <span class="p">[[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">],</span> <span class="nb">list</span><span class="p">(),</span> <span class="nb">tuple</span><span class="p">(),</span> <span class="nb">dict</span><span class="p">(),</span> <span class="mf">5.0</span><span class="p">]:</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">space</span> <span class="o">==</span> <span class="n">obj</span><span class="p">:</span>
+                    <span class="n">counter</span><span class="o">.</span><span class="n">fail</span><span class="p">(</span><span class="s1">&#39;space == obj,  with obj=</span><span class="si">{}</span><span class="s1">&#39;</span>
+                                 <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">obj</span><span class="p">))</span>
+
+                <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">space</span> <span class="o">!=</span> <span class="n">obj</span><span class="p">:</span>
+                    <span class="n">counter</span><span class="o">.</span><span class="n">fail</span><span class="p">(</span><span class="s1">&#39;not space != obj,  with obj=</span><span class="si">{}</span><span class="s1">&#39;</span>
+                                 <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">obj</span><span class="p">))</span></div>
+
+<div class="viewcode-block" id="SpaceTest.contains"><a class="viewcode-back" href="../../../generated/odl.diagnostics.space.SpaceTest.contains.html#odl.diagnostics.space.SpaceTest.contains">[docs]</a>    <span class="k">def</span> <span class="nf">contains</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Verify `LinearSpace.__contains__`.&quot;&quot;&quot;</span>
+        <span class="k">with</span> <span class="n">fail_counter</span><span class="p">(</span>
+            <span class="n">test_name</span><span class="o">=</span><span class="s1">&#39;Verify behavior of `obj in space`&#39;</span><span class="p">,</span>
+            <span class="n">logger</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">log</span>
+        <span class="p">)</span> <span class="k">as</span> <span class="n">counter</span><span class="p">:</span>
+
+            <span class="k">for</span> <span class="p">[</span><span class="n">n_x</span><span class="p">,</span> <span class="n">x</span><span class="p">]</span> <span class="ow">in</span> <span class="n">samples</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">space</span><span class="p">):</span>
+                <span class="k">if</span> <span class="n">x</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">space</span><span class="p">:</span>
+                    <span class="n">counter</span><span class="o">.</span><span class="n">fail</span><span class="p">(</span><span class="s1">&#39;x not in space,  with x=</span><span class="si">{}</span><span class="s1">&#39;</span>
+                                 <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">n_x</span><span class="p">))</span>
+
+                <span class="k">if</span> <span class="n">x</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">space</span><span class="p">:</span>
+                    <span class="n">counter</span><span class="o">.</span><span class="n">fail</span><span class="p">(</span><span class="s1">&#39;not x in space,  with x=</span><span class="si">{}</span><span class="s1">&#39;</span>
+                                 <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">n_x</span><span class="p">))</span>
+
+            <span class="k">for</span> <span class="n">obj</span> <span class="ow">in</span> <span class="p">[[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">],</span> <span class="nb">list</span><span class="p">(),</span> <span class="nb">tuple</span><span class="p">(),</span> <span class="nb">dict</span><span class="p">(),</span> <span class="mf">5.0</span><span class="p">]:</span>
+                <span class="k">if</span> <span class="n">obj</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">space</span><span class="p">:</span>
+                    <span class="n">counter</span><span class="o">.</span><span class="n">fail</span><span class="p">(</span><span class="s1">&#39;obj in space,  with obj=</span><span class="si">{}</span><span class="s1">&#39;</span>
+                                 <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">obj</span><span class="p">))</span>
+
+                <span class="k">if</span> <span class="ow">not</span> <span class="n">obj</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">space</span><span class="p">:</span>
+                    <span class="n">counter</span><span class="o">.</span><span class="n">fail</span><span class="p">(</span><span class="s1">&#39;not obj not in space,  with obj=</span><span class="si">{}</span><span class="s1">&#39;</span>
+                                 <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">obj</span><span class="p">))</span></div>
+
+<div class="viewcode-block" id="SpaceTest.element_assign"><a class="viewcode-back" href="../../../generated/odl.diagnostics.space.SpaceTest.element_assign.html#odl.diagnostics.space.SpaceTest.element_assign">[docs]</a>    <span class="k">def</span> <span class="nf">element_assign</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Verify `LinearSpaceElement.assign`.&quot;&quot;&quot;</span>
+        <span class="k">with</span> <span class="n">fail_counter</span><span class="p">(</span>
+            <span class="n">test_name</span><span class="o">=</span><span class="s1">&#39;Verify behavior of `LinearSpaceElement.assign`&#39;</span><span class="p">,</span>
+            <span class="n">logger</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">log</span>
+        <span class="p">)</span> <span class="k">as</span> <span class="n">counter</span><span class="p">:</span>
+
+            <span class="k">for</span> <span class="p">[</span><span class="n">n_x</span><span class="p">,</span> <span class="n">x</span><span class="p">],</span> <span class="p">[</span><span class="n">n_y</span><span class="p">,</span> <span class="n">y</span><span class="p">]</span> <span class="ow">in</span> <span class="n">samples</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">space</span><span class="p">,</span>
+                                              <span class="bp">self</span><span class="o">.</span><span class="n">space</span><span class="p">):</span>
+                <span class="n">x</span><span class="o">.</span><span class="n">assign</span><span class="p">(</span><span class="n">y</span><span class="p">)</span>
+                <span class="n">correct</span> <span class="o">=</span> <span class="n">_approx_equal</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">tol</span><span class="p">)</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="n">correct</span><span class="p">:</span>
+                    <span class="n">counter</span><span class="o">.</span><span class="n">fail</span><span class="p">(</span><span class="s1">&#39;failed with x=</span><span class="si">{:25s}</span><span class="s1"> y=</span><span class="si">{:25s}</span><span class="s1">&#39;</span>
+                                 <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">n_x</span><span class="p">,</span> <span class="n">n_y</span><span class="p">))</span></div>
+
+<div class="viewcode-block" id="SpaceTest.element_copy"><a class="viewcode-back" href="../../../generated/odl.diagnostics.space.SpaceTest.element_copy.html#odl.diagnostics.space.SpaceTest.element_copy">[docs]</a>    <span class="k">def</span> <span class="nf">element_copy</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Verify `LinearSpaceElement.copy`.&quot;&quot;&quot;</span>
+        <span class="k">with</span> <span class="n">fail_counter</span><span class="p">(</span>
+            <span class="n">test_name</span><span class="o">=</span><span class="s1">&#39;Verify behavior of `LinearSpaceElement.copy`&#39;</span><span class="p">,</span>
+            <span class="n">logger</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">log</span>
+        <span class="p">)</span> <span class="k">as</span> <span class="n">counter</span><span class="p">:</span>
+
+            <span class="k">for</span> <span class="p">[</span><span class="n">n_x</span><span class="p">,</span> <span class="n">x</span><span class="p">]</span> <span class="ow">in</span> <span class="n">samples</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">space</span><span class="p">):</span>
+                <span class="c1"># equal after copy</span>
+                <span class="n">y</span> <span class="o">=</span> <span class="n">x</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+                <span class="n">correct</span> <span class="o">=</span> <span class="n">_approx_equal</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">tol</span><span class="p">)</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="n">correct</span><span class="p">:</span>
+                    <span class="n">counter</span><span class="o">.</span><span class="n">fail</span><span class="p">(</span><span class="s1">&#39;failed with x={:s5s}&#39;</span>
+                                 <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">n_x</span><span class="p">))</span>
+
+                <span class="c1"># modify y, x stays the same</span>
+                <span class="n">y</span> <span class="o">*=</span> <span class="mf">2.0</span>
+                <span class="n">correct</span> <span class="o">=</span> <span class="n">n_x</span> <span class="o">==</span> <span class="s1">&#39;Zero&#39;</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">_approx_equal</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">tol</span><span class="p">)</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="n">correct</span><span class="p">:</span>
+                    <span class="n">counter</span><span class="o">.</span><span class="n">fail</span><span class="p">(</span><span class="s1">&#39;modified y, x changed with x=</span><span class="si">{:25s}</span><span class="s1">&#39;</span>
+                                 <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">n_x</span><span class="p">))</span></div>
+
+<div class="viewcode-block" id="SpaceTest.element_set_zero"><a class="viewcode-back" href="../../../generated/odl.diagnostics.space.SpaceTest.element_set_zero.html#odl.diagnostics.space.SpaceTest.element_set_zero">[docs]</a>    <span class="k">def</span> <span class="nf">element_set_zero</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Verify `LinearSpaceElement.set_zero`.&quot;&quot;&quot;</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">zero</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">space</span><span class="o">.</span><span class="n">zero</span><span class="p">()</span>
+        <span class="k">except</span> <span class="ne">NotImplementedError</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;*** SPACE HAS NO ZERO VECTOR ***&#39;</span><span class="p">)</span>
+            <span class="k">return</span>
+
+        <span class="k">with</span> <span class="n">fail_counter</span><span class="p">(</span>
+            <span class="n">test_name</span><span class="o">=</span><span class="s1">&#39;Verify behavior of `LinearSpaceElement.set_zero`&#39;</span><span class="p">,</span>
+            <span class="n">logger</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">log</span>
+        <span class="p">)</span> <span class="k">as</span> <span class="n">counter</span><span class="p">:</span>
+
+            <span class="k">for</span> <span class="p">[</span><span class="n">n_x</span><span class="p">,</span> <span class="n">x</span><span class="p">]</span> <span class="ow">in</span> <span class="n">samples</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">space</span><span class="p">):</span>
+                <span class="n">x</span><span class="o">.</span><span class="n">set_zero</span><span class="p">()</span>
+                <span class="n">correct</span> <span class="o">=</span> <span class="n">_approx_equal</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">zero</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">tol</span><span class="p">)</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="n">correct</span><span class="p">:</span>
+                    <span class="n">counter</span><span class="o">.</span><span class="n">fail</span><span class="p">(</span><span class="s1">&#39;failed with x=</span><span class="si">{:25s}</span><span class="s1">&#39;</span>
+                                 <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">n_x</span><span class="p">))</span></div>
+
+<div class="viewcode-block" id="SpaceTest.element_equals"><a class="viewcode-back" href="../../../generated/odl.diagnostics.space.SpaceTest.element_equals.html#odl.diagnostics.space.SpaceTest.element_equals">[docs]</a>    <span class="k">def</span> <span class="nf">element_equals</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Verify `LinearSpaceElement.__eq__`.&quot;&quot;&quot;</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">zero</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">space</span><span class="o">.</span><span class="n">zero</span><span class="p">()</span>
+        <span class="k">except</span> <span class="ne">NotImplementedError</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;*** SPACE HAS NO ZERO VECTOR ***&#39;</span><span class="p">)</span>
+            <span class="k">return</span>
+
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">zero</span> <span class="o">==</span> <span class="n">zero</span>
+        <span class="k">except</span> <span class="ne">NotImplementedError</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="s1">&#39;Vector has no __eq__&#39;</span><span class="p">)</span>
+            <span class="k">return</span>
+
+        <span class="k">with</span> <span class="n">fail_counter</span><span class="p">(</span>
+            <span class="n">test_name</span><span class="o">=</span><span class="s1">&#39;Verify behavior of `element1 == element2`&#39;</span><span class="p">,</span>
+            <span class="n">logger</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">log</span>
+        <span class="p">)</span> <span class="k">as</span> <span class="n">counter</span><span class="p">:</span>
+
+            <span class="k">for</span> <span class="p">[</span><span class="n">n_x</span><span class="p">,</span> <span class="n">x</span><span class="p">],</span> <span class="p">[</span><span class="n">n_y</span><span class="p">,</span> <span class="n">y</span><span class="p">]</span> <span class="ow">in</span> <span class="n">samples</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">space</span><span class="p">,</span>
+                                              <span class="bp">self</span><span class="o">.</span><span class="n">space</span><span class="p">):</span>
+                <span class="k">if</span> <span class="n">n_x</span> <span class="o">==</span> <span class="n">n_y</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="ow">not</span> <span class="n">x</span> <span class="o">==</span> <span class="n">y</span><span class="p">:</span>
+                        <span class="n">counter</span><span class="o">.</span><span class="n">fail</span><span class="p">(</span><span class="s1">&#39;failed x == x with x=</span><span class="si">{:25s}</span><span class="s1">&#39;</span>
+                                     <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">n_x</span><span class="p">))</span>
+
+                    <span class="k">if</span> <span class="n">x</span> <span class="o">!=</span> <span class="n">y</span><span class="p">:</span>
+                        <span class="n">counter</span><span class="o">.</span><span class="n">fail</span><span class="p">(</span><span class="s1">&#39;failed not x != x with x=</span><span class="si">{:25s}</span><span class="s1">&#39;</span>
+                                     <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">n_x</span><span class="p">))</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="n">x</span> <span class="o">==</span> <span class="n">y</span><span class="p">:</span>
+                        <span class="n">counter</span><span class="o">.</span><span class="n">fail</span><span class="p">(</span><span class="s1">&#39;failed not x == y with x=</span><span class="si">{:25s}</span><span class="s1">, &#39;</span>
+                                     <span class="s1">&#39;x=</span><span class="si">{:25s}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">n_x</span><span class="p">,</span> <span class="n">n_y</span><span class="p">))</span>
+
+                    <span class="k">if</span> <span class="ow">not</span> <span class="n">x</span> <span class="o">!=</span> <span class="n">y</span><span class="p">:</span>
+                        <span class="n">counter</span><span class="o">.</span><span class="n">fail</span><span class="p">(</span><span class="s1">&#39;failed x != y with x=</span><span class="si">{:25s}</span><span class="s1">, x=</span><span class="si">{:25s}</span><span class="s1">&#39;</span>
+                                     <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">n_x</span><span class="p">,</span> <span class="n">n_y</span><span class="p">))</span></div>
+
+<div class="viewcode-block" id="SpaceTest.element_space"><a class="viewcode-back" href="../../../generated/odl.diagnostics.space.SpaceTest.element_space.html#odl.diagnostics.space.SpaceTest.element_space">[docs]</a>    <span class="k">def</span> <span class="nf">element_space</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Verify `LinearSpaceElement.space`.&quot;&quot;&quot;</span>
+        <span class="k">with</span> <span class="n">fail_counter</span><span class="p">(</span>
+            <span class="n">test_name</span><span class="o">=</span><span class="s1">&#39;Verify `LinearSpaceElement.space`&#39;</span><span class="p">,</span>
+            <span class="n">logger</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">log</span>
+        <span class="p">)</span> <span class="k">as</span> <span class="n">counter</span><span class="p">:</span>
+
+            <span class="k">for</span> <span class="p">[</span><span class="n">n_x</span><span class="p">,</span> <span class="n">x</span><span class="p">]</span> <span class="ow">in</span> <span class="n">samples</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">space</span><span class="p">):</span>
+                <span class="k">if</span> <span class="n">x</span><span class="o">.</span><span class="n">space</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">space</span><span class="p">:</span>
+                    <span class="n">counter</span><span class="o">.</span><span class="n">fail</span><span class="p">(</span><span class="s1">&#39;failed with x=</span><span class="si">{:25s}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">n_x</span><span class="p">))</span></div>
+
+<div class="viewcode-block" id="SpaceTest.element"><a class="viewcode-back" href="../../../generated/odl.diagnostics.space.SpaceTest.element.html#odl.diagnostics.space.SpaceTest.element">[docs]</a>    <span class="k">def</span> <span class="nf">element</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Verify `LinearSpaceElement`.&quot;&quot;&quot;</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">== Verifying element attributes ==</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">element_assign</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">element_copy</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">element_set_zero</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">element_equals</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">element_space</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="SpaceTest.run_tests"><a class="viewcode-back" href="../../../generated/odl.diagnostics.space.SpaceTest.run_tests.html#odl.diagnostics.space.SpaceTest.run_tests">[docs]</a>    <span class="k">def</span> <span class="nf">run_tests</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Run all tests on this space.&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">== RUNNING ALL TESTS ==</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="s1">&#39;Space = </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">space</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">field</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">element_method</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">linearity</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">inner</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">norm</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dist</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">multiply</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">equals</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">contains</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">element</span><span class="p">()</span></div>
+
+    <span class="k">def</span> <span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return ``str(self)``.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="s1">&#39;</span><span class="si">{}</span><span class="s1">(</span><span class="si">{}</span><span class="s1">)&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">space</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return ``repr(self)``.&quot;&quot;&quot;</span>
+        <span class="n">inner_str</span> <span class="o">=</span> <span class="s1">&#39;</span><span class="si">{!r}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">space</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbose</span><span class="p">:</span>
+            <span class="n">inner_str</span> <span class="o">+=</span> <span class="s1">&#39;, verbose=False&#39;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">tol</span> <span class="o">!=</span> <span class="mf">1e-5</span><span class="p">:</span>
+            <span class="n">inner_str</span> <span class="o">+=</span> <span class="s1">&#39;, tol=</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">tol</span><span class="p">)</span>
+        <span class="k">return</span> <span class="s1">&#39;</span><span class="si">{}</span><span class="s1">(</span><span class="si">{}</span><span class="s1">)&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="p">,</span> <span class="n">inner_str</span><span class="p">)</span></div>
+
+
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s1">&#39;__main__&#39;</span><span class="p">:</span>
+    <span class="kn">from</span> <span class="nn">odl</span> <span class="kn">import</span> <span class="n">rn</span><span class="p">,</span> <span class="n">uniform_discr</span>
+    <span class="n">SpaceTest</span><span class="p">(</span><span class="n">rn</span><span class="p">(</span><span class="mi">10</span><span class="p">),</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span><span class="o">.</span><span class="n">run_tests</span><span class="p">()</span>
+    <span class="n">SpaceTest</span><span class="p">(</span><span class="n">uniform_discr</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span> <span class="p">[</span><span class="mi">5</span><span class="p">,</span> <span class="mi">5</span><span class="p">]))</span><span class="o">.</span><span class="n">run_tests</span><span class="p">()</span>
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &#169; Copyright 2014-2020 The ODL Contributors.
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

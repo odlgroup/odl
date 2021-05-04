@@ -1,0 +1,8 @@
+:orphan:
+
+CallbackPrintHardwareUsage.reset
+==========================================================
+
+.. currentmodule:: odl.solvers.util.callback
+
+.. automethod:: CallbackPrintHardwareUsage.reset

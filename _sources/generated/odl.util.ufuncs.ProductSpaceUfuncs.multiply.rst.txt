@@ -1,0 +1,8 @@
+:orphan:
+
+ProductSpaceUfuncs.multiply
+===========================================
+
+.. currentmodule:: odl.util.ufuncs
+
+.. automethod:: ProductSpaceUfuncs.multiply

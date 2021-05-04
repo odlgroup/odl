@@ -1,0 +1,6 @@
+ProductSpaceCustomInner.repr_part
+==================================================
+
+.. currentmodule:: odl.space.pspace
+
+.. autoproperty:: ProductSpaceCustomInner.repr_part

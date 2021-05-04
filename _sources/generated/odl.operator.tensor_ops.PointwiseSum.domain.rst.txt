@@ -1,0 +1,6 @@
+PointwiseSum.domain
+===========================================
+
+.. currentmodule:: odl.operator.tensor_ops
+
+.. autoproperty:: PointwiseSum.domain

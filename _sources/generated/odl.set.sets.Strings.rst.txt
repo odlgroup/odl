@@ -1,0 +1,33 @@
+﻿Strings
+====================
+
+.. currentmodule:: odl.set.sets
+
+.. autoclass:: Strings
+   :show-inheritance:
+   
+   
+   .. automethod:: __init__
+   
+      
+   
+   .. HACK -- the point here is that we don't want this to appear in the output, but the autosummary should still generate the pages.
+      .. autosummary::
+         :toctree:
+      
+         Strings.__contains__
+         Strings.__eq__
+         Strings.contains_all
+         Strings.contains_set
+         Strings.element
+   
+
+    
+   .. HACK -- the point here is that we don't want this to appear in the output, but the autosummary should still generate the pages.
+      .. autosummary::
+         :toctree:
+      
+         Strings.examples
+         Strings.length
+   
+   

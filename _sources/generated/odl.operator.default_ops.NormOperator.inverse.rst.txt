@@ -1,0 +1,6 @@
+NormOperator.inverse
+=============================================
+
+.. currentmodule:: odl.operator.default_ops
+
+.. autoproperty:: NormOperator.inverse

@@ -1,0 +1,36 @@
+﻿ArrayWeighting
+==================================
+
+.. currentmodule:: odl.space.weighting
+
+.. autoclass:: ArrayWeighting
+   :show-inheritance:
+   
+   
+   .. automethod:: __init__
+   
+      
+   
+   .. HACK -- the point here is that we don't want this to appear in the output, but the autosummary should still generate the pages.
+      .. autosummary::
+         :toctree:
+      
+         ArrayWeighting.__eq__
+         ArrayWeighting.dist
+         ArrayWeighting.equiv
+         ArrayWeighting.inner
+         ArrayWeighting.is_valid
+         ArrayWeighting.norm
+   
+
+    
+   .. HACK -- the point here is that we don't want this to appear in the output, but the autosummary should still generate the pages.
+      .. autosummary::
+         :toctree:
+      
+         ArrayWeighting.array
+         ArrayWeighting.exponent
+         ArrayWeighting.impl
+         ArrayWeighting.repr_part
+   
+   

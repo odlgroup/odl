@@ -1,0 +1,6 @@
+BroadcastOperator.adjoint
+=================================================
+
+.. currentmodule:: odl.operator.pspace_ops
+
+.. autoproperty:: BroadcastOperator.adjoint

@@ -1,0 +1,45 @@
+﻿WaveletTransformBase
+=======================================
+
+.. currentmodule:: odl.trafos.wavelet
+
+.. autoclass:: WaveletTransformBase
+   :show-inheritance:
+   
+   
+   .. automethod:: __init__
+   
+      
+   
+   .. HACK -- the point here is that we don't want this to appear in the output, but the autosummary should still generate the pages.
+      .. autosummary::
+         :toctree:
+      
+         WaveletTransformBase.__call__
+         WaveletTransformBase.__eq__
+         WaveletTransformBase._call
+         WaveletTransformBase.derivative
+         WaveletTransformBase.norm
+         WaveletTransformBase.scales
+   
+
+    
+   .. HACK -- the point here is that we don't want this to appear in the output, but the autosummary should still generate the pages.
+      .. autosummary::
+         :toctree:
+      
+         WaveletTransformBase.adjoint
+         WaveletTransformBase.domain
+         WaveletTransformBase.impl
+         WaveletTransformBase.inverse
+         WaveletTransformBase.is_biorthogonal
+         WaveletTransformBase.is_functional
+         WaveletTransformBase.is_linear
+         WaveletTransformBase.is_orthogonal
+         WaveletTransformBase.nlevels
+         WaveletTransformBase.pad_const
+         WaveletTransformBase.pad_mode
+         WaveletTransformBase.range
+         WaveletTransformBase.wavelet
+   
+   

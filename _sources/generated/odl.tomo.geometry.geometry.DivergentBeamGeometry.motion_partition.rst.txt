@@ -1,0 +1,6 @@
+DivergentBeamGeometry.motion_partition
+=================================================================
+
+.. currentmodule:: odl.tomo.geometry.geometry
+
+.. autoproperty:: DivergentBeamGeometry.motion_partition

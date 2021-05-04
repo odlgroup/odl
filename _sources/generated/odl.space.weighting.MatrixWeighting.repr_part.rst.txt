@@ -1,0 +1,6 @@
+MatrixWeighting.repr_part
+=============================================
+
+.. currentmodule:: odl.space.weighting
+
+.. autoproperty:: MatrixWeighting.repr_part

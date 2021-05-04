@@ -1,0 +1,45 @@
+﻿Geometry
+===================================
+
+.. currentmodule:: odl.tomo.geometry.geometry
+
+.. autoclass:: Geometry
+   :show-inheritance:
+   
+   
+   .. automethod:: __init__
+   
+      
+   
+   .. HACK -- the point here is that we don't want this to appear in the output, but the autosummary should still generate the pages.
+      .. autosummary::
+         :toctree:
+      
+         Geometry.__eq__
+         Geometry.det_point_position
+         Geometry.det_refpoint
+         Geometry.det_to_src
+         Geometry.rotation_matrix
+   
+
+    
+   .. HACK -- the point here is that we don't want this to appear in the output, but the autosummary should still generate the pages.
+      .. autosummary::
+         :toctree:
+      
+         Geometry.check_bounds
+         Geometry.det_grid
+         Geometry.det_params
+         Geometry.det_partition
+         Geometry.detector
+         Geometry.grid
+         Geometry.implementation_cache
+         Geometry.motion_grid
+         Geometry.motion_params
+         Geometry.motion_partition
+         Geometry.ndim
+         Geometry.params
+         Geometry.partition
+         Geometry.translation
+   
+   

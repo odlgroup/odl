@@ -1,0 +1,17 @@
+example_funcs
+=============
+
+Example functionals used in optimization.
+
+.. currentmodule:: odl.solvers.functional.example_funcs
+
+
+
+.. rubric:: Classes
+
+.. autosummary::
+   :toctree: generated/
+
+   ~odl.solvers.functional.example_funcs.RosenbrockFunctional
+
+

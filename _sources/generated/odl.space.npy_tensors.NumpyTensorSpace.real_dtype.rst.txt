@@ -1,0 +1,6 @@
+NumpyTensorSpace.real_dtype
+=================================================
+
+.. currentmodule:: odl.space.npy_tensors
+
+.. autoproperty:: NumpyTensorSpace.real_dtype

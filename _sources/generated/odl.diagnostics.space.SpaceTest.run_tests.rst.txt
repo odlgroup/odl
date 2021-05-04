@@ -1,0 +1,8 @@
+:orphan:
+
+SpaceTest.run_tests
+=========================================
+
+.. currentmodule:: odl.diagnostics.space
+
+.. automethod:: SpaceTest.run_tests

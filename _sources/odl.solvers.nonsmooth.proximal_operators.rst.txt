@@ -1,0 +1,53 @@
+proximal_operators
+==================
+
+Factory functions for creating proximal operators.
+
+Functions with ``convex_conj`` mean the proximal of the convex conjugate and
+are provided for convenience.
+
+For more details see :ref:`proximal_operators` and references therein. For
+more details on proximal operators including how to evaluate the proximal
+operator of a variety of functions see [PB2014].
+
+References
+----------
+[PB2014] Parikh, N, and Boyd, S. *Proximal Algorithms*.
+Foundations and Trends in Optimization, 1 (2014), pp 127-239.
+
+
+.. currentmodule:: odl.solvers.nonsmooth.proximal_operators
+
+
+
+
+.. rubric:: Functions
+
+.. autosummary::
+   :toctree: generated/
+
+   ~odl.solvers.nonsmooth.proximal_operators.combine_proximals
+   ~odl.solvers.nonsmooth.proximal_operators.proj_l1
+   ~odl.solvers.nonsmooth.proximal_operators.proj_simplex
+   ~odl.solvers.nonsmooth.proximal_operators.proximal_arg_scaling
+   ~odl.solvers.nonsmooth.proximal_operators.proximal_box_constraint
+   ~odl.solvers.nonsmooth.proximal_operators.proximal_composition
+   ~odl.solvers.nonsmooth.proximal_operators.proximal_const_func
+   ~odl.solvers.nonsmooth.proximal_operators.proximal_convex_conj
+   ~odl.solvers.nonsmooth.proximal_operators.proximal_convex_conj_kl
+   ~odl.solvers.nonsmooth.proximal_operators.proximal_convex_conj_kl_cross_entropy
+   ~odl.solvers.nonsmooth.proximal_operators.proximal_convex_conj_l1
+   ~odl.solvers.nonsmooth.proximal_operators.proximal_convex_conj_l1_l2
+   ~odl.solvers.nonsmooth.proximal_operators.proximal_convex_conj_l2
+   ~odl.solvers.nonsmooth.proximal_operators.proximal_convex_conj_l2_squared
+   ~odl.solvers.nonsmooth.proximal_operators.proximal_convex_conj_linfty
+   ~odl.solvers.nonsmooth.proximal_operators.proximal_huber
+   ~odl.solvers.nonsmooth.proximal_operators.proximal_l1
+   ~odl.solvers.nonsmooth.proximal_operators.proximal_l1_l2
+   ~odl.solvers.nonsmooth.proximal_operators.proximal_l2
+   ~odl.solvers.nonsmooth.proximal_operators.proximal_l2_squared
+   ~odl.solvers.nonsmooth.proximal_operators.proximal_linfty
+   ~odl.solvers.nonsmooth.proximal_operators.proximal_nonnegativity
+   ~odl.solvers.nonsmooth.proximal_operators.proximal_quadratic_perturbation
+   ~odl.solvers.nonsmooth.proximal_operators.proximal_translation
+

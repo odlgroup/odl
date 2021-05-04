@@ -1,0 +1,6 @@
+﻿timer
+========================
+
+.. currentmodule:: odl.util.testutils
+
+.. autofunction:: timer

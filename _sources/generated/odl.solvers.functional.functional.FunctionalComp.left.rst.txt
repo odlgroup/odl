@@ -1,0 +1,6 @@
+FunctionalComp.left
+=====================================================
+
+.. currentmodule:: odl.solvers.functional.functional
+
+.. autoproperty:: FunctionalComp.left

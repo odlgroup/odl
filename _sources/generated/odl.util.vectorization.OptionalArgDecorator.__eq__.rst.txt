@@ -1,0 +1,8 @@
+:orphan:
+
+OptionalArgDecorator.__eq__
+==================================================
+
+.. currentmodule:: odl.util.vectorization
+
+.. automethod:: OptionalArgDecorator.__eq__

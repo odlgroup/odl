@@ -1,0 +1,21 @@
+solvers
+=======
+
+Classes and routines for numerical optimization.
+
+.. currentmodule:: odl.solvers
+
+
+.. rubric:: Modules
+
+.. toctree::
+   :maxdepth: 2
+
+   odl.solvers.functional
+   odl.solvers.iterative
+   odl.solvers.nonsmooth
+   odl.solvers.smooth
+   odl.solvers.util
+
+
+

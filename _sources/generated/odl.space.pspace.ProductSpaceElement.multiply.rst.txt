@@ -1,0 +1,8 @@
+:orphan:
+
+ProductSpaceElement.multiply
+=============================================
+
+.. currentmodule:: odl.space.pspace
+
+.. automethod:: ProductSpaceElement.multiply

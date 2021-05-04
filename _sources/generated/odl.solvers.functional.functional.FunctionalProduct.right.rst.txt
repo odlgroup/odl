@@ -1,0 +1,6 @@
+FunctionalProduct.right
+=========================================================
+
+.. currentmodule:: odl.solvers.functional.functional
+
+.. autoproperty:: FunctionalProduct.right

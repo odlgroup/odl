@@ -1,0 +1,6 @@
+NumericalDerivative.is_linear
+================================================================
+
+.. currentmodule:: odl.solvers.functional.derivatives
+
+.. autoproperty:: NumericalDerivative.is_linear

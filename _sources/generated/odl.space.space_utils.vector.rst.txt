@@ -1,0 +1,6 @@
+﻿vector
+============================
+
+.. currentmodule:: odl.space.space_utils
+
+.. autofunction:: vector

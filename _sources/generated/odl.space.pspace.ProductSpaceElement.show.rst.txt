@@ -1,0 +1,8 @@
+:orphan:
+
+ProductSpaceElement.show
+=========================================
+
+.. currentmodule:: odl.space.pspace
+
+.. automethod:: ProductSpaceElement.show

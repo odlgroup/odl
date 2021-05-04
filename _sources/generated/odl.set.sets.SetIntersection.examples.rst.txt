@@ -1,0 +1,6 @@
+SetIntersection.examples
+=====================================
+
+.. currentmodule:: odl.set.sets
+
+.. autoproperty:: SetIntersection.examples

@@ -1,0 +1,8 @@
+:orphan:
+
+Tensor.copy
+==================================
+
+.. currentmodule:: odl.space.base_tensors
+
+.. automethod:: Tensor.copy

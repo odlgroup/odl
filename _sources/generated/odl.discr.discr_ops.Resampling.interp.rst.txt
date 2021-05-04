@@ -1,0 +1,6 @@
+Resampling.interp
+=====================================
+
+.. currentmodule:: odl.discr.discr_ops
+
+.. autoproperty:: Resampling.interp

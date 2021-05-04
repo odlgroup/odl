@@ -1,0 +1,6 @@
+FunctionalRightVectorMult.gradient
+====================================================================
+
+.. currentmodule:: odl.solvers.functional.functional
+
+.. autoproperty:: FunctionalRightVectorMult.gradient

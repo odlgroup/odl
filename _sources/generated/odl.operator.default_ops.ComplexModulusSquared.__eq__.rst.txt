@@ -1,0 +1,8 @@
+:orphan:
+
+ComplexModulusSquared.__eq__
+=====================================================
+
+.. currentmodule:: odl.operator.default_ops
+
+.. automethod:: ComplexModulusSquared.__eq__

@@ -1,0 +1,499 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>odl.phantom.noise &mdash; odl 1.0.0.dev0 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/custom.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../../" src="../../../_static/documentation_options.js"></script>
+        <script src="../../../_static/jquery.js"></script>
+        <script src="../../../_static/underscore.js"></script>
+        <script src="../../../_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="../../../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../../index.html" class="icon icon-home"> odl
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                1.0.0.dev0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Getting Started</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../getting_started/getting_started.html">Getting Started</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Working with ODL</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../guide/guide.html">User’s guide – selected topics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../math/math.html">Mathematical Background</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Developer zone</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../dev/dev.html">Contributing to ODL</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Useful facts</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../guide/faq.html">Frequently asked questions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../guide/glossary.html">Glossary</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../release_notes.html">Release Notes</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../refs.html">References</a></li>
+</ul>
+<p class="caption"><span class="caption-text">API Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../odl.html">odl</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">odl</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="../../index.html">Module code</a> &raquo;</li>
+        
+      <li>odl.phantom.noise</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for odl.phantom.noise</h1><div class="highlight"><pre>
+<span></span><span class="c1"># Copyright 2014-2019 The ODL contributors</span>
+<span class="c1">#</span>
+<span class="c1"># This file is part of ODL.</span>
+<span class="c1">#</span>
+<span class="c1"># This Source Code Form is subject to the terms of the Mozilla Public License,</span>
+<span class="c1"># v. 2.0. If a copy of the MPL was not distributed with this file, You can</span>
+<span class="c1"># obtain one at https://mozilla.org/MPL/2.0/.</span>
+
+<span class="sd">&quot;&quot;&quot;Functions to create noise samples of different distributions.&quot;&quot;&quot;</span>
+
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">absolute_import</span><span class="p">,</span> <span class="n">division</span><span class="p">,</span> <span class="n">print_function</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+
+<span class="kn">from</span> <span class="nn">odl.util</span> <span class="kn">import</span> <span class="n">npy_random_seed</span>
+
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;white_noise&#39;</span><span class="p">,</span> <span class="s1">&#39;poisson_noise&#39;</span><span class="p">,</span> <span class="s1">&#39;salt_pepper_noise&#39;</span><span class="p">,</span>
+           <span class="s1">&#39;uniform_noise&#39;</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="white_noise"><a class="viewcode-back" href="../../../generated/odl.phantom.noise.white_noise.html#odl.phantom.noise.white_noise">[docs]</a><span class="k">def</span> <span class="nf">white_noise</span><span class="p">(</span><span class="n">space</span><span class="p">,</span> <span class="n">mean</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">stddev</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Standard gaussian noise in space, pointwise ``N(mean, stddev**2)``.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    space : `TensorSpace` or `ProductSpace`</span>
+<span class="sd">        The space in which the noise is created.</span>
+<span class="sd">    mean : ``space.field`` element or ``space`` `element-like`, optional</span>
+<span class="sd">        The mean of the white noise. If a scalar, it is interpreted as</span>
+<span class="sd">        ``mean * space.one()``.</span>
+<span class="sd">        If ``space`` is complex, the real and imaginary parts are interpreted</span>
+<span class="sd">        as the mean of their respective part of the noise.</span>
+<span class="sd">    stddev : `float` or ``space`` `element-like`, optional</span>
+<span class="sd">        The standard deviation of the white noise. If a scalar, it is</span>
+<span class="sd">        interpreted as ``stddev * space.one()``.</span>
+<span class="sd">    seed : int, optional</span>
+<span class="sd">        Random seed to use for generating the noise.</span>
+<span class="sd">        For ``None``, use the current seed.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    white_noise : ``space`` element</span>
+
+<span class="sd">    See Also</span>
+<span class="sd">    --------</span>
+<span class="sd">    poisson_noise</span>
+<span class="sd">    salt_pepper_noise</span>
+<span class="sd">    numpy.random.normal</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="kn">from</span> <span class="nn">odl.space</span> <span class="kn">import</span> <span class="n">ProductSpace</span>
+
+    <span class="k">with</span> <span class="n">npy_random_seed</span><span class="p">(</span><span class="n">seed</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">space</span><span class="p">,</span> <span class="n">ProductSpace</span><span class="p">):</span>
+            <span class="n">values</span> <span class="o">=</span> <span class="p">[</span><span class="n">white_noise</span><span class="p">(</span><span class="n">subspace</span><span class="p">,</span> <span class="n">mean</span><span class="p">,</span> <span class="n">stddev</span><span class="p">)</span>
+                      <span class="k">for</span> <span class="n">subspace</span> <span class="ow">in</span> <span class="n">space</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">space</span><span class="o">.</span><span class="n">is_complex</span><span class="p">:</span>
+                <span class="n">real</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">normal</span><span class="p">(</span>
+                    <span class="n">loc</span><span class="o">=</span><span class="n">mean</span><span class="o">.</span><span class="n">real</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="n">stddev</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="n">space</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+                <span class="n">imag</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">normal</span><span class="p">(</span>
+                    <span class="n">loc</span><span class="o">=</span><span class="n">mean</span><span class="o">.</span><span class="n">imag</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="n">stddev</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="n">space</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+                <span class="n">values</span> <span class="o">=</span> <span class="n">real</span> <span class="o">+</span> <span class="mi">1</span><span class="n">j</span> <span class="o">*</span> <span class="n">imag</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">values</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">normal</span><span class="p">(</span>
+                    <span class="n">loc</span><span class="o">=</span><span class="n">mean</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="n">stddev</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="n">space</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">space</span><span class="o">.</span><span class="n">element</span><span class="p">(</span><span class="n">values</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="uniform_noise"><a class="viewcode-back" href="../../../generated/odl.phantom.noise.uniform_noise.html#odl.phantom.noise.uniform_noise">[docs]</a><span class="k">def</span> <span class="nf">uniform_noise</span><span class="p">(</span><span class="n">space</span><span class="p">,</span> <span class="n">low</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">high</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Uniformly distributed noise in ``space``, pointwise ``U(low, high)``.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    space : `TensorSpace` or `ProductSpace`</span>
+<span class="sd">        The space in which the noise is created.</span>
+<span class="sd">    low : ``space.field`` element or ``space`` `element-like`, optional</span>
+<span class="sd">        The lower bound of the uniform noise. If a scalar, it is interpreted as</span>
+<span class="sd">        ``low * space.one()``.</span>
+<span class="sd">        If ``space`` is complex, the real and imaginary parts are interpreted</span>
+<span class="sd">        as their respective part of the noise.</span>
+<span class="sd">    high : ``space.field`` element or ``space`` `element-like`, optional</span>
+<span class="sd">        The upper bound of the uniform noise. If a scalar, it is interpreted as</span>
+<span class="sd">        ``high * space.one()``.</span>
+<span class="sd">        If ``space`` is complex, the real and imaginary parts are interpreted</span>
+<span class="sd">        as their respective part of the noise.</span>
+<span class="sd">    seed : int, optional</span>
+<span class="sd">        Random seed to use for generating the noise.</span>
+<span class="sd">        For ``None``, use the current seed.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    white_noise : ``space`` element</span>
+
+<span class="sd">    See Also</span>
+<span class="sd">    --------</span>
+<span class="sd">    poisson_noise</span>
+<span class="sd">    salt_pepper_noise</span>
+<span class="sd">    white_noise</span>
+<span class="sd">    numpy.random.normal</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="kn">from</span> <span class="nn">odl.space</span> <span class="kn">import</span> <span class="n">ProductSpace</span>
+
+    <span class="k">with</span> <span class="n">npy_random_seed</span><span class="p">(</span><span class="n">seed</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">space</span><span class="p">,</span> <span class="n">ProductSpace</span><span class="p">):</span>
+            <span class="n">values</span> <span class="o">=</span> <span class="p">[</span><span class="n">uniform_noise</span><span class="p">(</span><span class="n">subspace</span><span class="p">,</span> <span class="n">low</span><span class="p">,</span> <span class="n">high</span><span class="p">)</span>
+                      <span class="k">for</span> <span class="n">subspace</span> <span class="ow">in</span> <span class="n">space</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">space</span><span class="o">.</span><span class="n">is_complex</span><span class="p">:</span>
+                <span class="n">real</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="n">low</span><span class="o">=</span><span class="n">low</span><span class="o">.</span><span class="n">real</span><span class="p">,</span> <span class="n">high</span><span class="o">=</span><span class="n">high</span><span class="o">.</span><span class="n">real</span><span class="p">,</span>
+                                         <span class="n">size</span><span class="o">=</span><span class="n">space</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+                <span class="n">imag</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="n">low</span><span class="o">=</span><span class="n">low</span><span class="o">.</span><span class="n">imag</span><span class="p">,</span> <span class="n">high</span><span class="o">=</span><span class="n">high</span><span class="o">.</span><span class="n">imag</span><span class="p">,</span>
+                                         <span class="n">size</span><span class="o">=</span><span class="n">space</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+                <span class="n">values</span> <span class="o">=</span> <span class="n">real</span> <span class="o">+</span> <span class="mi">1</span><span class="n">j</span> <span class="o">*</span> <span class="n">imag</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">values</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="n">low</span><span class="o">=</span><span class="n">low</span><span class="p">,</span> <span class="n">high</span><span class="o">=</span><span class="n">high</span><span class="p">,</span>
+                                           <span class="n">size</span><span class="o">=</span><span class="n">space</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">space</span><span class="o">.</span><span class="n">element</span><span class="p">(</span><span class="n">values</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="poisson_noise"><a class="viewcode-back" href="../../../generated/odl.phantom.noise.poisson_noise.html#odl.phantom.noise.poisson_noise">[docs]</a><span class="k">def</span> <span class="nf">poisson_noise</span><span class="p">(</span><span class="n">intensity</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="sa">r</span><span class="sd">&quot;&quot;&quot;Poisson distributed noise with given intensity.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    intensity : `TensorSpace` or `ProductSpace` element</span>
+<span class="sd">        The intensity (usually called lambda) parameter of the noise.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    poisson_noise : ``intensity.space`` element</span>
+<span class="sd">        Poisson distributed random variable.</span>
+<span class="sd">    seed : int, optional</span>
+<span class="sd">        Random seed to use for generating the noise.</span>
+<span class="sd">        For ``None``, use the current seed.</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    For a Poisson distributed random variable :math:`X` with intensity</span>
+<span class="sd">    :math:`\lambda`, the probability of it taking the value</span>
+<span class="sd">    :math:`k \in \mathbb{N}_0` is given by</span>
+
+<span class="sd">    .. math::</span>
+<span class="sd">        \frac{\lambda^k e^{-\lambda}}{k!}</span>
+
+<span class="sd">    Note that the function only takes integer values.</span>
+
+<span class="sd">    See Also</span>
+<span class="sd">    --------</span>
+<span class="sd">    white_noise</span>
+<span class="sd">    salt_pepper_noise</span>
+<span class="sd">    uniform_noise</span>
+<span class="sd">    numpy.random.poisson</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="kn">from</span> <span class="nn">odl.space</span> <span class="kn">import</span> <span class="n">ProductSpace</span>
+
+    <span class="k">with</span> <span class="n">npy_random_seed</span><span class="p">(</span><span class="n">seed</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">intensity</span><span class="o">.</span><span class="n">space</span><span class="p">,</span> <span class="n">ProductSpace</span><span class="p">):</span>
+            <span class="n">values</span> <span class="o">=</span> <span class="p">[</span><span class="n">poisson_noise</span><span class="p">(</span><span class="n">subintensity</span><span class="p">)</span>
+                      <span class="k">for</span> <span class="n">subintensity</span> <span class="ow">in</span> <span class="n">intensity</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">values</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">poisson</span><span class="p">(</span><span class="n">intensity</span><span class="o">.</span><span class="n">asarray</span><span class="p">())</span>
+
+    <span class="k">return</span> <span class="n">intensity</span><span class="o">.</span><span class="n">space</span><span class="o">.</span><span class="n">element</span><span class="p">(</span><span class="n">values</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="salt_pepper_noise"><a class="viewcode-back" href="../../../generated/odl.phantom.noise.salt_pepper_noise.html#odl.phantom.noise.salt_pepper_noise">[docs]</a><span class="k">def</span> <span class="nf">salt_pepper_noise</span><span class="p">(</span><span class="n">vector</span><span class="p">,</span> <span class="n">fraction</span><span class="o">=</span><span class="mf">0.05</span><span class="p">,</span> <span class="n">salt_vs_pepper</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span>
+                      <span class="n">low_val</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">high_val</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Add salt and pepper noise to vector.</span>
+
+<span class="sd">    Salt and pepper noise replaces random elements in ``vector`` with</span>
+<span class="sd">    ``low_val`` or ``high_val``.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    vector : element of `TensorSpace` or `ProductSpace`</span>
+<span class="sd">        The vector that noise should be added to.</span>
+<span class="sd">    fraction : float, optional</span>
+<span class="sd">        The propotion of the elements in ``vector`` that should be converted</span>
+<span class="sd">        to noise.</span>
+<span class="sd">    salt_vs_pepper : float, optional</span>
+<span class="sd">        Relative abundance of salt (high) vs pepper (low) noise. A high value</span>
+<span class="sd">        means more salt than pepper noise.</span>
+<span class="sd">    low_val : float, optional</span>
+<span class="sd">        The &quot;pepper&quot; color in the noise.</span>
+<span class="sd">        Default: minimum value of ``vector``. For product spaces the minimum</span>
+<span class="sd">        value per subspace is taken.</span>
+<span class="sd">    high_val : float, optional</span>
+<span class="sd">        The &quot;salt&quot; value in the noise.</span>
+<span class="sd">        Default: maximuim value of ``vector``. For product spaces the maximum</span>
+<span class="sd">        value per subspace is taken.</span>
+<span class="sd">    seed : int, optional</span>
+<span class="sd">        Random seed to use for generating the noise.</span>
+<span class="sd">        For ``None``, use the current seed.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    salt_pepper_noise : ``vector.space`` element</span>
+<span class="sd">        ``vector`` with salt and pepper noise.</span>
+
+<span class="sd">    See Also</span>
+<span class="sd">    --------</span>
+<span class="sd">    white_noise</span>
+<span class="sd">    poisson_noise</span>
+<span class="sd">    uniform_noise</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="kn">from</span> <span class="nn">odl.space</span> <span class="kn">import</span> <span class="n">ProductSpace</span>
+
+    <span class="c1"># Validate input parameters</span>
+    <span class="n">fraction</span><span class="p">,</span> <span class="n">fraction_in</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">fraction</span><span class="p">),</span> <span class="n">fraction</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="mi">0</span> <span class="o">&lt;=</span> <span class="n">fraction</span> <span class="o">&lt;=</span> <span class="mi">1</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;`fraction` (</span><span class="si">{}</span><span class="s1">) should be a float in the interval &#39;</span>
+                         <span class="s1">&#39;[0, 1]&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">fraction_in</span><span class="p">))</span>
+
+    <span class="n">salt_vs_pepper</span><span class="p">,</span> <span class="n">salt_vs_pepper_in</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">salt_vs_pepper</span><span class="p">),</span> <span class="n">salt_vs_pepper</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="mi">0</span> <span class="o">&lt;=</span> <span class="n">salt_vs_pepper</span> <span class="o">&lt;=</span> <span class="mi">1</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;`salt_vs_pepper` (</span><span class="si">{}</span><span class="s1">) should be a float in the &#39;</span>
+                         <span class="s1">&#39;interval [0, 1]&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">salt_vs_pepper_in</span><span class="p">))</span>
+
+    <span class="k">with</span> <span class="n">npy_random_seed</span><span class="p">(</span><span class="n">seed</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">vector</span><span class="o">.</span><span class="n">space</span><span class="p">,</span> <span class="n">ProductSpace</span><span class="p">):</span>
+            <span class="n">values</span> <span class="o">=</span> <span class="p">[</span><span class="n">salt_pepper_noise</span><span class="p">(</span><span class="n">subintensity</span><span class="p">,</span> <span class="n">fraction</span><span class="p">,</span> <span class="n">salt_vs_pepper</span><span class="p">,</span>
+                                        <span class="n">low_val</span><span class="p">,</span> <span class="n">high_val</span><span class="p">)</span>
+                      <span class="k">for</span> <span class="n">subintensity</span> <span class="ow">in</span> <span class="n">vector</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># Extract vector of values</span>
+            <span class="n">values</span> <span class="o">=</span> <span class="n">vector</span><span class="o">.</span><span class="n">asarray</span><span class="p">()</span><span class="o">.</span><span class="n">flatten</span><span class="p">()</span>
+
+            <span class="c1"># Determine fill-in values if not given</span>
+            <span class="k">if</span> <span class="n">low_val</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">low_val</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">values</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">high_val</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">high_val</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">values</span><span class="p">)</span>
+
+            <span class="c1"># Create randomly selected points as a subset of image.</span>
+            <span class="n">a</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">vector</span><span class="o">.</span><span class="n">size</span><span class="p">)</span>
+            <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">shuffle</span><span class="p">(</span><span class="n">a</span><span class="p">)</span>
+            <span class="n">salt_indices</span> <span class="o">=</span> <span class="n">a</span><span class="p">[:</span><span class="nb">int</span><span class="p">(</span><span class="n">fraction</span> <span class="o">*</span> <span class="n">vector</span><span class="o">.</span><span class="n">size</span> <span class="o">*</span> <span class="n">salt_vs_pepper</span><span class="p">)]</span>
+            <span class="n">pepper_indices</span> <span class="o">=</span> <span class="n">a</span><span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="n">fraction</span> <span class="o">*</span> <span class="n">vector</span><span class="o">.</span><span class="n">size</span> <span class="o">*</span> <span class="n">salt_vs_pepper</span><span class="p">):</span>
+                               <span class="nb">int</span><span class="p">(</span><span class="n">fraction</span> <span class="o">*</span> <span class="n">vector</span><span class="o">.</span><span class="n">size</span><span class="p">)]</span>
+
+            <span class="n">values</span><span class="p">[</span><span class="n">salt_indices</span><span class="p">]</span> <span class="o">=</span> <span class="n">high_val</span>
+            <span class="n">values</span><span class="p">[</span><span class="n">pepper_indices</span><span class="p">]</span> <span class="o">=</span> <span class="o">-</span><span class="n">low_val</span>
+            <span class="n">values</span> <span class="o">=</span> <span class="n">values</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">vector</span><span class="o">.</span><span class="n">space</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">vector</span><span class="o">.</span><span class="n">space</span><span class="o">.</span><span class="n">element</span><span class="p">(</span><span class="n">values</span><span class="p">)</span></div>
+
+
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s1">&#39;__main__&#39;</span><span class="p">:</span>
+    <span class="c1"># Show the phantoms</span>
+    <span class="kn">import</span> <span class="nn">odl</span>
+    <span class="kn">from</span> <span class="nn">odl.util.testutils</span> <span class="kn">import</span> <span class="n">run_doctests</span>
+
+    <span class="n">r100</span> <span class="o">=</span> <span class="n">odl</span><span class="o">.</span><span class="n">rn</span><span class="p">(</span><span class="mi">100</span><span class="p">)</span>
+    <span class="n">white_noise</span><span class="p">(</span><span class="n">r100</span><span class="p">)</span><span class="o">.</span><span class="n">show</span><span class="p">(</span><span class="s1">&#39;white_noise&#39;</span><span class="p">)</span>
+    <span class="n">uniform_noise</span><span class="p">(</span><span class="n">r100</span><span class="p">)</span><span class="o">.</span><span class="n">show</span><span class="p">(</span><span class="s1">&#39;uniform_noise&#39;</span><span class="p">)</span>
+    <span class="n">white_noise</span><span class="p">(</span><span class="n">r100</span><span class="p">,</span> <span class="n">mean</span><span class="o">=</span><span class="mi">5</span><span class="p">)</span><span class="o">.</span><span class="n">show</span><span class="p">(</span><span class="s1">&#39;white_noise with mean&#39;</span><span class="p">)</span>
+
+    <span class="n">c100</span> <span class="o">=</span> <span class="n">odl</span><span class="o">.</span><span class="n">cn</span><span class="p">(</span><span class="mi">100</span><span class="p">)</span>
+    <span class="n">white_noise</span><span class="p">(</span><span class="n">c100</span><span class="p">)</span><span class="o">.</span><span class="n">show</span><span class="p">(</span><span class="s1">&#39;complex white_noise&#39;</span><span class="p">)</span>
+    <span class="n">uniform_noise</span><span class="p">(</span><span class="n">c100</span><span class="p">)</span><span class="o">.</span><span class="n">show</span><span class="p">(</span><span class="s1">&#39;complex uniform_noise&#39;</span><span class="p">)</span>
+
+    <span class="n">discr</span> <span class="o">=</span> <span class="n">odl</span><span class="o">.</span><span class="n">uniform_discr</span><span class="p">([</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span> <span class="p">[</span><span class="mi">300</span><span class="p">,</span> <span class="mi">300</span><span class="p">])</span>
+    <span class="n">white_noise</span><span class="p">(</span><span class="n">discr</span><span class="p">)</span><span class="o">.</span><span class="n">show</span><span class="p">(</span><span class="s1">&#39;white_noise 2d&#39;</span><span class="p">)</span>
+    <span class="n">uniform_noise</span><span class="p">(</span><span class="n">discr</span><span class="p">)</span><span class="o">.</span><span class="n">show</span><span class="p">(</span><span class="s1">&#39;uniform_noise 2d&#39;</span><span class="p">)</span>
+
+    <span class="n">vector</span> <span class="o">=</span> <span class="n">odl</span><span class="o">.</span><span class="n">phantom</span><span class="o">.</span><span class="n">shepp_logan</span><span class="p">(</span><span class="n">discr</span><span class="p">,</span> <span class="n">modified</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">poisson_noise</span><span class="p">(</span><span class="n">vector</span> <span class="o">*</span> <span class="mi">100</span><span class="p">)</span><span class="o">.</span><span class="n">show</span><span class="p">(</span><span class="s1">&#39;poisson_noise 2d&#39;</span><span class="p">)</span>
+    <span class="n">salt_pepper_noise</span><span class="p">(</span><span class="n">vector</span><span class="p">)</span><span class="o">.</span><span class="n">show</span><span class="p">(</span><span class="s1">&#39;salt_pepper_noise 2d&#39;</span><span class="p">)</span>
+
+    <span class="c1"># Run also the doctests</span>
+    <span class="n">run_doctests</span><span class="p">()</span>
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &#169; Copyright 2014-2020 The ODL Contributors.
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

@@ -1,0 +1,8 @@
+:orphan:
+
+FlatteningOperator.derivative
+=====================================================
+
+.. currentmodule:: odl.operator.tensor_ops
+
+.. automethod:: FlatteningOperator.derivative

@@ -1,0 +1,6 @@
+﻿submarine
+===================================
+
+.. currentmodule:: odl.phantom.misc_phantoms
+
+.. autofunction:: submarine

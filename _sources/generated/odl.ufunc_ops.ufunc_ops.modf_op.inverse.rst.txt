@@ -1,0 +1,6 @@
+modf_op.inverse
+=======================================
+
+.. currentmodule:: odl.ufunc_ops.ufunc_ops
+
+.. autoproperty:: modf_op.inverse

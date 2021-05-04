@@ -1,0 +1,8 @@
+:orphan:
+
+FunctionalLeftVectorMult.norm
+===================================================
+
+.. currentmodule:: odl.operator.operator
+
+.. automethod:: FunctionalLeftVectorMult.norm

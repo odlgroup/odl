@@ -1,0 +1,6 @@
+log_func.inverse
+========================================
+
+.. currentmodule:: odl.ufunc_ops.ufunc_ops
+
+.. autoproperty:: log_func.inverse

@@ -1,0 +1,6 @@
+KullbackLeiblerCrossEntropyConvexConj.gradient
+=========================================================================================
+
+.. currentmodule:: odl.solvers.functional.default_functionals
+
+.. autoproperty:: KullbackLeiblerCrossEntropyConvexConj.gradient

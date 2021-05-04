@@ -1,0 +1,58 @@
+﻿RectPartition
+=================================
+
+.. currentmodule:: odl.discr.partition
+
+.. autoclass:: RectPartition
+   :show-inheritance:
+   
+   
+   .. automethod:: __init__
+   
+      
+   
+   .. HACK -- the point here is that we don't want this to appear in the output, but the autosummary should still generate the pages.
+      .. autosummary::
+         :toctree:
+      
+         RectPartition.__eq__
+         RectPartition.__getitem__
+         RectPartition.append
+         RectPartition.approx_equals
+         RectPartition.index
+         RectPartition.insert
+         RectPartition.max
+         RectPartition.min
+         RectPartition.points
+         RectPartition.squeeze
+   
+
+    
+   .. HACK -- the point here is that we don't want this to appear in the output, but the autosummary should still generate the pages.
+      .. autosummary::
+         :toctree:
+      
+         RectPartition.boundary_cell_fractions
+         RectPartition.byaxis
+         RectPartition.cell_boundary_vecs
+         RectPartition.cell_sides
+         RectPartition.cell_sizes_vecs
+         RectPartition.cell_volume
+         RectPartition.coord_vectors
+         RectPartition.extent
+         RectPartition.grid
+         RectPartition.has_isotropic_cells
+         RectPartition.is_uniform
+         RectPartition.is_uniform_byaxis
+         RectPartition.max_pt
+         RectPartition.meshgrid
+         RectPartition.mid_pt
+         RectPartition.min_pt
+         RectPartition.ndim
+         RectPartition.nodes_on_bdry
+         RectPartition.nodes_on_bdry_byaxis
+         RectPartition.set
+         RectPartition.shape
+         RectPartition.size
+   
+   

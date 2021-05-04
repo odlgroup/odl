@@ -1,0 +1,6 @@
+DiscretizedSpace.meshgrid
+===============================================
+
+.. currentmodule:: odl.discr.discr_space
+
+.. autoproperty:: DiscretizedSpace.meshgrid

@@ -1,0 +1,6 @@
+NumpyTensorSpaceCustomInner.inner
+=======================================================
+
+.. currentmodule:: odl.space.npy_tensors
+
+.. autoproperty:: NumpyTensorSpaceCustomInner.inner

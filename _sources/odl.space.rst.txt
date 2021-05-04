@@ -1,0 +1,22 @@
+space
+=====
+
+Basic vector spaces and utilities.
+
+.. currentmodule:: odl.space
+
+
+.. rubric:: Modules
+
+.. toctree::
+   :maxdepth: 2
+
+   odl.space.base_tensors
+   odl.space.entry_points
+   odl.space.npy_tensors
+   odl.space.pspace
+   odl.space.space_utils
+   odl.space.weighting
+
+
+

@@ -1,0 +1,6 @@
+﻿tensor_space_impl
+========================================
+
+.. currentmodule:: odl.space.entry_points
+
+.. autofunction:: tensor_space_impl

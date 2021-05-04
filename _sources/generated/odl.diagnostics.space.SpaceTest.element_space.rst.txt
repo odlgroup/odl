@@ -1,0 +1,8 @@
+:orphan:
+
+SpaceTest.element_space
+=============================================
+
+.. currentmodule:: odl.diagnostics.space
+
+.. automethod:: SpaceTest.element_space

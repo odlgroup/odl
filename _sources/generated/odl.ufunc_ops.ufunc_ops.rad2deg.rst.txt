@@ -1,0 +1,6 @@
+﻿rad2deg
+===============================
+
+.. currentmodule:: odl.ufunc_ops.ufunc_ops
+
+.. autofunction:: rad2deg

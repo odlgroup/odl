@@ -1,0 +1,387 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>resize_array &mdash; odl 1.0.0.dev0 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="zscore" href="odl.util.numerics.zscore.html" />
+    <link rel="prev" title="fast_1d_tensor_mult" href="odl.util.numerics.fast_1d_tensor_mult.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../index.html" class="icon icon-home"> odl
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                1.0.0.dev0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Getting Started</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../getting_started/getting_started.html">Getting Started</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Working with ODL</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../guide/guide.html">User’s guide – selected topics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../math/math.html">Mathematical Background</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Developer zone</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../dev/dev.html">Contributing to ODL</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Useful facts</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../guide/faq.html">Frequently asked questions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../guide/glossary.html">Glossary</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../release_notes.html">Release Notes</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../refs.html">References</a></li>
+</ul>
+<p class="caption"><span class="caption-text">API Reference</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../odl.html">odl</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../odl.contrib.html">contrib</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../odl.deform.html">deform</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../odl.diagnostics.html">diagnostics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../odl.discr.html">discr</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../odl.operator.html">operator</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../odl.phantom.html">phantom</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../odl.set.html">set</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../odl.solvers.html">solvers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../odl.space.html">space</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../odl.tomo.html">tomo</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../odl.trafos.html">trafos</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../odl.ufunc_ops.html">ufunc_ops</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="../odl.util.html">util</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="../odl.util.graphics.html">graphics</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../odl.util.normalize.html">normalize</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../odl.util.npy_compat.html">npy_compat</a></li>
+<li class="toctree-l3 current"><a class="reference internal" href="../odl.util.numerics.html">numerics</a><ul class="current">
+<li class="toctree-l4"><a class="reference internal" href="odl.util.numerics.apply_on_boundary.html">apply_on_boundary</a></li>
+<li class="toctree-l4"><a class="reference internal" href="odl.util.numerics.binning.html">binning</a></li>
+<li class="toctree-l4"><a class="reference internal" href="odl.util.numerics.fast_1d_tensor_mult.html">fast_1d_tensor_mult</a></li>
+<li class="toctree-l4 current"><a class="current reference internal" href="#">resize_array</a></li>
+<li class="toctree-l4"><a class="reference internal" href="odl.util.numerics.zscore.html">zscore</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../odl.util.testutils.html">testutils</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../odl.util.ufuncs.html">ufuncs</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../odl.util.utility.html">utility</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../odl.util.vectorization.html">vectorization</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">odl</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="../odl.html">odl</a> &raquo;</li>
+        
+          <li><a href="../odl.util.html">util</a> &raquo;</li>
+        
+          <li><a href="../odl.util.numerics.html">numerics</a> &raquo;</li>
+        
+      <li>resize_array</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            <a href="../_sources/generated/odl.util.numerics.resize_array.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="resize-array">
+<h1>resize_array<a class="headerlink" href="#resize-array" title="Permalink to this headline">¶</a></h1>
+<dl class="py function">
+<dt id="odl.util.numerics.resize_array">
+<code class="sig-prename descclassname"><span class="pre">odl.util.numerics.</span></code><code class="sig-name descname"><span class="pre">resize_array</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">arr</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">newshp</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">offset</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pad_mode</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'constant'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pad_const</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">direction</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'forward'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">out</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/odl/util/numerics.html#resize_array"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#odl.util.numerics.resize_array" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the resized version of <code class="docutils literal notranslate"><span class="pre">arr</span></code> with shape <code class="docutils literal notranslate"><span class="pre">newshp</span></code>.</p>
+<p>In axes where <code class="docutils literal notranslate"><span class="pre">newshp</span> <span class="pre">&gt;</span> <span class="pre">arr.shape</span></code>, padding is applied according
+to the supplied options.
+Where <code class="docutils literal notranslate"><span class="pre">newshp</span> <span class="pre">&lt;</span> <span class="pre">arr.shape</span></code>, the array is cropped to the new
+size.</p>
+<p>See <a class="reference external" href="https://odlgroup.github.io/odl/math/resizing_ops.html">the online documentation</a>
+on resizing operators for mathematical details.</p>
+<dl class="field-list">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl>
+<dt><strong>arr</strong><span class="classifier"><a class="reference internal" href="../guide/glossary.html#term-array-like"><code class="xref any std std-term docutils literal notranslate"><span class="pre">array-like</span></code></a></span></dt><dd><p>Array to be resized.</p>
+</dd>
+<dt><strong>newshp</strong><span class="classifier">sequence of ints</span></dt><dd><p>Desired shape of the output array.</p>
+</dd>
+<dt><strong>offset</strong><span class="classifier">sequence of ints, optional</span></dt><dd><p>Specifies how many entries are added to/removed from the “left”
+side (corresponding to low indices) of <code class="docutils literal notranslate"><span class="pre">arr</span></code>.</p>
+</dd>
+<dt><strong>pad_mode</strong><span class="classifier">string, optional</span></dt><dd><p>Method to be used to fill in missing values in an enlarged array.</p>
+<p><code class="docutils literal notranslate"><span class="pre">'constant'</span></code>: Fill with <code class="docutils literal notranslate"><span class="pre">pad_const</span></code>.</p>
+<p><code class="docutils literal notranslate"><span class="pre">'symmetric'</span></code>: Reflect at the boundaries, not doubling the
+outmost values. This requires left and right padding sizes
+to be strictly smaller than the original array shape.</p>
+<p><code class="docutils literal notranslate"><span class="pre">'periodic'</span></code>: Fill in values from the other side, keeping
+the order. This requires left and right padding sizes to be
+at most as large as the original array shape.</p>
+<p><code class="docutils literal notranslate"><span class="pre">'order0'</span></code>: Extend constantly with the outmost values
+(ensures continuity).</p>
+<p><code class="docutils literal notranslate"><span class="pre">'order1'</span></code>: Extend with constant slope (ensures continuity of
+the first derivative). This requires at least 2 values along
+each axis where padding is applied.</p>
+</dd>
+<dt><strong>pad_const</strong><span class="classifier">scalar, optional</span></dt><dd><p>Value to be used in the <code class="docutils literal notranslate"><span class="pre">'constant'</span></code> padding mode.</p>
+</dd>
+<dt><strong>direction</strong><span class="classifier">{‘forward’, ‘adjoint’}</span></dt><dd><p>Determines which variant of the resizing is applied.</p>
+<p>‘forward’ : in axes where <code class="docutils literal notranslate"><span class="pre">out</span></code> is larger than <code class="docutils literal notranslate"><span class="pre">arr</span></code>,
+apply padding. Otherwise, restrict to the smaller size.</p>
+<p>‘adjoint’ : in axes where <code class="docutils literal notranslate"><span class="pre">out</span></code> is larger than <code class="docutils literal notranslate"><span class="pre">arr</span></code>,
+apply zero-padding. Otherwise, restrict to the smaller size
+and add the outside contributions according to <code class="docutils literal notranslate"><span class="pre">pad_mode</span></code>.</p>
+</dd>
+<dt><strong>out</strong><span class="classifier"><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.20)"><code class="xref any docutils literal notranslate"><span class="pre">numpy.ndarray</span></code></a>, optional</span></dt><dd><p>Array to write the result to. Must have shape <code class="docutils literal notranslate"><span class="pre">newshp</span></code> and
+be able to hold the data type of the input array.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><dl>
+<dt><strong>resized</strong><span class="classifier"><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.20)"><code class="xref any docutils literal notranslate"><span class="pre">numpy.ndarray</span></code></a></span></dt><dd><p>Resized array created according to the above rules. If <code class="docutils literal notranslate"><span class="pre">out</span></code>
+was given, the returned object is a reference to it.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+<p class="rubric">Examples</p>
+<p>The input can be shrunk by simply providing a smaller size.
+By default, values are removed from the right. When enlarging,
+zero-padding is applied by default, and the zeros are added to
+the right side. That behavior can be changed with the <code class="docutils literal notranslate"><span class="pre">offset</span></code>
+parameter:</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">odl.util.numerics</span> <span class="kn">import</span> <span class="n">resize_array</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">resize_array</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">],</span> <span class="p">(</span><span class="mi">1</span><span class="p">,))</span>
+<span class="go">array([1])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">resize_array</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">],</span> <span class="p">(</span><span class="mi">1</span><span class="p">,),</span> <span class="n">offset</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+<span class="go">array([3])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">resize_array</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">],</span> <span class="p">(</span><span class="mi">6</span><span class="p">,))</span>
+<span class="go">array([1, 2, 3, 0, 0, 0])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">resize_array</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">],</span> <span class="p">(</span><span class="mi">7</span><span class="p">,),</span> <span class="n">offset</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+<span class="go">array([0, 0, 1, 2, 3, 0, 0])</span>
+</pre></div>
+</div>
+<p>The padding constant can be changed, as well as the padding
+mode:</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">resize_array</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">],</span> <span class="p">(</span><span class="mi">7</span><span class="p">,),</span> <span class="n">pad_const</span><span class="o">=-</span><span class="mi">1</span><span class="p">,</span> <span class="n">offset</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+<span class="go">array([-1, -1,  1,  2,  3, -1, -1])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">resize_array</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">],</span> <span class="p">(</span><span class="mi">7</span><span class="p">,),</span> <span class="n">pad_mode</span><span class="o">=</span><span class="s1">&#39;periodic&#39;</span><span class="p">,</span> <span class="n">offset</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+<span class="go">array([2, 3, 1, 2, 3, 1, 2])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">resize_array</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">],</span> <span class="p">(</span><span class="mi">7</span><span class="p">,),</span> <span class="n">pad_mode</span><span class="o">=</span><span class="s1">&#39;symmetric&#39;</span><span class="p">,</span> <span class="n">offset</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+<span class="go">array([3, 2, 1, 2, 3, 2, 1])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">resize_array</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">],</span> <span class="p">(</span><span class="mi">7</span><span class="p">,),</span> <span class="n">pad_mode</span><span class="o">=</span><span class="s1">&#39;order0&#39;</span><span class="p">,</span> <span class="n">offset</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+<span class="go">array([1, 1, 1, 2, 3, 3, 3])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">resize_array</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">],</span> <span class="p">(</span><span class="mi">7</span><span class="p">,),</span> <span class="n">pad_mode</span><span class="o">=</span><span class="s1">&#39;order1&#39;</span><span class="p">,</span> <span class="n">offset</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+<span class="go">array([-1,  0,  1,  2,  3,  4,  5])</span>
+</pre></div>
+</div>
+<p>Everything works for arbitrary number of dimensions:</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="c1"># Take the middle two columns and extend rows symmetrically</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">resize_array</span><span class="p">([[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">],</span>
+<span class="gp">... </span>              <span class="p">[</span><span class="mi">5</span><span class="p">,</span> <span class="mi">6</span><span class="p">,</span> <span class="mi">7</span><span class="p">,</span> <span class="mi">8</span><span class="p">],</span>
+<span class="gp">... </span>              <span class="p">[</span><span class="mi">9</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="mi">11</span><span class="p">,</span> <span class="mi">12</span><span class="p">]],</span>
+<span class="gp">... </span>              <span class="p">(</span><span class="mi">5</span><span class="p">,</span> <span class="mi">2</span><span class="p">),</span> <span class="n">pad_mode</span><span class="o">=</span><span class="s1">&#39;symmetric&#39;</span><span class="p">,</span> <span class="n">offset</span><span class="o">=</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">])</span>
+<span class="go">array([[ 6,  7],</span>
+<span class="go">       [ 2,  3],</span>
+<span class="go">       [ 6,  7],</span>
+<span class="go">       [10, 11],</span>
+<span class="go">       [ 6,  7]])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># Take the rightmost two columns and extend rows symmetrically</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># downwards</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">resize_array</span><span class="p">([[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">],</span>
+<span class="gp">... </span>              <span class="p">[</span><span class="mi">5</span><span class="p">,</span> <span class="mi">6</span><span class="p">,</span> <span class="mi">7</span><span class="p">,</span> <span class="mi">8</span><span class="p">],</span>
+<span class="gp">... </span>              <span class="p">[</span><span class="mi">9</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="mi">11</span><span class="p">,</span> <span class="mi">12</span><span class="p">]],</span> <span class="p">(</span><span class="mi">5</span><span class="p">,</span> <span class="mi">2</span><span class="p">),</span> <span class="n">pad_mode</span><span class="o">=</span><span class="s1">&#39;symmetric&#39;</span><span class="p">,</span>
+<span class="gp">... </span>             <span class="n">offset</span><span class="o">=</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">2</span><span class="p">])</span>
+<span class="go">array([[ 3,  4],</span>
+<span class="go">       [ 7,  8],</span>
+<span class="go">       [11, 12],</span>
+<span class="go">       [ 7,  8],</span>
+<span class="go">       [ 3,  4]])</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+        <a href="odl.util.numerics.zscore.html" class="btn btn-neutral float-right" title="zscore" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="odl.util.numerics.fast_1d_tensor_mult.html" class="btn btn-neutral float-left" title="fast_1d_tensor_mult" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &#169; Copyright 2014-2020 The ODL Contributors.
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

@@ -1,0 +1,8 @@
+:orphan:
+
+TensorSpaceUfuncs.bitwise_or
+============================================
+
+.. currentmodule:: odl.util.ufuncs
+
+.. automethod:: TensorSpaceUfuncs.bitwise_or

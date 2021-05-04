@@ -1,0 +1,6 @@
+BregmanDistance.proximal
+==========================================================
+
+.. currentmodule:: odl.solvers.functional.functional
+
+.. autoproperty:: BregmanDistance.proximal

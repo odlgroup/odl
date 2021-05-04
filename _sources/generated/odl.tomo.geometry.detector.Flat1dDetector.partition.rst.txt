@@ -1,0 +1,6 @@
+Flat1dDetector.partition
+===================================================
+
+.. currentmodule:: odl.tomo.geometry.detector
+
+.. autoproperty:: Flat1dDetector.partition

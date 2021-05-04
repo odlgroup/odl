@@ -1,0 +1,8 @@
+:orphan:
+
+IntervalProd.max
+===============================
+
+.. currentmodule:: odl.set.domain
+
+.. automethod:: IntervalProd.max

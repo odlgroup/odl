@@ -1,0 +1,6 @@
+FourierTransformInverse.is_functional
+========================================================
+
+.. currentmodule:: odl.trafos.fourier
+
+.. autoproperty:: FourierTransformInverse.is_functional

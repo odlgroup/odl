@@ -1,0 +1,8 @@
+:orphan:
+
+exp_func.__call__
+=========================================
+
+.. currentmodule:: odl.ufunc_ops.ufunc_ops
+
+.. automethod:: exp_func.__call__

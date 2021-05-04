@@ -1,0 +1,8 @@
+:orphan:
+
+ReductionOperator.__getitem__
+=====================================================
+
+.. currentmodule:: odl.operator.pspace_ops
+
+.. automethod:: ReductionOperator.__getitem__

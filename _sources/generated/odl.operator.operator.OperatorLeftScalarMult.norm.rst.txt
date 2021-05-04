@@ -1,0 +1,8 @@
+:orphan:
+
+OperatorLeftScalarMult.norm
+=================================================
+
+.. currentmodule:: odl.operator.operator
+
+.. automethod:: OperatorLeftScalarMult.norm

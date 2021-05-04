@@ -1,0 +1,8 @@
+:orphan:
+
+ConeBeamGeometry.src_position
+========================================================
+
+.. currentmodule:: odl.tomo.geometry.conebeam
+
+.. automethod:: ConeBeamGeometry.src_position

@@ -1,0 +1,8 @@
+:orphan:
+
+vectorize.__call__
+=========================================
+
+.. currentmodule:: odl.util.vectorization
+
+.. automethod:: vectorize.__call__

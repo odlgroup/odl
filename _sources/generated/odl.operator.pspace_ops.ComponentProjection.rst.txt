@@ -1,0 +1,38 @@
+﻿ComponentProjection
+===========================================
+
+.. currentmodule:: odl.operator.pspace_ops
+
+.. autoclass:: ComponentProjection
+   :show-inheritance:
+   
+   
+   .. automethod:: __init__
+   
+      
+   
+   .. HACK -- the point here is that we don't want this to appear in the output, but the autosummary should still generate the pages.
+      .. autosummary::
+         :toctree:
+      
+         ComponentProjection.__call__
+         ComponentProjection.__eq__
+         ComponentProjection._call
+         ComponentProjection.derivative
+         ComponentProjection.norm
+   
+
+    
+   .. HACK -- the point here is that we don't want this to appear in the output, but the autosummary should still generate the pages.
+      .. autosummary::
+         :toctree:
+      
+         ComponentProjection.adjoint
+         ComponentProjection.domain
+         ComponentProjection.index
+         ComponentProjection.inverse
+         ComponentProjection.is_functional
+         ComponentProjection.is_linear
+         ComponentProjection.range
+   
+   

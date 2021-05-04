@@ -1,0 +1,8 @@
+:orphan:
+
+FunctionalRightVectorMult.bregman
+===================================================================
+
+.. currentmodule:: odl.solvers.functional.functional
+
+.. automethod:: FunctionalRightVectorMult.bregman

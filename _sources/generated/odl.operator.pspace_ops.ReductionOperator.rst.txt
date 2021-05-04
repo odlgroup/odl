@@ -1,0 +1,41 @@
+﻿ReductionOperator
+=========================================
+
+.. currentmodule:: odl.operator.pspace_ops
+
+.. autoclass:: ReductionOperator
+   :show-inheritance:
+   
+   
+   .. automethod:: __init__
+   
+      
+   
+   .. HACK -- the point here is that we don't want this to appear in the output, but the autosummary should still generate the pages.
+      .. autosummary::
+         :toctree:
+      
+         ReductionOperator.__call__
+         ReductionOperator.__eq__
+         ReductionOperator.__getitem__
+         ReductionOperator._call
+         ReductionOperator.derivative
+         ReductionOperator.norm
+   
+
+    
+   .. HACK -- the point here is that we don't want this to appear in the output, but the autosummary should still generate the pages.
+      .. autosummary::
+         :toctree:
+      
+         ReductionOperator.adjoint
+         ReductionOperator.domain
+         ReductionOperator.inverse
+         ReductionOperator.is_functional
+         ReductionOperator.is_linear
+         ReductionOperator.operators
+         ReductionOperator.prod_op
+         ReductionOperator.range
+         ReductionOperator.size
+   
+   

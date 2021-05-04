@@ -1,0 +1,6 @@
+NumpyTensorSpaceArrayWeighting.impl
+=========================================================
+
+.. currentmodule:: odl.space.npy_tensors
+
+.. autoproperty:: NumpyTensorSpaceArrayWeighting.impl

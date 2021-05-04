@@ -1,0 +1,6 @@
+﻿forbild
+================================
+
+.. currentmodule:: odl.phantom.transmission
+
+.. autofunction:: forbild

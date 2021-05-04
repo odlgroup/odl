@@ -1,0 +1,6 @@
+SamplingOperator.domain
+===============================================
+
+.. currentmodule:: odl.operator.tensor_ops
+
+.. autoproperty:: SamplingOperator.domain

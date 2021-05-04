@@ -1,0 +1,404 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>cone_beam_geometry &mdash; odl 1.0.0.dev0 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="helical_geometry" href="odl.tomo.geometry.conebeam.helical_geometry.html" />
+    <link rel="prev" title="FanBeamGeometry.src_position" href="odl.tomo.geometry.conebeam.FanBeamGeometry.src_position.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../index.html" class="icon icon-home"> odl
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                1.0.0.dev0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Getting Started</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../getting_started/getting_started.html">Getting Started</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Working with ODL</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../guide/guide.html">User’s guide – selected topics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../math/math.html">Mathematical Background</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Developer zone</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../dev/dev.html">Contributing to ODL</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Useful facts</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../guide/faq.html">Frequently asked questions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../guide/glossary.html">Glossary</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../release_notes.html">Release Notes</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../refs.html">References</a></li>
+</ul>
+<p class="caption"><span class="caption-text">API Reference</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../odl.html">odl</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../odl.contrib.html">contrib</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../odl.deform.html">deform</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../odl.diagnostics.html">diagnostics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../odl.discr.html">discr</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../odl.operator.html">operator</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../odl.phantom.html">phantom</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../odl.set.html">set</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../odl.solvers.html">solvers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../odl.space.html">space</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="../odl.tomo.html">tomo</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="../odl.tomo.analytic.html">analytic</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../odl.tomo.backends.html">backends</a></li>
+<li class="toctree-l3 current"><a class="reference internal" href="../odl.tomo.geometry.html">geometry</a><ul class="current">
+<li class="toctree-l4 current"><a class="reference internal" href="../odl.tomo.geometry.conebeam.html">conebeam</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../odl.tomo.geometry.detector.html">detector</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../odl.tomo.geometry.geometry.html">geometry</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../odl.tomo.geometry.parallel.html">parallel</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../odl.tomo.geometry.spect.html">spect</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../odl.tomo.operators.html">operators</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../odl.tomo.util.html">util</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../odl.trafos.html">trafos</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../odl.ufunc_ops.html">ufunc_ops</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../odl.util.html">util</a></li>
+</ul>
+</li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">odl</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="../odl.html">odl</a> &raquo;</li>
+        
+          <li><a href="../odl.tomo.html">tomo</a> &raquo;</li>
+        
+          <li><a href="../odl.tomo.geometry.html">geometry</a> &raquo;</li>
+        
+          <li><a href="../odl.tomo.geometry.conebeam.html">conebeam</a> &raquo;</li>
+        
+      <li>cone_beam_geometry</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            <a href="../_sources/generated/odl.tomo.geometry.conebeam.cone_beam_geometry.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="cone-beam-geometry">
+<h1>cone_beam_geometry<a class="headerlink" href="#cone-beam-geometry" title="Permalink to this headline">¶</a></h1>
+<dl class="py function">
+<dt id="odl.tomo.geometry.conebeam.cone_beam_geometry">
+<code class="sig-prename descclassname"><span class="pre">odl.tomo.geometry.conebeam.</span></code><code class="sig-name descname"><span class="pre">cone_beam_geometry</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">space</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">src_radius</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">det_radius</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_angles</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">short_scan</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">det_shape</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/odl/tomo/geometry/conebeam.html#cone_beam_geometry"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#odl.tomo.geometry.conebeam.cone_beam_geometry" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create a default fan or cone beam geometry from <code class="docutils literal notranslate"><span class="pre">space</span></code>.</p>
+<p>This function is intended for simple test cases where users do not
+need the full flexibility of the geometries, but simply wants a
+geometry that works.</p>
+<p>The geometry returned by this function has equidistant angles
+that lie (strictly) between 0 and either <code class="docutils literal notranslate"><span class="pre">2</span> <span class="pre">*</span> <span class="pre">pi</span></code> (full scan)
+or <code class="docutils literal notranslate"><span class="pre">pi</span> <span class="pre">+</span> <span class="pre">fan_angle</span></code> (short scan).
+The detector is centered around 0, and its size is chosen such that
+the whole <code class="docutils literal notranslate"><span class="pre">space</span></code> is covered with lines.</p>
+<p>The number of angles and detector elements is chosen such that
+the resulting sinogram is fully sampled according to the
+Nyquist criterion, which in general results in a very large number of
+samples. In particular, a <code class="docutils literal notranslate"><span class="pre">space</span></code> that is not centered at the origin
+can result in very large detectors since the latter is always
+origin-centered.</p>
+<dl class="field-list">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl>
+<dt><strong>space</strong><span class="classifier"><a class="reference internal" href="odl.discr.discr_space.DiscretizedSpace.html#odl.discr.discr_space.DiscretizedSpace" title="odl.discr.discr_space.DiscretizedSpace"><code class="xref any py py-class docutils literal notranslate"><span class="pre">DiscretizedSpace</span></code></a></span></dt><dd><p>Reconstruction space, the space of the volumetric data to be
+projected. Must be 2- or 3-dimensional.</p>
+</dd>
+<dt><strong>src_radius</strong><span class="classifier">nonnegative float</span></dt><dd><p>Radius of the source circle. Must be larger than the radius of
+the smallest vertical cylinder containing <code class="docutils literal notranslate"><span class="pre">space.domain</span></code>,
+i.e., the source must be outside the volume for all rotations.</p>
+</dd>
+<dt><strong>det_radius</strong><span class="classifier">nonnegative float</span></dt><dd><p>Radius of the detector circle.</p>
+</dd>
+<dt><strong>short_scan</strong><span class="classifier">bool, optional</span></dt><dd><p>Use the minimum required angular range <code class="docutils literal notranslate"><span class="pre">[0,</span> <span class="pre">pi</span> <span class="pre">+</span> <span class="pre">fan_angle]</span></code>.
+For <code class="docutils literal notranslate"><span class="pre">True</span></code>, the <a class="reference internal" href="odl.tomo.analytic.filtered_back_projection.parker_weighting.html#odl.tomo.analytic.filtered_back_projection.parker_weighting" title="odl.tomo.analytic.filtered_back_projection.parker_weighting"><code class="xref any py py-func docutils literal notranslate"><span class="pre">parker_weighting</span></code></a> should be used in FBP.
+By default, the range <code class="docutils literal notranslate"><span class="pre">[0,</span> <span class="pre">2</span> <span class="pre">*</span> <span class="pre">pi]</span></code> is used.</p>
+</dd>
+<dt><strong>num_angles</strong><span class="classifier">int, optional</span></dt><dd><p>Number of angles.
+Default: Enough to fully sample the data, see Notes.</p>
+</dd>
+<dt><strong>det_shape</strong><span class="classifier">int or sequence of ints, optional</span></dt><dd><p>Number of detector pixels.
+Default: Enough to fully sample the data, see Notes.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><dl>
+<dt><strong>geometry</strong><span class="classifier"><a class="reference internal" href="odl.tomo.geometry.geometry.DivergentBeamGeometry.html#odl.tomo.geometry.geometry.DivergentBeamGeometry" title="odl.tomo.geometry.geometry.DivergentBeamGeometry"><code class="xref any py py-class docutils literal notranslate"><span class="pre">DivergentBeamGeometry</span></code></a></span></dt><dd><p>Projection geometry with equidistant angles and zero-centered
+detector as determined by sampling criteria.</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>If <code class="docutils literal notranslate"><span class="pre">space</span></code> is 2D, the result is a <a class="reference internal" href="odl.tomo.geometry.conebeam.FanBeamGeometry.html#odl.tomo.geometry.conebeam.FanBeamGeometry" title="odl.tomo.geometry.conebeam.FanBeamGeometry"><code class="xref any py py-class docutils literal notranslate"><span class="pre">FanBeamGeometry</span></code></a>.</p></li>
+<li><p>If <code class="docutils literal notranslate"><span class="pre">space</span></code> is 3D, the result is a <a class="reference internal" href="odl.tomo.geometry.conebeam.ConeBeamGeometry.html#odl.tomo.geometry.conebeam.ConeBeamGeometry" title="odl.tomo.geometry.conebeam.ConeBeamGeometry"><code class="xref any py py-class docutils literal notranslate"><span class="pre">ConeBeamGeometry</span></code></a>.</p></li>
+</ul>
+</div></blockquote>
+</dd>
+</dl>
+</dd>
+</dl>
+<p class="rubric">Notes</p>
+<p>According to <a class="reference internal" href="#rcbce24be9edc-nw2001" id="id1">[NW2001]</a>, pages 75–76, a function
+<img class="math" src="../_images/math/abb287c194f917df5fcd6d9afd62eeaaa16db34a.png" alt="f : \mathbb{R}^2 \to \mathbb{R}"/> that has compact support</p>
+<div class="math">
+<p><img src="../_images/math/de4142fd0d800c30ce6cec8211c12d7ca6832d71.png" alt="\| x \| &gt; \rho  \implies f(x) = 0,"/></p>
+</div><p>and is essentially bandlimited</p>
+<div class="math">
+<p><img src="../_images/math/ae1170595d436fd4aea4cdedd6817837d065bcd4.png" alt="\| \xi \| &gt; \Omega \implies \hat{f}(\xi) \approx 0,"/></p>
+</div><p>can be fully reconstructed from a fan beam ray transform with
+source-detector distance <img class="math" src="../_images/math/79a3d439d28652c547386f39b555d90d3aaf102d.png" alt="r"/> (assuming all detector
+points have the same distance to the source) if (1) the projection
+angles are sampled with a spacing of <img class="math" src="../_images/math/2122cf9c783e1c967c9657721612ab7e3a91d247.png" alt="\Delta \psi"/> such that</p>
+<div class="math">
+<p><img src="../_images/math/86334868b93c07e526ee7ca5658648ef40e6c2b1.png" alt="\Delta \psi \leq \frac{r + \rho}{r}\, \frac{\pi}{\rho \Omega},"/></p>
+</div><p>and (2) the detector is sampled with an angular interval
+<img class="math" src="../_images/math/0eb690f98851f49f4508251dfc240f2efdd47789.png" alt="\Delta \alpha"/> that satisfies</p>
+<div class="math">
+<p><img src="../_images/math/276c31765cedfdcb23d2ace49c6c7374097ca022.png" alt="\Delta \alpha \leq \frac{\pi}{r \Omega}."/></p>
+</div><p>For a flat detector, the angular interval is smallest in the center
+of the fan and largest at the boundaries. The worst-case relation
+between the linear and angular sampling intervals are</p>
+<div class="math">
+<p><img src="../_images/math/73bd4204e22cd71a0a3f7885d514576ec2dcf5c5.png" alt="\Delta s = R \Delta \alpha, \quad R^2 = r^2 + (w / 2)^2,"/></p>
+</div><p>where <img class="math" src="../_images/math/cc87ee665749db882f94e0d3707eb23e39638650.png" alt="w"/> is the width of the detector.
+Thus, to satisfy the angular detector condition one can choose</p>
+<div class="math">
+<p><img src="../_images/math/6495f1e92917d5986baebc8afa66c419cffb7afb.png" alt="\Delta s \leq \frac{\pi \sqrt{r^2 + (w / 2)^2}}{r \Omega}."/></p>
+</div><p>The geometry returned by this function satisfies these conditions exactly.</p>
+<p>If the domain is 3-dimensional, a circular cone beam geometry is
+created with the third coordinate axis as rotation axis. This does,
+of course, not yield complete data, but is equivalent to the
+2D fan beam case in the <img class="math" src="../_images/math/e6825089a9cde28853c53cdc124847426ebea3b4.png" alt="z = 0"/> slice. The vertical size of
+the detector is chosen such that it covers the object vertically
+with rays, using a containing cuboid
+<img class="math" src="../_images/math/166c557deb1d13ee6b6ce9104f564980be5b57d3.png" alt="[-\rho, \rho]^2 \times [z_{\mathrm{min}}, z_{\mathrm{min}}]"/>
+to compute the cone angle.</p>
+<p class="rubric">References</p>
+<dl class="citation">
+<dt class="label" id="rcbce24be9edc-nw2001"><span class="brackets"><a class="fn-backref" href="#id1">NW2001</a></span></dt>
+<dd><p>Natterer, F and Wuebbeling, F.
+<em>Mathematical Methods in Image Reconstruction</em>.
+SIAM, 2001.
+<a class="reference external" href="https://dx.doi.org/10.1137/1.9780898718324">https://dx.doi.org/10.1137/1.9780898718324</a></p>
+</dd>
+</dl>
+<p class="rubric">Examples</p>
+<p>Create a fan beam geometry from a 2d space:</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">space</span> <span class="o">=</span> <span class="n">odl</span><span class="o">.</span><span class="n">uniform_discr</span><span class="p">([</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span> <span class="p">(</span><span class="mi">20</span><span class="p">,</span> <span class="mi">20</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">geometry</span> <span class="o">=</span> <span class="n">cone_beam_geometry</span><span class="p">(</span><span class="n">space</span><span class="p">,</span> <span class="n">src_radius</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span> <span class="n">det_radius</span><span class="o">=</span><span class="mi">5</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">geometry</span><span class="o">.</span><span class="n">angles</span><span class="o">.</span><span class="n">size</span>
+<span class="go">78</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">geometry</span><span class="o">.</span><span class="n">detector</span><span class="o">.</span><span class="n">size</span>
+<span class="go">57</span>
+</pre></div>
+</div>
+<p>For a short scan geometry (from 0 to <code class="docutils literal notranslate"><span class="pre">pi</span> <span class="pre">+</span> <span class="pre">fan_angle</span></code>), the
+<code class="docutils literal notranslate"><span class="pre">short_scan</span></code> flag can be set, resulting in a smaller number of
+angles:</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">geometry</span> <span class="o">=</span> <span class="n">cone_beam_geometry</span><span class="p">(</span><span class="n">space</span><span class="p">,</span> <span class="n">src_radius</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span> <span class="n">det_radius</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span>
+<span class="gp">... </span>                              <span class="n">short_scan</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">geometry</span><span class="o">.</span><span class="n">angles</span><span class="o">.</span><span class="n">size</span>
+<span class="go">46</span>
+</pre></div>
+</div>
+<p>If the source is close to the object, the detector becomes larger due
+to more magnification:</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">geometry</span> <span class="o">=</span> <span class="n">cone_beam_geometry</span><span class="p">(</span><span class="n">space</span><span class="p">,</span> <span class="n">src_radius</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">det_radius</span><span class="o">=</span><span class="mi">9</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">geometry</span><span class="o">.</span><span class="n">angles</span><span class="o">.</span><span class="n">size</span>
+<span class="go">80</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">geometry</span><span class="o">.</span><span class="n">detector</span><span class="o">.</span><span class="n">size</span>
+<span class="go">105</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+        <a href="odl.tomo.geometry.conebeam.helical_geometry.html" class="btn btn-neutral float-right" title="helical_geometry" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="odl.tomo.geometry.conebeam.FanBeamGeometry.src_position.html" class="btn btn-neutral float-left" title="FanBeamGeometry.src_position" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &#169; Copyright 2014-2020 The ODL Contributors.
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

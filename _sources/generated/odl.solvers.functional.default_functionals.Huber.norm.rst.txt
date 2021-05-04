@@ -1,0 +1,8 @@
+:orphan:
+
+Huber.norm
+=====================================================
+
+.. currentmodule:: odl.solvers.functional.default_functionals
+
+.. automethod:: Huber.norm

@@ -1,0 +1,8 @@
+:orphan:
+
+CustomDist.inner
+====================================
+
+.. currentmodule:: odl.space.weighting
+
+.. automethod:: CustomDist.inner

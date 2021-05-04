@@ -1,0 +1,8 @@
+:orphan:
+
+log1p_func.translated
+=============================================
+
+.. currentmodule:: odl.ufunc_ops.ufunc_ops
+
+.. automethod:: log1p_func.translated

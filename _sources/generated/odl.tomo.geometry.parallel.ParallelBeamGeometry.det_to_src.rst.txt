@@ -1,0 +1,8 @@
+:orphan:
+
+ParallelBeamGeometry.det_to_src
+==========================================================
+
+.. currentmodule:: odl.tomo.geometry.parallel
+
+.. automethod:: ParallelBeamGeometry.det_to_src

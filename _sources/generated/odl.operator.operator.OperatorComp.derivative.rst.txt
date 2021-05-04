@@ -1,0 +1,8 @@
+:orphan:
+
+OperatorComp.derivative
+=============================================
+
+.. currentmodule:: odl.operator.operator
+
+.. automethod:: OperatorComp.derivative

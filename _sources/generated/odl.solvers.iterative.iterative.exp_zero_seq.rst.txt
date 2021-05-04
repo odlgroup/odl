@@ -1,0 +1,6 @@
+﻿exp_zero_seq
+============================================
+
+.. currentmodule:: odl.solvers.iterative.iterative
+
+.. autofunction:: exp_zero_seq

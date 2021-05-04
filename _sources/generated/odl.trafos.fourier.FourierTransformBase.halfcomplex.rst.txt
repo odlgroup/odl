@@ -1,0 +1,6 @@
+FourierTransformBase.halfcomplex
+===================================================
+
+.. currentmodule:: odl.trafos.fourier
+
+.. autoproperty:: FourierTransformBase.halfcomplex

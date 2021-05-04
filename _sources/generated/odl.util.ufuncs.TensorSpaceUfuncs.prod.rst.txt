@@ -1,0 +1,8 @@
+:orphan:
+
+TensorSpaceUfuncs.prod
+======================================
+
+.. currentmodule:: odl.util.ufuncs
+
+.. automethod:: TensorSpaceUfuncs.prod

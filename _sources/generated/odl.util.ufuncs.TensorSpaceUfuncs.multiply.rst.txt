@@ -1,0 +1,8 @@
+:orphan:
+
+TensorSpaceUfuncs.multiply
+==========================================
+
+.. currentmodule:: odl.util.ufuncs
+
+.. automethod:: TensorSpaceUfuncs.multiply

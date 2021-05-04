@@ -1,0 +1,6 @@
+InnerProductOperator.inverse
+=====================================================
+
+.. currentmodule:: odl.operator.default_ops
+
+.. autoproperty:: InnerProductOperator.inverse

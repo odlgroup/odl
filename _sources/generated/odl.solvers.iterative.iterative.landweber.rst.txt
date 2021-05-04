@@ -1,0 +1,6 @@
+﻿landweber
+=========================================
+
+.. currentmodule:: odl.solvers.iterative.iterative
+
+.. autofunction:: landweber

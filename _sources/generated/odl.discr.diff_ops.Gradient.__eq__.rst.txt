@@ -1,0 +1,8 @@
+:orphan:
+
+Gradient.__eq__
+==================================
+
+.. currentmodule:: odl.discr.diff_ops
+
+.. automethod:: Gradient.__eq__

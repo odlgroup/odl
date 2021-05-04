@@ -1,0 +1,8 @@
+:orphan:
+
+NumpyTensorSpace._lincomb
+===============================================
+
+.. currentmodule:: odl.space.npy_tensors
+
+.. automethod:: NumpyTensorSpace._lincomb

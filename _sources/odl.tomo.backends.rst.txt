@@ -1,0 +1,21 @@
+backends
+========
+
+Bindings to external libraries for tomography.
+
+.. currentmodule:: odl.tomo.backends
+
+
+.. rubric:: Modules
+
+.. toctree::
+   :maxdepth: 2
+
+   odl.tomo.backends.astra_cpu
+   odl.tomo.backends.astra_cuda
+   odl.tomo.backends.astra_setup
+   odl.tomo.backends.skimage_radon
+   odl.tomo.backends.util
+
+
+

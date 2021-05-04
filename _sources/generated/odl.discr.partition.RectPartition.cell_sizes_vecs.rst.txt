@@ -1,0 +1,6 @@
+RectPartition.cell_sizes_vecs
+=================================================
+
+.. currentmodule:: odl.discr.partition
+
+.. autoproperty:: RectPartition.cell_sizes_vecs

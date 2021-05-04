@@ -1,0 +1,6 @@
+Geometry.detector
+============================================
+
+.. currentmodule:: odl.tomo.geometry.geometry
+
+.. autoproperty:: Geometry.detector

@@ -1,0 +1,6 @@
+﻿zscore
+========================
+
+.. currentmodule:: odl.util.numerics
+
+.. autofunction:: zscore

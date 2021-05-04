@@ -1,0 +1,6 @@
+PowerOperator.is_functional
+====================================================
+
+.. currentmodule:: odl.operator.default_ops
+
+.. autoproperty:: PowerOperator.is_functional

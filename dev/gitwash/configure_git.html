@@ -1,0 +1,420 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>Configure Git &mdash; odl 1.0.0.dev0 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/custom.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+        <script src="../../_static/jquery.js"></script>
+        <script src="../../_static/underscore.js"></script>
+        <script src="../../_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="../../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="Development workflow" href="development_workflow.html" />
+    <link rel="prev" title="Set up your fork" href="set_up_fork.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../index.html" class="icon icon-home"> odl
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                1.0.0.dev0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Getting Started</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../getting_started/getting_started.html">Getting Started</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Working with ODL</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../guide/guide.html">User’s guide – selected topics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../math/math.html">Mathematical Background</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Developer zone</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../dev.html">Contributing to ODL</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../dev.html#introduction">Introduction</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="../dev.html#contents">Contents</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="../extend.html">Extending ODL</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../document.html">How to document</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../testing.html">Testing in ODL</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../release.html">The ODL release process</a></li>
+<li class="toctree-l3 current"><a class="reference internal" href="index.html">Working with ODL source code</a><ul class="current">
+<li class="toctree-l4"><a class="reference internal" href="git_intro.html">Introduction</a></li>
+<li class="toctree-l4"><a class="reference internal" href="git_install.html">Install Git</a></li>
+<li class="toctree-l4"><a class="reference internal" href="following_latest.html">Following the latest source</a></li>
+<li class="toctree-l4"><a class="reference internal" href="patching.html">Making a patch</a></li>
+<li class="toctree-l4 current"><a class="reference internal" href="git_development.html">Git for development</a></li>
+<li class="toctree-l4"><a class="reference internal" href="git_resources.html">Git resources</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<p class="caption"><span class="caption-text">Useful facts</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../guide/faq.html">Frequently asked questions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../guide/glossary.html">Glossary</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../release_notes.html">Release Notes</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../refs.html">References</a></li>
+</ul>
+<p class="caption"><span class="caption-text">API Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../odl.html">odl</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">odl</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="../dev.html">Contributing to ODL</a> &raquo;</li>
+        
+          <li><a href="index.html">Working with ODL source code</a> &raquo;</li>
+        
+          <li><a href="git_development.html">Git for development</a> &raquo;</li>
+        
+      <li>Configure Git</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            <a href="../../_sources/dev/gitwash/configure_git.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="configure-git">
+<span id="id1"></span><h1>Configure Git<a class="headerlink" href="#configure-git" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="overview">
+<span id="git-config-basic"></span><h2>Overview<a class="headerlink" href="#overview" title="Permalink to this headline">¶</a></h2>
+<p>Your personal Git configurations are saved in the <code class="docutils literal notranslate"><span class="pre">.gitconfig</span></code> file in
+your home directory.</p>
+<p>Here is an example <code class="docutils literal notranslate"><span class="pre">.gitconfig</span></code> file:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>[user]
+        name = Your Name
+        email = you@yourdomain.example.com
+
+[alias]
+        ci = commit -a
+        co = checkout
+        st = status
+        stat = status
+        br = branch
+        wdiff = diff --color-words
+        show-conflicts = !git --no-pager diff --name-only --diff-filter=U
+
+[core]
+        editor = nano
+
+[merge]
+        summary = true
+</pre></div>
+</div>
+<p>You can edit this file directly or you can use the <code class="docutils literal notranslate"><span class="pre">git</span> <span class="pre">config</span> <span class="pre">--global</span></code>
+command:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$ git config --global user.name <span class="s2">&quot;Your Name&quot;</span>
+$ git config --global user.email you@yourdomain.example.com
+$ git config --global alias.ci <span class="s2">&quot;commit -a&quot;</span>
+$ git config --global alias.co checkout
+$ git config --global alias.st <span class="s2">&quot;status&quot;</span>
+$ git config --global alias.stat <span class="s2">&quot;status&quot;</span>
+$ git config --global alias.br branch
+$ git config --global alias.wdiff <span class="s2">&quot;diff --color-words&quot;</span>
+$ git config --global alias.show-conflicts <span class="s2">&quot;!git --no-pager diff --name-only --diff-filter=U&quot;</span>
+$ git config --global core.editor nano
+$ git config --global merge.summary <span class="nb">true</span>
+</pre></div>
+</div>
+<p>To set up on another computer, you can copy your <code class="docutils literal notranslate"><span class="pre">~/.gitconfig</span></code> file,
+or run the commands above.</p>
+</div>
+<div class="section" id="in-detail">
+<h2>In detail<a class="headerlink" href="#in-detail" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="user-name-and-user-email">
+<h3>user.name and user.email<a class="headerlink" href="#user-name-and-user-email" title="Permalink to this headline">¶</a></h3>
+<p>It is good practice to tell <a class="reference external" href="http://git-scm.com/">Git</a> who you are, for labeling any changes
+you make to the code. The simplest way to do this is from the command
+line:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$ git config --global user.name <span class="s2">&quot;Your Name&quot;</span>
+$ git config --global user.email you@yourdomain.example.com
+</pre></div>
+</div>
+<p>This will write the settings into your Git configuration file,  which
+should now contain a user section with your name and email:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">[</span><span class="n">user</span><span class="p">]</span>
+      <span class="n">name</span> <span class="o">=</span> <span class="n">Your</span> <span class="n">Name</span>
+      <span class="n">email</span> <span class="o">=</span> <span class="n">you</span><span class="nd">@yourdomain</span><span class="o">.</span><span class="n">example</span><span class="o">.</span><span class="n">com</span>
+</pre></div>
+</div>
+<p>Of course you’ll need to replace <code class="docutils literal notranslate"><span class="pre">Your</span> <span class="pre">Name</span></code> and <code class="docutils literal notranslate"><span class="pre">you&#64;yourdomain.example.com</span></code>
+with your actual name and email address.</p>
+</div>
+<div class="section" id="aliases">
+<h3>Aliases<a class="headerlink" href="#aliases" title="Permalink to this headline">¶</a></h3>
+<p>You might well benefit from some aliases to common commands.</p>
+<p>For example, you might well want to be able to shorten <code class="docutils literal notranslate"><span class="pre">git</span> <span class="pre">checkout</span></code>
+to <code class="docutils literal notranslate"><span class="pre">git</span> <span class="pre">co</span></code>.  Or you may want to alias <code class="docutils literal notranslate"><span class="pre">git</span> <span class="pre">diff</span> <span class="pre">--color-words</span></code>
+(which gives a nicely formatted output of the diff) to <code class="docutils literal notranslate"><span class="pre">git</span> <span class="pre">wdiff</span></code>.
+Another useful alias is <code class="docutils literal notranslate"><span class="pre">git</span> <span class="pre">show-conflicts</span></code> which displays files that
+are currently in conflict.</p>
+<p>The <code class="docutils literal notranslate"><span class="pre">git</span> <span class="pre">config</span> <span class="pre">--global</span></code> commands</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$ git config --global alias.ci <span class="s2">&quot;commit -a&quot;</span>
+$ git config --global alias.co checkout
+$ git config --global alias.st <span class="s2">&quot;status -a&quot;</span>
+$ git config --global alias.stat <span class="s2">&quot;status -a&quot;</span>
+$ git config --global alias.br branch
+$ git config --global alias.wdiff <span class="s2">&quot;diff --color-words&quot;</span>
+$ git config --global alias.show-conflicts <span class="s2">&quot;!git --no-pager diff --name-only --diff-filter=U&quot;</span>
+</pre></div>
+</div>
+<p>will create an <code class="docutils literal notranslate"><span class="pre">alias</span></code> section in your <code class="docutils literal notranslate"><span class="pre">.gitconfig</span></code> file with contents
+like this:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>[alias]
+        ci = commit -a
+        co = checkout
+        st = status -a
+        stat = status -a
+        br = branch
+        wdiff = diff --color-words
+        show-conflicts = !git --no-pager diff --name-only --diff-filter=U
+</pre></div>
+</div>
+</div>
+<div class="section" id="editor">
+<h3>Editor<a class="headerlink" href="#editor" title="Permalink to this headline">¶</a></h3>
+<p>You may also want to make sure that your favorite editor is used:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$ git config --global core.editor nano
+</pre></div>
+</div>
+</div>
+<div class="section" id="merging">
+<h3>Merging<a class="headerlink" href="#merging" title="Permalink to this headline">¶</a></h3>
+<p>To enforce summaries when doing merges (<code class="docutils literal notranslate"><span class="pre">~/.gitconfig</span></code> file again):</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">[</span><span class="n">merge</span><span class="p">]</span>
+   <span class="n">log</span> <span class="o">=</span> <span class="n">true</span>
+</pre></div>
+</div>
+<p>Or from the command line:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$ git config --global merge.log <span class="nb">true</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="fancy-log-output">
+<span id="fancy-log"></span><h3>Fancy log output<a class="headerlink" href="#fancy-log-output" title="Permalink to this headline">¶</a></h3>
+<p>This is a very nice alias to get a fancy log output; it should go in the
+<code class="docutils literal notranslate"><span class="pre">alias</span></code> section of your <code class="docutils literal notranslate"><span class="pre">.gitconfig</span></code> file:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">fancylog</span> <span class="o">=</span> <span class="n">log</span> <span class="o">--</span><span class="n">graph</span> <span class="o">--</span><span class="n">pretty</span><span class="o">=</span><span class="nb">format</span><span class="p">:</span><span class="s1">&#39;%Cred</span><span class="si">%h%</span><span class="s1">Creset -%C(yellow)</span><span class="si">%d</span><span class="s1">%Creset </span><span class="si">%s</span><span class="s1"> %Cgreen(</span><span class="si">%c</span><span class="s1">r) %C(bold blue)[</span><span class="si">%a</span><span class="s1">n]%Creset&#39;</span> <span class="o">--</span><span class="n">abbrev</span><span class="o">-</span><span class="n">commit</span> <span class="o">--</span><span class="n">date</span><span class="o">=</span><span class="n">relative</span>
+</pre></div>
+</div>
+<p>You use the alias with:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$ git fancylog
+</pre></div>
+</div>
+<p>and it gives graph / text output something like this (but with color!):</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">*</span> <span class="n">a105abc</span> <span class="o">-</span> <span class="p">(</span><span class="n">HEAD</span> <span class="o">-&gt;</span> <span class="n">master</span><span class="p">,</span> <span class="n">upstream</span><span class="o">/</span><span class="n">master</span><span class="p">)</span> <span class="n">Revert</span> <span class="s2">&quot;MAINT: replace deprecated pngmath extension by imgmath&quot;</span> <span class="p">(</span><span class="mi">50</span> <span class="n">minutes</span> <span class="n">ago</span><span class="p">)</span> <span class="p">[</span><span class="n">Holger</span> <span class="n">Kohr</span><span class="p">]</span>
+<span class="o">*</span> <span class="mi">05168</span><span class="n">c9</span> <span class="o">-</span> <span class="n">MAINT</span><span class="p">:</span> <span class="n">replace</span> <span class="n">deprecated</span> <span class="n">pngmath</span> <span class="n">extension</span> <span class="n">by</span> <span class="n">imgmath</span> <span class="p">(</span><span class="mi">53</span> <span class="n">minutes</span> <span class="n">ago</span><span class="p">)</span> <span class="p">[</span><span class="n">Holger</span> <span class="n">Kohr</span><span class="p">]</span>
+<span class="o">*</span> <span class="n">f654c3d</span> <span class="o">-</span> <span class="n">DOC</span><span class="p">:</span> <span class="n">update</span> <span class="n">README</span> <span class="ow">and</span> <span class="n">description</span> <span class="ow">in</span> <span class="n">setup</span><span class="o">.</span><span class="n">py</span> <span class="n">a</span> <span class="n">bit</span> <span class="p">(</span><span class="mi">19</span> <span class="n">hours</span> <span class="n">ago</span><span class="p">)</span> <span class="p">[</span><span class="n">Holger</span> <span class="n">Kohr</span><span class="p">]</span>
+<span class="o">*</span>   <span class="n">d097c7b</span> <span class="o">-</span> <span class="n">Merge</span> <span class="n">pull</span> <span class="n">request</span> <span class="c1">#436 from odlgroup/issue-435__parallel2d_rotation (19 hours ago) [Holger Kohr]</span>
+<span class="o">|</span>\
+<span class="o">|</span> <span class="o">*</span> <span class="mi">180</span><span class="n">ba96</span> <span class="o">-</span> <span class="p">(</span><span class="n">upstream</span><span class="o">/</span><span class="n">issue</span><span class="o">-</span><span class="mi">435</span><span class="n">__parallel2d_rotation</span><span class="p">,</span> <span class="n">issue</span><span class="o">-</span><span class="mi">435</span><span class="n">__parallel2d_rotation</span><span class="p">)</span> <span class="n">TST</span><span class="p">:</span> <span class="n">Add</span> <span class="n">test</span> <span class="k">for</span> <span class="n">angle</span> <span class="n">conventions</span> <span class="n">of</span> <span class="n">projectors</span> <span class="p">(</span><span class="mi">24</span> <span class="n">hours</span> <span class="n">ago</span><span class="p">)</span> <span class="p">[</span><span class="n">Jonas</span> <span class="n">Adler</span><span class="p">]</span>
+<span class="o">|</span> <span class="o">*</span> <span class="n">de2ab55</span> <span class="o">-</span> <span class="n">BUG</span><span class="p">:</span> <span class="n">fix</span> <span class="n">behaviour</span> <span class="n">of</span> <span class="n">show</span> <span class="k">with</span> <span class="n">nonuniform</span> <span class="n">data</span> <span class="p">(</span><span class="mi">26</span> <span class="n">hours</span> <span class="n">ago</span><span class="p">)</span> <span class="p">[</span><span class="n">Jonas</span> <span class="n">Adler</span><span class="p">]</span>
+<span class="o">|</span> <span class="o">*</span> <span class="n">a979666</span> <span class="o">-</span> <span class="n">BUG</span><span class="p">:</span> <span class="n">fix</span> <span class="n">rotation</span> <span class="n">by</span> <span class="mi">90</span> <span class="n">degrees</span> <span class="k">for</span> <span class="mi">2</span><span class="n">d</span> <span class="n">parallel</span> <span class="p">(</span><span class="mi">27</span> <span class="n">hours</span> <span class="n">ago</span><span class="p">)</span> <span class="p">[</span><span class="n">Holger</span> <span class="n">Kohr</span><span class="p">]</span>
+<span class="o">|/</span>
+<span class="o">*</span>   <span class="n">ecfd306</span> <span class="o">-</span> <span class="n">Merge</span> <span class="n">pull</span> <span class="n">request</span> <span class="c1">#444 from odlgroup/issue-443__uniform_partition (29 hours ago) [Holger Kohr]</span>
+<span class="o">|</span>\
+<span class="o">|</span> <span class="o">*</span> <span class="mi">024552</span><span class="n">f</span> <span class="o">-</span> <span class="n">MAINT</span><span class="p">:</span> <span class="n">replace</span> <span class="mi">10</span> <span class="o">**</span> <span class="o">-</span><span class="mi">10</span> <span class="k">with</span> <span class="mf">1e-10</span> <span class="ow">in</span> <span class="n">domain_test</span><span class="o">.</span><span class="n">py</span> <span class="p">(</span><span class="mi">29</span> <span class="n">hours</span> <span class="n">ago</span><span class="p">)</span> <span class="p">[</span><span class="n">Holger</span> <span class="n">Kohr</span><span class="p">]</span>
+<span class="o">|</span> <span class="o">*</span> <span class="mi">032</span><span class="n">b89d</span> <span class="o">-</span> <span class="n">ENH</span><span class="p">:</span> <span class="n">allow</span> <span class="n">single</span> <span class="nb">tuple</span> <span class="k">for</span> <span class="n">nodes_on_bdry</span> <span class="ow">in</span> <span class="n">uniform_sampling</span> <span class="k">for</span> <span class="mi">1</span><span class="n">d</span> <span class="p">(</span><span class="mi">29</span> <span class="n">hours</span> <span class="n">ago</span><span class="p">)</span> <span class="p">[</span><span class="n">Holger</span> <span class="n">Kohr</span><span class="p">]</span>
+<span class="o">|</span> <span class="o">*</span> <span class="mi">85</span><span class="n">dda52</span> <span class="o">-</span> <span class="n">ENH</span><span class="p">:</span> <span class="n">add</span> <span class="n">atol</span> <span class="n">to</span> <span class="n">IntervalProd</span><span class="o">.</span><span class="n">contains_all</span> <span class="p">(</span><span class="mi">29</span> <span class="n">hours</span> <span class="n">ago</span><span class="p">)</span> <span class="p">[</span><span class="n">Holger</span> <span class="n">Kohr</span><span class="p">]</span>
+<span class="o">|</span> <span class="o">*</span> <span class="n">bdaef8c</span> <span class="o">-</span> <span class="n">ENH</span><span class="p">:</span> <span class="n">make</span> <span class="n">uniform_partition</span> <span class="n">more</span> <span class="n">flexible</span> <span class="p">(</span><span class="mi">29</span> <span class="n">hours</span> <span class="n">ago</span><span class="p">)</span> <span class="p">[</span><span class="n">Holger</span> <span class="n">Kohr</span><span class="p">]</span>
+<span class="o">|</span> <span class="o">*</span> <span class="mi">72</span><span class="n">b4bd5</span> <span class="o">-</span> <span class="n">MAINT</span><span class="p">:</span> <span class="n">use</span> <span class="n">odl</span><span class="o">.</span><span class="n">foo</span> <span class="n">instead</span> <span class="n">of</span> <span class="kn">from</span> <span class="nn">odl</span> <span class="kn">import</span> <span class="n">foo</span> <span class="ow">in</span> <span class="n">partition_test</span><span class="o">.</span><span class="n">py</span> <span class="p">(</span><span class="mi">2</span> <span class="n">days</span> <span class="n">ago</span><span class="p">)</span> <span class="p">[</span><span class="n">Holger</span> <span class="n">Kohr</span><span class="p">]</span>
+<span class="o">|</span> <span class="o">*</span> <span class="mi">11</span><span class="n">ec155</span> <span class="o">-</span> <span class="n">MAINT</span><span class="p">:</span> <span class="n">fix</span> <span class="n">typo</span> <span class="ow">in</span> <span class="n">grid</span><span class="o">.</span><span class="n">py</span> <span class="p">(</span><span class="mi">2</span> <span class="n">days</span> <span class="n">ago</span><span class="p">)</span> <span class="p">[</span><span class="n">Holger</span> <span class="n">Kohr</span><span class="p">]</span>
+<span class="o">|</span> <span class="o">*</span> <span class="n">dabc917</span> <span class="o">-</span> <span class="n">MAINT</span><span class="p">:</span> <span class="n">change</span> <span class="n">tol</span> <span class="n">parameter</span> <span class="ow">in</span> <span class="n">IntervalProd</span> <span class="n">to</span> <span class="n">atol</span> <span class="p">(</span><span class="mi">2</span> <span class="n">days</span> <span class="n">ago</span><span class="p">)</span> <span class="p">[</span><span class="n">Holger</span> <span class="n">Kohr</span><span class="p">]</span>
+<span class="o">*</span> <span class="o">|</span>   <span class="n">e59662c</span> <span class="o">-</span> <span class="n">Merge</span> <span class="n">pull</span> <span class="n">request</span> <span class="c1">#439 from odlgroup/issue-409__element_noop (29 hours ago) [Jonas Adler]</span>
+<span class="o">|</span>\ \
+<span class="o">|</span> <span class="o">|/</span>
+<span class="o">|/|</span>
+<span class="o">|</span> <span class="o">*</span> <span class="mi">1</span><span class="n">d41554</span> <span class="o">-</span> <span class="n">API</span><span class="p">:</span> <span class="n">enforce</span> <span class="n">element</span><span class="p">(</span><span class="n">vec</span><span class="p">)</span> <span class="n">noop</span> <span class="p">(</span><span class="mi">8</span> <span class="n">days</span> <span class="n">ago</span><span class="p">)</span> <span class="p">[</span><span class="n">Jonas</span> <span class="n">Adler</span><span class="p">]</span>
+<span class="o">*</span> <span class="o">|</span>   <span class="mi">34</span><span class="n">d4e74</span> <span class="o">-</span> <span class="n">Merge</span> <span class="n">pull</span> <span class="n">request</span> <span class="c1">#438 from odlgroup/issue-437__discr_element_broadcast (8 days ago) [Jonas Adler]</span>
+<span class="o">|</span>\ \
+<span class="o">|</span> <span class="o">|/</span>
+<span class="o">|/|</span>
+<span class="o">|</span> <span class="o">*</span> <span class="n">e09bfa9</span> <span class="o">-</span> <span class="n">ENH</span><span class="p">:</span> <span class="n">allow</span> <span class="n">broadcasting</span> <span class="ow">in</span> <span class="n">discr</span> <span class="n">element</span> <span class="p">(</span><span class="mi">8</span> <span class="n">days</span> <span class="n">ago</span><span class="p">)</span> <span class="p">[</span><span class="n">Jonas</span> <span class="n">Adler</span><span class="p">]</span>
+</pre></div>
+</div>
+<p>Thanks to Yury V. Zaytsev for posting it.</p>
+</div>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+        <a href="development_workflow.html" class="btn btn-neutral float-right" title="Development workflow" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="set_up_fork.html" class="btn btn-neutral float-left" title="Set up your fork" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &#169; Copyright 2014-2020 The ODL Contributors.
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

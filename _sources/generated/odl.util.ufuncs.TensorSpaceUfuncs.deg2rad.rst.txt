@@ -1,0 +1,8 @@
+:orphan:
+
+TensorSpaceUfuncs.deg2rad
+=========================================
+
+.. currentmodule:: odl.util.ufuncs
+
+.. automethod:: TensorSpaceUfuncs.deg2rad

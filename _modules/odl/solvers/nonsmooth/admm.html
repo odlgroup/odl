@@ -1,0 +1,397 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>odl.solvers.nonsmooth.admm &mdash; odl 1.0.0.dev0 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../../../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../../../../_static/custom.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../../../" src="../../../../_static/documentation_options.js"></script>
+        <script src="../../../../_static/jquery.js"></script>
+        <script src="../../../../_static/underscore.js"></script>
+        <script src="../../../../_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="../../../../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../../../index.html" class="icon icon-home"> odl
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                1.0.0.dev0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Getting Started</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../getting_started/getting_started.html">Getting Started</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Working with ODL</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../guide/guide.html">User’s guide – selected topics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../math/math.html">Mathematical Background</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Developer zone</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../dev/dev.html">Contributing to ODL</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Useful facts</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../guide/faq.html">Frequently asked questions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../guide/glossary.html">Glossary</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../release_notes.html">Release Notes</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../refs.html">References</a></li>
+</ul>
+<p class="caption"><span class="caption-text">API Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../odl.html">odl</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../../index.html">odl</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../../../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="../../../index.html">Module code</a> &raquo;</li>
+        
+      <li>odl.solvers.nonsmooth.admm</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for odl.solvers.nonsmooth.admm</h1><div class="highlight"><pre>
+<span></span><span class="c1"># Copyright 2014-2019 The ODL contributors</span>
+<span class="c1">#</span>
+<span class="c1"># This file is part of ODL.</span>
+<span class="c1">#</span>
+<span class="c1"># This Source Code Form is subject to the terms of the Mozilla Public License,</span>
+<span class="c1"># v. 2.0. If a copy of the MPL was not distributed with this file, You can</span>
+<span class="c1"># obtain one at https://mozilla.org/MPL/2.0/.</span>
+
+<span class="sd">&quot;&quot;&quot;Alternating Direction method of Multipliers (ADMM) method variants.&quot;&quot;&quot;</span>
+
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">division</span>
+<span class="kn">from</span> <span class="nn">builtins</span> <span class="kn">import</span> <span class="nb">range</span>
+
+<span class="kn">from</span> <span class="nn">odl.operator</span> <span class="kn">import</span> <span class="n">Operator</span><span class="p">,</span> <span class="n">OpDomainError</span>
+
+
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;admm_linearized&#39;</span><span class="p">,)</span>
+
+
+<div class="viewcode-block" id="admm_linearized"><a class="viewcode-back" href="../../../../generated/odl.solvers.nonsmooth.admm.admm_linearized.html#odl.solvers.nonsmooth.admm.admm_linearized">[docs]</a><span class="k">def</span> <span class="nf">admm_linearized</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">f</span><span class="p">,</span> <span class="n">g</span><span class="p">,</span> <span class="n">L</span><span class="p">,</span> <span class="n">tau</span><span class="p">,</span> <span class="n">sigma</span><span class="p">,</span> <span class="n">niter</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="sa">r</span><span class="sd">&quot;&quot;&quot;Generic linearized ADMM method for convex problems.</span>
+
+<span class="sd">    ADMM stands for &quot;Alternating Direction Method of Multipliers&quot; and</span>
+<span class="sd">    is a popular convex optimization method. This variant solves problems</span>
+<span class="sd">    of the form ::</span>
+
+<span class="sd">        min_x [ f(x) + g(Lx) ]</span>
+
+<span class="sd">    with convex ``f`` and ``g``, and a linear operator ``L``. See Section</span>
+<span class="sd">    4.4 of `[PB2014] &lt;http://web.stanford.edu/~boyd/papers/prox_algs.html&gt;`_</span>
+<span class="sd">    and the Notes for more mathematical details.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    x : ``L.domain`` element</span>
+<span class="sd">        Starting point of the iteration, updated in-place.</span>
+<span class="sd">    f, g : `Functional`</span>
+<span class="sd">        The functions ``f`` and ``g`` in the problem definition. They</span>
+<span class="sd">        need to implement the ``proximal`` method.</span>
+<span class="sd">    L : linear `Operator`</span>
+<span class="sd">        The linear operator that is composed with ``g`` in the problem</span>
+<span class="sd">        definition. It must fulfill ``L.domain == f.domain`` and</span>
+<span class="sd">        ``L.range == g.domain``.</span>
+<span class="sd">    tau, sigma : positive float</span>
+<span class="sd">        Step size parameters for the update of the variables.</span>
+<span class="sd">    niter : non-negative int</span>
+<span class="sd">        Number of iterations.</span>
+
+<span class="sd">    Other Parameters</span>
+<span class="sd">    ----------------</span>
+<span class="sd">    callback : callable, optional</span>
+<span class="sd">        Function called with the current iterate after each iteration.</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    Given :math:`x^{(0)}` (the provided ``x``) and</span>
+<span class="sd">    :math:`u^{(0)} = z^{(0)} = 0`, linearized ADMM applies the following</span>
+<span class="sd">    iteration:</span>
+
+<span class="sd">    .. math::</span>
+<span class="sd">        x^{(k+1)} &amp;= \mathrm{prox}_{\tau f} \left[</span>
+<span class="sd">            x^{(k)} - \sigma^{-1}\tau L^*\big(</span>
+<span class="sd">                L x^{(k)} - z^{(k)} + u^{(k)}</span>
+<span class="sd">            \big)</span>
+<span class="sd">        \right]</span>
+
+<span class="sd">        z^{(k+1)} &amp;= \mathrm{prox}_{\sigma g}\left(</span>
+<span class="sd">            L x^{(k+1)} + u^{(k)}</span>
+<span class="sd">        \right)</span>
+
+<span class="sd">        u^{(k+1)} &amp;= u^{(k)} + L x^{(k+1)} - z^{(k+1)}</span>
+
+<span class="sd">    The step size parameters :math:`\tau` and :math:`\sigma` must satisfy</span>
+
+<span class="sd">    .. math::</span>
+<span class="sd">        0 &lt; \tau &lt; \frac{\sigma}{\|L\|^2}</span>
+
+<span class="sd">    to guarantee convergence.</span>
+
+<span class="sd">    The name &quot;linearized ADMM&quot; comes from the fact that in the</span>
+<span class="sd">    minimization subproblem for the :math:`x` variable, this variant</span>
+<span class="sd">    uses a linearization of a quadratic term in the augmented Lagrangian</span>
+<span class="sd">    of the generic ADMM, in order to make the step expressible with</span>
+<span class="sd">    the proximal operator of :math:`f`.</span>
+
+<span class="sd">    Another name for this algorithm is *split inexact Uzawa method*.</span>
+
+<span class="sd">    References</span>
+<span class="sd">    ----------</span>
+<span class="sd">    [PB2014] Parikh, N and Boyd, S. *Proximal Algorithms*. Foundations and</span>
+<span class="sd">    Trends in Optimization, 1(3) (2014), pp 123-231.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">L</span><span class="p">,</span> <span class="n">Operator</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;`op` </span><span class="si">{!r}</span><span class="s1"> is not an `Operator` instance&#39;</span>
+                        <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">L</span><span class="p">))</span>
+
+    <span class="k">if</span> <span class="n">x</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">L</span><span class="o">.</span><span class="n">domain</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">OpDomainError</span><span class="p">(</span><span class="s1">&#39;`x` </span><span class="si">{!r}</span><span class="s1"> is not in the domain of `op` </span><span class="si">{!r}</span><span class="s1">&#39;</span>
+                            <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">L</span><span class="o">.</span><span class="n">domain</span><span class="p">))</span>
+
+    <span class="n">tau</span><span class="p">,</span> <span class="n">tau_in</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">tau</span><span class="p">),</span> <span class="n">tau</span>
+    <span class="k">if</span> <span class="n">tau</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;`tau` must be positive, got </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">tau_in</span><span class="p">))</span>
+
+    <span class="n">sigma</span><span class="p">,</span> <span class="n">sigma_in</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">sigma</span><span class="p">),</span> <span class="n">sigma</span>
+    <span class="k">if</span> <span class="n">sigma</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;`sigma` must be positive, got </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">sigma_in</span><span class="p">))</span>
+
+    <span class="n">niter</span><span class="p">,</span> <span class="n">niter_in</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">niter</span><span class="p">),</span> <span class="n">niter</span>
+    <span class="k">if</span> <span class="n">niter</span> <span class="o">&lt;</span> <span class="mi">0</span> <span class="ow">or</span> <span class="n">niter</span> <span class="o">!=</span> <span class="n">niter_in</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;`niter` must be a non-negative integer, got </span><span class="si">{}</span><span class="s1">&#39;</span>
+                         <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">niter_in</span><span class="p">))</span>
+
+    <span class="c1"># Callback object</span>
+    <span class="n">callback</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;callback&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">callback</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">callable</span><span class="p">(</span><span class="n">callback</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;`callback` </span><span class="si">{}</span><span class="s1"> is not callable&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">callback</span><span class="p">))</span>
+
+    <span class="c1"># Initialize range variables</span>
+    <span class="n">z</span> <span class="o">=</span> <span class="n">L</span><span class="o">.</span><span class="n">range</span><span class="o">.</span><span class="n">zero</span><span class="p">()</span>
+    <span class="n">u</span> <span class="o">=</span> <span class="n">L</span><span class="o">.</span><span class="n">range</span><span class="o">.</span><span class="n">zero</span><span class="p">()</span>
+
+    <span class="c1"># Temporary for Lx + u [- z]</span>
+    <span class="n">tmp_ran</span> <span class="o">=</span> <span class="n">L</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+    <span class="c1"># Temporary for L^*(Lx + u - z)</span>
+    <span class="n">tmp_dom</span> <span class="o">=</span> <span class="n">L</span><span class="o">.</span><span class="n">domain</span><span class="o">.</span><span class="n">element</span><span class="p">()</span>
+
+    <span class="c1"># Store proximals since their initialization may involve computation</span>
+    <span class="n">prox_tau_f</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">proximal</span><span class="p">(</span><span class="n">tau</span><span class="p">)</span>
+    <span class="n">prox_sigma_g</span> <span class="o">=</span> <span class="n">g</span><span class="o">.</span><span class="n">proximal</span><span class="p">(</span><span class="n">sigma</span><span class="p">)</span>
+
+    <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">niter</span><span class="p">):</span>
+        <span class="c1"># tmp_ran has value Lx^k here</span>
+        <span class="c1"># tmp_dom &lt;- L^*(Lx^k + u^k - z^k)</span>
+        <span class="n">tmp_ran</span> <span class="o">+=</span> <span class="n">u</span>
+        <span class="n">tmp_ran</span> <span class="o">-=</span> <span class="n">z</span>
+        <span class="n">L</span><span class="o">.</span><span class="n">adjoint</span><span class="p">(</span><span class="n">tmp_ran</span><span class="p">,</span> <span class="n">out</span><span class="o">=</span><span class="n">tmp_dom</span><span class="p">)</span>
+
+        <span class="c1"># x &lt;- x^k - (tau/sigma) L^*(Lx^k + u^k - z^k)</span>
+        <span class="n">x</span><span class="o">.</span><span class="n">lincomb</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="o">-</span><span class="n">tau</span> <span class="o">/</span> <span class="n">sigma</span><span class="p">,</span> <span class="n">tmp_dom</span><span class="p">)</span>
+        <span class="c1"># x^(k+1) &lt;- prox[tau*f](x)</span>
+        <span class="n">prox_tau_f</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">out</span><span class="o">=</span><span class="n">x</span><span class="p">)</span>
+
+        <span class="c1"># tmp_ran &lt;- Lx^(k+1)</span>
+        <span class="n">L</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">out</span><span class="o">=</span><span class="n">tmp_ran</span><span class="p">)</span>
+        <span class="c1"># z^(k+1) &lt;- prox[sigma*g](Lx^(k+1) + u^k)</span>
+        <span class="n">prox_sigma_g</span><span class="p">(</span><span class="n">tmp_ran</span> <span class="o">+</span> <span class="n">u</span><span class="p">,</span> <span class="n">out</span><span class="o">=</span><span class="n">z</span><span class="p">)</span>  <span class="c1"># 1 copy here</span>
+
+        <span class="c1"># u^(k+1) = u^k + Lx^(k+1) - z^(k+1)</span>
+        <span class="n">u</span> <span class="o">+=</span> <span class="n">tmp_ran</span>
+        <span class="n">u</span> <span class="o">-=</span> <span class="n">z</span>
+
+        <span class="k">if</span> <span class="n">callback</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">callback</span><span class="p">(</span><span class="n">x</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="admm_linearized_simple"><a class="viewcode-back" href="../../../../generated/odl.solvers.nonsmooth.admm.admm_linearized_simple.html#odl.solvers.nonsmooth.admm.admm_linearized_simple">[docs]</a><span class="k">def</span> <span class="nf">admm_linearized_simple</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">f</span><span class="p">,</span> <span class="n">g</span><span class="p">,</span> <span class="n">L</span><span class="p">,</span> <span class="n">tau</span><span class="p">,</span> <span class="n">sigma</span><span class="p">,</span> <span class="n">niter</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Non-optimized version of ``admm_linearized``.</span>
+
+<span class="sd">    This function is intended for debugging. It makes a lot of copies and</span>
+<span class="sd">    performs no error checking.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">callback</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;callback&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+    <span class="n">z</span> <span class="o">=</span> <span class="n">L</span><span class="o">.</span><span class="n">range</span><span class="o">.</span><span class="n">zero</span><span class="p">()</span>
+    <span class="n">u</span> <span class="o">=</span> <span class="n">L</span><span class="o">.</span><span class="n">range</span><span class="o">.</span><span class="n">zero</span><span class="p">()</span>
+    <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">niter</span><span class="p">):</span>
+        <span class="n">x</span><span class="p">[:]</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">proximal</span><span class="p">(</span><span class="n">tau</span><span class="p">)(</span><span class="n">x</span> <span class="o">-</span> <span class="n">tau</span> <span class="o">/</span> <span class="n">sigma</span> <span class="o">*</span> <span class="n">L</span><span class="o">.</span><span class="n">adjoint</span><span class="p">(</span><span class="n">L</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="o">+</span> <span class="n">u</span> <span class="o">-</span> <span class="n">z</span><span class="p">))</span>
+        <span class="n">z</span> <span class="o">=</span> <span class="n">g</span><span class="o">.</span><span class="n">proximal</span><span class="p">(</span><span class="n">sigma</span><span class="p">)(</span><span class="n">L</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="o">+</span> <span class="n">u</span><span class="p">)</span>
+        <span class="n">u</span> <span class="o">=</span> <span class="n">L</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="o">+</span> <span class="n">u</span> <span class="o">-</span> <span class="n">z</span>
+        <span class="k">if</span> <span class="n">callback</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">callback</span><span class="p">(</span><span class="n">x</span><span class="p">)</span></div>
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &#169; Copyright 2014-2020 The ODL Contributors.
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

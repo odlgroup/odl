@@ -1,0 +1,6 @@
+InnerProductOperator.T
+===============================================
+
+.. currentmodule:: odl.operator.default_ops
+
+.. autoproperty:: InnerProductOperator.T

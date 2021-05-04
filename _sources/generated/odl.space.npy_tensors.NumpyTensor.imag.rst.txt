@@ -1,0 +1,6 @@
+NumpyTensor.imag
+======================================
+
+.. currentmodule:: odl.space.npy_tensors
+
+.. autoproperty:: NumpyTensor.imag

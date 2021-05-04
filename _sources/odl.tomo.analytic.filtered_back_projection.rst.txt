@@ -1,0 +1,20 @@
+filtered_back_projection
+========================
+
+
+
+.. currentmodule:: odl.tomo.analytic.filtered_back_projection
+
+
+
+
+.. rubric:: Functions
+
+.. autosummary::
+   :toctree: generated/
+
+   ~odl.tomo.analytic.filtered_back_projection.fbp_filter_op
+   ~odl.tomo.analytic.filtered_back_projection.fbp_op
+   ~odl.tomo.analytic.filtered_back_projection.parker_weighting
+   ~odl.tomo.analytic.filtered_back_projection.tam_danielson_window
+

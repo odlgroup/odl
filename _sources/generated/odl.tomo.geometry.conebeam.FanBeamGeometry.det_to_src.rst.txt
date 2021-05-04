@@ -1,0 +1,8 @@
+:orphan:
+
+FanBeamGeometry.det_to_src
+=====================================================
+
+.. currentmodule:: odl.tomo.geometry.conebeam
+
+.. automethod:: FanBeamGeometry.det_to_src

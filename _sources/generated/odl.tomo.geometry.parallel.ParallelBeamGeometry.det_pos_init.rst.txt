@@ -1,0 +1,6 @@
+ParallelBeamGeometry.det_pos_init
+============================================================
+
+.. currentmodule:: odl.tomo.geometry.parallel
+
+.. autoproperty:: ParallelBeamGeometry.det_pos_init

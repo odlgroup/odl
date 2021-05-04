@@ -1,0 +1,6 @@
+BregmanDistance.is_linear
+===========================================================
+
+.. currentmodule:: odl.solvers.functional.functional
+
+.. autoproperty:: BregmanDistance.is_linear

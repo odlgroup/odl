@@ -1,0 +1,6 @@
+﻿linear_deform
+===================================
+
+.. currentmodule:: odl.deform.linearized
+
+.. autofunction:: linear_deform

@@ -1,0 +1,6 @@
+FourierTransform.range
+=========================================
+
+.. currentmodule:: odl.trafos.fourier
+
+.. autoproperty:: FourierTransform.range

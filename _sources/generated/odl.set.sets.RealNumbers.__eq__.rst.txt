@@ -1,0 +1,8 @@
+:orphan:
+
+RealNumbers.__eq__
+===============================
+
+.. currentmodule:: odl.set.sets
+
+.. automethod:: RealNumbers.__eq__

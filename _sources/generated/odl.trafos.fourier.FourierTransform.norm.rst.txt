@@ -1,0 +1,8 @@
+:orphan:
+
+FourierTransform.norm
+========================================
+
+.. currentmodule:: odl.trafos.fourier
+
+.. automethod:: FourierTransform.norm

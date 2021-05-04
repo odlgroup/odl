@@ -1,0 +1,8 @@
+:orphan:
+
+remainder_op.norm
+=========================================
+
+.. currentmodule:: odl.ufunc_ops.ufunc_ops
+
+.. automethod:: remainder_op.norm

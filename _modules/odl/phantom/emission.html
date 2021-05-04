@@ -1,0 +1,392 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>odl.phantom.emission &mdash; odl 1.0.0.dev0 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/custom.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../../" src="../../../_static/documentation_options.js"></script>
+        <script src="../../../_static/jquery.js"></script>
+        <script src="../../../_static/underscore.js"></script>
+        <script src="../../../_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="../../../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../../index.html" class="icon icon-home"> odl
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                1.0.0.dev0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Getting Started</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../getting_started/getting_started.html">Getting Started</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Working with ODL</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../guide/guide.html">User’s guide – selected topics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../math/math.html">Mathematical Background</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Developer zone</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../dev/dev.html">Contributing to ODL</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Useful facts</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../guide/faq.html">Frequently asked questions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../guide/glossary.html">Glossary</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../release_notes.html">Release Notes</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../refs.html">References</a></li>
+</ul>
+<p class="caption"><span class="caption-text">API Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../odl.html">odl</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">odl</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="../../index.html">Module code</a> &raquo;</li>
+        
+      <li>odl.phantom.emission</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for odl.phantom.emission</h1><div class="highlight"><pre>
+<span></span><span class="c1"># Copyright 2014-2020 The ODL contributors</span>
+<span class="c1">#</span>
+<span class="c1"># This file is part of ODL.</span>
+<span class="c1">#</span>
+<span class="c1"># This Source Code Form is subject to the terms of the Mozilla Public License,</span>
+<span class="c1"># v. 2.0. If a copy of the MPL was not distributed with this file, You can</span>
+<span class="c1"># obtain one at https://mozilla.org/MPL/2.0/.</span>
+
+<span class="sd">&quot;&quot;&quot;Phantoms used in emission tomography.&quot;&quot;&quot;</span>
+
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">absolute_import</span><span class="p">,</span> <span class="n">division</span><span class="p">,</span> <span class="n">print_function</span>
+
+<span class="kn">from</span> <span class="nn">odl.phantom.geometric</span> <span class="kn">import</span> <span class="n">ellipsoid_phantom</span>
+<span class="kn">from</span> <span class="nn">odl.phantom.phantom_utils</span> <span class="kn">import</span> <span class="n">cylinders_from_ellipses</span>
+
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;derenzo_sources&#39;</span><span class="p">,)</span>
+
+
+<span class="k">def</span> <span class="nf">_derenzo_sources_2d</span><span class="p">():</span>
+    <span class="sd">&quot;&quot;&quot;Return ellipse parameters for a 2d Derenzo sources phantom.</span>
+
+<span class="sd">    This is a popular phantom in SPECT and PET. It defines the source</span>
+<span class="sd">    locations and intensities.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="p">[[</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">0.047788</span><span class="p">,</span> <span class="mf">0.047788</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.77758</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.11811</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">],</span>
+            <span class="p">[</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">0.063525</span><span class="p">,</span> <span class="mf">0.063525</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.71353</span><span class="p">,</span> <span class="mf">0.12182</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">],</span>
+            <span class="p">[</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">0.047788</span><span class="p">,</span> <span class="mf">0.047788</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.68141</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.28419</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">],</span>
+            <span class="p">[</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">0.063525</span><span class="p">,</span> <span class="mf">0.063525</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.58552</span><span class="p">,</span> <span class="mf">0.3433</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">],</span>
+            <span class="p">[</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">0.047838</span><span class="p">,</span> <span class="mf">0.047838</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.58547</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.45035</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">],</span>
+            <span class="p">[</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">0.047591</span><span class="p">,</span> <span class="mf">0.047591</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.58578</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.11798</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">],</span>
+            <span class="p">[</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">0.047591</span><span class="p">,</span> <span class="mf">0.047591</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.48972</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.61655</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">],</span>
+            <span class="p">[</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">0.047739</span><span class="p">,</span> <span class="mf">0.047739</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.48973</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.28414</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">],</span>
+            <span class="p">[</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">0.063747</span><span class="p">,</span> <span class="mf">0.063747</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.45769</span><span class="p">,</span> <span class="mf">0.12204</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">],</span>
+            <span class="p">[</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">0.063673</span><span class="p">,</span> <span class="mf">0.063673</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.4578</span><span class="p">,</span> <span class="mf">0.5649</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">],</span>
+            <span class="p">[</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">0.04764</span><span class="p">,</span> <span class="mf">0.04764</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.39384</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.45026</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">],</span>
+            <span class="p">[</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">0.047591</span><span class="p">,</span> <span class="mf">0.047591</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.39381</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.11783</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">],</span>
+            <span class="p">[</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">0.063525</span><span class="p">,</span> <span class="mf">0.063525</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.32987</span><span class="p">,</span> <span class="mf">0.3433</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">],</span>
+            <span class="p">[</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">0.03167</span><span class="p">,</span> <span class="mf">0.03167</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.31394</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.7915</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">],</span>
+            <span class="p">[</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">0.047591</span><span class="p">,</span> <span class="mf">0.047591</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.29786</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.28413</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">],</span>
+            <span class="p">[</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">0.032112</span><span class="p">,</span> <span class="mf">0.032112</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.25</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.68105</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">],</span>
+            <span class="p">[</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">0.063488</span><span class="p">,</span> <span class="mf">0.063488</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.20192</span><span class="p">,</span> <span class="mf">0.12185</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">],</span>
+            <span class="p">[</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">0.047442</span><span class="p">,</span> <span class="mf">0.047442</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.20192</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.11804</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">],</span>
+            <span class="p">[</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">0.079552</span><span class="p">,</span> <span class="mf">0.079552</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.15405</span><span class="p">,</span> <span class="mf">0.59875</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">],</span>
+            <span class="p">[</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">0.031744</span><span class="p">,</span> <span class="mf">0.031744</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.1862</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.79155</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">],</span>
+            <span class="p">[</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">0.03167</span><span class="p">,</span> <span class="mf">0.03167</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.18629</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.57055</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">],</span>
+            <span class="p">[</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">0.031892</span><span class="p">,</span> <span class="mf">0.031892</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.12224</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.68109</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">],</span>
+            <span class="p">[</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">0.03167</span><span class="p">,</span> <span class="mf">0.03167</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.1217</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.45961</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">],</span>
+            <span class="p">[</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">0.032039</span><span class="p">,</span> <span class="mf">0.032039</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.05808</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.79192</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">],</span>
+            <span class="p">[</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">0.031744</span><span class="p">,</span> <span class="mf">0.031744</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.058285</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.57011</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">],</span>
+            <span class="p">[</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">0.03167</span><span class="p">,</span> <span class="mf">0.03167</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.05827</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.3487</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">],</span>
+            <span class="p">[</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">0.079434</span><span class="p">,</span> <span class="mf">0.079434</span><span class="p">,</span> <span class="mf">0.0057692</span><span class="p">,</span> <span class="mf">0.32179</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">],</span>
+            <span class="p">[</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">0.031892</span><span class="p">,</span> <span class="mf">0.031892</span><span class="p">,</span> <span class="mf">0.0057692</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.68077</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">],</span>
+            <span class="p">[</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">0.031446</span><span class="p">,</span> <span class="mf">0.031446</span><span class="p">,</span> <span class="mf">0.0057692</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.45934</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">],</span>
+            <span class="p">[</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">0.031892</span><span class="p">,</span> <span class="mf">0.031892</span><span class="p">,</span> <span class="mf">0.0057692</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.23746</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">],</span>
+            <span class="p">[</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">0.032039</span><span class="p">,</span> <span class="mf">0.032039</span><span class="p">,</span> <span class="mf">0.069619</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.79192</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">],</span>
+            <span class="p">[</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">0.031744</span><span class="p">,</span> <span class="mf">0.031744</span><span class="p">,</span> <span class="mf">0.069824</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.57011</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">],</span>
+            <span class="p">[</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">0.03167</span><span class="p">,</span> <span class="mf">0.03167</span><span class="p">,</span> <span class="mf">0.069809</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.3487</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">],</span>
+            <span class="p">[</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">0.079552</span><span class="p">,</span> <span class="mf">0.079552</span><span class="p">,</span> <span class="mf">0.16558</span><span class="p">,</span> <span class="mf">0.59875</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">],</span>
+            <span class="p">[</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">0.031892</span><span class="p">,</span> <span class="mf">0.031892</span><span class="p">,</span> <span class="mf">0.13378</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.68109</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">],</span>
+            <span class="p">[</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">0.03167</span><span class="p">,</span> <span class="mf">0.03167</span><span class="p">,</span> <span class="mf">0.13324</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.45961</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">],</span>
+            <span class="p">[</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">0.031744</span><span class="p">,</span> <span class="mf">0.031744</span><span class="p">,</span> <span class="mf">0.19774</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.79155</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">],</span>
+            <span class="p">[</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">0.03167</span><span class="p">,</span> <span class="mf">0.03167</span><span class="p">,</span> <span class="mf">0.19783</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.57055</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">],</span>
+            <span class="p">[</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">0.09533</span><span class="p">,</span> <span class="mf">0.09533</span><span class="p">,</span> <span class="mf">0.28269</span><span class="p">,</span> <span class="mf">0.16171</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">],</span>
+            <span class="p">[</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">0.023572</span><span class="p">,</span> <span class="mf">0.023572</span><span class="p">,</span> <span class="mf">0.21346</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.11767</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">],</span>
+            <span class="p">[</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">0.032112</span><span class="p">,</span> <span class="mf">0.032112</span><span class="p">,</span> <span class="mf">0.26154</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.68105</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">],</span>
+            <span class="p">[</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">0.023968</span><span class="p">,</span> <span class="mf">0.023968</span><span class="p">,</span> <span class="mf">0.26122</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.20117</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">],</span>
+            <span class="p">[</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">0.023968</span><span class="p">,</span> <span class="mf">0.023968</span><span class="p">,</span> <span class="mf">0.30933</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.28398</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">],</span>
+            <span class="p">[</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">0.023771</span><span class="p">,</span> <span class="mf">0.023771</span><span class="p">,</span> <span class="mf">0.30939</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.11763</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">],</span>
+            <span class="p">[</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">0.03167</span><span class="p">,</span> <span class="mf">0.03167</span><span class="p">,</span> <span class="mf">0.32548</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.7915</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">],</span>
+            <span class="p">[</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">0.024066</span><span class="p">,</span> <span class="mf">0.024066</span><span class="p">,</span> <span class="mf">0.35722</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.36714</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">],</span>
+            <span class="p">[</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">0.023968</span><span class="p">,</span> <span class="mf">0.023968</span><span class="p">,</span> <span class="mf">0.35703</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.20132</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">],</span>
+            <span class="p">[</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">0.09538</span><span class="p">,</span> <span class="mf">0.09538</span><span class="p">,</span> <span class="mf">0.47446</span><span class="p">,</span> <span class="mf">0.49414</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">],</span>
+            <span class="p">[</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">0.024066</span><span class="p">,</span> <span class="mf">0.024066</span><span class="p">,</span> <span class="mf">0.40532</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.45053</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">],</span>
+            <span class="p">[</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">0.024066</span><span class="p">,</span> <span class="mf">0.024066</span><span class="p">,</span> <span class="mf">0.40532</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.28408</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">],</span>
+            <span class="p">[</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">0.023671</span><span class="p">,</span> <span class="mf">0.023671</span><span class="p">,</span> <span class="mf">0.40537</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.11771</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">],</span>
+            <span class="p">[</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">0.02387</span><span class="p">,</span> <span class="mf">0.02387</span><span class="p">,</span> <span class="mf">0.45299</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.53331</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">],</span>
+            <span class="p">[</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">0.02387</span><span class="p">,</span> <span class="mf">0.02387</span><span class="p">,</span> <span class="mf">0.45305</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.36713</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">],</span>
+            <span class="p">[</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">0.02387</span><span class="p">,</span> <span class="mf">0.02387</span><span class="p">,</span> <span class="mf">0.45299</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.2013</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">],</span>
+            <span class="p">[</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">0.023671</span><span class="p">,</span> <span class="mf">0.023671</span><span class="p">,</span> <span class="mf">0.50152</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.6169</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">],</span>
+            <span class="p">[</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">0.023968</span><span class="p">,</span> <span class="mf">0.023968</span><span class="p">,</span> <span class="mf">0.50132</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.45066</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">],</span>
+            <span class="p">[</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">0.023968</span><span class="p">,</span> <span class="mf">0.023968</span><span class="p">,</span> <span class="mf">0.50132</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.28395</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">],</span>
+            <span class="p">[</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">0.023671</span><span class="p">,</span> <span class="mf">0.023671</span><span class="p">,</span> <span class="mf">0.50152</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.11771</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">],</span>
+            <span class="p">[</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">0.024066</span><span class="p">,</span> <span class="mf">0.024066</span><span class="p">,</span> <span class="mf">0.54887</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.69934</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">],</span>
+            <span class="p">[</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">0.023771</span><span class="p">,</span> <span class="mf">0.023771</span><span class="p">,</span> <span class="mf">0.54894</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.5333</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">],</span>
+            <span class="p">[</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">0.023771</span><span class="p">,</span> <span class="mf">0.023771</span><span class="p">,</span> <span class="mf">0.54872</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.36731</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">],</span>
+            <span class="p">[</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">0.023771</span><span class="p">,</span> <span class="mf">0.023771</span><span class="p">,</span> <span class="mf">0.54894</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.20131</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">],</span>
+            <span class="p">[</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">0.09533</span><span class="p">,</span> <span class="mf">0.09533</span><span class="p">,</span> <span class="mf">0.66643</span><span class="p">,</span> <span class="mf">0.16163</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">],</span>
+            <span class="p">[</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">0.02387</span><span class="p">,</span> <span class="mf">0.02387</span><span class="p">,</span> <span class="mf">0.59739</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.61662</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">],</span>
+            <span class="p">[</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">0.023968</span><span class="p">,</span> <span class="mf">0.023968</span><span class="p">,</span> <span class="mf">0.59748</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.45066</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">],</span>
+            <span class="p">[</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">0.023968</span><span class="p">,</span> <span class="mf">0.023968</span><span class="p">,</span> <span class="mf">0.59748</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.28395</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">],</span>
+            <span class="p">[</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">0.023572</span><span class="p">,</span> <span class="mf">0.023572</span><span class="p">,</span> <span class="mf">0.59749</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.11763</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">],</span>
+            <span class="p">[</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">0.023572</span><span class="p">,</span> <span class="mf">0.023572</span><span class="p">,</span> <span class="mf">0.64482</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.53302</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">],</span>
+            <span class="p">[</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">0.023671</span><span class="p">,</span> <span class="mf">0.023671</span><span class="p">,</span> <span class="mf">0.64473</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.36716</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">],</span>
+            <span class="p">[</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">0.02387</span><span class="p">,</span> <span class="mf">0.02387</span><span class="p">,</span> <span class="mf">0.64491</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.20124</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">],</span>
+            <span class="p">[</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">0.02387</span><span class="p">,</span> <span class="mf">0.02387</span><span class="p">,</span> <span class="mf">0.69317</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.45038</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">],</span>
+            <span class="p">[</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">0.024066</span><span class="p">,</span> <span class="mf">0.024066</span><span class="p">,</span> <span class="mf">0.69343</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.28396</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">],</span>
+            <span class="p">[</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">0.023771</span><span class="p">,</span> <span class="mf">0.023771</span><span class="p">,</span> <span class="mf">0.69337</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.11792</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">],</span>
+            <span class="p">[</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">0.023572</span><span class="p">,</span> <span class="mf">0.023572</span><span class="p">,</span> <span class="mf">0.74074</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.36731</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">],</span>
+            <span class="p">[</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">0.023671</span><span class="p">,</span> <span class="mf">0.023671</span><span class="p">,</span> <span class="mf">0.74079</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.20152</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">],</span>
+            <span class="p">[</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">0.023671</span><span class="p">,</span> <span class="mf">0.023671</span><span class="p">,</span> <span class="mf">0.78911</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.28397</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">],</span>
+            <span class="p">[</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">0.02387</span><span class="p">,</span> <span class="mf">0.02387</span><span class="p">,</span> <span class="mf">0.78932</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.11793</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">],</span>
+            <span class="p">[</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">0.023572</span><span class="p">,</span> <span class="mf">0.023572</span><span class="p">,</span> <span class="mf">0.83686</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.20134</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">],</span>
+            <span class="p">[</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">0.023968</span><span class="p">,</span> <span class="mf">0.023968</span><span class="p">,</span> <span class="mf">0.88528</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.11791</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">]]</span>
+
+
+<div class="viewcode-block" id="derenzo_sources"><a class="viewcode-back" href="../../../generated/odl.phantom.emission.derenzo_sources.html#odl.phantom.emission.derenzo_sources">[docs]</a><span class="k">def</span> <span class="nf">derenzo_sources</span><span class="p">(</span><span class="n">space</span><span class="p">,</span> <span class="n">min_pt</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">max_pt</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Create the PET/SPECT Derenzo sources phantom.</span>
+
+<span class="sd">    The Derenzo phantom contains a series of circles of decreasing size.</span>
+
+<span class="sd">    In 3d the phantom is simply the 2d phantom extended in the z direction as</span>
+<span class="sd">    cylinders.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    space : `DiscretizedSpace`</span>
+<span class="sd">        Space in which the phantom should be created, must be 2- or</span>
+<span class="sd">        3-dimensional. If ``space.shape`` is 1 in an axis, a corresponding</span>
+<span class="sd">        slice of the phantom is created (instead of squashing the whole</span>
+<span class="sd">        phantom into the slice).</span>
+<span class="sd">    min_pt, max_pt : array-like, optional</span>
+<span class="sd">        If provided, use these vectors to determine the bounding box of the</span>
+<span class="sd">        phantom instead of ``space.min_pt`` and ``space.max_pt``.</span>
+<span class="sd">        It is currently required that ``min_pt &gt;= space.min_pt`` and</span>
+<span class="sd">        ``max_pt &lt;= space.max_pt``, i.e., shifting or scaling outside the</span>
+<span class="sd">        original space is not allowed.</span>
+
+<span class="sd">        Providing one of them results in a shift, e.g., for ``min_pt``::</span>
+
+<span class="sd">            new_min_pt = min_pt</span>
+<span class="sd">            new_max_pt = space.max_pt + (min_pt - space.min_pt)</span>
+
+<span class="sd">        Providing both results in a scaled version of the phantom.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    phantom : ``space`` element</span>
+<span class="sd">        The Derenzo source phantom in the given space.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">space</span><span class="o">.</span><span class="n">ndim</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">ellipsoid_phantom</span><span class="p">(</span><span class="n">space</span><span class="p">,</span> <span class="n">_derenzo_sources_2d</span><span class="p">(),</span> <span class="n">min_pt</span><span class="p">,</span> <span class="n">max_pt</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">space</span><span class="o">.</span><span class="n">ndim</span> <span class="o">==</span> <span class="mi">3</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">ellipsoid_phantom</span><span class="p">(</span>
+            <span class="n">space</span><span class="p">,</span> <span class="n">cylinders_from_ellipses</span><span class="p">(</span><span class="n">_derenzo_sources_2d</span><span class="p">()),</span>
+            <span class="n">min_pt</span><span class="p">,</span> <span class="n">max_pt</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;dimension not 2, no phantom available&#39;</span><span class="p">)</span></div>
+
+
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s1">&#39;__main__&#39;</span><span class="p">:</span>
+    <span class="c1"># Show the phantoms</span>
+    <span class="kn">import</span> <span class="nn">odl</span>
+    <span class="kn">from</span> <span class="nn">odl.util.testutils</span> <span class="kn">import</span> <span class="n">run_doctests</span>
+
+    <span class="n">n</span> <span class="o">=</span> <span class="mi">300</span>
+
+    <span class="c1"># 2D</span>
+    <span class="n">discr</span> <span class="o">=</span> <span class="n">odl</span><span class="o">.</span><span class="n">uniform_discr</span><span class="p">([</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span> <span class="p">[</span><span class="n">n</span><span class="p">,</span> <span class="n">n</span><span class="p">])</span>
+    <span class="n">derenzo_sources</span><span class="p">(</span><span class="n">discr</span><span class="p">)</span><span class="o">.</span><span class="n">show</span><span class="p">(</span><span class="s1">&#39;derenzo_sources 2d&#39;</span><span class="p">)</span>
+
+    <span class="c1"># 3D</span>
+    <span class="n">discr</span> <span class="o">=</span> <span class="n">odl</span><span class="o">.</span><span class="n">uniform_discr</span><span class="p">([</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span> <span class="p">[</span><span class="mi">300</span><span class="p">,</span> <span class="mi">300</span><span class="p">,</span> <span class="mi">300</span><span class="p">])</span>
+    <span class="n">derenzo_sources</span><span class="p">(</span><span class="n">discr</span><span class="p">)</span><span class="o">.</span><span class="n">show</span><span class="p">(</span><span class="s1">&#39;derenzo_sources 3d&#39;</span><span class="p">)</span>
+
+    <span class="c1"># Run also the doctests</span>
+    <span class="n">run_doctests</span><span class="p">()</span>
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &#169; Copyright 2014-2020 The ODL Contributors.
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

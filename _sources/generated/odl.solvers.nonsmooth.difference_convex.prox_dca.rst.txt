@@ -1,0 +1,6 @@
+﻿prox_dca
+================================================
+
+.. currentmodule:: odl.solvers.nonsmooth.difference_convex
+
+.. autofunction:: prox_dca

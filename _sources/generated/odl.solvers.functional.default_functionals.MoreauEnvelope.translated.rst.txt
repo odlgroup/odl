@@ -1,0 +1,8 @@
+:orphan:
+
+MoreauEnvelope.translated
+====================================================================
+
+.. currentmodule:: odl.solvers.functional.default_functionals
+
+.. automethod:: MoreauEnvelope.translated

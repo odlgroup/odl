@@ -1,0 +1,8 @@
+:orphan:
+
+FourierTransform.clear_fftw_plan
+===================================================
+
+.. currentmodule:: odl.trafos.fourier
+
+.. automethod:: FourierTransform.clear_fftw_plan

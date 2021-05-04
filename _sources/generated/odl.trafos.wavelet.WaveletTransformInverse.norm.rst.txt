@@ -1,0 +1,8 @@
+:orphan:
+
+WaveletTransformInverse.norm
+===============================================
+
+.. currentmodule:: odl.trafos.wavelet
+
+.. automethod:: WaveletTransformInverse.norm

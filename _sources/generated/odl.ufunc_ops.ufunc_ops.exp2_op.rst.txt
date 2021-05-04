@@ -1,0 +1,37 @@
+﻿exp2_op
+===============================
+
+.. currentmodule:: odl.ufunc_ops.ufunc_ops
+
+.. autoclass:: exp2_op
+   :show-inheritance:
+   
+   
+   .. automethod:: __init__
+   
+      
+   
+   .. HACK -- the point here is that we don't want this to appear in the output, but the autosummary should still generate the pages.
+      .. autosummary::
+         :toctree:
+      
+         exp2_op.__call__
+         exp2_op.__eq__
+         exp2_op._call
+         exp2_op.derivative
+         exp2_op.norm
+   
+
+    
+   .. HACK -- the point here is that we don't want this to appear in the output, but the autosummary should still generate the pages.
+      .. autosummary::
+         :toctree:
+      
+         exp2_op.adjoint
+         exp2_op.domain
+         exp2_op.inverse
+         exp2_op.is_functional
+         exp2_op.is_linear
+         exp2_op.range
+   
+   

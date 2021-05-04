@@ -1,0 +1,415 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>WeightedSumSamplingOperator &mdash; odl 1.0.0.dev0 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="WeightedSumSamplingOperator._call" href="odl.operator.tensor_ops.WeightedSumSamplingOperator._call.html" />
+    <link rel="prev" title="SamplingOperator.norm" href="odl.operator.tensor_ops.SamplingOperator.norm.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../index.html" class="icon icon-home"> odl
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                1.0.0.dev0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Getting Started</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../getting_started/getting_started.html">Getting Started</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Working with ODL</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../guide/guide.html">User’s guide – selected topics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../math/math.html">Mathematical Background</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Developer zone</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../dev/dev.html">Contributing to ODL</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Useful facts</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../guide/faq.html">Frequently asked questions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../guide/glossary.html">Glossary</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../release_notes.html">Release Notes</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../refs.html">References</a></li>
+</ul>
+<p class="caption"><span class="caption-text">API Reference</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../odl.html">odl</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../odl.contrib.html">contrib</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../odl.deform.html">deform</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../odl.diagnostics.html">diagnostics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../odl.discr.html">discr</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="../odl.operator.html">operator</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="../odl.operator.default_ops.html">default_ops</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../odl.operator.operator.html">operator</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../odl.operator.oputils.html">oputils</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../odl.operator.pspace_ops.html">pspace_ops</a></li>
+<li class="toctree-l3 current"><a class="reference internal" href="../odl.operator.tensor_ops.html">tensor_ops</a><ul class="current">
+<li class="toctree-l4"><a class="reference internal" href="odl.operator.tensor_ops.FlatteningOperator.html">FlatteningOperator</a></li>
+<li class="toctree-l4"><a class="reference internal" href="odl.operator.tensor_ops.MatrixOperator.html">MatrixOperator</a></li>
+<li class="toctree-l4"><a class="reference internal" href="odl.operator.tensor_ops.PointwiseInner.html">PointwiseInner</a></li>
+<li class="toctree-l4"><a class="reference internal" href="odl.operator.tensor_ops.PointwiseInnerAdjoint.html">PointwiseInnerAdjoint</a></li>
+<li class="toctree-l4"><a class="reference internal" href="odl.operator.tensor_ops.PointwiseInnerBase.html">PointwiseInnerBase</a></li>
+<li class="toctree-l4"><a class="reference internal" href="odl.operator.tensor_ops.PointwiseNorm.html">PointwiseNorm</a></li>
+<li class="toctree-l4"><a class="reference internal" href="odl.operator.tensor_ops.PointwiseSum.html">PointwiseSum</a></li>
+<li class="toctree-l4"><a class="reference internal" href="odl.operator.tensor_ops.PointwiseTensorFieldOperator.html">PointwiseTensorFieldOperator</a></li>
+<li class="toctree-l4"><a class="reference internal" href="odl.operator.tensor_ops.SamplingOperator.html">SamplingOperator</a></li>
+<li class="toctree-l4 current"><a class="current reference internal" href="#">WeightedSumSamplingOperator</a></li>
+<li class="toctree-l4"><a class="reference internal" href="odl.operator.tensor_ops.is_compatible_space.html">is_compatible_space</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../odl.phantom.html">phantom</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../odl.set.html">set</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../odl.solvers.html">solvers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../odl.space.html">space</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../odl.tomo.html">tomo</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../odl.trafos.html">trafos</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../odl.ufunc_ops.html">ufunc_ops</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../odl.util.html">util</a></li>
+</ul>
+</li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">odl</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="../odl.html">odl</a> &raquo;</li>
+        
+          <li><a href="../odl.operator.html">operator</a> &raquo;</li>
+        
+          <li><a href="../odl.operator.tensor_ops.html">tensor_ops</a> &raquo;</li>
+        
+      <li>WeightedSumSamplingOperator</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            <a href="../_sources/generated/odl.operator.tensor_ops.WeightedSumSamplingOperator.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="weightedsumsamplingoperator">
+<h1>WeightedSumSamplingOperator<a class="headerlink" href="#weightedsumsamplingoperator" title="Permalink to this headline">¶</a></h1>
+<dl class="py class">
+<dt id="odl.operator.tensor_ops.WeightedSumSamplingOperator">
+<em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">odl.operator.tensor_ops.</span></code><code class="sig-name descname"><span class="pre">WeightedSumSamplingOperator</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/odl/operator/tensor_ops.html#WeightedSumSamplingOperator"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#odl.operator.tensor_ops.WeightedSumSamplingOperator" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="odl.operator.operator.Operator.html#odl.operator.operator.Operator" title="odl.operator.operator.Operator"><code class="xref py py-class docutils literal notranslate"><span class="pre">odl.operator.operator.Operator</span></code></a></p>
+<p>Operator computing the sum of coefficients at sampling locations.</p>
+<p>This operator is the adjoint of <a class="reference internal" href="odl.operator.tensor_ops.SamplingOperator.html#odl.operator.tensor_ops.SamplingOperator" title="odl.operator.tensor_ops.SamplingOperator"><code class="xref any py py-class docutils literal notranslate"><span class="pre">SamplingOperator</span></code></a>.</p>
+<p class="rubric">Notes</p>
+<p>The weighted sum sampling operator for a sequence
+<img class="math" src="../_images/math/c813a75eb8051f1f625be5e08d304d634646b09d.png" alt="I = (i_n)_{n=1}^N"/>
+of indices (possibly with duplicates) is given by</p>
+<div class="math">
+<p><img src="../_images/math/437931398a96f5ea9c17d6e65799533a87df59ff.png" alt="W_I(g)(x) = \sum_{i \in I} d_i(x) g_i,"/></p>
+</div><p>where <img class="math" src="../_images/math/b95e8f800adb6a398b2b32d89e7e01b778edb2d9.png" alt="g \in \mathbb{F}^N"/> is the value vector, and
+<img class="math" src="../_images/math/54082d366e30a6599eb4acf68fb943b5f94743c8.png" alt="d_i"/> is either a Dirac delta or a characteristic function of
+the cell centered around the point indexed by <img class="math" src="../_images/math/5aa339d4daf45a810dda332e3c80a0698e526e04.png" alt="i"/>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Attributes</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><a class="reference internal" href="odl.operator.tensor_ops.WeightedSumSamplingOperator.adjoint.html#odl.operator.tensor_ops.WeightedSumSamplingOperator.adjoint" title="odl.operator.tensor_ops.WeightedSumSamplingOperator.adjoint"><code class="xref py py-obj docutils literal notranslate"><span class="pre">adjoint</span></code></a></dt><dd><p>Adjoint of this operator, a <a class="reference internal" href="odl.operator.tensor_ops.SamplingOperator.html#odl.operator.tensor_ops.SamplingOperator" title="odl.operator.tensor_ops.SamplingOperator"><code class="xref any py py-class docutils literal notranslate"><span class="pre">SamplingOperator</span></code></a>.</p>
+</dd>
+<dt><a class="reference internal" href="odl.operator.tensor_ops.WeightedSumSamplingOperator.domain.html#odl.operator.tensor_ops.WeightedSumSamplingOperator.domain" title="odl.operator.tensor_ops.WeightedSumSamplingOperator.domain"><code class="xref py py-obj docutils literal notranslate"><span class="pre">domain</span></code></a></dt><dd><p>Set of objects on which this operator can be evaluated.</p>
+</dd>
+<dt><a class="reference internal" href="odl.operator.tensor_ops.WeightedSumSamplingOperator.inverse.html#odl.operator.tensor_ops.WeightedSumSamplingOperator.inverse" title="odl.operator.tensor_ops.WeightedSumSamplingOperator.inverse"><code class="xref py py-obj docutils literal notranslate"><span class="pre">inverse</span></code></a></dt><dd><p>Return the operator inverse.</p>
+</dd>
+<dt><a class="reference internal" href="odl.operator.tensor_ops.WeightedSumSamplingOperator.is_functional.html#odl.operator.tensor_ops.WeightedSumSamplingOperator.is_functional" title="odl.operator.tensor_ops.WeightedSumSamplingOperator.is_functional"><code class="xref py py-obj docutils literal notranslate"><span class="pre">is_functional</span></code></a></dt><dd><p><code class="docutils literal notranslate"><span class="pre">True</span></code> if this operator’s range is a <a class="reference internal" href="odl.set.sets.Field.html#odl.set.sets.Field" title="odl.set.sets.Field"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Field</span></code></a>.</p>
+</dd>
+<dt><a class="reference internal" href="odl.operator.tensor_ops.WeightedSumSamplingOperator.is_linear.html#odl.operator.tensor_ops.WeightedSumSamplingOperator.is_linear" title="odl.operator.tensor_ops.WeightedSumSamplingOperator.is_linear"><code class="xref py py-obj docutils literal notranslate"><span class="pre">is_linear</span></code></a></dt><dd><p><code class="docutils literal notranslate"><span class="pre">True</span></code> if this operator is linear.</p>
+</dd>
+<dt><a class="reference internal" href="odl.operator.tensor_ops.WeightedSumSamplingOperator.range.html#odl.operator.tensor_ops.WeightedSumSamplingOperator.range" title="odl.operator.tensor_ops.WeightedSumSamplingOperator.range"><code class="xref py py-obj docutils literal notranslate"><span class="pre">range</span></code></a></dt><dd><p>Set in which the result of an evaluation of this operator lies.</p>
+</dd>
+<dt><a class="reference internal" href="odl.operator.tensor_ops.WeightedSumSamplingOperator.sampling_points.html#odl.operator.tensor_ops.WeightedSumSamplingOperator.sampling_points" title="odl.operator.tensor_ops.WeightedSumSamplingOperator.sampling_points"><code class="xref py py-obj docutils literal notranslate"><span class="pre">sampling_points</span></code></a></dt><dd><p>Indices where to sample the function.</p>
+</dd>
+<dt><a class="reference internal" href="odl.operator.tensor_ops.WeightedSumSamplingOperator.variant.html#odl.operator.tensor_ops.WeightedSumSamplingOperator.variant" title="odl.operator.tensor_ops.WeightedSumSamplingOperator.variant"><code class="xref py py-obj docutils literal notranslate"><span class="pre">variant</span></code></a></dt><dd><p>Weighting scheme for the operator.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+<p class="rubric">Methods</p>
+<table class="longtable docutils align-default">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="odl.operator.tensor_ops.WeightedSumSamplingOperator._call.html#odl.operator.tensor_ops.WeightedSumSamplingOperator._call" title="odl.operator.tensor_ops.WeightedSumSamplingOperator._call"><code class="xref py py-obj docutils literal notranslate"><span class="pre">_call</span></code></a>(self, x)</p></td>
+<td><p>Sum all values if indices are given multiple times.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="odl.operator.tensor_ops.WeightedSumSamplingOperator.derivative.html#odl.operator.tensor_ops.WeightedSumSamplingOperator.derivative" title="odl.operator.tensor_ops.WeightedSumSamplingOperator.derivative"><code class="xref py py-obj docutils literal notranslate"><span class="pre">derivative</span></code></a>(self, point)</p></td>
+<td><p>Return the operator derivative at <code class="docutils literal notranslate"><span class="pre">point</span></code>.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="odl.operator.tensor_ops.WeightedSumSamplingOperator.norm.html#odl.operator.tensor_ops.WeightedSumSamplingOperator.norm" title="odl.operator.tensor_ops.WeightedSumSamplingOperator.norm"><code class="xref py py-obj docutils literal notranslate"><span class="pre">norm</span></code></a>(self[, estimate])</p></td>
+<td><p>Return the operator norm of this operator.</p></td>
+</tr>
+</tbody>
+</table>
+<dl class="py method">
+<dt id="odl.operator.tensor_ops.WeightedSumSamplingOperator.__init__">
+<code class="sig-name descname"><span class="pre">__init__</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">range</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sampling_points</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">variant</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'char_fun'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/odl/operator/tensor_ops.html#WeightedSumSamplingOperator.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#odl.operator.tensor_ops.WeightedSumSamplingOperator.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initialize a new instance.</p>
+<dl class="field-list">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl>
+<dt><strong>range</strong><span class="classifier"><a class="reference internal" href="odl.space.base_tensors.TensorSpace.html#odl.space.base_tensors.TensorSpace" title="odl.space.base_tensors.TensorSpace"><code class="xref any py py-class docutils literal notranslate"><span class="pre">TensorSpace</span></code></a></span></dt><dd><p>Set of elements into which this operator maps.</p>
+</dd>
+<dt><strong>sampling_points</strong><span class="classifier">1D <a class="reference internal" href="../guide/glossary.html#term-array-like"><code class="xref any std std-term docutils literal notranslate"><span class="pre">array-like</span></code></a> or sequence of 1D array-likes</span></dt><dd><p>Indices that determine the sampling points.
+In n dimensions, it should be a sequence of n arrays, where
+each member array is of equal length N. The indexed positions
+are <code class="docutils literal notranslate"><span class="pre">(arr1[i],</span> <span class="pre">arr2[i],</span> <span class="pre">...,</span> <span class="pre">arrn[i])</span></code>, in total N
+points.
+If <code class="docutils literal notranslate"><span class="pre">range</span></code> is one-dimensional, a single array-like can be
+used. Likewise, a single point can be given as integer in 1D,
+and as a array-like sequence in nD.</p>
+</dd>
+<dt><strong>variant</strong><span class="classifier">{‘char_fun’, ‘dirac’}, optional</span></dt><dd><p>This option determines which function to sum over.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+<p class="rubric">Examples</p>
+<p>In 1d, a single index (an int) or a sequence of such can be used
+for indexing.</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">space</span> <span class="o">=</span> <span class="n">odl</span><span class="o">.</span><span class="n">uniform_discr</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">4</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">op</span> <span class="o">=</span> <span class="n">odl</span><span class="o">.</span><span class="n">WeightedSumSamplingOperator</span><span class="p">(</span><span class="n">space</span><span class="p">,</span> <span class="n">sampling_points</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">op</span><span class="o">.</span><span class="n">domain</span>
+<span class="go">rn(1)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">x</span> <span class="o">=</span> <span class="n">op</span><span class="o">.</span><span class="n">domain</span><span class="o">.</span><span class="n">element</span><span class="p">([</span><span class="mi">1</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># Put value 1 at index 1</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">op</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+<span class="go">uniform_discr(0.0, 1.0, 4).element([ 0.,  1.,  0.,  0.])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">op</span> <span class="o">=</span> <span class="n">odl</span><span class="o">.</span><span class="n">WeightedSumSamplingOperator</span><span class="p">(</span><span class="n">space</span><span class="p">,</span>
+<span class="gp">... </span>                                     <span class="n">sampling_points</span><span class="o">=</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">1</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">op</span><span class="o">.</span><span class="n">domain</span>
+<span class="go">rn(3)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">x</span> <span class="o">=</span> <span class="n">op</span><span class="o">.</span><span class="n">domain</span><span class="o">.</span><span class="n">element</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.25</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># Index 1 occurs twice and gets two contributions (1 and 0.25)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">op</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+<span class="go">uniform_discr(0.0, 1.0, 4).element([ 0.  ,  1.25,  0.5 ,  0.  ])</span>
+</pre></div>
+</div>
+<p>The <code class="docutils literal notranslate"><span class="pre">'dirac'</span></code> variant scales the values by the reciprocal
+cell volume of the operator range:</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">op</span> <span class="o">=</span> <span class="n">odl</span><span class="o">.</span><span class="n">WeightedSumSamplingOperator</span><span class="p">(</span>
+<span class="gp">... </span>    <span class="n">space</span><span class="p">,</span> <span class="n">sampling_points</span><span class="o">=</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span> <span class="n">variant</span><span class="o">=</span><span class="s1">&#39;dirac&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">x</span> <span class="o">=</span> <span class="n">op</span><span class="o">.</span><span class="n">domain</span><span class="o">.</span><span class="n">element</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.25</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="mi">1</span> <span class="o">/</span> <span class="n">op</span><span class="o">.</span><span class="n">range</span><span class="o">.</span><span class="n">cell_volume</span>  <span class="c1"># the scaling constant</span>
+<span class="go">4.0</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">op</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+<span class="go">uniform_discr(0.0, 1.0, 4).element([ 0.,  5.,  2.,  0.])</span>
+</pre></div>
+</div>
+<p>In higher dimensions, a sequence of index array-likes must be
+given, or a single sequence for a single point:</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">space</span> <span class="o">=</span> <span class="n">odl</span><span class="o">.</span><span class="n">uniform_discr</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span> <span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># Sample at the index (0, 2)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">op</span> <span class="o">=</span> <span class="n">odl</span><span class="o">.</span><span class="n">WeightedSumSamplingOperator</span><span class="p">(</span><span class="n">space</span><span class="p">,</span>
+<span class="gp">... </span>                                     <span class="n">sampling_points</span><span class="o">=</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">2</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">x</span> <span class="o">=</span> <span class="n">op</span><span class="o">.</span><span class="n">domain</span><span class="o">.</span><span class="n">element</span><span class="p">([</span><span class="mi">1</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># Insert the value 1 at index (0, 2)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">op</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+<span class="go">uniform_discr([ 0.,  0.], [ 1.,  1.], (2, 3)).element(</span>
+<span class="go">    [[ 0.,  0.,  1.],</span>
+<span class="go">     [ 0.,  0.,  0.]]</span>
+<span class="go">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sampling_points</span> <span class="o">=</span> <span class="p">[[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span>  <span class="c1"># indices (0, 2) and (1, 1)</span>
+<span class="gp">... </span>                   <span class="p">[</span><span class="mi">2</span><span class="p">,</span> <span class="mi">1</span><span class="p">]]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">op</span> <span class="o">=</span> <span class="n">odl</span><span class="o">.</span><span class="n">WeightedSumSamplingOperator</span><span class="p">(</span><span class="n">space</span><span class="p">,</span> <span class="n">sampling_points</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">x</span> <span class="o">=</span> <span class="n">op</span><span class="o">.</span><span class="n">domain</span><span class="o">.</span><span class="n">element</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">op</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+<span class="go">uniform_discr([ 0.,  0.], [ 1.,  1.], (2, 3)).element(</span>
+<span class="go">    [[ 0.,  0.,  1.],</span>
+<span class="go">     [ 0.,  2.,  0.]]</span>
+<span class="go">)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+        <a href="odl.operator.tensor_ops.WeightedSumSamplingOperator._call.html" class="btn btn-neutral float-right" title="WeightedSumSamplingOperator._call" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="odl.operator.tensor_ops.SamplingOperator.norm.html" class="btn btn-neutral float-left" title="SamplingOperator.norm" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &#169; Copyright 2014-2020 The ODL Contributors.
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

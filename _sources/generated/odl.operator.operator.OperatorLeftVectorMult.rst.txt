@@ -1,0 +1,39 @@
+﻿OperatorLeftVectorMult
+============================================
+
+.. currentmodule:: odl.operator.operator
+
+.. autoclass:: OperatorLeftVectorMult
+   :show-inheritance:
+   
+   
+   .. automethod:: __init__
+   
+      
+   
+   .. HACK -- the point here is that we don't want this to appear in the output, but the autosummary should still generate the pages.
+      .. autosummary::
+         :toctree:
+      
+         OperatorLeftVectorMult.__call__
+         OperatorLeftVectorMult.__eq__
+         OperatorLeftVectorMult._call
+         OperatorLeftVectorMult.derivative
+         OperatorLeftVectorMult.norm
+   
+
+    
+   .. HACK -- the point here is that we don't want this to appear in the output, but the autosummary should still generate the pages.
+      .. autosummary::
+         :toctree:
+      
+         OperatorLeftVectorMult.adjoint
+         OperatorLeftVectorMult.domain
+         OperatorLeftVectorMult.inverse
+         OperatorLeftVectorMult.is_functional
+         OperatorLeftVectorMult.is_linear
+         OperatorLeftVectorMult.operator
+         OperatorLeftVectorMult.range
+         OperatorLeftVectorMult.vector
+   
+   

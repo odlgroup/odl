@@ -1,0 +1,20 @@
+oputils
+=======
+
+Convenience functions for operators.
+
+.. currentmodule:: odl.operator.oputils
+
+
+
+
+.. rubric:: Functions
+
+.. autosummary::
+   :toctree: generated/
+
+   ~odl.operator.oputils.as_scipy_functional
+   ~odl.operator.oputils.as_scipy_operator
+   ~odl.operator.oputils.matrix_representation
+   ~odl.operator.oputils.power_method_opnorm
+

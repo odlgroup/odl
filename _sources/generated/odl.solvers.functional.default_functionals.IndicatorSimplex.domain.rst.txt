@@ -1,0 +1,6 @@
+IndicatorSimplex.domain
+==================================================================
+
+.. currentmodule:: odl.solvers.functional.default_functionals
+
+.. autoproperty:: IndicatorSimplex.domain

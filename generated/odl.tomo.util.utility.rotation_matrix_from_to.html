@@ -1,0 +1,346 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>rotation_matrix_from_to &mdash; odl 1.0.0.dev0 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="to_lab_sys" href="odl.tomo.util.utility.to_lab_sys.html" />
+    <link rel="prev" title="perpendicular_vector" href="odl.tomo.util.utility.perpendicular_vector.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../index.html" class="icon icon-home"> odl
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                1.0.0.dev0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Getting Started</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../getting_started/getting_started.html">Getting Started</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Working with ODL</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../guide/guide.html">User’s guide – selected topics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../math/math.html">Mathematical Background</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Developer zone</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../dev/dev.html">Contributing to ODL</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Useful facts</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../guide/faq.html">Frequently asked questions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../guide/glossary.html">Glossary</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../release_notes.html">Release Notes</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../refs.html">References</a></li>
+</ul>
+<p class="caption"><span class="caption-text">API Reference</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../odl.html">odl</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../odl.contrib.html">contrib</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../odl.deform.html">deform</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../odl.diagnostics.html">diagnostics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../odl.discr.html">discr</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../odl.operator.html">operator</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../odl.phantom.html">phantom</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../odl.set.html">set</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../odl.solvers.html">solvers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../odl.space.html">space</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="../odl.tomo.html">tomo</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="../odl.tomo.analytic.html">analytic</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../odl.tomo.backends.html">backends</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../odl.tomo.geometry.html">geometry</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../odl.tomo.operators.html">operators</a></li>
+<li class="toctree-l3 current"><a class="reference internal" href="../odl.tomo.util.html">util</a><ul class="current">
+<li class="toctree-l4"><a class="reference internal" href="../odl.tomo.util.source_detector_shifts.html">source_detector_shifts</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../odl.tomo.util.testutils.html">testutils</a></li>
+<li class="toctree-l4 current"><a class="reference internal" href="../odl.tomo.util.utility.html">utility</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../odl.trafos.html">trafos</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../odl.ufunc_ops.html">ufunc_ops</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../odl.util.html">util</a></li>
+</ul>
+</li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">odl</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="../odl.html">odl</a> &raquo;</li>
+        
+          <li><a href="../odl.tomo.html">tomo</a> &raquo;</li>
+        
+          <li><a href="../odl.tomo.util.html">util</a> &raquo;</li>
+        
+          <li><a href="../odl.tomo.util.utility.html">utility</a> &raquo;</li>
+        
+      <li>rotation_matrix_from_to</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            <a href="../_sources/generated/odl.tomo.util.utility.rotation_matrix_from_to.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="rotation-matrix-from-to">
+<h1>rotation_matrix_from_to<a class="headerlink" href="#rotation-matrix-from-to" title="Permalink to this headline">¶</a></h1>
+<dl class="py function">
+<dt id="odl.tomo.util.utility.rotation_matrix_from_to">
+<code class="sig-prename descclassname"><span class="pre">odl.tomo.util.utility.</span></code><code class="sig-name descname"><span class="pre">rotation_matrix_from_to</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">from_vec</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">to_vec</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/odl/tomo/util/utility.html#rotation_matrix_from_to"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#odl.tomo.util.utility.rotation_matrix_from_to" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return a matrix that rotates <code class="docutils literal notranslate"><span class="pre">from_vec</span></code> to <code class="docutils literal notranslate"><span class="pre">to_vec</span></code> in 2d or 3d.</p>
+<p>Since a rotation from one vector to another in 3 dimensions has
+(at least) one degree of freedom, this function makes deliberate but
+still arbitrary choices to fix these free parameters. See Notes for
+details. For the applied formula in 3d, see <a class="reference external" href="https://en.wikipedia.org/wiki/Rodrigues'_rotation_formula">this Wikipedia page
+about Rodrigues’ rotation formula</a>.</p>
+<dl class="field-list">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl>
+<dt><strong>from_vec, to_vec</strong><span class="classifier"><a class="reference internal" href="../guide/glossary.html#term-array-like"><code class="xref any std std-term docutils literal notranslate"><span class="pre">array-like</span></code></a>, shape <code class="docutils literal notranslate"><span class="pre">(2,)</span></code> or <code class="docutils literal notranslate"><span class="pre">(3,)</span></code></span></dt><dd><p>Vectors between which the returned matrix rotates. They should not
+be very close to zero or collinear.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><dl>
+<dt><strong>matrix</strong><span class="classifier"><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.20)"><code class="xref any docutils literal notranslate"><span class="pre">numpy.ndarray</span></code></a>, shape <code class="docutils literal notranslate"><span class="pre">(2,</span> <span class="pre">2)</span></code> or <code class="docutils literal notranslate"><span class="pre">(3,</span> <span class="pre">3)</span></code></span></dt><dd><p>A matrix rotating <code class="docutils literal notranslate"><span class="pre">from_vec</span></code> to <code class="docutils literal notranslate"><span class="pre">to_vec</span></code>. Note that the
+matrix does <em>not</em> include scaling, i.e. it is not guaranteed
+that <code class="docutils literal notranslate"><span class="pre">matrix.dot(from_vec)</span> <span class="pre">==</span> <span class="pre">to_vec</span></code>.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+<p class="rubric">Notes</p>
+<p>In 3d, the matrix corresponds to a rotation around the normal vector
+<img class="math" src="../_images/math/e89e9624afaf2215c98268a227e137dfd4e5bccc.png" alt="\hat n = \hat u \times \hat v"/>, where <img class="math" src="../_images/math/1b45498798fccbd2f07cd6e9c412ed73139ae3ea.png" alt="\hat u"/> and
+<img class="math" src="../_images/math/309fb530088529d9f61ee3f437164ccc59202a44.png" alt="\hat v"/> are the normalized versions of <img class="math" src="../_images/math/9b444cf6329a14140aee8ff5a06ff30772cc1c2f.png" alt="u"/>, the
+vector from which to rotate, and <img class="math" src="../_images/math/02d98909b5d6acd6a7ff927d4d42790bdd407d58.png" alt="v"/>, the vector to which
+should be rotated.</p>
+<p>The rotation angle is determined as
+<img class="math" src="../_images/math/5b5a9346c356a77c0f30de645521049a9c79c1f4.png" alt="\alpha = \pm \arccos(\langle \hat u, \hat v \rangle)"/>.
+Its sign corresponds to the sign of
+<img class="math" src="../_images/math/0b4dafeeac13d7b1c2669bdc65a4639d01b117e8.png" alt="\langle \hat b, \hat v\rangle"/>, where
+<img class="math" src="../_images/math/ccdce0d3692f0058bf73c5b839e1cf7a2d82e0ca.png" alt="\hat b = \hat n \times \hat u"/> is the binormal vector.</p>
+<p>In the case that <img class="math" src="../_images/math/1b45498798fccbd2f07cd6e9c412ed73139ae3ea.png" alt="\hat u"/> and <img class="math" src="../_images/math/309fb530088529d9f61ee3f437164ccc59202a44.png" alt="\hat v"/> are collinear,
+a perpendicular vector is chosen as <img class="math" src="../_images/math/29c7bbf614004996846485187556a10a3f6a39a3.png" alt="\hat n = (1, 0, 0)"/> if
+<img class="math" src="../_images/math/b19dffd3cd5e36bf3465936e77ede7a5e2d837a6.png" alt="v_1 = v_2 = 0"/>, else <img class="math" src="../_images/math/02abbbdd90fbcf4f1e74417cb7923fac21f968ee.png" alt="\hat n = (-v_2, v_1, v_3)"/>.
+The angle in this case is <img class="math" src="../_images/math/4cfc6181312f8d6d284d22109b3e663a7104af7f.png" alt="\alpha = 0"/> if
+<img class="math" src="../_images/math/406ca7fe4e9893ecb97d6f4f7265a07daa14a585.png" alt="\langle \hat u, \hat v \rangle &gt; 0"/>, otherwise
+<img class="math" src="../_images/math/b88fb5e1076e901968c9d5a0a92bcd6ecece8f22.png" alt="\alpha = \pi"/>.</p>
+<p class="rubric">Examples</p>
+<p>In two dimensions, rotation is simple:</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">from_vec</span><span class="p">,</span> <span class="n">to_vec</span> <span class="o">=</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mat</span> <span class="o">=</span> <span class="n">rotation_matrix_from_to</span><span class="p">(</span><span class="n">from_vec</span><span class="p">,</span> <span class="n">to_vec</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">to_vec_normalized</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">divide</span><span class="p">(</span><span class="n">to_vec</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">to_vec</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">np</span><span class="o">.</span><span class="n">allclose</span><span class="p">(</span><span class="n">mat</span><span class="o">.</span><span class="n">dot</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">]),</span> <span class="n">to_vec_normalized</span><span class="p">)</span>
+<span class="go">True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">from_vec</span><span class="p">,</span> <span class="n">to_vec</span> <span class="o">=</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mat</span> <span class="o">=</span> <span class="n">rotation_matrix_from_to</span><span class="p">(</span><span class="n">from_vec</span><span class="p">,</span> <span class="n">to_vec</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">to_vec_normalized</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">divide</span><span class="p">(</span><span class="n">to_vec</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">to_vec</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">np</span><span class="o">.</span><span class="n">allclose</span><span class="p">(</span><span class="n">mat</span><span class="o">.</span><span class="n">dot</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">]),</span> <span class="n">to_vec_normalized</span><span class="p">)</span>
+<span class="go">True</span>
+</pre></div>
+</div>
+<p>Rotation in 3d by less than <code class="docutils literal notranslate"><span class="pre">pi</span></code>:</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">from_vec</span><span class="p">,</span> <span class="n">to_vec</span> <span class="o">=</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mat</span> <span class="o">=</span> <span class="n">rotation_matrix_from_to</span><span class="p">(</span><span class="n">from_vec</span><span class="p">,</span> <span class="n">to_vec</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">to_vec_normalized</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">divide</span><span class="p">(</span><span class="n">to_vec</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">to_vec</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">np</span><span class="o">.</span><span class="n">allclose</span><span class="p">(</span><span class="n">mat</span><span class="o">.</span><span class="n">dot</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">]),</span> <span class="n">to_vec_normalized</span><span class="p">)</span>
+<span class="go">True</span>
+</pre></div>
+</div>
+<p>Rotation by more than <code class="docutils literal notranslate"><span class="pre">pi</span></code>:</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">from_vec</span><span class="p">,</span> <span class="n">to_vec</span> <span class="o">=</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mat</span> <span class="o">=</span> <span class="n">rotation_matrix_from_to</span><span class="p">(</span><span class="n">from_vec</span><span class="p">,</span> <span class="n">to_vec</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">to_vec_normalized</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">divide</span><span class="p">(</span><span class="n">to_vec</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">to_vec</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">np</span><span class="o">.</span><span class="n">allclose</span><span class="p">(</span><span class="n">mat</span><span class="o">.</span><span class="n">dot</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">]),</span> <span class="n">to_vec_normalized</span><span class="p">)</span>
+<span class="go">True</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+        <a href="odl.tomo.util.utility.to_lab_sys.html" class="btn btn-neutral float-right" title="to_lab_sys" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="odl.tomo.util.utility.perpendicular_vector.html" class="btn btn-neutral float-left" title="perpendicular_vector" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &#169; Copyright 2014-2020 The ODL Contributors.
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

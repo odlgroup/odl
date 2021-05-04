@@ -1,0 +1,6 @@
+BroadcastOperator.inverse
+=================================================
+
+.. currentmodule:: odl.operator.pspace_ops
+
+.. autoproperty:: BroadcastOperator.inverse

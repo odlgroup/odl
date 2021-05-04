@@ -1,0 +1,6 @@
+DiscretizedSpace.max_pt
+=============================================
+
+.. currentmodule:: odl.discr.discr_space
+
+.. autoproperty:: DiscretizedSpace.max_pt

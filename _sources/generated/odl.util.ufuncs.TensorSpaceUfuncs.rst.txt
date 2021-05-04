@@ -1,0 +1,103 @@
+﻿TensorSpaceUfuncs
+=================================
+
+.. currentmodule:: odl.util.ufuncs
+
+.. autoclass:: TensorSpaceUfuncs
+   :show-inheritance:
+   
+   
+   .. automethod:: __init__
+   
+      
+   
+   .. HACK -- the point here is that we don't want this to appear in the output, but the autosummary should still generate the pages.
+      .. autosummary::
+         :toctree:
+      
+         TensorSpaceUfuncs.__eq__
+         TensorSpaceUfuncs.absolute
+         TensorSpaceUfuncs.add
+         TensorSpaceUfuncs.arccos
+         TensorSpaceUfuncs.arccosh
+         TensorSpaceUfuncs.arcsin
+         TensorSpaceUfuncs.arcsinh
+         TensorSpaceUfuncs.arctan
+         TensorSpaceUfuncs.arctan2
+         TensorSpaceUfuncs.arctanh
+         TensorSpaceUfuncs.bitwise_and
+         TensorSpaceUfuncs.bitwise_or
+         TensorSpaceUfuncs.bitwise_xor
+         TensorSpaceUfuncs.ceil
+         TensorSpaceUfuncs.conj
+         TensorSpaceUfuncs.copysign
+         TensorSpaceUfuncs.cos
+         TensorSpaceUfuncs.cosh
+         TensorSpaceUfuncs.deg2rad
+         TensorSpaceUfuncs.divide
+         TensorSpaceUfuncs.equal
+         TensorSpaceUfuncs.exp
+         TensorSpaceUfuncs.exp2
+         TensorSpaceUfuncs.expm1
+         TensorSpaceUfuncs.floor
+         TensorSpaceUfuncs.floor_divide
+         TensorSpaceUfuncs.fmax
+         TensorSpaceUfuncs.fmin
+         TensorSpaceUfuncs.fmod
+         TensorSpaceUfuncs.greater
+         TensorSpaceUfuncs.greater_equal
+         TensorSpaceUfuncs.hypot
+         TensorSpaceUfuncs.invert
+         TensorSpaceUfuncs.isfinite
+         TensorSpaceUfuncs.isinf
+         TensorSpaceUfuncs.isnan
+         TensorSpaceUfuncs.left_shift
+         TensorSpaceUfuncs.less
+         TensorSpaceUfuncs.less_equal
+         TensorSpaceUfuncs.log
+         TensorSpaceUfuncs.log10
+         TensorSpaceUfuncs.log1p
+         TensorSpaceUfuncs.log2
+         TensorSpaceUfuncs.logaddexp
+         TensorSpaceUfuncs.logaddexp2
+         TensorSpaceUfuncs.logical_and
+         TensorSpaceUfuncs.logical_not
+         TensorSpaceUfuncs.logical_or
+         TensorSpaceUfuncs.logical_xor
+         TensorSpaceUfuncs.max
+         TensorSpaceUfuncs.maximum
+         TensorSpaceUfuncs.min
+         TensorSpaceUfuncs.minimum
+         TensorSpaceUfuncs.mod
+         TensorSpaceUfuncs.modf
+         TensorSpaceUfuncs.multiply
+         TensorSpaceUfuncs.negative
+         TensorSpaceUfuncs.not_equal
+         TensorSpaceUfuncs.power
+         TensorSpaceUfuncs.prod
+         TensorSpaceUfuncs.rad2deg
+         TensorSpaceUfuncs.reciprocal
+         TensorSpaceUfuncs.remainder
+         TensorSpaceUfuncs.right_shift
+         TensorSpaceUfuncs.rint
+         TensorSpaceUfuncs.sign
+         TensorSpaceUfuncs.signbit
+         TensorSpaceUfuncs.sin
+         TensorSpaceUfuncs.sinh
+         TensorSpaceUfuncs.sqrt
+         TensorSpaceUfuncs.square
+         TensorSpaceUfuncs.subtract
+         TensorSpaceUfuncs.sum
+         TensorSpaceUfuncs.tan
+         TensorSpaceUfuncs.tanh
+         TensorSpaceUfuncs.true_divide
+         TensorSpaceUfuncs.trunc
+   
+
+    
+   .. HACK -- the point here is that we don't want this to appear in the output, but the autosummary should still generate the pages.
+      .. autosummary::
+         :toctree:
+      
+   
+   

@@ -1,0 +1,6 @@
+L1Norm.is_functional
+===============================================================
+
+.. currentmodule:: odl.solvers.functional.default_functionals
+
+.. autoproperty:: L1Norm.is_functional

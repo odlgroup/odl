@@ -1,0 +1,6 @@
+PointwiseInnerAdjoint.weights
+=====================================================
+
+.. currentmodule:: odl.operator.tensor_ops
+
+.. autoproperty:: PointwiseInnerAdjoint.weights

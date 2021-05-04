@@ -1,0 +1,6 @@
+PointwiseNorm.is_weighted
+=================================================
+
+.. currentmodule:: odl.operator.tensor_ops
+
+.. autoproperty:: PointwiseNorm.is_weighted

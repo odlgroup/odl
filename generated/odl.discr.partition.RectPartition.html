@@ -1,0 +1,386 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>RectPartition &mdash; odl 1.0.0.dev0 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="RectPartition.append" href="odl.discr.partition.RectPartition.append.html" />
+    <link rel="prev" title="partition" href="../odl.discr.partition.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../index.html" class="icon icon-home"> odl
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                1.0.0.dev0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Getting Started</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../getting_started/getting_started.html">Getting Started</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Working with ODL</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../guide/guide.html">User’s guide – selected topics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../math/math.html">Mathematical Background</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Developer zone</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../dev/dev.html">Contributing to ODL</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Useful facts</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../guide/faq.html">Frequently asked questions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../guide/glossary.html">Glossary</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../release_notes.html">Release Notes</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../refs.html">References</a></li>
+</ul>
+<p class="caption"><span class="caption-text">API Reference</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../odl.html">odl</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../odl.contrib.html">contrib</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../odl.deform.html">deform</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../odl.diagnostics.html">diagnostics</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="../odl.discr.html">discr</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="../odl.discr.diff_ops.html">diff_ops</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../odl.discr.discr_ops.html">discr_ops</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../odl.discr.discr_space.html">discr_space</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../odl.discr.discr_utils.html">discr_utils</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../odl.discr.grid.html">grid</a></li>
+<li class="toctree-l3 current"><a class="reference internal" href="../odl.discr.partition.html">partition</a><ul class="current">
+<li class="toctree-l4 current"><a class="current reference internal" href="#">RectPartition</a></li>
+<li class="toctree-l4"><a class="reference internal" href="odl.discr.partition.nonuniform_partition.html">nonuniform_partition</a></li>
+<li class="toctree-l4"><a class="reference internal" href="odl.discr.partition.uniform_partition.html">uniform_partition</a></li>
+<li class="toctree-l4"><a class="reference internal" href="odl.discr.partition.uniform_partition_fromgrid.html">uniform_partition_fromgrid</a></li>
+<li class="toctree-l4"><a class="reference internal" href="odl.discr.partition.uniform_partition_fromintv.html">uniform_partition_fromintv</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../odl.operator.html">operator</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../odl.phantom.html">phantom</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../odl.set.html">set</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../odl.solvers.html">solvers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../odl.space.html">space</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../odl.tomo.html">tomo</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../odl.trafos.html">trafos</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../odl.ufunc_ops.html">ufunc_ops</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../odl.util.html">util</a></li>
+</ul>
+</li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">odl</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="../odl.html">odl</a> &raquo;</li>
+        
+          <li><a href="../odl.discr.html">discr</a> &raquo;</li>
+        
+          <li><a href="../odl.discr.partition.html">partition</a> &raquo;</li>
+        
+      <li>RectPartition</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            <a href="../_sources/generated/odl.discr.partition.RectPartition.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="rectpartition">
+<h1>RectPartition<a class="headerlink" href="#rectpartition" title="Permalink to this headline">¶</a></h1>
+<dl class="py class">
+<dt id="odl.discr.partition.RectPartition">
+<em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">odl.discr.partition.</span></code><code class="sig-name descname"><span class="pre">RectPartition</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">intv_prod</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">grid</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/odl/discr/partition.html#RectPartition"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#odl.discr.partition.RectPartition" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
+<p>Rectangular partition by hypercubes based on <a class="reference internal" href="odl.discr.grid.RectGrid.html#odl.discr.grid.RectGrid" title="odl.discr.grid.RectGrid"><code class="xref any py py-class docutils literal notranslate"><span class="pre">RectGrid</span></code></a>.</p>
+<p>In 1d, a partition of an interval is implicitly defined by a
+collection of points x[0], …, x[N-1] (a grid) which are chosen to
+lie in the center of the subintervals. The i-th subinterval is thus
+given by</p>
+<blockquote>
+<div><p><code class="docutils literal notranslate"><span class="pre">I[i]</span> <span class="pre">=</span> <span class="pre">[(x[i-1]+x[i])/2,</span> <span class="pre">(x[i]+x[i+1])/2]</span></code></p>
+</div></blockquote>
+<dl class="field-list simple">
+<dt class="field-odd">Attributes</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><a class="reference internal" href="odl.discr.partition.RectPartition.boundary_cell_fractions.html#odl.discr.partition.RectPartition.boundary_cell_fractions" title="odl.discr.partition.RectPartition.boundary_cell_fractions"><code class="xref py py-obj docutils literal notranslate"><span class="pre">boundary_cell_fractions</span></code></a></dt><dd><p>Return a tuple of contained fractions of boundary cells.</p>
+</dd>
+<dt><a class="reference internal" href="odl.discr.partition.RectPartition.byaxis.html#odl.discr.partition.RectPartition.byaxis" title="odl.discr.partition.RectPartition.byaxis"><code class="xref py py-obj docutils literal notranslate"><span class="pre">byaxis</span></code></a></dt><dd><p>Object to index <code class="docutils literal notranslate"><span class="pre">self</span></code> along axes.</p>
+</dd>
+<dt><a class="reference internal" href="odl.discr.partition.RectPartition.cell_boundary_vecs.html#odl.discr.partition.RectPartition.cell_boundary_vecs" title="odl.discr.partition.RectPartition.cell_boundary_vecs"><code class="xref py py-obj docutils literal notranslate"><span class="pre">cell_boundary_vecs</span></code></a></dt><dd><p>Return the cell boundaries as coordinate vectors.</p>
+</dd>
+<dt><a class="reference internal" href="odl.discr.partition.RectPartition.cell_sides.html#odl.discr.partition.RectPartition.cell_sides" title="odl.discr.partition.RectPartition.cell_sides"><code class="xref py py-obj docutils literal notranslate"><span class="pre">cell_sides</span></code></a></dt><dd><p>Side lengths of all ‘inner’ cells of a uniform partition.</p>
+</dd>
+<dt><a class="reference internal" href="odl.discr.partition.RectPartition.cell_sizes_vecs.html#odl.discr.partition.RectPartition.cell_sizes_vecs" title="odl.discr.partition.RectPartition.cell_sizes_vecs"><code class="xref py py-obj docutils literal notranslate"><span class="pre">cell_sizes_vecs</span></code></a></dt><dd><p>Return the cell sizes as coordinate vectors.</p>
+</dd>
+<dt><a class="reference internal" href="odl.discr.partition.RectPartition.cell_volume.html#odl.discr.partition.RectPartition.cell_volume" title="odl.discr.partition.RectPartition.cell_volume"><code class="xref py py-obj docutils literal notranslate"><span class="pre">cell_volume</span></code></a></dt><dd><p>Volume of the ‘inner’ cells of a uniform partition.</p>
+</dd>
+<dt><a class="reference internal" href="odl.discr.partition.RectPartition.coord_vectors.html#odl.discr.partition.RectPartition.coord_vectors" title="odl.discr.partition.RectPartition.coord_vectors"><code class="xref py py-obj docutils literal notranslate"><span class="pre">coord_vectors</span></code></a></dt><dd><p>Coordinate vectors of the grid.</p>
+</dd>
+<dt><a class="reference internal" href="odl.discr.partition.RectPartition.extent.html#odl.discr.partition.RectPartition.extent" title="odl.discr.partition.RectPartition.extent"><code class="xref py py-obj docutils literal notranslate"><span class="pre">extent</span></code></a></dt><dd><p>Return a vector containing the total extent (max - min).</p>
+</dd>
+<dt><a class="reference internal" href="odl.discr.partition.RectPartition.grid.html#odl.discr.partition.RectPartition.grid" title="odl.discr.partition.RectPartition.grid"><code class="xref py py-obj docutils literal notranslate"><span class="pre">grid</span></code></a></dt><dd><p><a class="reference internal" href="odl.discr.grid.RectGrid.html#odl.discr.grid.RectGrid" title="odl.discr.grid.RectGrid"><code class="xref any py py-class docutils literal notranslate"><span class="pre">RectGrid</span></code></a> defining this partition.</p>
+</dd>
+<dt><a class="reference internal" href="odl.discr.partition.RectPartition.has_isotropic_cells.html#odl.discr.partition.RectPartition.has_isotropic_cells" title="odl.discr.partition.RectPartition.has_isotropic_cells"><code class="xref py py-obj docutils literal notranslate"><span class="pre">has_isotropic_cells</span></code></a></dt><dd><p><code class="docutils literal notranslate"><span class="pre">True</span></code> if <a class="reference internal" href="odl.discr.partition.RectPartition.grid.html#odl.discr.partition.RectPartition.grid" title="odl.discr.partition.RectPartition.grid"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">grid</span></code></a> is uniform and <a class="reference internal" href="odl.discr.partition.RectPartition.cell_sides.html#odl.discr.partition.RectPartition.cell_sides" title="odl.discr.partition.RectPartition.cell_sides"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">cell_sides</span></code></a> are all equal.</p>
+</dd>
+<dt><a class="reference internal" href="odl.discr.partition.RectPartition.is_uniform.html#odl.discr.partition.RectPartition.is_uniform" title="odl.discr.partition.RectPartition.is_uniform"><code class="xref py py-obj docutils literal notranslate"><span class="pre">is_uniform</span></code></a></dt><dd><p><code class="docutils literal notranslate"><span class="pre">True</span></code> if <a class="reference internal" href="odl.discr.partition.RectPartition.grid.html#odl.discr.partition.RectPartition.grid" title="odl.discr.partition.RectPartition.grid"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">grid</span></code></a> is uniform.</p>
+</dd>
+<dt><a class="reference internal" href="odl.discr.partition.RectPartition.is_uniform_byaxis.html#odl.discr.partition.RectPartition.is_uniform_byaxis" title="odl.discr.partition.RectPartition.is_uniform_byaxis"><code class="xref py py-obj docutils literal notranslate"><span class="pre">is_uniform_byaxis</span></code></a></dt><dd><p>Boolean tuple showing uniformity of <code class="docutils literal notranslate"><span class="pre">self.grid</span></code> per axis.</p>
+</dd>
+<dt><a class="reference internal" href="odl.discr.partition.RectPartition.max_pt.html#odl.discr.partition.RectPartition.max_pt" title="odl.discr.partition.RectPartition.max_pt"><code class="xref py py-obj docutils literal notranslate"><span class="pre">max_pt</span></code></a></dt><dd><p>Maximum coordinates of the partitioned set.</p>
+</dd>
+<dt><a class="reference internal" href="odl.discr.partition.RectPartition.meshgrid.html#odl.discr.partition.RectPartition.meshgrid" title="odl.discr.partition.RectPartition.meshgrid"><code class="xref py py-obj docutils literal notranslate"><span class="pre">meshgrid</span></code></a></dt><dd><p>Return the sparse meshgrid of sampling points.</p>
+</dd>
+<dt><a class="reference internal" href="odl.discr.partition.RectPartition.mid_pt.html#odl.discr.partition.RectPartition.mid_pt" title="odl.discr.partition.RectPartition.mid_pt"><code class="xref py py-obj docutils literal notranslate"><span class="pre">mid_pt</span></code></a></dt><dd><p>Midpoint of the partitioned set.</p>
+</dd>
+<dt><a class="reference internal" href="odl.discr.partition.RectPartition.min_pt.html#odl.discr.partition.RectPartition.min_pt" title="odl.discr.partition.RectPartition.min_pt"><code class="xref py py-obj docutils literal notranslate"><span class="pre">min_pt</span></code></a></dt><dd><p>Minimum coordinates of the partitioned set.</p>
+</dd>
+<dt><a class="reference internal" href="odl.discr.partition.RectPartition.ndim.html#odl.discr.partition.RectPartition.ndim" title="odl.discr.partition.RectPartition.ndim"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ndim</span></code></a></dt><dd><p>Number of dimensions.</p>
+</dd>
+<dt><a class="reference internal" href="odl.discr.partition.RectPartition.nodes_on_bdry.html#odl.discr.partition.RectPartition.nodes_on_bdry" title="odl.discr.partition.RectPartition.nodes_on_bdry"><code class="xref py py-obj docutils literal notranslate"><span class="pre">nodes_on_bdry</span></code></a></dt><dd><p>Encoding of grid points lying on the boundary.</p>
+</dd>
+<dt><a class="reference internal" href="odl.discr.partition.RectPartition.nodes_on_bdry_byaxis.html#odl.discr.partition.RectPartition.nodes_on_bdry_byaxis" title="odl.discr.partition.RectPartition.nodes_on_bdry_byaxis"><code class="xref py py-obj docutils literal notranslate"><span class="pre">nodes_on_bdry_byaxis</span></code></a></dt><dd><p>Nested tuple of booleans for <a class="reference internal" href="odl.discr.partition.RectPartition.nodes_on_bdry.html#odl.discr.partition.RectPartition.nodes_on_bdry" title="odl.discr.partition.RectPartition.nodes_on_bdry"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">nodes_on_bdry</span></code></a>.</p>
+</dd>
+<dt><a class="reference internal" href="odl.discr.partition.RectPartition.set.html#odl.discr.partition.RectPartition.set" title="odl.discr.partition.RectPartition.set"><code class="xref py py-obj docutils literal notranslate"><span class="pre">set</span></code></a></dt><dd><p>Partitioned set, an <a class="reference internal" href="odl.set.domain.IntervalProd.html#odl.set.domain.IntervalProd" title="odl.set.domain.IntervalProd"><code class="xref any py py-class docutils literal notranslate"><span class="pre">IntervalProd</span></code></a>.</p>
+</dd>
+<dt><a class="reference internal" href="odl.discr.partition.RectPartition.shape.html#odl.discr.partition.RectPartition.shape" title="odl.discr.partition.RectPartition.shape"><code class="xref py py-obj docutils literal notranslate"><span class="pre">shape</span></code></a></dt><dd><p>Number of cells per axis, equal to <code class="docutils literal notranslate"><span class="pre">self.grid.shape</span></code>.</p>
+</dd>
+<dt><a class="reference internal" href="odl.discr.partition.RectPartition.size.html#odl.discr.partition.RectPartition.size" title="odl.discr.partition.RectPartition.size"><code class="xref py py-obj docutils literal notranslate"><span class="pre">size</span></code></a></dt><dd><p>Total number of cells, equal to <code class="docutils literal notranslate"><span class="pre">self.grid.size</span></code>.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+<p class="rubric">Methods</p>
+<table class="longtable docutils align-default">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="odl.discr.partition.RectPartition.append.html#odl.discr.partition.RectPartition.append" title="odl.discr.partition.RectPartition.append"><code class="xref py py-obj docutils literal notranslate"><span class="pre">append</span></code></a>(self, \*parts)</p></td>
+<td><p>Insert <code class="docutils literal notranslate"><span class="pre">parts</span></code> at the end as a block.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="odl.discr.partition.RectPartition.approx_equals.html#odl.discr.partition.RectPartition.approx_equals" title="odl.discr.partition.RectPartition.approx_equals"><code class="xref py py-obj docutils literal notranslate"><span class="pre">approx_equals</span></code></a>(self, other, atol)</p></td>
+<td><p>Return <code class="docutils literal notranslate"><span class="pre">True</span></code> in case of approximate equality.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="odl.discr.partition.RectPartition.index.html#odl.discr.partition.RectPartition.index" title="odl.discr.partition.RectPartition.index"><code class="xref py py-obj docutils literal notranslate"><span class="pre">index</span></code></a>(self, value[, floating])</p></td>
+<td><p>Return the index of a value in the domain.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="odl.discr.partition.RectPartition.insert.html#odl.discr.partition.RectPartition.insert" title="odl.discr.partition.RectPartition.insert"><code class="xref py py-obj docutils literal notranslate"><span class="pre">insert</span></code></a>(self, index, \*parts)</p></td>
+<td><p>Return a copy with <code class="docutils literal notranslate"><span class="pre">parts</span></code> inserted before <code class="docutils literal notranslate"><span class="pre">index</span></code>.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="odl.discr.partition.RectPartition.max.html#odl.discr.partition.RectPartition.max" title="odl.discr.partition.RectPartition.max"><code class="xref py py-obj docutils literal notranslate"><span class="pre">max</span></code></a>(self)</p></td>
+<td><p>Return the maximum point of the partitioned set.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="odl.discr.partition.RectPartition.min.html#odl.discr.partition.RectPartition.min" title="odl.discr.partition.RectPartition.min"><code class="xref py py-obj docutils literal notranslate"><span class="pre">min</span></code></a>(self)</p></td>
+<td><p>Return the minimum point of the partitioned set.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="odl.discr.partition.RectPartition.points.html#odl.discr.partition.RectPartition.points" title="odl.discr.partition.RectPartition.points"><code class="xref py py-obj docutils literal notranslate"><span class="pre">points</span></code></a>(self[, order])</p></td>
+<td><p>Return the sampling grid points.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="odl.discr.partition.RectPartition.squeeze.html#odl.discr.partition.RectPartition.squeeze" title="odl.discr.partition.RectPartition.squeeze"><code class="xref py py-obj docutils literal notranslate"><span class="pre">squeeze</span></code></a>(self[, axis])</p></td>
+<td><p>Return the partition with removed degenerate (length 1) dimensions.</p></td>
+</tr>
+</tbody>
+</table>
+<dl class="py method">
+<dt id="odl.discr.partition.RectPartition.__init__">
+<code class="sig-name descname"><span class="pre">__init__</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">intv_prod</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">grid</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/odl/discr/partition.html#RectPartition.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#odl.discr.partition.RectPartition.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initialize a new instance.</p>
+<dl class="field-list">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl>
+<dt><strong>intv_prod</strong><span class="classifier"><a class="reference internal" href="odl.set.domain.IntervalProd.html#odl.set.domain.IntervalProd" title="odl.set.domain.IntervalProd"><code class="xref any py py-class docutils literal notranslate"><span class="pre">IntervalProd</span></code></a></span></dt><dd><p>Set to be partitioned</p>
+</dd>
+<dt><strong>grid</strong><span class="classifier"><a class="reference internal" href="odl.discr.grid.RectGrid.html#odl.discr.grid.RectGrid" title="odl.discr.grid.RectGrid"><code class="xref any py py-class docutils literal notranslate"><span class="pre">RectGrid</span></code></a></span></dt><dd><p>Spatial points supporting the partition. They must be
+contained in <code class="docutils literal notranslate"><span class="pre">intv_prod</span></code>.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+        <a href="odl.discr.partition.RectPartition.append.html" class="btn btn-neutral float-right" title="RectPartition.append" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="../odl.discr.partition.html" class="btn btn-neutral float-left" title="partition" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &#169; Copyright 2014-2020 The ODL Contributors.
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

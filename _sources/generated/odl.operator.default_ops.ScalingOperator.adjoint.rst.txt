@@ -1,0 +1,6 @@
+ScalingOperator.adjoint
+================================================
+
+.. currentmodule:: odl.operator.default_ops
+
+.. autoproperty:: ScalingOperator.adjoint

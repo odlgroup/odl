@@ -1,0 +1,6 @@
+ConeBeamGeometry.src_to_det_init
+===========================================================
+
+.. currentmodule:: odl.tomo.geometry.conebeam
+
+.. autoproperty:: ConeBeamGeometry.src_to_det_init

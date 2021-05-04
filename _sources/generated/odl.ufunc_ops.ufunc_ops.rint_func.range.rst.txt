@@ -1,0 +1,6 @@
+rint_func.range
+=======================================
+
+.. currentmodule:: odl.ufunc_ops.ufunc_ops
+
+.. autoproperty:: rint_func.range

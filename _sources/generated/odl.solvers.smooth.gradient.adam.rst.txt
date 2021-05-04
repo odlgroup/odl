@@ -1,0 +1,6 @@
+﻿adam
+================================
+
+.. currentmodule:: odl.solvers.smooth.gradient
+
+.. autofunction:: adam

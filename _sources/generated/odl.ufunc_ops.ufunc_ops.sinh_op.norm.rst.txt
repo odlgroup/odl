@@ -1,0 +1,8 @@
+:orphan:
+
+sinh_op.norm
+====================================
+
+.. currentmodule:: odl.ufunc_ops.ufunc_ops
+
+.. automethod:: sinh_op.norm

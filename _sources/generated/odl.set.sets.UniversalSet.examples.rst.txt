@@ -1,0 +1,6 @@
+UniversalSet.examples
+==================================
+
+.. currentmodule:: odl.set.sets
+
+.. autoproperty:: UniversalSet.examples

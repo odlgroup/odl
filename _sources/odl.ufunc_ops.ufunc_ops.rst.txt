@@ -1,0 +1,211 @@
+ufunc_ops
+=========
+
+Ufunc operators for ODL vectors.
+
+.. currentmodule:: odl.ufunc_ops.ufunc_ops
+
+
+
+.. rubric:: Classes
+
+.. autosummary::
+   :toctree: generated/
+
+   ~odl.ufunc_ops.ufunc_ops.absolute_func
+   ~odl.ufunc_ops.ufunc_ops.absolute_op
+   ~odl.ufunc_ops.ufunc_ops.add_op
+   ~odl.ufunc_ops.ufunc_ops.arccos_func
+   ~odl.ufunc_ops.ufunc_ops.arccos_op
+   ~odl.ufunc_ops.ufunc_ops.arccosh_func
+   ~odl.ufunc_ops.ufunc_ops.arccosh_op
+   ~odl.ufunc_ops.ufunc_ops.arcsin_func
+   ~odl.ufunc_ops.ufunc_ops.arcsin_op
+   ~odl.ufunc_ops.ufunc_ops.arcsinh_func
+   ~odl.ufunc_ops.ufunc_ops.arcsinh_op
+   ~odl.ufunc_ops.ufunc_ops.arctan2_op
+   ~odl.ufunc_ops.ufunc_ops.arctan_func
+   ~odl.ufunc_ops.ufunc_ops.arctan_op
+   ~odl.ufunc_ops.ufunc_ops.arctanh_func
+   ~odl.ufunc_ops.ufunc_ops.arctanh_op
+   ~odl.ufunc_ops.ufunc_ops.bitwise_and_op
+   ~odl.ufunc_ops.ufunc_ops.bitwise_or_op
+   ~odl.ufunc_ops.ufunc_ops.bitwise_xor_op
+   ~odl.ufunc_ops.ufunc_ops.ceil_func
+   ~odl.ufunc_ops.ufunc_ops.ceil_op
+   ~odl.ufunc_ops.ufunc_ops.conj_func
+   ~odl.ufunc_ops.ufunc_ops.conj_op
+   ~odl.ufunc_ops.ufunc_ops.copysign_op
+   ~odl.ufunc_ops.ufunc_ops.cos_func
+   ~odl.ufunc_ops.ufunc_ops.cos_op
+   ~odl.ufunc_ops.ufunc_ops.cosh_func
+   ~odl.ufunc_ops.ufunc_ops.cosh_op
+   ~odl.ufunc_ops.ufunc_ops.deg2rad_func
+   ~odl.ufunc_ops.ufunc_ops.deg2rad_op
+   ~odl.ufunc_ops.ufunc_ops.divide_op
+   ~odl.ufunc_ops.ufunc_ops.equal_op
+   ~odl.ufunc_ops.ufunc_ops.exp2_func
+   ~odl.ufunc_ops.ufunc_ops.exp2_op
+   ~odl.ufunc_ops.ufunc_ops.exp_func
+   ~odl.ufunc_ops.ufunc_ops.exp_op
+   ~odl.ufunc_ops.ufunc_ops.expm1_func
+   ~odl.ufunc_ops.ufunc_ops.expm1_op
+   ~odl.ufunc_ops.ufunc_ops.floor_divide_op
+   ~odl.ufunc_ops.ufunc_ops.floor_func
+   ~odl.ufunc_ops.ufunc_ops.floor_op
+   ~odl.ufunc_ops.ufunc_ops.fmax_op
+   ~odl.ufunc_ops.ufunc_ops.fmin_op
+   ~odl.ufunc_ops.ufunc_ops.fmod_op
+   ~odl.ufunc_ops.ufunc_ops.greater_equal_op
+   ~odl.ufunc_ops.ufunc_ops.greater_op
+   ~odl.ufunc_ops.ufunc_ops.hypot_op
+   ~odl.ufunc_ops.ufunc_ops.invert_op
+   ~odl.ufunc_ops.ufunc_ops.isfinite_func
+   ~odl.ufunc_ops.ufunc_ops.isfinite_op
+   ~odl.ufunc_ops.ufunc_ops.isinf_func
+   ~odl.ufunc_ops.ufunc_ops.isinf_op
+   ~odl.ufunc_ops.ufunc_ops.isnan_func
+   ~odl.ufunc_ops.ufunc_ops.isnan_op
+   ~odl.ufunc_ops.ufunc_ops.left_shift_op
+   ~odl.ufunc_ops.ufunc_ops.less_equal_op
+   ~odl.ufunc_ops.ufunc_ops.less_op
+   ~odl.ufunc_ops.ufunc_ops.log10_func
+   ~odl.ufunc_ops.ufunc_ops.log10_op
+   ~odl.ufunc_ops.ufunc_ops.log1p_func
+   ~odl.ufunc_ops.ufunc_ops.log1p_op
+   ~odl.ufunc_ops.ufunc_ops.log2_func
+   ~odl.ufunc_ops.ufunc_ops.log2_op
+   ~odl.ufunc_ops.ufunc_ops.log_func
+   ~odl.ufunc_ops.ufunc_ops.log_op
+   ~odl.ufunc_ops.ufunc_ops.logaddexp2_op
+   ~odl.ufunc_ops.ufunc_ops.logaddexp_op
+   ~odl.ufunc_ops.ufunc_ops.logical_and_op
+   ~odl.ufunc_ops.ufunc_ops.logical_not_func
+   ~odl.ufunc_ops.ufunc_ops.logical_not_op
+   ~odl.ufunc_ops.ufunc_ops.logical_or_op
+   ~odl.ufunc_ops.ufunc_ops.logical_xor_op
+   ~odl.ufunc_ops.ufunc_ops.maximum_op
+   ~odl.ufunc_ops.ufunc_ops.minimum_op
+   ~odl.ufunc_ops.ufunc_ops.mod_op
+   ~odl.ufunc_ops.ufunc_ops.modf_op
+   ~odl.ufunc_ops.ufunc_ops.multiply_op
+   ~odl.ufunc_ops.ufunc_ops.negative_func
+   ~odl.ufunc_ops.ufunc_ops.negative_op
+   ~odl.ufunc_ops.ufunc_ops.not_equal_op
+   ~odl.ufunc_ops.ufunc_ops.power_op
+   ~odl.ufunc_ops.ufunc_ops.rad2deg_func
+   ~odl.ufunc_ops.ufunc_ops.rad2deg_op
+   ~odl.ufunc_ops.ufunc_ops.reciprocal_func
+   ~odl.ufunc_ops.ufunc_ops.reciprocal_op
+   ~odl.ufunc_ops.ufunc_ops.remainder_op
+   ~odl.ufunc_ops.ufunc_ops.right_shift_op
+   ~odl.ufunc_ops.ufunc_ops.rint_func
+   ~odl.ufunc_ops.ufunc_ops.rint_op
+   ~odl.ufunc_ops.ufunc_ops.sign_func
+   ~odl.ufunc_ops.ufunc_ops.sign_op
+   ~odl.ufunc_ops.ufunc_ops.signbit_func
+   ~odl.ufunc_ops.ufunc_ops.signbit_op
+   ~odl.ufunc_ops.ufunc_ops.sin_func
+   ~odl.ufunc_ops.ufunc_ops.sin_op
+   ~odl.ufunc_ops.ufunc_ops.sinh_func
+   ~odl.ufunc_ops.ufunc_ops.sinh_op
+   ~odl.ufunc_ops.ufunc_ops.sqrt_func
+   ~odl.ufunc_ops.ufunc_ops.sqrt_op
+   ~odl.ufunc_ops.ufunc_ops.square_func
+   ~odl.ufunc_ops.ufunc_ops.square_op
+   ~odl.ufunc_ops.ufunc_ops.subtract_op
+   ~odl.ufunc_ops.ufunc_ops.tan_func
+   ~odl.ufunc_ops.ufunc_ops.tan_op
+   ~odl.ufunc_ops.ufunc_ops.tanh_func
+   ~odl.ufunc_ops.ufunc_ops.tanh_op
+   ~odl.ufunc_ops.ufunc_ops.true_divide_op
+   ~odl.ufunc_ops.ufunc_ops.trunc_func
+   ~odl.ufunc_ops.ufunc_ops.trunc_op
+
+
+.. rubric:: Functions
+
+.. autosummary::
+   :toctree: generated/
+
+   ~odl.ufunc_ops.ufunc_ops.absolute
+   ~odl.ufunc_ops.ufunc_ops.add
+   ~odl.ufunc_ops.ufunc_ops.arccos
+   ~odl.ufunc_ops.ufunc_ops.arccosh
+   ~odl.ufunc_ops.ufunc_ops.arcsin
+   ~odl.ufunc_ops.ufunc_ops.arcsinh
+   ~odl.ufunc_ops.ufunc_ops.arctan
+   ~odl.ufunc_ops.ufunc_ops.arctan2
+   ~odl.ufunc_ops.ufunc_ops.arctanh
+   ~odl.ufunc_ops.ufunc_ops.bitwise_and
+   ~odl.ufunc_ops.ufunc_ops.bitwise_or
+   ~odl.ufunc_ops.ufunc_ops.bitwise_xor
+   ~odl.ufunc_ops.ufunc_ops.ceil
+   ~odl.ufunc_ops.ufunc_ops.conj
+   ~odl.ufunc_ops.ufunc_ops.copysign
+   ~odl.ufunc_ops.ufunc_ops.cos
+   ~odl.ufunc_ops.ufunc_ops.cosh
+   ~odl.ufunc_ops.ufunc_ops.deg2rad
+   ~odl.ufunc_ops.ufunc_ops.derivative_factory
+   ~odl.ufunc_ops.ufunc_ops.divide
+   ~odl.ufunc_ops.ufunc_ops.dtypes_out
+   ~odl.ufunc_ops.ufunc_ops.equal
+   ~odl.ufunc_ops.ufunc_ops.exp
+   ~odl.ufunc_ops.ufunc_ops.exp2
+   ~odl.ufunc_ops.ufunc_ops.expm1
+   ~odl.ufunc_ops.ufunc_ops.find_min_signature
+   ~odl.ufunc_ops.ufunc_ops.floor
+   ~odl.ufunc_ops.ufunc_ops.floor_divide
+   ~odl.ufunc_ops.ufunc_ops.fmax
+   ~odl.ufunc_ops.ufunc_ops.fmin
+   ~odl.ufunc_ops.ufunc_ops.fmod
+   ~odl.ufunc_ops.ufunc_ops.gradient_factory
+   ~odl.ufunc_ops.ufunc_ops.greater
+   ~odl.ufunc_ops.ufunc_ops.greater_equal
+   ~odl.ufunc_ops.ufunc_ops.hypot
+   ~odl.ufunc_ops.ufunc_ops.indirection
+   ~odl.ufunc_ops.ufunc_ops.invert
+   ~odl.ufunc_ops.ufunc_ops.isfinite
+   ~odl.ufunc_ops.ufunc_ops.isinf
+   ~odl.ufunc_ops.ufunc_ops.isnan
+   ~odl.ufunc_ops.ufunc_ops.left_shift
+   ~odl.ufunc_ops.ufunc_ops.less
+   ~odl.ufunc_ops.ufunc_ops.less_equal
+   ~odl.ufunc_ops.ufunc_ops.log
+   ~odl.ufunc_ops.ufunc_ops.log10
+   ~odl.ufunc_ops.ufunc_ops.log1p
+   ~odl.ufunc_ops.ufunc_ops.log2
+   ~odl.ufunc_ops.ufunc_ops.logaddexp
+   ~odl.ufunc_ops.ufunc_ops.logaddexp2
+   ~odl.ufunc_ops.ufunc_ops.logical_and
+   ~odl.ufunc_ops.ufunc_ops.logical_not
+   ~odl.ufunc_ops.ufunc_ops.logical_or
+   ~odl.ufunc_ops.ufunc_ops.logical_xor
+   ~odl.ufunc_ops.ufunc_ops.maximum
+   ~odl.ufunc_ops.ufunc_ops.minimum
+   ~odl.ufunc_ops.ufunc_ops.mod
+   ~odl.ufunc_ops.ufunc_ops.modf
+   ~odl.ufunc_ops.ufunc_ops.multiply
+   ~odl.ufunc_ops.ufunc_ops.negative
+   ~odl.ufunc_ops.ufunc_ops.not_equal
+   ~odl.ufunc_ops.ufunc_ops.power
+   ~odl.ufunc_ops.ufunc_ops.rad2deg
+   ~odl.ufunc_ops.ufunc_ops.reciprocal
+   ~odl.ufunc_ops.ufunc_ops.remainder
+   ~odl.ufunc_ops.ufunc_ops.right_shift
+   ~odl.ufunc_ops.ufunc_ops.rint
+   ~odl.ufunc_ops.ufunc_ops.sign
+   ~odl.ufunc_ops.ufunc_ops.signbit
+   ~odl.ufunc_ops.ufunc_ops.sin
+   ~odl.ufunc_ops.ufunc_ops.sinh
+   ~odl.ufunc_ops.ufunc_ops.sqrt
+   ~odl.ufunc_ops.ufunc_ops.square
+   ~odl.ufunc_ops.ufunc_ops.subtract
+   ~odl.ufunc_ops.ufunc_ops.tan
+   ~odl.ufunc_ops.ufunc_ops.tanh
+   ~odl.ufunc_ops.ufunc_ops.true_divide
+   ~odl.ufunc_ops.ufunc_ops.trunc
+   ~odl.ufunc_ops.ufunc_ops.ufunc_class_factory
+   ~odl.ufunc_ops.ufunc_ops.ufunc_factory
+   ~odl.ufunc_ops.ufunc_ops.ufunc_functional_factory
+

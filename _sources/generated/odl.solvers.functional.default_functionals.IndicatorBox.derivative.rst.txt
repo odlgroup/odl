@@ -1,0 +1,8 @@
+:orphan:
+
+IndicatorBox.derivative
+==================================================================
+
+.. currentmodule:: odl.solvers.functional.default_functionals
+
+.. automethod:: IndicatorBox.derivative

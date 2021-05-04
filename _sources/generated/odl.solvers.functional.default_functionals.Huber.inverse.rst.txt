@@ -1,0 +1,6 @@
+Huber.inverse
+========================================================
+
+.. currentmodule:: odl.solvers.functional.default_functionals
+
+.. autoproperty:: Huber.inverse

@@ -1,0 +1,10 @@
+contrib
+=======
+
+User-contributed and possibly not fully supported modules within ODL.
+
+.. currentmodule:: odl.contrib
+
+
+
+

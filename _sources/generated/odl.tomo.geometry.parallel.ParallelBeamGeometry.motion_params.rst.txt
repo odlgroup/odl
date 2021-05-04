@@ -1,0 +1,6 @@
+ParallelBeamGeometry.motion_params
+=============================================================
+
+.. currentmodule:: odl.tomo.geometry.parallel
+
+.. autoproperty:: ParallelBeamGeometry.motion_params

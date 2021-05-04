@@ -1,0 +1,6 @@
+﻿pyfftw_call
+===============================================
+
+.. currentmodule:: odl.trafos.backends.pyfftw_bindings
+
+.. autofunction:: pyfftw_call

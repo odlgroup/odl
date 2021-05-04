@@ -1,0 +1,33 @@
+tensor_ops
+==========
+
+Operators defined for tensor fields.
+
+.. currentmodule:: odl.operator.tensor_ops
+
+
+
+.. rubric:: Classes
+
+.. autosummary::
+   :toctree: generated/
+
+   ~odl.operator.tensor_ops.FlatteningOperator
+   ~odl.operator.tensor_ops.MatrixOperator
+   ~odl.operator.tensor_ops.PointwiseInner
+   ~odl.operator.tensor_ops.PointwiseInnerAdjoint
+   ~odl.operator.tensor_ops.PointwiseInnerBase
+   ~odl.operator.tensor_ops.PointwiseNorm
+   ~odl.operator.tensor_ops.PointwiseSum
+   ~odl.operator.tensor_ops.PointwiseTensorFieldOperator
+   ~odl.operator.tensor_ops.SamplingOperator
+   ~odl.operator.tensor_ops.WeightedSumSamplingOperator
+
+
+.. rubric:: Functions
+
+.. autosummary::
+   :toctree: generated/
+
+   ~odl.operator.tensor_ops.is_compatible_space
+

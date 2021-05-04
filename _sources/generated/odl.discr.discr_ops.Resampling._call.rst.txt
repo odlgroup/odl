@@ -1,0 +1,8 @@
+:orphan:
+
+Resampling._call
+====================================
+
+.. currentmodule:: odl.discr.discr_ops
+
+.. automethod:: Resampling._call

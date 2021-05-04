@@ -1,0 +1,8 @@
+:orphan:
+
+PointwiseTensorFieldOperator.norm
+=========================================================
+
+.. currentmodule:: odl.operator.tensor_ops
+
+.. automethod:: PointwiseTensorFieldOperator.norm

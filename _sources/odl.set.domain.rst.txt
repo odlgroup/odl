@@ -1,0 +1,17 @@
+domain
+======
+
+Domains for continuous functions. 
+
+.. currentmodule:: odl.set.domain
+
+
+
+.. rubric:: Classes
+
+.. autosummary::
+   :toctree: generated/
+
+   ~odl.set.domain.IntervalProd
+
+

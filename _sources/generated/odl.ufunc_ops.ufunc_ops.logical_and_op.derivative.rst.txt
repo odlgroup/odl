@@ -1,0 +1,8 @@
+:orphan:
+
+logical_and_op.derivative
+=================================================
+
+.. currentmodule:: odl.ufunc_ops.ufunc_ops
+
+.. automethod:: logical_and_op.derivative

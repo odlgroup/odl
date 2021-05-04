@@ -1,0 +1,6 @@
+﻿astra_projection_geometry
+=======================================================
+
+.. currentmodule:: odl.tomo.backends.astra_setup
+
+.. autofunction:: astra_projection_geometry

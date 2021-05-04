@@ -1,0 +1,6 @@
+conj_func.adjoint
+=========================================
+
+.. currentmodule:: odl.ufunc_ops.ufunc_ops
+
+.. autoproperty:: conj_func.adjoint

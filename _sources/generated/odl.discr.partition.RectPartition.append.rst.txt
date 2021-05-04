@@ -1,0 +1,8 @@
+:orphan:
+
+RectPartition.append
+========================================
+
+.. currentmodule:: odl.discr.partition
+
+.. automethod:: RectPartition.append

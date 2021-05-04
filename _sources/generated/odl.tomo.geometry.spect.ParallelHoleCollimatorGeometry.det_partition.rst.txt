@@ -1,0 +1,6 @@
+ParallelHoleCollimatorGeometry.det_partition
+====================================================================
+
+.. currentmodule:: odl.tomo.geometry.spect
+
+.. autoproperty:: ParallelHoleCollimatorGeometry.det_partition

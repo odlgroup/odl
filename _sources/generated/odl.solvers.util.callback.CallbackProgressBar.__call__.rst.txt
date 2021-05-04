@@ -1,0 +1,8 @@
+:orphan:
+
+CallbackProgressBar.__call__
+======================================================
+
+.. currentmodule:: odl.solvers.util.callback
+
+.. automethod:: CallbackProgressBar.__call__

@@ -1,0 +1,8 @@
+:orphan:
+
+SetIntersection.contains_set
+=========================================
+
+.. currentmodule:: odl.set.sets
+
+.. automethod:: SetIntersection.contains_set

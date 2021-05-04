@@ -1,0 +1,8 @@
+:orphan:
+
+Laplacian.derivative
+=======================================
+
+.. currentmodule:: odl.discr.diff_ops
+
+.. automethod:: Laplacian.derivative

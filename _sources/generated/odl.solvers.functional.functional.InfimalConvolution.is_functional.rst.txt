@@ -1,0 +1,6 @@
+InfimalConvolution.is_functional
+==================================================================
+
+.. currentmodule:: odl.solvers.functional.functional
+
+.. autoproperty:: InfimalConvolution.is_functional

@@ -1,0 +1,8 @@
+:orphan:
+
+Tensor.set_zero
+======================================
+
+.. currentmodule:: odl.space.base_tensors
+
+.. automethod:: Tensor.set_zero

@@ -1,0 +1,6 @@
+﻿accelerated_proximal_gradient
+=============================================================================
+
+.. currentmodule:: odl.solvers.nonsmooth.proximal_gradient_solvers
+
+.. autofunction:: accelerated_proximal_gradient

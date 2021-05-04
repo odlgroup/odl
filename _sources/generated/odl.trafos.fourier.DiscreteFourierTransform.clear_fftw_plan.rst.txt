@@ -1,0 +1,8 @@
+:orphan:
+
+DiscreteFourierTransform.clear_fftw_plan
+===========================================================
+
+.. currentmodule:: odl.trafos.fourier
+
+.. automethod:: DiscreteFourierTransform.clear_fftw_plan

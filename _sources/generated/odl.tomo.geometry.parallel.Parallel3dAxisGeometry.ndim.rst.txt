@@ -1,0 +1,6 @@
+Parallel3dAxisGeometry.ndim
+======================================================
+
+.. currentmodule:: odl.tomo.geometry.parallel
+
+.. autoproperty:: Parallel3dAxisGeometry.ndim

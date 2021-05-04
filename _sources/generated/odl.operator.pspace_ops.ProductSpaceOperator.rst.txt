@@ -1,0 +1,41 @@
+﻿ProductSpaceOperator
+============================================
+
+.. currentmodule:: odl.operator.pspace_ops
+
+.. autoclass:: ProductSpaceOperator
+   :show-inheritance:
+   
+   
+   .. automethod:: __init__
+   
+      
+   
+   .. HACK -- the point here is that we don't want this to appear in the output, but the autosummary should still generate the pages.
+      .. autosummary::
+         :toctree:
+      
+         ProductSpaceOperator.__call__
+         ProductSpaceOperator.__eq__
+         ProductSpaceOperator.__getitem__
+         ProductSpaceOperator._call
+         ProductSpaceOperator.derivative
+         ProductSpaceOperator.norm
+   
+
+    
+   .. HACK -- the point here is that we don't want this to appear in the output, but the autosummary should still generate the pages.
+      .. autosummary::
+         :toctree:
+      
+         ProductSpaceOperator.adjoint
+         ProductSpaceOperator.domain
+         ProductSpaceOperator.inverse
+         ProductSpaceOperator.is_functional
+         ProductSpaceOperator.is_linear
+         ProductSpaceOperator.ops
+         ProductSpaceOperator.range
+         ProductSpaceOperator.shape
+         ProductSpaceOperator.size
+   
+   

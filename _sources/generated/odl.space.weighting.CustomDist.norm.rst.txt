@@ -1,0 +1,8 @@
+:orphan:
+
+CustomDist.norm
+===================================
+
+.. currentmodule:: odl.space.weighting
+
+.. automethod:: CustomDist.norm

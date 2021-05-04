@@ -1,0 +1,6 @@
+LinCombOperator.is_functional
+======================================================
+
+.. currentmodule:: odl.operator.default_ops
+
+.. autoproperty:: LinCombOperator.is_functional

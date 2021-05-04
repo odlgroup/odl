@@ -1,0 +1,8 @@
+:orphan:
+
+TensorSpace.default_dtype
+================================================
+
+.. currentmodule:: odl.space.base_tensors
+
+.. automethod:: TensorSpace.default_dtype

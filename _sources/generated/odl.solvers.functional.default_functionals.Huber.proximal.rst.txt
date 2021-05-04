@@ -1,0 +1,6 @@
+Huber.proximal
+=========================================================
+
+.. currentmodule:: odl.solvers.functional.default_functionals
+
+.. autoproperty:: Huber.proximal

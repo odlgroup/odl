@@ -1,0 +1,45 @@
+﻿FunctionalTranslation
+=======================================================
+
+.. currentmodule:: odl.solvers.functional.functional
+
+.. autoclass:: FunctionalTranslation
+   :show-inheritance:
+   
+   
+   .. automethod:: __init__
+   
+      
+   
+   .. HACK -- the point here is that we don't want this to appear in the output, but the autosummary should still generate the pages.
+      .. autosummary::
+         :toctree:
+      
+         FunctionalTranslation.__call__
+         FunctionalTranslation.__eq__
+         FunctionalTranslation._call
+         FunctionalTranslation.bregman
+         FunctionalTranslation.derivative
+         FunctionalTranslation.norm
+         FunctionalTranslation.translated
+   
+
+    
+   .. HACK -- the point here is that we don't want this to appear in the output, but the autosummary should still generate the pages.
+      .. autosummary::
+         :toctree:
+      
+         FunctionalTranslation.adjoint
+         FunctionalTranslation.convex_conj
+         FunctionalTranslation.domain
+         FunctionalTranslation.functional
+         FunctionalTranslation.grad_lipschitz
+         FunctionalTranslation.gradient
+         FunctionalTranslation.inverse
+         FunctionalTranslation.is_functional
+         FunctionalTranslation.is_linear
+         FunctionalTranslation.proximal
+         FunctionalTranslation.range
+         FunctionalTranslation.translation
+   
+   

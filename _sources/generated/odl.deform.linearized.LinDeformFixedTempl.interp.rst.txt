@@ -1,0 +1,6 @@
+LinDeformFixedTempl.interp
+================================================
+
+.. currentmodule:: odl.deform.linearized
+
+.. autoproperty:: LinDeformFixedTempl.interp

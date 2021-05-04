@@ -1,0 +1,6 @@
+CylindricalDetector.check_bounds
+===========================================================
+
+.. currentmodule:: odl.tomo.geometry.detector
+
+.. autoproperty:: CylindricalDetector.check_bounds

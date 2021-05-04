@@ -1,0 +1,8 @@
+:orphan:
+
+UniversalSet.__contains__
+======================================
+
+.. currentmodule:: odl.set.sets
+
+.. automethod:: UniversalSet.__contains__

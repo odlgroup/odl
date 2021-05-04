@@ -1,0 +1,6 @@
+ReductionOperator.is_functional
+=======================================================
+
+.. currentmodule:: odl.operator.pspace_ops
+
+.. autoproperty:: ReductionOperator.is_functional

@@ -1,0 +1,6 @@
+FunctionalTranslation.domain
+==============================================================
+
+.. currentmodule:: odl.solvers.functional.functional
+
+.. autoproperty:: FunctionalTranslation.domain

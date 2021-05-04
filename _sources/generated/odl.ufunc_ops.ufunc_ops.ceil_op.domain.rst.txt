@@ -1,0 +1,6 @@
+ceil_op.domain
+======================================
+
+.. currentmodule:: odl.ufunc_ops.ufunc_ops
+
+.. autoproperty:: ceil_op.domain

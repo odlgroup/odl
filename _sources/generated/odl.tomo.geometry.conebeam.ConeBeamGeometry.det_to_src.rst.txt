@@ -1,0 +1,8 @@
+:orphan:
+
+ConeBeamGeometry.det_to_src
+======================================================
+
+.. currentmodule:: odl.tomo.geometry.conebeam
+
+.. automethod:: ConeBeamGeometry.det_to_src

@@ -1,0 +1,8 @@
+:orphan:
+
+Functional.norm
+=================================================
+
+.. currentmodule:: odl.solvers.functional.functional
+
+.. automethod:: Functional.norm

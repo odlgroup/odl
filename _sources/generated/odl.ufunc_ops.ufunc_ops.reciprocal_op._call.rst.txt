@@ -1,0 +1,8 @@
+:orphan:
+
+reciprocal_op._call
+===========================================
+
+.. currentmodule:: odl.ufunc_ops.ufunc_ops
+
+.. automethod:: reciprocal_op._call

@@ -1,0 +1,8 @@
+:orphan:
+
+TensorSpaceUfuncs.subtract
+==========================================
+
+.. currentmodule:: odl.util.ufuncs
+
+.. automethod:: TensorSpaceUfuncs.subtract

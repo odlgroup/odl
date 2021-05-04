@@ -1,0 +1,6 @@
+PointwiseNorm.adjoint
+=============================================
+
+.. currentmodule:: odl.operator.tensor_ops
+
+.. autoproperty:: PointwiseNorm.adjoint

@@ -1,0 +1,8 @@
+:orphan:
+
+logaddexp2_op.derivative
+================================================
+
+.. currentmodule:: odl.ufunc_ops.ufunc_ops
+
+.. automethod:: logaddexp2_op.derivative

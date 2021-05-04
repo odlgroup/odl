@@ -1,0 +1,6 @@
+﻿is_valid_input_array
+===========================================
+
+.. currentmodule:: odl.util.vectorization
+
+.. autofunction:: is_valid_input_array

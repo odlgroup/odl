@@ -1,0 +1,6 @@
+Parallel3dEulerGeometry.det_axes_init
+================================================================
+
+.. currentmodule:: odl.tomo.geometry.parallel
+
+.. autoproperty:: Parallel3dEulerGeometry.det_axes_init

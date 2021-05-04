@@ -1,0 +1,8 @@
+:orphan:
+
+CylindricalDetector.__eq__
+=====================================================
+
+.. currentmodule:: odl.tomo.geometry.detector
+
+.. automethod:: CylindricalDetector.__eq__

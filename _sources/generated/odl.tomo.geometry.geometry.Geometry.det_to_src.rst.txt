@@ -1,0 +1,8 @@
+:orphan:
+
+Geometry.det_to_src
+==============================================
+
+.. currentmodule:: odl.tomo.geometry.geometry
+
+.. automethod:: Geometry.det_to_src

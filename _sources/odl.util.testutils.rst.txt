@@ -1,0 +1,40 @@
+testutils
+=========
+
+Testing utilities.
+
+.. currentmodule:: odl.util.testutils
+
+
+
+.. rubric:: Classes
+
+.. autosummary::
+   :toctree: generated/
+
+   ~odl.util.testutils.ProgressBar
+   ~odl.util.testutils.ProgressRange
+
+
+.. rubric:: Functions
+
+.. autosummary::
+   :toctree: generated/
+
+   ~odl.util.testutils.all_almost_equal
+   ~odl.util.testutils.all_almost_equal_array
+   ~odl.util.testutils.all_equal
+   ~odl.util.testutils.dtype_ndigits
+   ~odl.util.testutils.dtype_tol
+   ~odl.util.testutils.fail_counter
+   ~odl.util.testutils.is_subdict
+   ~odl.util.testutils.noise_array
+   ~odl.util.testutils.noise_element
+   ~odl.util.testutils.noise_elements
+   ~odl.util.testutils.run_doctests
+   ~odl.util.testutils.simple_fixture
+   ~odl.util.testutils.test
+   ~odl.util.testutils.test_file
+   ~odl.util.testutils.timeit
+   ~odl.util.testutils.timer
+

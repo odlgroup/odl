@@ -1,0 +1,8 @@
+:orphan:
+
+SpaceTest.element_equals
+==============================================
+
+.. currentmodule:: odl.diagnostics.space
+
+.. automethod:: SpaceTest.element_equals

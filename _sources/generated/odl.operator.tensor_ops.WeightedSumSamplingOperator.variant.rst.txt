@@ -1,0 +1,6 @@
+WeightedSumSamplingOperator.variant
+===========================================================
+
+.. currentmodule:: odl.operator.tensor_ops
+
+.. autoproperty:: WeightedSumSamplingOperator.variant

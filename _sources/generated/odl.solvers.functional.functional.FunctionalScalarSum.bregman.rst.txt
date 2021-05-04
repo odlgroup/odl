@@ -1,0 +1,8 @@
+:orphan:
+
+FunctionalScalarSum.bregman
+=============================================================
+
+.. currentmodule:: odl.solvers.functional.functional
+
+.. automethod:: FunctionalScalarSum.bregman

@@ -1,0 +1,1823 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>odl.solvers.functional.functional &mdash; odl 1.0.0.dev0 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../../../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../../../../_static/custom.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../../../" src="../../../../_static/documentation_options.js"></script>
+        <script src="../../../../_static/jquery.js"></script>
+        <script src="../../../../_static/underscore.js"></script>
+        <script src="../../../../_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="../../../../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../../../index.html" class="icon icon-home"> odl
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                1.0.0.dev0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Getting Started</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../getting_started/getting_started.html">Getting Started</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Working with ODL</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../guide/guide.html">User’s guide – selected topics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../math/math.html">Mathematical Background</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Developer zone</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../dev/dev.html">Contributing to ODL</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Useful facts</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../guide/faq.html">Frequently asked questions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../guide/glossary.html">Glossary</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../release_notes.html">Release Notes</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../refs.html">References</a></li>
+</ul>
+<p class="caption"><span class="caption-text">API Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../odl.html">odl</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../../index.html">odl</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../../../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="../../../index.html">Module code</a> &raquo;</li>
+        
+      <li>odl.solvers.functional.functional</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for odl.solvers.functional.functional</h1><div class="highlight"><pre>
+<span></span><span class="c1"># coding=utf-8</span>
+
+<span class="c1"># Copyright 2014-2019 The ODL contributors</span>
+<span class="c1">#</span>
+<span class="c1"># This file is part of ODL.</span>
+<span class="c1">#</span>
+<span class="c1"># This Source Code Form is subject to the terms of the Mozilla Public License,</span>
+<span class="c1"># v. 2.0. If a copy of the MPL was not distributed with this file, You can</span>
+<span class="c1"># obtain one at https://mozilla.org/MPL/2.0/.</span>
+
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">print_function</span><span class="p">,</span> <span class="n">division</span><span class="p">,</span> <span class="n">absolute_import</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+
+<span class="kn">from</span> <span class="nn">odl.operator.operator</span> <span class="kn">import</span> <span class="p">(</span>
+    <span class="n">Operator</span><span class="p">,</span> <span class="n">OperatorComp</span><span class="p">,</span> <span class="n">OperatorLeftScalarMult</span><span class="p">,</span> <span class="n">OperatorRightScalarMult</span><span class="p">,</span>
+    <span class="n">OperatorRightVectorMult</span><span class="p">,</span> <span class="n">OperatorSum</span><span class="p">,</span> <span class="n">OperatorPointwiseProduct</span><span class="p">)</span>
+<span class="kn">from</span> <span class="nn">odl.operator.default_ops</span> <span class="kn">import</span> <span class="p">(</span><span class="n">IdentityOperator</span><span class="p">,</span> <span class="n">ConstantOperator</span><span class="p">)</span>
+<span class="kn">from</span> <span class="nn">odl.solvers.nonsmooth</span> <span class="kn">import</span> <span class="p">(</span><span class="n">proximal_arg_scaling</span><span class="p">,</span> <span class="n">proximal_translation</span><span class="p">,</span>
+                                   <span class="n">proximal_quadratic_perturbation</span><span class="p">,</span>
+                                   <span class="n">proximal_const_func</span><span class="p">,</span> <span class="n">proximal_convex_conj</span><span class="p">)</span>
+<span class="kn">from</span> <span class="nn">odl.util</span> <span class="kn">import</span> <span class="n">signature_string</span><span class="p">,</span> <span class="n">indent</span>
+
+
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;Functional&#39;</span><span class="p">,</span> <span class="s1">&#39;FunctionalLeftScalarMult&#39;</span><span class="p">,</span>
+           <span class="s1">&#39;FunctionalRightScalarMult&#39;</span><span class="p">,</span> <span class="s1">&#39;FunctionalComp&#39;</span><span class="p">,</span>
+           <span class="s1">&#39;FunctionalRightVectorMult&#39;</span><span class="p">,</span> <span class="s1">&#39;FunctionalSum&#39;</span><span class="p">,</span> <span class="s1">&#39;FunctionalScalarSum&#39;</span><span class="p">,</span>
+           <span class="s1">&#39;FunctionalTranslation&#39;</span><span class="p">,</span> <span class="s1">&#39;InfimalConvolution&#39;</span><span class="p">,</span>
+           <span class="s1">&#39;FunctionalQuadraticPerturb&#39;</span><span class="p">,</span> <span class="s1">&#39;FunctionalProduct&#39;</span><span class="p">,</span>
+           <span class="s1">&#39;FunctionalQuotient&#39;</span><span class="p">,</span> <span class="s1">&#39;BregmanDistance&#39;</span><span class="p">,</span> <span class="s1">&#39;simple_functional&#39;</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="Functional"><a class="viewcode-back" href="../../../../generated/odl.solvers.functional.functional.Functional.html#odl.solvers.functional.functional.Functional">[docs]</a><span class="k">class</span> <span class="nc">Functional</span><span class="p">(</span><span class="n">Operator</span><span class="p">):</span>
+
+    <span class="sd">&quot;&quot;&quot;Implementation of a functional class.</span>
+
+<span class="sd">    A functional is an operator ``f`` that maps from some domain ``X`` to the</span>
+<span class="sd">    field of scalars ``F`` associated with the domain:</span>
+
+<span class="sd">        ``f : X -&gt; F``.</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    The implementation of the functional class assumes that the domain</span>
+<span class="sd">    :math:`X` is a Hilbert space and that the field of scalars :math:`F` is a</span>
+<span class="sd">    is the real numbers. It is possible to create functions that do not fulfil</span>
+<span class="sd">    these assumptions, however some mathematical results might not be valid in</span>
+<span class="sd">    this case. For more information, see `the ODL functional guide</span>
+<span class="sd">    &lt;http://odlgroup.github.io/odl/guide/in_depth/functional_guide.html&gt;`_.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="Functional.__init__"><a class="viewcode-back" href="../../../../generated/odl.solvers.functional.functional.Functional.html#odl.solvers.functional.functional.Functional.__init__">[docs]</a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">space</span><span class="p">,</span> <span class="n">linear</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">grad_lipschitz</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Initialize a new instance.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        space : `LinearSpace`</span>
+<span class="sd">            The domain of this functional, i.e., the set of elements to</span>
+<span class="sd">            which this functional can be applied.</span>
+<span class="sd">        linear : bool, optional</span>
+<span class="sd">            If `True`, the functional is considered as linear.</span>
+<span class="sd">        grad_lipschitz : float, optional</span>
+<span class="sd">            The Lipschitz constant of the gradient. Default: ``nan``</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># Cannot use `super(Functional, self)` here since that breaks</span>
+        <span class="c1"># subclasses with multiple inheritance (at least those where both</span>
+        <span class="c1"># parents implement `__init__`, e.g., in `ScalingFunctional`)</span>
+        <span class="n">Operator</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">domain</span><span class="o">=</span><span class="n">space</span><span class="p">,</span> <span class="nb">range</span><span class="o">=</span><span class="n">space</span><span class="o">.</span><span class="n">field</span><span class="p">,</span> <span class="n">linear</span><span class="o">=</span><span class="n">linear</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__grad_lipschitz</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">grad_lipschitz</span><span class="p">)</span></div>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">grad_lipschitz</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Lipschitz constant for the gradient of the functional.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__grad_lipschitz</span>
+
+    <span class="nd">@grad_lipschitz</span><span class="o">.</span><span class="n">setter</span>
+    <span class="k">def</span> <span class="nf">grad_lipschitz</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Setter for the Lipschitz constant for the gradient.&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__grad_lipschitz</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">gradient</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sa">r</span><span class="sd">&quot;&quot;&quot;Gradient operator of the functional.</span>
+
+<span class="sd">        Notes</span>
+<span class="sd">        -----</span>
+<span class="sd">        The operator that corresponds to the mapping</span>
+
+<span class="sd">        .. math::</span>
+<span class="sd">            x \to \nabla f(x)</span>
+
+<span class="sd">        where :math:`\nabla f(x)` is the element used to evaluate</span>
+<span class="sd">        derivatives in a direction :math:`d` by</span>
+<span class="sd">        :math:`\langle \nabla f(x), d \rangle`.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span>
+            <span class="s1">&#39;no gradient implemented for functional </span><span class="si">{!r}</span><span class="s1">&#39;</span>
+            <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="p">))</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">proximal</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sa">r</span><span class="sd">&quot;&quot;&quot;Proximal factory of the functional.</span>
+
+<span class="sd">        Notes</span>
+<span class="sd">        -----</span>
+<span class="sd">        The proximal operator of a function :math:`f` is an operator defined as</span>
+
+<span class="sd">        .. math::</span>
+<span class="sd">            prox_{\sigma f}(x) = \sup_{y} \left\{ f(y) -</span>
+<span class="sd">            \frac{1}{2\sigma} \| y-x \|_2^2 \right\}.</span>
+
+<span class="sd">        Proximal operators are often used in different optimization algorithms,</span>
+<span class="sd">        especially when designed to handle nonsmooth functionals.</span>
+
+<span class="sd">        A `proximal factory` is a function that, when called with a step</span>
+<span class="sd">        length :math:`\sigma`, returns the corresponding proximal operator.</span>
+
+<span class="sd">        The nonsmooth solvers that make use of proximal operators to solve a</span>
+<span class="sd">        given optimization problem take a `proximal factory` as input,</span>
+<span class="sd">        i.e., a function returning a proximal operator. See for example</span>
+<span class="sd">        `forward_backward_pd`.</span>
+
+<span class="sd">        In general, the step length :math:`\sigma` is expected to be a</span>
+<span class="sd">        positive float, but certain functionals might accept more types of</span>
+<span class="sd">        objects as a stepsize:</span>
+
+<span class="sd">        - If a functional is a `SeparableSum`, then, instead of a positive</span>
+<span class="sd">          float, one may call the `proximal factory` with a list of positive</span>
+<span class="sd">          floats, and the stepsize are applied to each component individually.</span>
+
+<span class="sd">        - For certain special functionals like `L1Norm` and `L2NormSquared`,</span>
+<span class="sd">          which are not implemented as a `SeparableSum`, the proximal factory</span>
+<span class="sd">          will accept an argument which is `element-like` regarding the domain</span>
+<span class="sd">          of the functional. Its components must be strictly positive floats.</span>
+
+<span class="sd">        A stepsize like :math:`(\sigma_1, \ldots, \sigma_n)`  coincides</span>
+<span class="sd">        with a matrix-valued distance according to Section XV.4 of [HL1993]</span>
+<span class="sd">        and the rule</span>
+
+<span class="sd">        .. math::</span>
+<span class="sd">            M = \mathrm{diag}(\sigma_1^{-1}, \ldots, \sigma_n^{-1})</span>
+
+<span class="sd">        or the Bregman-proximal according to [E1993] and the rule</span>
+
+<span class="sd">        .. math::</span>
+<span class="sd">            h(x) = \langle x, M x \rangle.</span>
+
+<span class="sd">        References</span>
+<span class="sd">        ----------</span>
+<span class="sd">        [HL1993] Hiriart-Urruty J-B, and Lemaréchal C. *Convex analysis and</span>
+<span class="sd">        minimization algorithms II. Advanced theory and bundle methods.*</span>
+<span class="sd">        Springer, 1993.</span>
+
+<span class="sd">        [E1993] Eckstein J. *Nonlinear proximal point algorithms using Bregman</span>
+<span class="sd">        functions, with applications to convex programming.* Mathematics of</span>
+<span class="sd">        Operations Research, 18.1 (1993), pp 202--226.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span>
+            <span class="s1">&#39;no proximal operator implemented for functional </span><span class="si">{!r}</span><span class="s1">&#39;</span>
+            <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="p">))</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">convex_conj</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sa">r</span><span class="sd">&quot;&quot;&quot;Convex conjugate functional of the functional.</span>
+
+<span class="sd">        Notes</span>
+<span class="sd">        -----</span>
+<span class="sd">        The convex conjugate functional of a convex functional :math:`f(x)`,</span>
+<span class="sd">        defined on a Hilber space, is defined as the functional</span>
+
+<span class="sd">        .. math::</span>
+<span class="sd">            f^*(x^*) = \sup_{x} \{ \langle x^*,x \rangle - f(x)  \}.</span>
+
+<span class="sd">        The concept is also known as the Legendre transformation.</span>
+
+<span class="sd">        For literature references see, e.g., [Lue1969], [Roc1970], the</span>
+<span class="sd">        wikipedia article on `Convex conjugate</span>
+<span class="sd">        &lt;https://en.wikipedia.org/wiki/Convex_conjugate&gt;`_ or the wikipedia</span>
+<span class="sd">        article on the `Legendre transformation</span>
+<span class="sd">        &lt;https://en.wikipedia.org/wiki/Legendre_transformation&gt;`_.</span>
+
+<span class="sd">        References</span>
+<span class="sd">        ----------</span>
+<span class="sd">        [Lue1969] Luenberger, D G. *Optimization by vector space methods*.</span>
+<span class="sd">        Wiley, 1969.</span>
+
+<span class="sd">        [Roc1970] Rockafellar, R. T. *Convex analysis*. Princeton</span>
+<span class="sd">        University Press, 1970.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">FunctionalDefaultConvexConjugate</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+
+<div class="viewcode-block" id="Functional.derivative"><a class="viewcode-back" href="../../../../generated/odl.solvers.functional.functional.Functional.derivative.html#odl.solvers.functional.functional.Functional.derivative">[docs]</a>    <span class="k">def</span> <span class="nf">derivative</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">point</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return the derivative operator in the given point.</span>
+
+<span class="sd">        This function returns the linear operator given by::</span>
+
+<span class="sd">            self.derivative(point)(x) == self.gradient(point).inner(x)</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        point : `domain` element</span>
+<span class="sd">            The point in which the gradient is evaluated.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        derivative : `Operator`</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">gradient</span><span class="p">(</span><span class="n">point</span><span class="p">)</span><span class="o">.</span><span class="n">T</span></div>
+
+<div class="viewcode-block" id="Functional.translated"><a class="viewcode-back" href="../../../../generated/odl.solvers.functional.functional.Functional.translated.html#odl.solvers.functional.functional.Functional.translated">[docs]</a>    <span class="k">def</span> <span class="nf">translated</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">shift</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return a translation of the functional.</span>
+
+<span class="sd">        For a given functional ``f`` and an element ``translation`` in the</span>
+<span class="sd">        domain of ``f``, this operation creates the functional</span>
+<span class="sd">        ``f(. - translation)``.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        translation : `domain` element</span>
+<span class="sd">            Element in the domain of the functional</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        out : `FunctionalTranslation`</span>
+<span class="sd">            The functional ``f(. - translation)``</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">FunctionalTranslation</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">shift</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Functional.bregman"><a class="viewcode-back" href="../../../../generated/odl.solvers.functional.functional.Functional.bregman.html#odl.solvers.functional.functional.Functional.bregman">[docs]</a>    <span class="k">def</span> <span class="nf">bregman</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">point</span><span class="p">,</span> <span class="n">subgrad</span><span class="p">):</span>
+        <span class="sa">r</span><span class="sd">&quot;&quot;&quot;Return the Bregman distance functional.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        point : element of ``functional.domain``</span>
+<span class="sd">            Point from which to define the Bregman distance.</span>
+<span class="sd">        subgrad : element of ``functional.domain``</span>
+<span class="sd">            A subgradient of ``functional`` in ``point``. If it exists,  a</span>
+<span class="sd">            valid option is ``functional.gradient(point)``.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        out : `BregmanDistance`</span>
+<span class="sd">            The Bregman distance functional.</span>
+
+<span class="sd">        Notes</span>
+<span class="sd">        -----</span>
+<span class="sd">        Given a functional :math:`f`, a point :math:`y`, and a (sub)gradient</span>
+<span class="sd">        :math:`p \in \partial f(y)`, the Bregman distance functional</span>
+<span class="sd">        :math:`D_f^p(\cdot, y)` in a point :math:`x` is given by</span>
+
+<span class="sd">        .. math::</span>
+<span class="sd">            D_f^p(x, y) = f(x) - f(y) - \langle p, x - y \rangle.</span>
+
+
+<span class="sd">        For mathematical details, see</span>
+<span class="sd">        `[Bur2016] &lt;https://arxiv.org/abs/1505.05191&gt;`_. See also the Wikipedia</span>
+<span class="sd">        article: https://en.wikipedia.org/wiki/Bregman_divergence</span>
+
+<span class="sd">        References</span>
+<span class="sd">        ----------</span>
+<span class="sd">        [Bur2016] Burger, M. *Bregman Distances in Inverse Problems and Partial</span>
+<span class="sd">        Differential Equation*. In: Advances in Mathematical Modeling,</span>
+<span class="sd">        Optimization and Optimal Control, 2016. p. 3-33.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">BregmanDistance</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">point</span><span class="p">,</span> <span class="n">subgrad</span><span class="p">)</span></div>
+
+    <span class="k">def</span> <span class="fm">__mul__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return ``self * other``.</span>
+
+<span class="sd">        If ``other`` is an `Operator`, this corresponds to composition with the</span>
+<span class="sd">        operator:</span>
+
+<span class="sd">            ``(func * op)(x) == func(op(x))``</span>
+
+<span class="sd">        If ``other`` is a scalar, this corresponds to right multiplication of</span>
+<span class="sd">        scalars with functionals:</span>
+
+<span class="sd">            ``(func * scalar)(x) == func(scalar * x)``</span>
+
+<span class="sd">        If ``other`` is a vector, this corresponds to right multiplication of</span>
+<span class="sd">        vectors with functionals:</span>
+
+<span class="sd">            ``(func * vector) == func(vector * x)``</span>
+
+<span class="sd">        Note that left and right multiplications are generally different.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        other : `Operator`, `domain` element or scalar</span>
+<span class="sd">            `Operator`:</span>
+<span class="sd">            The `Operator.range` of ``other`` must match this functional&#39;s</span>
+<span class="sd">            `domain`.</span>
+
+<span class="sd">            `domain` element:</span>
+<span class="sd">            ``other`` must be an element of this functionals&#39;s</span>
+<span class="sd">            `Functional.domain`.</span>
+
+<span class="sd">            scalar:</span>
+<span class="sd">            The `domain` of this functional must be a</span>
+<span class="sd">            `LinearSpace` and ``other`` must be an element of the `field`</span>
+<span class="sd">            of this functional&#39;s `domain`. Note that this `field` is also this</span>
+<span class="sd">            functional&#39;s `range`.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        mul : `Functional`</span>
+<span class="sd">            Multiplication result.</span>
+
+<span class="sd">            If ``other`` is an `Operator`, ``mul`` is a</span>
+<span class="sd">            `FunctionalComp`.</span>
+
+<span class="sd">            If ``other`` is a scalar, ``mul`` is a</span>
+<span class="sd">            `FunctionalRightScalarMult`.</span>
+
+<span class="sd">            If ``other`` is a vector, ``mul`` is a</span>
+<span class="sd">            `FunctionalRightVectorMult`.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="n">Operator</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">FunctionalComp</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">other</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">range</span><span class="p">:</span>
+            <span class="c1"># Left multiplication is more efficient, so we can use this in the</span>
+            <span class="c1"># case of linear functional.</span>
+            <span class="k">if</span> <span class="n">other</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="kn">from</span> <span class="nn">odl.solvers.functional.default_functionals</span> <span class="kn">import</span> <span class="p">(</span>
+                    <span class="n">ConstantFunctional</span><span class="p">)</span>
+                <span class="k">return</span> <span class="n">ConstantFunctional</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">domain</span><span class="p">,</span>
+                                          <span class="bp">self</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">domain</span><span class="o">.</span><span class="n">zero</span><span class="p">()))</span>
+            <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_linear</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">FunctionalLeftScalarMult</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">FunctionalRightScalarMult</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">other</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">domain</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">FunctionalRightVectorMult</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="nb">super</span><span class="p">(</span><span class="n">Functional</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__mul__</span><span class="p">(</span><span class="n">other</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="fm">__rmul__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return ``other * self``.</span>
+
+<span class="sd">        If ``other`` is an `Operator`, since a functional is also an operator</span>
+<span class="sd">        this corresponds to operator composition:</span>
+
+<span class="sd">            ``(op * func)(x) == op(func(x))``</span>
+
+<span class="sd">        If ``other`` is a scalar, this corresponds to left multiplication of</span>
+<span class="sd">        scalars with functionals:</span>
+
+<span class="sd">            ``(scalar * func)(x) == scalar * func(x)``</span>
+
+<span class="sd">        If ``other`` is a vector,  since a functional is also an operator this</span>
+<span class="sd">        corresponds to left multiplication of vectors with operators:</span>
+
+<span class="sd">            ``(vector * func)(x) == vector * func(x)``</span>
+
+<span class="sd">        Note that left and right multiplications are generally different.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        other : `Operator`, `domain` element or scalar</span>
+<span class="sd">            `Operator`:</span>
+<span class="sd">            The `Operator.domain` of ``other`` must match this functional&#39;s</span>
+<span class="sd">            `Functional.range`.</span>
+
+<span class="sd">            `LinearSpaceElement`:</span>
+<span class="sd">            ``other`` must be an element of this functionals&#39;s</span>
+<span class="sd">            `Functional.range`.</span>
+
+<span class="sd">            scalar:</span>
+<span class="sd">            The `Operator.domain` of this operator must be a</span>
+<span class="sd">            `LinearSpace` and ``other`` must be an</span>
+<span class="sd">            element of the ``field`` of this operator&#39;s</span>
+<span class="sd">            `Operator.domain`.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        rmul : `Functional` or `Operator`</span>
+<span class="sd">            Multiplication result.</span>
+
+<span class="sd">            If ``other`` is an `Operator`, ``rmul`` is an `OperatorComp`.</span>
+
+<span class="sd">            If ``other`` is a scalar, ``rmul`` is a</span>
+<span class="sd">            `FunctionalLeftScalarMult`.</span>
+
+<span class="sd">            If ``other`` is a vector, ``rmul`` is a</span>
+<span class="sd">            `OperatorLeftVectorMult`.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">other</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">range</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">other</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="kn">from</span> <span class="nn">odl.solvers.functional.default_functionals</span> <span class="kn">import</span> <span class="p">(</span>
+                    <span class="n">ZeroFunctional</span><span class="p">)</span>
+                <span class="k">return</span> <span class="n">ZeroFunctional</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">domain</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">FunctionalLeftScalarMult</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="nb">super</span><span class="p">(</span><span class="n">Functional</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__rmul__</span><span class="p">(</span><span class="n">other</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="fm">__add__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return ``self + other``.</span>
+
+<span class="sd">        If ``other`` is a `Functional`, this corresponds to</span>
+
+<span class="sd">            ``(func1 + func2)(x) == func1(x) + func2(x)``</span>
+
+<span class="sd">        If ``other`` is a scalar, this corresponds to adding a scalar to the</span>
+<span class="sd">        value of the functional:</span>
+
+<span class="sd">            ``(func + scalar)(x) == func(x) + scalar``</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        other : `Functional` or scalar</span>
+<span class="sd">            `Functional`:</span>
+<span class="sd">            The `Functional.domain` and `Functional.range` of ``other``</span>
+<span class="sd">            must match this functional&#39;s  `Functional.domain` and</span>
+<span class="sd">            `Functional.range`.</span>
+
+<span class="sd">            scalar:</span>
+<span class="sd">            The scalar needs to be in this functional&#39;s `Functional.range`.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        sum : `Functional`</span>
+<span class="sd">            Addition result.</span>
+
+<span class="sd">            If ``other`` is in ``Functional.range``, ``sum`` is a</span>
+<span class="sd">            `FunctionalScalarSum`.</span>
+
+<span class="sd">            If ``other`` is a `Functional`, ``sum`` is a `FunctionalSum`.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">other</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">domain</span><span class="o">.</span><span class="n">field</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">FunctionalScalarSum</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="n">Functional</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">FunctionalSum</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="nb">super</span><span class="p">(</span><span class="n">Functional</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__add__</span><span class="p">(</span><span class="n">other</span><span class="p">)</span>
+
+    <span class="c1"># Since addition is commutative, right and left addition is the same</span>
+    <span class="fm">__radd__</span> <span class="o">=</span> <span class="fm">__add__</span>
+
+    <span class="k">def</span> <span class="fm">__sub__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return ``self - other``.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span> <span class="o">+</span> <span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="n">other</span></div>
+
+
+<div class="viewcode-block" id="FunctionalLeftScalarMult"><a class="viewcode-back" href="../../../../generated/odl.solvers.functional.functional.FunctionalLeftScalarMult.html#odl.solvers.functional.functional.FunctionalLeftScalarMult">[docs]</a><span class="k">class</span> <span class="nc">FunctionalLeftScalarMult</span><span class="p">(</span><span class="n">Functional</span><span class="p">,</span> <span class="n">OperatorLeftScalarMult</span><span class="p">):</span>
+
+    <span class="sd">&quot;&quot;&quot;Scalar multiplication of functional from the left.</span>
+
+<span class="sd">    Given a functional ``f`` and a scalar ``scalar``, this represents the</span>
+<span class="sd">    functional</span>
+
+<span class="sd">        ``(scalar * f)(x) == scalar * f(x)``.</span>
+
+<span class="sd">    ``Functional.__rmul__`` takes care of the case scalar = 0.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="FunctionalLeftScalarMult.__init__"><a class="viewcode-back" href="../../../../generated/odl.solvers.functional.functional.FunctionalLeftScalarMult.html#odl.solvers.functional.functional.FunctionalLeftScalarMult.__init__">[docs]</a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">func</span><span class="p">,</span> <span class="n">scalar</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Initialize a new instance.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        func : `Functional`</span>
+<span class="sd">            Functional to be scaled.</span>
+<span class="sd">        scalar : float, nonzero</span>
+<span class="sd">            Number with which to scale the functional.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">func</span><span class="p">,</span> <span class="n">Functional</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;`func` </span><span class="si">{!r}</span><span class="s1"> is not a `Functional` instance&#39;</span>
+                            <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">func</span><span class="p">))</span>
+
+        <span class="n">Functional</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span>
+            <span class="bp">self</span><span class="p">,</span> <span class="n">space</span><span class="o">=</span><span class="n">func</span><span class="o">.</span><span class="n">domain</span><span class="p">,</span> <span class="n">linear</span><span class="o">=</span><span class="n">func</span><span class="o">.</span><span class="n">is_linear</span><span class="p">,</span>
+            <span class="n">grad_lipschitz</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">scalar</span><span class="p">)</span> <span class="o">*</span> <span class="n">func</span><span class="o">.</span><span class="n">grad_lipschitz</span><span class="p">)</span>
+        <span class="n">OperatorLeftScalarMult</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">operator</span><span class="o">=</span><span class="n">func</span><span class="p">,</span> <span class="n">scalar</span><span class="o">=</span><span class="n">scalar</span><span class="p">)</span></div>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">functional</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;The original functional.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">operator</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">gradient</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Gradient operator of the functional.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">scalar</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">functional</span><span class="o">.</span><span class="n">gradient</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">convex_conj</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Convex conjugate functional of the scaled functional.</span>
+
+<span class="sd">        ``Functional.__rmul__`` takes care of the case scalar = 0.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">scalar</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;scaling with nonpositive values have no convex &#39;</span>
+                             <span class="s1">&#39;conjugate. Current value: </span><span class="si">{}</span><span class="s1">.&#39;</span>
+                             <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">scalar</span><span class="p">))</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">scalar</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">functional</span><span class="o">.</span><span class="n">convex_conj</span> <span class="o">*</span> <span class="p">(</span><span class="mf">1.0</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">scalar</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">proximal</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Proximal factory of the scaled functional.</span>
+
+<span class="sd">        ``Functional.__rmul__`` takes care of the case scalar = 0</span>
+
+<span class="sd">        See Also</span>
+<span class="sd">        --------</span>
+<span class="sd">        odl.solvers.nonsmooth.proximal_operators.proximal_const_func</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">scalar</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;proximal operator of functional scaled with a &#39;</span>
+                             <span class="s1">&#39;negative value </span><span class="si">{}</span><span class="s1"> is not well-defined&#39;</span>
+                             <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">scalar</span><span class="p">))</span>
+
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">scalar</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="c1"># Should not get here. `Functional.__rmul__` takes care of the case</span>
+            <span class="c1"># scalar = 0</span>
+            <span class="k">return</span> <span class="n">proximal_const_func</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">domain</span><span class="p">)</span>
+
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">def</span> <span class="nf">proximal_left_scalar_mult</span><span class="p">(</span><span class="n">sigma</span><span class="o">=</span><span class="mf">1.0</span><span class="p">):</span>
+                <span class="sd">&quot;&quot;&quot;Proximal operator for left scalar multiplication.</span>
+
+<span class="sd">                    Parameters</span>
+<span class="sd">                    ----------</span>
+<span class="sd">                    sigma : positive float, optional</span>
+<span class="sd">                        Step size parameter. Default: 1.0</span>
+<span class="sd">                &quot;&quot;&quot;</span>
+                <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">functional</span><span class="o">.</span><span class="n">proximal</span><span class="p">(</span><span class="n">sigma</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">scalar</span><span class="p">)</span>
+
+            <span class="k">return</span> <span class="n">proximal_left_scalar_mult</span></div>
+
+
+<div class="viewcode-block" id="FunctionalRightScalarMult"><a class="viewcode-back" href="../../../../generated/odl.solvers.functional.functional.FunctionalRightScalarMult.html#odl.solvers.functional.functional.FunctionalRightScalarMult">[docs]</a><span class="k">class</span> <span class="nc">FunctionalRightScalarMult</span><span class="p">(</span><span class="n">Functional</span><span class="p">,</span> <span class="n">OperatorRightScalarMult</span><span class="p">):</span>
+
+    <span class="sd">&quot;&quot;&quot;Scalar multiplication of the argument of functional.</span>
+
+<span class="sd">    Given a functional ``f`` and a scalar ``scalar``, this represents the</span>
+<span class="sd">    functional</span>
+
+<span class="sd">        ``(f * scalar)(x) == f(scalar * x)``.</span>
+
+<span class="sd">    `Functional.__mul__` takes care of the case scalar = 0.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="FunctionalRightScalarMult.__init__"><a class="viewcode-back" href="../../../../generated/odl.solvers.functional.functional.FunctionalRightScalarMult.html#odl.solvers.functional.functional.FunctionalRightScalarMult.__init__">[docs]</a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">func</span><span class="p">,</span> <span class="n">scalar</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Initialize a new instance.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        func : `Functional`</span>
+<span class="sd">            The functional which will have its argument scaled.</span>
+<span class="sd">        scalar : float, nonzero</span>
+<span class="sd">            The scaling parameter with which the argument is scaled.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">func</span><span class="p">,</span> <span class="n">Functional</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;`func` </span><span class="si">{!r}</span><span class="s1"> is not a `Functional` instance&#39;</span>
+                            <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">func</span><span class="p">))</span>
+
+        <span class="n">scalar</span> <span class="o">=</span> <span class="n">func</span><span class="o">.</span><span class="n">domain</span><span class="o">.</span><span class="n">field</span><span class="o">.</span><span class="n">element</span><span class="p">(</span><span class="n">scalar</span><span class="p">)</span>
+
+        <span class="n">Functional</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span>
+            <span class="bp">self</span><span class="p">,</span> <span class="n">space</span><span class="o">=</span><span class="n">func</span><span class="o">.</span><span class="n">domain</span><span class="p">,</span> <span class="n">linear</span><span class="o">=</span><span class="n">func</span><span class="o">.</span><span class="n">is_linear</span><span class="p">,</span>
+            <span class="n">grad_lipschitz</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">scalar</span><span class="p">)</span> <span class="o">*</span> <span class="n">func</span><span class="o">.</span><span class="n">grad_lipschitz</span><span class="p">)</span>
+        <span class="n">OperatorRightScalarMult</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">operator</span><span class="o">=</span><span class="n">func</span><span class="p">,</span> <span class="n">scalar</span><span class="o">=</span><span class="n">scalar</span><span class="p">)</span></div>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">functional</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;The original functional.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">operator</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">gradient</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Gradient operator of the functional.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">scalar</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">functional</span><span class="o">.</span><span class="n">gradient</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">scalar</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">convex_conj</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Convex conjugate functional of functional with scaled argument.</span>
+
+<span class="sd">        `Functional.__mul__` takes care of the case scalar = 0.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">functional</span><span class="o">.</span><span class="n">convex_conj</span> <span class="o">*</span> <span class="p">(</span><span class="mi">1</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">scalar</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">proximal</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Proximal factory of the functional.</span>
+
+<span class="sd">        See Also</span>
+<span class="sd">        --------</span>
+<span class="sd">        odl.solvers.nonsmooth.proximal_operators.proximal_arg_scaling</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">proximal_arg_scaling</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">functional</span><span class="o">.</span><span class="n">proximal</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">scalar</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="FunctionalComp"><a class="viewcode-back" href="../../../../generated/odl.solvers.functional.functional.FunctionalComp.html#odl.solvers.functional.functional.FunctionalComp">[docs]</a><span class="k">class</span> <span class="nc">FunctionalComp</span><span class="p">(</span><span class="n">Functional</span><span class="p">,</span> <span class="n">OperatorComp</span><span class="p">):</span>
+
+    <span class="sd">&quot;&quot;&quot;Composition of a functional with an operator.</span>
+
+<span class="sd">    Given a functional ``func`` and an operator ``op``, such that the range of</span>
+<span class="sd">    the operator is equal to the domain of the functional, this corresponds to</span>
+<span class="sd">    the functional</span>
+
+<span class="sd">        ``(func * op)(x) == func(op(x))``.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="FunctionalComp.__init__"><a class="viewcode-back" href="../../../../generated/odl.solvers.functional.functional.FunctionalComp.html#odl.solvers.functional.functional.FunctionalComp.__init__">[docs]</a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">func</span><span class="p">,</span> <span class="n">op</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Initialize a new instance.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        func : `Functional`</span>
+<span class="sd">            The left (&quot;outer&quot;) operator</span>
+<span class="sd">        op : `Operator`</span>
+<span class="sd">            The right (&quot;inner&quot;) operator. Its range must coincide with the</span>
+<span class="sd">            domain of ``func``.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">func</span><span class="p">,</span> <span class="n">Functional</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;`fun` </span><span class="si">{!r}</span><span class="s1"> is not a `Functional` instance&#39;</span>
+                            <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">func</span><span class="p">))</span>
+
+        <span class="n">OperatorComp</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">left</span><span class="o">=</span><span class="n">func</span><span class="p">,</span> <span class="n">right</span><span class="o">=</span><span class="n">op</span><span class="p">)</span>
+        <span class="n">Functional</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">space</span><span class="o">=</span><span class="n">op</span><span class="o">.</span><span class="n">domain</span><span class="p">,</span>
+                            <span class="n">linear</span><span class="o">=</span><span class="p">(</span><span class="n">func</span><span class="o">.</span><span class="n">is_linear</span> <span class="ow">and</span> <span class="n">op</span><span class="o">.</span><span class="n">is_linear</span><span class="p">),</span>
+                            <span class="n">grad_lipschitz</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">)</span></div>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">gradient</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Gradient of the compositon according to the chain rule.&quot;&quot;&quot;</span>
+        <span class="n">func</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">left</span>
+        <span class="n">op</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">right</span>
+
+        <span class="k">class</span> <span class="nc">FunctionalCompositionGradient</span><span class="p">(</span><span class="n">Operator</span><span class="p">):</span>
+
+            <span class="sd">&quot;&quot;&quot;Gradient of the compositon according to the chain rule.&quot;&quot;&quot;</span>
+
+            <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+                <span class="sd">&quot;&quot;&quot;Initialize a new instance.&quot;&quot;&quot;</span>
+                <span class="nb">super</span><span class="p">(</span><span class="n">FunctionalCompositionGradient</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span>
+                    <span class="n">op</span><span class="o">.</span><span class="n">domain</span><span class="p">,</span> <span class="n">op</span><span class="o">.</span><span class="n">domain</span><span class="p">,</span> <span class="n">linear</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+
+            <span class="k">def</span> <span class="nf">_call</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
+                <span class="sd">&quot;&quot;&quot;Apply the gradient operator to the given point.&quot;&quot;&quot;</span>
+                <span class="k">return</span> <span class="n">op</span><span class="o">.</span><span class="n">derivative</span><span class="p">(</span><span class="n">x</span><span class="p">)</span><span class="o">.</span><span class="n">adjoint</span><span class="p">(</span><span class="n">func</span><span class="o">.</span><span class="n">gradient</span><span class="p">(</span><span class="n">op</span><span class="p">(</span><span class="n">x</span><span class="p">)))</span>
+
+            <span class="k">def</span> <span class="nf">derivative</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
+                <span class="sd">&quot;&quot;&quot;The derivative in point ``x``.</span>
+
+<span class="sd">                This is only defined</span>
+<span class="sd">                &quot;&quot;&quot;</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="n">op</span><span class="o">.</span><span class="n">is_linear</span><span class="p">:</span>
+                    <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s1">&#39;derivative only implemented &#39;</span>
+                                              <span class="s1">&#39;for linear opertors.&#39;</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="k">return</span> <span class="p">(</span><span class="n">op</span><span class="o">.</span><span class="n">adjoint</span> <span class="o">*</span> <span class="n">func</span><span class="o">.</span><span class="n">gradient</span> <span class="o">*</span> <span class="n">op</span><span class="p">)</span><span class="o">.</span><span class="n">derivative</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">FunctionalCompositionGradient</span><span class="p">()</span></div>
+
+
+<div class="viewcode-block" id="FunctionalRightVectorMult"><a class="viewcode-back" href="../../../../generated/odl.solvers.functional.functional.FunctionalRightVectorMult.html#odl.solvers.functional.functional.FunctionalRightVectorMult">[docs]</a><span class="k">class</span> <span class="nc">FunctionalRightVectorMult</span><span class="p">(</span><span class="n">Functional</span><span class="p">,</span> <span class="n">OperatorRightVectorMult</span><span class="p">):</span>
+
+    <span class="sd">&quot;&quot;&quot;Expression type for the functional right vector multiplication.</span>
+
+<span class="sd">    Given a functional ``func`` and a vector ``y`` in the domain of ``func``,</span>
+<span class="sd">    this corresponds to the functional</span>
+
+<span class="sd">        ``(func * y)(x) == func(y * x)``.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="FunctionalRightVectorMult.__init__"><a class="viewcode-back" href="../../../../generated/odl.solvers.functional.functional.FunctionalRightVectorMult.html#odl.solvers.functional.functional.FunctionalRightVectorMult.__init__">[docs]</a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">func</span><span class="p">,</span> <span class="n">vector</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Initialize a new instance.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        func : `Functional`</span>
+<span class="sd">            The domain of ``func`` must be a ``vector.space``.</span>
+<span class="sd">        vector : `domain` element</span>
+<span class="sd">            The vector to multiply by.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">func</span><span class="p">,</span> <span class="n">Functional</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;`fun` </span><span class="si">{!r}</span><span class="s1"> is not a `Functional` instance&#39;</span>
+                            <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">func</span><span class="p">))</span>
+
+        <span class="n">OperatorRightVectorMult</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">operator</span><span class="o">=</span><span class="n">func</span><span class="p">,</span> <span class="n">vector</span><span class="o">=</span><span class="n">vector</span><span class="p">)</span>
+        <span class="n">Functional</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">space</span><span class="o">=</span><span class="n">func</span><span class="o">.</span><span class="n">domain</span><span class="p">)</span></div>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">functional</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">operator</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">gradient</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Gradient operator of the functional.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">vector</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">operator</span><span class="o">.</span><span class="n">gradient</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">vector</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">convex_conj</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Convex conjugate functional of the functional.</span>
+
+<span class="sd">        This is only defined for vectors with no zero-elements.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">functional</span><span class="o">.</span><span class="n">convex_conj</span> <span class="o">*</span> <span class="p">(</span><span class="mf">1.0</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">vector</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="FunctionalSum"><a class="viewcode-back" href="../../../../generated/odl.solvers.functional.functional.FunctionalSum.html#odl.solvers.functional.functional.FunctionalSum">[docs]</a><span class="k">class</span> <span class="nc">FunctionalSum</span><span class="p">(</span><span class="n">Functional</span><span class="p">,</span> <span class="n">OperatorSum</span><span class="p">):</span>
+
+    <span class="sd">&quot;&quot;&quot;Expression type for the sum of functionals.</span>
+
+<span class="sd">    ``FunctionalSum(func1, func2) == (x --&gt; func1(x) + func2(x))``.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="FunctionalSum.__init__"><a class="viewcode-back" href="../../../../generated/odl.solvers.functional.functional.FunctionalSum.html#odl.solvers.functional.functional.FunctionalSum.__init__">[docs]</a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">left</span><span class="p">,</span> <span class="n">right</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Initialize a new instance.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        left, right : `Functional`</span>
+<span class="sd">            The summands of the functional sum. Their `Functional.domain`</span>
+<span class="sd">            and `Functional.range` must coincide.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">left</span><span class="p">,</span> <span class="n">Functional</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;`left` </span><span class="si">{!r}</span><span class="s1"> is not a `Functional` instance&#39;</span>
+                            <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">left</span><span class="p">))</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">right</span><span class="p">,</span> <span class="n">Functional</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;`right` </span><span class="si">{!r}</span><span class="s1"> is not a `Functional` instance&#39;</span>
+                            <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">right</span><span class="p">))</span>
+
+        <span class="n">Functional</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span>
+            <span class="bp">self</span><span class="p">,</span> <span class="n">space</span><span class="o">=</span><span class="n">left</span><span class="o">.</span><span class="n">domain</span><span class="p">,</span>
+            <span class="n">linear</span><span class="o">=</span><span class="p">(</span><span class="n">left</span><span class="o">.</span><span class="n">is_linear</span> <span class="ow">and</span> <span class="n">right</span><span class="o">.</span><span class="n">is_linear</span><span class="p">),</span>
+            <span class="n">grad_lipschitz</span><span class="o">=</span><span class="n">left</span><span class="o">.</span><span class="n">grad_lipschitz</span> <span class="o">+</span> <span class="n">right</span><span class="o">.</span><span class="n">grad_lipschitz</span><span class="p">)</span>
+        <span class="n">OperatorSum</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">left</span><span class="p">,</span> <span class="n">right</span><span class="p">)</span></div>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">gradient</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Gradient operator of functional sum.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">left</span><span class="o">.</span><span class="n">gradient</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">right</span><span class="o">.</span><span class="n">gradient</span></div>
+
+
+<div class="viewcode-block" id="FunctionalScalarSum"><a class="viewcode-back" href="../../../../generated/odl.solvers.functional.functional.FunctionalScalarSum.html#odl.solvers.functional.functional.FunctionalScalarSum">[docs]</a><span class="k">class</span> <span class="nc">FunctionalScalarSum</span><span class="p">(</span><span class="n">FunctionalSum</span><span class="p">):</span>
+
+    <span class="sd">&quot;&quot;&quot;Expression type for the sum of a functional and a scalar.</span>
+
+<span class="sd">    ``FunctionalScalarSum(func, scalar) == (x --&gt; func(x) + scalar)``</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="FunctionalScalarSum.__init__"><a class="viewcode-back" href="../../../../generated/odl.solvers.functional.functional.FunctionalScalarSum.html#odl.solvers.functional.functional.FunctionalScalarSum.__init__">[docs]</a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">func</span><span class="p">,</span> <span class="n">scalar</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Initialize a new instance.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        func : `Functional`</span>
+<span class="sd">            Functional to which the scalar is added.</span>
+<span class="sd">        scalar : `element` in the `field` of the ``domain``</span>
+<span class="sd">            The scalar to be added to the functional. The `field` of the</span>
+<span class="sd">            ``domain`` is the range of the functional.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="kn">from</span> <span class="nn">odl.solvers.functional.default_functionals</span> <span class="kn">import</span> <span class="p">(</span>
+            <span class="n">ConstantFunctional</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">func</span><span class="p">,</span> <span class="n">Functional</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;`fun` </span><span class="si">{!r}</span><span class="s1"> is not a `Functional` instance&#39;</span>
+                            <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">func</span><span class="p">))</span>
+        <span class="k">if</span> <span class="n">scalar</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">func</span><span class="o">.</span><span class="n">range</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;`scalar` </span><span class="si">{}</span><span class="s1"> is not in the range of &#39;</span>
+                            <span class="s1">&#39;`func` </span><span class="si">{!r}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">scalar</span><span class="p">,</span> <span class="n">func</span><span class="p">))</span>
+
+        <span class="nb">super</span><span class="p">(</span><span class="n">FunctionalScalarSum</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span>
+            <span class="n">left</span><span class="o">=</span><span class="n">func</span><span class="p">,</span>
+            <span class="n">right</span><span class="o">=</span><span class="n">ConstantFunctional</span><span class="p">(</span><span class="n">space</span><span class="o">=</span><span class="n">func</span><span class="o">.</span><span class="n">domain</span><span class="p">,</span> <span class="n">constant</span><span class="o">=</span><span class="n">scalar</span><span class="p">))</span></div>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">scalar</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;The scalar that is added to the functional&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">right</span><span class="o">.</span><span class="n">constant</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">proximal</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Proximal factory of the FunctionalScalarSum.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">left</span><span class="o">.</span><span class="n">proximal</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">convex_conj</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Convex conjugate functional of FunctionalScalarSum.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">left</span><span class="o">.</span><span class="n">convex_conj</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">scalar</span></div>
+
+
+<div class="viewcode-block" id="FunctionalTranslation"><a class="viewcode-back" href="../../../../generated/odl.solvers.functional.functional.FunctionalTranslation.html#odl.solvers.functional.functional.FunctionalTranslation">[docs]</a><span class="k">class</span> <span class="nc">FunctionalTranslation</span><span class="p">(</span><span class="n">Functional</span><span class="p">):</span>
+
+    <span class="sd">&quot;&quot;&quot;Implementation of the translated functional.</span>
+
+<span class="sd">    Given a functional ``f`` and an element ``translation`` in the domain of</span>
+<span class="sd">    ``f``, this corresponds to the functional ``f(. - translation)``.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="FunctionalTranslation.__init__"><a class="viewcode-back" href="../../../../generated/odl.solvers.functional.functional.FunctionalTranslation.html#odl.solvers.functional.functional.FunctionalTranslation.__init__">[docs]</a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">func</span><span class="p">,</span> <span class="n">translation</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Initialize a new instance.</span>
+
+<span class="sd">        Given a functional ``f(.)`` and a vector ``translation`` in the domain</span>
+<span class="sd">        of ``f``, this corresponds to the functional ``f(. - translation)``.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        func : `Functional`</span>
+<span class="sd">            Functional which is to be translated.</span>
+<span class="sd">        translation : `domain` element</span>
+<span class="sd">            The translation.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">func</span><span class="p">,</span> <span class="n">Functional</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;`func` </span><span class="si">{!r}</span><span class="s1"> not a `Functional` instance&#39;</span>
+                            <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">func</span><span class="p">))</span>
+
+        <span class="n">translation</span> <span class="o">=</span> <span class="n">func</span><span class="o">.</span><span class="n">domain</span><span class="o">.</span><span class="n">element</span><span class="p">(</span><span class="n">translation</span><span class="p">)</span>
+
+        <span class="nb">super</span><span class="p">(</span><span class="n">FunctionalTranslation</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span>
+            <span class="n">space</span><span class="o">=</span><span class="n">func</span><span class="o">.</span><span class="n">domain</span><span class="p">,</span> <span class="n">linear</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+            <span class="n">grad_lipschitz</span><span class="o">=</span><span class="n">func</span><span class="o">.</span><span class="n">grad_lipschitz</span><span class="p">)</span>
+
+        <span class="c1"># TODO: Add case if we have translation -&gt; scaling -&gt; translation?</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">func</span><span class="p">,</span> <span class="n">FunctionalTranslation</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">__functional</span> <span class="o">=</span> <span class="n">func</span><span class="o">.</span><span class="n">functional</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">__translation</span> <span class="o">=</span> <span class="n">func</span><span class="o">.</span><span class="n">translation</span> <span class="o">+</span> <span class="n">translation</span>
+
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">__functional</span> <span class="o">=</span> <span class="n">func</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">__translation</span> <span class="o">=</span> <span class="n">translation</span></div>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">functional</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;The original functional that has been translated.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__functional</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">translation</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;The translation.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__translation</span>
+
+<div class="viewcode-block" id="FunctionalTranslation._call"><a class="viewcode-back" href="../../../../generated/odl.solvers.functional.functional.FunctionalTranslation._call.html#odl.solvers.functional.functional.FunctionalTranslation._call">[docs]</a>    <span class="k">def</span> <span class="nf">_call</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Evaluate the functional in a point ``x``.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">functional</span><span class="p">(</span><span class="n">x</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">translation</span><span class="p">)</span></div>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">gradient</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Gradient operator of the functional.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">functional</span><span class="o">.</span><span class="n">gradient</span> <span class="o">*</span>
+                <span class="p">(</span><span class="n">IdentityOperator</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">domain</span><span class="p">)</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">translation</span><span class="p">))</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">proximal</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Proximal factory of the translated functional.</span>
+
+<span class="sd">        See Also</span>
+<span class="sd">        --------</span>
+<span class="sd">        odl.solvers.nonsmooth.proximal_operators.proximal_translation</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">proximal_translation</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">functional</span><span class="o">.</span><span class="n">proximal</span><span class="p">,</span>
+                                    <span class="bp">self</span><span class="o">.</span><span class="n">translation</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">convex_conj</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sa">r</span><span class="sd">&quot;&quot;&quot;Convex conjugate functional of the translated functional.</span>
+
+<span class="sd">        Notes</span>
+<span class="sd">        -----</span>
+<span class="sd">        Given a functional :math:`f`, the convex conjugate of a translated</span>
+<span class="sd">        version :math:`f(\cdot - y)` is given by a linear pertubation of the</span>
+<span class="sd">        convex conjugate of :math:`f`:</span>
+
+<span class="sd">        .. math::</span>
+<span class="sd">            (f( . - y))^* (x) = f^*(x) + &lt;y, x&gt;.</span>
+
+<span class="sd">        For reference on the identity used, see [KP2015].</span>
+
+<span class="sd">        References</span>
+<span class="sd">        ----------</span>
+<span class="sd">        [KP2015] Komodakis, N, and Pesquet, J-C. *Playing with Duality: An</span>
+<span class="sd">        overview of recent primal-dual approaches for solving large-scale</span>
+<span class="sd">        optimization problems*. IEEE Signal Processing Magazine, 32.6 (2015),</span>
+<span class="sd">        pp 31--54.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">FunctionalQuadraticPerturb</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">functional</span><span class="o">.</span><span class="n">convex_conj</span><span class="p">,</span>
+            <span class="n">linear_term</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">translation</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return ``repr(self)``.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="s1">&#39;</span><span class="si">{!r}</span><span class="s1">.translated(</span><span class="si">{!r}</span><span class="s1">)&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">functional</span><span class="p">,</span>
+                                              <span class="bp">self</span><span class="o">.</span><span class="n">translation</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return ``str(self)``.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="s1">&#39;</span><span class="si">{}</span><span class="s1">.translated(</span><span class="si">{}</span><span class="s1">)&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">functional</span><span class="p">,</span>
+                                          <span class="bp">self</span><span class="o">.</span><span class="n">translation</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="InfimalConvolution"><a class="viewcode-back" href="../../../../generated/odl.solvers.functional.functional.InfimalConvolution.html#odl.solvers.functional.functional.InfimalConvolution">[docs]</a><span class="k">class</span> <span class="nc">InfimalConvolution</span><span class="p">(</span><span class="n">Functional</span><span class="p">):</span>
+
+    <span class="sd">&quot;&quot;&quot;Functional representing ``h(x) = inf_y f(x-y) + g(y)``.&quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="InfimalConvolution.__init__"><a class="viewcode-back" href="../../../../generated/odl.solvers.functional.functional.InfimalConvolution.html#odl.solvers.functional.functional.InfimalConvolution.__init__">[docs]</a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">left</span><span class="p">,</span> <span class="n">right</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Initialize a new instance.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        left : `Functional`</span>
+<span class="sd">            Function corresponding to ``f``.</span>
+<span class="sd">        right : `Functional`</span>
+<span class="sd">            Function corresponding to ``g``.</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        --------</span>
+<span class="sd">        &gt;&gt;&gt; space = odl.rn(3)</span>
+<span class="sd">        &gt;&gt;&gt; l1 = odl.solvers.L1Norm(space)</span>
+<span class="sd">        &gt;&gt;&gt; l2 = odl.solvers.L2Norm(space)</span>
+<span class="sd">        &gt;&gt;&gt; f = odl.solvers.InfimalConvolution(l1.convex_conj, l2.convex_conj)</span>
+<span class="sd">        &gt;&gt;&gt; x = f.domain.one()</span>
+<span class="sd">        &gt;&gt;&gt; f.convex_conj(x) - (l1(x) + l2(x))</span>
+<span class="sd">        0.0</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">left</span><span class="p">,</span> <span class="n">Functional</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;`func` </span><span class="si">{}</span><span class="s1"> is not a `Functional` instance&#39;</span>
+                            <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">left</span><span class="p">))</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">right</span><span class="p">,</span> <span class="n">Functional</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;`func` </span><span class="si">{}</span><span class="s1"> is not a `Functional` instance&#39;</span>
+                            <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">right</span><span class="p">))</span>
+
+        <span class="nb">super</span><span class="p">(</span><span class="n">InfimalConvolution</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span>
+            <span class="n">space</span><span class="o">=</span><span class="n">left</span><span class="o">.</span><span class="n">domain</span><span class="p">,</span> <span class="n">linear</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">grad_lipschitz</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__left</span> <span class="o">=</span> <span class="n">left</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__right</span> <span class="o">=</span> <span class="n">right</span></div>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">left</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Left functional.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__left</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">right</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Right functional.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__right</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">convex_conj</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Convex conjugate functional of the functional.</span>
+
+<span class="sd">        Notes</span>
+<span class="sd">        -----</span>
+<span class="sd">        The convex conjugate of the infimal convolution</span>
+
+<span class="sd">        .. math::</span>
+<span class="sd">            h(x) = inf_y f(x-y) + g(y)</span>
+
+<span class="sd">        is the sum of it:</span>
+
+<span class="sd">        .. math::</span>
+<span class="sd">            h^*(x) = f^*(x) + g^*(x)</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">left</span><span class="o">.</span><span class="n">convex_conj</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">right</span><span class="o">.</span><span class="n">convex_conj</span>
+
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return ``repr(self)``.&quot;&quot;&quot;</span>
+        <span class="n">posargs</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">left</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">right</span><span class="p">]</span>
+        <span class="n">inner_str</span> <span class="o">=</span> <span class="n">signature_string</span><span class="p">(</span><span class="n">posargs</span><span class="p">,</span> <span class="p">[],</span> <span class="n">sep</span><span class="o">=</span><span class="s1">&#39;,</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="s1">&#39;</span><span class="si">{}</span><span class="s1">(</span><span class="se">\n</span><span class="si">{}</span><span class="se">\n</span><span class="s1">)&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="p">,</span> <span class="n">indent</span><span class="p">(</span><span class="n">inner_str</span><span class="p">))</span>
+
+    <span class="k">def</span> <span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return ``str(self)``.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="nb">repr</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="FunctionalQuadraticPerturb"><a class="viewcode-back" href="../../../../generated/odl.solvers.functional.functional.FunctionalQuadraticPerturb.html#odl.solvers.functional.functional.FunctionalQuadraticPerturb">[docs]</a><span class="k">class</span> <span class="nc">FunctionalQuadraticPerturb</span><span class="p">(</span><span class="n">Functional</span><span class="p">):</span>
+
+    <span class="sd">&quot;&quot;&quot;The functional representing ``F(.) + a * &lt;., .&gt; + &lt;., u&gt; + c``.&quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="FunctionalQuadraticPerturb.__init__"><a class="viewcode-back" href="../../../../generated/odl.solvers.functional.functional.FunctionalQuadraticPerturb.html#odl.solvers.functional.functional.FunctionalQuadraticPerturb.__init__">[docs]</a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">func</span><span class="p">,</span> <span class="n">quadratic_coeff</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">linear_term</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                 <span class="n">constant</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Initialize a new instance.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        func : `Functional`</span>
+<span class="sd">            Function corresponding to ``f``.</span>
+<span class="sd">        quadratic_coeff : ``domain.field`` element, optional</span>
+<span class="sd">            Coefficient of the quadratic term. Default: 0.</span>
+<span class="sd">        linear_term : `domain` element, optional</span>
+<span class="sd">            Element in domain of ``func``, corresponding to the translation.</span>
+<span class="sd">            Default: Zero element.</span>
+<span class="sd">        constant : ``domain.field`` element, optional</span>
+<span class="sd">            The constant coefficient. Default: 0.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">func</span><span class="p">,</span> <span class="n">Functional</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;`func` </span><span class="si">{}</span><span class="s1"> is not a `Functional` instance&#39;</span>
+                            <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">func</span><span class="p">))</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">__functional</span> <span class="o">=</span> <span class="n">func</span>
+        <span class="n">quadratic_coeff</span> <span class="o">=</span> <span class="n">func</span><span class="o">.</span><span class="n">domain</span><span class="o">.</span><span class="n">field</span><span class="o">.</span><span class="n">element</span><span class="p">(</span><span class="n">quadratic_coeff</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">quadratic_coeff</span><span class="o">.</span><span class="n">imag</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s2">&quot;Complex-valued quadratic coefficient is not supported.&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__quadratic_coeff</span> <span class="o">=</span> <span class="n">quadratic_coeff</span><span class="o">.</span><span class="n">real</span>
+
+        <span class="k">if</span> <span class="n">linear_term</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">__linear_term</span> <span class="o">=</span> <span class="n">func</span><span class="o">.</span><span class="n">domain</span><span class="o">.</span><span class="n">element</span><span class="p">(</span><span class="n">linear_term</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">__linear_term</span> <span class="o">=</span> <span class="n">func</span><span class="o">.</span><span class="n">domain</span><span class="o">.</span><span class="n">zero</span><span class="p">()</span>
+
+        <span class="k">if</span> <span class="n">linear_term</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">grad_lipschitz</span> <span class="o">=</span> <span class="n">func</span><span class="o">.</span><span class="n">grad_lipschitz</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">grad_lipschitz</span> <span class="o">=</span> <span class="p">(</span><span class="n">func</span><span class="o">.</span><span class="n">grad_lipschitz</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">linear_term</span><span class="o">.</span><span class="n">norm</span><span class="p">())</span>
+
+        <span class="n">constant</span> <span class="o">=</span> <span class="n">func</span><span class="o">.</span><span class="n">domain</span><span class="o">.</span><span class="n">field</span><span class="o">.</span><span class="n">element</span><span class="p">(</span><span class="n">constant</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">constant</span><span class="o">.</span><span class="n">imag</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s2">&quot;Complex-valued `constant` coefficient is not supported.&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__constant</span> <span class="o">=</span> <span class="n">constant</span><span class="o">.</span><span class="n">real</span>
+
+        <span class="nb">super</span><span class="p">(</span><span class="n">FunctionalQuadraticPerturb</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span>
+            <span class="n">space</span><span class="o">=</span><span class="n">func</span><span class="o">.</span><span class="n">domain</span><span class="p">,</span>
+            <span class="n">linear</span><span class="o">=</span><span class="n">func</span><span class="o">.</span><span class="n">is_linear</span> <span class="ow">and</span> <span class="p">(</span><span class="n">quadratic_coeff</span> <span class="o">==</span> <span class="mi">0</span><span class="p">),</span>
+            <span class="n">grad_lipschitz</span><span class="o">=</span><span class="n">grad_lipschitz</span><span class="p">)</span></div>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">functional</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Original functional.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__functional</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">quadratic_coeff</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Cofficient of the quadratic term.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__quadratic_coeff</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">linear_term</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Linear term.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__linear_term</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">constant</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;The constant coefficient.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__constant</span>
+
+<div class="viewcode-block" id="FunctionalQuadraticPerturb._call"><a class="viewcode-back" href="../../../../generated/odl.solvers.functional.functional.FunctionalQuadraticPerturb._call.html#odl.solvers.functional.functional.FunctionalQuadraticPerturb._call">[docs]</a>    <span class="k">def</span> <span class="nf">_call</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Apply the functional to the given point.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">functional</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="o">+</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">quadratic_coeff</span> <span class="o">*</span> <span class="n">x</span><span class="o">.</span><span class="n">inner</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="o">+</span>
+                <span class="n">x</span><span class="o">.</span><span class="n">inner</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">linear_term</span><span class="p">)</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">constant</span><span class="p">)</span></div>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">gradient</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Gradient operator of the functional.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">functional</span><span class="o">.</span><span class="n">gradient</span> <span class="o">+</span>
+                <span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">quadratic_coeff</span><span class="p">)</span> <span class="o">*</span> <span class="n">IdentityOperator</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">domain</span><span class="p">)</span> <span class="o">+</span>
+                <span class="n">ConstantOperator</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">linear_term</span><span class="p">))</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">proximal</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Proximal factory of the quadratically perturbed functional.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">quadratic_coeff</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;`quadratic_coeff` </span><span class="si">{}</span><span class="s1"> must be non-negative&#39;</span>
+                            <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">quadratic_coeff</span><span class="p">))</span>
+
+        <span class="k">return</span> <span class="n">proximal_quadratic_perturbation</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">functional</span><span class="o">.</span><span class="n">proximal</span><span class="p">,</span>
+            <span class="n">a</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">quadratic_coeff</span><span class="p">,</span> <span class="n">u</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">linear_term</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">convex_conj</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sa">r</span><span class="sd">&quot;&quot;&quot;Convex conjugate functional of the functional.</span>
+
+<span class="sd">        Notes</span>
+<span class="sd">        -----</span>
+<span class="sd">        Given a functional :math:`f`, the convex conjugate of a linearly</span>
+<span class="sd">        perturbed version :math:`f(x) + &lt;y, x&gt;` is given by a translation of</span>
+<span class="sd">        the convex conjugate of :math:`f`:</span>
+
+<span class="sd">        .. math::</span>
+<span class="sd">            (f + \langle y, \cdot \rangle)^* (x^*) = f^*(x^* - y).</span>
+
+<span class="sd">        For reference on the identity used, see `[KP2015]`_. Moreover, the</span>
+<span class="sd">        convex conjugate of :math:`f + c` is by definition</span>
+
+<span class="sd">        .. math::</span>
+<span class="sd">            (f + c)^* (x^*) = f^*(x^*) - c.</span>
+
+
+<span class="sd">        References</span>
+<span class="sd">        ----------</span>
+<span class="sd">        [KP2015] Komodakis, N, and Pesquet, J-C. *Playing with Duality: An</span>
+<span class="sd">        overview of recent primal-dual approaches for solving large-scale</span>
+<span class="sd">        optimization problems*. IEEE Signal Processing Magazine, 32.6 (2015),</span>
+<span class="sd">        pp 31--54.</span>
+
+<span class="sd">        .. _[KP2015]:  https://arxiv.org/abs/1406.5429</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">quadratic_coeff</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">cconj</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">functional</span><span class="o">.</span><span class="n">convex_conj</span><span class="o">.</span><span class="n">translated</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">linear_term</span><span class="p">)</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">constant</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="n">cconj</span> <span class="o">=</span> <span class="n">cconj</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">constant</span>
+            <span class="k">return</span> <span class="n">cconj</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="nb">super</span><span class="p">(</span><span class="n">FunctionalQuadraticPerturb</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">convex_conj</span>
+
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return ``repr(self)``.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="s1">&#39;</span><span class="si">{}</span><span class="s1">(</span><span class="si">{!r}</span><span class="s1">, </span><span class="si">{!r}</span><span class="s1">, </span><span class="si">{!r}</span><span class="s1">, </span><span class="si">{!r}</span><span class="s1">)&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="p">,</span>
+                                                   <span class="bp">self</span><span class="o">.</span><span class="n">functional</span><span class="p">,</span>
+                                                   <span class="bp">self</span><span class="o">.</span><span class="n">quadratic_coeff</span><span class="p">,</span>
+                                                   <span class="bp">self</span><span class="o">.</span><span class="n">linear_term</span><span class="p">,</span>
+                                                   <span class="bp">self</span><span class="o">.</span><span class="n">constant</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return ``str(self)``.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="s1">&#39;</span><span class="si">{}</span><span class="s1">(</span><span class="si">{}</span><span class="s1">, </span><span class="si">{}</span><span class="s1">, </span><span class="si">{}</span><span class="s1">, </span><span class="si">{}</span><span class="s1">)&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="p">,</span>
+                                           <span class="bp">self</span><span class="o">.</span><span class="n">functional</span><span class="p">,</span>
+                                           <span class="bp">self</span><span class="o">.</span><span class="n">quadratic_coeff</span><span class="p">,</span>
+                                           <span class="bp">self</span><span class="o">.</span><span class="n">linear_term</span><span class="p">,</span>
+                                           <span class="bp">self</span><span class="o">.</span><span class="n">constant</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="FunctionalProduct"><a class="viewcode-back" href="../../../../generated/odl.solvers.functional.functional.FunctionalProduct.html#odl.solvers.functional.functional.FunctionalProduct">[docs]</a><span class="k">class</span> <span class="nc">FunctionalProduct</span><span class="p">(</span><span class="n">Functional</span><span class="p">,</span> <span class="n">OperatorPointwiseProduct</span><span class="p">):</span>
+
+    <span class="sd">&quot;&quot;&quot;Product ``p(x) = f(x) * g(x)`` of two functionals ``f`` and ``g``.&quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="FunctionalProduct.__init__"><a class="viewcode-back" href="../../../../generated/odl.solvers.functional.functional.FunctionalProduct.html#odl.solvers.functional.functional.FunctionalProduct.__init__">[docs]</a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">left</span><span class="p">,</span> <span class="n">right</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Initialize a new instance.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        left, right : `Functional`</span>
+<span class="sd">            Functionals in the product. Need to have matching domains.</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        --------</span>
+<span class="sd">        Construct the functional || . ||_2^2 * 3</span>
+
+<span class="sd">        &gt;&gt;&gt; space = odl.rn(2)</span>
+<span class="sd">        &gt;&gt;&gt; func1 = odl.solvers.L2NormSquared(space)</span>
+<span class="sd">        &gt;&gt;&gt; func2 = odl.solvers.ConstantFunctional(space, 3)</span>
+<span class="sd">        &gt;&gt;&gt; prod = odl.solvers.FunctionalProduct(func1, func2)</span>
+<span class="sd">        &gt;&gt;&gt; prod([2, 3])  # expect (2**2 + 3**2) * 3 = 39</span>
+<span class="sd">        39.0</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">left</span><span class="p">,</span> <span class="n">Functional</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;`left` </span><span class="si">{}</span><span class="s1"> is not a `Functional` instance&#39;</span>
+                            <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">left</span><span class="p">))</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">right</span><span class="p">,</span> <span class="n">Functional</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;`right` </span><span class="si">{}</span><span class="s1"> is not a `Functional` instance&#39;</span>
+                            <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">right</span><span class="p">))</span>
+
+        <span class="n">OperatorPointwiseProduct</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">left</span><span class="p">,</span> <span class="n">right</span><span class="p">)</span>
+        <span class="n">Functional</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">left</span><span class="o">.</span><span class="n">domain</span><span class="p">,</span> <span class="n">linear</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                            <span class="n">grad_lipschitz</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">)</span></div>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">gradient</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sa">r</span><span class="sd">&quot;&quot;&quot;Gradient operator of the functional.</span>
+
+<span class="sd">        Notes</span>
+<span class="sd">        -----</span>
+<span class="sd">        The derivative is computed using Leibniz&#39;s rule:</span>
+
+<span class="sd">        .. math::</span>
+<span class="sd">            [\nabla (f g)](p) = g(p) [\nabla f](p) + f(p) [\nabla g](p)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">func</span> <span class="o">=</span> <span class="bp">self</span>
+
+        <span class="k">class</span> <span class="nc">FunctionalProductGradient</span><span class="p">(</span><span class="n">Operator</span><span class="p">):</span>
+
+            <span class="sd">&quot;&quot;&quot;Functional representing the gradient of ``f(.) * g(.)``.&quot;&quot;&quot;</span>
+
+            <span class="k">def</span> <span class="nf">_call</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
+                <span class="k">return</span> <span class="p">(</span><span class="n">func</span><span class="o">.</span><span class="n">right</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="o">*</span> <span class="n">func</span><span class="o">.</span><span class="n">left</span><span class="o">.</span><span class="n">gradient</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="o">+</span>
+                        <span class="n">func</span><span class="o">.</span><span class="n">left</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="o">*</span> <span class="n">func</span><span class="o">.</span><span class="n">right</span><span class="o">.</span><span class="n">gradient</span><span class="p">(</span><span class="n">x</span><span class="p">))</span>
+
+        <span class="k">return</span> <span class="n">FunctionalProductGradient</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">domain</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">domain</span><span class="p">,</span>
+                                         <span class="n">linear</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="FunctionalQuotient"><a class="viewcode-back" href="../../../../generated/odl.solvers.functional.functional.FunctionalQuotient.html#odl.solvers.functional.functional.FunctionalQuotient">[docs]</a><span class="k">class</span> <span class="nc">FunctionalQuotient</span><span class="p">(</span><span class="n">Functional</span><span class="p">):</span>
+
+    <span class="sd">&quot;&quot;&quot;Quotient ``p(x) = f(x) / g(x)`` of two functionals ``f`` and ``g``.&quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="FunctionalQuotient.__init__"><a class="viewcode-back" href="../../../../generated/odl.solvers.functional.functional.FunctionalQuotient.html#odl.solvers.functional.functional.FunctionalQuotient.__init__">[docs]</a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dividend</span><span class="p">,</span> <span class="n">divisor</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Initialize a new instance.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        dividend, divisor : `Functional`</span>
+<span class="sd">            Functionals in the quotient. Need to have matching domains.</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        --------</span>
+<span class="sd">        Construct the functional || . ||_2 / 5</span>
+
+<span class="sd">        &gt;&gt;&gt; space = odl.rn(2)</span>
+<span class="sd">        &gt;&gt;&gt; func1 = odl.solvers.L2Norm(space)</span>
+<span class="sd">        &gt;&gt;&gt; func2 = odl.solvers.ConstantFunctional(space, 5)</span>
+<span class="sd">        &gt;&gt;&gt; prod = odl.solvers.FunctionalQuotient(func1, func2)</span>
+<span class="sd">        &gt;&gt;&gt; prod([3, 4])  # expect sqrt(3**2 + 4**2) / 5 = 1</span>
+<span class="sd">        1.0</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">dividend</span><span class="p">,</span> <span class="n">Functional</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;`dividend` </span><span class="si">{}</span><span class="s1"> is not a `Functional` instance&#39;</span>
+                            <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">dividend</span><span class="p">))</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">divisor</span><span class="p">,</span> <span class="n">Functional</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;`divisor` </span><span class="si">{}</span><span class="s1"> is not a `Functional` instance&#39;</span>
+                            <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">divisor</span><span class="p">))</span>
+
+        <span class="k">if</span> <span class="n">dividend</span><span class="o">.</span><span class="n">domain</span> <span class="o">!=</span> <span class="n">divisor</span><span class="o">.</span><span class="n">domain</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;domains of the operators do not match&#39;</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">__dividend</span> <span class="o">=</span> <span class="n">dividend</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__divisor</span> <span class="o">=</span> <span class="n">divisor</span>
+
+        <span class="nb">super</span><span class="p">(</span><span class="n">FunctionalQuotient</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span>
+            <span class="n">dividend</span><span class="o">.</span><span class="n">domain</span><span class="p">,</span> <span class="n">linear</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">grad_lipschitz</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">)</span></div>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">dividend</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;The dividend of the quotient.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__dividend</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">divisor</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;The divisor of the quotient.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__divisor</span>
+
+<div class="viewcode-block" id="FunctionalQuotient._call"><a class="viewcode-back" href="../../../../generated/odl.solvers.functional.functional.FunctionalQuotient._call.html#odl.solvers.functional.functional.FunctionalQuotient._call">[docs]</a>    <span class="k">def</span> <span class="nf">_call</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Apply the functional to the given point.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">dividend</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">divisor</span><span class="p">(</span><span class="n">x</span><span class="p">)</span></div>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">gradient</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sa">r</span><span class="sd">&quot;&quot;&quot;Gradient operator of the functional.</span>
+
+<span class="sd">        Notes</span>
+<span class="sd">        -----</span>
+<span class="sd">        The derivative is computed using the quotient rule:</span>
+
+<span class="sd">        .. math::</span>
+<span class="sd">            [\nabla (f / g)](p) = (g(p) [\nabla f](p) -</span>
+<span class="sd">                                    f(p) [\nabla g](p)) / g(p)^2</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">func</span> <span class="o">=</span> <span class="bp">self</span>
+
+        <span class="k">class</span> <span class="nc">FunctionalQuotientGradient</span><span class="p">(</span><span class="n">Operator</span><span class="p">):</span>
+
+            <span class="sd">&quot;&quot;&quot;Functional representing the gradient of ``f(.) / g(.)``.&quot;&quot;&quot;</span>
+
+            <span class="k">def</span> <span class="nf">_call</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
+                <span class="sd">&quot;&quot;&quot;Apply the functional to the given point.&quot;&quot;&quot;</span>
+                <span class="n">dividendx</span> <span class="o">=</span> <span class="n">func</span><span class="o">.</span><span class="n">dividend</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+                <span class="n">divisorx</span> <span class="o">=</span> <span class="n">func</span><span class="o">.</span><span class="n">divisor</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+                <span class="k">return</span> <span class="p">((</span><span class="mi">1</span> <span class="o">/</span> <span class="n">divisorx</span><span class="p">)</span> <span class="o">*</span> <span class="n">func</span><span class="o">.</span><span class="n">dividend</span><span class="o">.</span><span class="n">gradient</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="o">+</span>
+                        <span class="p">(</span><span class="o">-</span> <span class="n">dividendx</span> <span class="o">/</span> <span class="n">divisorx</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span> <span class="o">*</span> <span class="n">func</span><span class="o">.</span><span class="n">divisor</span><span class="o">.</span><span class="n">gradient</span><span class="p">(</span><span class="n">x</span><span class="p">))</span>
+
+        <span class="k">return</span> <span class="n">FunctionalQuotientGradient</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">domain</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">domain</span><span class="p">,</span>
+                                          <span class="n">linear</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return ``repr(self)``.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="s1">&#39;</span><span class="si">{}</span><span class="s1">(</span><span class="si">{!r}</span><span class="s1">, </span><span class="si">{!r}</span><span class="s1">)&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="p">,</span>
+                                       <span class="bp">self</span><span class="o">.</span><span class="n">dividend</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">divisor</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return ``str(self)``.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="s1">&#39;</span><span class="si">{}</span><span class="s1">(</span><span class="si">{}</span><span class="s1">, </span><span class="si">{}</span><span class="s1">)&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="p">,</span>
+                                   <span class="bp">self</span><span class="o">.</span><span class="n">dividend</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">divisor</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="FunctionalDefaultConvexConjugate"><a class="viewcode-back" href="../../../../generated/odl.solvers.functional.functional.FunctionalDefaultConvexConjugate.html#odl.solvers.functional.functional.FunctionalDefaultConvexConjugate">[docs]</a><span class="k">class</span> <span class="nc">FunctionalDefaultConvexConjugate</span><span class="p">(</span><span class="n">Functional</span><span class="p">):</span>
+
+    <span class="sa">r</span><span class="sd">&quot;&quot;&quot;The `Functional` representing ``F^*``, the convex conjugate of ``F``.</span>
+
+<span class="sd">    This class does not provide a way to evaluate the functional, it is rather</span>
+<span class="sd">    intended to be used for its `proximal`.</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    The proximal is found by using the Moreau identity</span>
+
+<span class="sd">    .. math::</span>
+<span class="sd">        \text{prox}_{\sigma F^*}(y) = y -</span>
+<span class="sd">        \sigma \text{prox}_{F / \sigma}(y / \sigma)</span>
+
+<span class="sd">    which allows the proximal of the convex conjugate to be calculated without</span>
+<span class="sd">    explicit knowledge about the convex conjugate itself.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="FunctionalDefaultConvexConjugate.__init__"><a class="viewcode-back" href="../../../../generated/odl.solvers.functional.functional.FunctionalDefaultConvexConjugate.html#odl.solvers.functional.functional.FunctionalDefaultConvexConjugate.__init__">[docs]</a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">func</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Initialize a new instance.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        func : `Functional`</span>
+<span class="sd">            Functional corresponding to F.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">func</span><span class="p">,</span> <span class="n">Functional</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;`func` </span><span class="si">{}</span><span class="s1"> is not a `Functional` instance&#39;</span>
+                            <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">func</span><span class="p">))</span>
+
+        <span class="nb">super</span><span class="p">(</span><span class="n">FunctionalDefaultConvexConjugate</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span>
+            <span class="n">space</span><span class="o">=</span><span class="n">func</span><span class="o">.</span><span class="n">domain</span><span class="p">,</span> <span class="n">linear</span><span class="o">=</span><span class="n">func</span><span class="o">.</span><span class="n">is_linear</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__convex_conj</span> <span class="o">=</span> <span class="n">func</span></div>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">convex_conj</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;The original functional.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__convex_conj</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">proximal</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Proximal factory using the Moreu identity.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        proximal : proximal_convex_conj</span>
+<span class="sd">            Proximal computed using the Moreu identity</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">proximal_convex_conj</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">convex_conj</span><span class="o">.</span><span class="n">proximal</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return ``repr(self)``.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="s1">&#39;</span><span class="si">{!r}</span><span class="s1">.convex_conj&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">convex_conj</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return ``str(self)``.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="s1">&#39;</span><span class="si">{}</span><span class="s1">.convex_conj&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">convex_conj</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="BregmanDistance"><a class="viewcode-back" href="../../../../generated/odl.solvers.functional.functional.BregmanDistance.html#odl.solvers.functional.functional.BregmanDistance">[docs]</a><span class="k">class</span> <span class="nc">BregmanDistance</span><span class="p">(</span><span class="n">Functional</span><span class="p">):</span>
+    <span class="sa">r</span><span class="sd">&quot;&quot;&quot;The Bregman distance functional.</span>
+
+<span class="sd">    The Bregman distance, also refered to as the Bregman divergence, is similar</span>
+<span class="sd">    to a metric but satisfies neither the triangle inequality nor symmetry.</span>
+<span class="sd">    Nevertheless, the Bregman distance is used in variational regularization of</span>
+<span class="sd">    inverse problems, see, e.g., `[Bur2016]`_.</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    Given a functional :math:`f`, a point :math:`y`, and a (sub)gradient</span>
+<span class="sd">    :math:`p \in \partial f(y)`, the Bregman distance functional</span>
+<span class="sd">    :math:`D_f^p(\cdot, y)` in a point :math:`x` is given by</span>
+
+<span class="sd">    .. math::</span>
+<span class="sd">        D_f^p(x, y) = f(x) - f(y) - \langle p, x - y \rangle.</span>
+
+
+<span class="sd">    For mathematical details, see</span>
+<span class="sd">    `[Bur2016] &lt;https://arxiv.org/abs/1505.05191&gt;`_. See also the Wikipedia</span>
+<span class="sd">    article: https://en.wikipedia.org/wiki/Bregman_divergence</span>
+
+<span class="sd">    References</span>
+<span class="sd">    ----------</span>
+<span class="sd">    [Bur2016] Burger, M. *Bregman Distances in Inverse Problems and Partial</span>
+<span class="sd">    Differential Equation*. In: Advances in Mathematical Modeling, Optimization</span>
+<span class="sd">    and Optimal Control, 2016. p. 3-33.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="BregmanDistance.__init__"><a class="viewcode-back" href="../../../../generated/odl.solvers.functional.functional.BregmanDistance.html#odl.solvers.functional.functional.BregmanDistance.__init__">[docs]</a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">functional</span><span class="p">,</span> <span class="n">point</span><span class="p">,</span> <span class="n">subgrad</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Initialize a new instance.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        functional : `Functional`</span>
+<span class="sd">            Functional on which to base the Bregman distance.</span>
+<span class="sd">        point : element of ``functional.domain``</span>
+<span class="sd">            Point from which to define the Bregman distance.</span>
+<span class="sd">        subgrad : element of ``functional.domain``</span>
+<span class="sd">            A subgradient of ``functional`` in ``point``. If it exists,  a</span>
+<span class="sd">            valid option is ``functional.gradient(point)``.</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        --------</span>
+<span class="sd">        Example of initializing the Bregman distance functional:</span>
+
+<span class="sd">        &gt;&gt;&gt; space = odl.uniform_discr(0, 1, 10)</span>
+<span class="sd">        &gt;&gt;&gt; l2_squared = odl.solvers.L2NormSquared(space)</span>
+<span class="sd">        &gt;&gt;&gt; point = space.one()</span>
+<span class="sd">        &gt;&gt;&gt; subgrad = l2_squared.gradient(point)</span>
+<span class="sd">        &gt;&gt;&gt; bregman_dist = odl.solvers.BregmanDistance(</span>
+<span class="sd">        ...     l2_squared, point, subgrad)</span>
+
+<span class="sd">        This is gives squared L2 distance to the given point, ||x - 1||^2:</span>
+
+<span class="sd">        &gt;&gt;&gt; expected_functional = l2_squared.translated(point)</span>
+<span class="sd">        &gt;&gt;&gt; bregman_dist(space.zero()) == expected_functional(space.zero())</span>
+<span class="sd">        True</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">functional</span><span class="p">,</span> <span class="n">Functional</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;`functional` </span><span class="si">{}</span><span class="s1"> not an instance of ``Functional``&#39;</span>
+                            <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">functional</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__functional</span> <span class="o">=</span> <span class="n">functional</span>
+
+        <span class="k">if</span> <span class="n">point</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">functional</span><span class="o">.</span><span class="n">domain</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;`point` </span><span class="si">{}</span><span class="s1"> is not in `functional.domain` </span><span class="si">{}</span><span class="s1">&#39;</span>
+                             <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">point</span><span class="p">,</span> <span class="n">functional</span><span class="o">.</span><span class="n">domain</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__point</span> <span class="o">=</span> <span class="n">point</span>
+
+        <span class="k">if</span> <span class="n">subgrad</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">functional</span><span class="o">.</span><span class="n">domain</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span>
+                <span class="s1">&#39;`subgrad` must be an element in `functional.domain`, got &#39;</span>
+                <span class="s1">&#39;</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">subgrad</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__subgrad</span> <span class="o">=</span> <span class="n">subgrad</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">__constant</span> <span class="o">=</span> <span class="o">-</span><span class="n">functional</span><span class="p">(</span><span class="n">point</span><span class="p">)</span> <span class="o">+</span> <span class="n">subgrad</span><span class="o">.</span><span class="n">inner</span><span class="p">(</span><span class="n">point</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">__bregman_dist</span> <span class="o">=</span> <span class="n">FunctionalQuadraticPerturb</span><span class="p">(</span>
+            <span class="n">functional</span><span class="p">,</span> <span class="n">linear_term</span><span class="o">=-</span><span class="n">subgrad</span><span class="p">,</span> <span class="n">constant</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">__constant</span><span class="p">)</span>
+
+        <span class="n">grad_lipschitz</span> <span class="o">=</span> <span class="n">functional</span><span class="o">.</span><span class="n">grad_lipschitz</span> <span class="o">+</span> <span class="n">subgrad</span><span class="o">.</span><span class="n">norm</span><span class="p">()</span>
+
+        <span class="nb">super</span><span class="p">(</span><span class="n">BregmanDistance</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span>
+            <span class="n">space</span><span class="o">=</span><span class="n">functional</span><span class="o">.</span><span class="n">domain</span><span class="p">,</span> <span class="n">linear</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+            <span class="n">grad_lipschitz</span><span class="o">=</span><span class="n">grad_lipschitz</span><span class="p">)</span></div>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">functional</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;The functional used to define the Bregman distance.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__functional</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">point</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;The point used to define the Bregman distance.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__point</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">subgrad</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;The subgradient used to define the Bregman distance.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__subgrad</span>
+
+<div class="viewcode-block" id="BregmanDistance._call"><a class="viewcode-back" href="../../../../generated/odl.solvers.functional.functional.BregmanDistance._call.html#odl.solvers.functional.functional.BregmanDistance._call">[docs]</a>    <span class="k">def</span> <span class="nf">_call</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return ``self(x)``.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__bregman_dist</span><span class="p">(</span><span class="n">x</span><span class="p">)</span></div>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">convex_conj</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;The convex conjugate&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__bregman_dist</span><span class="o">.</span><span class="n">convex_conj</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">proximal</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return the ``proximal factory`` of the functional.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__bregman_dist</span><span class="o">.</span><span class="n">proximal</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">gradient</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Gradient operator of the functional.&quot;&quot;&quot;</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">op_to_return</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">functional</span><span class="o">.</span><span class="n">gradient</span>
+        <span class="k">except</span> <span class="ne">NotImplementedError</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span>
+                <span class="s1">&#39;`self.functional.gradient` is not implemented for &#39;</span>
+                <span class="s1">&#39;`self.functional` </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">functional</span><span class="p">))</span>
+
+        <span class="n">op_to_return</span> <span class="o">=</span> <span class="n">op_to_return</span> <span class="o">-</span> <span class="n">ConstantOperator</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">subgrad</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">op_to_return</span>
+
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;Return ``repr(self)``.&#39;&#39;&#39;</span>
+        <span class="n">posargs</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">functional</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">point</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">subgrad</span><span class="p">]</span>
+        <span class="n">optargs</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">inner_str</span> <span class="o">=</span> <span class="n">signature_string</span><span class="p">(</span><span class="n">posargs</span><span class="p">,</span> <span class="n">optargs</span><span class="p">,</span> <span class="n">sep</span><span class="o">=</span><span class="s1">&#39;,</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="s1">&#39;</span><span class="si">{}</span><span class="s1">(</span><span class="se">\n</span><span class="si">{}</span><span class="se">\n</span><span class="s1">)&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="p">,</span> <span class="n">indent</span><span class="p">(</span><span class="n">inner_str</span><span class="p">))</span></div>
+
+
+<div class="viewcode-block" id="simple_functional"><a class="viewcode-back" href="../../../../generated/odl.solvers.functional.functional.simple_functional.html#odl.solvers.functional.functional.simple_functional">[docs]</a><span class="k">def</span> <span class="nf">simple_functional</span><span class="p">(</span><span class="n">space</span><span class="p">,</span> <span class="n">fcall</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">grad</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">prox</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">grad_lip</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">,</span>
+                      <span class="n">convex_conj_fcall</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">convex_conj_grad</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                      <span class="n">convex_conj_prox</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">convex_conj_grad_lip</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">,</span>
+                      <span class="n">linear</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Simplified interface to create a functional with specific properties.</span>
+
+<span class="sd">    Users may specify as many properties as-is needed by the application.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    space : `LinearSpace`</span>
+<span class="sd">        Space that the functional should act on.</span>
+<span class="sd">    fcall : callable, optional</span>
+<span class="sd">        Function to evaluate when calling the functional.</span>
+<span class="sd">    grad : callable or `Operator`, optional</span>
+<span class="sd">        Gradient operator of the functional.</span>
+<span class="sd">    prox : `proximal factory`, optional</span>
+<span class="sd">        Proximal factory for the functional.</span>
+<span class="sd">    grad_lip : float, optional</span>
+<span class="sd">        lipschitz constant of the functional.</span>
+<span class="sd">    convex_conj_fcall : callable, optional</span>
+<span class="sd">        Function to evaluate when calling the convex conjugate functional.</span>
+<span class="sd">    convex_conj_grad : callable or `Operator`, optional</span>
+<span class="sd">        Gradient operator of the convex conjugate functional</span>
+<span class="sd">    convex_conj_prox : `proximal factory`, optional</span>
+<span class="sd">        Proximal factory for the convex conjugate functional.</span>
+<span class="sd">    convex_conj_grad_lip : float, optional</span>
+<span class="sd">        lipschitz constant of the convex conjugate functional.</span>
+<span class="sd">    linear : bool, optional</span>
+<span class="sd">        True if the operator is linear.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    Create squared sum functional on rn:</span>
+
+<span class="sd">    &gt;&gt;&gt; def f(x):</span>
+<span class="sd">    ...     return sum(xi**2 for xi in x)</span>
+<span class="sd">    &gt;&gt;&gt; def dfdx(x):</span>
+<span class="sd">    ...     return 2 * x</span>
+<span class="sd">    &gt;&gt;&gt; space = odl.rn(3)</span>
+<span class="sd">    &gt;&gt;&gt; func = simple_functional(space, f, grad=dfdx)</span>
+<span class="sd">    &gt;&gt;&gt; func.domain</span>
+<span class="sd">    rn(3)</span>
+<span class="sd">    &gt;&gt;&gt; func.range</span>
+<span class="sd">    RealNumbers()</span>
+<span class="sd">    &gt;&gt;&gt; func([1, 2, 3])</span>
+<span class="sd">    14.0</span>
+<span class="sd">    &gt;&gt;&gt; func.gradient([1, 2, 3])</span>
+<span class="sd">    rn(3).element([ 2.,  4.,  6.])</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">grad</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">grad</span><span class="p">,</span> <span class="n">Operator</span><span class="p">):</span>
+        <span class="n">grad_in</span> <span class="o">=</span> <span class="n">grad</span>
+
+        <span class="k">class</span> <span class="nc">SimpleFunctionalGradient</span><span class="p">(</span><span class="n">Operator</span><span class="p">):</span>
+
+            <span class="sd">&quot;&quot;&quot;Gradient of a `SimpleFunctional`.&quot;&quot;&quot;</span>
+
+            <span class="k">def</span> <span class="nf">_call</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
+                <span class="sd">&quot;&quot;&quot;Return ``self(x)``.&quot;&quot;&quot;</span>
+                <span class="k">return</span> <span class="n">grad_in</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+
+        <span class="n">grad</span> <span class="o">=</span> <span class="n">SimpleFunctionalGradient</span><span class="p">(</span><span class="n">space</span><span class="p">,</span> <span class="n">space</span><span class="p">,</span> <span class="n">linear</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="p">(</span><span class="n">convex_conj_grad</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span>
+            <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">convex_conj_grad</span><span class="p">,</span> <span class="n">Operator</span><span class="p">)):</span>
+        <span class="n">convex_conj_grad_in</span> <span class="o">=</span> <span class="n">convex_conj_grad</span>
+
+        <span class="k">class</span> <span class="nc">SimpleFunctionalConvexConjGradient</span><span class="p">(</span><span class="n">Operator</span><span class="p">):</span>
+
+            <span class="sd">&quot;&quot;&quot;Gradient of the convex conj of a  `SimpleFunctional`.&quot;&quot;&quot;</span>
+
+            <span class="k">def</span> <span class="nf">_call</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
+                <span class="sd">&quot;&quot;&quot;Return ``self(x)``.&quot;&quot;&quot;</span>
+                <span class="k">return</span> <span class="n">convex_conj_grad_in</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+
+        <span class="n">convex_conj_grad</span> <span class="o">=</span> <span class="n">SimpleFunctionalConvexConjGradient</span><span class="p">(</span>
+            <span class="n">space</span><span class="p">,</span> <span class="n">space</span><span class="p">,</span> <span class="n">linear</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+
+    <span class="k">class</span> <span class="nc">SimpleFunctional</span><span class="p">(</span><span class="n">Functional</span><span class="p">):</span>
+
+        <span class="sd">&quot;&quot;&quot;A simplified functional for examples.&quot;&quot;&quot;</span>
+
+        <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+            <span class="sd">&quot;&quot;&quot;Initialize an instance.&quot;&quot;&quot;</span>
+            <span class="nb">super</span><span class="p">(</span><span class="n">SimpleFunctional</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span>
+                <span class="n">space</span><span class="p">,</span> <span class="n">linear</span><span class="o">=</span><span class="n">linear</span><span class="p">,</span> <span class="n">grad_lipschitz</span><span class="o">=</span><span class="n">grad_lip</span><span class="p">)</span>
+
+        <span class="k">def</span> <span class="nf">_call</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
+            <span class="sd">&quot;&quot;&quot;Return ``self(x)``.&quot;&quot;&quot;</span>
+            <span class="k">if</span> <span class="n">fcall</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s1">&#39;call not implemented&#39;</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">fcall</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+
+        <span class="nd">@property</span>
+        <span class="k">def</span> <span class="nf">proximal</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+            <span class="sd">&quot;&quot;&quot;Return the proximal of the operator.&quot;&quot;&quot;</span>
+            <span class="k">if</span> <span class="n">prox</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s1">&#39;proximal not implemented&#39;</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">prox</span>
+
+        <span class="nd">@property</span>
+        <span class="k">def</span> <span class="nf">gradient</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+            <span class="sd">&quot;&quot;&quot;Return the gradient of the operator.&quot;&quot;&quot;</span>
+            <span class="k">if</span> <span class="n">grad</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s1">&#39;gradient not implemented&#39;</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">grad</span>
+
+        <span class="nd">@property</span>
+        <span class="k">def</span> <span class="nf">convex_conj</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">simple_functional</span><span class="p">(</span><span class="n">space</span><span class="p">,</span> <span class="n">fcall</span><span class="o">=</span><span class="n">convex_conj_fcall</span><span class="p">,</span>
+                                     <span class="n">grad</span><span class="o">=</span><span class="n">convex_conj_grad</span><span class="p">,</span>
+                                     <span class="n">prox</span><span class="o">=</span><span class="n">convex_conj_prox</span><span class="p">,</span>
+                                     <span class="n">grad_lip</span><span class="o">=</span><span class="n">convex_conj_grad_lip</span><span class="p">,</span>
+                                     <span class="n">convex_conj_fcall</span><span class="o">=</span><span class="n">fcall</span><span class="p">,</span>
+                                     <span class="n">convex_conj_grad</span><span class="o">=</span><span class="n">grad</span><span class="p">,</span>
+                                     <span class="n">convex_conj_prox</span><span class="o">=</span><span class="n">prox</span><span class="p">,</span>
+                                     <span class="n">convex_conj_grad_lip</span><span class="o">=</span><span class="n">grad_lip</span><span class="p">,</span>
+                                     <span class="n">linear</span><span class="o">=</span><span class="n">linear</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">SimpleFunctional</span><span class="p">()</span></div>
+
+
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s1">&#39;__main__&#39;</span><span class="p">:</span>
+    <span class="kn">from</span> <span class="nn">odl.util.testutils</span> <span class="kn">import</span> <span class="n">run_doctests</span>
+    <span class="n">run_doctests</span><span class="p">()</span>
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &#169; Copyright 2014-2020 The ODL Contributors.
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

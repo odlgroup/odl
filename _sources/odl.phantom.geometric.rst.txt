@@ -1,0 +1,23 @@
+geometric
+=========
+
+Phantoms given by simple geometric objects such as cubes or spheres.
+
+.. currentmodule:: odl.phantom.geometric
+
+
+
+
+.. rubric:: Functions
+
+.. autosummary::
+   :toctree: generated/
+
+   ~odl.phantom.geometric.cuboid
+   ~odl.phantom.geometric.defrise
+   ~odl.phantom.geometric.defrise_ellipses
+   ~odl.phantom.geometric.ellipsoid_phantom
+   ~odl.phantom.geometric.indicate_proj_axis
+   ~odl.phantom.geometric.smooth_cuboid
+   ~odl.phantom.geometric.tgv_phantom
+

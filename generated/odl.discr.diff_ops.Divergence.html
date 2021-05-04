@@ -1,0 +1,395 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>Divergence &mdash; odl 1.0.0.dev0 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Divergence._call" href="odl.discr.diff_ops.Divergence._call.html" />
+    <link rel="prev" title="diff_ops" href="../odl.discr.diff_ops.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../index.html" class="icon icon-home"> odl
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                1.0.0.dev0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Getting Started</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../getting_started/getting_started.html">Getting Started</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Working with ODL</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../guide/guide.html">User’s guide – selected topics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../math/math.html">Mathematical Background</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Developer zone</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../dev/dev.html">Contributing to ODL</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Useful facts</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../guide/faq.html">Frequently asked questions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../guide/glossary.html">Glossary</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../release_notes.html">Release Notes</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../refs.html">References</a></li>
+</ul>
+<p class="caption"><span class="caption-text">API Reference</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../odl.html">odl</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../odl.contrib.html">contrib</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../odl.deform.html">deform</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../odl.diagnostics.html">diagnostics</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="../odl.discr.html">discr</a><ul class="current">
+<li class="toctree-l3 current"><a class="reference internal" href="../odl.discr.diff_ops.html">diff_ops</a><ul class="current">
+<li class="toctree-l4 current"><a class="current reference internal" href="#">Divergence</a></li>
+<li class="toctree-l4"><a class="reference internal" href="odl.discr.diff_ops.Gradient.html">Gradient</a></li>
+<li class="toctree-l4"><a class="reference internal" href="odl.discr.diff_ops.Laplacian.html">Laplacian</a></li>
+<li class="toctree-l4"><a class="reference internal" href="odl.discr.diff_ops.PartialDerivative.html">PartialDerivative</a></li>
+<li class="toctree-l4"><a class="reference internal" href="odl.discr.diff_ops.finite_diff.html">finite_diff</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../odl.discr.discr_ops.html">discr_ops</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../odl.discr.discr_space.html">discr_space</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../odl.discr.discr_utils.html">discr_utils</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../odl.discr.grid.html">grid</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../odl.discr.partition.html">partition</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../odl.operator.html">operator</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../odl.phantom.html">phantom</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../odl.set.html">set</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../odl.solvers.html">solvers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../odl.space.html">space</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../odl.tomo.html">tomo</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../odl.trafos.html">trafos</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../odl.ufunc_ops.html">ufunc_ops</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../odl.util.html">util</a></li>
+</ul>
+</li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">odl</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="../odl.html">odl</a> &raquo;</li>
+        
+          <li><a href="../odl.discr.html">discr</a> &raquo;</li>
+        
+          <li><a href="../odl.discr.diff_ops.html">diff_ops</a> &raquo;</li>
+        
+      <li>Divergence</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            <a href="../_sources/generated/odl.discr.diff_ops.Divergence.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="divergence">
+<h1>Divergence<a class="headerlink" href="#divergence" title="Permalink to this headline">¶</a></h1>
+<dl class="py class">
+<dt id="odl.discr.diff_ops.Divergence">
+<em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">odl.discr.diff_ops.</span></code><code class="sig-name descname"><span class="pre">Divergence</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/odl/discr/diff_ops.html#Divergence"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#odl.discr.diff_ops.Divergence" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="odl.operator.tensor_ops.PointwiseTensorFieldOperator.html#odl.operator.tensor_ops.PointwiseTensorFieldOperator" title="odl.operator.tensor_ops.PointwiseTensorFieldOperator"><code class="xref py py-class docutils literal notranslate"><span class="pre">odl.operator.tensor_ops.PointwiseTensorFieldOperator</span></code></a></p>
+<p>Divergence operator for <a class="reference internal" href="odl.discr.discr_space.DiscretizedSpace.html#odl.discr.discr_space.DiscretizedSpace" title="odl.discr.discr_space.DiscretizedSpace"><code class="xref any py py-class docutils literal notranslate"><span class="pre">DiscretizedSpace</span></code></a> spaces.</p>
+<p>Calls helper function <a class="reference internal" href="odl.discr.diff_ops.finite_diff.html#odl.discr.diff_ops.finite_diff" title="odl.discr.diff_ops.finite_diff"><code class="xref any py py-func docutils literal notranslate"><span class="pre">finite_diff</span></code></a> for each component of the input
+product space vector. For the adjoint of the <a class="reference internal" href="#odl.discr.diff_ops.Divergence" title="odl.discr.diff_ops.Divergence"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Divergence</span></code></a> operator to
+match the negative <a class="reference internal" href="odl.discr.diff_ops.Gradient.html#odl.discr.diff_ops.Gradient" title="odl.discr.diff_ops.Gradient"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Gradient</span></code></a> operator implicit zero is assumed.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Attributes</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><a class="reference internal" href="odl.discr.diff_ops.Divergence.adjoint.html#odl.discr.diff_ops.Divergence.adjoint" title="odl.discr.diff_ops.Divergence.adjoint"><code class="xref py py-obj docutils literal notranslate"><span class="pre">adjoint</span></code></a></dt><dd><p>Adjoint of this operator.</p>
+</dd>
+<dt><a class="reference internal" href="odl.discr.diff_ops.Divergence.base_space.html#odl.discr.diff_ops.Divergence.base_space" title="odl.discr.diff_ops.Divergence.base_space"><code class="xref py py-obj docutils literal notranslate"><span class="pre">base_space</span></code></a></dt><dd><p>Base space <code class="docutils literal notranslate"><span class="pre">X</span></code> of this operator’s domain and range.</p>
+</dd>
+<dt><a class="reference internal" href="odl.discr.diff_ops.Divergence.domain.html#odl.discr.diff_ops.Divergence.domain" title="odl.discr.diff_ops.Divergence.domain"><code class="xref py py-obj docutils literal notranslate"><span class="pre">domain</span></code></a></dt><dd><p>Set of objects on which this operator can be evaluated.</p>
+</dd>
+<dt><a class="reference internal" href="odl.discr.diff_ops.Divergence.inverse.html#odl.discr.diff_ops.Divergence.inverse" title="odl.discr.diff_ops.Divergence.inverse"><code class="xref py py-obj docutils literal notranslate"><span class="pre">inverse</span></code></a></dt><dd><p>Return the operator inverse.</p>
+</dd>
+<dt><a class="reference internal" href="odl.discr.diff_ops.Divergence.is_functional.html#odl.discr.diff_ops.Divergence.is_functional" title="odl.discr.diff_ops.Divergence.is_functional"><code class="xref py py-obj docutils literal notranslate"><span class="pre">is_functional</span></code></a></dt><dd><p><code class="docutils literal notranslate"><span class="pre">True</span></code> if this operator’s range is a <a class="reference internal" href="odl.set.sets.Field.html#odl.set.sets.Field" title="odl.set.sets.Field"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Field</span></code></a>.</p>
+</dd>
+<dt><a class="reference internal" href="odl.discr.diff_ops.Divergence.is_linear.html#odl.discr.diff_ops.Divergence.is_linear" title="odl.discr.diff_ops.Divergence.is_linear"><code class="xref py py-obj docutils literal notranslate"><span class="pre">is_linear</span></code></a></dt><dd><p><code class="docutils literal notranslate"><span class="pre">True</span></code> if this operator is linear.</p>
+</dd>
+<dt><a class="reference internal" href="odl.discr.diff_ops.Divergence.range.html#odl.discr.diff_ops.Divergence.range" title="odl.discr.diff_ops.Divergence.range"><code class="xref py py-obj docutils literal notranslate"><span class="pre">range</span></code></a></dt><dd><p>Set in which the result of an evaluation of this operator lies.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+<p class="rubric">Methods</p>
+<table class="longtable docutils align-default">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="odl.discr.diff_ops.Divergence._call.html#odl.discr.diff_ops.Divergence._call" title="odl.discr.diff_ops.Divergence._call"><code class="xref py py-obj docutils literal notranslate"><span class="pre">_call</span></code></a>(self, x[, out])</p></td>
+<td><p>Calculate the divergence of <code class="docutils literal notranslate"><span class="pre">x</span></code>.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="odl.discr.diff_ops.Divergence.derivative.html#odl.discr.diff_ops.Divergence.derivative" title="odl.discr.diff_ops.Divergence.derivative"><code class="xref py py-obj docutils literal notranslate"><span class="pre">derivative</span></code></a>(self[, point])</p></td>
+<td><p>Return the derivative operator.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="odl.discr.diff_ops.Divergence.norm.html#odl.discr.diff_ops.Divergence.norm" title="odl.discr.diff_ops.Divergence.norm"><code class="xref py py-obj docutils literal notranslate"><span class="pre">norm</span></code></a>(self[, estimate])</p></td>
+<td><p>Return the operator norm of this operator.</p></td>
+</tr>
+</tbody>
+</table>
+<dl class="py method">
+<dt id="odl.discr.diff_ops.Divergence.__init__">
+<code class="sig-name descname"><span class="pre">__init__</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">domain</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">range</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">method</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'forward'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pad_mode</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'constant'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pad_const</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/odl/discr/diff_ops.html#Divergence.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#odl.discr.diff_ops.Divergence.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initialize a new instance.</p>
+<p>Zero padding is assumed for the adjoint of the <a class="reference internal" href="#odl.discr.diff_ops.Divergence" title="odl.discr.diff_ops.Divergence"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Divergence</span></code></a>
+operator to match the negative <a class="reference internal" href="odl.discr.diff_ops.Gradient.html#odl.discr.diff_ops.Gradient" title="odl.discr.diff_ops.Gradient"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Gradient</span></code></a> operator.</p>
+<dl class="field-list">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl>
+<dt><strong>domain</strong><span class="classifier">power space of <a class="reference internal" href="odl.discr.discr_space.DiscretizedSpace.html#odl.discr.discr_space.DiscretizedSpace" title="odl.discr.discr_space.DiscretizedSpace"><code class="xref any py py-class docutils literal notranslate"><span class="pre">DiscretizedSpace</span></code></a>, optional</span></dt><dd><p>Space of elements which the operator acts on.
+This is required if <code class="docutils literal notranslate"><span class="pre">range</span></code> is not given.</p>
+</dd>
+<dt><strong>range</strong><span class="classifier"><a class="reference internal" href="odl.discr.discr_space.DiscretizedSpace.html#odl.discr.discr_space.DiscretizedSpace" title="odl.discr.discr_space.DiscretizedSpace"><code class="xref any py py-class docutils literal notranslate"><span class="pre">DiscretizedSpace</span></code></a>, optional</span></dt><dd><p>Space of elements to which the operator maps.
+This is required if <code class="docutils literal notranslate"><span class="pre">domain</span></code> is not given.</p>
+</dd>
+<dt><strong>method</strong><span class="classifier">{‘forward’, ‘backward’, ‘central’}, optional</span></dt><dd><p>Finite difference method to be used</p>
+</dd>
+<dt><strong>pad_mode</strong><span class="classifier">string, optional</span></dt><dd><p>The padding mode to use outside the domain.</p>
+<p><code class="docutils literal notranslate"><span class="pre">'constant'</span></code>: Fill with <code class="docutils literal notranslate"><span class="pre">pad_const</span></code>.</p>
+<p><code class="docutils literal notranslate"><span class="pre">'symmetric'</span></code>: Reflect at the boundaries, not doubling the</p>
+<p><code class="docutils literal notranslate"><span class="pre">'periodic'</span></code>: Fill in values from the other side, keeping
+the order.</p>
+<p><code class="docutils literal notranslate"><span class="pre">'order0'</span></code>: Extend constantly with the outmost values
+(ensures continuity).</p>
+<p><code class="docutils literal notranslate"><span class="pre">'order1'</span></code>: Extend with constant slope (ensures continuity of
+the first derivative). This requires at least 2 values along
+each axis.</p>
+<p><code class="docutils literal notranslate"><span class="pre">'order2'</span></code>: Extend with second order accuracy (ensures continuity
+of the second derivative). This requires at least 3 values along
+each axis.</p>
+</dd>
+<dt><strong>pad_const</strong><span class="classifier">float, optional</span></dt><dd><p>For <code class="docutils literal notranslate"><span class="pre">pad_mode</span> <span class="pre">==</span> <span class="pre">'constant'</span></code>, <code class="docutils literal notranslate"><span class="pre">f</span></code> assumes
+<code class="docutils literal notranslate"><span class="pre">pad_const</span></code> for indices outside the domain of <code class="docutils literal notranslate"><span class="pre">f</span></code></p>
+</dd>
+</dl>
+</dd>
+</dl>
+<p class="rubric">Examples</p>
+<p>Initialize a Divergence opeator:</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">ran</span> <span class="o">=</span> <span class="n">odl</span><span class="o">.</span><span class="n">uniform_discr</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="p">[</span><span class="mi">3</span><span class="p">,</span> <span class="mi">5</span><span class="p">],</span> <span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">5</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">dom</span> <span class="o">=</span> <span class="n">odl</span><span class="o">.</span><span class="n">ProductSpace</span><span class="p">(</span><span class="n">ran</span><span class="p">,</span> <span class="n">ran</span><span class="o">.</span><span class="n">ndim</span><span class="p">)</span>  <span class="c1"># 2-dimensional</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">div</span> <span class="o">=</span> <span class="n">Divergence</span><span class="p">(</span><span class="n">dom</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">div</span><span class="o">.</span><span class="n">range</span> <span class="o">==</span> <span class="n">ran</span>
+<span class="go">True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">div2</span> <span class="o">=</span> <span class="n">Divergence</span><span class="p">(</span><span class="nb">range</span><span class="o">=</span><span class="n">ran</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">div2</span><span class="o">.</span><span class="n">domain</span> <span class="o">==</span> <span class="n">dom</span>
+<span class="go">True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">div3</span> <span class="o">=</span> <span class="n">Divergence</span><span class="p">(</span><span class="n">domain</span><span class="o">=</span><span class="n">dom</span><span class="p">,</span> <span class="nb">range</span><span class="o">=</span><span class="n">ran</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">div3</span><span class="o">.</span><span class="n">domain</span> <span class="o">==</span> <span class="n">dom</span>
+<span class="go">True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">div3</span><span class="o">.</span><span class="n">range</span> <span class="o">==</span> <span class="n">ran</span>
+<span class="go">True</span>
+</pre></div>
+</div>
+<p>Call the operator:</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">data</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([[</span><span class="mf">0.</span><span class="p">,</span> <span class="mf">1.</span><span class="p">,</span> <span class="mf">2.</span><span class="p">,</span> <span class="mf">3.</span><span class="p">,</span> <span class="mf">4.</span><span class="p">],</span>
+<span class="gp">... </span>                 <span class="p">[</span><span class="mf">1.</span><span class="p">,</span> <span class="mf">2.</span><span class="p">,</span> <span class="mf">3.</span><span class="p">,</span> <span class="mf">4.</span><span class="p">,</span> <span class="mf">5.</span><span class="p">],</span>
+<span class="gp">... </span>                 <span class="p">[</span><span class="mf">2.</span><span class="p">,</span> <span class="mf">3.</span><span class="p">,</span> <span class="mf">4.</span><span class="p">,</span> <span class="mf">5.</span><span class="p">,</span> <span class="mf">6.</span><span class="p">]])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">f</span> <span class="o">=</span> <span class="n">div</span><span class="o">.</span><span class="n">domain</span><span class="o">.</span><span class="n">element</span><span class="p">([</span><span class="n">data</span><span class="p">,</span> <span class="n">data</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">div_f</span> <span class="o">=</span> <span class="n">div</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">div_f</span><span class="p">)</span>
+<span class="go">[[  2.,   2.,   2.,   2.,  -3.],</span>
+<span class="go"> [  2.,   2.,   2.,   2.,  -4.],</span>
+<span class="go"> [ -1.,  -2.,  -3.,  -4., -12.]]</span>
+</pre></div>
+</div>
+<p>Verify adjoint:</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">g</span> <span class="o">=</span> <span class="n">div</span><span class="o">.</span><span class="n">range</span><span class="o">.</span><span class="n">element</span><span class="p">(</span><span class="n">data</span> <span class="o">**</span> <span class="mi">2</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">adj_div_g</span> <span class="o">=</span> <span class="n">div</span><span class="o">.</span><span class="n">adjoint</span><span class="p">(</span><span class="n">g</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">g</span><span class="o">.</span><span class="n">inner</span><span class="p">(</span><span class="n">div_f</span><span class="p">)</span> <span class="o">/</span> <span class="n">f</span><span class="o">.</span><span class="n">inner</span><span class="p">(</span><span class="n">adj_div_g</span><span class="p">)</span>
+<span class="go">1.0</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+        <a href="odl.discr.diff_ops.Divergence._call.html" class="btn btn-neutral float-right" title="Divergence._call" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="../odl.discr.diff_ops.html" class="btn btn-neutral float-left" title="diff_ops" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &#169; Copyright 2014-2020 The ODL Contributors.
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

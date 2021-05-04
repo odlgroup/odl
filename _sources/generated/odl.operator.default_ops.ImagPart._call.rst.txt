@@ -1,0 +1,8 @@
+:orphan:
+
+ImagPart._call
+=======================================
+
+.. currentmodule:: odl.operator.default_ops
+
+.. automethod:: ImagPart._call

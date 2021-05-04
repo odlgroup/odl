@@ -1,0 +1,6 @@
+﻿greater_equal
+=====================================
+
+.. currentmodule:: odl.ufunc_ops.ufunc_ops
+
+.. autofunction:: greater_equal

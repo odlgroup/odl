@@ -1,0 +1,8 @@
+:orphan:
+
+ConeBeamGeometry.__getitem__
+=======================================================
+
+.. currentmodule:: odl.tomo.geometry.conebeam
+
+.. automethod:: ConeBeamGeometry.__getitem__

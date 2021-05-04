@@ -1,0 +1,6 @@
+bitwise_and_op.is_linear
+================================================
+
+.. currentmodule:: odl.ufunc_ops.ufunc_ops
+
+.. autoproperty:: bitwise_and_op.is_linear

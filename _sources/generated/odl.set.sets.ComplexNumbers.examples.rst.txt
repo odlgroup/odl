@@ -1,0 +1,6 @@
+ComplexNumbers.examples
+====================================
+
+.. currentmodule:: odl.set.sets
+
+.. autoproperty:: ComplexNumbers.examples

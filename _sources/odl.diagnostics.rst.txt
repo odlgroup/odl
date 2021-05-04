@@ -1,0 +1,19 @@
+diagnostics
+===========
+
+Automated diagnostic checks.
+
+.. currentmodule:: odl.diagnostics
+
+
+.. rubric:: Modules
+
+.. toctree::
+   :maxdepth: 2
+
+   odl.diagnostics.examples
+   odl.diagnostics.operator
+   odl.diagnostics.space
+
+
+

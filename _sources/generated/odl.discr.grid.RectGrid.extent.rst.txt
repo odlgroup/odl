@@ -1,0 +1,6 @@
+RectGrid.extent
+==============================
+
+.. currentmodule:: odl.discr.grid
+
+.. autoproperty:: RectGrid.extent

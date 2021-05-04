@@ -1,0 +1,993 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>odl.tomo.backends.astra_setup &mdash; odl 1.0.0.dev0 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../../../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../../../../_static/custom.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../../../" src="../../../../_static/documentation_options.js"></script>
+        <script src="../../../../_static/jquery.js"></script>
+        <script src="../../../../_static/underscore.js"></script>
+        <script src="../../../../_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="../../../../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../../../index.html" class="icon icon-home"> odl
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                1.0.0.dev0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Getting Started</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../getting_started/getting_started.html">Getting Started</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Working with ODL</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../guide/guide.html">User’s guide – selected topics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../math/math.html">Mathematical Background</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Developer zone</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../dev/dev.html">Contributing to ODL</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Useful facts</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../guide/faq.html">Frequently asked questions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../guide/glossary.html">Glossary</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../release_notes.html">Release Notes</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../refs.html">References</a></li>
+</ul>
+<p class="caption"><span class="caption-text">API Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../odl.html">odl</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../../index.html">odl</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../../../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="../../../index.html">Module code</a> &raquo;</li>
+        
+      <li>odl.tomo.backends.astra_setup</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for odl.tomo.backends.astra_setup</h1><div class="highlight"><pre>
+<span></span><span class="c1"># Copyright 2014-2020 The ODL contributors</span>
+<span class="c1">#</span>
+<span class="c1"># This file is part of ODL.</span>
+<span class="c1">#</span>
+<span class="c1"># This Source Code Form is subject to the terms of the Mozilla Public License,</span>
+<span class="c1"># v. 2.0. If a copy of the MPL was not distributed with this file, You can</span>
+<span class="c1"># obtain one at https://mozilla.org/MPL/2.0/.</span>
+
+<span class="sd">&quot;&quot;&quot;Helper functions to prepare ASTRA algorithms.</span>
+
+<span class="sd">This module contains utility functions to convert data structures from the</span>
+<span class="sd">ODL geometry representation to ASTRA&#39;s data structures, including:</span>
+
+<span class="sd">* volume geometries</span>
+<span class="sd">* projection geometries</span>
+<span class="sd">* create vectors from geometries</span>
+<span class="sd">* data arrays</span>
+<span class="sd">* projectors</span>
+<span class="sd">* algorithm configuration dictionaries</span>
+
+<span class="sd">`ASTRA documentation &lt;http://www.astra-toolbox.com/&gt;`_.</span>
+
+<span class="sd">`ASTRA on GitHub &lt;https://github.com/astra-toolbox/&gt;`_.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">absolute_import</span><span class="p">,</span> <span class="n">division</span><span class="p">,</span> <span class="n">print_function</span>
+
+<span class="kn">import</span> <span class="nn">warnings</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+
+<span class="kn">from</span> <span class="nn">odl.discr</span> <span class="kn">import</span> <span class="n">DiscretizedSpace</span><span class="p">,</span> <span class="n">DiscretizedSpaceElement</span>
+<span class="kn">from</span> <span class="nn">odl.tomo.geometry</span> <span class="kn">import</span> <span class="p">(</span>
+    <span class="n">DivergentBeamGeometry</span><span class="p">,</span> <span class="n">Flat1dDetector</span><span class="p">,</span> <span class="n">Flat2dDetector</span><span class="p">,</span> <span class="n">Geometry</span><span class="p">,</span>
+    <span class="n">ParallelBeamGeometry</span><span class="p">)</span>
+<span class="kn">from</span> <span class="nn">odl.tomo.util.utility</span> <span class="kn">import</span> <span class="n">euler_matrix</span>
+
+<span class="k">try</span><span class="p">:</span>
+    <span class="kn">import</span> <span class="nn">astra</span>
+<span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
+    <span class="n">ASTRA_AVAILABLE</span> <span class="o">=</span> <span class="kc">False</span>
+    <span class="n">ASTRA_VERSION</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>
+<span class="k">else</span><span class="p">:</span>
+    <span class="n">ASTRA_AVAILABLE</span> <span class="o">=</span> <span class="kc">True</span>
+
+<span class="c1"># Make sure that ASTRA &gt;= 1.7 is used</span>
+<span class="k">if</span> <span class="n">ASTRA_AVAILABLE</span><span class="p">:</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="c1"># Available from 1.8 on</span>
+        <span class="n">ASTRA_VERSION</span> <span class="o">=</span> <span class="n">astra</span><span class="o">.</span><span class="n">__version__</span>
+    <span class="k">except</span> <span class="ne">AttributeError</span><span class="p">:</span>
+        <span class="c1"># Below version 1.8</span>
+        <span class="n">_maj</span> <span class="o">=</span> <span class="n">astra</span><span class="o">.</span><span class="n">astra</span><span class="o">.</span><span class="n">version</span><span class="p">()</span> <span class="o">//</span> <span class="mi">100</span>
+        <span class="n">_min</span> <span class="o">=</span> <span class="n">astra</span><span class="o">.</span><span class="n">astra</span><span class="o">.</span><span class="n">version</span><span class="p">()</span> <span class="o">%</span> <span class="mi">100</span>
+        <span class="n">ASTRA_VERSION</span> <span class="o">=</span> <span class="s1">&#39;.&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="nb">str</span><span class="p">(</span><span class="n">_maj</span><span class="p">),</span> <span class="nb">str</span><span class="p">(</span><span class="n">_min</span><span class="p">)])</span>
+        <span class="k">if</span> <span class="p">(</span><span class="n">_maj</span><span class="p">,</span> <span class="n">_min</span><span class="p">)</span> <span class="o">&lt;</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">7</span><span class="p">):</span>
+            <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span>
+                <span class="s1">&#39;your version </span><span class="si">{}</span><span class="s1">.</span><span class="si">{}</span><span class="s1"> of ASTRA is unsupported, please upgrade &#39;</span>
+                <span class="s1">&#39;to 1.7 or higher&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">_maj</span><span class="p">,</span> <span class="n">_min</span><span class="p">),</span> <span class="ne">RuntimeWarning</span><span class="p">)</span>
+
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">(</span>
+    <span class="s1">&#39;ASTRA_AVAILABLE&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;ASTRA_VERSION&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;astra_supports&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;astra_versions_supporting&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;astra_volume_geometry&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;astra_conebeam_3d_geom_to_vec&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;astra_conebeam_2d_geom_to_vec&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;astra_parallel_3d_geom_to_vec&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;astra_projection_geometry&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;astra_data&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;astra_projector&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;astra_algorithm&#39;</span><span class="p">,</span>
+<span class="p">)</span>
+
+
+<span class="c1"># ASTRA_FEATURES contains a set of features along with version specifiers</span>
+<span class="c1"># to track ASTRA support for those features. The version specifiers must</span>
+<span class="c1"># be valid setuptools package requirements (without package name), e.g.,</span>
+<span class="c1"># as exact version &#39;==1.7&#39;, as inequality &#39;&gt;=1.7&#39; or as several requirements</span>
+<span class="c1"># that need to be satisfied simultaneously, e.g., &#39;&gt;=1.8,&lt;=2.0&#39;.</span>
+<span class="c1"># To give multiple requirements that should be OR-ed together, use a</span>
+<span class="c1"># sequence instead of a single string in the dictionary, e.g.,</span>
+<span class="c1"># [&#39;==1.7&#39;, &#39;&gt;=1.8,&lt;=2.0&#39;].</span>
+
+<span class="n">ASTRA_FEATURES</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="c1"># Cell sizes not equal in both axes in 2d, currently crashes.</span>
+    <span class="s1">&#39;anisotropic_voxels_2d&#39;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
+
+    <span class="c1"># Cell sizes not equal all 3 axes in 3d, see</span>
+    <span class="c1"># https://github.com/astra-toolbox/astra-toolbox/pull/41</span>
+    <span class="s1">&#39;anisotropic_voxels_3d&#39;</span><span class="p">:</span> <span class="s1">&#39;&gt;=1.8&#39;</span><span class="p">,</span>
+
+    <span class="c1"># ASTRA geometry defined by vectors supported in the current</span>
+    <span class="c1"># development version, will be in the next release after 1.8.3. See</span>
+    <span class="c1"># https://github.com/astra-toolbox/astra-toolbox/issues/54</span>
+    <span class="s1">&#39;par2d_vec_geometry&#39;</span><span class="p">:</span> <span class="s1">&#39;&gt;1.8.3&#39;</span><span class="p">,</span>
+
+    <span class="c1"># Density weighting for cone 2d (fan beam), not supported yet,</span>
+    <span class="c1"># see the discussion in</span>
+    <span class="c1"># https://github.com/astra-toolbox/astra-toolbox/issues/71</span>
+    <span class="s1">&#39;cone2d_density_weighting&#39;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
+
+    <span class="c1"># Approximate version of ray-density weighting in cone beam</span>
+    <span class="c1"># backprojection for constant source-detector distance, see</span>
+    <span class="c1"># https://github.com/astra-toolbox/astra-toolbox/pull/84</span>
+    <span class="s1">&#39;cone3d_approx_density_weighting&#39;</span><span class="p">:</span> <span class="s1">&#39;&gt;=1.8,&lt;1.9.9.dev&#39;</span><span class="p">,</span>
+
+    <span class="c1"># General case not supported yet, see the discussion in</span>
+    <span class="c1"># https://github.com/astra-toolbox/astra-toolbox/issues/71</span>
+    <span class="s1">&#39;cone3d_density_weighting&#39;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
+
+    <span class="c1"># Fix for division by zero with detector midpoint normal perpendicular</span>
+    <span class="c1"># to geometry axis in parallel 3d, see</span>
+    <span class="c1"># https://github.com/astra-toolbox/astra-toolbox/issues/18</span>
+    <span class="s1">&#39;par3d_det_mid_pt_perp_to_axis&#39;</span><span class="p">:</span> <span class="s1">&#39;&gt;=1.7.2&#39;</span><span class="p">,</span>
+
+    <span class="c1"># Linking instead of copying of GPU memory, see</span>
+    <span class="c1"># https://github.com/astra-toolbox/astra-toolbox/pull/93</span>
+    <span class="s1">&#39;gpulink&#39;</span><span class="p">:</span> <span class="s1">&#39;&gt;=1.8.3&#39;</span><span class="p">,</span>
+
+    <span class="c1"># Distance-driven projector for parallel 2d geometry, will be in the</span>
+    <span class="c1"># next release after 1.8.3, see</span>
+    <span class="c1"># https://github.com/astra-toolbox/astra-toolbox/pull/183</span>
+    <span class="s1">&#39;par2d_distance_driven_proj&#39;</span><span class="p">:</span> <span class="s1">&#39;&gt;1.8.3&#39;</span><span class="p">,</span>
+<span class="p">}</span>
+
+
+<div class="viewcode-block" id="astra_supports"><a class="viewcode-back" href="../../../../generated/odl.tomo.backends.astra_setup.astra_supports.html#odl.tomo.backends.astra_setup.astra_supports">[docs]</a><span class="k">def</span> <span class="nf">astra_supports</span><span class="p">(</span><span class="n">feature</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Return bool indicating whether current ASTRA supports ``feature``.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    feature : str</span>
+<span class="sd">        Name of a potential feature of ASTRA. See ``ASTRA_FEATURES`` for</span>
+<span class="sd">        possible values.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    supports : bool</span>
+<span class="sd">        ``True`` if the currently imported version of ASTRA supports the</span>
+<span class="sd">        feature in question, ``False`` otherwise.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="kn">from</span> <span class="nn">odl.util.utility</span> <span class="kn">import</span> <span class="n">pkg_supports</span>
+    <span class="k">return</span> <span class="n">pkg_supports</span><span class="p">(</span><span class="n">feature</span><span class="p">,</span> <span class="n">ASTRA_VERSION</span><span class="p">,</span> <span class="n">ASTRA_FEATURES</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="astra_versions_supporting"><a class="viewcode-back" href="../../../../generated/odl.tomo.backends.astra_setup.astra_versions_supporting.html#odl.tomo.backends.astra_setup.astra_versions_supporting">[docs]</a><span class="k">def</span> <span class="nf">astra_versions_supporting</span><span class="p">(</span><span class="n">feature</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Return version spec for support of the given feature.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    feature : str</span>
+<span class="sd">        Name of a potential feature of ASTRA. See ``ASTRA_FEATURES`` for</span>
+<span class="sd">        possible values.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    version_spec : str</span>
+<span class="sd">        Specifier for versions of ASTRA that support ``feature``. See</span>
+<span class="sd">        `odl.util.utility.pkg_supports` for details.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">ASTRA_FEATURES</span><span class="p">[</span><span class="nb">str</span><span class="p">(</span><span class="n">feature</span><span class="p">)]</span>
+    <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;unknown feature </span><span class="si">{!r}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">feature</span><span class="p">))</span></div>
+
+
+<div class="viewcode-block" id="astra_volume_geometry"><a class="viewcode-back" href="../../../../generated/odl.tomo.backends.astra_setup.astra_volume_geometry.html#odl.tomo.backends.astra_setup.astra_volume_geometry">[docs]</a><span class="k">def</span> <span class="nf">astra_volume_geometry</span><span class="p">(</span><span class="n">vol_space</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Create an ASTRA volume geometry from the discretized domain.</span>
+
+<span class="sd">    From the ASTRA documentation:</span>
+
+<span class="sd">    In all 3D geometries, the coordinate system is defined around the</span>
+<span class="sd">    reconstruction volume. The center of the reconstruction volume is the</span>
+<span class="sd">    origin, and the sides of the voxels in the volume have length 1.</span>
+
+<span class="sd">    All dimensions in the projection geometries are relative to this unit</span>
+<span class="sd">    length.</span>
+
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    vol_space : `DiscretizedSpace`</span>
+<span class="sd">        Discretized space where the reconstruction (volume) lives.</span>
+<span class="sd">        It must be 2- or 3-dimensional and uniformly discretized.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    astra_geom : dict</span>
+
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
+<span class="sd">    NotImplementedError</span>
+<span class="sd">        If the cell sizes are not the same in each dimension.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">vol_space</span><span class="p">,</span> <span class="n">DiscretizedSpace</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;`vol_space` </span><span class="si">{!r}</span><span class="s1"> is not a DiscretizedSpace instance&#39;</span>
+                        <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">vol_space</span><span class="p">))</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">vol_space</span><span class="o">.</span><span class="n">is_uniform</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;`vol_space` </span><span class="si">{}</span><span class="s1"> is not uniformly discretized&#39;</span><span class="p">)</span>
+
+    <span class="n">vol_shp</span> <span class="o">=</span> <span class="n">vol_space</span><span class="o">.</span><span class="n">partition</span><span class="o">.</span><span class="n">shape</span>
+    <span class="n">vol_min</span> <span class="o">=</span> <span class="n">vol_space</span><span class="o">.</span><span class="n">partition</span><span class="o">.</span><span class="n">min_pt</span>
+    <span class="n">vol_max</span> <span class="o">=</span> <span class="n">vol_space</span><span class="o">.</span><span class="n">partition</span><span class="o">.</span><span class="n">max_pt</span>
+
+    <span class="k">if</span> <span class="n">vol_space</span><span class="o">.</span><span class="n">ndim</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
+        <span class="c1"># ASTRA does in principle support custom minimum and maximum</span>
+        <span class="c1"># values for the volume extent also in earlier versions, but running</span>
+        <span class="c1"># the algorithm fails if voxels are non-isotropic.</span>
+        <span class="k">if</span> <span class="p">(</span>
+            <span class="ow">not</span> <span class="n">vol_space</span><span class="o">.</span><span class="n">partition</span><span class="o">.</span><span class="n">has_isotropic_cells</span>
+            <span class="ow">and</span> <span class="ow">not</span> <span class="n">astra_supports</span><span class="p">(</span><span class="s1">&#39;anisotropic_voxels_2d&#39;</span><span class="p">)</span>
+        <span class="p">):</span>
+            <span class="n">req_ver</span> <span class="o">=</span> <span class="n">astra_versions_supporting</span><span class="p">(</span><span class="s1">&#39;anisotropic_voxels_2d&#39;</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span>
+                <span class="s1">&#39;support for non-isotropic pixels in 2d volumes requires &#39;</span>
+                <span class="s1">&#39;ASTRA </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">req_ver</span><span class="p">)</span>
+            <span class="p">)</span>
+        <span class="c1"># Given a 2D array of shape (x, y), a volume geometry is created as:</span>
+        <span class="c1">#    astra.create_vol_geom(x, y, y_min, y_max, x_min, x_max)</span>
+        <span class="c1"># yielding a dictionary:</span>
+        <span class="c1">#   {&#39;GridRowCount&#39;: x,</span>
+        <span class="c1">#    &#39;GridColCount&#39;: y,</span>
+        <span class="c1">#    &#39;WindowMinX&#39;: y_min,</span>
+        <span class="c1">#    &#39;WindowMaxX&#39;: y_max,</span>
+        <span class="c1">#    &#39;WindowMinY&#39;: x_min,</span>
+        <span class="c1">#    &#39;WindowMaxY&#39;: x_max}</span>
+        <span class="c1">#</span>
+        <span class="c1"># NOTE: this setting is flipped with respect to x and y. We do this</span>
+        <span class="c1"># as part of a global rotation of the geometry by -90 degrees, which</span>
+        <span class="c1"># avoids rotating the data.</span>
+        <span class="c1"># NOTE: We need to flip the sign of the (ODL) x component since</span>
+        <span class="c1"># ASTRA seems to move it in the other direction. Not quite clear</span>
+        <span class="c1"># why.</span>
+        <span class="n">vol_geom</span> <span class="o">=</span> <span class="n">astra</span><span class="o">.</span><span class="n">create_vol_geom</span><span class="p">(</span><span class="n">vol_shp</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">vol_shp</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span>
+                                         <span class="n">vol_min</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">vol_max</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span>
+                                         <span class="o">-</span><span class="n">vol_max</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="o">-</span><span class="n">vol_min</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+    <span class="k">elif</span> <span class="n">vol_space</span><span class="o">.</span><span class="n">ndim</span> <span class="o">==</span> <span class="mi">3</span><span class="p">:</span>
+        <span class="c1"># Not supported in all versions of ASTRA</span>
+        <span class="k">if</span> <span class="p">(</span>
+            <span class="ow">not</span> <span class="n">vol_space</span><span class="o">.</span><span class="n">partition</span><span class="o">.</span><span class="n">has_isotropic_cells</span>
+            <span class="ow">and</span> <span class="ow">not</span> <span class="n">astra_supports</span><span class="p">(</span><span class="s1">&#39;anisotropic_voxels_3d&#39;</span><span class="p">)</span>
+        <span class="p">):</span>
+            <span class="n">req_ver</span> <span class="o">=</span> <span class="n">astra_versions_supporting</span><span class="p">(</span><span class="s1">&#39;anisotropic_voxels_3d&#39;</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span>
+                <span class="s1">&#39;support for non-isotropic pixels in 3d volumes requires &#39;</span>
+                <span class="s1">&#39;ASTRA </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">req_ver</span><span class="p">)</span>
+            <span class="p">)</span>
+        <span class="c1"># Given a 3D array of shape (x, y, z), a volume geometry is created as:</span>
+        <span class="c1">#    astra.create_vol_geom(y, z, x, z_min, z_max, y_min, y_max,</span>
+        <span class="c1">#                          x_min, x_max),</span>
+        <span class="c1"># yielding a dictionary:</span>
+        <span class="c1">#   {&#39;GridColCount&#39;: z,</span>
+        <span class="c1">#    &#39;GridRowCount&#39;: y,</span>
+        <span class="c1">#    &#39;GridSliceCount&#39;: x,</span>
+        <span class="c1">#    &#39;WindowMinX&#39;: z_max,</span>
+        <span class="c1">#    &#39;WindowMaxX&#39;: z_max,</span>
+        <span class="c1">#    &#39;WindowMinY&#39;: y_min,</span>
+        <span class="c1">#    &#39;WindowMaxY&#39;: y_min,</span>
+        <span class="c1">#    &#39;WindowMinZ&#39;: x_min,</span>
+        <span class="c1">#    &#39;WindowMaxZ&#39;: x_min}</span>
+        <span class="n">vol_geom</span> <span class="o">=</span> <span class="n">astra</span><span class="o">.</span><span class="n">create_vol_geom</span><span class="p">(</span><span class="n">vol_shp</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">vol_shp</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span> <span class="n">vol_shp</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
+                                         <span class="n">vol_min</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span> <span class="n">vol_max</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span>
+                                         <span class="n">vol_min</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">vol_max</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span>
+                                         <span class="n">vol_min</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">vol_max</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">{}</span><span class="s1">-dimensional volume geometries not supported &#39;</span>
+                         <span class="s1">&#39;by ASTRA&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">vol_space</span><span class="o">.</span><span class="n">ndim</span><span class="p">))</span>
+    <span class="k">return</span> <span class="n">vol_geom</span></div>
+
+
+<div class="viewcode-block" id="astra_conebeam_3d_geom_to_vec"><a class="viewcode-back" href="../../../../generated/odl.tomo.backends.astra_setup.astra_conebeam_3d_geom_to_vec.html#odl.tomo.backends.astra_setup.astra_conebeam_3d_geom_to_vec">[docs]</a><span class="k">def</span> <span class="nf">astra_conebeam_3d_geom_to_vec</span><span class="p">(</span><span class="n">geometry</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Create vectors for ASTRA projection geometries from ODL geometry.</span>
+
+<span class="sd">    The 3D vectors are used to create an ASTRA projection geometry for</span>
+<span class="sd">    cone beam geometries, see ``&#39;cone_vec&#39;`` in the</span>
+<span class="sd">    `ASTRA projection geometry documentation`_.</span>
+
+<span class="sd">    Each row of the returned vectors corresponds to a single projection</span>
+<span class="sd">    and consists of ::</span>
+
+<span class="sd">        (srcX, srcY, srcZ, dX, dY, dZ, uX, uY, uZ, vX, vY, vZ)</span>
+
+<span class="sd">    with</span>
+
+<span class="sd">        - ``src``: the ray source position</span>
+<span class="sd">        - ``d``  : the center of the detector</span>
+<span class="sd">        - ``u``  : the vector from detector pixel ``(0,0)`` to ``(0,1)``</span>
+<span class="sd">        - ``v``  : the vector from detector pixel ``(0,0)`` to ``(1,0)``</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    geometry : `Geometry`</span>
+<span class="sd">        ODL projection geometry from which to create the ASTRA geometry.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    vectors : `numpy.ndarray`</span>
+<span class="sd">        Array of shape ``(num_angles, 12)`` containing the vectors.</span>
+
+<span class="sd">    References</span>
+<span class="sd">    ----------</span>
+<span class="sd">    .. _ASTRA projection geometry documentation:</span>
+<span class="sd">       http://www.astra-toolbox.com/docs/geom3d.html#projection-geometries</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">angles</span> <span class="o">=</span> <span class="n">geometry</span><span class="o">.</span><span class="n">angles</span>
+    <span class="n">vectors</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">angles</span><span class="o">.</span><span class="n">size</span><span class="p">,</span> <span class="mi">12</span><span class="p">))</span>
+
+    <span class="c1"># Source position</span>
+    <span class="n">vectors</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">:</span><span class="mi">3</span><span class="p">]</span> <span class="o">=</span> <span class="n">geometry</span><span class="o">.</span><span class="n">src_position</span><span class="p">(</span><span class="n">angles</span><span class="p">)</span>
+
+    <span class="c1"># Center of detector in 3D space</span>
+    <span class="n">mid_pt</span> <span class="o">=</span> <span class="n">geometry</span><span class="o">.</span><span class="n">det_params</span><span class="o">.</span><span class="n">mid_pt</span>
+    <span class="n">vectors</span><span class="p">[:,</span> <span class="mi">3</span><span class="p">:</span><span class="mi">6</span><span class="p">]</span> <span class="o">=</span> <span class="n">geometry</span><span class="o">.</span><span class="n">det_point_position</span><span class="p">(</span><span class="n">angles</span><span class="p">,</span> <span class="n">mid_pt</span><span class="p">)</span>
+
+    <span class="c1"># Vectors from detector pixel (0, 0) to (1, 0) and (0, 0) to (0, 1)</span>
+    <span class="c1"># `det_axes` gives shape (N, 2, 3), swap to get (2, N, 3)</span>
+    <span class="n">det_axes</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">moveaxis</span><span class="p">(</span><span class="n">geometry</span><span class="o">.</span><span class="n">det_axes</span><span class="p">(</span><span class="n">angles</span><span class="p">),</span> <span class="o">-</span><span class="mi">2</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+    <span class="n">px_sizes</span> <span class="o">=</span> <span class="n">geometry</span><span class="o">.</span><span class="n">det_partition</span><span class="o">.</span><span class="n">cell_sides</span>
+    <span class="c1"># Swap detector axes to have better memory layout in  projection data.</span>
+    <span class="c1"># ASTRA produces `(v, theta, u)` layout, and to map to ODL layout</span>
+    <span class="c1"># `(theta, u, v)` a complete roll must be performed, which is the</span>
+    <span class="c1"># worst case (compeltely discontiguous).</span>
+    <span class="c1"># Instead we swap `u` and `v`, resulting in the effective ASTRA result</span>
+    <span class="c1"># `(u, theta, v)`. Here we only need to swap axes 0 and 1, which</span>
+    <span class="c1"># keeps at least contiguous blocks in `v`.</span>
+    <span class="n">vectors</span><span class="p">[:,</span> <span class="mi">9</span><span class="p">:</span><span class="mi">12</span><span class="p">]</span> <span class="o">=</span> <span class="n">det_axes</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="n">px_sizes</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">vectors</span><span class="p">[:,</span> <span class="mi">6</span><span class="p">:</span><span class="mi">9</span><span class="p">]</span> <span class="o">=</span> <span class="n">det_axes</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">*</span> <span class="n">px_sizes</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+
+    <span class="c1"># ASTRA has (z, y, x) axis convention, in contrast to (x, y, z) in ODL,</span>
+    <span class="c1"># so we need to adapt to this by changing the order.</span>
+    <span class="n">newind</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">4</span><span class="p">):</span>
+        <span class="n">newind</span> <span class="o">+=</span> <span class="p">[</span><span class="mi">2</span> <span class="o">+</span> <span class="mi">3</span> <span class="o">*</span> <span class="n">i</span><span class="p">,</span> <span class="mi">1</span> <span class="o">+</span> <span class="mi">3</span> <span class="o">*</span> <span class="n">i</span><span class="p">,</span> <span class="mi">0</span> <span class="o">+</span> <span class="mi">3</span> <span class="o">*</span> <span class="n">i</span><span class="p">]</span>
+    <span class="n">vectors</span> <span class="o">=</span> <span class="n">vectors</span><span class="p">[:,</span> <span class="n">newind</span><span class="p">]</span>
+
+    <span class="k">return</span> <span class="n">vectors</span></div>
+
+
+<div class="viewcode-block" id="astra_conebeam_2d_geom_to_vec"><a class="viewcode-back" href="../../../../generated/odl.tomo.backends.astra_setup.astra_conebeam_2d_geom_to_vec.html#odl.tomo.backends.astra_setup.astra_conebeam_2d_geom_to_vec">[docs]</a><span class="k">def</span> <span class="nf">astra_conebeam_2d_geom_to_vec</span><span class="p">(</span><span class="n">geometry</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Create vectors for ASTRA projection geometries from ODL geometry.</span>
+
+<span class="sd">    The 2D vectors are used to create an ASTRA projection geometry for</span>
+<span class="sd">    fan beam geometries, see ``&#39;fanflat_vec&#39;`` in the</span>
+<span class="sd">    `ASTRA projection geometry documentation`_.</span>
+
+<span class="sd">    Each row of the returned vectors corresponds to a single projection</span>
+<span class="sd">    and consists of ::</span>
+
+<span class="sd">        (srcX, srcY, dX, dY, uX, uY)</span>
+
+<span class="sd">    with</span>
+
+<span class="sd">        - ``src``: the ray source position</span>
+<span class="sd">        - ``d``  : the center of the detector</span>
+<span class="sd">        - ``u``  : the vector from detector pixel 0 to 1</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    geometry : `Geometry`</span>
+<span class="sd">        ODL projection geometry from which to create the ASTRA geometry.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    vectors : `numpy.ndarray`</span>
+<span class="sd">        Array of shape ``(num_angles, 6)`` containing the vectors.</span>
+
+<span class="sd">    References</span>
+<span class="sd">    ----------</span>
+<span class="sd">    .. _ASTRA projection geometry documentation:</span>
+<span class="sd">       http://www.astra-toolbox.com/docs/geom2d.html#projection-geometries</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># Instead of rotating the data by 90 degrees counter-clockwise,</span>
+    <span class="c1"># we subtract pi/2 from the geometry angles, thereby rotating the</span>
+    <span class="c1"># geometry by 90 degrees clockwise</span>
+    <span class="n">rot_minus_90</span> <span class="o">=</span> <span class="n">euler_matrix</span><span class="p">(</span><span class="o">-</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span> <span class="o">/</span> <span class="mi">2</span><span class="p">)</span>
+    <span class="n">angles</span> <span class="o">=</span> <span class="n">geometry</span><span class="o">.</span><span class="n">angles</span>
+    <span class="n">vectors</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">angles</span><span class="o">.</span><span class="n">size</span><span class="p">,</span> <span class="mi">6</span><span class="p">))</span>
+
+    <span class="c1"># Source position</span>
+    <span class="n">src_pos</span> <span class="o">=</span> <span class="n">geometry</span><span class="o">.</span><span class="n">src_position</span><span class="p">(</span><span class="n">angles</span><span class="p">)</span>
+    <span class="n">vectors</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">:</span><span class="mi">2</span><span class="p">]</span> <span class="o">=</span> <span class="n">rot_minus_90</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">src_pos</span><span class="o">.</span><span class="n">T</span><span class="p">)</span><span class="o">.</span><span class="n">T</span>  <span class="c1"># dot along 2nd axis</span>
+
+    <span class="c1"># Center of detector</span>
+    <span class="n">mid_pt</span> <span class="o">=</span> <span class="n">geometry</span><span class="o">.</span><span class="n">det_params</span><span class="o">.</span><span class="n">mid_pt</span>
+    <span class="c1"># Need to cast `mid_pt` to float since otherwise the empty axis is</span>
+    <span class="c1"># not removed</span>
+    <span class="n">centers</span> <span class="o">=</span> <span class="n">geometry</span><span class="o">.</span><span class="n">det_point_position</span><span class="p">(</span><span class="n">angles</span><span class="p">,</span> <span class="nb">float</span><span class="p">(</span><span class="n">mid_pt</span><span class="p">))</span>
+    <span class="n">vectors</span><span class="p">[:,</span> <span class="mi">2</span><span class="p">:</span><span class="mi">4</span><span class="p">]</span> <span class="o">=</span> <span class="n">rot_minus_90</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">centers</span><span class="o">.</span><span class="n">T</span><span class="p">)</span><span class="o">.</span><span class="n">T</span>
+
+    <span class="c1"># Vector from detector pixel 0 to 1</span>
+    <span class="n">det_axis</span> <span class="o">=</span> <span class="n">rot_minus_90</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">geometry</span><span class="o">.</span><span class="n">det_axis</span><span class="p">(</span><span class="n">angles</span><span class="p">)</span><span class="o">.</span><span class="n">T</span><span class="p">)</span><span class="o">.</span><span class="n">T</span>
+    <span class="n">px_size</span> <span class="o">=</span> <span class="n">geometry</span><span class="o">.</span><span class="n">det_partition</span><span class="o">.</span><span class="n">cell_sides</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">vectors</span><span class="p">[:,</span> <span class="mi">4</span><span class="p">:</span><span class="mi">6</span><span class="p">]</span> <span class="o">=</span> <span class="n">det_axis</span> <span class="o">*</span> <span class="n">px_size</span>
+
+    <span class="k">return</span> <span class="n">vectors</span></div>
+
+
+<div class="viewcode-block" id="astra_parallel_3d_geom_to_vec"><a class="viewcode-back" href="../../../../generated/odl.tomo.backends.astra_setup.astra_parallel_3d_geom_to_vec.html#odl.tomo.backends.astra_setup.astra_parallel_3d_geom_to_vec">[docs]</a><span class="k">def</span> <span class="nf">astra_parallel_3d_geom_to_vec</span><span class="p">(</span><span class="n">geometry</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Create vectors for ASTRA projection geometries from ODL geometry.</span>
+
+<span class="sd">    The 3D vectors are used to create an ASTRA projection geometry for</span>
+<span class="sd">    parallel beam geometries, see ``&#39;parallel3d_vec&#39;`` in the</span>
+<span class="sd">    `ASTRA projection geometry documentation`_.</span>
+
+<span class="sd">    Each row of the returned vectors corresponds to a single projection</span>
+<span class="sd">    and consists of ::</span>
+
+<span class="sd">        (rayX, rayY, rayZ, dX, dY, dZ, uX, uY, uZ, vX, vY, vZ)</span>
+
+<span class="sd">    with</span>
+
+<span class="sd">        - ``ray``: the ray direction</span>
+<span class="sd">        - ``d``  : the center of the detector</span>
+<span class="sd">        - ``u``  : the vector from detector pixel ``(0,0)`` to ``(0,1)``</span>
+<span class="sd">        - ``v``  : the vector from detector pixel ``(0,0)`` to ``(1,0)``</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    geometry : `Geometry`</span>
+<span class="sd">        ODL projection geometry from which to create the ASTRA geometry.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    vectors : `numpy.ndarray`</span>
+<span class="sd">        Array of shape ``(num_angles, 12)`` containing the vectors.</span>
+
+<span class="sd">    References</span>
+<span class="sd">    ----------</span>
+<span class="sd">    .. _ASTRA projection geometry documentation:</span>
+<span class="sd">       http://www.astra-toolbox.com/docs/geom3d.html#projection-geometries</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">angles</span> <span class="o">=</span> <span class="n">geometry</span><span class="o">.</span><span class="n">angles</span>
+    <span class="n">mid_pt</span> <span class="o">=</span> <span class="n">geometry</span><span class="o">.</span><span class="n">det_params</span><span class="o">.</span><span class="n">mid_pt</span>
+
+    <span class="n">vectors</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">angles</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="mi">12</span><span class="p">))</span>
+
+    <span class="c1"># Ray direction = -(detector-to-source normal vector)</span>
+    <span class="n">vectors</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">:</span><span class="mi">3</span><span class="p">]</span> <span class="o">=</span> <span class="o">-</span><span class="n">geometry</span><span class="o">.</span><span class="n">det_to_src</span><span class="p">(</span><span class="n">angles</span><span class="p">,</span> <span class="n">mid_pt</span><span class="p">)</span>
+
+    <span class="c1"># Center of the detector in 3D space</span>
+    <span class="n">vectors</span><span class="p">[:,</span> <span class="mi">3</span><span class="p">:</span><span class="mi">6</span><span class="p">]</span> <span class="o">=</span> <span class="n">geometry</span><span class="o">.</span><span class="n">det_point_position</span><span class="p">(</span><span class="n">angles</span><span class="p">,</span> <span class="n">mid_pt</span><span class="p">)</span>
+
+    <span class="c1"># Vectors from detector pixel (0, 0) to (1, 0) and (0, 0) to (0, 1)</span>
+    <span class="c1"># `det_axes` gives shape (N, 2, 3), swap to get (2, N, 3)</span>
+    <span class="n">det_axes</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">moveaxis</span><span class="p">(</span><span class="n">geometry</span><span class="o">.</span><span class="n">det_axes</span><span class="p">(</span><span class="n">angles</span><span class="p">),</span> <span class="o">-</span><span class="mi">2</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+    <span class="n">px_sizes</span> <span class="o">=</span> <span class="n">geometry</span><span class="o">.</span><span class="n">det_partition</span><span class="o">.</span><span class="n">cell_sides</span>
+    <span class="c1"># Swap detector axes to have better memory layout in  projection data.</span>
+    <span class="c1"># ASTRA produces `(v, theta, u)` layout, and to map to ODL layout</span>
+    <span class="c1"># `(theta, u, v)` a complete roll must be performed, which is the</span>
+    <span class="c1"># worst case (compeltely discontiguous).</span>
+    <span class="c1"># Instead we swap `u` and `v`, resulting in the effective ASTRA result</span>
+    <span class="c1"># `(u, theta, v)`. Here we only need to swap axes 0 and 1, which</span>
+    <span class="c1"># keeps at least contiguous blocks in `v`.</span>
+    <span class="n">vectors</span><span class="p">[:,</span> <span class="mi">9</span><span class="p">:</span><span class="mi">12</span><span class="p">]</span> <span class="o">=</span> <span class="n">det_axes</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="n">px_sizes</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">vectors</span><span class="p">[:,</span> <span class="mi">6</span><span class="p">:</span><span class="mi">9</span><span class="p">]</span> <span class="o">=</span> <span class="n">det_axes</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">*</span> <span class="n">px_sizes</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+
+    <span class="c1"># ASTRA has (z, y, x) axis convention, in contrast to (x, y, z) in ODL,</span>
+    <span class="c1"># so we need to adapt to this by changing the order.</span>
+    <span class="n">new_ind</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">4</span><span class="p">):</span>
+        <span class="n">new_ind</span> <span class="o">+=</span> <span class="p">[</span><span class="mi">2</span> <span class="o">+</span> <span class="mi">3</span> <span class="o">*</span> <span class="n">i</span><span class="p">,</span> <span class="mi">1</span> <span class="o">+</span> <span class="mi">3</span> <span class="o">*</span> <span class="n">i</span><span class="p">,</span> <span class="mi">0</span> <span class="o">+</span> <span class="mi">3</span> <span class="o">*</span> <span class="n">i</span><span class="p">]</span>
+    <span class="n">vectors</span> <span class="o">=</span> <span class="n">vectors</span><span class="p">[:,</span> <span class="n">new_ind</span><span class="p">]</span>
+    <span class="k">return</span> <span class="n">vectors</span></div>
+
+
+<div class="viewcode-block" id="astra_projection_geometry"><a class="viewcode-back" href="../../../../generated/odl.tomo.backends.astra_setup.astra_projection_geometry.html#odl.tomo.backends.astra_setup.astra_projection_geometry">[docs]</a><span class="k">def</span> <span class="nf">astra_projection_geometry</span><span class="p">(</span><span class="n">geometry</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Create an ASTRA projection geometry from an ODL geometry object.</span>
+
+<span class="sd">    As of ASTRA version 1.7, the length values are not required any more to be</span>
+<span class="sd">    rescaled for 3D geometries and non-unit (but isotropic) voxel sizes.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    geometry : `Geometry`</span>
+<span class="sd">        ODL projection geometry from which to create the ASTRA geometry.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    proj_geom : dict</span>
+<span class="sd">        Dictionary defining the ASTRA projection geometry.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">geometry</span><span class="p">,</span> <span class="n">Geometry</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;`geometry` </span><span class="si">{!r}</span><span class="s1"> is not a `Geometry` instance&#39;</span>
+                        <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">geometry</span><span class="p">))</span>
+
+    <span class="k">if</span> <span class="s1">&#39;astra&#39;</span> <span class="ow">in</span> <span class="n">geometry</span><span class="o">.</span><span class="n">implementation_cache</span><span class="p">:</span>
+        <span class="c1"># Shortcut, reuse already computed value.</span>
+        <span class="k">return</span> <span class="n">geometry</span><span class="o">.</span><span class="n">implementation_cache</span><span class="p">[</span><span class="s1">&#39;astra&#39;</span><span class="p">]</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">geometry</span><span class="o">.</span><span class="n">det_partition</span><span class="o">.</span><span class="n">is_uniform</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;non-uniform detector sampling is not supported&#39;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">geometry</span><span class="p">,</span> <span class="n">ParallelBeamGeometry</span><span class="p">)</span> <span class="ow">and</span>
+            <span class="nb">isinstance</span><span class="p">(</span><span class="n">geometry</span><span class="o">.</span><span class="n">detector</span><span class="p">,</span> <span class="p">(</span><span class="n">Flat1dDetector</span><span class="p">,</span> <span class="n">Flat2dDetector</span><span class="p">))</span> <span class="ow">and</span>
+            <span class="n">geometry</span><span class="o">.</span><span class="n">ndim</span> <span class="o">==</span> <span class="mi">2</span><span class="p">):</span>
+        <span class="c1"># TODO: change to parallel_vec when available</span>
+        <span class="n">det_width</span> <span class="o">=</span> <span class="n">geometry</span><span class="o">.</span><span class="n">det_partition</span><span class="o">.</span><span class="n">cell_sides</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">det_count</span> <span class="o">=</span> <span class="n">geometry</span><span class="o">.</span><span class="n">detector</span><span class="o">.</span><span class="n">size</span>
+        <span class="c1"># Instead of rotating the data by 90 degrees counter-clockwise,</span>
+        <span class="c1"># we subtract pi/2 from the geometry angles, thereby rotating the</span>
+        <span class="c1"># geometry by 90 degrees clockwise</span>
+        <span class="n">angles</span> <span class="o">=</span> <span class="n">geometry</span><span class="o">.</span><span class="n">angles</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span> <span class="o">/</span> <span class="mi">2</span>
+        <span class="n">proj_geom</span> <span class="o">=</span> <span class="n">astra</span><span class="o">.</span><span class="n">create_proj_geom</span><span class="p">(</span><span class="s1">&#39;parallel&#39;</span><span class="p">,</span> <span class="n">det_width</span><span class="p">,</span> <span class="n">det_count</span><span class="p">,</span>
+                                           <span class="n">angles</span><span class="p">)</span>
+
+    <span class="k">elif</span> <span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">geometry</span><span class="p">,</span> <span class="n">DivergentBeamGeometry</span><span class="p">)</span> <span class="ow">and</span>
+          <span class="nb">isinstance</span><span class="p">(</span><span class="n">geometry</span><span class="o">.</span><span class="n">detector</span><span class="p">,</span> <span class="p">(</span><span class="n">Flat1dDetector</span><span class="p">,</span> <span class="n">Flat2dDetector</span><span class="p">))</span> <span class="ow">and</span>
+          <span class="n">geometry</span><span class="o">.</span><span class="n">ndim</span> <span class="o">==</span> <span class="mi">2</span><span class="p">):</span>
+        <span class="n">det_count</span> <span class="o">=</span> <span class="n">geometry</span><span class="o">.</span><span class="n">detector</span><span class="o">.</span><span class="n">size</span>
+        <span class="n">vec</span> <span class="o">=</span> <span class="n">astra_conebeam_2d_geom_to_vec</span><span class="p">(</span><span class="n">geometry</span><span class="p">)</span>
+        <span class="n">proj_geom</span> <span class="o">=</span> <span class="n">astra</span><span class="o">.</span><span class="n">create_proj_geom</span><span class="p">(</span><span class="s1">&#39;fanflat_vec&#39;</span><span class="p">,</span> <span class="n">det_count</span><span class="p">,</span> <span class="n">vec</span><span class="p">)</span>
+
+    <span class="k">elif</span> <span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">geometry</span><span class="p">,</span> <span class="n">ParallelBeamGeometry</span><span class="p">)</span> <span class="ow">and</span>
+          <span class="nb">isinstance</span><span class="p">(</span><span class="n">geometry</span><span class="o">.</span><span class="n">detector</span><span class="p">,</span> <span class="p">(</span><span class="n">Flat1dDetector</span><span class="p">,</span> <span class="n">Flat2dDetector</span><span class="p">))</span> <span class="ow">and</span>
+          <span class="n">geometry</span><span class="o">.</span><span class="n">ndim</span> <span class="o">==</span> <span class="mi">3</span><span class="p">):</span>
+        <span class="c1"># Swap detector axes (see astra_*_3d_to_vec)</span>
+        <span class="n">det_row_count</span> <span class="o">=</span> <span class="n">geometry</span><span class="o">.</span><span class="n">det_partition</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">det_col_count</span> <span class="o">=</span> <span class="n">geometry</span><span class="o">.</span><span class="n">det_partition</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+        <span class="n">vec</span> <span class="o">=</span> <span class="n">astra_parallel_3d_geom_to_vec</span><span class="p">(</span><span class="n">geometry</span><span class="p">)</span>
+        <span class="n">proj_geom</span> <span class="o">=</span> <span class="n">astra</span><span class="o">.</span><span class="n">create_proj_geom</span><span class="p">(</span><span class="s1">&#39;parallel3d_vec&#39;</span><span class="p">,</span> <span class="n">det_row_count</span><span class="p">,</span>
+                                           <span class="n">det_col_count</span><span class="p">,</span> <span class="n">vec</span><span class="p">)</span>
+
+    <span class="k">elif</span> <span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">geometry</span><span class="p">,</span> <span class="n">DivergentBeamGeometry</span><span class="p">)</span> <span class="ow">and</span>
+          <span class="nb">isinstance</span><span class="p">(</span><span class="n">geometry</span><span class="o">.</span><span class="n">detector</span><span class="p">,</span> <span class="p">(</span><span class="n">Flat1dDetector</span><span class="p">,</span> <span class="n">Flat2dDetector</span><span class="p">))</span> <span class="ow">and</span>
+          <span class="n">geometry</span><span class="o">.</span><span class="n">ndim</span> <span class="o">==</span> <span class="mi">3</span><span class="p">):</span>
+        <span class="c1"># Swap detector axes (see astra_*_3d_to_vec)</span>
+        <span class="n">det_row_count</span> <span class="o">=</span> <span class="n">geometry</span><span class="o">.</span><span class="n">det_partition</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">det_col_count</span> <span class="o">=</span> <span class="n">geometry</span><span class="o">.</span><span class="n">det_partition</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+        <span class="n">vec</span> <span class="o">=</span> <span class="n">astra_conebeam_3d_geom_to_vec</span><span class="p">(</span><span class="n">geometry</span><span class="p">)</span>
+        <span class="n">proj_geom</span> <span class="o">=</span> <span class="n">astra</span><span class="o">.</span><span class="n">create_proj_geom</span><span class="p">(</span><span class="s1">&#39;cone_vec&#39;</span><span class="p">,</span> <span class="n">det_row_count</span><span class="p">,</span>
+                                           <span class="n">det_col_count</span><span class="p">,</span> <span class="n">vec</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s1">&#39;unknown ASTRA geometry type </span><span class="si">{!r}</span><span class="s1">&#39;</span>
+                                  <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">geometry</span><span class="p">))</span>
+
+    <span class="k">if</span> <span class="s1">&#39;astra&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">geometry</span><span class="o">.</span><span class="n">implementation_cache</span><span class="p">:</span>
+        <span class="c1"># Save computed value for later</span>
+        <span class="n">geometry</span><span class="o">.</span><span class="n">implementation_cache</span><span class="p">[</span><span class="s1">&#39;astra&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">proj_geom</span>
+
+    <span class="k">return</span> <span class="n">proj_geom</span></div>
+
+
+<div class="viewcode-block" id="astra_data"><a class="viewcode-back" href="../../../../generated/odl.tomo.backends.astra_setup.astra_data.html#odl.tomo.backends.astra_setup.astra_data">[docs]</a><span class="k">def</span> <span class="nf">astra_data</span><span class="p">(</span><span class="n">astra_geom</span><span class="p">,</span> <span class="n">datatype</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">ndim</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">allow_copy</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Create an ASTRA data object.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    astra_geom : dict</span>
+<span class="sd">        ASTRA geometry object for the data creator, must correspond to the</span>
+<span class="sd">        given ``datatype``.</span>
+<span class="sd">    datatype : {&#39;volume&#39;, &#39;projection&#39;}</span>
+<span class="sd">        Type of the data container.</span>
+<span class="sd">    data : `DiscretizedSpaceElement` or `numpy.ndarray`, optional</span>
+<span class="sd">        Data for the initialization of the data object. If ``None``,</span>
+<span class="sd">        an ASTRA data object filled with zeros is created.</span>
+<span class="sd">    ndim : {2, 3}, optional</span>
+<span class="sd">        Dimension of the data. If ``data`` is provided, this parameter</span>
+<span class="sd">        has no effect.</span>
+<span class="sd">    allow_copy : `bool`, optional</span>
+<span class="sd">        If ``True``, allow copying of ``data``. This means that anything</span>
+<span class="sd">        written by ASTRA to the returned object will not be written to</span>
+<span class="sd">        ``data``.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    id : int</span>
+<span class="sd">        Handle for the new ASTRA internal data object.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">data</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="p">(</span><span class="n">DiscretizedSpaceElement</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)):</span>
+            <span class="n">ndim</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">ndim</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;`data` </span><span class="si">{!r}</span><span class="s1"> is neither DiscretizedSpaceElement &#39;</span>
+                            <span class="s1">&#39;instance nor a `numpy.ndarray`&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">data</span><span class="p">))</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">ndim</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">ndim</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">datatype</span> <span class="o">==</span> <span class="s1">&#39;volume&#39;</span><span class="p">:</span>
+        <span class="n">astra_dtype_str</span> <span class="o">=</span> <span class="s1">&#39;-vol&#39;</span>
+    <span class="k">elif</span> <span class="n">datatype</span> <span class="o">==</span> <span class="s1">&#39;projection&#39;</span><span class="p">:</span>
+        <span class="n">astra_dtype_str</span> <span class="o">=</span> <span class="s1">&#39;-sino&#39;</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;`datatype` </span><span class="si">{!r}</span><span class="s1"> not understood&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">datatype</span><span class="p">))</span>
+
+    <span class="c1"># Get the functions from the correct module</span>
+    <span class="k">if</span> <span class="n">ndim</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
+        <span class="n">link</span> <span class="o">=</span> <span class="n">astra</span><span class="o">.</span><span class="n">data2d</span><span class="o">.</span><span class="n">link</span>
+        <span class="n">create</span> <span class="o">=</span> <span class="n">astra</span><span class="o">.</span><span class="n">data2d</span><span class="o">.</span><span class="n">create</span>
+    <span class="k">elif</span> <span class="n">ndim</span> <span class="o">==</span> <span class="mi">3</span><span class="p">:</span>
+        <span class="n">link</span> <span class="o">=</span> <span class="n">astra</span><span class="o">.</span><span class="n">data3d</span><span class="o">.</span><span class="n">link</span>
+        <span class="n">create</span> <span class="o">=</span> <span class="n">astra</span><span class="o">.</span><span class="n">data3d</span><span class="o">.</span><span class="n">create</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">{}</span><span class="s1">-dimensional data not supported&#39;</span>
+                         <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">ndim</span><span class="p">))</span>
+
+    <span class="c1"># ASTRA checks if data is c-contiguous and aligned</span>
+    <span class="k">if</span> <span class="n">data</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">allow_copy</span><span class="p">:</span>
+            <span class="n">data_array</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="s1">&#39;float32&#39;</span><span class="p">,</span> <span class="n">order</span><span class="o">=</span><span class="s1">&#39;C&#39;</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">link</span><span class="p">(</span><span class="n">astra_dtype_str</span><span class="p">,</span> <span class="n">astra_geom</span><span class="p">,</span> <span class="n">data_array</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">):</span>
+                <span class="k">return</span> <span class="n">link</span><span class="p">(</span><span class="n">astra_dtype_str</span><span class="p">,</span> <span class="n">astra_geom</span><span class="p">,</span> <span class="n">data</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="n">data</span><span class="o">.</span><span class="n">tensor</span><span class="o">.</span><span class="n">impl</span> <span class="o">==</span> <span class="s1">&#39;numpy&#39;</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">link</span><span class="p">(</span><span class="n">astra_dtype_str</span><span class="p">,</span> <span class="n">astra_geom</span><span class="p">,</span> <span class="n">data</span><span class="o">.</span><span class="n">asarray</span><span class="p">())</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="c1"># Something else than NumPy data representation</span>
+                <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s1">&#39;ASTRA supports data wrapping only &#39;</span>
+                                          <span class="s1">&#39;for `numpy.ndarray` instances, got &#39;</span>
+                                          <span class="s1">&#39;</span><span class="si">{!r}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">data</span><span class="p">))</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">create</span><span class="p">(</span><span class="n">astra_dtype_str</span><span class="p">,</span> <span class="n">astra_geom</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="astra_projector"><a class="viewcode-back" href="../../../../generated/odl.tomo.backends.astra_setup.astra_projector.html#odl.tomo.backends.astra_setup.astra_projector">[docs]</a><span class="k">def</span> <span class="nf">astra_projector</span><span class="p">(</span><span class="n">astra_proj_type</span><span class="p">,</span> <span class="n">astra_vol_geom</span><span class="p">,</span> <span class="n">astra_proj_geom</span><span class="p">,</span> <span class="n">ndim</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Create an ASTRA projector configuration dictionary.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    astra_proj_type : str</span>
+<span class="sd">        ASTRA projector type. Available selections depend on the type of</span>
+<span class="sd">        geometry. See `the ASTRA documentation</span>
+<span class="sd">        &lt;http://www.astra-toolbox.com/docs/proj2d.html&gt;`_ for details.</span>
+<span class="sd">    astra_vol_geom : dict</span>
+<span class="sd">        ASTRA volume geometry.</span>
+<span class="sd">    astra_proj_geom : dict</span>
+<span class="sd">        ASTRA projection geometry.</span>
+<span class="sd">    ndim : {2, 3}</span>
+<span class="sd">        Number of dimensions of the projector.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    proj_id : int</span>
+<span class="sd">        Handle for the created ASTRA internal projector object.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="s1">&#39;type&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">astra_proj_geom</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;invalid projection geometry dict </span><span class="si">{}</span><span class="s1">&#39;</span>
+                         <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">astra_proj_geom</span><span class="p">))</span>
+
+    <span class="n">ndim</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">ndim</span><span class="p">)</span>
+
+    <span class="n">astra_geom</span> <span class="o">=</span> <span class="n">astra_proj_geom</span><span class="p">[</span><span class="s1">&#39;type&#39;</span><span class="p">]</span>
+    <span class="k">if</span> <span class="p">(</span>
+        <span class="n">astra_geom</span> <span class="o">==</span> <span class="s1">&#39;parallel_vec&#39;</span>
+        <span class="ow">and</span> <span class="ow">not</span> <span class="n">astra_supports</span><span class="p">(</span><span class="s1">&#39;par2d_vec_geometry&#39;</span><span class="p">)</span>
+    <span class="p">):</span>
+        <span class="n">req_ver</span> <span class="o">=</span> <span class="n">astra_versions_supporting</span><span class="p">(</span><span class="s1">&#39;par2d_vec_geometry&#39;</span><span class="p">)</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+            <span class="s2">&quot;&#39;parallel_vec&#39; geometry requires ASTRA </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">req_ver</span><span class="p">)</span>
+        <span class="p">)</span>
+
+    <span class="c1"># Check if projector types are valid. We should not have to do this,</span>
+    <span class="c1"># but the errors from ASTRA are rather unspecific, so we check ourselves</span>
+    <span class="c1"># to know what&#39;s wrong.</span>
+    <span class="n">astra_proj_type</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">astra_proj_type</span><span class="p">)</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
+
+    <span class="k">if</span> <span class="p">(</span>
+        <span class="n">astra_proj_type</span> <span class="o">==</span> <span class="s1">&#39;distance_driven&#39;</span>
+        <span class="ow">and</span> <span class="ow">not</span> <span class="n">astra_supports</span><span class="p">(</span><span class="s1">&#39;par2d_distance_driven_proj&#39;</span><span class="p">)</span>
+    <span class="p">):</span>
+        <span class="n">req_ver</span> <span class="o">=</span> <span class="n">astra_versions_supporting</span><span class="p">(</span><span class="s1">&#39;par2d_distance_driven_proj&#39;</span><span class="p">)</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+            <span class="s2">&quot;&#39;distance_driven&#39; projector requires ASTRA </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">req_ver</span><span class="p">)</span>
+        <span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">astra_geom</span> <span class="ow">in</span> <span class="p">{</span><span class="s1">&#39;parallel&#39;</span><span class="p">,</span> <span class="s1">&#39;parallel_vec&#39;</span><span class="p">}:</span>
+        <span class="n">valid_proj_types</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;line&#39;</span><span class="p">,</span> <span class="s1">&#39;linear&#39;</span><span class="p">,</span> <span class="s1">&#39;strip&#39;</span><span class="p">,</span> <span class="s1">&#39;cuda&#39;</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">astra_supports</span><span class="p">(</span><span class="s1">&#39;par2d_distance_driven_proj&#39;</span><span class="p">):</span>
+            <span class="n">valid_proj_types</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;distance_driven&#39;</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">astra_geom</span> <span class="ow">in</span> <span class="p">{</span><span class="s1">&#39;fanflat&#39;</span><span class="p">,</span> <span class="s1">&#39;fanflat_vec&#39;</span><span class="p">}:</span>
+        <span class="n">valid_proj_types</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;line_fanflat&#39;</span><span class="p">,</span> <span class="s1">&#39;strip_fanflat&#39;</span><span class="p">,</span> <span class="s1">&#39;cuda&#39;</span><span class="p">]</span>
+    <span class="k">elif</span> <span class="n">astra_geom</span> <span class="ow">in</span> <span class="p">{</span><span class="s1">&#39;parallel3d&#39;</span><span class="p">,</span> <span class="s1">&#39;parallel3d_vec&#39;</span><span class="p">}:</span>
+        <span class="n">valid_proj_types</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;linear3d&#39;</span><span class="p">,</span> <span class="s1">&#39;cuda3d&#39;</span><span class="p">]</span>
+    <span class="k">elif</span> <span class="n">astra_geom</span> <span class="ow">in</span> <span class="p">{</span><span class="s1">&#39;cone&#39;</span><span class="p">,</span> <span class="s1">&#39;cone_vec&#39;</span><span class="p">}:</span>
+        <span class="n">valid_proj_types</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;linearcone&#39;</span><span class="p">,</span> <span class="s1">&#39;cuda3d&#39;</span><span class="p">]</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;invalid geometry type </span><span class="si">{!r}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">astra_geom</span><span class="p">))</span>
+
+    <span class="k">if</span> <span class="n">astra_proj_type</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">valid_proj_types</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+            <span class="s1">&#39;projector type </span><span class="si">{!r}</span><span class="s1"> not in the set </span><span class="si">{}</span><span class="s1"> of valid types for &#39;</span>
+            <span class="s1">&#39;geometry type </span><span class="si">{!r}</span><span class="s1">&#39;</span>
+            <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">astra_proj_type</span><span class="p">,</span> <span class="n">valid_proj_types</span><span class="p">,</span> <span class="n">astra_geom</span><span class="p">)</span>
+        <span class="p">)</span>
+
+    <span class="c1"># Create config dict</span>
+    <span class="n">proj_cfg</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="n">proj_cfg</span><span class="p">[</span><span class="s1">&#39;type&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">astra_proj_type</span>
+    <span class="n">proj_cfg</span><span class="p">[</span><span class="s1">&#39;VolumeGeometry&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">astra_vol_geom</span>
+    <span class="n">proj_cfg</span><span class="p">[</span><span class="s1">&#39;ProjectionGeometry&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">astra_proj_geom</span>
+    <span class="n">proj_cfg</span><span class="p">[</span><span class="s1">&#39;options&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+
+    <span class="c1"># Add the approximate 1/r^2 weighting exposed in intermediate versions of</span>
+    <span class="c1"># ASTRA</span>
+    <span class="k">if</span> <span class="p">(</span>
+        <span class="n">astra_geom</span> <span class="ow">in</span> <span class="p">(</span><span class="s1">&#39;cone&#39;</span><span class="p">,</span> <span class="s1">&#39;cone_vec&#39;</span><span class="p">)</span>
+        <span class="ow">and</span> <span class="n">astra_supports</span><span class="p">(</span><span class="s1">&#39;cone3d_approx_density_weighting&#39;</span><span class="p">)</span>
+    <span class="p">):</span>
+        <span class="n">proj_cfg</span><span class="p">[</span><span class="s1">&#39;options&#39;</span><span class="p">][</span><span class="s1">&#39;DensityWeighting&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">True</span>
+
+    <span class="k">if</span> <span class="n">ndim</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">astra</span><span class="o">.</span><span class="n">projector</span><span class="o">.</span><span class="n">create</span><span class="p">(</span><span class="n">proj_cfg</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">astra</span><span class="o">.</span><span class="n">projector3d</span><span class="o">.</span><span class="n">create</span><span class="p">(</span><span class="n">proj_cfg</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="astra_algorithm"><a class="viewcode-back" href="../../../../generated/odl.tomo.backends.astra_setup.astra_algorithm.html#odl.tomo.backends.astra_setup.astra_algorithm">[docs]</a><span class="k">def</span> <span class="nf">astra_algorithm</span><span class="p">(</span><span class="n">direction</span><span class="p">,</span> <span class="n">ndim</span><span class="p">,</span> <span class="n">vol_id</span><span class="p">,</span> <span class="n">sino_id</span><span class="p">,</span> <span class="n">proj_id</span><span class="p">,</span> <span class="n">impl</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Create an ASTRA algorithm object to run the projector.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    direction : {&#39;forward&#39;, &#39;backward&#39;}</span>
+<span class="sd">        For ``&#39;forward&#39;``, apply the forward projection, for ``&#39;backward&#39;``</span>
+<span class="sd">        the backprojection.</span>
+<span class="sd">    ndim : {2, 3}</span>
+<span class="sd">        Number of dimensions of the projector.</span>
+<span class="sd">    vol_id : int</span>
+<span class="sd">        Handle for the ASTRA volume data object.</span>
+<span class="sd">    sino_id : int</span>
+<span class="sd">        Handle for the ASTRA projection data object.</span>
+<span class="sd">    proj_id : int</span>
+<span class="sd">        Handle for the ASTRA projector object.</span>
+<span class="sd">    impl : {&#39;cpu&#39;, &#39;cuda&#39;}</span>
+<span class="sd">        Implementation of the projector.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    id : int</span>
+<span class="sd">        Handle for the created ASTRA internal algorithm object.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">direction</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">(</span><span class="s1">&#39;forward&#39;</span><span class="p">,</span> <span class="s1">&#39;backward&#39;</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;`direction` &#39;</span><span class="si">{}</span><span class="s2">&#39; not understood&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">direction</span><span class="p">))</span>
+    <span class="k">if</span> <span class="n">ndim</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">{}</span><span class="s1">-dimensional projectors not supported&#39;</span>
+                         <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">ndim</span><span class="p">))</span>
+    <span class="k">if</span> <span class="n">impl</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">(</span><span class="s1">&#39;cpu&#39;</span><span class="p">,</span> <span class="s1">&#39;cuda&#39;</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;`impl` type &#39;</span><span class="si">{}</span><span class="s2">&#39; not understood&quot;</span>
+                         <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">impl</span><span class="p">))</span>
+    <span class="k">if</span> <span class="n">ndim</span> <span class="o">==</span> <span class="mi">3</span> <span class="ow">and</span> <span class="n">impl</span> <span class="o">==</span> <span class="s1">&#39;cpu&#39;</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span>
+            <span class="s1">&#39;3d algorithms for CPU not supported by ASTRA&#39;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">proj_id</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">impl</span> <span class="o">==</span> <span class="s1">&#39;cpu&#39;</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;&#39;cpu&#39; implementation requires projector ID&quot;</span><span class="p">)</span>
+
+    <span class="n">algo_map</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;forward&#39;</span><span class="p">:</span> <span class="p">{</span><span class="mi">2</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;cpu&#39;</span><span class="p">:</span> <span class="s1">&#39;FP&#39;</span><span class="p">,</span> <span class="s1">&#39;cuda&#39;</span><span class="p">:</span> <span class="s1">&#39;FP_CUDA&#39;</span><span class="p">},</span>
+                            <span class="mi">3</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;cpu&#39;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span> <span class="s1">&#39;cuda&#39;</span><span class="p">:</span> <span class="s1">&#39;FP3D_CUDA&#39;</span><span class="p">}},</span>
+                <span class="s1">&#39;backward&#39;</span><span class="p">:</span> <span class="p">{</span><span class="mi">2</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;cpu&#39;</span><span class="p">:</span> <span class="s1">&#39;BP&#39;</span><span class="p">,</span> <span class="s1">&#39;cuda&#39;</span><span class="p">:</span> <span class="s1">&#39;BP_CUDA&#39;</span><span class="p">},</span>
+                             <span class="mi">3</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;cpu&#39;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span> <span class="s1">&#39;cuda&#39;</span><span class="p">:</span> <span class="s1">&#39;BP3D_CUDA&#39;</span><span class="p">}}}</span>
+
+    <span class="n">algo_cfg</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;type&#39;</span><span class="p">:</span> <span class="n">algo_map</span><span class="p">[</span><span class="n">direction</span><span class="p">][</span><span class="n">ndim</span><span class="p">][</span><span class="n">impl</span><span class="p">],</span>
+                <span class="s1">&#39;ProjectorId&#39;</span><span class="p">:</span> <span class="n">proj_id</span><span class="p">,</span>
+                <span class="s1">&#39;ProjectionDataId&#39;</span><span class="p">:</span> <span class="n">sino_id</span><span class="p">}</span>
+    <span class="k">if</span> <span class="n">direction</span> <span class="o">==</span> <span class="s1">&#39;forward&#39;</span><span class="p">:</span>
+        <span class="n">algo_cfg</span><span class="p">[</span><span class="s1">&#39;VolumeDataId&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">vol_id</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">algo_cfg</span><span class="p">[</span><span class="s1">&#39;ReconstructionDataId&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">vol_id</span>
+
+    <span class="c1"># Create ASTRA algorithm object</span>
+    <span class="k">return</span> <span class="n">astra</span><span class="o">.</span><span class="n">algorithm</span><span class="o">.</span><span class="n">create</span><span class="p">(</span><span class="n">algo_cfg</span><span class="p">)</span></div>
+
+
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s1">&#39;__main__&#39;</span><span class="p">:</span>
+    <span class="kn">from</span> <span class="nn">odl.util.testutils</span> <span class="kn">import</span> <span class="n">run_doctests</span>
+    <span class="n">run_doctests</span><span class="p">()</span>
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &#169; Copyright 2014-2020 The ODL Contributors.
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

@@ -1,0 +1,39 @@
+﻿SamplingOperator
+========================================
+
+.. currentmodule:: odl.operator.tensor_ops
+
+.. autoclass:: SamplingOperator
+   :show-inheritance:
+   
+   
+   .. automethod:: __init__
+   
+      
+   
+   .. HACK -- the point here is that we don't want this to appear in the output, but the autosummary should still generate the pages.
+      .. autosummary::
+         :toctree:
+      
+         SamplingOperator.__call__
+         SamplingOperator.__eq__
+         SamplingOperator._call
+         SamplingOperator.derivative
+         SamplingOperator.norm
+   
+
+    
+   .. HACK -- the point here is that we don't want this to appear in the output, but the autosummary should still generate the pages.
+      .. autosummary::
+         :toctree:
+      
+         SamplingOperator.adjoint
+         SamplingOperator.domain
+         SamplingOperator.inverse
+         SamplingOperator.is_functional
+         SamplingOperator.is_linear
+         SamplingOperator.range
+         SamplingOperator.sampling_points
+         SamplingOperator.variant
+   
+   

@@ -1,0 +1,6 @@
+FourierTransformBase.domain
+==============================================
+
+.. currentmodule:: odl.trafos.fourier
+
+.. autoproperty:: FourierTransformBase.domain

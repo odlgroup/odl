@@ -1,0 +1,21 @@
+numerics
+========
+
+Numerical helper functions for convenience or speed.
+
+.. currentmodule:: odl.util.numerics
+
+
+
+
+.. rubric:: Functions
+
+.. autosummary::
+   :toctree: generated/
+
+   ~odl.util.numerics.apply_on_boundary
+   ~odl.util.numerics.binning
+   ~odl.util.numerics.fast_1d_tensor_mult
+   ~odl.util.numerics.resize_array
+   ~odl.util.numerics.zscore
+

@@ -1,0 +1,6 @@
+﻿reciprocal_grid
+========================================
+
+.. currentmodule:: odl.trafos.util.ft_utils
+
+.. autofunction:: reciprocal_grid

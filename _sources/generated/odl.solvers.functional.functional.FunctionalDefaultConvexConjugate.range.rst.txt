@@ -1,0 +1,6 @@
+FunctionalDefaultConvexConjugate.range
+========================================================================
+
+.. currentmodule:: odl.solvers.functional.functional
+
+.. autoproperty:: FunctionalDefaultConvexConjugate.range

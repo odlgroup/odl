@@ -1,0 +1,6 @@
+FunctionalLeftVectorMult.inverse
+======================================================
+
+.. currentmodule:: odl.operator.operator
+
+.. autoproperty:: FunctionalLeftVectorMult.inverse

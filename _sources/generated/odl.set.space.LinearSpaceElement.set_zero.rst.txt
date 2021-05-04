@@ -1,0 +1,8 @@
+:orphan:
+
+LinearSpaceElement.set_zero
+=========================================
+
+.. currentmodule:: odl.set.space
+
+.. automethod:: LinearSpaceElement.set_zero

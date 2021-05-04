@@ -1,0 +1,6 @@
+ProductSpaceConstWeighting.repr_part
+=====================================================
+
+.. currentmodule:: odl.space.pspace
+
+.. autoproperty:: ProductSpaceConstWeighting.repr_part

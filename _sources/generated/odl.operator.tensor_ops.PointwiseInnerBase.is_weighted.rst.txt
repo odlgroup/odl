@@ -1,0 +1,6 @@
+PointwiseInnerBase.is_weighted
+======================================================
+
+.. currentmodule:: odl.operator.tensor_ops
+
+.. autoproperty:: PointwiseInnerBase.is_weighted

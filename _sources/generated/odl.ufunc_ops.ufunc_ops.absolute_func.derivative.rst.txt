@@ -1,0 +1,8 @@
+:orphan:
+
+absolute_func.derivative
+================================================
+
+.. currentmodule:: odl.ufunc_ops.ufunc_ops
+
+.. automethod:: absolute_func.derivative

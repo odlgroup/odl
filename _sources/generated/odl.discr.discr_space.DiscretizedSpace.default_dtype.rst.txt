@@ -1,0 +1,8 @@
+:orphan:
+
+DiscretizedSpace.default_dtype
+====================================================
+
+.. currentmodule:: odl.discr.discr_space
+
+.. automethod:: DiscretizedSpace.default_dtype

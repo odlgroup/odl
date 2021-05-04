@@ -1,0 +1,8 @@
+:orphan:
+
+CallbackPrintHardwareUsage.__call__
+=============================================================
+
+.. currentmodule:: odl.solvers.util.callback
+
+.. automethod:: CallbackPrintHardwareUsage.__call__

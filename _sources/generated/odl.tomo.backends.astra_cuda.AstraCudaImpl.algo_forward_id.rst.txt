@@ -1,0 +1,6 @@
+AstraCudaImpl.algo_forward_id
+==========================================================
+
+.. currentmodule:: odl.tomo.backends.astra_cuda
+
+.. autoattribute:: AstraCudaImpl.algo_forward_id

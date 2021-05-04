@@ -1,0 +1,6 @@
+WaveletTransform.pad_mode
+============================================
+
+.. currentmodule:: odl.trafos.wavelet
+
+.. autoproperty:: WaveletTransform.pad_mode

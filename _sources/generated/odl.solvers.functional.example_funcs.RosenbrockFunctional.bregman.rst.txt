@@ -1,0 +1,8 @@
+:orphan:
+
+RosenbrockFunctional.bregman
+=================================================================
+
+.. currentmodule:: odl.solvers.functional.example_funcs
+
+.. automethod:: RosenbrockFunctional.bregman

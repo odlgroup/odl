@@ -1,0 +1,6 @@
+RealPart.range
+=======================================
+
+.. currentmodule:: odl.operator.default_ops
+
+.. autoproperty:: RealPart.range

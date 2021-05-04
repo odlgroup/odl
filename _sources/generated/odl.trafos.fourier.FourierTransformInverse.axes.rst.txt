@@ -1,0 +1,6 @@
+FourierTransformInverse.axes
+===============================================
+
+.. currentmodule:: odl.trafos.fourier
+
+.. autoproperty:: FourierTransformInverse.axes

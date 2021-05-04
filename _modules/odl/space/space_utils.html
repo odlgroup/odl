@@ -1,0 +1,512 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>odl.space.space_utils &mdash; odl 1.0.0.dev0 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/custom.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../../" src="../../../_static/documentation_options.js"></script>
+        <script src="../../../_static/jquery.js"></script>
+        <script src="../../../_static/underscore.js"></script>
+        <script src="../../../_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="../../../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../../index.html" class="icon icon-home"> odl
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                1.0.0.dev0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Getting Started</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../getting_started/getting_started.html">Getting Started</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Working with ODL</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../guide/guide.html">User’s guide – selected topics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../math/math.html">Mathematical Background</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Developer zone</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../dev/dev.html">Contributing to ODL</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Useful facts</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../guide/faq.html">Frequently asked questions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../guide/glossary.html">Glossary</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../release_notes.html">Release Notes</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../refs.html">References</a></li>
+</ul>
+<p class="caption"><span class="caption-text">API Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../odl.html">odl</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">odl</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="../../index.html">Module code</a> &raquo;</li>
+        
+      <li>odl.space.space_utils</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for odl.space.space_utils</h1><div class="highlight"><pre>
+<span></span><span class="c1"># Copyright 2014-2019 The ODL contributors</span>
+<span class="c1">#</span>
+<span class="c1"># This file is part of ODL.</span>
+<span class="c1">#</span>
+<span class="c1"># This Source Code Form is subject to the terms of the Mozilla Public License,</span>
+<span class="c1"># v. 2.0. If a copy of the MPL was not distributed with this file, You can</span>
+<span class="c1"># obtain one at https://mozilla.org/MPL/2.0/.</span>
+
+<span class="sd">&quot;&quot;&quot;Utility functions for space implementations.&quot;&quot;&quot;</span>
+
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">print_function</span><span class="p">,</span> <span class="n">division</span><span class="p">,</span> <span class="n">absolute_import</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+
+<span class="kn">from</span> <span class="nn">odl.set</span> <span class="kn">import</span> <span class="n">RealNumbers</span><span class="p">,</span> <span class="n">ComplexNumbers</span>
+<span class="kn">from</span> <span class="nn">odl.space.entry_points</span> <span class="kn">import</span> <span class="n">tensor_space_impl</span>
+
+
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;vector&#39;</span><span class="p">,</span> <span class="s1">&#39;tensor_space&#39;</span><span class="p">,</span> <span class="s1">&#39;cn&#39;</span><span class="p">,</span> <span class="s1">&#39;rn&#39;</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="vector"><a class="viewcode-back" href="../../../generated/odl.space.space_utils.vector.html#odl.space.space_utils.vector">[docs]</a><span class="k">def</span> <span class="nf">vector</span><span class="p">(</span><span class="n">array</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">order</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">impl</span><span class="o">=</span><span class="s1">&#39;numpy&#39;</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Create a vector from an array-like object.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    array : `array-like`</span>
+<span class="sd">        Array from which to create the vector. Scalars become</span>
+<span class="sd">        one-dimensional vectors.</span>
+<span class="sd">    dtype : optional</span>
+<span class="sd">        Set the data type of the vector manually with this option.</span>
+<span class="sd">        By default, the space type is inferred from the input data.</span>
+<span class="sd">    order : {None, &#39;C&#39;, &#39;F&#39;}, optional</span>
+<span class="sd">        Axis ordering of the data storage. For the default ``None``,</span>
+<span class="sd">        no contiguousness is enforced, avoiding a copy if possible.</span>
+<span class="sd">    impl : str, optional</span>
+<span class="sd">        Impmlementation back-end for the space. See</span>
+<span class="sd">        `odl.space.entry_points.tensor_space_impl_names` for available</span>
+<span class="sd">        options.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    vector : `Tensor`</span>
+<span class="sd">        Vector created from the input array. Its concrete type depends</span>
+<span class="sd">        on the provided arguments.</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    This is a convenience function and not intended for use in</span>
+<span class="sd">    speed-critical algorithms.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    Create one-dimensional vectors:</span>
+
+<span class="sd">    &gt;&gt;&gt; odl.vector([1, 2, 3])  # No automatic cast to float</span>
+<span class="sd">    tensor_space(3, dtype=int).element([1, 2, 3])</span>
+<span class="sd">    &gt;&gt;&gt; odl.vector([1, 2, 3], dtype=float)</span>
+<span class="sd">    rn(3).element([ 1.,  2.,  3.])</span>
+<span class="sd">    &gt;&gt;&gt; odl.vector([1, 2 - 1j, 3])</span>
+<span class="sd">    cn(3).element([ 1.+0.j,  2.-1.j,  3.+0.j])</span>
+
+<span class="sd">    Non-scalar types are also supported:</span>
+
+<span class="sd">    &gt;&gt;&gt; odl.vector([True, True, False])</span>
+<span class="sd">    tensor_space(3, dtype=bool).element([ True,  True, False])</span>
+
+<span class="sd">    The function also supports multi-dimensional input:</span>
+
+<span class="sd">    &gt;&gt;&gt; odl.vector([[1, 2, 3],</span>
+<span class="sd">    ...             [4, 5, 6]])</span>
+<span class="sd">    tensor_space((2, 3), dtype=int).element(</span>
+<span class="sd">        [[1, 2, 3],</span>
+<span class="sd">         [4, 5, 6]]</span>
+<span class="sd">    )</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># Sanitize input</span>
+    <span class="n">arr</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">array</span><span class="p">,</span> <span class="n">copy</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">order</span><span class="o">=</span><span class="n">order</span><span class="p">,</span> <span class="n">ndmin</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">arr</span><span class="o">.</span><span class="n">dtype</span> <span class="ow">is</span> <span class="nb">object</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;invalid input data resulting in `dtype==object`&#39;</span><span class="p">)</span>
+
+    <span class="c1"># Set dtype</span>
+    <span class="k">if</span> <span class="n">dtype</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">space_dtype</span> <span class="o">=</span> <span class="n">dtype</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">space_dtype</span> <span class="o">=</span> <span class="n">arr</span><span class="o">.</span><span class="n">dtype</span>
+
+    <span class="n">space</span> <span class="o">=</span> <span class="n">tensor_space</span><span class="p">(</span><span class="n">arr</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">space_dtype</span><span class="p">,</span> <span class="n">impl</span><span class="o">=</span><span class="n">impl</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">space</span><span class="o">.</span><span class="n">element</span><span class="p">(</span><span class="n">arr</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="tensor_space"><a class="viewcode-back" href="../../../generated/odl.space.space_utils.tensor_space.html#odl.space.space_utils.tensor_space">[docs]</a><span class="k">def</span> <span class="nf">tensor_space</span><span class="p">(</span><span class="n">shape</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">impl</span><span class="o">=</span><span class="s1">&#39;numpy&#39;</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Return a tensor space with arbitrary scalar data type.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    shape : positive int or sequence of positive ints</span>
+<span class="sd">        Number of entries per axis for elements in this space. A</span>
+<span class="sd">        single integer results in a space with 1 axis.</span>
+<span class="sd">    dtype : optional</span>
+<span class="sd">        Data type of each element. Can be provided in any way the</span>
+<span class="sd">        `numpy.dtype` function understands, e.g. as built-in type or</span>
+<span class="sd">        as a string.</span>
+<span class="sd">        For ``None``, the `TensorSpace.default_dtype` of the</span>
+<span class="sd">        created space is used.</span>
+<span class="sd">    impl : str, optional</span>
+<span class="sd">        Impmlementation back-end for the space. See</span>
+<span class="sd">        `odl.space.entry_points.tensor_space_impl_names` for available</span>
+<span class="sd">        options.</span>
+<span class="sd">    kwargs :</span>
+<span class="sd">        Extra keyword arguments passed to the space constructor.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    space : `TensorSpace`</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    Space of 3-tuples with ``uint64`` entries (although not strictly a</span>
+<span class="sd">    vector space):</span>
+
+<span class="sd">    &gt;&gt;&gt; odl.tensor_space(3, dtype=&#39;uint64&#39;)</span>
+<span class="sd">    tensor_space(3, dtype=&#39;uint64&#39;)</span>
+
+<span class="sd">    2x3 tensors with same data type:</span>
+
+<span class="sd">    &gt;&gt;&gt; odl.tensor_space((2, 3), dtype=&#39;uint64&#39;)</span>
+<span class="sd">    tensor_space((2, 3), dtype=&#39;uint64&#39;)</span>
+
+<span class="sd">    The default data type depends on the implementation. For</span>
+<span class="sd">    ``impl=&#39;numpy&#39;``, it is ``&#39;float64&#39;``:</span>
+
+<span class="sd">    &gt;&gt;&gt; ts = odl.tensor_space((2, 3))</span>
+<span class="sd">    &gt;&gt;&gt; ts</span>
+<span class="sd">    rn((2, 3))</span>
+<span class="sd">    &gt;&gt;&gt; ts.dtype</span>
+<span class="sd">    dtype(&#39;float64&#39;)</span>
+
+<span class="sd">    See Also</span>
+<span class="sd">    --------</span>
+<span class="sd">    rn, cn : Constructors for real and complex spaces</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">tspace_cls</span> <span class="o">=</span> <span class="n">tensor_space_impl</span><span class="p">(</span><span class="n">impl</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">dtype</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">dtype</span> <span class="o">=</span> <span class="n">tspace_cls</span><span class="o">.</span><span class="n">default_dtype</span><span class="p">()</span>
+
+    <span class="c1"># Use args by keyword since the constructor may take other arguments</span>
+    <span class="c1"># by position</span>
+    <span class="k">return</span> <span class="n">tspace_cls</span><span class="p">(</span><span class="n">shape</span><span class="o">=</span><span class="n">shape</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">dtype</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="cn"><a class="viewcode-back" href="../../../generated/odl.space.space_utils.cn.html#odl.space.space_utils.cn">[docs]</a><span class="k">def</span> <span class="nf">cn</span><span class="p">(</span><span class="n">shape</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">impl</span><span class="o">=</span><span class="s1">&#39;numpy&#39;</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Return a space of complex tensors.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    shape : positive int or sequence of positive ints</span>
+<span class="sd">        Number of entries per axis for elements in this space. A</span>
+<span class="sd">        single integer results in a space with 1 axis.</span>
+<span class="sd">    dtype : optional</span>
+<span class="sd">        Data type of each element. Can be provided in any way the</span>
+<span class="sd">        `numpy.dtype` function understands, e.g. as built-in type or</span>
+<span class="sd">        as a string. Only complex floating-point data types are allowed.</span>
+<span class="sd">        For ``None``, the `TensorSpace.default_dtype` of the</span>
+<span class="sd">        created space is used in the form</span>
+<span class="sd">        ``default_dtype(ComplexNumbers())``.</span>
+<span class="sd">    impl : str, optional</span>
+<span class="sd">        Impmlementation back-end for the space. See</span>
+<span class="sd">        `odl.space.entry_points.tensor_space_impl_names` for available</span>
+<span class="sd">        options.</span>
+<span class="sd">    kwargs :</span>
+<span class="sd">        Extra keyword arguments passed to the space constructor.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    cn : `TensorSpace`</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    Space of complex 3-tuples with ``complex64`` entries:</span>
+
+<span class="sd">    &gt;&gt;&gt; odl.cn(3, dtype=&#39;complex64&#39;)</span>
+<span class="sd">    cn(3, dtype=&#39;complex64&#39;)</span>
+
+<span class="sd">    Complex 2x3 tensors with ``complex64`` entries:</span>
+
+<span class="sd">    &gt;&gt;&gt; odl.cn((2, 3), dtype=&#39;complex64&#39;)</span>
+<span class="sd">    cn((2, 3), dtype=&#39;complex64&#39;)</span>
+
+<span class="sd">    The default data type depends on the implementation. For</span>
+<span class="sd">    ``impl=&#39;numpy&#39;``, it is ``&#39;complex128&#39;``:</span>
+
+<span class="sd">    &gt;&gt;&gt; space = odl.cn((2, 3))</span>
+<span class="sd">    &gt;&gt;&gt; space</span>
+<span class="sd">    cn((2, 3))</span>
+<span class="sd">    &gt;&gt;&gt; space.dtype</span>
+<span class="sd">    dtype(&#39;complex128&#39;)</span>
+
+<span class="sd">    See Also</span>
+<span class="sd">    --------</span>
+<span class="sd">    tensor_space : Space of tensors with arbitrary scalar data type.</span>
+<span class="sd">    rn : Real tensor space.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">cn_cls</span> <span class="o">=</span> <span class="n">tensor_space_impl</span><span class="p">(</span><span class="n">impl</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">dtype</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">dtype</span> <span class="o">=</span> <span class="n">cn_cls</span><span class="o">.</span><span class="n">default_dtype</span><span class="p">(</span><span class="n">ComplexNumbers</span><span class="p">())</span>
+
+    <span class="c1"># Use args by keyword since the constructor may take other arguments</span>
+    <span class="c1"># by position</span>
+    <span class="n">cn</span> <span class="o">=</span> <span class="n">cn_cls</span><span class="p">(</span><span class="n">shape</span><span class="o">=</span><span class="n">shape</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">dtype</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">cn</span><span class="o">.</span><span class="n">is_complex</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;data type </span><span class="si">{!r}</span><span class="s1"> not a complex floating-point type.&#39;</span>
+                         <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">dtype</span><span class="p">))</span>
+    <span class="k">return</span> <span class="n">cn</span></div>
+
+
+<div class="viewcode-block" id="rn"><a class="viewcode-back" href="../../../generated/odl.space.space_utils.rn.html#odl.space.space_utils.rn">[docs]</a><span class="k">def</span> <span class="nf">rn</span><span class="p">(</span><span class="n">shape</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">impl</span><span class="o">=</span><span class="s1">&#39;numpy&#39;</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Return a space of real tensors.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    shape : positive int or sequence of positive ints</span>
+<span class="sd">        Number of entries per axis for elements in this space. A</span>
+<span class="sd">        single integer results in a space with 1 axis.</span>
+<span class="sd">    dtype : optional</span>
+<span class="sd">        Data type of each element. Can be provided in any way the</span>
+<span class="sd">        `numpy.dtype` function understands, e.g. as built-in type or</span>
+<span class="sd">        as a string. Only real floating-point data types are allowed.</span>
+<span class="sd">        For ``None``, the `TensorSpace.default_dtype` of the</span>
+<span class="sd">        created space is used in the form</span>
+<span class="sd">        ``default_dtype(RealNumbers())``.</span>
+<span class="sd">    impl : str, optional</span>
+<span class="sd">        Impmlementation back-end for the space. See</span>
+<span class="sd">        `odl.space.entry_points.tensor_space_impl_names` for available</span>
+<span class="sd">        options.</span>
+<span class="sd">    kwargs :</span>
+<span class="sd">        Extra keyword arguments passed to the space constructor.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    real_space : `TensorSpace`</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    Space of real 3-tuples with ``float32`` entries:</span>
+
+<span class="sd">    &gt;&gt;&gt; odl.rn(3, dtype=&#39;float32&#39;)</span>
+<span class="sd">    rn(3, dtype=&#39;float32&#39;)</span>
+
+<span class="sd">    Real 2x3 tensors with ``float32`` entries:</span>
+
+<span class="sd">    &gt;&gt;&gt; odl.rn((2, 3), dtype=&#39;float32&#39;)</span>
+<span class="sd">    rn((2, 3), dtype=&#39;float32&#39;)</span>
+
+<span class="sd">    The default data type depends on the implementation. For</span>
+<span class="sd">    ``impl=&#39;numpy&#39;``, it is ``&#39;float64&#39;``:</span>
+
+<span class="sd">    &gt;&gt;&gt; ts = odl.rn((2, 3))</span>
+<span class="sd">    &gt;&gt;&gt; ts</span>
+<span class="sd">    rn((2, 3))</span>
+<span class="sd">    &gt;&gt;&gt; ts.dtype</span>
+<span class="sd">    dtype(&#39;float64&#39;)</span>
+
+<span class="sd">    See Also</span>
+<span class="sd">    --------</span>
+<span class="sd">    tensor_space : Space of tensors with arbitrary scalar data type.</span>
+<span class="sd">    cn : Complex tensor space.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">rn_cls</span> <span class="o">=</span> <span class="n">tensor_space_impl</span><span class="p">(</span><span class="n">impl</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">dtype</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">dtype</span> <span class="o">=</span> <span class="n">rn_cls</span><span class="o">.</span><span class="n">default_dtype</span><span class="p">(</span><span class="n">RealNumbers</span><span class="p">())</span>
+
+    <span class="c1"># Use args by keyword since the constructor may take other arguments</span>
+    <span class="c1"># by position</span>
+    <span class="n">rn</span> <span class="o">=</span> <span class="n">rn_cls</span><span class="p">(</span><span class="n">shape</span><span class="o">=</span><span class="n">shape</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">dtype</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">rn</span><span class="o">.</span><span class="n">is_real</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;data type </span><span class="si">{!r}</span><span class="s1"> not a real floating-point type.&#39;</span>
+                         <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">dtype</span><span class="p">))</span>
+    <span class="k">return</span> <span class="n">rn</span></div>
+
+
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s1">&#39;__main__&#39;</span><span class="p">:</span>
+    <span class="kn">from</span> <span class="nn">odl.util.testutils</span> <span class="kn">import</span> <span class="n">run_doctests</span>
+    <span class="n">run_doctests</span><span class="p">()</span>
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &#169; Copyright 2014-2020 The ODL Contributors.
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

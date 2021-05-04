@@ -1,0 +1,6 @@
+ProductSpace.field
+===================================
+
+.. currentmodule:: odl.space.pspace
+
+.. autoproperty:: ProductSpace.field

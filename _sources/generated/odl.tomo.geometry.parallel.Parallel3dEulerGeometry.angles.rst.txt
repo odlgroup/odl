@@ -1,0 +1,6 @@
+Parallel3dEulerGeometry.angles
+=========================================================
+
+.. currentmodule:: odl.tomo.geometry.parallel
+
+.. autoproperty:: Parallel3dEulerGeometry.angles

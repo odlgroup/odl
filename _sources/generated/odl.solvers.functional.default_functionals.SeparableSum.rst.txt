@@ -1,0 +1,45 @@
+﻿SeparableSum
+=======================================================
+
+.. currentmodule:: odl.solvers.functional.default_functionals
+
+.. autoclass:: SeparableSum
+   :show-inheritance:
+   
+   
+   .. automethod:: __init__
+   
+      
+   
+   .. HACK -- the point here is that we don't want this to appear in the output, but the autosummary should still generate the pages.
+      .. autosummary::
+         :toctree:
+      
+         SeparableSum.__call__
+         SeparableSum.__eq__
+         SeparableSum.__getitem__
+         SeparableSum._call
+         SeparableSum.bregman
+         SeparableSum.derivative
+         SeparableSum.norm
+         SeparableSum.translated
+   
+
+    
+   .. HACK -- the point here is that we don't want this to appear in the output, but the autosummary should still generate the pages.
+      .. autosummary::
+         :toctree:
+      
+         SeparableSum.adjoint
+         SeparableSum.convex_conj
+         SeparableSum.domain
+         SeparableSum.functionals
+         SeparableSum.grad_lipschitz
+         SeparableSum.gradient
+         SeparableSum.inverse
+         SeparableSum.is_functional
+         SeparableSum.is_linear
+         SeparableSum.proximal
+         SeparableSum.range
+   
+   

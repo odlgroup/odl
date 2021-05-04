@@ -1,0 +1,6 @@
+﻿true_divide
+===================================
+
+.. currentmodule:: odl.ufunc_ops.ufunc_ops
+
+.. autofunction:: true_divide

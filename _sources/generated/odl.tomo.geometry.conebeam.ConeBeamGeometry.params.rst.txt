@@ -1,0 +1,6 @@
+ConeBeamGeometry.params
+==================================================
+
+.. currentmodule:: odl.tomo.geometry.conebeam
+
+.. autoproperty:: ConeBeamGeometry.params

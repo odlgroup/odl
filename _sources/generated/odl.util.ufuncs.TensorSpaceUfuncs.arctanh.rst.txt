@@ -1,0 +1,8 @@
+:orphan:
+
+TensorSpaceUfuncs.arctanh
+=========================================
+
+.. currentmodule:: odl.util.ufuncs
+
+.. automethod:: TensorSpaceUfuncs.arctanh

@@ -1,0 +1,6 @@
+﻿binning
+=========================
+
+.. currentmodule:: odl.util.numerics
+
+.. autofunction:: binning

@@ -1,0 +1,6 @@
+FunctionalQuadraticPerturb.quadratic_coeff
+============================================================================
+
+.. currentmodule:: odl.solvers.functional.functional
+
+.. autoproperty:: FunctionalQuadraticPerturb.quadratic_coeff

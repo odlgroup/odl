@@ -1,0 +1,41 @@
+ufuncs
+======
+
+Universal functions (ufuncs) for ODL-wrapped arrays.
+
+These functions are internal and should only be used as methods on
+`Tensor`-like classes.
+
+See `numpy.ufuncs
+<http://docs.scipy.org/doc/numpy/reference/ufuncs.html>`_
+for more information.
+
+Notes
+-----
+The default implementation of these methods uses the ``__array_ufunc__``
+dispatch machinery `introduced in Numpy 1.13
+<https://github.com/charris/numpy/blob/master/doc/source/reference/arrays.classes.rst#special-attributes-and-methods>`_.
+
+
+.. currentmodule:: odl.util.ufuncs
+
+
+
+.. rubric:: Classes
+
+.. autosummary::
+   :toctree: generated/
+
+   ~odl.util.ufuncs.ProductSpaceUfuncs
+   ~odl.util.ufuncs.TensorSpaceUfuncs
+
+
+.. rubric:: Functions
+
+.. autosummary::
+   :toctree: generated/
+
+   ~odl.util.ufuncs.method
+   ~odl.util.ufuncs.wrap_ufunc_base
+   ~odl.util.ufuncs.wrap_ufunc_productspace
+

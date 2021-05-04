@@ -1,0 +1,917 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>odl.trafos.wavelet &mdash; odl 1.0.0.dev0 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/custom.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../../" src="../../../_static/documentation_options.js"></script>
+        <script src="../../../_static/jquery.js"></script>
+        <script src="../../../_static/underscore.js"></script>
+        <script src="../../../_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="../../../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../../index.html" class="icon icon-home"> odl
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                1.0.0.dev0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Getting Started</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../getting_started/getting_started.html">Getting Started</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Working with ODL</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../guide/guide.html">User’s guide – selected topics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../math/math.html">Mathematical Background</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Developer zone</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../dev/dev.html">Contributing to ODL</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Useful facts</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../guide/faq.html">Frequently asked questions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../guide/glossary.html">Glossary</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../release_notes.html">Release Notes</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../refs.html">References</a></li>
+</ul>
+<p class="caption"><span class="caption-text">API Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../odl.html">odl</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">odl</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="../../index.html">Module code</a> &raquo;</li>
+        
+      <li>odl.trafos.wavelet</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for odl.trafos.wavelet</h1><div class="highlight"><pre>
+<span></span><span class="c1"># Copyright 2014-2020 The ODL contributors</span>
+<span class="c1">#</span>
+<span class="c1"># This file is part of ODL.</span>
+<span class="c1">#</span>
+<span class="c1"># This Source Code Form is subject to the terms of the Mozilla Public License,</span>
+<span class="c1"># v. 2.0. If a copy of the MPL was not distributed with this file, You can</span>
+<span class="c1"># obtain one at https://mozilla.org/MPL/2.0/.</span>
+
+<span class="sd">&quot;&quot;&quot;Discrete wavelet transformation on L2 spaces.&quot;&quot;&quot;</span>
+
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">absolute_import</span><span class="p">,</span> <span class="n">division</span><span class="p">,</span> <span class="n">print_function</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+
+<span class="kn">from</span> <span class="nn">odl.discr</span> <span class="kn">import</span> <span class="n">DiscretizedSpace</span>
+<span class="kn">from</span> <span class="nn">odl.operator</span> <span class="kn">import</span> <span class="n">Operator</span>
+<span class="kn">from</span> <span class="nn">odl.trafos.backends.pywt_bindings</span> <span class="kn">import</span> <span class="p">(</span>
+    <span class="n">PYWT_AVAILABLE</span><span class="p">,</span> <span class="n">precompute_raveled_slices</span><span class="p">,</span> <span class="n">pywt_pad_mode</span><span class="p">,</span> <span class="n">pywt_wavelet</span><span class="p">)</span>
+
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;WaveletTransform&#39;</span><span class="p">,</span> <span class="s1">&#39;WaveletTransformInverse&#39;</span><span class="p">)</span>
+
+
+<span class="n">_SUPPORTED_WAVELET_IMPLS</span> <span class="o">=</span> <span class="p">()</span>
+<span class="k">if</span> <span class="n">PYWT_AVAILABLE</span><span class="p">:</span>
+    <span class="n">_SUPPORTED_WAVELET_IMPLS</span> <span class="o">+=</span> <span class="p">(</span><span class="s1">&#39;pywt&#39;</span><span class="p">,)</span>
+    <span class="kn">import</span> <span class="nn">pywt</span>
+
+
+<div class="viewcode-block" id="WaveletTransformBase"><a class="viewcode-back" href="../../../generated/odl.trafos.wavelet.WaveletTransformBase.html#odl.trafos.wavelet.WaveletTransformBase">[docs]</a><span class="k">class</span> <span class="nc">WaveletTransformBase</span><span class="p">(</span><span class="n">Operator</span><span class="p">):</span>
+
+    <span class="sd">&quot;&quot;&quot;Base class for discrete wavelet transforms.</span>
+
+<span class="sd">    This abstract class is intended to share code between the forward,</span>
+<span class="sd">    inverse and adjoint wavelet transforms.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="WaveletTransformBase.__init__"><a class="viewcode-back" href="../../../generated/odl.trafos.wavelet.WaveletTransformBase.html#odl.trafos.wavelet.WaveletTransformBase.__init__">[docs]</a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">space</span><span class="p">,</span> <span class="n">wavelet</span><span class="p">,</span> <span class="n">nlevels</span><span class="p">,</span> <span class="n">variant</span><span class="p">,</span> <span class="n">pad_mode</span><span class="o">=</span><span class="s1">&#39;constant&#39;</span><span class="p">,</span>
+                 <span class="n">pad_const</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">impl</span><span class="o">=</span><span class="s1">&#39;pywt&#39;</span><span class="p">,</span> <span class="n">axes</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Initialize a new instance.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        space : `DiscretizedSpace`</span>
+<span class="sd">            Domain of the forward wavelet transform (the &quot;image domain&quot;).</span>
+<span class="sd">            In the case of ``variant in (&#39;inverse&#39;, &#39;adjoint&#39;)``, this</span>
+<span class="sd">            space is the range of the operator.</span>
+<span class="sd">        wavelet : string or `pywt.Wavelet`</span>
+<span class="sd">            Specification of the wavelet to be used in the transform.</span>
+<span class="sd">            If a string is given, it is converted to a `pywt.Wavelet`.</span>
+<span class="sd">            Use `pywt.wavelist` to get a list of available wavelets.</span>
+
+<span class="sd">            Possible wavelet families are:</span>
+
+<span class="sd">            ``&#39;haar&#39;``: Haar</span>
+
+<span class="sd">            ``&#39;db&#39;``: Daubechies</span>
+
+<span class="sd">            ``&#39;sym&#39;``: Symlets</span>
+
+<span class="sd">            ``&#39;coif&#39;``: Coiflets</span>
+
+<span class="sd">            ``&#39;bior&#39;``: Biorthogonal</span>
+
+<span class="sd">            ``&#39;rbio&#39;``: Reverse biorthogonal</span>
+
+<span class="sd">            ``&#39;dmey&#39;``: Discrete FIR approximation of the Meyer wavelet</span>
+
+<span class="sd">        variant : {&#39;forward&#39;, &#39;inverse&#39;, &#39;adjoint&#39;}</span>
+<span class="sd">            Wavelet transform variant to be created.</span>
+<span class="sd">        nlevels : positive int, optional</span>
+<span class="sd">            Number of scaling levels to be used in the decomposition. The</span>
+<span class="sd">            maximum number of levels can be calculated with</span>
+<span class="sd">            `pywt.dwtn_max_level`.</span>
+<span class="sd">            Default: Use maximum number of levels.</span>
+<span class="sd">        pad_mode : string, optional</span>
+<span class="sd">            Method to be used to extend the signal.</span>
+
+<span class="sd">            ``&#39;constant&#39;``: Fill with ``pad_const``.</span>
+
+<span class="sd">            ``&#39;symmetric&#39;``: Reflect at the boundaries, not repeating the</span>
+<span class="sd">            outmost values.</span>
+
+<span class="sd">            ``&#39;periodic&#39;``: Fill in values from the other side, keeping</span>
+<span class="sd">            the order.</span>
+
+<span class="sd">            ``&#39;order0&#39;``: Extend constantly with the outmost values</span>
+<span class="sd">            (ensures continuity).</span>
+
+<span class="sd">            ``&#39;order1&#39;``: Extend with constant slope (ensures continuity of</span>
+<span class="sd">            the first derivative). This requires at least 2 values along</span>
+<span class="sd">            each axis where padding is applied.</span>
+
+<span class="sd">            ``&#39;pywt_per&#39;``:  like ``&#39;periodic&#39;``-padding but gives the smallest</span>
+<span class="sd">            possible number of decomposition coefficients.</span>
+<span class="sd">            Only available with ``impl=&#39;pywt&#39;``, See ``pywt.Modes.modes``.</span>
+
+<span class="sd">            ``&#39;reflect&#39;``: Reflect at the boundary, without repeating the</span>
+<span class="sd">            outmost values.</span>
+
+<span class="sd">            ``&#39;antisymmetric&#39;``: Anti-symmetric variant of ``symmetric``.</span>
+
+<span class="sd">            ``&#39;antireflect&#39;``: Anti-symmetric variant of ``reflect``.</span>
+
+<span class="sd">            For reference, the following table compares the naming conventions</span>
+<span class="sd">            for the modes in ODL vs. PyWavelets::</span>
+
+<span class="sd">                ======================= ==================</span>
+<span class="sd">                          ODL               PyWavelets</span>
+<span class="sd">                ======================= ==================</span>
+<span class="sd">                symmetric               symmetric</span>
+<span class="sd">                reflect                 reflect</span>
+<span class="sd">                order1                  smooth</span>
+<span class="sd">                order0                  constant</span>
+<span class="sd">                constant, pad_const=0   zero</span>
+<span class="sd">                periodic                periodic</span>
+<span class="sd">                pywt_per                periodization</span>
+<span class="sd">                antisymmetric           antisymmetric</span>
+<span class="sd">                antireflect             antireflect</span>
+<span class="sd">                ======================= ==================</span>
+
+<span class="sd">            See `signal extension modes`_ for an illustration of the modes</span>
+<span class="sd">            (under the PyWavelets naming conventions).</span>
+<span class="sd">        pad_const : float, optional</span>
+<span class="sd">            Constant value to use if ``pad_mode == &#39;constant&#39;``. Ignored</span>
+<span class="sd">            otherwise. Constants other than 0 are not supported by the</span>
+<span class="sd">            ``pywt`` back-end.</span>
+<span class="sd">        impl : {&#39;pywt&#39;}, optional</span>
+<span class="sd">            Back-end for the wavelet transform.</span>
+<span class="sd">        axes : sequence of ints, optional</span>
+<span class="sd">            Axes over which the DWT that created ``coeffs`` was performed.  The</span>
+<span class="sd">            default value of ``None`` corresponds to all axes. When not all</span>
+<span class="sd">            axes are included this is analagous to a batch transform in</span>
+<span class="sd">            ``len(axes)`` dimensions looped over the non-transformed axes. In</span>
+<span class="sd">            orther words, filtering and decimation does not occur along any</span>
+<span class="sd">            axes not in ``axes``.</span>
+
+<span class="sd">        References</span>
+<span class="sd">        ----------</span>
+<span class="sd">        .. _signal extension modes:</span>
+<span class="sd">           https://pywavelets.readthedocs.io/en/latest/ref/signal-extension-modes.html</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">space</span><span class="p">,</span> <span class="n">DiscretizedSpace</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span>
+                <span class="s1">&#39;`space` </span><span class="si">{!r}</span><span class="s1"> is not a `DiscretizedSpace` instance&#39;</span>
+                <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">space</span><span class="p">)</span>
+            <span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">__impl</span><span class="p">,</span> <span class="n">impl_in</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">impl</span><span class="p">)</span><span class="o">.</span><span class="n">lower</span><span class="p">(),</span> <span class="n">impl</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">impl</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">_SUPPORTED_WAVELET_IMPLS</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;`impl` &#39;</span><span class="si">{}</span><span class="s2">&#39; not supported&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">impl_in</span><span class="p">))</span>
+
+        <span class="k">if</span> <span class="n">axes</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">axes</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="n">space</span><span class="o">.</span><span class="n">ndim</span><span class="p">))</span>
+        <span class="k">elif</span> <span class="n">np</span><span class="o">.</span><span class="n">isscalar</span><span class="p">(</span><span class="n">axes</span><span class="p">):</span>
+            <span class="n">axes</span> <span class="o">=</span> <span class="p">(</span><span class="n">axes</span><span class="p">,)</span>
+        <span class="k">elif</span> <span class="nb">len</span><span class="p">(</span><span class="n">axes</span><span class="p">)</span> <span class="o">&gt;</span> <span class="n">space</span><span class="o">.</span><span class="n">ndim</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;too many axes&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">axes</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">axes</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">nlevels</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">nlevels</span> <span class="o">=</span> <span class="n">pywt</span><span class="o">.</span><span class="n">dwtn_max_level</span><span class="p">(</span><span class="n">space</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="n">wavelet</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">axes</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__nlevels</span><span class="p">,</span> <span class="n">nlevels_in</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">nlevels</span><span class="p">),</span> <span class="n">nlevels</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">nlevels</span> <span class="o">!=</span> <span class="n">nlevels_in</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;`nlevels` must be integer, got </span><span class="si">{}</span><span class="s1">&#39;</span>
+                             <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">nlevels_in</span><span class="p">))</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">__impl</span><span class="p">,</span> <span class="n">impl_in</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">impl</span><span class="p">)</span><span class="o">.</span><span class="n">lower</span><span class="p">(),</span> <span class="n">impl</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">impl</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">_SUPPORTED_WAVELET_IMPLS</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;`impl` &#39;</span><span class="si">{}</span><span class="s2">&#39; not supported&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">impl_in</span><span class="p">))</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">__wavelet</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">wavelet</span><span class="p">,</span> <span class="s1">&#39;name&#39;</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">wavelet</span><span class="p">)</span><span class="o">.</span><span class="n">lower</span><span class="p">())</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__pad_mode</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">pad_mode</span><span class="p">)</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__pad_const</span> <span class="o">=</span> <span class="n">space</span><span class="o">.</span><span class="n">field</span><span class="o">.</span><span class="n">element</span><span class="p">(</span><span class="n">pad_const</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">impl</span> <span class="o">==</span> <span class="s1">&#39;pywt&#39;</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">pywt_pad_mode</span> <span class="o">=</span> <span class="n">pywt_pad_mode</span><span class="p">(</span><span class="n">pad_mode</span><span class="p">,</span> <span class="n">pad_const</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">pywt_wavelet</span> <span class="o">=</span> <span class="n">pywt_wavelet</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">wavelet</span><span class="p">)</span>
+            <span class="c1"># determine coefficient shapes (without running wavedecn)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_coeff_shapes</span> <span class="o">=</span> <span class="n">pywt</span><span class="o">.</span><span class="n">wavedecn_shapes</span><span class="p">(</span>
+                <span class="n">space</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="n">wavelet</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">pywt_pad_mode</span><span class="p">,</span>
+                <span class="n">level</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">nlevels</span><span class="p">,</span> <span class="n">axes</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">axes</span><span class="p">)</span>
+            <span class="c1"># precompute slices into the (raveled) coeffs</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_coeff_slices</span> <span class="o">=</span> <span class="n">precompute_raveled_slices</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_coeff_shapes</span><span class="p">)</span>
+            <span class="n">coeff_size</span> <span class="o">=</span> <span class="n">pywt</span><span class="o">.</span><span class="n">wavedecn_size</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_coeff_shapes</span><span class="p">)</span>
+            <span class="n">coeff_space</span> <span class="o">=</span> <span class="n">space</span><span class="o">.</span><span class="n">tspace_type</span><span class="p">(</span><span class="n">coeff_size</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">space</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">&quot;bad `impl` &#39;</span><span class="si">{}</span><span class="s2">&#39;&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">impl</span><span class="p">))</span>
+
+        <span class="n">variant</span><span class="p">,</span> <span class="n">variant_in</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">variant</span><span class="p">)</span><span class="o">.</span><span class="n">lower</span><span class="p">(),</span> <span class="n">variant</span>
+        <span class="k">if</span> <span class="n">variant</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">(</span><span class="s1">&#39;forward&#39;</span><span class="p">,</span> <span class="s1">&#39;inverse&#39;</span><span class="p">,</span> <span class="s1">&#39;adjoint&#39;</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;`variant` &#39;</span><span class="si">{}</span><span class="s2">&#39; not understood&quot;</span>
+                             <span class="s2">&quot;&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">variant_in</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__variant</span> <span class="o">=</span> <span class="n">variant</span>
+
+        <span class="k">if</span> <span class="n">variant</span> <span class="o">==</span> <span class="s1">&#39;forward&#39;</span><span class="p">:</span>
+            <span class="nb">super</span><span class="p">(</span><span class="n">WaveletTransformBase</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span>
+                <span class="n">domain</span><span class="o">=</span><span class="n">space</span><span class="p">,</span> <span class="nb">range</span><span class="o">=</span><span class="n">coeff_space</span><span class="p">,</span> <span class="n">linear</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="nb">super</span><span class="p">(</span><span class="n">WaveletTransformBase</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span>
+                <span class="n">domain</span><span class="o">=</span><span class="n">coeff_space</span><span class="p">,</span> <span class="nb">range</span><span class="o">=</span><span class="n">space</span><span class="p">,</span> <span class="n">linear</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span></div>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">impl</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Implementation back-end of this wavelet transform.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__impl</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">nlevels</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Number of scaling levels in this wavelet transform.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__nlevels</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">wavelet</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Name of the wavelet used in this wavelet transform.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__wavelet</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">pad_mode</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Padding mode used for extending input beyond its boundary.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__pad_mode</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">pad_const</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Value for extension used in ``&#39;constant&#39;`` padding mode.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__pad_const</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">is_orthogonal</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Whether or not the wavelet basis is orthogonal.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">pywt_wavelet</span><span class="o">.</span><span class="n">orthogonal</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">is_biorthogonal</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Whether or not the wavelet basis is bi-orthogonal.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">pywt_wavelet</span><span class="o">.</span><span class="n">biorthogonal</span>
+
+<div class="viewcode-block" id="WaveletTransformBase.scales"><a class="viewcode-back" href="../../../generated/odl.trafos.wavelet.WaveletTransformBase.scales.html#odl.trafos.wavelet.WaveletTransformBase.scales">[docs]</a>    <span class="k">def</span> <span class="nf">scales</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Get the scales of each coefficient.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        scales : ``range`` element</span>
+<span class="sd">            The scale of each coefficient, given by an integer. 0 for the</span>
+<span class="sd">            lowest resolution and self.nlevels for the highest.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">impl</span> <span class="o">==</span> <span class="s1">&#39;pywt&#39;</span><span class="p">:</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">__variant</span> <span class="o">==</span> <span class="s1">&#39;forward&#39;</span><span class="p">:</span>
+                <span class="n">discr_space</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">domain</span>
+                <span class="n">wavelet_space</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">range</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">discr_space</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">range</span>
+                <span class="n">wavelet_space</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">domain</span>
+
+            <span class="n">shapes</span> <span class="o">=</span> <span class="n">pywt</span><span class="o">.</span><span class="n">wavedecn_shapes</span><span class="p">(</span><span class="n">discr_space</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">pywt_wavelet</span><span class="p">,</span>
+                                          <span class="n">mode</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">pywt_pad_mode</span><span class="p">,</span>
+                                          <span class="n">level</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">nlevels</span><span class="p">,</span> <span class="n">axes</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">axes</span><span class="p">)</span>
+            <span class="n">coeff_list</span> <span class="o">=</span> <span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">full</span><span class="p">(</span><span class="n">shapes</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="mi">0</span><span class="p">)]</span>
+            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span> <span class="o">+</span> <span class="nb">len</span><span class="p">(</span><span class="n">shapes</span><span class="p">[</span><span class="mi">1</span><span class="p">:])):</span>
+                <span class="n">coeff_list</span><span class="o">.</span><span class="n">append</span><span class="p">({</span><span class="n">k</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">full</span><span class="p">(</span><span class="n">shapes</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">k</span><span class="p">],</span> <span class="n">i</span><span class="p">)</span>
+                                   <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">shapes</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">keys</span><span class="p">()})</span>
+            <span class="n">coeffs</span> <span class="o">=</span> <span class="n">pywt</span><span class="o">.</span><span class="n">ravel_coeffs</span><span class="p">(</span><span class="n">coeff_list</span><span class="p">,</span> <span class="n">axes</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">axes</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="k">return</span> <span class="n">wavelet_space</span><span class="o">.</span><span class="n">element</span><span class="p">(</span><span class="n">coeffs</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">&quot;bad `impl` &#39;</span><span class="si">{}</span><span class="s2">&#39;&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">impl</span><span class="p">))</span></div></div>
+
+
+<div class="viewcode-block" id="WaveletTransform"><a class="viewcode-back" href="../../../generated/odl.trafos.wavelet.WaveletTransform.html#odl.trafos.wavelet.WaveletTransform">[docs]</a><span class="k">class</span> <span class="nc">WaveletTransform</span><span class="p">(</span><span class="n">WaveletTransformBase</span><span class="p">):</span>
+
+    <span class="sd">&quot;&quot;&quot;Discrete wavelet transform between discretized Lp spaces.&quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="WaveletTransform.__init__"><a class="viewcode-back" href="../../../generated/odl.trafos.wavelet.WaveletTransform.html#odl.trafos.wavelet.WaveletTransform.__init__">[docs]</a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">domain</span><span class="p">,</span> <span class="n">wavelet</span><span class="p">,</span> <span class="n">nlevels</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">pad_mode</span><span class="o">=</span><span class="s1">&#39;constant&#39;</span><span class="p">,</span>
+                 <span class="n">pad_const</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">impl</span><span class="o">=</span><span class="s1">&#39;pywt&#39;</span><span class="p">,</span> <span class="n">axes</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Initialize a new instance.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        domain : `DiscretizedSpace`</span>
+<span class="sd">            Domain of the wavelet transform (the &quot;image domain&quot;).</span>
+<span class="sd">        wavelet : string or `pywt.Wavelet`</span>
+<span class="sd">            Specification of the wavelet to be used in the transform.</span>
+<span class="sd">            If a string is given, it is converted to a `pywt.Wavelet`.</span>
+<span class="sd">            Use `pywt.wavelist` to get a list of available wavelets.</span>
+
+<span class="sd">            Possible wavelet families are:</span>
+
+<span class="sd">            ``&#39;haar&#39;``: Haar</span>
+
+<span class="sd">            ``&#39;db&#39;``: Daubechies</span>
+
+<span class="sd">            ``&#39;sym&#39;``: Symlets</span>
+
+<span class="sd">            ``&#39;coif&#39;``: Coiflets</span>
+
+<span class="sd">            ``&#39;bior&#39;``: Biorthogonal</span>
+
+<span class="sd">            ``&#39;rbio&#39;``: Reverse biorthogonal</span>
+
+<span class="sd">            ``&#39;dmey&#39;``: Discrete FIR approximation of the Meyer wavelet</span>
+
+<span class="sd">        nlevels : positive int, optional</span>
+<span class="sd">            Number of scaling levels to be used in the decomposition. The</span>
+<span class="sd">            maximum number of levels can be calculated with</span>
+<span class="sd">            `pywt.dwtn_max_level`.</span>
+<span class="sd">            Default: Use maximum number of levels.</span>
+<span class="sd">        pad_mode : string, optional</span>
+<span class="sd">            Method to be used to extend the signal.</span>
+
+<span class="sd">            ``&#39;constant&#39;``: Fill with ``pad_const``.</span>
+
+<span class="sd">            ``&#39;symmetric&#39;``: Reflect at the boundaries, not repeating the</span>
+<span class="sd">            outmost values.</span>
+
+<span class="sd">            ``&#39;periodic&#39;``: Fill in values from the other side, keeping</span>
+<span class="sd">            the order.</span>
+
+<span class="sd">            ``&#39;order0&#39;``: Extend constantly with the outmost values</span>
+<span class="sd">            (ensures continuity).</span>
+
+<span class="sd">            ``&#39;order1&#39;``: Extend with constant slope (ensures continuity of</span>
+<span class="sd">            the first derivative). This requires at least 2 values along</span>
+<span class="sd">            each axis where padding is applied.</span>
+
+<span class="sd">            ``&#39;pywt_per&#39;``:  like ``&#39;periodic&#39;``-padding but gives the smallest</span>
+<span class="sd">            possible number of decomposition coefficients.</span>
+<span class="sd">            Only available with ``impl=&#39;pywt&#39;``, See ``pywt.Modes.modes``.</span>
+
+<span class="sd">            ``&#39;reflect&#39;``: Reflect at the boundary, without repeating the</span>
+<span class="sd">            outmost values.</span>
+
+<span class="sd">            ``&#39;antisymmetric&#39;``: Anti-symmetric variant of ``symmetric``.</span>
+
+<span class="sd">            ``&#39;antireflect&#39;``: Anti-symmetric variant of ``reflect``.</span>
+
+<span class="sd">            For reference, the following table compares the naming conventions</span>
+<span class="sd">            for the modes in ODL vs. PyWavelets::</span>
+
+<span class="sd">                ======================= ==================</span>
+<span class="sd">                          ODL               PyWavelets</span>
+<span class="sd">                ======================= ==================</span>
+<span class="sd">                symmetric               symmetric</span>
+<span class="sd">                reflect                 reflect</span>
+<span class="sd">                order1                  smooth</span>
+<span class="sd">                order0                  constant</span>
+<span class="sd">                constant, pad_const=0   zero</span>
+<span class="sd">                periodic                periodic</span>
+<span class="sd">                pywt_per                periodization</span>
+<span class="sd">                antisymmetric           antisymmetric</span>
+<span class="sd">                antireflect             antireflect</span>
+<span class="sd">                ======================= ==================</span>
+
+<span class="sd">            See `signal extension modes`_ for an illustration of the modes</span>
+<span class="sd">            (under the PyWavelets naming conventions).</span>
+<span class="sd">        pad_const : float, optional</span>
+<span class="sd">            Constant value to use if ``pad_mode == &#39;constant&#39;``. Ignored</span>
+<span class="sd">            otherwise. Constants other than 0 are not supported by the</span>
+<span class="sd">            ``pywt`` back-end.</span>
+<span class="sd">        impl : {&#39;pywt&#39;}, optional</span>
+<span class="sd">            Backend for the wavelet transform.</span>
+<span class="sd">        axes : sequence of ints, optional</span>
+<span class="sd">            Axes over which the DWT that created ``coeffs`` was performed.  The</span>
+<span class="sd">            default value of ``None`` corresponds to all axes. When not all</span>
+<span class="sd">            axes are included this is analagous to a batch transform in</span>
+<span class="sd">            ``len(axes)`` dimensions looped over the non-transformed axes. In</span>
+<span class="sd">            orther words, filtering and decimation does not occur along any</span>
+<span class="sd">            axes not in ``axes``.</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        --------</span>
+<span class="sd">        Compute a very simple wavelet transform in a discrete 2D space with</span>
+<span class="sd">        4 sampling points per axis:</span>
+
+<span class="sd">        &gt;&gt;&gt; space = odl.uniform_discr([0, 0], [1, 1], (4, 4))</span>
+<span class="sd">        &gt;&gt;&gt; wavelet_trafo = odl.trafos.WaveletTransform(</span>
+<span class="sd">        ...     domain=space, nlevels=1, wavelet=&#39;haar&#39;)</span>
+<span class="sd">        &gt;&gt;&gt; wavelet_trafo.is_biorthogonal</span>
+<span class="sd">        True</span>
+<span class="sd">        &gt;&gt;&gt; data = [[1, 1, 1, 1],</span>
+<span class="sd">        ...         [0, 0, 0, 0],</span>
+<span class="sd">        ...         [0, 0, 1, 1],</span>
+<span class="sd">        ...         [1, 0, 1, 0]]</span>
+<span class="sd">        &gt;&gt;&gt; decomp = wavelet_trafo(data)</span>
+<span class="sd">        &gt;&gt;&gt; decomp.shape</span>
+<span class="sd">        (16,)</span>
+
+<span class="sd">        It is also possible to apply the transform only along a subset of the</span>
+<span class="sd">        axes. Here, we apply a 1D wavelet transfrom along axis 0 for each</span>
+<span class="sd">        index along axis 1:</span>
+
+<span class="sd">        &gt;&gt;&gt; wavelet_trafo = odl.trafos.WaveletTransform(</span>
+<span class="sd">        ...     domain=space, nlevels=1, wavelet=&#39;haar&#39;, axes=(0,))</span>
+<span class="sd">        &gt;&gt;&gt; decomp = wavelet_trafo(data)</span>
+<span class="sd">        &gt;&gt;&gt; decomp.shape</span>
+<span class="sd">        (16,)</span>
+
+<span class="sd">        In general, the size of the coefficients may exceed the size of the</span>
+<span class="sd">        input data when the wavelet is longer than the Haar wavelet. This</span>
+<span class="sd">        due to extra coefficients that must be kept for perfect reconstruction.</span>
+<span class="sd">        No extra boundary coefficients are needed when the edge mode is</span>
+<span class="sd">        ``&quot;pywt_periodic&quot;`` and the size along each transformed axis is a</span>
+<span class="sd">        multiple of ``2**nlevels``.</span>
+
+<span class="sd">        &gt;&gt;&gt; space = odl.uniform_discr([0, 0], [1, 1], (16, 16))</span>
+<span class="sd">        &gt;&gt;&gt; space.size</span>
+<span class="sd">        256</span>
+<span class="sd">        &gt;&gt;&gt; wavelet_trafo = odl.trafos.WaveletTransform(</span>
+<span class="sd">        ...     domain=space, nlevels=2, wavelet=&#39;db2&#39;,</span>
+<span class="sd">        ...     pad_mode=&#39;pywt_periodic&#39;)</span>
+<span class="sd">        &gt;&gt;&gt; decomp = wavelet_trafo(np.ones(space.shape))</span>
+<span class="sd">        &gt;&gt;&gt; decomp.shape</span>
+<span class="sd">        (256,)</span>
+<span class="sd">        &gt;&gt;&gt; wavelet_trafo = odl.trafos.WaveletTransform(</span>
+<span class="sd">        ...     domain=space, nlevels=2, wavelet=&#39;db2&#39;, pad_mode=&#39;symmetric&#39;)</span>
+<span class="sd">        &gt;&gt;&gt; decomp = wavelet_trafo(np.ones(space.shape))</span>
+<span class="sd">        &gt;&gt;&gt; decomp.shape</span>
+<span class="sd">        (387,)</span>
+
+<span class="sd">        References</span>
+<span class="sd">        ----------</span>
+<span class="sd">        .. _signal extension modes:</span>
+<span class="sd">           https://pywavelets.readthedocs.io/en/latest/ref/signal-extension-modes.html</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">WaveletTransform</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span>
+            <span class="n">space</span><span class="o">=</span><span class="n">domain</span><span class="p">,</span> <span class="n">wavelet</span><span class="o">=</span><span class="n">wavelet</span><span class="p">,</span> <span class="n">nlevels</span><span class="o">=</span><span class="n">nlevels</span><span class="p">,</span> <span class="n">variant</span><span class="o">=</span><span class="s1">&#39;forward&#39;</span><span class="p">,</span>
+            <span class="n">pad_mode</span><span class="o">=</span><span class="n">pad_mode</span><span class="p">,</span> <span class="n">pad_const</span><span class="o">=</span><span class="n">pad_const</span><span class="p">,</span> <span class="n">impl</span><span class="o">=</span><span class="n">impl</span><span class="p">,</span> <span class="n">axes</span><span class="o">=</span><span class="n">axes</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="WaveletTransform._call"><a class="viewcode-back" href="../../../generated/odl.trafos.wavelet.WaveletTransform._call.html#odl.trafos.wavelet.WaveletTransform._call">[docs]</a>    <span class="k">def</span> <span class="nf">_call</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return wavelet transform of ``x``.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">impl</span> <span class="o">==</span> <span class="s1">&#39;pywt&#39;</span><span class="p">:</span>
+            <span class="n">coeffs</span> <span class="o">=</span> <span class="n">pywt</span><span class="o">.</span><span class="n">wavedecn</span><span class="p">(</span>
+                <span class="n">x</span><span class="p">,</span> <span class="n">wavelet</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">pywt_wavelet</span><span class="p">,</span> <span class="n">level</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">nlevels</span><span class="p">,</span>
+                <span class="n">mode</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">pywt_pad_mode</span><span class="p">,</span> <span class="n">axes</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">axes</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">pywt</span><span class="o">.</span><span class="n">ravel_coeffs</span><span class="p">(</span><span class="n">coeffs</span><span class="p">,</span> <span class="n">axes</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">axes</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">&quot;bad `impl` &#39;</span><span class="si">{}</span><span class="s2">&#39;&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">impl</span><span class="p">))</span></div>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">adjoint</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Adjoint wavelet transform.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        adjoint : `WaveletTransformInverse`</span>
+<span class="sd">            If the transform is orthogonal, the adjoint is the inverse.</span>
+
+<span class="sd">        Raises</span>
+<span class="sd">        ------</span>
+<span class="sd">        OpNotImplementedError</span>
+<span class="sd">            if `is_orthogonal` is ``False``</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_orthogonal</span><span class="p">:</span>
+            <span class="n">scale</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">domain</span><span class="o">.</span><span class="n">partition</span><span class="o">.</span><span class="n">cell_volume</span>
+            <span class="k">return</span> <span class="n">scale</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">inverse</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># TODO: put adjoint here</span>
+            <span class="k">return</span> <span class="nb">super</span><span class="p">(</span><span class="n">WaveletTransform</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">adjoint</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">inverse</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Inverse wavelet transform.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        inverse : `WaveletTransformInverse`</span>
+
+<span class="sd">        See Also</span>
+<span class="sd">        --------</span>
+<span class="sd">        adjoint</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">WaveletTransformInverse</span><span class="p">(</span>
+            <span class="nb">range</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">domain</span><span class="p">,</span> <span class="n">wavelet</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">pywt_wavelet</span><span class="p">,</span> <span class="n">nlevels</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">nlevels</span><span class="p">,</span>
+            <span class="n">pad_mode</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">pad_mode</span><span class="p">,</span> <span class="n">pad_const</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">pad_const</span><span class="p">,</span> <span class="n">impl</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">impl</span><span class="p">,</span>
+            <span class="n">axes</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">axes</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="WaveletTransformInverse"><a class="viewcode-back" href="../../../generated/odl.trafos.wavelet.WaveletTransformInverse.html#odl.trafos.wavelet.WaveletTransformInverse">[docs]</a><span class="k">class</span> <span class="nc">WaveletTransformInverse</span><span class="p">(</span><span class="n">WaveletTransformBase</span><span class="p">):</span>
+
+    <span class="sd">&quot;&quot;&quot;Discrete inverse wavelet trafo between discrete L2 spaces.</span>
+
+<span class="sd">    See Also</span>
+<span class="sd">    --------</span>
+<span class="sd">    WaveletTransform</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="WaveletTransformInverse.__init__"><a class="viewcode-back" href="../../../generated/odl.trafos.wavelet.WaveletTransformInverse.html#odl.trafos.wavelet.WaveletTransformInverse.__init__">[docs]</a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="nb">range</span><span class="p">,</span> <span class="n">wavelet</span><span class="p">,</span> <span class="n">nlevels</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">pad_mode</span><span class="o">=</span><span class="s1">&#39;constant&#39;</span><span class="p">,</span>
+                 <span class="n">pad_const</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">impl</span><span class="o">=</span><span class="s1">&#39;pywt&#39;</span><span class="p">,</span> <span class="n">axes</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Initialize a new instance.</span>
+
+<span class="sd">         Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        range : `DiscretizedSpace`</span>
+<span class="sd">            Domain of the forward wavelet transform (the &quot;image domain&quot;),</span>
+<span class="sd">            which is the range of this inverse transform.</span>
+<span class="sd">        wavelet : string or `pywt.Wavelet`</span>
+<span class="sd">            Specification of the wavelet to be used in the transform.</span>
+<span class="sd">            If a string is given, it is converted to a `pywt.Wavelet`.</span>
+<span class="sd">            Use `pywt.wavelist` to get a list of available wavelets.</span>
+
+<span class="sd">            Possible wavelet families are:</span>
+
+<span class="sd">            ``&#39;haar&#39;``: Haar</span>
+
+<span class="sd">            ``&#39;db&#39;``: Daubechies</span>
+
+<span class="sd">            ``&#39;sym&#39;``: Symlets</span>
+
+<span class="sd">            ``&#39;coif&#39;``: Coiflets</span>
+
+<span class="sd">            ``&#39;bior&#39;``: Biorthogonal</span>
+
+<span class="sd">            ``&#39;rbio&#39;``: Reverse biorthogonal</span>
+
+<span class="sd">            ``&#39;dmey&#39;``: Discrete FIR approximation of the Meyer wavelet</span>
+
+<span class="sd">        nlevels : positive int, optional</span>
+<span class="sd">            Number of scaling levels to be used in the decomposition. The</span>
+<span class="sd">            maximum number of levels can be calculated with</span>
+<span class="sd">            `pywt.dwtn_max_level`.</span>
+<span class="sd">            Default: Use maximum number of levels.</span>
+<span class="sd">        pad_mode : string, optional</span>
+<span class="sd">            Method to be used to extend the signal.</span>
+
+<span class="sd">            ``&#39;constant&#39;``: Fill with ``pad_const``.</span>
+
+<span class="sd">            ``&#39;symmetric&#39;``: Reflect at the boundaries, not repeating the</span>
+<span class="sd">            outmost values.</span>
+
+<span class="sd">            ``&#39;periodic&#39;``: Fill in values from the other side, keeping</span>
+<span class="sd">            the order.</span>
+
+<span class="sd">            ``&#39;order0&#39;``: Extend constantly with the outmost values</span>
+<span class="sd">            (ensures continuity).</span>
+
+<span class="sd">            ``&#39;order1&#39;``: Extend with constant slope (ensures continuity of</span>
+<span class="sd">            the first derivative). This requires at least 2 values along</span>
+<span class="sd">            each axis where padding is applied.</span>
+
+<span class="sd">            ``&#39;pywt_per&#39;``:  like ``&#39;periodic&#39;``-padding but gives the smallest</span>
+<span class="sd">            possible number of decomposition coefficients.</span>
+<span class="sd">            Only available with ``impl=&#39;pywt&#39;``, See ``pywt.Modes.modes``.</span>
+
+<span class="sd">            ``&#39;reflect&#39;``: Reflect at the boundary, without repeating the</span>
+<span class="sd">            outmost values.</span>
+
+<span class="sd">            ``&#39;antisymmetric&#39;``: Anti-symmetric variant of ``symmetric``.</span>
+
+<span class="sd">            ``&#39;antireflect&#39;``: Anti-symmetric variant of ``reflect``.</span>
+
+<span class="sd">            For reference, the following table compares the naming conventions</span>
+<span class="sd">            for the modes in ODL vs. PyWavelets::</span>
+
+<span class="sd">                ======================= ==================</span>
+<span class="sd">                          ODL               PyWavelets</span>
+<span class="sd">                ======================= ==================</span>
+<span class="sd">                symmetric               symmetric</span>
+<span class="sd">                reflect                 reflect</span>
+<span class="sd">                order1                  smooth</span>
+<span class="sd">                order0                  constant</span>
+<span class="sd">                constant, pad_const=0   zero</span>
+<span class="sd">                periodic                periodic</span>
+<span class="sd">                pywt_per                periodization</span>
+<span class="sd">                antisymmetric           antisymmetric</span>
+<span class="sd">                antireflect             antireflect</span>
+<span class="sd">                ======================= ==================</span>
+
+<span class="sd">            See `signal extension modes`_ for an illustration of the modes</span>
+<span class="sd">            (under the PyWavelets naming conventions).</span>
+<span class="sd">        pad_const : float, optional</span>
+<span class="sd">            Constant value to use if ``pad_mode == &#39;constant&#39;``. Ignored</span>
+<span class="sd">            otherwise. Constants other than 0 are not supported by the</span>
+<span class="sd">            ``pywt`` back-end.</span>
+<span class="sd">        impl : {&#39;pywt&#39;}, optional</span>
+<span class="sd">            Back-end for the wavelet transform.</span>
+<span class="sd">        axes : sequence of ints, optional</span>
+<span class="sd">            Axes over which the DWT that created ``coeffs`` was performed.  The</span>
+<span class="sd">            default value of ``None`` corresponds to all axes. When not all</span>
+<span class="sd">            axes are included this is analagous to a batch transform in</span>
+<span class="sd">            ``len(axes)`` dimensions looped over the non-transformed axes. In</span>
+<span class="sd">            orther words, filtering and decimation does not occur along any</span>
+<span class="sd">            axes not in ``axes``.</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        --------</span>
+<span class="sd">        Check that the inverse is the actual inverse on a simple example on</span>
+<span class="sd">        a discrete 2D space with 4 sampling points per axis:</span>
+
+<span class="sd">        &gt;&gt;&gt; space = odl.uniform_discr([0, 0], [1, 1], (4, 4))</span>
+<span class="sd">        &gt;&gt;&gt; wavelet_trafo = odl.trafos.WaveletTransform(</span>
+<span class="sd">        ...     domain=space, nlevels=1, wavelet=&#39;haar&#39;)</span>
+<span class="sd">        &gt;&gt;&gt; orig_array = np.array([[1, 1, 1, 1],</span>
+<span class="sd">        ...                        [0, 0, 0, 0],</span>
+<span class="sd">        ...                        [0, 0, 1, 1],</span>
+<span class="sd">        ...                        [1, 0, 1, 0]])</span>
+<span class="sd">        &gt;&gt;&gt; decomp = wavelet_trafo(orig_array)</span>
+<span class="sd">        &gt;&gt;&gt; recon = wavelet_trafo.inverse(decomp)</span>
+<span class="sd">        &gt;&gt;&gt; np.allclose(recon, orig_array)</span>
+<span class="sd">        True</span>
+
+<span class="sd">        References</span>
+<span class="sd">        ----------</span>
+<span class="sd">        .. _signal extension modes:</span>
+<span class="sd">           https://pywavelets.readthedocs.io/en/latest/ref/signal-extension-modes.html</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">WaveletTransformInverse</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span>
+            <span class="n">space</span><span class="o">=</span><span class="nb">range</span><span class="p">,</span> <span class="n">wavelet</span><span class="o">=</span><span class="n">wavelet</span><span class="p">,</span> <span class="n">variant</span><span class="o">=</span><span class="s1">&#39;inverse&#39;</span><span class="p">,</span> <span class="n">nlevels</span><span class="o">=</span><span class="n">nlevels</span><span class="p">,</span>
+            <span class="n">pad_mode</span><span class="o">=</span><span class="n">pad_mode</span><span class="p">,</span> <span class="n">pad_const</span><span class="o">=</span><span class="n">pad_const</span><span class="p">,</span> <span class="n">impl</span><span class="o">=</span><span class="n">impl</span><span class="p">,</span> <span class="n">axes</span><span class="o">=</span><span class="n">axes</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="WaveletTransformInverse._call"><a class="viewcode-back" href="../../../generated/odl.trafos.wavelet.WaveletTransformInverse._call.html#odl.trafos.wavelet.WaveletTransformInverse._call">[docs]</a>    <span class="k">def</span> <span class="nf">_call</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">coeffs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return the inverse wavelet transform of ``coeffs``.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">impl</span> <span class="o">==</span> <span class="s1">&#39;pywt&#39;</span><span class="p">:</span>
+            <span class="n">coeffs</span> <span class="o">=</span> <span class="n">pywt</span><span class="o">.</span><span class="n">unravel_coeffs</span><span class="p">(</span><span class="n">coeffs</span><span class="p">,</span>
+                                         <span class="n">coeff_slices</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_coeff_slices</span><span class="p">,</span>
+                                         <span class="n">coeff_shapes</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_coeff_shapes</span><span class="p">,</span>
+                                         <span class="n">output_format</span><span class="o">=</span><span class="s1">&#39;wavedecn&#39;</span><span class="p">)</span>
+            <span class="n">recon</span> <span class="o">=</span> <span class="n">pywt</span><span class="o">.</span><span class="n">waverecn</span><span class="p">(</span>
+                <span class="n">coeffs</span><span class="p">,</span> <span class="n">wavelet</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">pywt_wavelet</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">pywt_pad_mode</span><span class="p">,</span>
+                <span class="n">axes</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">axes</span><span class="p">)</span>
+            <span class="n">recon_shape</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">range</span><span class="o">.</span><span class="n">shape</span>
+            <span class="k">if</span> <span class="n">recon</span><span class="o">.</span><span class="n">shape</span> <span class="o">!=</span> <span class="n">recon_shape</span><span class="p">:</span>
+                <span class="c1"># If the original shape was odd along any transformed axes it</span>
+                <span class="c1"># will have been rounded up to the next even size after the</span>
+                <span class="c1"># reconstruction. The extra sample should be discarded.</span>
+                <span class="c1"># The underlying reason is decimation by two in reconstruction</span>
+                <span class="c1"># must keep ceil(N/2) samples in each band for perfect</span>
+                <span class="c1"># reconstruction. Reconstruction then upsamples by two.</span>
+                <span class="c1"># When N is odd, (2 * np.ceil(N/2)) != N.</span>
+                <span class="n">recon_slc</span> <span class="o">=</span> <span class="p">[]</span>
+                <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="p">(</span><span class="n">n_recon</span><span class="p">,</span> <span class="n">n_intended</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="n">recon</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span>
+                                                              <span class="n">recon_shape</span><span class="p">)):</span>
+                    <span class="k">if</span> <span class="n">n_recon</span> <span class="o">==</span> <span class="n">n_intended</span> <span class="o">+</span> <span class="mi">1</span><span class="p">:</span>
+                        <span class="c1"># Upsampling added one entry too much in this axis,</span>
+                        <span class="c1"># drop last one</span>
+                        <span class="n">recon_slc</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">slice</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">))</span>
+                    <span class="k">elif</span> <span class="n">n_recon</span> <span class="o">==</span> <span class="n">n_intended</span><span class="p">:</span>
+                        <span class="n">recon_slc</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">slice</span><span class="p">(</span><span class="kc">None</span><span class="p">))</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                            <span class="s1">&#39;in axis </span><span class="si">{}</span><span class="s1">: expected size </span><span class="si">{}</span><span class="s1"> or </span><span class="si">{}</span><span class="s1"> in &#39;</span>
+                            <span class="s1">&#39;`recon_shape`, got </span><span class="si">{}</span><span class="s1">&#39;</span>
+                            <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">n_recon</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="n">n_recon</span><span class="p">,</span>
+                                      <span class="n">n_intended</span><span class="p">))</span>
+                <span class="n">recon</span> <span class="o">=</span> <span class="n">recon</span><span class="p">[</span><span class="nb">tuple</span><span class="p">(</span><span class="n">recon_slc</span><span class="p">)]</span>
+            <span class="k">return</span> <span class="n">recon</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">&quot;bad `impl` &#39;</span><span class="si">{}</span><span class="s2">&#39;&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">impl</span><span class="p">))</span></div>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">adjoint</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Adjoint of this operator.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        adjoint : `WaveletTransform`</span>
+<span class="sd">            If the transform is orthogonal, the adjoint is the inverse.</span>
+
+<span class="sd">        Raises</span>
+<span class="sd">        ------</span>
+<span class="sd">        OpNotImplementedError</span>
+<span class="sd">            if `is_orthogonal` is ``False``</span>
+
+<span class="sd">        See Also</span>
+<span class="sd">        --------</span>
+<span class="sd">        inverse</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_orthogonal</span><span class="p">:</span>
+            <span class="n">scale</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">range</span><span class="o">.</span><span class="n">partition</span><span class="o">.</span><span class="n">cell_volume</span>
+            <span class="k">return</span> <span class="n">scale</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">inverse</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># TODO: put adjoint here</span>
+            <span class="k">return</span> <span class="nb">super</span><span class="p">(</span><span class="n">WaveletTransformInverse</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">adjoint</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">inverse</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Inverse of this operator.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        inverse : `WaveletTransform`</span>
+
+<span class="sd">        See Also</span>
+<span class="sd">        --------</span>
+<span class="sd">        adjoint</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">WaveletTransform</span><span class="p">(</span>
+            <span class="n">domain</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">range</span><span class="p">,</span> <span class="n">wavelet</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">pywt_wavelet</span><span class="p">,</span> <span class="n">nlevels</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">nlevels</span><span class="p">,</span>
+            <span class="n">pad_mode</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">pad_mode</span><span class="p">,</span> <span class="n">pad_const</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">pad_const</span><span class="p">,</span> <span class="n">impl</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">impl</span><span class="p">,</span>
+            <span class="n">axes</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">axes</span><span class="p">)</span></div>
+
+
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s1">&#39;__main__&#39;</span><span class="p">:</span>
+    <span class="kn">from</span> <span class="nn">odl.util.testutils</span> <span class="kn">import</span> <span class="n">run_doctests</span>
+    <span class="n">run_doctests</span><span class="p">(</span><span class="n">skip_if</span><span class="o">=</span><span class="ow">not</span> <span class="n">PYWT_AVAILABLE</span><span class="p">)</span>
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &#169; Copyright 2014-2020 The ODL Contributors.
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

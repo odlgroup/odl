@@ -1,0 +1,6 @@
+﻿noise_element
+================================
+
+.. currentmodule:: odl.util.testutils
+
+.. autofunction:: noise_element

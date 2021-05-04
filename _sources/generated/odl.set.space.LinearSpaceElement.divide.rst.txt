@@ -1,0 +1,8 @@
+:orphan:
+
+LinearSpaceElement.divide
+=======================================
+
+.. currentmodule:: odl.set.space
+
+.. automethod:: LinearSpaceElement.divide

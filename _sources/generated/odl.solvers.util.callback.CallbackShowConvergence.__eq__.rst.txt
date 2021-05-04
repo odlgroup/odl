@@ -1,0 +1,8 @@
+:orphan:
+
+CallbackShowConvergence.__eq__
+========================================================
+
+.. currentmodule:: odl.solvers.util.callback
+
+.. automethod:: CallbackShowConvergence.__eq__

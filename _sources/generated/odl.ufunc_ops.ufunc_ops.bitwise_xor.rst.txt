@@ -1,0 +1,6 @@
+﻿bitwise_xor
+===================================
+
+.. currentmodule:: odl.ufunc_ops.ufunc_ops
+
+.. autofunction:: bitwise_xor

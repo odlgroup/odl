@@ -1,0 +1,43 @@
+﻿FunctionalDefaultConvexConjugate
+==================================================================
+
+.. currentmodule:: odl.solvers.functional.functional
+
+.. autoclass:: FunctionalDefaultConvexConjugate
+   :show-inheritance:
+   
+   
+   .. automethod:: __init__
+   
+      
+   
+   .. HACK -- the point here is that we don't want this to appear in the output, but the autosummary should still generate the pages.
+      .. autosummary::
+         :toctree:
+      
+         FunctionalDefaultConvexConjugate.__call__
+         FunctionalDefaultConvexConjugate.__eq__
+         FunctionalDefaultConvexConjugate._call
+         FunctionalDefaultConvexConjugate.bregman
+         FunctionalDefaultConvexConjugate.derivative
+         FunctionalDefaultConvexConjugate.norm
+         FunctionalDefaultConvexConjugate.translated
+   
+
+    
+   .. HACK -- the point here is that we don't want this to appear in the output, but the autosummary should still generate the pages.
+      .. autosummary::
+         :toctree:
+      
+         FunctionalDefaultConvexConjugate.adjoint
+         FunctionalDefaultConvexConjugate.convex_conj
+         FunctionalDefaultConvexConjugate.domain
+         FunctionalDefaultConvexConjugate.grad_lipschitz
+         FunctionalDefaultConvexConjugate.gradient
+         FunctionalDefaultConvexConjugate.inverse
+         FunctionalDefaultConvexConjugate.is_functional
+         FunctionalDefaultConvexConjugate.is_linear
+         FunctionalDefaultConvexConjugate.proximal
+         FunctionalDefaultConvexConjugate.range
+   
+   

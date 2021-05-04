@@ -1,0 +1,8 @@
+:orphan:
+
+OperatorPointwiseProduct.derivative
+=========================================================
+
+.. currentmodule:: odl.operator.operator
+
+.. automethod:: OperatorPointwiseProduct.derivative

@@ -1,0 +1,6 @@
+﻿uniform_grid
+===========================
+
+.. currentmodule:: odl.discr.grid
+
+.. autofunction:: uniform_grid

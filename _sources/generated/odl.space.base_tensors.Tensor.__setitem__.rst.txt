@@ -1,0 +1,8 @@
+:orphan:
+
+Tensor.__setitem__
+=========================================
+
+.. currentmodule:: odl.space.base_tensors
+
+.. automethod:: Tensor.__setitem__

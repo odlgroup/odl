@@ -1,0 +1,8 @@
+:orphan:
+
+ParallelHoleCollimatorGeometry.det_point_position
+=========================================================================
+
+.. currentmodule:: odl.tomo.geometry.spect
+
+.. automethod:: ParallelHoleCollimatorGeometry.det_point_position

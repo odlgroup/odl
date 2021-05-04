@@ -1,0 +1,6 @@
+﻿gauss_newton
+============================================
+
+.. currentmodule:: odl.solvers.iterative.iterative
+
+.. autofunction:: gauss_newton

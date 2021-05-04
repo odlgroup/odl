@@ -1,0 +1,20 @@
+space_utils
+===========
+
+Utility functions for space implementations.
+
+.. currentmodule:: odl.space.space_utils
+
+
+
+
+.. rubric:: Functions
+
+.. autosummary::
+   :toctree: generated/
+
+   ~odl.space.space_utils.cn
+   ~odl.space.space_utils.rn
+   ~odl.space.space_utils.tensor_space
+   ~odl.space.space_utils.vector
+

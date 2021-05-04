@@ -1,0 +1,6 @@
+DivergentBeamGeometry.check_bounds
+=============================================================
+
+.. currentmodule:: odl.tomo.geometry.geometry
+
+.. autoproperty:: DivergentBeamGeometry.check_bounds
