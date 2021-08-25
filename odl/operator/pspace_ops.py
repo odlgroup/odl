@@ -263,7 +263,7 @@ class ProductSpaceOperator(Operator):
                     '{}'.format(len(row), i, ncols))
 
             for j, col in enumerate(row):
-                if col is None or col is 0:
+                if col is None or col == 0:
                     pass
                 elif isinstance(col, Operator):
                     irow.append(i)
