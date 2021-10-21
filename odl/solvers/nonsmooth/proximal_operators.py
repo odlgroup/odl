@@ -1608,9 +1608,12 @@ def proj_l1(x, radius=1, out=None):
         out = x.space.element()
 
     u = x.ufuncs.absolute()
-    v = x.ufuncs.sign()
-    proj_simplex(u, radius, out)
-    out *= v
+    if u.ufuncs.sum() <= radius:
+        out[:] = x
+    else:
+        v = x.ufuncs.sign()
+        proj_simplex(u, radius, out)
+        out *= v
 
     return out
 
