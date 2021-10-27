@@ -1494,7 +1494,7 @@ def proximal_linfty(space):
         def _call(self, x, out):
             """Return ``self(x)``."""
 
-            radius = 1
+            radius = self.sigma
 
             if x is out:
                 x = x.copy()
