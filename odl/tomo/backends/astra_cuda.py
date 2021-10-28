@@ -23,8 +23,9 @@ from odl.tomo.backends.astra_setup import (
     astra_volume_geometry)
 from odl.tomo.backends.util import _add_default_complex_impl
 from odl.tomo.geometry import (
-    ConeBeamGeometry, FanBeamGeometry, Geometry, Parallel2dGeometry,
-    Parallel3dAxisGeometry)
+    ConeBeamGeometry, ConeVecGeometry, FanBeamGeometry, Geometry,
+    Parallel2dGeometry, Parallel3dAxisGeometry, ParallelVecGeometry,
+    VecGeometry)
 
 try:
     import astra
@@ -38,7 +39,7 @@ __all__ = (
 )
 
 
-class AstraCudaImpl:
+class AstraCudaImpl(object):
     """`RayTransform` implementation for CUDA algorithms in ASTRA."""
 
     algo_forward_id = None
@@ -238,8 +239,14 @@ class AstraCudaImpl:
 
             # Fix scaling to weight by pixel size
             if (
-                isinstance(self.geometry, Parallel2dGeometry)
-                and parse_version(ASTRA_VERSION) < parse_version('1.9.9.dev')
+                parse_version(ASTRA_VERSION) < parse_version('1.9.9.dev')
+                and (
+                    isinstance(self.geometry, Parallel2dGeometry)
+                    or (
+                        isinstance(self.geometry, ParallelVecGeometry)
+                        and self.geometry.ndim == 2
+                    )
+                )
             ):
                 # parallel2d scales with pixel stride
                 out *= 1 / float(self.geometry.det_partition.cell_volume)
@@ -337,19 +344,22 @@ def astra_cuda_bp_scaling_factor(proj_space, vol_space, geometry):
     track of it and adapt the scaling accordingly.
     """
     # Angular integration weighting factor
-    # angle interval weight by approximate cell volume
-    angle_extent = geometry.motion_partition.extent
-    num_angles = geometry.motion_partition.shape
-    # TODO: this gives the wrong factor for Parallel3dEulerGeometry with
-    # 2 angles
-    scaling_factor = (angle_extent / num_angles).prod()
+    if isinstance(geometry, VecGeometry):
+        angle_weighting = 1.0
+    else:
+        # Average angle step, approximation in the case of non-uniform angles
+        angle_extent = geometry.motion_partition.extent
+        num_angles = geometry.motion_partition.shape
+        # TODO: this gives the wrong factor for Parallel3dEulerGeometry with
+        #       2 angles
+        angle_weighting = (angle_extent / num_angles).prod()
 
     # Correct in case of non-weighted spaces
-    proj_extent = float(proj_space.partition.extent.prod())
+    proj_extent = float(np.prod(proj_space.partition.extent))
     proj_size = float(proj_space.partition.size)
     proj_weighting = proj_extent / proj_size
 
-    scaling_factor *= (
+    scaling_factor = angle_weighting * (
         proj_space.weighting.const / proj_weighting
     )
     scaling_factor /= (
@@ -384,6 +394,23 @@ def astra_cuda_bp_scaling_factor(proj_space, vol_space, geometry):
             src_radius = geometry.src_radius
             det_radius = geometry.det_radius
             scaling_factor *= ((src_radius + det_radius) / src_radius) ** 2
+        elif isinstance(geometry, ParallelVecGeometry):
+            if geometry.ndim == 2:
+                # Scales with 1 / cell_volume
+                scaling_factor *= float(vol_space.cell_volume)
+            elif geometry.ndim == 3:
+                # Scales with cell volume
+                scaling_factor /= vol_space.cell_volume
+        elif isinstance(geometry, ConeVecGeometry):
+            if geometry.ndim == 2:
+                # Scales with 1 / cell_volume
+                scaling_factor *= float(vol_space.cell_volume)
+            elif geometry.ndim == 3:
+                det_px_area = geometry.det_partition.cell_volume
+                scaling_factor *= (
+                    det_px_area ** 2 / vol_space.cell_volume ** 2
+                )
+
     elif parse_version(ASTRA_VERSION) < parse_version('1.9.0dev'):
         # Scaling for the 1.8.x releases
         if isinstance(geometry, Parallel2dGeometry):
@@ -409,15 +436,23 @@ def astra_cuda_bp_scaling_factor(proj_space, vol_space, geometry):
             src_radius = geometry.src_radius
             det_radius = geometry.det_radius
             scaling_factor *= ((src_radius + det_radius) / src_radius) ** 2
+        elif isinstance(geometry, ParallelVecGeometry):
+            if geometry.ndim == 2:
+                # Scales with 1 / cell_volume
+                scaling_factor *= float(vol_space.cell_volume)
+            elif geometry.ndim == 3:
+                # Scales with cell volume
+                scaling_factor /= vol_space.cell_volume
+        elif isinstance(geometry, ConeVecGeometry):
+            if geometry.ndim == 2:
+                # Scales with 1 / cell_volume
+                scaling_factor *= float(vol_space.cell_volume)
+            elif geometry.ndim == 3:
+                det_px_area = geometry.det_partition.cell_volume
+                scaling_factor *= (
+                    det_px_area ** 2 / vol_space.cell_volume ** 2
+                )
 
-            # Correction for scaled 1/r^2 factor in ASTRA's density weighting.
-            # This compensates for scaled voxels and pixels, as well as a
-            # missing factor src_radius ** 2 in the ASTRA BP with
-            # density weighting.
-            det_px_area = geometry.det_partition.cell_volume
-            scaling_factor *= (
-                src_radius ** 2 * det_px_area ** 2 / vol_space.cell_volume ** 2
-            )
     elif parse_version(ASTRA_VERSION) < parse_version('1.9.9.dev'):
         # Scaling for intermediate dev releases between 1.8.3 and 1.9.9.dev
         if isinstance(geometry, Parallel2dGeometry):
@@ -450,6 +485,26 @@ def astra_cuda_bp_scaling_factor(proj_space, vol_space, geometry):
             # density weighting.
             det_px_area = geometry.det_partition.cell_volume
             scaling_factor *= (src_radius ** 2 * det_px_area ** 2)
+        elif isinstance(geometry, ParallelVecGeometry):
+            if geometry.ndim == 2:
+                # Scales with 1 / cell_volume
+                scaling_factor *= float(vol_space.cell_volume)
+            elif geometry.ndim == 3:
+                # Scales with cell volume
+                scaling_factor /= vol_space.cell_volume
+        elif isinstance(geometry, ConeVecGeometry):
+            # TODO: the distance weighting correction should be based on the
+            #       distances per angle; part of the weighting scheme probably
+            if geometry.ndim == 2:
+                # Scales with 1 / cell_volume
+                scaling_factor *= float(vol_space.cell_volume)
+            elif geometry.ndim == 3:
+                det_px_area = geometry.det_partition.cell_volume
+                scaling_factor *= (
+                    det_px_area ** 2 / vol_space.cell_volume ** 2
+                )
+
+
     else:
         # Scaling for versions since 1.9.9.dev
         scaling_factor /= float(vol_space.cell_volume)

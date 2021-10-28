@@ -1402,7 +1402,7 @@ def pkg_supports(feature, pkg_version, pkg_feat_dict):
     >>> pkg_supports('feat5', '1.0', feat_dict)
     False
     """
-    from pkg_resources import parse_requirements
+    from packaging.requirements import Requirement
 
     feature = str(feature)
     pkg_version = str(pkg_version)
@@ -1418,16 +1418,13 @@ def pkg_supports(feature, pkg_version, pkg_feat_dict):
     ver_specs = ['pkg' + supp_ver for supp_ver in supp_versions]
     # Each parse_requirements list contains only one entry since we specify
     # only one package
-    ver_reqs = [list(parse_requirements(ver_spec))[0]
-                for ver_spec in ver_specs]
+    ver_reqs = [Requirement(ver_spec) for ver_spec in ver_specs]
 
-    # If one of the requirements in the list is met, return True
-    for req in ver_reqs:
-        if req.specifier.contains(pkg_version, prereleases=True):
-            return True
-
-    # No match
-    return False
+    # If one of the requirements in the list is met, return True, else False
+    return any(
+        req.specifier.contains(pkg_version, prereleases=True)
+        for req in ver_reqs
+    )
 
 
 @contextmanager
