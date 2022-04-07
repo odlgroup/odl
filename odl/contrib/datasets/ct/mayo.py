@@ -112,20 +112,25 @@ def load_projections(dir, indices=None, use_ffs=True):
     angles = [d.DetectorFocalCenterAngularPosition for d in datasets]
     angles = -np.unwrap(angles) - np.pi  # different definition of angles
 
-    # Set minimum and maximum corners
-    shape = np.array([datasets[0].NumberofDetectorColumns,
-                      datasets[0].NumberofDetectorRows])
-    pixel_size = np.array([datasets[0].DetectorElementTransverseSpacing,
-                           datasets[0].DetectorElementAxialSpacing])
-
-    # Correct from center of pixel to corner of pixel
-    minp = -(np.array(datasets[0].DetectorCentralElement) - 0.5) * pixel_size
-    maxp = minp + shape * pixel_size
-
     # Select geometry parameters
     src_radius = datasets[0].DetectorFocalCenterRadialDistance
     det_radius = (datasets[0].ConstantRadialDistance -
                   datasets[0].DetectorFocalCenterRadialDistance)
+    det_curvature_radius = src_radius + det_radius
+
+    # Set minimum and maximum corners
+    det_shape = np.array([datasets[0].NumberofDetectorColumns,
+                          datasets[0].NumberofDetectorRows])
+
+    # Set pixel size
+    # TransverseSpacing is specified as arc length; convert this to angle.
+    det_pixel_size = np.array([datasets[0].DetectorElementTransverseSpacing /
+                                 det_curvature_radius,
+                               datasets[0].DetectorElementAxialSpacing])
+
+    # Correct from center of pixel to corner of pixel
+    minp = -(np.array(datasets[0].DetectorCentralElement) - 0.5) * pixel_size
+    maxp = minp + shape * pixel_size
 
     # For unknown reasons, mayo does not include the tag
     # "TableFeedPerRotation", which is what we want.
@@ -186,6 +191,8 @@ def load_projections(dir, indices=None, use_ffs=True):
                                          detector_partition,
                                          src_radius=src_radius,
                                          det_radius=det_radius,
+                                         det_curvature_radius=
+                                             (det_curvature_radius, None),
                                          pitch=pitch,
                                          offset_along_axis=offset_along_axis)
 
