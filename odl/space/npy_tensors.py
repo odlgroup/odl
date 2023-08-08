@@ -480,7 +480,7 @@ class NumpyTensorSpace(TensorSpace):
         all_dtypes = []
         for lst in np.sctypes.values():
             for dtype in lst:
-                if dtype not in (np.object, np.void):
+                if dtype not in (object, np.void):
                     all_dtypes.append(np.dtype(dtype))
         # Need to add these manually since np.sctypes['others'] will only
         # contain one of them (depending on Python version)
