@@ -13,7 +13,6 @@ import numpy as np
 from odl.discr import ResizingOperator
 from odl.trafos import FourierTransform, PYFFTW_AVAILABLE
 
-
 __all__ = ('fbp_op', 'fbp_filter_op', 'tam_danielson_window',
            'parker_weighting')
 
@@ -324,6 +323,9 @@ def fbp_filter_op(ray_trafo, padding=True, filter_type='Ram-Lak',
 
         `Parallel3dAxisGeometry` : Exact reconstruction
 
+        `Parallel3dEulerGeometry` : Exact reconstruction, only implemented for
+        2d angle partitions.
+
         `FanBeamGeometry` : Approximate reconstruction, correct in limit of
         fan angle = 0.
         Only flat detectors are supported (det_curvature_radius is None).
@@ -364,9 +366,10 @@ def fbp_filter_op(ray_trafo, padding=True, filter_type='Ram-Lak',
     tam_danielson_window : Windowing for helical data
     """
     impl = 'pyfftw' if PYFFTW_AVAILABLE else 'numpy'
-    alen = ray_trafo.geometry.motion_params.length
+    alen = ray_trafo.geometry.motion_params.extent[0]
 
     if ray_trafo.domain.ndim == 2:
+
         # Define ramp filter
         def fourier_filter(x):
             abs_freq = np.abs(x[1])
@@ -387,7 +390,48 @@ def fbp_filter_op(ray_trafo, padding=True, filter_type='Ram-Lak',
         else:
             fourier = FourierTransform(ray_trafo.range, axes=1, impl=impl)
 
-    elif ray_trafo.domain.ndim == 3:
+    elif ray_trafo.domain.ndim == 3 and ray_trafo.geometry.angles.ndim == 2:
+        if hasattr(ray_trafo.geometry, 'src_radius'):
+            raise NotImplementedError(
+                'FBP not yet implemented for 3D cone-beam')
+        else:
+            scale = 1.0
+
+        phi = ray_trafo.geometry.grid.coord_vectors[1]
+        avol = alen * (abs(np.cos(phi)).sum() * abs(phi[1] - phi[0]))
+
+        # Define ramp filter
+        def fourier_filter(x):
+            abs_freq = ((abs(x[2]) ** 2 + abs(x[3]) ** 2) ** .5
+                        * abs(np.cos(x[1])))
+            norm_freq = abs_freq / np.max(abs_freq)
+            filt = _fbp_filter(norm_freq, filter_type, frequency_scaling)
+
+            coverage = avol / (4 * np.pi)  # fraction of the sphere sampled
+            c = (np.pi / 2) ** .5  # Fourier transform of |x|^{1-n} = 1/(c|y|)
+            # I don't understand this factor
+            fudge = 0.03 / ray_trafo.domain.cell_volume
+
+            scaling = scale * np.max(abs_freq) / (c * coverage) * fudge
+            return filt * scaling
+
+        if padding:
+            # Define padding operator
+            padded_shape_u = ray_trafo.range.shape[2] * 2 - 1
+            padded_shape_v = ray_trafo.range.shape[3] * 2 - 1
+
+            ran_shp = (ray_trafo.range.shape[0],
+                       ray_trafo.range.shape[1],
+                       padded_shape_u,
+                       padded_shape_v)
+            resizing = ResizingOperator(ray_trafo.range, ran_shp=ran_shp)
+
+            fourier = FourierTransform(resizing.range, axes=[2, 3], impl=impl)
+            fourier = fourier * resizing
+        else:
+            fourier = FourierTransform(ray_trafo.range, axes=[2, 3], impl=impl)
+
+    elif ray_trafo.domain.ndim == 3 and hasattr(ray_trafo.geometry, 'axis'):
         # Find the direction that the filter should be taken in
         rot_dir = _rotation_direction_in_detector(ray_trafo.geometry)
 
@@ -454,7 +498,8 @@ def fbp_filter_op(ray_trafo, padding=True, filter_type='Ram-Lak',
         else:
             fourier = FourierTransform(ray_trafo.range, axes=axes, impl=impl)
     else:
-        raise NotImplementedError('FBP only implemented in 2d and 3d')
+        raise NotImplementedError(
+            'FBP is not yet implemented in this geometry')
 
     # Create ramp in the detector direction
     ramp_function = fourier.range.element(fourier_filter)
@@ -490,6 +535,9 @@ def fbp_op(ray_trafo, padding=True, filter_type='Ram-Lak',
         `Parallel2dGeometry` : Exact reconstruction
 
         `Parallel3dAxisGeometry` : Exact reconstruction
+
+        `Parallel3dEulerGeometry` : Exact reconstruction, only implemented for
+        2d angle partitions.
 
         `FanBeamGeometry` : Approximate reconstruction, correct in limit of fan
         angle = 0.
