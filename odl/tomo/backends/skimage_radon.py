@@ -152,13 +152,19 @@ def skimage_radon_back_projector(sinogram, geometry, vol_space, out=None):
         # Only do asserts here since these are backend functions
         assert out in vol_space
 
+    # scikit-image changed the name of this parameter in version 0.17
+    if (skimage.__version__<'0.17'):
+        filter_disable = {"filter": None}
+    else:
+        filter_disable = {"filter_name": None}
+
     # Rotate back from (rows, cols) to (x, y), then back-project (no filter)
     backproj = iradon(
         skimage_sinogram.asarray().T,
         theta,
         output_size=vol_space.shape[0],
-        filter=None,
         circle=False,
+        **filter_disable
     )
     out[:] = np.rot90(backproj, -1)
 
