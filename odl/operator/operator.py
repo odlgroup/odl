@@ -418,7 +418,7 @@ class Operator(object):
 
     def __new__(cls, *args, **kwargs):
         """Create a new instance."""
-        if not hasattr(cls, '_call_out_of_place'):
+        if '_call_out_of_place' not in cls.__dict__:
             call_has_out, call_out_optional, _ = _dispatch_call_args(cls)
             cls._call_has_out = call_has_out
             cls._call_out_optional = call_out_optional
