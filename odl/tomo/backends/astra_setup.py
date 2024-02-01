@@ -382,6 +382,9 @@ def astra_cyl_conebeam_3d_geom_to_vec(geometry):
     vectors[:, 0:3] = geometry.src_position(angles)
 
     # Center of detector in 3D space
+    # FIXME: This is not correct: det_point_position returns the zero-point of
+    # the detector, and not the center of the detector. For quarter-pixel-shifted
+    # detector these two do not coincide.
     mid_pt = geometry.det_params.mid_pt
     vectors[:, 3:6] = geometry.det_point_position(angles, mid_pt)
 
