@@ -18,10 +18,13 @@ import numpy as np
 import os
 import sys
 import pydicom
+import odl
+#import tqdm
 from functools import partial
 
 from pydicom.datadict import DicomDictionary, keyword_dict
-from mayo_dicom_dict import new_dict_items
+from odl.discr.discr_utils import linear_interpolator
+from odl.contrib.datasets.ct.mayo_dicom_dict import new_dict_items
 
 # Update the DICOM dictionary with the extra Mayo tags
 DicomDictionary.update(new_dict_items)
@@ -45,7 +48,7 @@ def _read_projections(folder, indices):
 
     data_array = []
 
-    for i, file_name in enumerate(file_names):
+    for i, file_name in enumerate(file_names): #enumerate(tqdm.tqdm(file_names,'Loading projection data')):
         # read the file
         try:
             dataset = pydicom.read_file(os.path.join(folder, file_name))
@@ -58,10 +61,15 @@ def _read_projections(folder, indices):
             # Get some required data
             rows = dataset.NumberofDetectorRows
             cols = dataset.NumberofDetectorColumns
+            #rescale_intercept = dataset.RescaleIntercept
+            #rescale_slope = dataset.RescaleSlope
+
         else:
             # Sanity checks
             assert rows == dataset.NumberofDetectorRows
             assert cols == dataset.NumberofDetectorColumns
+            #assert rescale_intercept == dataset.RescaleIntercept
+            #assert rescale_slope == dataset.RescaleSlope
 
         rescale_intercept = dataset.RescaleIntercept
         rescale_slope = dataset.RescaleSlope
@@ -83,43 +91,133 @@ def _read_projections(folder, indices):
     return datasets, data_array
 
 
-def load_projections(folder, indices=None):
-
+def load_projections(folder, indices=None, use_ffs=True, flat=False, interpolate=True):
+    """Load geometry and data stored in Mayo format from folder.
+    Parameters
+    ----------
+    folder : str
+        Path to the folder where the Mayo DICOM files are stored.
+    indices : optional
+        Indices of the projections to load.
+        Accepts advanced indexing such as slice or list of indices.
+    use_ffs : bool, optional
+        If ``True``, a source shift is applied to compensate the flying focal spot.
+        Default: ``True``
+    flat : bool, optional
+        If ``True``, the data is projected on a flat detector.
+        Default: ``Flat``
+    Returns
+    -------
+    geometry : ConeBeamGeometry
+        Geometry corresponding to the Mayo projector.
+    proj_data : `numpy.ndarray`
+        Projection data, given as the line integral of the linear attenuation
+        coefficient (g/cm^3). Its unit is thus g/cm^2.
+    """
     datasets, data_array = _read_projections(folder, indices)
 
     # Get the angles
     angles = np.array([d.DetectorFocalCenterAngularPosition for d in datasets])
+    # Reverse angular axis and set origin at 6 o'clock
     angles = -np.unwrap(angles) - np.pi 
-    
-    # position along the rotation axis
-    axial_position = -np.array([d.DetectorFocalCenterAxialPosition for d in datasets])
 
-    # detector
-    detector_shape = np.array([datasets[0].NumberofDetectorColumns,
+    # Set minimum and maximum corners
+    det_shape = np.array([datasets[0].NumberofDetectorColumns,
                           datasets[0].NumberofDetectorRows])
-    pixel_size = np.array([datasets[0].DetectorElementTransverseSpacing,
+    det_pixel_size = np.array([datasets[0].DetectorElementTransverseSpacing,
                                datasets[0].DetectorElementAxialSpacing])
 
+    # Correct from center of pixel to corner of pixel
+    # det_minp = -(np.array(datasets[0].DetectorCentralElement) - 0.5) * det_pixel_size
+    # in the implementation of the curved detector it is assumed 
+    # that the detector axis are "attached" to the 0-point of the detector,
+    # but in the ray transform it is assumed that 
+    # the axis are "attached" to the center of the detector.
+    # To avoid problems, we make sure that these two point coincide and
+    # shift the detector through the detector shift fuction 
+    # and rotate the detector axes accordingly 
+    det_minp = -det_shape * det_pixel_size / 2 
+    det_maxp = det_minp + det_shape * det_pixel_size
 
     # Select geometry parameters
-    source_radius = datasets[0].DetectorFocalCenterRadialDistance
-    detector_radius = (datasets[0].ConstantRadialDistance -
+    src_radius = datasets[0].DetectorFocalCenterRadialDistance
+    det_radius = (datasets[0].ConstantRadialDistance -
                   datasets[0].DetectorFocalCenterRadialDistance)
+    curv_radius = src_radius + det_radius
+    if flat:
+        det_curvature_radius = None
+    else:
+        det_curvature_radius = (curv_radius, None)
 
+    # For unknown reasons, mayo does not include the tag
+    # "TableFeedPerRotation", which is what we want.
+    # Instead we manually compute the pitch
+    table_dist = (datasets[-1].DetectorFocalCenterAxialPosition -
+                  datasets[0].DetectorFocalCenterAxialPosition)
+    num_rot = (angles[-1] - angles[0]) / (2 * np.pi)
+    pitch = table_dist / num_rot
     
-    # Flying focal spot
+    # Convert offset to odl definitions
+    offset_along_axis = (datasets[0].DetectorFocalCenterAxialPosition -
+                         angles[0] / (2 * np.pi) * pitch)
+
+    # offsets: detector’s focal center -> focal spot
     offset_angular = np.array([d.SourceAngularPositionShift for d in datasets]) 
     offset_radial = np.array([d.SourceRadialDistanceShift for d in datasets]) 
     offset_axial = np.array([d.SourceAxialPositionShift for d in datasets])
+
     # angles have inverse convention
     shift_d = np.cos(-offset_angular) * (src_radius + offset_radial) - src_radius
     shift_t = np.sin(-offset_angular) * (src_radius + offset_radial)
-    shift_r = - offset_axial    
-    source_shift = np.transpose(np.vstack([shift_d, shift_t, shift_r]))
+    # correcting for non-uniform pitch
+    det_offset_axial = np.array([d.DetectorFocalCenterAxialPosition for d in datasets])
+    shift_z = np.zeros(len(angles))-(det_offset_axial - angles / (2 * np.pi) * pitch - offset_along_axis)
+    shift_r = shift_z - offset_axial
+    
+    # Create partition for detector
+    if not flat:
+        det_minp[0] /= curv_radius 
+        det_maxp[0] /= curv_radius 
+    detector_partition = odl.uniform_partition(det_minp, det_maxp, det_shape)
 
+    # Assemble geometry
+    angle_partition = odl.nonuniform_partition(angles)
+    
+    # Flying focal spot
+    src_shift_func = None
+    if use_ffs:
+        shifts = np.transpose(np.vstack([shift_d, shift_t, shift_r]))
+        src_shift_func = partial(
+            odl.tomo.flying_focal_spot, apart=angle_partition, shifts=shifts)
+    else:
+        src_shift_func = None
         
     # Detector shift 
-    shift_angle = datasets[0].DetectorCentralElement[0] - 0.5 - det_shape[0] / 2
+    n_agles = len(angles)
+    shift_angle =  -((det_shape[0] / 2 - (datasets[0].DetectorCentralElement[0] - 0.5)) 
+                   * det_pixel_size[0] / curv_radius)
+    shift_d = curv_radius * (np.cos(shift_angle) - 1)
+    shift_t = curv_radius * np.sin(shift_angle)
+    shifts = np.transpose(np.vstack([np.ones(n_agles) * shift_d, 
+                                     np.ones(n_agles) * shift_t, 
+                                     shift_z]))
+    det_shift_func = partial(
+        odl.tomo.flying_focal_spot, apart=angle_partition, shifts=shifts)
+    
+    # Detector axes (rotate the first axis (1, 0, 0) by shift_angle)
+    det_axes_init = [(np.cos(shift_angle), np.sin(shift_angle), 0),
+                     (0, 0, 1)]
+    
+    geometry = odl.tomo.ConeBeamGeometry(angle_partition,
+                                         detector_partition,
+                                         src_radius=src_radius,
+                                         det_radius=det_radius,
+                                         pitch=pitch,
+                                         det_curvature_radius=det_curvature_radius,
+                                         det_axes_init=det_axes_init, 
+                                         offset_along_axis=offset_along_axis,
+                                         src_shift_func=src_shift_func,
+                                         det_shift_func=det_shift_func)
 
     # number of photons is inverse to the noise variance
     photon_stat = []
@@ -127,9 +225,46 @@ def load_projections(folder, indices=None):
         photon_stat.append(d.PhotonStatistics)
     photon_stat = np.expand_dims(np.array(photon_stat), axis=-1)
     
+    if flat and interpolate:
+        # project the data on a flat grid
+        space = odl.discr.uniform_discr([-1,-1,-1], [1,1,1], (3,3,3))
+        grid = odl.tomo.RayTransform(space, geometry).range.grid
+        data_array = interpolate_flat_grid(data_array, grid, curv_radius)
         
-    return angles, axial_position, detector_shape, pixel_size, source_radius, detetor_radius, detector_shift, source_shift, sdata_array, photon_stat
+    return geometry, data_array, photon_stat
 
+
+def interpolate_flat_grid(data_array, range_grid, radial_dist):
+    """Return the linear interpolator of the projection data on a flat detector.
+    Parameters
+    ----------
+    data_array : `numpy.ndarray`
+        Projection data on the cylindrical detector that should be interpolated.
+    range_grid : RectGrid
+        Rectilinear grid on the flat detector.
+    radial_dist : float
+        The constant radial distance, that is the distance between the detector’s
+        focal center and its central element.
+    Returns
+    -------
+    proj_data : `numpy.ndarray`
+        Interpolated projection data on the flat rectilinear grid.
+    """
+
+    # convert coordinates
+    theta, up, vp = range_grid.meshgrid
+
+    u = radial_dist * np.arctan(up / radial_dist)
+    v = radial_dist / np.sqrt(radial_dist**2 + up**2) * vp
+
+    # Calculate projection data in rectangular coordinates since we have no
+    # backend that supports cylindrical
+    interpolator = linear_interpolator(
+        data_array, range_grid.coord_vectors
+    )
+    proj_data_interpolated = interpolator((theta, u, v))
+
+    return proj_data_interpolated
 
 
 def load_reconstruction(folder, slice_start=0, slice_end=None):
@@ -170,7 +305,7 @@ def load_reconstruction(folder, slice_start=0, slice_end=None):
         slice_end = len(file_names)
     file_names = file_names[slice_start:slice_end]
 
-    for file_name in file_names:
+    for file_name in file_names:#tqdm.tqdm(file_names, 'loading volume data'):
         # read the file
         dataset = pydicom.read_file(os.path.join(folder, file_name))
 
@@ -197,9 +332,16 @@ def load_reconstruction(folder, slice_start=0, slice_end=None):
         volumes.append(densities)
         datasets.append(dataset)
         
+    # since pixel_size and pixel_thickness are same accros volume, 
+    # we take it from the first .dicom file    
+    pixel_size = np.array(datasets[0].PixelSpacing)
+    pixel_thickness = float(datasets[0].SliceThickness)
+
+    voxel_size = np.array(list(pixel_size) + [pixel_thickness])
     shape = np.array([rows, cols, len(volumes)])
 
     # Compute geometry parameters
+    #print(datasets[0].ReconstructionDiameter, datasets[0].TableHeight, datasets[0].ReconstructionTargetCenterPatient, datasets[0].DataCollectionCenterPatient)
     if datasets[0].get("ReconstructionTargetCenterPatient") is not None:
         mid_pt = np.array(datasets[0].ReconstructionTargetCenterPatient)
         mid_pt[1] += dataset.TableHeight
@@ -208,6 +350,9 @@ def load_reconstruction(folder, slice_start=0, slice_end=None):
     reconstruction_size = datasets[0].ReconstructionDiameter
     min_pt = mid_pt - reconstruction_size / 2
     max_pt = mid_pt + reconstruction_size / 2
+
+    # axis 1 has reversed convention
+    #min_pt[1], max_pt[1] = -max_pt[1], -min_pt[1]
 
     if len(datasets) > 1:
         slice_distance = np.abs(
@@ -240,9 +385,16 @@ def load_reconstruction(folder, slice_start=0, slice_end=None):
     max_pt[2] += 0.5 * slice_distance
     
 
+    recon_space = odl.uniform_discr(min_pt, max_pt, shape)
 
     volume = np.transpose(np.array(volumes), (1, 2, 0))
 
-    return min_pt, max_pt, shape, volume
+    return recon_space, volume
 
+
+
+
+if __name__ == '__main__':
+    from odl.util.testutils import run_doctests
+    run_doctests()
         
