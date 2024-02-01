@@ -153,7 +153,7 @@ def skimage_radon_back_projector(sinogram, geometry, vol_space, out=None):
         assert out in vol_space
 
     # scikit-image changed the name of this parameter in version 0.17
-    if (skimage.__version__<'0.17'):
+    if (skimage.__version__ < '0.17'):
         filter_disable = {"filter": None}
     else:
         filter_disable = {"filter_name": None}
