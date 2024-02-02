@@ -284,14 +284,28 @@ def load_reconstruction(folder, slice_start=0, slice_end=-1):
         # If we only have one slice, we must approximate the distance.
         slice_distance = pixel_thickness
 
+    if 'Siemens'.upper() in dataset.Manufacturer.upper(): 
+        if 'HEAD' in dataset.BodyPartExamined.upper():
+            min_pt[2] = np.array(datasets[0].ImagePositionPatient)[2]
+            max_pt[2] = np.array(datasets[-1].ImagePositionPatient)[2]
+        else:
+            min_pt[2] = -np.array(datasets[0].ImagePositionPatient)[2]
+            max_pt[2] = -np.array(datasets[-1].ImagePositionPatient)[2]
+    else:
+        if 'HEAD' in dataset.BodyPartExamined.upper():
+            min_pt[2] = np.array(datasets[0].ImagePositionPatient)[2]
+            max_pt[2] = np.array(datasets[-1].ImagePositionPatient)[2]
+        else:
+            min_pt[2] = np.array(datasets[-1].ImagePositionPatient)[2]
+            max_pt[2] = np.array(datasets[0].ImagePositionPatient)[2]
+            volumes = volumes[::-1]
     # The middle of the minimum/maximum slice can be computed from the
     # DICOM attribute "DataCollectionCenterPatient". Since ODL uses corner
     # points (e.g. edge of volume) we need to add half a voxel thickness to
-    # both sides.
-    min_pt[2] = -np.array(datasets[0].DataCollectionCenterPatient)[2]
+    # both sides. 
     min_pt[2] -= 0.5 * slice_distance
-    max_pt[2] = -np.array(datasets[-1].DataCollectionCenterPatient)[2]
     max_pt[2] += 0.5 * slice_distance
+    
 
     partition = odl.uniform_partition(min_pt, max_pt, shape)
 
