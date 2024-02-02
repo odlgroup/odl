@@ -235,14 +235,10 @@ def load_reconstruction(folder, slice_start=0, slice_end=None):
     # The middle of the minimum/maximum slice can be computed from the
     # DICOM attribute "DataCollectionCenterPatient". Since ODL uses corner
     # points (e.g. edge of volume) we need to add half a voxel thickness to
-    # both sides.
-    min_pt[2] = -np.array(datasets[0].ImagePositionPatient)[2]
+    # both sides. 
     min_pt[2] -= 0.5 * slice_distance
-    max_pt[2] = -np.array(datasets[-1].ImagePositionPatient)[2]
     max_pt[2] += 0.5 * slice_distance
-    if min_pt[2] > max_pt[2]:
-        min_pt[2] = -min_pt[2]
-        max_pt[2] = -max_pt[2]
+    
 
 
     volume = np.transpose(np.array(volumes), (1, 2, 0))
