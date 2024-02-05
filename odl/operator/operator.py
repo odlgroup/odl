@@ -17,7 +17,6 @@ from numbers import Integral, Number
 
 from odl.set import Field, LinearSpace, Set
 from odl.set.space import LinearSpaceElement
-from odl.util import cache_arguments
 
 __all__ = (
     'Operator',
@@ -122,7 +121,6 @@ def _function_signature(func):
     return '{}({})'.format(func.__name__, argstr)
 
 
-@cache_arguments
 def _dispatch_call_args(cls=None, bound_call=None, unbound_call=None,
                         attr='_call'):
     """Check the arguments of ``_call()`` or similar for conformity.
@@ -420,20 +418,21 @@ class Operator(object):
 
     def __new__(cls, *args, **kwargs):
         """Create a new instance."""
-        call_has_out, call_out_optional, _ = _dispatch_call_args(cls)
-        cls._call_has_out = call_has_out
-        cls._call_out_optional = call_out_optional
-        if not call_has_out:
-            # Out-of-place _call
-            cls._call_in_place = _default_call_in_place
-            cls._call_out_of_place = cls._call
-        elif call_out_optional:
-            # Dual-use _call
-            cls._call_in_place = cls._call_out_of_place = cls._call
-        else:
-            # In-place-only _call
-            cls._call_in_place = cls._call
-            cls._call_out_of_place = _default_call_out_of_place
+        if '_call_out_of_place' not in cls.__dict__:
+            call_has_out, call_out_optional, _ = _dispatch_call_args(cls)
+            cls._call_has_out = call_has_out
+            cls._call_out_optional = call_out_optional
+            if not call_has_out:
+                # Out-of-place _call
+                cls._call_in_place = _default_call_in_place
+                cls._call_out_of_place = cls._call
+            elif call_out_optional:
+                # Dual-use _call
+                cls._call_in_place = cls._call_out_of_place = cls._call
+            else:
+                # In-place-only _call
+                cls._call_in_place = cls._call
+                cls._call_out_of_place = _default_call_out_of_place
 
         return object.__new__(cls)
 
