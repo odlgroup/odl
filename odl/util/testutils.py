@@ -323,7 +323,7 @@ def noise_array(space):
     """
     from odl.space import ProductSpace
     if isinstance(space, ProductSpace):
-        return np.array([noise_array(si) for si in space])
+        return np.array([noise_array(si) for si in space], dtype=object)
     else:
         if space.dtype == bool:
             arr = np.random.randint(0, 2, size=space.shape, dtype=bool)

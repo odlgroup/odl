@@ -436,7 +436,7 @@ def show_discrete_data(values, grid, title=None, method='',
                 plt.colorbar(mappable=csub, ticks=ticks, format=fmt)
             elif update_in_place:
                 # If it exists and we should update it
-                csub.colorbar.set_clim(minval, maxval)
+                csub.set_clim(minval, maxval)
                 csub.colorbar.set_ticks(ticks)
                 if '%' not in fmt:
                     labels = [fmt] * len(ticks)
