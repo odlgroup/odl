@@ -167,7 +167,7 @@ class ProductSpaceOperator(Operator):
                                 ''.format(range))
             if range.is_weighted:
                 raise NotImplementedError('weighted spaces not supported')
-        
+
         if isinstance(operators, scipy.sparse.spmatrix):
             if not all(isinstance(op, Operator) for op in operators.data):
                 raise ValueError('sparse matrix `operator` contains non-'
@@ -177,10 +177,10 @@ class ProductSpaceOperator(Operator):
             print('Warning: scipy.sparse.spmatrix is deprecated.')
             self.__ops = COOMatrix(operators.data, (operators.row, operators.col),
                                    operators.shape)
-        
+
         elif isinstance(operators, COOMatrix):
             self.__ops = operators
-        
+
         else:
             self.__ops = self._convert_to_spmatrix(operators)
 
@@ -238,7 +238,7 @@ class ProductSpaceOperator(Operator):
     @staticmethod
     def _convert_to_spmatrix(operators):
         """Convert an array-like object of operators to a sparse matrix."""
-        
+
         # Lazy import to improve `import odl` time
         # import scipy.sparse
 
@@ -289,7 +289,7 @@ class ProductSpaceOperator(Operator):
         # in `coo_matrix.__init__`
         data_arr = np.empty(len(data), dtype=object)
         data_arr[:] = data
-        
+
         return COOMatrix(data_arr, (irow, icol), (nrows, ncols))
 
     @property
@@ -741,6 +741,7 @@ class BroadcastOperator(Operator):
     ReductionOperator : Calculates sum of operator results.
     DiagonalOperator : Case where each operator should have its own argument.
     """
+
     def __init__(self, *operators):
         """Initialize a new instance
 
@@ -911,6 +912,7 @@ class ReductionOperator(Operator):
     DiagonalOperator : Case where each operator should have its own argument.
     SeparableSum : Corresponding construction for functionals.
     """
+
     def __init__(self, *operators):
         """Initialize a new instance.
 
