@@ -565,11 +565,12 @@ class _Interpolator(object):
             Interpolated values. If ``out`` was given, the returned
             object is a reference to it.
         """
-        if isinstance(x, tuple):
+        if self.input_type == 'meshgrid':
             # Given a meshgrid, the evaluation will be on a ragged array.
             x = np.asarray(x, dtype=object)
         else:
             x = np.asarray(x)
+
         ndim = len(self.coord_vecs)
         scalar_out = False
 
