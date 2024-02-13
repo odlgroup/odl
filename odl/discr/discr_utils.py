@@ -553,8 +553,9 @@ class _Interpolator(object):
 
         Parameters
         ----------
-        x : `meshgrid` or `numpy.ndarray`
-            Evaluation points of the interpolator
+        x : `meshgrid` (i.e., tuple of arrays) if `input_type` is meshgrid,
+            else `numpy.ndarray`.
+            Evaluation points of the interpolator.
         out : `numpy.ndarray`, optional
             Array to which the results are written. Needs to have
             correct shape according to input ``x``.
@@ -565,7 +566,12 @@ class _Interpolator(object):
             Interpolated values. If ``out`` was given, the returned
             object is a reference to it.
         """
-        x = np.asarray(x)
+        if self.input_type == 'meshgrid':
+            # Given a meshgrid, the evaluation will be on a ragged array.
+            x = np.asarray(x, dtype=object)
+        else:
+            x = np.asarray(x)
+
         ndim = len(self.coord_vecs)
         scalar_out = False
 
