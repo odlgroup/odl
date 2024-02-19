@@ -149,14 +149,14 @@ def all_almost_equal_array(v1, v2, ndigits):
     if v1.dtype is np.dtype(object) or v2.dtype is np.dtype(object):
         if len(v1) != len(v2):
             return False
-        for w1,w2 in zip(v1,v2):
+        for w1, w2 in zip(v1, v2):
             if not all_almost_equal(w1, w2, ndigits):
                 return False
         return True
     else:
         return np.allclose(v1, v2,
-                       rtol=10 ** -ndigits, atol=10 ** -ndigits,
-                       equal_nan=True)
+                           rtol=10 ** -ndigits, atol=10 ** -ndigits,
+                           equal_nan=True)
 
 
 def all_almost_equal(iter1, iter2, ndigits=None):
@@ -335,12 +335,13 @@ def noise_array(space):
         if space.is_power_space:
             return np.array([noise_array(si) for si in space])
 
-        # Non-power–product-space elements are represented as arrays of arrays, each in
-        # general with a different shape. These cannot be monolithic NumPy arrays.
-        # NumPy allows non-rectangular arrays when explicitly requesting dtype=object, but
-        # these behave different from ordinary arrays in several ways. The following is a
-        # hack to have only the outer array with dtype=object but store the inner elements
-        # as for the constituent spaces. The resulting ragged arrays support some, but not
+        # Non-power–product-space elements are represented as arrays of arrays,
+        # each in general with a different shape. These cannot be monolithic
+        # NumPy arrays. NumPy allows non-rectangular arrays when explicitly
+        # requesting dtype=object, but these behave different from ordinary
+        # arrays in several ways. The following is a hack to have only the
+        # outer array with dtype=object but store the inner elements as for the
+        # constituent spaces. The resulting ragged arrays support some, but not
         # all numerical operations.
         result = np.array([None for si in space], dtype=object)
         for i, si in enumerate(space):

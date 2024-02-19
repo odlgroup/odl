@@ -1002,19 +1002,21 @@ def test_real_setter_product_space(space, newpart):
     recursive deconstruction to cover the possible cases."""
 
     def verify_result(x, expected_result, recursion_limit=4):
-        if recursion_limit<=0:
+        if recursion_limit <= 0:
             return False
         try:
             # Catch scalar argument
             iter(expected_result)
         except TypeError:
-            return verify_result(x, expected_result * space.one(), recursion_limit-1)
+            return verify_result(x, expected_result * space.one(),
+                                 recursion_limit - 1)
         if expected_result in space:
             return all_equal(x.real, expected_result.real)
         elif all_equal(x.real, expected_result):
             return True
         elif space.is_power_space:
-            return verify_result(x, [expected_result for _ in space], recursion_limit-1)
+            return verify_result(x, [expected_result for _ in space],
+                                 recursion_limit - 1)
 
     x = noise_element(space)
     x.real = newpart
@@ -1029,13 +1031,14 @@ def test_imag_setter_product_space(space, newpart):
     """Like test_real_setter_product_space but for imaginary part."""
 
     def verify_result(x, expected_result, recursion_limit=4):
-        if recursion_limit<=0:
+        if recursion_limit <= 0:
             return False
         try:
             # Catch scalar argument
             iter(expected_result)
         except TypeError:
-            return verify_result(x, expected_result * space.one(), recursion_limit-1)
+            return verify_result(x, expected_result * space.one(),
+                                 recursion_limit - 1)
         if expected_result in space:
             # The imaginary part is by definition real, and thus the new
             # imaginary part is thus the real part of the element we try to set
@@ -1044,7 +1047,8 @@ def test_imag_setter_product_space(space, newpart):
         elif all_equal(x.imag, expected_result):
             return True
         elif space.is_power_space:
-            return verify_result(x, [expected_result for _ in space], recursion_limit-1)
+            return verify_result(x, [expected_result for _ in space],
+                                 recursion_limit - 1)
 
     x = noise_element(space)
     x.imag = newpart
