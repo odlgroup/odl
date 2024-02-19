@@ -1,7 +1,6 @@
 
 """
-File containing a custom COO matrix representation.
-In contrast to scipy the container allows for arbitrary matrix elements.
+Sparse matrix representation for creating product space operators.
 """
 
 __all__ = ('COOMatrix',)
@@ -9,10 +8,15 @@ __all__ = ('COOMatrix',)
 
 class COOMatrix():
     """
-    Custom COO matrix representation for creating product space operators.
+    Custom coo matrix representation for creating product space operators.
 
     The columns, rows and data are stored in separate lists such that
     A[i[k], j[k]] = data[k].
+
+    Note that, the class is only used as a container and does not provide
+    any matrix operations. Further, no checks are performed on the data thus
+    duplicate and out-of-order indices are allowed and the user is responsible
+    for ensuring the correct shape of the matrix.
 
     """
 
@@ -28,18 +32,22 @@ class COOMatrix():
 
     @property
     def row(self):
+        """Return the row indices of the matrix."""
         return self.__index[0]
 
     @property
     def col(self):
+        """Return the column indices of the matrix."""
         return self.__index[1]
 
     @property
     def shape(self):
+        """Return the shape of the matrix."""
         return self.__shape
 
     @property
     def data(self):
+        """Return the data of the matrix."""
         return self.__data
 
     def __repr__(self):
