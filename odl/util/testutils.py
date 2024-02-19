@@ -146,7 +146,15 @@ def all_equal(iter1, iter2):
 
 
 def all_almost_equal_array(v1, v2, ndigits):
-    return np.allclose(v1, v2,
+    if v1.dtype is np.dtype(object) or v2.dtype is np.dtype(object):
+        if len(v1) != len(v2):
+            return False
+        for w1,w2 in zip(v1,v2):
+            if not all_almost_equal(w1, w2, ndigits):
+                return False
+        return True
+    else:
+        return np.allclose(v1, v2,
                        rtol=10 ** -ndigits, atol=10 ** -ndigits,
                        equal_nan=True)
 
