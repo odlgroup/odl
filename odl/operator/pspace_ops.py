@@ -175,7 +175,8 @@ class ProductSpaceOperator(Operator):
             # scipy sparse matrix not supported (deprecated due to API changes)
             # keep now for backward compatibility
             print('Warning: scipy.sparse.spmatrix is deprecated.')
-            self.__ops = COOMatrix(operators.data, (operators.row, operators.col),
+            self.__ops = COOMatrix(operators.data,
+                                   (operators.row, operators.col),
                                    operators.shape)
 
         elif isinstance(operators, COOMatrix):
