@@ -999,7 +999,11 @@ def test_real_imag_and_conj():
 def test_real_setter_product_space(space, newpart):
     """Verify that the setter for the real part of an element works.
     What setting the real part means depends on the inputs; we perform a
-    recursive deconstruction to cover the possible cases."""
+    recursive deconstruction to cover the possible cases.
+    Barring deeply nested products, the recursion will only be shallow
+    (depth 2 for a simple product space). We limit it to a depth of at
+    most 4, to avoid that if some bug causes an infinite recursion,
+    the user would get a cryptic stack-overflow error."""
 
     def verify_result(x, expected_result, recursion_limit=4):
         if recursion_limit <= 0:
