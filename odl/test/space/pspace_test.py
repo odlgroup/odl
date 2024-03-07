@@ -997,50 +997,70 @@ def test_real_imag_and_conj():
 
 
 def test_real_setter_product_space(space, newpart):
-    """Verify that the setter for the real part of an element works."""
+    """Verify that the setter for the real part of an element works.
+    What setting the real part means depends on the inputs; we perform a
+    recursive deconstruction to cover the possible cases.
+    Barring deeply nested products, the recursion will only be shallow
+    (depth 2 for a simple product space). We limit it to a depth of at
+    most 4, to avoid that if some bug causes an infinite recursion,
+    the user would get a cryptic stack-overflow error."""
+
+    def verify_result(x, expected_result, recursion_limit=4):
+        if recursion_limit <= 0:
+            return False
+        try:
+            # Catch scalar argument
+            iter(expected_result)
+        except TypeError:
+            return verify_result(x, expected_result * space.one(),
+                                 recursion_limit - 1)
+        if expected_result in space:
+            return all_equal(x.real, expected_result.real)
+        elif all_equal(x.real, expected_result):
+            return True
+        elif space.is_power_space:
+            return verify_result(x, [expected_result for _ in space],
+                                 recursion_limit - 1)
+
     x = noise_element(space)
     x.real = newpart
 
-    try:
-        # Catch the scalar
-        iter(newpart)
-    except TypeError:
-        expected_result = newpart * space.one()
-    else:
-        if newpart in space:
-            expected_result = newpart.real
-        elif np.shape(newpart) == (3,):
-            expected_result = [newpart, newpart]
-        else:
-            expected_result = newpart
-
     assert x in space
-    assert all_equal(x.real, expected_result)
+    assert(verify_result(x, newpart))
+
+    return
 
 
 def test_imag_setter_product_space(space, newpart):
-    """Verify that the setter for the imaginary part of an element works."""
-    x = noise_element(space)
-    x.imag = newpart
+    """Like test_real_setter_product_space but for imaginary part."""
 
-    try:
-        # Catch the scalar
-        iter(newpart)
-    except TypeError:
-        expected_result = newpart * space.one()
-    else:
-        if newpart in space:
+    def verify_result(x, expected_result, recursion_limit=4):
+        if recursion_limit <= 0:
+            return False
+        try:
+            # Catch scalar argument
+            iter(expected_result)
+        except TypeError:
+            return verify_result(x, expected_result * space.one(),
+                                 recursion_limit - 1)
+        if expected_result in space:
             # The imaginary part is by definition real, and thus the new
             # imaginary part is thus the real part of the element we try to set
             # the value to
-            expected_result = newpart.real
-        elif np.shape(newpart) == (3,):
-            expected_result = [newpart, newpart]
-        else:
-            expected_result = newpart
+            return all_equal(x.imag, expected_result.real)
+        elif all_equal(x.imag, expected_result):
+            return True
+        elif space.is_power_space:
+            return verify_result(x, [expected_result for _ in space],
+                                 recursion_limit - 1)
+
+    x = noise_element(space)
+    x.imag = newpart
 
     assert x in space
-    assert all_equal(x.imag, expected_result)
+    assert(verify_result(x, newpart))
+
+    return
 
 
 if __name__ == '__main__':
