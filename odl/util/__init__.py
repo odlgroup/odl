@@ -17,6 +17,7 @@ from .numerics import *
 from .testutils import *
 from .utility import *
 from .vectorization import *
+from .sparse import *
 
 __all__ = ()
 __all__ += graphics.__all__
@@ -26,3 +27,4 @@ __all__ += numerics.__all__
 __all__ += testutils.__all__
 __all__ += utility.__all__
 __all__ += vectorization.__all__
+__all__ += sparse.__all__
