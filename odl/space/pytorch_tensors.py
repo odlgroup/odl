@@ -1,4 +1,4 @@
-# Copyright 2014-2020 The ODL contributors
+# Copyright 2024 The ODL contributors
 #
 # This file is part of ODL.
 #
@@ -6,7 +6,7 @@
 # v. 2.0. If a copy of the MPL was not distributed with this file, You can
 # obtain one at https://mozilla.org/MPL/2.0/.
 
-"""NumPy implementation of tensor spaces."""
+"""PyTorch implementation of tensor spaces."""
 
 from __future__ import absolute_import, division, print_function
 from future.utils import native
@@ -16,6 +16,7 @@ from builtins import object
 from functools import partial
 
 import numpy as np
+import torch
 
 from odl.set.sets import ComplexNumbers, RealNumbers
 from odl.set.space import LinearSpaceTypeError
@@ -27,20 +28,22 @@ from odl.util import (
     dtype_str, is_floating_dtype, is_numeric_dtype, is_real_dtype, nullcontext,
     signature_string, writable_array)
 
-__all__ = ('NumpyTensorSpace',)
+__all__ = ('PytorchTensorSpace',)
 
 
-_BLAS_DTYPES = (np.dtype('float32'), np.dtype('float64'),
-                np.dtype('complex64'), np.dtype('complex128'))
+_PYTORCH_DTYPES = {np.dtype('float32'): torch.float32,
+                   np.dtype('float64'): torch.float64,
+                   np.dtype('complex64'): torch.complex64,
+                   np.dtype('complex128'): torch.complex128}
 
 # Define size thresholds to switch implementations
 THRESHOLD_SMALL = 100
 THRESHOLD_MEDIUM = 50000
 
 
-class NumpyTensorSpace(TensorSpace):
+class PytorchTensorSpace(TensorSpace):
 
-    """Set of tensors of arbitrary data type, implemented with NumPy.
+    """Set of tensors of arbitrary data type, implemented with Pytorch.
 
     A tensor is, in the most general sense, a multi-dimensional array
     that allows operations per entry (keep the rank constant),
@@ -57,7 +60,7 @@ class NumpyTensorSpace(TensorSpace):
     supported by this class, along with reductions based on arithmetic
     or comparison, and element-wise mathematical functions ("ufuncs").
 
-    This class is implemented using `numpy.ndarray`'s as back-end.
+    This class is implemented using `torch.Tensor`'s as back-end.
 
     See the `Wikipedia article on tensors`_ for further details.
     See also [Hac2012] "Part I Algebraic Tensors" for a rigorous
@@ -84,7 +87,7 @@ class NumpyTensorSpace(TensorSpace):
             single integer results in a space with rank 1, i.e., 1 axis.
         dtype :
             Data type of each element. Can be provided in any
-            way the `numpy.dtype` function understands, e.g.
+            way the `torch.dtype` function understands, e.g.
             as built-in type or as a string. For ``None``,
             the `default_dtype` of this space (``float64``) is used.
         exponent : positive float, optional
@@ -117,7 +120,7 @@ class NumpyTensorSpace(TensorSpace):
 
         dist : callable, optional
             Distance function defining a metric on the space.
-            It must accept two `NumpyTensor` arguments and return
+            It must accept two `PytorchTensor` arguments and return
             a non-negative real number. See ``Notes`` for
             mathematical requirements.
 
@@ -129,7 +132,7 @@ class NumpyTensorSpace(TensorSpace):
 
         norm : callable, optional
             The norm implementation. It must accept a
-            `NumpyTensor` argument, return a non-negative real number.
+            `PytorchTensor` argument, return a non-negative real number.
             See ``Notes`` for mathematical requirements.
 
             By default, ``norm(x)`` is calculated as ``inner(x, x)``.
@@ -140,7 +143,7 @@ class NumpyTensorSpace(TensorSpace):
 
         inner : callable, optional
             The inner product implementation. It must accept two
-            `NumpyTensor` arguments and return an element of the field
+            `PytorchTensor` arguments and return an element of the field
             of the space (usually real or complex number).
             See ``Notes`` for mathematical requirements.
 
@@ -201,25 +204,16 @@ class NumpyTensorSpace(TensorSpace):
         --------
         Explicit initialization with the class constructor:
 
-        >>> space = NumpyTensorSpace(3, float)
+        >>> space = PytorchTensorSpace(3, float)
         >>> space
         rn(3)
         >>> space.shape
         (3,)
         >>> space.dtype
         dtype('float64')
-
-        A more convenient way is to use factory functions:
-
-        >>> space = odl.rn(3, weighting=[1, 2, 3])
-        >>> space
-        rn(3, weighting=[1, 2, 3])
-        >>> space = odl.tensor_space((2, 3), dtype=int)
-        >>> space
-        tensor_space((2, 3), dtype=int)
         """
-        super(NumpyTensorSpace, self).__init__(shape, dtype)
-        if self.dtype.char not in self.available_dtypes():
+        super(PytorchTensorSpace, self).__init__(shape, dtype)
+        if self.dtype not in self.available_dtypes():
             raise ValueError('`dtype` {!r} not supported'
                              ''.format(dtype_str(dtype)))
 
@@ -234,6 +228,8 @@ class NumpyTensorSpace(TensorSpace):
             raise ValueError('cannot use any of `weighting`, `dist`, `norm` '
                              'or `inner` for non-numeric `dtype` {}'
                              ''.format(dtype))
+        else:
+            self._torch_dtype = _PYTORCH_DTYPES[self.dtype]
         if exponent != 2.0 and any(x is not None for x in (dist, norm, inner)):
             raise ValueError('cannot use any of `dist`, `norm` or `inner` '
                              'for exponent != 2')
@@ -247,8 +243,8 @@ class NumpyTensorSpace(TensorSpace):
         # Set the weighting
         if weighting is not None:
             if isinstance(weighting, Weighting):
-                if weighting.impl != 'numpy':
-                    raise ValueError("`weighting.impl` must be 'numpy', "
+                if weighting.impl != 'torch':
+                    raise ValueError("`weighting.impl` must be 'torch', "
                                      '`got {!r}'.format(weighting.impl))
                 if weighting.exponent != exponent:
                     raise ValueError('`weighting.exponent` conflicts with '
@@ -259,7 +255,7 @@ class NumpyTensorSpace(TensorSpace):
                 self.__weighting = _weighting(weighting, exponent)
 
             # Check (afterwards) that the weighting input was sane
-            if isinstance(self.weighting, NumpyTensorSpaceArrayWeighting):
+            if isinstance(self.weighting, PytorchTensorSpaceArrayWeighting):
                 if self.weighting.array.dtype == object:
                     raise ValueError('invalid `weighting` argument: {}'
                                      ''.format(weighting))
@@ -276,14 +272,14 @@ class NumpyTensorSpace(TensorSpace):
                                                self.weighting.array.shape))
 
         elif dist is not None:
-            self.__weighting = NumpyTensorSpaceCustomDist(dist)
+            self.__weighting = PytorchTensorSpaceCustomDist(dist)
         elif norm is not None:
-            self.__weighting = NumpyTensorSpaceCustomNorm(norm)
+            self.__weighting = PytorchTensorSpaceCustomNorm(norm)
         elif inner is not None:
-            self.__weighting = NumpyTensorSpaceCustomInner(inner)
+            self.__weighting = PytorchTensorSpaceCustomInner(inner)
         else:
             # No weighting, i.e., weighting with constant 1.0
-            self.__weighting = NumpyTensorSpaceConstWeighting(1.0, exponent)
+            self.__weighting = PytorchTensorSpaceConstWeighting(1.0, exponent)
 
         # Make sure there are no leftover kwargs
         if kwargs:
@@ -296,7 +292,7 @@ class NumpyTensorSpace(TensorSpace):
 
     @property
     def default_order(self):
-        """Default storage order for new elements in this space: ``'C'``."""
+        """Default (and only) storage order for new elements in this space: ``'C'``."""
         return 'C'
 
     @property
@@ -308,7 +304,7 @@ class NumpyTensorSpace(TensorSpace):
     def is_weighted(self):
         """Return ``True`` if the space is not weighted by constant 1.0."""
         return not (
-            isinstance(self.weighting, NumpyTensorSpaceConstWeighting) and
+            isinstance(self.weighting, PytorchTensorSpaceConstWeighting) and
             self.weighting.const == 1.0)
 
     @property
@@ -326,8 +322,8 @@ class NumpyTensorSpace(TensorSpace):
 
             If ``inp`` is `None`, an empty element is created with no
             guarantee of its state (memory allocation only).
-            The new element will use ``order`` as storage order if
-            provided, otherwise `default_order`.
+            All tensors use row-major storage (corrsponding to
+            `order='C'` in NumPy).
 
             Otherwise, a copy is avoided whenever possible. This requires
             correct `shape` and `dtype`, and if ``order`` is provided,
@@ -335,19 +331,14 @@ class NumpyTensorSpace(TensorSpace):
             conditions is not met, a copy is made.
 
         data_ptr : int, optional
-            Pointer to the start memory address of a contiguous Numpy array
+            Pointer to the start memory address of a contiguous PyTorch array
             or an equivalent raw container with the same total number of
-            bytes. For this option, ``order`` must be either ``'C'`` or
-            ``'F'``.
+            bytes.
             The option is also mutually exclusive with ``inp``.
-        order : {None, 'C', 'F'}, optional
-            Storage order of the returned element. For ``'C'`` and ``'F'``,
-            contiguous memory in the respective ordering is enforced.
-            The default ``None`` enforces no contiguousness.
 
         Returns
         -------
-        element : `NumpyTensor`
+        element : `PytorchTensor`
             The new element, created from ``inp`` or from scratch.
 
         Examples
@@ -355,7 +346,7 @@ class NumpyTensorSpace(TensorSpace):
         Without arguments, an uninitialized element is created. With an
         array-like input, the element can be initialized:
 
-        >>> space = odl.rn(3)
+        >>> space = odl.rn(3)           # TODO adapt / test
         >>> empty = space.element()
         >>> empty.shape
         (3,)
@@ -365,11 +356,11 @@ class NumpyTensorSpace(TensorSpace):
         >>> x
         rn(3).element([ 1.,  2.,  3.])
 
-        If the input already is a `numpy.ndarray` of correct `dtype`, it
+        If the input already is a `torch.Tensor` of correct `dtype`, it
         will merely be wrapped, i.e., both array and space element access
         the same memory, such that mutations will affect both:
 
-        >>> arr = np.array([1, 2, 3], dtype=float)
+        >>> arr = torch.Tensor([1, 2, 3], dtype=float)  # TODO test
         >>> elem = odl.rn(3).element(arr)
         >>> elem[0] = 0
         >>> elem
@@ -381,8 +372,8 @@ class NumpyTensorSpace(TensorSpace):
         again in shared memory:
 
         >>> int_space = odl.tensor_space((2, 3), dtype=int)
-        >>> arr = np.array([[1, 2, 3],
-        ...                 [4, 5, 6]], dtype=int, order='F')
+        >>> arr = torch.Tensor([[1, 2, 3],
+        ...                     [4, 5, 6]], dtype=int, order='F')
         >>> ptr = arr.ctypes.data
         >>> y = int_space.element(data_ptr=ptr, order='F')
         >>> y
@@ -395,15 +386,11 @@ class NumpyTensorSpace(TensorSpace):
         array([[ 1, -1,  3],
                [ 4,  5,  6]])
         """
-        if order is not None and str(order).upper() not in ('C', 'F'):
-            raise ValueError("`order` {!r} not understood".format(order))
+        if order is not None and str(order).upper() not in ('C'):
+            raise ValueError(f"Only row-major order supported ('C'), not '{order}'.")
 
         if inp is None and data_ptr is None:
-            if order is None:
-                arr = np.empty(self.shape, dtype=self.dtype,
-                               order=self.default_order)
-            else:
-                arr = np.empty(self.shape, dtype=self.dtype, order=order)
+            arr = torch.empty(self.shape, dtype=self._torch_dtype)
 
             return self.element_type(self, arr)
 
@@ -415,23 +402,18 @@ class NumpyTensorSpace(TensorSpace):
             ctype_array_def = ctypes.c_byte * self.nbytes
             as_ctype_array = ctype_array_def.from_address(data_ptr)
             as_numpy_array = np.ctypeslib.as_array(as_ctype_array)
-            arr = as_numpy_array.view(dtype=self.dtype)
+            arr = as_numpy_array.view(dtype=self._torch_dtype)
             arr = arr.reshape(self.shape, order=order)
-            return self.element_type(self, arr)
+            return self.element_type(self, torch.Tensor(arr))
 
         elif inp is not None and data_ptr is None:
             if inp in self and order is None:
                 # Short-circuit for space elements and no enforced ordering
                 return inp
 
-            # Try to not copy but require dtype and order if given
-            # (`order=None` is ok as np.array argument)
-            arr = np.array(inp, copy=False, dtype=self.dtype, ndmin=self.ndim,
-                           order=order)
-            # Make sure the result is writeable, if not make copy.
-            # This happens for e.g. results of `np.broadcast_to()`.
-            if not arr.flags.writeable:
-                arr = arr.copy()
+            # TODO avoid copy when it's not necessary
+            arr = torch.tensor(inp, dtype=self._torch_dtype)
+
             if arr.shape != self.shape:
                 raise ValueError('shape of `inp` not equal to space shape: '
                                  '{} != {}'.format(arr.shape, self.shape))
@@ -445,26 +427,24 @@ class NumpyTensorSpace(TensorSpace):
 
         Examples
         --------
-        >>> space = odl.rn(3)
+        >>> space = odl.rn(3)  # TODO adapt
         >>> x = space.zero()
         >>> x
         rn(3).element([ 0.,  0.,  0.])
         """
-        return self.element(np.zeros(self.shape, dtype=self.dtype,
-                                     order=self.default_order))
+        return self.element(torch.zeros(self.shape, dtype=self._torch_dtype))
 
     def one(self):
         """Return a tensor of all ones.
 
         Examples
         --------
-        >>> space = odl.rn(3)
+        >>> space = odl.rn(3)  # TODO adapt
         >>> x = space.one()
         >>> x
         rn(3).element([ 1.,  1.,  1.])
         """
-        return self.element(np.ones(self.shape, dtype=self.dtype,
-                                    order=self.default_order))
+        return self.element(torch.ones(self.shape, dtype=self._torch_dtype))
 
     @staticmethod
     def available_dtypes():
@@ -472,20 +452,10 @@ class NumpyTensorSpace(TensorSpace):
 
         Notes
         -----
-        This is all dtypes available in Numpy. See ``numpy.sctypes``
-        for more information.
-
-        The available dtypes may depend on the specific system used.
+        Currently only a conservative selection of the types supported
+        by Pytorch.
         """
-        all_dtypes = []
-        for lst in np.sctypes.values():
-            for dtype in lst:
-                if dtype not in (object, np.void):
-                    all_dtypes.append(np.dtype(dtype))
-        # Need to add these manually since np.sctypes['others'] will only
-        # contain one of them (depending on Python version)
-        all_dtypes.extend([np.dtype('S'), np.dtype('U')])
-        return tuple(sorted(set(all_dtypes)))
+        return [np.float32, np.float64, np.complex64, np.complex128]
 
     @staticmethod
     def default_dtype(field=None):
@@ -500,17 +470,20 @@ class NumpyTensorSpace(TensorSpace):
 
         Returns
         -------
-        dtype : `numpy.dtype`
-            Numpy data type specifier. The returned defaults are:
+        dtype : `torch.dtype`
+            Pytorch data type specifier. The returned defaults are:
 
                 ``RealNumbers()`` : ``np.dtype('float64')``
 
                 ``ComplexNumbers()`` : ``np.dtype('complex128')``
         """
+        # Note that we're using the NumPy versions of the types, rather
+        # than the equivalent Pytorch ones. This is for compatibility
+        # with the rest of ODL, which is not aware of Pytorch.
         if field is None or field == RealNumbers():
-            return np.dtype('float64')
+            return np.float64
         elif field == ComplexNumbers():
-            return np.dtype('complex128')
+            return np.complex128
         else:
             raise ValueError('no default data type defined for field {}'
                              ''.format(field))
@@ -528,14 +501,14 @@ class NumpyTensorSpace(TensorSpace):
         ----------
         a, b : `TensorSpace.field` element
             Scalars to multiply ``x1`` and ``x2`` with.
-        x1, x2 : `NumpyTensor`
+        x1, x2 : `PytorchTensor`
             Summands in the linear combination.
-        out : `NumpyTensor`
+        out : `PytorchTensor`
             Tensor to which the result is written.
 
         Examples
         --------
-        >>> space = odl.rn(3)
+        >>> space = odl.rn(3)    # TODO adapt
         >>> x = space.element([0, 1, 1])
         >>> y = space.element([0, 0, 1])
         >>> out = space.element()
@@ -545,7 +518,7 @@ class NumpyTensorSpace(TensorSpace):
         >>> result is out
         True
         """
-        _lincomb_impl(a, x1, b, x2, out)
+        torch.add(input=a*x1.data, other=x2.data, alpha=b, out=out.data)
 
     def _dist(self, x1, x2):
         """Return the distance between ``x1`` and ``x2``.
@@ -555,7 +528,7 @@ class NumpyTensorSpace(TensorSpace):
 
         Parameters
         ----------
-        x1, x2 : `NumpyTensor`
+        x1, x2 : `PytorchTensor`
             Elements whose mutual distance is calculated.
 
         Returns
@@ -597,7 +570,7 @@ class NumpyTensorSpace(TensorSpace):
 
         Parameters
         ----------
-        x : `NumpyTensor`
+        x : `PytorchTensor`
             Element whose norm is calculated.
 
         Returns
@@ -635,7 +608,7 @@ class NumpyTensorSpace(TensorSpace):
 
         Parameters
         ----------
-        x1, x2 : `NumpyTensor`
+        x1, x2 : `PytorchTensor`
             Elements whose inner product is calculated.
 
         Returns
@@ -669,9 +642,9 @@ class NumpyTensorSpace(TensorSpace):
 
         Parameters
         ----------
-        x1, x2 : `NumpyTensor`
+        x1, x2 : `PytorchTensor`
             Factors in the product.
-        out : `NumpyTensor`
+        out : `PytorchTensor`
             Element to which the result is written.
 
         Examples
@@ -688,7 +661,7 @@ class NumpyTensorSpace(TensorSpace):
         >>> result is out
         True
         """
-        np.multiply(x1.data, x2.data, out=out.data)
+        torch.mul(x1.data, x2.data, out=out.data)
 
     def _divide(self, x1, x2, out):
         """Compute the entry-wise quotient ``x1 / x2``.
@@ -698,9 +671,9 @@ class NumpyTensorSpace(TensorSpace):
 
         Parameters
         ----------
-        x1, x2 : `NumpyTensor`
+        x1, x2 : `PytorchTensor`
             Dividend and divisor in the quotient.
-        out : `NumpyTensor`
+        out : `PytorchTensor`
             Element to which the result is written.
 
         Examples
@@ -717,7 +690,7 @@ class NumpyTensorSpace(TensorSpace):
         >>> result is out
         True
         """
-        np.divide(x1.data, x2.data, out=out.data)
+        torch.div(x1.data, x2.data, out=out.data)
 
     def __eq__(self, other):
         """Return ``self == other``.
@@ -726,8 +699,8 @@ class NumpyTensorSpace(TensorSpace):
         -------
         equals : bool
             True if ``other`` is an instance of ``type(self)``
-            with the same `NumpyTensorSpace.shape`, `NumpyTensorSpace.dtype`
-            and `NumpyTensorSpace.weighting`, otherwise False.
+            with the same `PytorchTensorSpace.shape`, `PytorchTensorSpace.dtype`
+            and `PytorchTensorSpace.weighting`, otherwise False.
 
         Examples
         --------
@@ -754,12 +727,12 @@ class NumpyTensorSpace(TensorSpace):
         if other is self:
             return True
 
-        return (super(NumpyTensorSpace, self).__eq__(other) and
+        return (super(PytorchTensorSpace, self).__eq__(other) and
                 self.weighting == other.weighting)
 
     def __hash__(self):
         """Return ``hash(self)``."""
-        return hash((super(NumpyTensorSpace, self).__hash__(),
+        return hash((super(PytorchTensorSpace, self).__hash__(),
                      self.weighting))
 
     @property
@@ -770,7 +743,7 @@ class NumpyTensorSpace(TensorSpace):
         --------
         Indexing with integers or slices:
 
-        >>> space = odl.rn((2, 3, 4))
+        >>> space = odl.rn((2, 3, 4))  # TODO adapt
         >>> space.byaxis[0]
         rn(2)
         >>> space.byaxis[1:]
@@ -783,7 +756,7 @@ class NumpyTensorSpace(TensorSpace):
         """
         space = self
 
-        class NpyTensorSpacebyaxis(object):
+        class PytorchTensorSpacebyaxis(object):
 
             """Helper class for indexing by axis."""
 
@@ -798,7 +771,7 @@ class NumpyTensorSpace(TensorSpace):
 
                 if isinstance(space.weighting, ArrayWeighting):
                     new_array = np.asarray(space.weighting.array[indices])
-                    weighting = NumpyTensorSpaceArrayWeighting(
+                    weighting = PytorchTensorSpaceArrayWeighting(
                         new_array, space.weighting.exponent)
                 else:
                     weighting = space.weighting
@@ -809,7 +782,7 @@ class NumpyTensorSpace(TensorSpace):
                 """Return ``repr(self)``."""
                 return repr(space) + '.byaxis'
 
-        return NpyTensorSpacebyaxis()
+        return PytorchTensorSpacebyaxis()
 
     def __repr__(self):
         """Return ``repr(self)``."""
@@ -819,7 +792,7 @@ class NumpyTensorSpace(TensorSpace):
             posargs = [self.shape]
 
         if self.is_real:
-            ctor_name = 'rn'
+            ctor_name = 'rn'  # TODO adapt
         elif self.is_complex:
             ctor_name = 'cn'
         else:
@@ -846,13 +819,13 @@ class NumpyTensorSpace(TensorSpace):
 
     @property
     def element_type(self):
-        """Type of elements in this space: `NumpyTensor`."""
-        return NumpyTensor
+        """Type of elements in this space: `PytorchTensor`."""
+        return PytorchTensor
 
 
-class NumpyTensor(Tensor):
+class PytorchTensor(Tensor):
 
-    """Representation of a `NumpyTensorSpace` element."""
+    """Representation of a `PytorchTensorSpace` element."""
 
     def __init__(self, space, data):
         """Initialize a new instance."""
@@ -861,31 +834,31 @@ class NumpyTensor(Tensor):
 
     @property
     def data(self):
-        """The `numpy.ndarray` representing the data of ``self``."""
+        """The `torch.Tensor` representing the data of ``self``."""
         return self.__data
 
     def asarray(self, out=None):
-        """Extract the data of this array as a ``numpy.ndarray``.
+        """Extract the data of this array as a ``torch.Tensor``.
 
-        This method is invoked when calling `numpy.asarray` on this
+        This method is invoked when calling `torch.tensor` on this
         tensor.
 
         Parameters
         ----------
-        out : `numpy.ndarray`, optional
+        out : `np.ndarray`, optional
             Array in which the result should be written in-place.
             Has to be contiguous and of the correct dtype.
 
         Returns
         -------
-        asarray : `numpy.ndarray`
-            Numpy array with the same data type as ``self``. If
+        asarray : `torch.Tensor`
+            Pytorch array with the same data type as ``self``. If
             ``out`` was given, the returned object is a reference
             to it.
 
         Examples
         --------
-        >>> space = odl.rn(3, dtype='float32')
+        >>> space = odl.rn(3, dtype='float32')  # TODO adapt
         >>> x = space.element([1, 2, 3])
         >>> x.asarray()
         array([ 1.,  2.,  3.], dtype=float32)
@@ -903,9 +876,9 @@ class NumpyTensor(Tensor):
                [ 1.,  1.,  1.]])
         """
         if out is None:
-            return self.data
+            return self.data.cpu().numpy()
         else:
-            out[:] = self.data
+            out[:] = self.data.cpu().numpy()
             return out
 
     def astype(self, dtype):
@@ -921,7 +894,7 @@ class NumpyTensor(Tensor):
 
         Returns
         -------
-        newelem : `NumpyTensor`
+        newelem : `PytorchTensor`
             Version of this element with given data type.
         """
         return self.space.astype(dtype).element(self.data.astype(dtype))
@@ -933,7 +906,7 @@ class NumpyTensor(Tensor):
         Examples
         --------
         >>> import ctypes
-        >>> space = odl.tensor_space(3, dtype='uint16')
+        >>> space = odl.tensor_space(3, dtype='uint16')   # TODO check example
         >>> x = space.element([1, 2, 3])
         >>> arr_type = ctypes.c_uint16 * 3  # C type "array of 3 uint16"
         >>> buffer = arr_type.from_address(x.data_ptr)
@@ -943,11 +916,11 @@ class NumpyTensor(Tensor):
 
         In-place modification via pointer:
 
-        >>> arr[0] = 42
+        >>> arr[0] = 42    # TODO doubtful if this actually works
         >>> x
         tensor_space(3, dtype='uint16').element([42,  2,  3])
         """
-        return self.data.ctypes.data
+        return self.data.data_ptr()
 
     def __eq__(self, other):
         """Return ``self == other``.
@@ -984,7 +957,7 @@ class NumpyTensor(Tensor):
         elif other not in self.space:
             return False
         else:
-            return np.array_equal(self.data, other.data)
+            return torch.equal(self.data, other.data)
 
     def copy(self):
         """Return an identical (deep) copy of this tensor.
@@ -995,12 +968,12 @@ class NumpyTensor(Tensor):
 
         Returns
         -------
-        copy : `NumpyTensor`
+        copy : `PytorchTensor`
             The deep copy
 
         Examples
         --------
-        >>> space = odl.rn(3)
+        >>> space = odl.rn(3)   # TODO adapt
         >>> x = space.element([1, 2, 3])
         >>> y = x.copy()
         >>> y == x
@@ -1008,7 +981,7 @@ class NumpyTensor(Tensor):
         >>> y is x
         False
         """
-        return self.space.element(self.data.copy())
+        return self.space.element(self.data.clone())
 
     def __copy__(self):
         """Return ``copy(self)``.
@@ -1044,7 +1017,7 @@ class NumpyTensor(Tensor):
 
         Returns
         -------
-        values : `NumpyTensorSpace.dtype` or `NumpyTensor`
+        values : `PytorchTensorSpace.dtype` or `PytorchTensor`
             The value(s) at the given indices. Note that the returned
             object is a writable view into the original tensor, except
             for the case when ``indices`` is a list.
@@ -1094,11 +1067,11 @@ class NumpyTensor(Tensor):
         )
         """
         # Lazy implementation: index the array and deal with it
-        if isinstance(indices, NumpyTensor):
+        if isinstance(indices, PytorchTensor):
             indices = indices.data
         arr = self.data[indices]
 
-        if np.isscalar(arr):
+        if arr.shape == ():  # scalar
             if self.space.field is not None:
                 return self.space.field.element(arr)
             else:
@@ -1121,7 +1094,7 @@ class NumpyTensor(Tensor):
         indices : index expression
             Integer, slice or sequence of these, defining the positions
             of the data array which should be written to.
-        values : scalar, array-like or `NumpyTensor`
+        values : scalar, array-like or `PytorchTensor`
             The value(s) that are to be assigned.
 
             If ``index`` is an integer, ``value`` must be a scalar.
@@ -1198,9 +1171,9 @@ class NumpyTensor(Tensor):
 
         Returns
         -------
-        real : `NumpyTensor`
+        real : `PytorchTensor`
             Real part of this element as a member of a
-            `NumpyTensorSpace` with corresponding real data type.
+            `PytorchTensorSpace` with corresponding real data type.
 
         Examples
         --------
@@ -1257,9 +1230,9 @@ class NumpyTensor(Tensor):
 
         Returns
         -------
-        imag : `NumpyTensor`
+        imag : `PytorchTensor`
             Imaginary part this element as an element of a
-            `NumpyTensorSpace` with real data type.
+            `PytorchTensorSpace` with real data type.
 
         Examples
         --------
@@ -1322,13 +1295,13 @@ class NumpyTensor(Tensor):
 
         Parameters
         ----------
-        out : `NumpyTensor`, optional
+        out : `PytorchTensor`, optional
             Element to which the complex conjugate is written.
             Must be an element of ``self.space``.
 
         Returns
         -------
-        out : `NumpyTensor`
+        out : `PytorchTensor`
             The complex conjugate element. If ``out`` was provided,
             the returned object is a reference to it.
 
@@ -1377,11 +1350,11 @@ class NumpyTensor(Tensor):
         """Return ``self **= other``."""
         try:
             if other == int(other):
-                return super(NumpyTensor, self).__ipow__(other)
+                return super(PytorchTensor, self).__ipow__(other)
         except TypeError:
             pass
 
-        np.power(self.data, other, out=self.data)
+        torch.pow(self.data, other, out=self.data)
         return self
 
     def __int__(self):
@@ -1406,500 +1379,22 @@ class NumpyTensor(Tensor):
                             'Python scalars')
         return complex(self.data.ravel()[0])
 
-    def __array_ufunc__(self, ufunc, method, *inputs, **kwargs):
-        """Interface to Numpy's ufunc machinery.
 
-        This method is called by Numpy version 1.13 and higher as a single
-        point for the ufunc dispatch logic. An object implementing
-        ``__array_ufunc__`` takes over control when a `numpy.ufunc` is
-        called on it, allowing it to use custom implementations and
-        output types.
-
-        This includes handling of in-place arithmetic like
-        ``npy_array += custom_obj``. In this case, the custom object's
-        ``__array_ufunc__`` takes precedence over the baseline
-        `numpy.ndarray` implementation. It will be called with
-        ``npy_array`` as ``out`` argument, which ensures that the
-        returned object is a Numpy array. For this to work properly,
-        ``__array_ufunc__`` has to accept Numpy arrays as ``out`` arguments.
-
-        See the `corresponding NEP`_ and the `interface documentation`_
-        for further details. See also the `general documentation on
-        Numpy ufuncs`_.
-
-        .. note::
-            This basic implementation casts inputs and
-            outputs to Numpy arrays and evaluates ``ufunc`` on those.
-            For `numpy.ndarray` based data storage, this incurs no
-            significant overhead compared to direct usage of Numpy arrays.
-
-            For other (in particular non-local) implementations, e.g.,
-            GPU arrays or distributed memory, overhead is significant due
-            to copies to CPU main memory. In those classes, the
-            ``__array_ufunc__`` mechanism should be overridden to use
-            native implementations if possible.
-
-        .. note::
-            When using operations that alter the shape (like ``reduce``),
-            or the data type (can be any of the methods),
-            the resulting array is wrapped in a space of the same
-            type as ``self.space``, propagating space properties like
-            `exponent` or `weighting` as closely as possible.
-
-        Parameters
-        ----------
-        ufunc : `numpy.ufunc`
-            Ufunc that should be called on ``self``.
-        method : str
-            Method on ``ufunc`` that should be called on ``self``.
-            Possible values:
-
-            ``'__call__'``, ``'accumulate'``, ``'at'``, ``'outer'``,
-            ``'reduce'``, ``'reduceat'``
-
-        input1, ..., inputN :
-            Positional arguments to ``ufunc.method``.
-        kwargs :
-            Keyword arguments to ``ufunc.method``.
-
-        Returns
-        -------
-        ufunc_result : `Tensor`, `numpy.ndarray` or tuple
-            Result of the ufunc evaluation. If no ``out`` keyword argument
-            was given, the result is a `Tensor` or a tuple
-            of such, depending on the number of outputs of ``ufunc``.
-            If ``out`` was provided, the returned object or tuple entries
-            refer(s) to ``out``.
-
-        Examples
-        --------
-        We apply `numpy.add` to ODL tensors:
-
-        >>> r3 = odl.rn(3)
-        >>> x = r3.element([1, 2, 3])
-        >>> y = r3.element([-1, -2, -3])
-        >>> x.__array_ufunc__(np.add, '__call__', x, y)
-        rn(3).element([ 0.,  0.,  0.])
-        >>> np.add(x, y)  # same mechanism for Numpy >= 1.13
-        rn(3).element([ 0.,  0.,  0.])
-
-        As ``out``, a Numpy array or an ODL tensor can be given (wrapped
-        in a sequence):
-
-        >>> out = r3.element()
-        >>> res = x.__array_ufunc__(np.add, '__call__', x, y, out=(out,))
-        >>> out
-        rn(3).element([ 0.,  0.,  0.])
-        >>> res is out
-        True
-        >>> out_arr = np.empty(3)
-        >>> res = x.__array_ufunc__(np.add, '__call__', x, y, out=(out_arr,))
-        >>> out_arr
-        array([ 0.,  0.,  0.])
-        >>> res is out_arr
-        True
-
-        With multiple dimensions:
-
-        >>> r23 = odl.rn((2, 3))
-        >>> x = y = r23.one()
-        >>> x.__array_ufunc__(np.add, '__call__', x, y)
-        rn((2, 3)).element(
-            [[ 2.,  2.,  2.],
-             [ 2.,  2.,  2.]]
-        )
-
-        The ``ufunc.accumulate`` method retains the original `shape` and
-        `dtype`. The latter can be changed with the ``dtype`` parameter:
-
-        >>> x = r3.element([1, 2, 3])
-        >>> x.__array_ufunc__(np.add, 'accumulate', x)
-        rn(3).element([ 1.,  3.,  6.])
-        >>> np.add.accumulate(x)  # same mechanism for Numpy >= 1.13
-        rn(3).element([ 1.,  3.,  6.])
-        >>> x.__array_ufunc__(np.add, 'accumulate', x, dtype=complex)
-        cn(3).element([ 1.+0.j,  3.+0.j,  6.+0.j])
-
-        For multi-dimensional tensors, an optional ``axis`` parameter
-        can be provided:
-
-        >>> z = r23.one()
-        >>> z.__array_ufunc__(np.add, 'accumulate', z, axis=1)
-        rn((2, 3)).element(
-            [[ 1.,  2.,  3.],
-             [ 1.,  2.,  3.]]
-        )
-
-        The ``ufunc.at`` method operates in-place. Here we add the second
-        operand ``[5, 10]`` to ``x`` at indices ``[0, 2]``:
-
-        >>> x = r3.element([1, 2, 3])
-        >>> x.__array_ufunc__(np.add, 'at', x, [0, 2], [5, 10])
-        >>> x
-        rn(3).element([  6.,   2.,  13.])
-
-        For outer-product-type operations, i.e., operations where the result
-        shape is the sum of the individual shapes, the ``ufunc.outer``
-        method can be used:
-
-        >>> x = odl.rn(2).element([0, 3])
-        >>> y = odl.rn(3).element([1, 2, 3])
-        >>> x.__array_ufunc__(np.add, 'outer', x, y)
-        rn((2, 3)).element(
-            [[ 1.,  2.,  3.],
-             [ 4.,  5.,  6.]]
-        )
-        >>> y.__array_ufunc__(np.add, 'outer', y, x)
-        rn((3, 2)).element(
-            [[ 1.,  4.],
-             [ 2.,  5.],
-             [ 3.,  6.]]
-        )
-
-        Using ``ufunc.reduce`` produces a scalar, which can be avoided with
-        ``keepdims=True``:
-
-        >>> x = r3.element([1, 2, 3])
-        >>> x.__array_ufunc__(np.add, 'reduce', x)
-        6.0
-        >>> x.__array_ufunc__(np.add, 'reduce', x, keepdims=True)
-        rn(1).element([ 6.])
-
-        In multiple dimensions, ``axis`` can be provided for reduction over
-        selected axes:
-
-        >>> z = r23.element([[1, 2, 3],
-        ...                  [4, 5, 6]])
-        >>> z.__array_ufunc__(np.add, 'reduce', z, axis=1)
-        rn(2).element([  6.,  15.])
-
-        Finally, ``add.reduceat`` is a combination of ``reduce`` and
-        ``at`` with rather flexible and complex semantics (see the
-        `reduceat documentation`_ for details):
-
-        >>> x = r3.element([1, 2, 3])
-        >>> x.__array_ufunc__(np.add, 'reduceat', x, [0, 1])
-        rn(2).element([ 1.,  5.])
-
-        References
-        ----------
-        .. _corresponding NEP:
-           https://docs.scipy.org/doc/numpy/neps/ufunc-overrides.html
-
-        .. _interface documentation:
-           https://docs.scipy.org/doc/numpy/reference/arrays.classes.html\
-#numpy.class.__array_ufunc__
-
-        .. _general documentation on Numpy ufuncs:
-           https://docs.scipy.org/doc/numpy/reference/ufuncs.html
-
-        .. _reduceat documentation:
-           https://docs.scipy.org/doc/numpy/reference/generated/\
-numpy.ufunc.reduceat.html
-        """
-        # Remark: this method differs from the parent implementation only
-        # in the propagation of additional space properties.
-
-        # --- Process `out` --- #
-
-        # Unwrap out if provided. The output parameters are all wrapped
-        # in one tuple, even if there is only one.
-        out_tuple = kwargs.pop('out', ())
-
-        # Check number of `out` args, depending on `method`
-        if method == '__call__' and len(out_tuple) not in (0, ufunc.nout):
-            raise ValueError(
-                "ufunc {}: need 0 or {} `out` arguments for "
-                "`method='__call__'`, got {}"
-                ''.format(ufunc.__name__, ufunc.nout, len(out_tuple)))
-        elif method != '__call__' and len(out_tuple) not in (0, 1):
-            raise ValueError(
-                'ufunc {}: need 0 or 1 `out` arguments for `method={!r}`, '
-                'got {}'.format(ufunc.__name__, method, len(out_tuple)))
-
-        # We allow our own tensors, the data container type and
-        # `numpy.ndarray` objects as `out` (see docs for reason for the
-        # latter)
-        valid_types = (type(self), type(self.data), np.ndarray)
-        if not all(isinstance(o, valid_types) or o is None
-                   for o in out_tuple):
-            return NotImplemented
-
-        # Assign to `out` or `out1` and `out2`, respectively
-        out = out1 = out2 = None
-        if len(out_tuple) == 1:
-            out = out_tuple[0]
-        elif len(out_tuple) == 2:
-            out1 = out_tuple[0]
-            out2 = out_tuple[1]
-
-        # --- Process `inputs` --- #
-
-        # Convert inputs that are ODL tensors to Numpy arrays so that the
-        # native Numpy ufunc is called later
-        inputs = tuple(
-            inp.asarray() if isinstance(inp, type(self)) else inp
-            for inp in inputs)
-
-        # --- Get some parameters for later --- #
-
-        # Arguments for `writable_array` and/or space constructors
-        out_dtype = kwargs.get('dtype', None)
-        if out_dtype is None:
-            array_kwargs = {}
-        else:
-            array_kwargs = {'dtype': out_dtype}
-
-        exponent = self.space.exponent
-        weighting = self.space.weighting
-
-        # --- Evaluate ufunc --- #
-
-        if method == '__call__':
-            if ufunc.nout == 1:
-                # Make context for output (trivial one returns `None`)
-                if out is None:
-                    out_ctx = nullcontext()
-                else:
-                    out_ctx = writable_array(out, **array_kwargs)
-
-                # Evaluate ufunc
-                with out_ctx as out_arr:
-                    kwargs['out'] = out_arr
-                    res = ufunc(*inputs, **kwargs)
-
-                # Wrap result if necessary (lazily)
-                if out is None:
-                    if is_floating_dtype(res.dtype):
-                        # Weighting contains exponent
-                        spc_kwargs = {'weighting': weighting}
-                    else:
-                        # No `exponent` or `weighting` applicable
-                        spc_kwargs = {}
-                    out_space = type(self.space)(self.shape, res.dtype,
-                                                 **spc_kwargs)
-                    out = out_space.element(res)
-
-                return out
-
-            elif ufunc.nout == 2:
-                # Make contexts for outputs (trivial ones return `None`)
-                if out1 is not None:
-                    out1_ctx = writable_array(out1, **array_kwargs)
-                else:
-                    out1_ctx = nullcontext()
-                if out2 is not None:
-                    out2_ctx = writable_array(out2, **array_kwargs)
-                else:
-                    out2_ctx = nullcontext()
-
-                # Evaluate ufunc
-                with out1_ctx as out1_arr, out2_ctx as out2_arr:
-                    kwargs['out'] = (out1_arr, out2_arr)
-                    res1, res2 = ufunc(*inputs, **kwargs)
-
-                # Wrap results if necessary (lazily)
-                # We don't use exponents or weightings since we don't know
-                # how to map them to the spaces
-                if out1 is None:
-                    out1_space = type(self.space)(self.shape, res1.dtype)
-                    out1 = out1_space.element(res1)
-                if out2 is None:
-                    out2_space = type(self.space)(self.shape, res2.dtype)
-                    out2 = out2_space.element(res2)
-
-                return out1, out2
-
-            else:
-                raise NotImplementedError('nout = {} not supported'
-                                          ''.format(ufunc.nout))
-
-        else:  # method != '__call__'
-            # Make context for output (trivial one returns `None`)
-            if out is None:
-                out_ctx = nullcontext()
-            else:
-                out_ctx = writable_array(out, **array_kwargs)
-
-            # Evaluate ufunc method
-            with out_ctx as out_arr:
-                if method != 'at':
-                    # No kwargs allowed for 'at'
-                    kwargs['out'] = out_arr
-                res = getattr(ufunc, method)(*inputs, **kwargs)
-
-            # Shortcut for scalar or no return value
-            if np.isscalar(res) or res is None:
-                # The first occurs for `reduce` with all axes,
-                # the second for in-place stuff (`at` currently)
-                return res
-
-            # Wrap result if necessary (lazily)
-            if out is None:
-                if is_floating_dtype(res.dtype):
-                    if res.shape != self.shape:
-                        # Don't propagate weighting if shape changes
-                        weighting = NumpyTensorSpaceConstWeighting(1.0,
-                                                                   exponent)
-                    spc_kwargs = {'weighting': weighting}
-                else:
-                    spc_kwargs = {}
-
-                out_space = type(self.space)(res.shape, res.dtype,
-                                             **spc_kwargs)
-                out = out_space.element(res)
-
-            return out
-
-
-def _blas_is_applicable(*args):
-    """Whether BLAS routines can be applied or not.
-
-    BLAS routines are available for single and double precision
-    float or complex data only. If the arrays are non-contiguous,
-    BLAS methods are usually slower, and array-writing routines do
-    not work at all. Hence, only contiguous arrays are allowed.
-
-    Parameters
-    ----------
-    x1,...,xN : `NumpyTensor`
-        The tensors to be tested for BLAS conformity.
-
-    Returns
-    -------
-    blas_is_applicable : bool
-        ``True`` if all mentioned requirements are met, ``False`` otherwise.
-    """
-    if any(x.dtype != args[0].dtype for x in args[1:]):
-        return False
-    elif any(x.dtype not in _BLAS_DTYPES for x in args):
-        return False
-    elif not (all(x.flags.f_contiguous for x in args) or
-              all(x.flags.c_contiguous for x in args)):
-        return False
-    elif any(x.size > np.iinfo('int32').max for x in args):
-        # Temporary fix for 32 bit int overflow in BLAS
-        # TODO: use chunking instead
-        return False
-    else:
-        return True
-
-
-def _lincomb_impl(a, x1, b, x2, out):
-    """Optimized implementation of ``out[:] = a * x1 + b * x2``."""
-    # Lazy import to improve `import odl` time
-    import scipy.linalg
-
-    size = native(x1.size)
-
-    if size < THRESHOLD_SMALL:
-        # Faster for small arrays
-        out.data[:] = a * x1.data + b * x2.data
-        return
-
-    elif (size < THRESHOLD_MEDIUM or
-          not _blas_is_applicable(x1.data, x2.data, out.data)):
-
-        def fallback_axpy(x1, x2, n, a):
-            """Fallback axpy implementation avoiding copy."""
-            if a != 0:
-                x2 /= a
-                x2 += x1
-                x2 *= a
-            return x2
-
-        def fallback_scal(a, x, n):
-            """Fallback scal implementation."""
-            x *= a
-            return x
-
-        def fallback_copy(x1, x2, n):
-            """Fallback copy implementation."""
-            x2[...] = x1[...]
-            return x2
-
-        axpy, scal, copy = (fallback_axpy, fallback_scal, fallback_copy)
-        x1_arr = x1.data
-        x2_arr = x2.data
-        out_arr = out.data
-
-    else:
-        # Need flat data for BLAS, otherwise in-place does not work.
-        # Raveling must happen in fixed order for non-contiguous out,
-        # otherwise 'A' is applied to arrays, which makes the outcome
-        # dependent on their respective contiguousness.
-        if out.data.flags.f_contiguous:
-            ravel_order = 'F'
-        else:
-            ravel_order = 'C'
-
-        x1_arr = x1.data.ravel(order=ravel_order)
-        x2_arr = x2.data.ravel(order=ravel_order)
-        out_arr = out.data.ravel(order=ravel_order)
-        axpy, scal, copy = scipy.linalg.blas.get_blas_funcs(
-            ['axpy', 'scal', 'copy'], arrays=(x1_arr, x2_arr, out_arr))
-
-    if x1 is x2 and b != 0:
-        # x1 is aligned with x2 -> out = (a+b)*x1
-        _lincomb_impl(a + b, x1, 0, x1, out)
-    elif out is x1 and out is x2:
-        # All the vectors are aligned -> out = (a+b)*out
-        if (a + b) != 0:
-            scal(a + b, out_arr, size)
-        else:
-            out_arr[:] = 0
-    elif out is x1:
-        # out is aligned with x1 -> out = a*out + b*x2
-        if a != 1:
-            scal(a, out_arr, size)
-        if b != 0:
-            axpy(x2_arr, out_arr, size, b)
-    elif out is x2:
-        # out is aligned with x2 -> out = a*x1 + b*out
-        if b != 1:
-            scal(b, out_arr, size)
-        if a != 0:
-            axpy(x1_arr, out_arr, size, a)
-    else:
-        # We have exhausted all alignment options, so x1 is not x2 is not out
-        # We now optimize for various values of a and b
-        if b == 0:
-            if a == 0:  # Zero assignment -> out = 0
-                out_arr[:] = 0
-            else:  # Scaled copy -> out = a*x1
-                copy(x1_arr, out_arr, size)
-                if a != 1:
-                    scal(a, out_arr, size)
-
-        else:  # b != 0
-            if a == 0:  # Scaled copy -> out = b*x2
-                copy(x2_arr, out_arr, size)
-                if b != 1:
-                    scal(b, out_arr, size)
-
-            elif a == 1:  # No scaling in x1 -> out = x1 + b*x2
-                copy(x1_arr, out_arr, size)
-                axpy(x2_arr, out_arr, size, b)
-            else:  # Generic case -> out = a*x1 + b*x2
-                copy(x2_arr, out_arr, size)
-                if b != 1:
-                    scal(b, out_arr, size)
-                axpy(x1_arr, out_arr, size, a)
 
 
 def _weighting(weights, exponent):
     """Return a weighting whose type is inferred from the arguments."""
-    if np.isscalar(weights):
-        weighting = NumpyTensorSpaceConstWeighting(weights, exponent)
+    if np.isscalar(weights) or weights.shape == ():
+        weighting = PytorchTensorSpaceConstWeighting(weights, exponent)
     elif weights is None:
-        weighting = NumpyTensorSpaceConstWeighting(1.0, exponent)
+        weighting = PytorchTensorSpaceConstWeighting(1.0, exponent)
     else:  # last possibility: make an array
-        arr = np.asarray(weights)
-        weighting = NumpyTensorSpaceArrayWeighting(arr, exponent)
+        arr = torch.tensor(weights)
+        weighting = PytorchTensorSpaceArrayWeighting(arr, exponent)
     return weighting
 
 
-def npy_weighted_inner(weights):
+def pytorch_weighted_inner(weights):
     """Weighted inner product on `TensorSpace`'s as free function.
 
     Parameters
@@ -1917,13 +1412,13 @@ def npy_weighted_inner(weights):
 
     See Also
     --------
-    NumpyTensorSpaceConstWeighting
-    NumpyTensorSpaceArrayWeighting
+    PytorchTensorSpaceConstWeighting
+    PytorchTensorSpaceArrayWeighting
     """
     return _weighting(weights, exponent=2.0).inner
 
 
-def npy_weighted_norm(weights, exponent=2.0):
+def pytorch_weighted_norm(weights, exponent=2.0):
     """Weighted norm on `TensorSpace`'s as free function.
 
     Parameters
@@ -1943,13 +1438,13 @@ def npy_weighted_norm(weights, exponent=2.0):
 
     See Also
     --------
-    NumpyTensorSpaceConstWeighting
-    NumpyTensorSpaceArrayWeighting
+    PytorchTensorSpaceConstWeighting
+    PytorchTensorSpaceArrayWeighting
     """
     return _weighting(weights, exponent=exponent).norm
 
 
-def npy_weighted_dist(weights, exponent=2.0):
+def pytorch_weighted_dist(weights, exponent=2.0):
     """Weighted distance on `TensorSpace`'s as free function.
 
     Parameters
@@ -1969,73 +1464,49 @@ def npy_weighted_dist(weights, exponent=2.0):
 
     See Also
     --------
-    NumpyTensorSpaceConstWeighting
-    NumpyTensorSpaceArrayWeighting
+    PytorchTensorSpaceConstWeighting
+    PytorchTensorSpaceArrayWeighting
     """
     return _weighting(weights, exponent=exponent).dist
 
 
 def _norm_default(x):
     """Default Euclidean norm implementation."""
-    # Lazy import to improve `import odl` time
-    import scipy.linalg
 
-    if _blas_is_applicable(x.data):
-        nrm2 = scipy.linalg.blas.get_blas_funcs('nrm2', dtype=x.dtype)
-        norm = partial(nrm2, n=native(x.size))
-    else:
-        norm = np.linalg.norm
-    return norm(x.data.ravel())
+    return x.data.norm(p=2)
 
 
 def _pnorm_default(x, p):
     """Default p-norm implementation."""
-    return np.linalg.norm(x.data.ravel(), ord=p)
+    return x.data.norm(p=p)
 
 
 def _pnorm_diagweight(x, p, w):
     """Diagonally weighted p-norm implementation."""
-    # Ravel both in the same order (w is a numpy array)
-    order = 'F' if all(a.flags.f_contiguous for a in (x.data, w)) else 'C'
-
-    # This is faster than first applying the weights and then summing with
-    # BLAS dot or nrm2
-    xp = np.abs(x.data.ravel(order))
+    xp = torch.abs(x.data)
     if p == float('inf'):
-        xp *= w.ravel(order)
-        return np.max(xp)
+        xp *= w
+        return torch.max(xp)
     else:
-        xp = np.power(xp, p, out=xp)
-        xp *= w.ravel(order)
-        return np.sum(xp) ** (1 / p)
+        torch.pow(xp, p, out=xp)
+        xp *= w
+        return torch.sum(xp) ** (1 / p)
 
 
 def _inner_default(x1, x2):
     """Default Euclidean inner product implementation."""
-    # Ravel both in the same order
-    order = 'F' if all(a.data.flags.f_contiguous for a in (x1, x2)) else 'C'
 
     if is_real_dtype(x1.dtype):
-        if x1.size > THRESHOLD_MEDIUM:
-            # This is as fast as BLAS dotc
-            return np.tensordot(x1, x2, [range(x1.ndim)] * 2)
-        else:
-            # Several times faster for small arrays
-            return np.dot(x1.data.ravel(order),
-                          x2.data.ravel(order))
+        return torch.dot(x1.data, x2.data)
     else:
         # x2 as first argument because we want linearity in x1
-        return np.vdot(x2.data.ravel(order),
-                       x1.data.ravel(order))
+        return torch.vdot(x2.data, x1.data)
 
 
-# TODO: implement intermediate weighting schemes with arrays that are
-# broadcast, i.e. between scalar and full-blown in dimensionality?
 
+class PytorchTensorSpaceArrayWeighting(ArrayWeighting):
 
-class NumpyTensorSpaceArrayWeighting(ArrayWeighting):
-
-    """Weighting of a `NumpyTensorSpace` by an array.
+    """Weighting of a `PytorchTensorSpace` by an array.
 
     This class defines a weighting by an array that has the same shape
     as the tensor space. Since the space is not known to this class,
@@ -2100,23 +1571,23 @@ class NumpyTensorSpaceArrayWeighting(ArrayWeighting):
           it does not define an inner product or norm, respectively. This
           is not checked during initialization.
         """
-        if isinstance(array, NumpyTensor):
+        if isinstance(array, PytorchTensor):
             array = array.data
-        elif not isinstance(array, np.ndarray):
-            array = np.asarray(array)
-        super(NumpyTensorSpaceArrayWeighting, self).__init__(
-            array, impl='numpy', exponent=exponent)
+        elif not isinstance(array, torch.Tensor):
+            array = torch.tensor(array)
+        super(PytorchTensorSpaceArrayWeighting, self).__init__(
+            array, impl='pytorch', exponent=exponent)
 
     def __hash__(self):
         """Return ``hash(self)``."""
-        return hash((type(self), self.array.tobytes(), self.exponent))
+        return hash((type(self), hash(self.array), self.exponent))
 
     def inner(self, x1, x2):
         """Return the weighted inner product of ``x1`` and ``x2``.
 
         Parameters
         ----------
-        x1, x2 : `NumpyTensor`
+        x1, x2 : `PytorchTensor`
             Tensors whose inner product is calculated.
 
         Returns
@@ -2140,7 +1611,7 @@ class NumpyTensorSpaceArrayWeighting(ArrayWeighting):
 
         Parameters
         ----------
-        x : `NumpyTensor`
+        x : `PytorchTensor`
             Tensor whose norm is calculated.
 
         Returns
@@ -2157,9 +1628,9 @@ class NumpyTensorSpaceArrayWeighting(ArrayWeighting):
             return float(_pnorm_diagweight(x, self.exponent, self.array))
 
 
-class NumpyTensorSpaceConstWeighting(ConstWeighting):
+class PytorchTensorSpaceConstWeighting(ConstWeighting):
 
-    """Weighting of a `NumpyTensorSpace` by a constant.
+    """Weighting of a `PytorchTensorSpace` by a constant.
 
     See ``Notes`` for mathematical details.
     """
@@ -2214,7 +1685,7 @@ class NumpyTensorSpaceConstWeighting(ConstWeighting):
         - The constant must be positive, otherwise it does not define an
           inner product or norm, respectively.
         """
-        super(NumpyTensorSpaceConstWeighting, self).__init__(
+        super(PytorchTensorSpaceConstWeighting, self).__init__(
             const, impl='numpy', exponent=exponent)
 
     def inner(self, x1, x2):
@@ -2222,7 +1693,7 @@ class NumpyTensorSpaceConstWeighting(ConstWeighting):
 
         Parameters
         ----------
-        x1, x2 : `NumpyTensor`
+        x1, x2 : `PytorchTensor`
             Tensors whose inner product is calculated.
 
         Returns
@@ -2246,7 +1717,7 @@ class NumpyTensorSpaceConstWeighting(ConstWeighting):
 
         Parameters
         ----------
-        x1 : `NumpyTensor`
+        x1 : `PytorchTensor`
             Tensor whose norm is calculated.
 
         Returns
@@ -2267,7 +1738,7 @@ class NumpyTensorSpaceConstWeighting(ConstWeighting):
 
         Parameters
         ----------
-        x1, x2 : `NumpyTensor`
+        x1, x2 : `PytorchTensor`
             Tensors whose mutual distance is calculated.
 
         Returns
@@ -2284,7 +1755,7 @@ class NumpyTensorSpaceConstWeighting(ConstWeighting):
                           _pnorm_default(x1 - x2, self.exponent)))
 
 
-class NumpyTensorSpaceCustomInner(CustomInner):
+class PytorchTensorSpaceCustomInner(CustomInner):
 
     """Class for handling a user-specified inner product."""
 
@@ -2303,10 +1774,10 @@ class NumpyTensorSpaceCustomInner(CustomInner):
             - ``<s*x + y, z> = s * <x, z> + <y, z>``
             - ``<x, x> = 0``  if and only if  ``x = 0``
         """
-        super(NumpyTensorSpaceCustomInner, self).__init__(inner, impl='numpy')
+        super(PytorchTensorSpaceCustomInner, self).__init__(inner, impl='numpy')
 
 
-class NumpyTensorSpaceCustomNorm(CustomNorm):
+class PytorchTensorSpaceCustomNorm(CustomNorm):
 
     """Class for handling a user-specified norm.
 
@@ -2329,10 +1800,10 @@ class NumpyTensorSpaceCustomNorm(CustomNorm):
             - ``||s * x|| = |s| * ||x||``
             - ``||x + y|| <= ||x|| + ||y||``
         """
-        super(NumpyTensorSpaceCustomNorm, self).__init__(norm, impl='numpy')
+        super(PytorchTensorSpaceCustomNorm, self).__init__(norm, impl='numpy')
 
 
-class NumpyTensorSpaceCustomDist(CustomDist):
+class PytorchTensorSpaceCustomDist(CustomDist):
 
     """Class for handling a user-specified distance in `TensorSpace`.
 
@@ -2355,7 +1826,7 @@ class NumpyTensorSpaceCustomDist(CustomDist):
             - ``dist(x, y) = dist(y, x)``
             - ``dist(x, y) <= dist(x, z) + dist(z, y)``
         """
-        super(NumpyTensorSpaceCustomDist, self).__init__(dist, impl='numpy')
+        super(PytorchTensorSpaceCustomDist, self).__init__(dist, impl='numpy')
 
 
 if __name__ == '__main__':
