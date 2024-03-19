@@ -12,10 +12,12 @@ from __future__ import absolute_import
 
 from . import base_tensors, entry_points, weighting
 from .npy_tensors import *
+from .pytorch_tensors import *
 from .pspace import *
 from .space_utils import *
 
 __all__ = ()
 __all__ += npy_tensors.__all__
+__all__ += pytorch_tensors.__all__
 __all__ += pspace.__all__
 __all__ += space_utils.__all__
