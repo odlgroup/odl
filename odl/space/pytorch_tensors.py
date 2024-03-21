@@ -287,8 +287,8 @@ class PytorchTensorSpace(TensorSpace):
 
     @property
     def impl(self):
-        """Name of the implementation back-end: ``'numpy'``."""
-        return 'numpy'
+        """Name of the implementation back-end: ``'pytorch'``."""
+        return 'pytorch'
 
     @property
     def default_order(self):
@@ -1686,7 +1686,7 @@ class PytorchTensorSpaceConstWeighting(ConstWeighting):
           inner product or norm, respectively.
         """
         super(PytorchTensorSpaceConstWeighting, self).__init__(
-            const, impl='numpy', exponent=exponent)
+            const, impl='pytorch', exponent=exponent)
 
     def inner(self, x1, x2):
         """Return the weighted inner product of ``x1`` and ``x2``.
@@ -1774,7 +1774,7 @@ class PytorchTensorSpaceCustomInner(CustomInner):
             - ``<s*x + y, z> = s * <x, z> + <y, z>``
             - ``<x, x> = 0``  if and only if  ``x = 0``
         """
-        super(PytorchTensorSpaceCustomInner, self).__init__(inner, impl='numpy')
+        super(PytorchTensorSpaceCustomInner, self).__init__(inner, impl='pytorch')
 
 
 class PytorchTensorSpaceCustomNorm(CustomNorm):
@@ -1800,7 +1800,7 @@ class PytorchTensorSpaceCustomNorm(CustomNorm):
             - ``||s * x|| = |s| * ||x||``
             - ``||x + y|| <= ||x|| + ||y||``
         """
-        super(PytorchTensorSpaceCustomNorm, self).__init__(norm, impl='numpy')
+        super(PytorchTensorSpaceCustomNorm, self).__init__(norm, impl='pytorch')
 
 
 class PytorchTensorSpaceCustomDist(CustomDist):
@@ -1826,7 +1826,7 @@ class PytorchTensorSpaceCustomDist(CustomDist):
             - ``dist(x, y) = dist(y, x)``
             - ``dist(x, y) <= dist(x, z) + dist(z, y)``
         """
-        super(PytorchTensorSpaceCustomDist, self).__init__(dist, impl='numpy')
+        super(PytorchTensorSpaceCustomDist, self).__init__(dist, impl='pytorch')
 
 
 if __name__ == '__main__':
