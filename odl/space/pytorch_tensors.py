@@ -243,8 +243,8 @@ class PytorchTensorSpace(TensorSpace):
         # Set the weighting
         if weighting is not None:
             if isinstance(weighting, Weighting):
-                if weighting.impl != 'torch':
-                    raise ValueError("`weighting.impl` must be 'torch', "
+                if weighting.impl != 'pytorch':
+                    raise ValueError("`weighting.impl` must be 'pytorch', "
                                      '`got {!r}'.format(weighting.impl))
                 if weighting.exponent != exponent:
                     raise ValueError('`weighting.exponent` conflicts with '
