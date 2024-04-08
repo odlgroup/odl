@@ -27,11 +27,13 @@ class Convolution(odl.Operator):
 
 
 # Discretization
-discr_space = odl.uniform_discr(0, 10, 500, impl='numpy')
+discr_space = odl.uniform_discr(-5, 5, 500, impl='numpy')
 
 # Complicated functions to check performance
-kernel = discr_space.element(lambda x: np.exp(x / 2) * np.cos(x * 1.172))
-phantom = discr_space.element(lambda x: x ** 2 * np.sin(x) ** 2 * (x > 5))
+kernel = discr_space.element(lambda x: np.exp(-x**2 * 2) * np.cos(x * 1.172))
+
+# phantom = discr_space.element(lambda x: (x+5) ** 2 * np.sin(x+5) ** 2 * (x > 0))
+phantom = discr_space.element(lambda x: np.cos(0*x) * (x > -1) * (x < 1))
 
 # Create operator
 conv = Convolution(kernel)
@@ -41,21 +43,28 @@ iterations = 100
 omega = 1 / conv.opnorm() ** 2
 
 
-# Display callback
-def callback(x):
-    plt.plot(conv(x))
-
+def test_with_plot(conv, phantom, solver, **extra_args):
+    fig, axs = plt.subplots(2)
+    fig.suptitle("CGN")
+    axs[0].set_title("x")
+    axs[1].set_title("k*x")
+    axs[0].plot(phantom)
+    axs[1].plot(conv(phantom))
+    def plot_callback(x):
+        axs[0].plot(conv(x), '--')
+        axs[1].plot(conv(x), '--')
+    solver(conv, discr_space.zero(), phantom, iterations, callback=plot_callback, **extra_args)
 
 # Test CGN
-plt.figure()
-plt.plot(phantom)
-odl.solvers.conjugate_gradient_normal(conv, discr_space.zero(), phantom,
-                                      iterations, callback)
+test_with_plot(conv, phantom, odl.solvers.conjugate_gradient_normal)
 
-# Landweber
-plt.figure()
-plt.plot(phantom)
-odl.solvers.landweber(conv, discr_space.zero(), phantom,
-                      iterations, omega, callback)
+# test_with_plot(conv, phantom, odl.solvers.landweber, omega=omega)
 
+# # Landweber
+# lw_fig, lw_axs = plt.subplots(1)
+# lw_fig.suptitle("Landweber")
+# lw_axs.plot(phantom)
+# odl.solvers.landweber(conv, discr_space.zero(), phantom,
+#                       iterations, omega, lambda x: lw_axs.plot(conv(x)))
+# 
 plt.show()
