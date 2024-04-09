@@ -56,4 +56,4 @@ g = A(phantom)
 # Display the results using the show method
 kernel.show('kernel')
 phantom.show('phantom')
-g.show('convolved phantom')
+g.show('convolved phantom', force_show=True)
