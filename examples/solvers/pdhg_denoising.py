@@ -26,7 +26,7 @@ image /= image.max()
 space = odl.uniform_discr([0, 0], shape, shape)
 
 # Original image
-orig = space.element(image)
+orig = space.element(image.copy())
 
 # Add noise
 image += 0.1 * odl.phantom.white_noise(orig.space)
