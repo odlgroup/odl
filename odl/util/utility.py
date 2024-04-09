@@ -17,6 +17,7 @@ from contextlib import contextmanager
 from itertools import product
 
 import numpy as np
+import torch
 
 __all__ = (
     'REPR_PRECISION',
@@ -33,6 +34,7 @@ __all__ = (
     'is_real_dtype',
     'is_real_floating_dtype',
     'is_complex_floating_dtype',
+    'uses_pytorch',
     'real_dtype',
     'complex_dtype',
     'is_string',
@@ -487,6 +489,13 @@ def complex_dtype(dtype, default=None):
     else:
         return np.dtype((complex_base_dtype, dtype.shape))
 
+def uses_pytorch(obj):
+    if isinstance(obj, torch.Tensor):
+        return True
+    elif getattr(obj, "impl", None)=="pytorch":
+        return True
+    else:
+        return False
 
 def is_string(obj):
     """Return ``True`` if ``obj`` behaves like a string, ``False`` else."""
@@ -618,8 +627,12 @@ def writable_array(obj, **kwargs):
     [2, 4, 6]
     """
     arr = None
+    torch_impl = uses_pytorch(obj)
     try:
-        arr = np.asarray(obj, **kwargs)
+        if torch_impl:
+            arr = torch.tensor(obj, **kwargs)
+        else:
+            arr = np.asarray(obj, **kwargs)
         yield arr
     finally:
         if arr is not None:
