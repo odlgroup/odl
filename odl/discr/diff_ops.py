@@ -16,7 +16,7 @@ from odl.discr.discr_space import DiscretizedSpace
 from odl.operator.tensor_ops import PointwiseTensorFieldOperator
 from odl.space import ProductSpace
 from odl.util import indent, signature_string, writable_array
-from odl.array_API_support import asarray
+from odl.array_API_support import asarray, get_array_and_backend
 
 __all__ = ('PartialDerivative', 'Gradient', 'Divergence', 'Laplacian')
 
@@ -557,11 +557,13 @@ class Divergence(PointwiseTensorFieldOperator):
         """Calculate the divergence of ``x``."""
         if out is None:
             out = self.range.element()
+        # print(f"{type(out.data)=}")
 
         ndim = self.range.ndim
         dx = self.range.cell_sides
 
-        tmp = np.empty(out.shape, out.dtype)
+        tmp = self.range.element().data
+
         with writable_array(out) as out_arr:
             for axis in range(ndim):
                 finite_diff(x[axis], axis=axis, dx=dx[axis],
@@ -885,7 +887,12 @@ def finite_diff(f, axis, dx=1.0, method='forward', out=None,
     >>> out is finite_diff(f, axis=0, out=out)
     True
     """
-    f_arr = asarray(f)
+    f_arr, backend = get_array_and_backend(f)
+    if backend.impl=='pytorch' and out is not None:
+        assert(isinstance(out, backend.array_type)), f"{type(out)=}"
+
+    dtype = f.dtype if out is None else out.dtype
+
     ndim = f_arr.ndim
 
     if f_arr.shape[axis] < 2:
@@ -910,7 +917,10 @@ def finite_diff(f, axis, dx=1.0, method='forward', out=None,
         raise ValueError('`pad_mode` {} not understood'
                          ''.format(pad_mode))
 
-    pad_const = f.dtype.type(pad_const)
+    if isinstance(pad_const, backend.array_type):
+        pad_const = pad_const.reshape([])
+    else:
+        pad_const = backend.array_constructor([pad_const], dtype=dtype)
 
     if out is None:
         out = np.empty_like(f_arr)
@@ -933,19 +943,25 @@ def finite_diff(f, axis, dx=1.0, method='forward', out=None,
     out, out_in = np.swapaxes(out, 0, axis), out
     f_arr = np.swapaxes(f_arr, 0, axis)
 
+    def fd_subtraction(a, b):
+        if backend.impl=='pytorch':
+            out[1:-1] = a - b
+        else:
+            np.subtract(a, b, out=out[1:-1])
+
     # Interior of the domain of f
     if method == 'central':
         # 1D equivalent: out[1:-1] = (f[2:] - f[:-2])/2.0
-        np.subtract(f_arr[2:], f_arr[:-2], out=out[1:-1])
+        fd_subtraction(f_arr[2:], f_arr[:-2])
         out[1:-1] /= 2.0
 
     elif method == 'forward':
         # 1D equivalent: out[1:-1] = (f[2:] - f[1:-1])
-        np.subtract(f_arr[2:], f_arr[1:-1], out=out[1:-1])
+        fd_subtraction(f_arr[2:], f_arr[1:-1])
 
     elif method == 'backward':
         # 1D equivalent: out[1:-1] = (f[1:-1] - f[:-2])
-        np.subtract(f_arr[1:-1], f_arr[:-2], out=out[1:-1])
+        fd_subtraction(f_arr[1:-1], f_arr[:-2])
 
     # Boundaries
     if pad_mode == 'constant':
