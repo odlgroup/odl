@@ -876,9 +876,9 @@ class PytorchTensor(Tensor):
                [ 1.,  1.,  1.]])
         """
         if out is None:
-            return self.data.cpu().numpy()
+            return self.data
         else:
-            out[:] = self.data.cpu().numpy()
+            out[:] = self.data
             return out
 
     def astype(self, dtype):

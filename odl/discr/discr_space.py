@@ -1510,7 +1510,7 @@ class DiscretizedSpaceElement(Tensor):
 
         # Squeeze grid and values according to the index expression
         part = self.space.partition[indices].squeeze()
-        values = self.asarray()[indices].squeeze()
+        values = np.array(self)[indices].squeeze()
 
         return show_discrete_data(values, part, title=title, method=method,
                                   force_show=force_show, fig=fig,
