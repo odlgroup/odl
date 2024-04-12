@@ -11,11 +11,12 @@
 from __future__ import absolute_import, division, print_function
 
 import numpy as np
+import torch
 
 from odl.discr.discr_space import DiscretizedSpace
 from odl.operator.tensor_ops import PointwiseTensorFieldOperator
 from odl.space import ProductSpace
-from odl.util import indent, signature_string, writable_array
+from odl.util import indent, signature_string, writable_array, uses_pytorch, dtype_type
 
 __all__ = ('PartialDerivative', 'Gradient', 'Divergence', 'Laplacian')
 
@@ -556,11 +557,14 @@ class Divergence(PointwiseTensorFieldOperator):
         """Calculate the divergence of ``x``."""
         if out is None:
             out = self.range.element()
+        # print(f"{type(out.data)=}")
 
         ndim = self.range.ndim
         dx = self.range.cell_sides
+        torch_impl = uses_pytorch(x[0])
 
-        tmp = np.empty(out.shape, out.dtype, order=out.space.default_order)
+        tmp = self.range.element().asarray()
+        # print(f"{type(tmp)=}")
         with writable_array(out) as out_arr:
             for axis in range(ndim):
                 finite_diff(x[axis], axis=axis, dx=dx[axis],
@@ -884,7 +888,14 @@ def finite_diff(f, axis, dx=1.0, method='forward', out=None,
     >>> out is finite_diff(f, axis=0, out=out)
     True
     """
-    f_arr = np.asarray(f)
+    torch_impl = uses_pytorch(f)
+    if torch_impl and out is not None:
+        assert(isinstance(out, torch.Tensor)), f"{type(out)=}"
+
+    if torch_impl:
+        f_arr = torch.tensor(f)
+    else:
+        f_arr = np.asarray(f)
     ndim = f_arr.ndim
 
     if f_arr.shape[axis] < 2:
@@ -909,7 +920,7 @@ def finite_diff(f, axis, dx=1.0, method='forward', out=None,
         raise ValueError('`pad_mode` {} not understood'
                          ''.format(pad_mode))
 
-    pad_const = f.dtype.type(pad_const)
+    pad_const = dtype_type(f)(pad_const)
 
     if out is None:
         out = np.empty_like(f_arr)
@@ -932,19 +943,25 @@ def finite_diff(f, axis, dx=1.0, method='forward', out=None,
     out, out_in = np.swapaxes(out, 0, axis), out
     f_arr = np.swapaxes(f_arr, 0, axis)
 
+    def fd_subtraction(a, b):
+        if torch_impl:
+            out[1:-1] = a - b
+        else:
+            np.subtract(a, b, out=out[1:-1])
+
     # Interior of the domain of f
     if method == 'central':
         # 1D equivalent: out[1:-1] = (f[2:] - f[:-2])/2.0
-        np.subtract(f_arr[2:], f_arr[:-2], out=out[1:-1])
+        fd_subtraction(f_arr[2:], f_arr[:-2])
         out[1:-1] /= 2.0
 
     elif method == 'forward':
         # 1D equivalent: out[1:-1] = (f[2:] - f[1:-1])
-        np.subtract(f_arr[2:], f_arr[1:-1], out=out[1:-1])
+        fd_subtraction(f_arr[2:], f_arr[1:-1])
 
     elif method == 'backward':
         # 1D equivalent: out[1:-1] = (f[1:-1] - f[:-2])
-        np.subtract(f_arr[1:-1], f_arr[:-2], out=out[1:-1])
+        fd_subtraction(f_arr[1:-1], f_arr[:-2])
 
     # Boundaries
     if pad_mode == 'constant':
