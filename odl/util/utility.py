@@ -27,6 +27,7 @@ __all__ = (
     'array_str',
     'dtype_repr',
     'dtype_str',
+    'dtype_type',
     'cache_arguments',
     'is_numeric_dtype',
     'is_int_dtype',
@@ -310,6 +311,27 @@ def dtype_str(dtype):
         return "('{}', {})".format(dtype.base, dtype.shape)
     else:
         return '{}'.format(dtype)
+
+def dtype_type(dtype):
+    """Obtain a Python type corresponding to the given NumPy or PyTorch
+    dtype. This can be used for constructing values of a suitable type
+    for storing in an array of either backend."""
+    if isinstance(dtype, str) or isinstance(dtype, type):
+        dtype = np.dtype(dtype)
+
+    if hasattr(dtype, 'dtype'):
+        return dtype_type(dtype.dtype)
+    elif dtype == np.dtype(int):
+        return int
+    elif dtype == np.dtype(float):
+        return float
+    elif dtype == np.dtype(complex):
+        return complex
+    elif dtype == torch.float64:
+        return float
+    else:
+        raise ValueError(f"No suitable Python type available for {dtype}.")
+
 
 
 def cache_arguments(function):
