@@ -67,13 +67,15 @@ omega = 1 / conv.opnorm() ** 2
 def test_with_plot(conv, phantom, solver, **extra_args):
     fig, axs = plt.subplots(2)
     fig.suptitle("CGN")
+    def plot_fn(ax_id, fn, *plot_args, **plot_kwargs):
+        axs[ax_id].plot(fn, *plot_args, **plot_kwargs)
     axs[0].set_title("x")
     axs[1].set_title("k*x")
-    axs[0].plot(phantom)
-    axs[1].plot(conv(phantom))
+    plot_fn(0, phantom)
+    plot_fn(1, conv(phantom))
     def plot_callback(x):
-        axs[0].plot(conv(x), '--')
-        axs[1].plot(conv(x), '--')
+        plot_fn(0, conv(x), '--')
+        plot_fn(1, conv(x), '--')
     solver(conv, discr_space.zero(), phantom, iterations, callback=plot_callback, **extra_args)
 
 # Test CGN
