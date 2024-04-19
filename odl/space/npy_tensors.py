@@ -879,6 +879,15 @@ class NumpyTensorSpace(TensorSpace):
         """Type of elements in this space: `NumpyTensor`."""
         return NumpyTensor
 
+    def is_suitable_scalar(self, s):
+        return type(s) is self.dtype.type
+
+    def as_suitable_scalar(self, s):
+        """Try to convert `s` to a type that can be scalar-multiplied with
+        numpy arrays.
+        """
+        return self.dtype.type(s)
+
 
 class NumpyTensor(Tensor):
 
