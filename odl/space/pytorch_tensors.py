@@ -295,6 +295,35 @@ class PytorchTensorSpace(TensorSpace):
         """Default (and only) storage order for new elements in this space: ``'C'``."""
         return 'C'
 
+    def is_suitable_scalar(self, s):
+        if self._torch_dtype in [torch.complex64, torch.complex128]:
+            return type(s) is complex
+        else:
+            return type(s) is float
+        # Singleton-tensor version:
+        # if not isinstance(s, torch.Tensor):
+        #     return False
+        # elif s.dtype != self._torch_dtype:
+        #     return False
+        # elif s.shape != ():
+        #     return False
+        # else:
+        #     return True
+
+    def as_suitable_scalar(self, s):
+        """Try to convert `s` to a type that can be scalar-multiplied with
+        torch tensors.
+        """
+        if self._torch_dtype in [torch.complex64, torch.complex128]:
+            return complex(s)
+            # Arguably, this would be more appropriate:
+            # return torch.tensor(complex(s), dtype=self._torch_dtype)
+            # But this results in wrong PyTorch multiplication functions
+            # being called.
+        else:
+            return float(s)
+            # return torch.tensor(float(s), dtype=self._torch_dtype)
+
     @property
     def weighting(self):
         """This space's weighting scheme."""

@@ -388,6 +388,17 @@ class ProductSpace(LinearSpace):
         else:
             raise AttributeError("`dtype`'s of subspaces not equal")
 
+    def is_suitable_scalar(self, s):
+        return all(space.is_suitable_scalar(s) for space in self.spaces)
+
+    def as_suitable_scalar(self, s):
+        """Try to convert `s` to a type that can be scalar-multiplied with
+        elements of this space.
+        """
+        s_sui = self.spaces[0].as_suitable_scalar(s)
+        assert(self.is_suitable_scalar(s_sui))
+        return s_sui
+
     @property
     def is_real(self):
         """True if this is a space of real valued vectors."""

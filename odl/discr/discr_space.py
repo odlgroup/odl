@@ -244,6 +244,18 @@ class DiscretizedSpace(TensorSpace):
         """
         return self.tspace.available_dtypes()
 
+    def is_suitable_scalar(self, s):
+        """Determine whether `s` has a type that can be scalar-multiplied with
+        elements of this space.
+        """
+        return self.tspace.is_suitable_scalar(s)
+
+    def as_suitable_scalar(self, s):
+        """Try to convert `s` to a type that can be scalar-multiplied with
+        elements of this space.
+        """
+        return self.tspace.as_suitable_scalar(s)
+
     # --- Derived properties
 
     @property
