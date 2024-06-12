@@ -1386,6 +1386,10 @@ class PytorchTensor(Tensor):
         torch.pow(self.data, other, out=self.data)
         return self
 
+    def __rmul__(self, other):
+        result = self.space.element(other * self.data)
+        return result
+
     def __int__(self):
         """Return ``int(self)``."""
         return int(self.data)
