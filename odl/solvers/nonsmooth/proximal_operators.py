@@ -391,7 +391,7 @@ def proximal_quadratic_perturbation(prox_factory, a, u=None):
             return (MultiplyOperator(const, domain=u.space, range=u.space) *
                     prox *
                     (MultiplyOperator(const, domain=u.space, range=u.space) -
-                     sigma * const * u))
+                     u.space.as_suitable_scalar(sigma * const) * u))
         else:
             space = prox.domain
             return (MultiplyOperator(const, domain=space, range=space) *

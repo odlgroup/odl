@@ -320,13 +320,14 @@ class MultiplyOperator(Operator):
 
     def _call(self, x, out=None):
         """Multiply ``x`` and write to ``out`` if given."""
+        μ = x.space.as_suitable_scalar(self.multiplicand)
         if out is None:
-            return x * self.multiplicand
+            return x * μ
         elif not self.__range_is_field:
             if self.__domain_is_field:
-                out.lincomb(x, self.multiplicand)
+                out.lincomb(x, μ)
             else:
-                out.assign(self.multiplicand * x)
+                out.assign(x * μ)
         else:
             raise ValueError('can only use `out` with `LinearSpace` range')
 
