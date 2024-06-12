@@ -20,7 +20,7 @@ from odl.util import (
     array_str, dtype_str, indent, is_complex_floating_dtype, is_floating_dtype,
     is_numeric_dtype, is_real_dtype, is_real_floating_dtype, safe_int_conv,
     signature_string, writable_array)
-from odl.util.ufuncs import TensorSpaceUfuncs
+from odl.util.ufuncs import NumpyTensorSpaceUfuncs, PytorchTensorSpaceUfuncs
 from odl.util.utility import TYPE_MAP_C2R, TYPE_MAP_R2C, nullcontext
 
 __all__ = ('TensorSpace',)
@@ -890,7 +890,13 @@ numpy.ufunc.reduceat.html
             the minimum required version. Use Numpy ufuncs directly, e.g.,
             ``np.sqrt(x)`` instead of ``x.ufuncs.sqrt()``.
         """
-        return TensorSpaceUfuncs(self)
+        if self.impl == "numpy":
+            return NumpyTensorSpaceUfuncs(self)
+        elif self.impl == "pytorch":
+            return PytorchTensorSpaceUfuncs(self)
+        else:
+            raise NotImplementedError()
+            
 
     def show(self, title=None, method='', indices=None, force_show=False,
              fig=None, **kwargs):

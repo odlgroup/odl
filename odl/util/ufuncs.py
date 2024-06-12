@@ -26,10 +26,11 @@ arrays.classes.rst#special-attributes-and-methods>`_.
 from __future__ import print_function, division, absolute_import
 from builtins import object
 import numpy as np
+import torch
 import re
 
 
-__all__ = ('TensorSpaceUfuncs', 'ProductSpaceUfuncs')
+__all__ = ('NumpyTensorSpaceUfuncs', 'ProductSpaceUfuncs')
 
 
 # Some are ignored since they don't cooperate with dtypes, needs fix
@@ -64,6 +65,36 @@ numpy.{}
 """.format(name)
     UFUNCS.append((name, n_in, n_out, doc))
 
+TORCH_RAW_UFUNCS = ['absolute', 'add', 'arccos', 'arccosh', 'arcsin', 'arcsinh',
+              'arctan', 'arctan2', 'arctanh', 'bitwise_and', 'bitwise_or',
+              'bitwise_xor', 'ceil', 'conj', 'copysign', 'cos', 'cosh',
+              'deg2rad', 'divide', 'equal', 'exp', 'exp2', 'expm1', 'floor',
+              'floor_divide', 'fmax', 'fmin', 'fmod', 'greater',
+              'greater_equal', 'hypot', 'isfinite', 'isinf', 'isnan',
+              'less', 'less_equal', 'log', 'log10', 'log1p',
+              'log2', 'logaddexp', 'logaddexp2', 'logical_and', 'logical_not',
+              'logical_or', 'logical_xor', 'maximum', 'minimum',
+              'multiply', 'negative', 'not_equal',
+              'rad2deg', 'reciprocal', 'remainder',
+              'sign', 'signbit', 'sin', 'sinh', 'sqrt', 'square', 'subtract',
+              'tan', 'tanh', 'true_divide', 'trunc']
+# Add some standardized information
+TORCH_UFUNCS = []
+for name in TORCH_RAW_UFUNCS:
+    ufunc = getattr(np, name)
+    n_in, n_out = ufunc.nin, ufunc.nout
+    descr = ufunc.__doc__.splitlines()[2]
+    # Numpy occasionally uses single ticks for doc, we only use them for links
+    descr = re.sub('`+', '``', descr)
+    doc = descr + """
+
+See Also
+--------
+torch.{}
+""".format(name)
+    TORCH_UFUNCS.append((name, n_in, n_out, doc))
+
+
 # TODO: add the following reductions (to the CUDA implementation):
 # ['var', 'trace', 'tensordot', 'std', 'ptp', 'mean', 'diff', 'cumsum',
 #  'cumprod', 'average']
@@ -72,7 +103,7 @@ numpy.{}
 # --- Wrappers for `Tensor` --- #
 
 
-def wrap_ufunc_base(name, n_in, n_out, doc):
+def wrap_ufunc_numpy(name, n_in, n_out, doc):
     """Return ufunc wrapper for implementation-agnostic ufunc classes."""
     ufunc = getattr(np, name)
     if n_in == 1:
@@ -111,8 +142,42 @@ def wrap_ufunc_base(name, n_in, n_out, doc):
     wrapper.__doc__ = doc
     return wrapper
 
+def wrap_ufunc_pytorch(name, n_in, n_out, doc):
+    """Return ufunc wrapper for implementation-agnostic ufunc classes."""
+    ufunc = getattr(torch, name)
 
-class TensorSpaceUfuncs(object):
+    if n_in == 1:
+        def wrapper(self, out=None, **kwargs):
+            if out is None:
+                return self.elem.space.element(ufunc(self.elem.data, **kwargs))
+            elif isinstance(out, type(self.elem)):
+                ufunc(self.elem.data, out=out.data, **kwargs)
+                return
+            raise NotImplementedError()
+
+    elif n_in == 2:
+        def wrapper(self, x2, out=None, **kwargs):
+            if out is None:
+                return self.elem.space.element(ufunc(self.elem.data, **kwargs))
+            elif isinstance(out, type(self.elem)):
+                selfdata = self.elem.data
+                if isinstance(x2, type(self.elem)):
+                    x2 = x2.data
+                elif isinstance(x2, (float, int)):
+                    x2 = torch.tensor(x2).to(selfdata.device)
+                ufunc(selfdata, x2, out=out.data, **kwargs)
+                return
+            raise NotImplementedError()
+
+    else:
+        raise NotImplementedError
+
+    wrapper.__name__ = wrapper.__qualname__ = name
+    wrapper.__doc__ = doc
+    return wrapper
+
+
+class NumpyTensorSpaceUfuncs(object):
 
     """Ufuncs for `Tensor` objects.
 
@@ -176,9 +241,18 @@ class TensorSpaceUfuncs(object):
 
 # Add ufunc methods to ufunc class
 for name, n_in, n_out, doc in UFUNCS:
-    method = wrap_ufunc_base(name, n_in, n_out, doc)
-    setattr(TensorSpaceUfuncs, name, method)
+    method = wrap_ufunc_numpy(name, n_in, n_out, doc)
+    setattr(NumpyTensorSpaceUfuncs, name, method)
 
+
+class PytorchTensorSpaceUfuncs(object):
+    def __init__(self, elem):
+        """Create ufunc wrapper for elem."""
+        self.elem = elem
+
+for name, n_in, n_out, doc in TORCH_UFUNCS:
+    method = wrap_ufunc_pytorch(name, n_in, n_out, doc)
+    setattr(PytorchTensorSpaceUfuncs, name, method)
 
 # --- Wrappers for `ProductSpaceElement` --- #
 
