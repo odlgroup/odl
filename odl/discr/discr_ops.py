@@ -320,10 +320,12 @@ class ResizingOperator(Operator):
                                  '`ran_shp`')
 
             for i in range(domain.ndim):
-                if (ran.is_uniform_byaxis[i] and
+                if (
+                    domain.shape[i] != ran.shape[i] and  # axis i relevant
+                    ran.is_uniform_byaxis[i] and
                     domain.is_uniform_byaxis[i] and
-                        not np.isclose(ran.cell_sides[i],
-                                       domain.cell_sides[i])):
+                    not np.isclose(ran.cell_sides[i], domain.cell_sides[i])
+                ):
                     raise ValueError(
                         'in axis {}: cell sides of domain and range differ '
                         'significantly: (difference {})'
