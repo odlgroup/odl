@@ -573,9 +573,9 @@ class Divergence(PointwiseTensorFieldOperator):
 
                 # Add singleton channel- and batch dimensions
                 horizconv_data = x[0].data[None,None]
-                horizconv_kern = torch.tensor([[[[-1,1]]]], dtype=dtype)
+                horizconv_kern = torch.tensor([[[[-1],[1],[0]]]], dtype=dtype)
                 verticonv_data = x[1].data[None,None]
-                verticonv_kern = torch.tensor([[[[-1],[1]]]], dtype=dtype)
+                verticonv_kern = torch.tensor([[[[-1,1,0]]]], dtype=dtype)
                 return self.range.element(
                     torch.conv2d(horizconv_data, horizconv_kern, padding='same')[0,0]
                       / dx[0]
