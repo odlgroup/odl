@@ -567,44 +567,32 @@ class Divergence(PointwiseTensorFieldOperator):
 
         backend = self.range.array_backend
 
+        def directional_derivative(axis, dd_out=None):
+            return finite_diff( x[axis], axis=axis, dx=dx[axis]
+                              , method=self.method, pad_mode=self.pad_mode
+                              , pad_const=self.pad_const
+                              , out=dd_out )
+
         if out is None:
-            if backend.impl == "pytorch" and len(x)==2:
-                import torch
+            result = directional_derivative(0)
+            for axis in range(1,len(x)):
+                result += directional_derivative(axis)
 
-                dtype = x[0].data.dtype
+            return self.range.element(result)
 
-                assert(self.method=='backward'), f"{self.method=}"
-                assert(self.pad_mode=='constant')
-                assert(self.pad_const==0)
+        else:
+            assert(backend.impl != 'pytorch')
 
-                # Add singleton channel- and batch dimensions
-                horizconv_data = x[0].data[None,None]
-                horizconv_kern = torch.tensor([[[[-1],[1],[0]]]], dtype=dtype)
-                verticonv_data = x[1].data[None,None]
-                verticonv_kern = torch.tensor([[[[-1,1,0]]]], dtype=dtype)
-                return self.range.element(
-                    torch.conv2d(horizconv_data, horizconv_kern, padding='same')[0,0]
-                      / dx[0]
-                  + torch.conv2d(verticonv_data, verticonv_kern, padding='same')[0,0]
-                      / dx[1]
-                  )
-            else:
-                out = self.range.element()
-
-        tmp = self.range.element().data
-
-        with writable_array(out) as out_arr:
-            for axis in range(ndim):
-                finite_diff(x[axis], axis=axis, dx=dx[axis],
-                            method=self.method, pad_mode=self.pad_mode,
-                            pad_const=self.pad_const,
-                            out=tmp)
-                if axis == 0:
-                    out_arr[:] = tmp
-                else:
-                    out_arr += tmp
-
-        return out
+            tmp = self.range.element().asarray()
+            with writable_array(out) as out_arr:
+                for axis in range(ndim):
+                    directional_derivative(axis, out=tmp)
+                    if axis == 0:
+                        out_arr[:] = tmp
+                    else:
+                        out_arr += tmp
+ 
+            return out
 
     def derivative(self, point=None):
         """Return the derivative operator.
@@ -1250,7 +1238,7 @@ def finite_diff(f, axis, dx=1.0, method='forward', out=None,
                 pad_mode=pad_mode, pad_const=pad_const)
         else:
             assert(isinstance(out, torch.Tensor)), f"{type(out)=}"
-            out[:] = _finite_diff_pytorch(torch.tensor(f), axis, dx=dx, method=method,
+            out[:] = _finite_diff_pytorch(f.data, axis, dx=dx, method=method,
                 pad_mode=pad_mode, pad_const=pad_const)
     else:
         return _finite_diff_numpy(np.asarray(f.data), axis, dx=dx, method=method, out=out,
