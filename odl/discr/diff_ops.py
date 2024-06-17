@@ -555,13 +555,33 @@ class Divergence(PointwiseTensorFieldOperator):
 
     def _call(self, x, out=None):
         """Calculate the divergence of ``x``."""
-        if out is None:
-            out = self.range.element()
-        # print(f"{type(out.data)=}")
 
         ndim = self.range.ndim
         dx = self.range.cell_sides
+
         torch_impl = uses_pytorch(x[0])
+
+        if out is None:
+            if torch_impl and len(x)==2:
+                dtype = x[0].data.dtype
+
+                assert(self.method=='backward'), f"{self.method=}"
+                assert(self.pad_mode=='constant')
+                assert(self.pad_const==0)
+
+                # Add singleton channel- and batch dimensions
+                horizconv_data = x[0].data[None,None]
+                horizconv_kern = torch.tensor([[[[-1,1]]]], dtype=dtype)
+                verticonv_data = x[1].data[None,None]
+                verticonv_kern = torch.tensor([[[[-1],[1]]]], dtype=dtype)
+                return self.range.element(
+                    torch.conv2d(horizconv_data, horizconv_kern, padding='same')[0,0]
+                      / dx[0]
+                  + torch.conv2d(verticonv_data, verticonv_kern, padding='same')[0,0]
+                      / dx[1]
+                  )
+            else:
+                out = self.range.element()
 
         tmp = self.range.element().asarray()
         # print(f"{type(tmp)=}")
