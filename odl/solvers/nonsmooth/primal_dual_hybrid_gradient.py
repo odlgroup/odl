@@ -14,7 +14,7 @@ non-smooth convex optimization problems in imaging.
 
 from __future__ import print_function, division, absolute_import
 import numpy as np
-
+from odl.util import uses_pytorch
 from odl.operator import Operator
 
 
@@ -263,14 +263,22 @@ def pdhg(x, f, g, L, niter, tau=None, sigma=None, **kwargs):
     dual_tmp = L.range.element()
     primal_tmp = L.domain.element()
 
+    if uses_pytorch(x):
+        calc_in_place = False  # In-place updates are not efficient in PyTorch
+    else:
+        calc_in_place = True
+
     for _ in range(niter):
         # Copy required for relaxation
         x_old.assign(x)
 
         # Gradient ascent in the dual variable y
         # Compute dual_tmp = y + sigma * L(x_relax)
-        L(x_relax, out=dual_tmp)
-        dual_tmp.lincomb(1, y, sigma, dual_tmp)
+        if calc_in_place:
+            L(x_relax, out=dual_tmp)
+            dual_tmp.lincomb(1, y, sigma, dual_tmp)
+        else:
+            dual_tmp = y + sigma*L(x_relax)
 
         # Apply the dual proximal
         if not proximal_constant:
@@ -279,13 +287,20 @@ def pdhg(x, f, g, L, niter, tau=None, sigma=None, **kwargs):
 
         # Gradient descent in the primal variable x
         # Compute primal_tmp = x + (- tau) * L.derivative(x).adjoint(y)
-        L.derivative(x).adjoint(y, out=primal_tmp)
-        primal_tmp.lincomb(1, x, -tau, primal_tmp)
+        if calc_in_place:
+            L.derivative(x).adjoint(y, out=primal_tmp)
+            primal_tmp.lincomb(1, x, -tau, primal_tmp)
+        else:
+            primal_tmp = x - L.derivative(x).adjoint(y)*tau
 
         # Apply the primal proximal
         if not proximal_constant:
             proximal_primal_tau = proximal_primal(tau)
-        proximal_primal_tau(primal_tmp, out=x)
+
+        if True or calc_in_place:
+            proximal_primal_tau(primal_tmp, out=x)
+        else:
+            x.assign(proximal_primal_tau(primal_tmp))
 
         # Acceleration
         if gamma_primal is not None:
@@ -299,7 +314,10 @@ def pdhg(x, f, g, L, niter, tau=None, sigma=None, **kwargs):
             sigma *= theta
 
         # Over-relaxation in the primal variable x
-        x_relax.lincomb(1 + theta, x, -theta, x_old)
+        if calc_in_place:
+            x_relax.lincomb(1 + theta, x, -theta, x_old)
+        else:
+            x_relax = x*(1+theta) - x_old*theta
 
         if callback is not None:
             callback(x)
