@@ -1107,7 +1107,7 @@ def _finite_diff_pytorch(f_arr, axis, dx=1.0, method='forward',
     # Kernel for convolution that expresses the finite-difference operator on, at least,
     # the interior of the domain of f
     def as_kernel(mat):
-        return torch.tensor(mat, dtype=dtype)
+        return torch.tensor(mat, dtype=dtype, device=f_arr.device)
     if method == 'central':
         fd_kernel = as_kernel([[[[-1],[0],[1]]]]) / (2*dx)
     elif method == 'forward':
