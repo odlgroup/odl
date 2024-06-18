@@ -14,7 +14,7 @@ import numpy as np
 from future.utils import native
 from odl.space import ProductSpace
 from odl.space.base_tensors import TensorSpace
-from odl.util import nd_iterator
+from odl.util import nd_iterator, uses_pytorch
 from odl.util.testutils import noise_element
 
 __all__ = (
@@ -228,17 +228,27 @@ def power_method_opnorm(op, xstart=None, maxiter=100, rtol=1e-05, atol=1e-08,
     # initial guess of opnorm
     opnorm = calc_opnorm(x_norm)
 
-    # temporary to improve performance
-    tmp = op.range.element()
+    if uses_pytorch(x):
+        calc_in_place = False  # In-place updates are not efficient in PyTorch
+    else:
+        calc_in_place = True
+        # temporary to improve performance in NumPy
+        tmp = op.range.element()
 
     # Use the power method to estimate opnorm
     for i in range(ncalls):
         if use_normal:
-            op(x, out=tmp)
-            op.adjoint(tmp, out=x)
+            if calc_in_place:
+                op(x, out=tmp)
+                op.adjoint(tmp, out=x)
+            else:
+                x = op.adjoint(op(x), out=x)
         else:
-            op(x, out=tmp)
-            x, tmp = tmp, x
+            if calc_in_place:
+                op(x, out=tmp)
+                x, tmp = tmp, x
+            else:
+                x = op(x)
 
         # Calculate x norm and verify it is valid
         x_norm = x.norm()
