@@ -1609,8 +1609,9 @@ def uniform_discr_frompartition(partition, dtype=None, impl='numpy', **kwargs):
         else:
             weighting = partition.cell_volume
 
+    tensor_impl_args = {}
+
     if impl=='pytorch':
-        tensor_impl_args = {}
         for arg in ['torch_device']:
             if arg in kwargs:
                 tensor_impl_args[arg] = kwargs.pop(arg)
