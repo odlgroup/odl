@@ -1106,12 +1106,14 @@ def _finite_diff_pytorch(f_arr, axis, dx=1.0, method='forward',
 
     # Kernel for convolution that expresses the finite-difference operator on, at least,
     # the interior of the domain of f
+    def as_kernel(mat):
+        return torch.tensor(mat, dtype=dtype)
     if method == 'central':
-        fd_kernel = torch.tensor([[[[-1],[0],[1]]]], dtype=dtype) / (2*dx)
+        fd_kernel = as_kernel([[[[-1],[0],[1]]]]) / (2*dx)
     elif method == 'forward':
-        fd_kernel = torch.tensor([[[[0],[-1],[1]]]], dtype=dtype) / dx
+        fd_kernel = as_kernel([[[[0],[-1],[1]]]]) / dx
     elif method == 'backward':
-        fd_kernel = torch.tensor([[[[-1],[1],[0]]]], dtype=dtype) / dx
+        fd_kernel = as_kernel([[[[-1],[1],[0]]]]) / dx
 
     if pad_mode == 'constant':
         if pad_const==0:
