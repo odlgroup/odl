@@ -101,6 +101,11 @@ class PytorchTensorSpace(TensorSpace):
 
         Other Parameters
         ----------------
+        torch_device : optional, PyTorch device identifier
+            Where to store and process data (i.e. arrays) representing elements
+            of this space. Should typically be a GPU (cuda) if available, else
+            CPU as also used by NumPy.
+
         weighting : optional
             Use weighted inner product, norm, and dist. The following
             types are supported as ``weighting``:
@@ -217,11 +222,14 @@ class PytorchTensorSpace(TensorSpace):
             raise ValueError('`dtype` {!r} not supported'
                              ''.format(dtype_str(dtype)))
 
+        torch_device = kwargs.pop('torch_device', "cpu")
         dist = kwargs.pop('dist', None)
         norm = kwargs.pop('norm', None)
         inner = kwargs.pop('inner', None)
         weighting = kwargs.pop('weighting', None)
         exponent = kwargs.pop('exponent', getattr(weighting, 'exponent', 2.0))
+
+        self._torch_device = torch.device(torch_device)
 
         if (not is_numeric_dtype(self.dtype) and
                 any(x is not None for x in (dist, norm, inner, weighting))):
@@ -419,7 +427,7 @@ class PytorchTensorSpace(TensorSpace):
             raise ValueError(f"Only row-major order supported ('C'), not '{order}'.")
 
         if inp is None and data_ptr is None:
-            arr = torch.empty(self.shape, dtype=self._torch_dtype)
+            arr = torch.empty(self.shape, dtype=self._torch_dtype, device=self._torch_device)
 
             return self.element_type(self, arr)
 
@@ -441,7 +449,7 @@ class PytorchTensorSpace(TensorSpace):
                 return inp
 
             # TODO avoid copy when it's not necessary
-            arr = torch.tensor(inp, dtype=self._torch_dtype)
+            arr = torch.tensor(inp, dtype=self._torch_dtype, device=self._torch_device)
 
             if arr.shape != self.shape:
                 raise ValueError('shape of `inp` not equal to space shape: '
