@@ -11,28 +11,29 @@ https://odlgroup.github.io/odl/guide/pdhg_guide.html in the ODL documentation.
 """
 
 import numpy as np
+import torch
 import scipy.misc
 import odl
 
+impl = 'numpy'
+# impl = 'pytorch'
+
 # Read test image: use only every second pixel, convert integer to float,
 # and rotate to get the image upright
-image = np.rot90(scipy.misc.ascent()[::2, ::2], 3).astype('float')
+image = np.rot90(scipy.datasets.ascent()[::2, ::2], 3).astype('float')
 shape = image.shape
 
 # Rescale max to 1
 image /= image.max()
 
 # Discretized spaces
-space = odl.uniform_discr([0, 0], shape, shape)
+space = odl.uniform_discr([0, 0], shape, shape, impl=impl)
 
 # Original image
 orig = space.element(image.copy())
 
 # Add noise
-image += 0.1 * odl.phantom.white_noise(orig.space)
-
-# Data of noisy image
-noisy = space.element(image)
+noisy = space.element(image) + 0.1 * odl.phantom.white_noise(orig.space)
 
 # Gradient operator
 gradient = odl.Gradient(space)
