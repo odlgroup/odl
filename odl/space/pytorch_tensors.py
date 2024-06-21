@@ -1202,6 +1202,20 @@ class PytorchTensor(Tensor):
 
         self.data[indices] = values
 
+    def __array__(self, dtype=None):
+        """Return a Numpy array from this tensor.
+
+        Parameters
+        ----------
+        dtype :
+            Specifier for the data type of the output array.
+
+        Returns
+        -------
+        array : `numpy.ndarray`
+        """
+        return self.data.cpu().numpy()
+
     @property
     def real(self):
         """Real part of ``self``.
