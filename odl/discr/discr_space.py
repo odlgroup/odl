@@ -954,6 +954,22 @@ class DiscretizedSpaceElement(Tensor):
                 values = values.tensor
             self.tensor.__setitem__(indices, values)
 
+    def __array__(self, dtype=None):
+        """Return a Numpy array from this tensor.
+        (Contrast with the `asarray` method, which may give other types of array,
+        not just NumPy.)
+
+        Parameters
+        ----------
+        dtype :
+            Specifier for the data type of the output array.
+
+        Returns
+        -------
+        array : `numpy.ndarray`
+        """
+        return self.tensor.__array__()
+
     def __array_ufunc__(self, ufunc, method, *inputs, **kwargs):
         """Interface to Numpy's ufunc machinery.
 
