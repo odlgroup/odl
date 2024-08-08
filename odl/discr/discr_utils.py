@@ -621,6 +621,8 @@ class _Interpolator(object):
 
         # iterate through dimensions
         for xi, cvec in zip(x, self.coord_vecs):
+            xi = np.asarray(xi, dtype=self.values.dtype)
+
             idcs = np.searchsorted(cvec, xi) - 1
 
             idcs[idcs < 0] = 0
