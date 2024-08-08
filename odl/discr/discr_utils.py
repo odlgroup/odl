@@ -621,7 +621,7 @@ class _Interpolator(object):
 
         # iterate through dimensions
         for xi, cvec in zip(x, self.coord_vecs):
-            xi = np.asarray(xi, dtype = self.values.dtype)
+            xi = np.asarray(xi, dtype=self.values.dtype)
 
             idcs = np.searchsorted(cvec, xi) - 1
 
@@ -803,7 +803,7 @@ class _PerAxisInterpolator(_Interpolator):
         # axis, resulting in a loop of length 2**ndim
         for lo_hi, edge in zip(product(*([['l', 'h']] * len(indices))),
                                product(*edge_indices)):
-            weight = np.array([1.0], dtype = self.values.dtype)
+            weight = np.array([1.0], dtype=self.values.dtype)
             # TODO(kohr-h): determine best summation order from array strides
             for lh, w_lo, w_hi in zip(lo_hi, low_weights, high_weights):
 
