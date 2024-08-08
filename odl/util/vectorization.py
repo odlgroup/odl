@@ -21,7 +21,10 @@ __all__ = ('is_valid_input_array', 'is_valid_input_meshgrid',
 
 def is_valid_input_array(x, ndim=None):
     """Test if ``x`` is a correctly shaped point array in R^d."""
-    x = np.asarray(x)
+    try:
+        x = np.asarray(x)
+    except ValueError:
+        return False
 
     if ndim is None or ndim == 1:
         return x.ndim == 1 and x.size > 1 or x.ndim == 2 and x.shape[0] == 1
