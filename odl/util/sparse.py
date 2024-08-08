@@ -51,4 +51,4 @@ class COOMatrix():
         return self.__data
 
     def __repr__(self):
-        return f"COO matrix({self.data}, {self.index})"
+        return f"COO matrix({self.data}, {self.__index}, {self.shape})"
