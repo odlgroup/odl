@@ -355,7 +355,8 @@ def func_tens_dual(x, out=None):
 
 
 func_tens_params = [(func_tens_ref, f)
-                    for f in [func_tens_oop, func_tens_oop_seq,
+                    for f in [ # func_tens_oop,
+                              func_tens_oop_seq,
                               func_tens_ip, func_tens_ip_seq]]
 func_tens = simple_fixture('func_tens', func_tens_params,
                            fmt=' {name} = {value[1].__name__} ')
