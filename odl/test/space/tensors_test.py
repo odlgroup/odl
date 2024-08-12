@@ -1530,7 +1530,9 @@ def test_ufunc_corner_cases(odl_tspace_impl):
 
     # --- Ufuncs with nin = 1, nout = 1 --- #
 
-    with pytest.raises(ValueError):
+    wrong_argcount_error = ValueError if np.__version__<"1.21" else TypeError
+
+    with pytest.raises(wrong_argcount_error):
         # Too many arguments
         x.__array_ufunc__(np.sin, '__call__', x, np.ones((2, 3)))
 
@@ -1561,7 +1563,7 @@ def test_ufunc_corner_cases(odl_tspace_impl):
 
     # --- Ufuncs with nin = 2, nout = 1 --- #
 
-    with pytest.raises(ValueError):
+    with pytest.raises(wrong_argcount_error):
         # Too few arguments
         x.__array_ufunc__(np.add, '__call__', x)
 
