@@ -16,7 +16,7 @@ from packaging.version import parse as parse_version
 from functools import partial
 
 import odl
-from odl.tomo.backends import ASTRA_VERSION
+from odl.tomo.backends import ASTRA_AVAILABLE, ASTRA_VERSION
 from odl.tomo.util.testutils import (
     skip_if_no_astra, skip_if_no_astra_cuda, skip_if_no_skimage)
 from odl.util.testutils import all_almost_equal, simple_fixture
@@ -235,7 +235,8 @@ def test_adjoint(projector):
     # Relative tolerance, still rather high due to imperfectly matched
     # adjoint in the cone beam case
     if (
-        parse_version(ASTRA_VERSION) < parse_version('1.8rc1')
+        ASTRA_AVAILABLE
+        and parse_version(ASTRA_VERSION) < parse_version('1.8rc1')
         and isinstance(projector.geometry, odl.tomo.ConeBeamGeometry)
     ):
         rtol = 0.1
