@@ -1111,8 +1111,8 @@ def uniform_grid_fromintv(intv_prod, shape, nodes_on_bdry=True):
 
     shape = normalized_scalar_param_list(shape, intv_prod.ndim, safe_int_conv)
 
-    if np.shape(nodes_on_bdry) == ():
-        nodes_on_bdry = ([(bool(nodes_on_bdry), bool(nodes_on_bdry))] *
+    if isinstance(nodes_on_bdry, bool):
+        nodes_on_bdry = ([(nodes_on_bdry, nodes_on_bdry)] *
                          intv_prod.ndim)
     elif intv_prod.ndim == 1 and len(nodes_on_bdry) == 2:
         nodes_on_bdry = [nodes_on_bdry]
