@@ -1339,12 +1339,12 @@ def _make_dual_use_func(func_ip, func_oop, domain, out_dtype):
             elif tensor_valued:
                 # The out object can be any array-like of objects with shapes
                 # that should all be broadcastable to scalar_out_shape.
-                results = np.array(out)
-                if results.dtype == object or scalar_in:
+
+                if any(res.shape != scalar_out_shape for res in out) or scalar_in:
                     # Some results don't have correct shape, need to
                     # broadcast
                     bcast_res = []
-                    for res in results.ravel():
+                    for res in out:
                         if ndim == 1:
                             # As usual, 1d is tedious to deal with. This
                             # code deals with extra dimensions in result
@@ -1355,17 +1355,17 @@ def _make_dual_use_func(func_ip, func_oop, domain, out_dtype):
                             if shp and shp[0] == 1:
                                 res = res.reshape(res.shape[1:])
                         bcast_res.append(
-                            np.broadcast_to(res, scalar_out_shape))
+                            np.broadcast_to(res, scalar_out_shape).astype(scalar_out_dtype))
 
                     out_arr = np.array(bcast_res, dtype=scalar_out_dtype)
-                elif results.dtype != scalar_out_dtype:
+                else:
+                    out_arr = np.asarray(out)
+                if out_arr.dtype != scalar_out_dtype:
                     raise ValueError(
                         'result is of dtype {}, expected {}'
-                        ''.format(dtype_repr(results.dtype),
+                        ''.format(dtype_repr(out_arr.dtype),
                                   dtype_repr(scalar_out_dtype))
                     )
-                else:
-                    out_arr = results
 
                 out = out_arr.reshape(out_shape)
 
