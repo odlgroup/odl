@@ -1378,6 +1378,7 @@ def test_ufuncs(tspace, odl_ufunc):
 
     if (np.issubsctype(tspace.dtype, np.complexfloating) and
             name in ['remainder',
+                     'floor_divide',
                      'trunc',
                      'signbit',
                      'invert',
