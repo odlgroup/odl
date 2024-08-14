@@ -1355,7 +1355,8 @@ def _make_dual_use_func(func_ip, func_oop, domain, out_dtype):
                             if shp and shp[0] == 1:
                                 res = res.reshape(res.shape[1:])
                         bcast_res.append(
-                            np.broadcast_to(res, scalar_out_shape).astype(scalar_out_dtype))
+                            np.broadcast_to(res, scalar_out_shape)
+                              .astype(scalar_out_dtype))
 
                     out_arr = np.array(bcast_res, dtype=scalar_out_dtype)
                 else:

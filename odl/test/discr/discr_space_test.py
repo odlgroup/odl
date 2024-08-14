@@ -897,7 +897,7 @@ def test_ufunc_corner_cases(odl_tspace_impl):
 
     # --- UFuncs with nin = 1, nout = 1 --- #
 
-    wrong_argcount_error = ValueError if np.__version__<"1.21" else TypeError
+    wrong_argcount_error = ValueError if np.__version__ < "1.21" else TypeError
 
     with pytest.raises(wrong_argcount_error):
         # Too many arguments
