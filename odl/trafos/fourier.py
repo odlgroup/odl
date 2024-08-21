@@ -24,15 +24,32 @@ from odl.util import (
     complex_dtype, conj_exponent, dtype_repr, is_complex_floating_dtype,
     is_real_dtype, normalized_axes_tuple, normalized_scalar_param_list)
 
+from typing import Optional
+
 __all__ = ('DiscreteFourierTransform', 'DiscreteFourierTransformInverse',
            'FourierTransform', 'FourierTransformInverse')
 
 
-_SUPPORTED_FOURIER_IMPLS = ('numpy',)
-_DEFAULT_FOURIER_IMPL = 'numpy'
+_SUPPORTED_FOURIER_IMPLS = {'numpy': ('numpy',)}
+_DEFAULT_FOURIER_IMPL = {'numpy': 'numpy'}
 if PYFFTW_AVAILABLE:
-    _SUPPORTED_FOURIER_IMPLS += ('pyfftw',)
-    _DEFAULT_FOURIER_IMPL = 'pyfftw'
+    _SUPPORTED_FOURIER_IMPLS['numpy'] += ('pyfftw',)
+    _DEFAULT_FOURIER_IMPL['numpy'] = 'pyfftw'
+
+
+def _select_fft_impl(impl_suggestion: Optional[str], domain_impl: str):
+    if impl_suggestion is None:
+        impl = _DEFAULT_FOURIER_IMPL.get(domain_impl)
+        if impl is None:
+            raise ValueError("There is no default FFT implementation for"
+                           + " tensors with {domain_impl} implementation.")
+    else:
+        impl = impl_suggestion
+    impl, impl_in = str(impl).lower(), impl
+    if impl not in _SUPPORTED_FOURIER_IMPLS.get(domain_impl):
+        raise ValueError(f"`impl` '{impl_in}' not supported for"
+                           + " tensors with {domain_impl} implementation.")
+    return impl
 
 
 class DiscreteFourierTransformBase(Operator):
@@ -89,12 +106,7 @@ class DiscreteFourierTransformBase(Operator):
                             ''.format(range))
 
         # Implementation
-        if impl is None:
-            impl = _DEFAULT_FOURIER_IMPL
-        impl, impl_in = str(impl).lower(), impl
-        if impl not in _SUPPORTED_FOURIER_IMPLS:
-            raise ValueError("`impl` '{}' not supported".format(impl_in))
-        self.__impl = impl
+        self.__impl = _select_fft_impl(impl)
 
         # Axes
         if axes is None:
@@ -123,11 +135,11 @@ class DiscreteFourierTransformBase(Operator):
             domain.grid, shift=False, halfcomplex=halfcomplex, axes=axes).shape
 
         if range is None:
-            impl = domain.tspace.impl
+            domain_impl = domain.tspace.impl
 
             shape = np.atleast_1d(ran_shape)
             range = uniform_discr(
-                [0] * len(shape), shape - 1, shape, ran_dtype, impl,
+                [0] * len(shape), shape - 1, shape, ran_dtype, domain_impl,
                 nodes_on_bdry=True, exponent=conj_exponent(domain.exponent))
 
         else:
@@ -169,10 +181,13 @@ class DiscreteFourierTransformBase(Operator):
             Call pyfftw backend directly
         """
         # TODO: Implement zero padding
-        if self.impl == 'numpy':
-            out[:] = self._call_numpy(x.asarray())
-        else:
-            out[:] = self._call_pyfftw(x.asarray(), out.asarray(), **kwargs)
+        match self.impl:
+            case 'numpy':
+                out[:] = self._call_numpy(x.asarray())
+            case 'pyfftw':
+                out[:] = self._call_pyfftw(x.asarray(), out.asarray(), **kwargs)
+            case _:
+                raise NotImplementedError(self.impl)
 
     @property
     def impl(self):
@@ -801,22 +816,13 @@ class FourierTransformBase(Operator):
         if not isinstance(domain, DiscretizedSpace):
             raise TypeError('domain {!r} is not a `DiscretizedSpace` instance'
                             ''.format(domain))
-        if domain.impl != 'numpy':
-            raise NotImplementedError(
-                'Only Numpy-based data spaces are supported, got {}'
-                ''.format(domain.tspace))
 
         # axes
         axes = kwargs.pop('axes', np.arange(domain.ndim))
         self.__axes = normalized_axes_tuple(axes, domain.ndim)
 
         # Implementation
-        if impl is None:
-            impl = _DEFAULT_FOURIER_IMPL
-        impl, impl_in = str(impl).lower(), impl
-        if impl not in _SUPPORTED_FOURIER_IMPLS:
-            raise ValueError("`impl` '{}' not supported".format(impl_in))
-        self.__impl = impl
+        self.__impl = _select_fft_impl(impl, domain.impl)
 
         # Handle half-complex yes/no and shifts
         halfcomplex = kwargs.pop('halfcomplex', True)
@@ -902,11 +908,15 @@ class FourierTransformBase(Operator):
             Call pyfftw backend directly
         """
         # TODO: Implement zero padding
-        if self.impl == 'numpy':
-            out[:] = self._call_numpy(x.asarray())
-        else:
-            # 0-overhead assignment if asarray() does not copy
-            out[:] = self._call_pyfftw(x.asarray(), out.asarray(), **kwargs)
+        match self.impl:
+            case 'numpy':
+                out[:] = self._call_numpy(x.asarray())
+            case 'pyfftw':
+                # 0-overhead assignment if asarray() does not copy
+                out[:] = self._call_pyfftw(x.asarray(), out.asarray(), **kwargs)
+            case _:
+                raise NotImplementedError(self.impl)
+
 
     def _call_numpy(self, x):
         """Return ``self(x)`` for numpy back-end.
