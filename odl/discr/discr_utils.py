@@ -20,6 +20,7 @@ import sys
 from builtins import object
 from functools import partial
 from itertools import product
+from warnings import warn
 
 import numpy as np
 
@@ -624,6 +625,8 @@ class _Interpolator(object):
             try:
                 xi = np.asarray(xi).astype(self.values.dtype, casting='safe')
             except TypeError:
+                warn("Unable to infer accurate dtype for"
+                  +" interpolation coefficients, defaulting to `float`.")
                 xi = np.asarray(xi, dtype=float)
 
             idcs = np.searchsorted(cvec, xi) - 1
