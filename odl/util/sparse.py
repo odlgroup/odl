@@ -3,6 +3,8 @@
 Sparse matrix representation for creating product space operators.
 """
 
+import numpy as np
+
 __all__ = ('COOMatrix',)
 
 
@@ -27,18 +29,19 @@ class COOMatrix():
             raise ValueError('data and index must have the same length')
 
         self.__data = data
-        self.__index = index
+        self.__row_index = np.asarray(index[0])
+        self.__col_index = np.asarray(index[1])
         self.__shape = shape
 
     @property
     def row(self):
         """Return the row indices of the matrix."""
-        return self.__index[0]
+        return self.__row_index
 
     @property
     def col(self):
         """Return the column indices of the matrix."""
-        return self.__index[1]
+        return self.__col_index
 
     @property
     def shape(self):
@@ -51,4 +54,5 @@ class COOMatrix():
         return self.__data
 
     def __repr__(self):
-        return f"COO matrix({self.data}, {self.index})"
+        return ( f"COO matrix({self.data},"
+                + f"({self.__row_index}, {self.__col_index}), {self.shape})" )
