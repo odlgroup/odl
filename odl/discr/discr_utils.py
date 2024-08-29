@@ -1361,7 +1361,10 @@ def _make_dual_use_func(func_ip, func_oop, domain, out_dtype):
             elif tensor_valued:
                 # The out object can be any array-like of objects with shapes
                 # that should all be broadcastable to scalar_out_shape.
-                out_arr = np.asarray(_broadcast_nested_list(out, scalar_out_shape))
+                try:
+                    out_arr = np.asarray(out)
+                except ValueError:
+                    out_arr = np.asarray(_broadcast_nested_list(out, scalar_out_shape))
 
                 if out_arr.dtype != scalar_out_dtype:
                     raise ValueError(
