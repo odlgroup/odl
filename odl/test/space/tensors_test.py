@@ -1378,6 +1378,7 @@ def test_ufuncs(tspace, odl_ufunc):
 
     if (np.issubsctype(tspace.dtype, np.complexfloating) and
             name in ['remainder',
+                     'floor_divide',
                      'trunc',
                      'signbit',
                      'invert',
@@ -1487,10 +1488,21 @@ def test_ufuncs(tspace, odl_ufunc):
 
     assert all_almost_equal(odl_result, npy_result)
 
+    # Most ufuncs are type-preserving and can therefore be applied iteratively
+    # for reductions. This is not the case for equalities or logical operators,
+    # which can only be iterated over an array that was boolean to start with.
+    boolean_ufuncs = ['equal', 'not_equal',
+                      'greater', 'greater_equal',
+                      'less', 'less_equal',
+                      'logical_and', 'logical_or',
+                      'logical_xor']
+
+    in_array = in_arrays[0]
+    in_elem = in_elems_new[0]
+
     # Check `ufunc.reduce`
-    if nin == 2 and nout == 1:
-        in_array = in_arrays[0]
-        in_elem = in_elems_new[0]
+    if (nin == 2 and nout == 1
+          and (odl_ufunc not in boolean_ufuncs or in_array.dtype is bool)):
 
         # We only test along one axis since some binary ufuncs are not
         # re-orderable, in which case Numpy raises a ValueError
