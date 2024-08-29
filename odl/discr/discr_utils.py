@@ -933,10 +933,9 @@ def _func_out_type(func):
 
     return has_out, out_optional
 
-def _broadcast_nested_list(arr_lists, element_shape):
+def _broadcast_nested_list(arr_lists, element_shape, ndim):
     """ A generalisation of `np.broadcast_to`, applied to an arbitrarily
     deep list (or tuple) eventually containing arrays or scalars. """
-    ndim = len(element_shape)
     if isinstance(arr_lists, np.ndarray) or np.isscalar(arr_lists):
         if ndim == 1:
             # As usual, 1d is tedious to deal with. This
@@ -949,7 +948,7 @@ def _broadcast_nested_list(arr_lists, element_shape):
                 arr_lists = arr_lists.reshape(arr_lists.shape[1:])
         return np.broadcast_to(arr_lists, element_shape)
     else:
-        return [_broadcast_nested_list(row, element_shape) for row in arr_lists]
+        return [_broadcast_nested_list(row, element_shape, ndim) for row in arr_lists]
 
 
 def sampling_function(func_or_arr, domain, out_dtype=None):
@@ -1027,7 +1026,7 @@ def sampling_function(func_or_arr, domain, out_dtype=None):
             else:
                 raise TypeError('invalid input `x`')
 
-            bcast_results = _broadcast_nested_list(result, scalar_out_shape)
+            bcast_results = _broadcast_nested_list(result, scalar_out_shape, domain.ndim)
 
             # New array that is flat in the `out_shape` axes, reshape it
             # to the final `out_shape + scalar_shape`, using the same
@@ -1364,7 +1363,7 @@ def _make_dual_use_func(func_ip, func_oop, domain, out_dtype):
                 try:
                     out_arr = np.asarray(out)
                 except ValueError:
-                    out_arr = np.asarray(_broadcast_nested_list(out, scalar_out_shape))
+                    out_arr = np.asarray(_broadcast_nested_list(out, scalar_out_shape, ndim=ndim))
 
                 if out_arr.dtype != scalar_out_dtype:
                     raise ValueError(
