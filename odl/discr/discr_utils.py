@@ -119,7 +119,7 @@ def point_collocation(func, points, out=None, **kwargs):
     >>> ys = [3, 4]
     >>> mesh = sparse_meshgrid(xs, ys)
     >>> def vec_valued(x):
-    ...     return (x[0] - 1, 0, x[0] + x[1])  # broadcasting
+    ...     return (x[0] - 1., 0., x[0] + x[1])  # broadcasting
     >>> # For a function with several output components, we must specify the
     >>> # shape explicitly in the `out_dtype` parameter
     >>> func1 = sampling_function(
