@@ -279,7 +279,7 @@ def normalized_nodes_on_bdry(nodes_on_bdry, length):
     [(True, False), (False, False), (True, True)]
     """
     if isinstance(nodes_on_bdry, bool):
-        return [(bool(nodes_on_bdry), bool(nodes_on_bdry))] * length
+        return [(nodes_on_bdry, nodes_on_bdry)] * length
     elif (length == 1 and len(nodes_on_bdry) == 2
           and all(isinstance(d, bool) for d in nodes_on_bdry)):
         return [nodes_on_bdry[0], nodes_on_bdry[1]]
