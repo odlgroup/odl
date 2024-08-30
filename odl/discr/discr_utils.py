@@ -20,6 +20,7 @@ import sys
 from builtins import object
 from functools import partial
 from itertools import product
+from warnings import warn
 
 import numpy as np
 
@@ -621,6 +622,13 @@ class _Interpolator(object):
 
         # iterate through dimensions
         for xi, cvec in zip(x, self.coord_vecs):
+            try:
+                xi = np.asarray(xi).astype(self.values.dtype, casting='safe')
+            except TypeError:
+                warn("Unable to infer accurate dtype for"
+                  +" interpolation coefficients, defaulting to `float`.")
+                xi = np.asarray(xi, dtype=float)
+
             idcs = np.searchsorted(cvec, xi) - 1
 
             idcs[idcs < 0] = 0
@@ -706,6 +714,8 @@ def _compute_nearest_weights_edge(idcs, ndist):
 
 def _compute_linear_weights_edge(idcs, ndist):
     """Helper for linear interpolation."""
+    ndist = np.asarray(ndist)
+
     # Get out-of-bounds indices from the norm_distances. Negative
     # means "too low", larger than or equal to 1 means "too high"
     lo = np.where(ndist < 0)
@@ -799,7 +809,7 @@ class _PerAxisInterpolator(_Interpolator):
         # axis, resulting in a loop of length 2**ndim
         for lo_hi, edge in zip(product(*([['l', 'h']] * len(indices))),
                                product(*edge_indices)):
-            weight = 1.0
+            weight = np.array([1.0], dtype=self.values.dtype)
             # TODO(kohr-h): determine best summation order from array strides
             for lh, w_lo, w_hi in zip(lo_hi, low_weights, high_weights):
 
