@@ -278,11 +278,11 @@ def normalized_nodes_on_bdry(nodes_on_bdry, length):
     >>> normalized_nodes_on_bdry([[True, False], False, True], length=3)
     [(True, False), (False, False), (True, True)]
     """
-    shape = np.shape(nodes_on_bdry)
-    if shape == ():
-        out_list = [(bool(nodes_on_bdry), bool(nodes_on_bdry))] * length
-    elif length == 1 and shape == (2,):
-        out_list = [(bool(nodes_on_bdry[0]), bool(nodes_on_bdry[1]))]
+    if isinstance(nodes_on_bdry, bool):
+        return [(nodes_on_bdry, nodes_on_bdry)] * length
+    elif (length == 1 and len(nodes_on_bdry) == 2
+          and all(isinstance(d, bool) for d in nodes_on_bdry)):
+        return [nodes_on_bdry[0], nodes_on_bdry[1]]
     elif len(nodes_on_bdry) == length:
         out_list = []
 
