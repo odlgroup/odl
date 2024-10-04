@@ -24,17 +24,13 @@ from odl.space.base_tensors import Tensor, TensorSpace
 from odl.space.weighting import (
     ArrayWeighting, ConstWeighting, CustomDist, CustomInner, CustomNorm,
     Weighting)
+from odl.util.utility import _CORRESPONDING_PYTORCH_DTYPES
 from odl.util import (
     dtype_str, is_floating_dtype, is_numeric_dtype, is_real_dtype, nullcontext,
     signature_string, writable_array)
 
 __all__ = ('PytorchTensorSpace',)
 
-
-_PYTORCH_DTYPES = {np.dtype('float32'): torch.float32,
-                   np.dtype('float64'): torch.float64,
-                   np.dtype('complex64'): torch.complex64,
-                   np.dtype('complex128'): torch.complex128}
 
 # Define size thresholds to switch implementations
 THRESHOLD_SMALL = 100
@@ -237,7 +233,7 @@ class PytorchTensorSpace(TensorSpace):
                              'or `inner` for non-numeric `dtype` {}'
                              ''.format(dtype))
         else:
-            self._torch_dtype = _PYTORCH_DTYPES[self.dtype]
+            self._torch_dtype = _CORRESPONDING_PYTORCH_DTYPES[self.dtype]
         if exponent != 2.0 and any(x is not None for x in (dist, norm, inner)):
             raise ValueError('cannot use any of `dist`, `norm` or `inner` '
                              'for exponent != 2')
