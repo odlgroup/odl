@@ -11,6 +11,8 @@
 from __future__ import absolute_import, division, print_function
 
 import numpy as np
+import torch
+from odl.util.utility import is_castable_to
 from odl.util.normalize import normalized_scalar_param_list, safe_int_conv
 
 __all__ = (
@@ -421,16 +423,31 @@ def resize_array(arr, newshp, offset=None, pad_mode='constant', pad_const=0,
     except TypeError:
         raise TypeError('`newshp` must be a sequence, got {!r}'.format(newshp))
 
+    if isinstance(arr, np.ndarray):
+        impl = 'numpy'
+    elif isinstance(arr, torch.Tensor):
+        impl = 'pytorch'
+    else:
+        raise TypeError(f"Unknown how to resize array (?) of type {type(arr)}.")
+
     if out is not None:
-        if not isinstance(out, np.ndarray):
+        if impl=='numpy' and not isinstance(out, np.ndarray):
             raise TypeError('`out` must be a `numpy.ndarray` instance, got '
+                            '{!r}'.format(out))
+        elif impl=='pytorch' and not isinstance(out, torch.Tensor):
+            raise TypeError('`out` must be a `torch.Tensor` instance, got '
                             '{!r}'.format(out))
         if out.shape != newshp:
             raise ValueError('`out` must have shape {}, got {}'
                              ''.format(newshp, out.shape))
 
-        order = 'C' if out.flags.c_contiguous else 'F'
-        arr = np.asarray(arr, dtype=out.dtype, order=order)
+        if impl=='pytorch':
+            if arr.dtype != out.dtype:
+                arr = torch.tensor(arr, dtype=out.dtype)
+        else: # NumPy
+            order = 'C' if out.flags.c_contiguous else 'F'
+            arr = np.asarray(arr, dtype=out.dtype, order=order)
+
         if arr.ndim != out.ndim:
             raise ValueError('number of axes of `arr` and `out` do not match '
                              '({} != {})'.format(arr.ndim, out.ndim))
@@ -455,13 +472,14 @@ def resize_array(arr, newshp, offset=None, pad_mode='constant', pad_const=0,
     if pad_mode not in _SUPPORTED_RESIZE_PAD_MODES:
         raise ValueError("`pad_mode` '{}' not understood".format(pad_mode_in))
 
-    if (pad_mode == 'constant' and
-        not np.can_cast(pad_const, out.dtype) and
-        any(n_new > n_orig
-            for n_orig, n_new in zip(arr.shape, out.shape))):
-        raise ValueError('`pad_const` {} cannot be safely cast to the data '
-                         'type {} of the output array'
-                         ''.format(pad_const, out.dtype))
+    if pad_mode == 'constant':
+        incompatible_const_error = ValueError(
+            f'`pad_const` {pad_const} cannot be safely cast to the data '
+          + f'type {out.dtype} of the output array')
+        if (not is_castable_to(pad_const, out.dtype)
+             and any(n_new > n_orig
+                      for n_orig, n_new in zip(arr.shape, out.shape))):
+            raise incompatible_const_error
 
     # Handle direction
     direction, direction_in = str(direction).lower(), direction
@@ -473,10 +491,11 @@ def resize_array(arr, newshp, offset=None, pad_mode='constant', pad_const=0,
         raise ValueError("`pad_const` must be 0 for 'adjoint' direction, "
                          "got {}".format(pad_const))
 
+    fill_with = out.fill_ if impl=='pytorch' else out.fill
     if direction == 'forward' and pad_mode == 'constant' and pad_const != 0:
-        out.fill(pad_const)
+        fill_with(pad_const)
     else:
-        out.fill(0)
+        fill_with(0)
 
     # Perform the resizing
     if direction == 'forward':
