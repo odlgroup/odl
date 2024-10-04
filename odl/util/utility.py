@@ -35,6 +35,7 @@ __all__ = (
     'is_real_dtype',
     'is_real_floating_dtype',
     'is_complex_floating_dtype',
+    'is_castable_to',
     'uses_pytorch',
     'real_dtype',
     'complex_dtype',
@@ -515,6 +516,37 @@ _CORRESPONDING_PYTORCH_DTYPES = {np.dtype('float32'): torch.float32,
                    np.dtype('float64'): torch.float64,
                    np.dtype('complex64'): torch.complex64,
                    np.dtype('complex128'): torch.complex128}
+
+@cache_arguments
+def is_castable(from_dtype, to_dtype):
+    """Determine whether the type `from` is safely convertible to `to`.
+    Both should be either NumPy `dtype` or PyTorch `dtype`."""
+    if isinstance(from_dtype, np.dtype) and isinstance(to_dtype, np.dtype):
+        return np.can_cast(from_dtype, to_dtype)
+    elif (isinstance(to_dtype, torch.dtype)):
+        from_dtype = _CORRESPONDING_PYTORCH_DTYPES.get(from_dtype, from_dtype)
+        # Torch does not provide a satisfying way to determine castability,
+        # so we find it out by experiment.
+        # This is somewhat expensive, so it is important that this function is
+        # memoised (cache_arguments).
+        try:
+            gen = torch.Generator()
+            gen.manual_seed(1232451) # Avoid nondeterministic behaviour
+            test_arr = torch.rand((1000,), generator=gen, dtype=from_dtype)
+            roundtripped = test_arr.to(to_dtype).to(from_dtype)
+        except TypeError:
+            return False
+        return torch.equal(roundtripped, test_arr)
+
+def is_castable_to(obj, dtype):
+    """Determine whether there is a safe way to cast `obj` to the type
+    specified by `dtype`, which can be either a NumPy dtype or a PyTorch
+    `dtype`."""
+    if hasattr(obj, 'dtype'):
+        obj_dtype = obj.dtype
+    else:
+        obj_dtype = np.array([obj]).dtype
+    return is_castable(obj_dtype, dtype)
 
 def uses_pytorch(obj):
     if isinstance(obj, torch.Tensor):
