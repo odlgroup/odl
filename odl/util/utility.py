@@ -356,6 +356,13 @@ def cache_arguments(function):
 @cache_arguments
 def is_numeric_dtype(dtype):
     """Return ``True`` if ``dtype`` is a numeric type."""
+    if isinstance(dtype, torch.dtype):
+        try:
+            assert(dtype in [torch.float32, torch.float64])
+            return True
+        except AssertionError:
+            assert(dtype in [torch.complex64, torch.complex128])
+            return True
     dtype = np.dtype(dtype)
     return np.issubsctype(getattr(dtype, 'base', None), np.number)
 
@@ -382,13 +389,18 @@ def is_real_dtype(dtype):
 @cache_arguments
 def is_real_floating_dtype(dtype):
     """Return ``True`` if ``dtype`` is a real floating point type."""
-    dtype = np.dtype(dtype)
+    dtype = np.dtype( dtype)
     return np.issubsctype(getattr(dtype, 'base', None), np.floating)
 
 
 @cache_arguments
 def is_complex_floating_dtype(dtype):
     """Return ``True`` if ``dtype`` is a complex floating point type."""
+    if isinstance(dtype, torch.dtype):
+        if(dtype in [torch.float32, torch.float64]):
+            return False
+        assert(dtype in [torch.complex64, torch.complex128])
+        return True
     dtype = np.dtype(dtype)
     return np.issubsctype(getattr(dtype, 'base', None), np.complexfloating)
 
