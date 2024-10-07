@@ -711,7 +711,17 @@ def writable_array(obj, **kwargs):
     torch_impl = uses_pytorch(obj)
     try:
         if torch_impl:
-            arr = torch.tensor(obj, **kwargs)
+            if isinstance(obj, torch.Tensor):
+                arr = obj
+            elif hasattr(obj, 'data') and isinstance(obj.data, torch.Tensor):
+                arr = obj.data
+            else:
+                if hasattr(obj, 'data'):
+                    if 'dtype' not in kwargs:
+                        kwargs['dtype'] = obj.data.dtype
+                    arr = torch.tensor(obj.data, **kwargs)
+                else:
+                    arr = torch.tensor(obj, **kwargs)
         else:
             arr = np.asarray(obj, **kwargs)
         yield arr
