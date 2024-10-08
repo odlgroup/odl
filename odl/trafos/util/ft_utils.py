@@ -618,7 +618,7 @@ def reciprocal_space(space, axes=None, halfcomplex=False, shift=True,
             raise ValueError('{} is not a complex data type'
                              ''.format(dtype_repr(dtype)))
 
-    impl = kwargs.pop('impl', 'numpy')
+    impl = kwargs.pop('impl', space.impl)
 
     # Calculate range
     recip_grid = reciprocal_grid(space.grid, shift=shift,
