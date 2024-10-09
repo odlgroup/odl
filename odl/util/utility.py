@@ -15,6 +15,7 @@ import contextlib
 from collections import OrderedDict
 from contextlib import contextmanager
 from itertools import product
+from abc import ABC
 
 import numpy as np
 import torch
@@ -43,6 +44,8 @@ __all__ = (
     'nd_iterator',
     'conj_exponent',
     'nullcontext',
+    'ArrayOnBackendManager',
+    'compatible_array_manager',
     'writable_array',
     'signature_string',
     'signature_string_parts',
@@ -587,6 +590,55 @@ def is_string(obj):
     else:
         return True
 
+class ArrayOnBackendManager(ABC):
+    def __init__(self):
+        raise NotImplementedError()
+    def as_compatible_array(self, arr, **kwargs):
+        raise NotImplementedError()
+    def compatible_zeros(self, shape, **kwargs):
+        raise NotImplementedError()
+    def compatible_ones(self, shape, **kwargs):
+        raise NotImplementedError()
+    def select_dtype(self, arr, dtype):
+        raise NotImplementedError()
+    def make_copy(self, arr):
+        raise NotImplementedError()
+
+class ArrayOnPytorchManager(ABC):
+    def __init__(self, device):
+        self._device = device
+    def as_compatible_array(self, arr, **kwargs):
+        return torch.tensor(arr, device = self._device, **kwargs)
+    def compatible_zeros(self, shape, **kwargs):
+        return torch.zeros(shape, device = self._device, **kwargs)
+    def compatible_ones(self, shape, **kwargs):
+        return torch.ones(shape, device = self._device, **kwargs)
+    def select_dtype(self, arr, dtype):
+        if dtype in _CORRESPONDING_PYTORCH_DTYPES:
+            dtype = _CORRESPONDING_PYTORCH_DTYPES[dtype]
+        return arr.type(dtype)
+    def make_copy(self, arr):
+        return arr.clone().detach()
+
+class ArrayOnNumPyManager(ABC):
+    def __init__(self):
+        pass
+    def as_compatible_array(self, arr, **kwargs):
+        return np.array(arr, **kwargs)
+    def compatible_zeros(self, shape, **kwargs):
+        return np.zeros(shape, **kwargs)
+    def compatible_ones(self, shape, **kwargs):
+        return np.ones(shape, **kwargs)
+    def select_dtype(self, arr, dtype):
+        return arr.astype(dtype, copy=False)
+    def make_copy(self, arr):
+        return arr.copy()
+
+def compatible_array_manager(arr):
+    if uses_pytorch(arr):
+        return ArrayOnPytorchManager(arr.device)
+    else:
+        return ArrayOnNumPyManager()
 
 def nd_iterator(shape):
     """Iterator over n-d cube with shape.
