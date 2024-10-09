@@ -48,7 +48,7 @@ def _select_fft_impl(impl_suggestion: Optional[str], domain_impl: str):
     impl, impl_in = str(impl).lower(), impl
     if impl not in _SUPPORTED_FOURIER_IMPLS.get(domain_impl):
         raise ValueError(f"`impl` '{impl_in}' not supported for"
-                           + " tensors with {domain_impl} implementation.")
+                           + f" tensors with {domain_impl} implementation.")
     return impl
 
 
@@ -106,7 +106,7 @@ class DiscreteFourierTransformBase(Operator):
                             ''.format(range))
 
         # Implementation
-        self.__impl = _select_fft_impl(impl)
+        self.__impl = _select_fft_impl(impl, domain.impl)
 
         # Axes
         if axes is None:
@@ -139,8 +139,9 @@ class DiscreteFourierTransformBase(Operator):
 
             shape = np.atleast_1d(ran_shape)
             range = uniform_discr(
-                [0] * len(shape), shape - 1, shape, ran_dtype, domain_impl,
-                nodes_on_bdry=True, exponent=conj_exponent(domain.exponent))
+                [0] * len(shape), shape - 1, shape, ran_dtype,
+                nodes_on_bdry=True, exponent=conj_exponent(domain.exponent),
+                impl=domain.impl)
 
         else:
             if range.shape != ran_shape:
