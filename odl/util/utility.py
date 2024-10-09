@@ -402,7 +402,13 @@ def is_real_dtype(dtype):
 @cache_arguments
 def is_real_floating_dtype(dtype):
     """Return ``True`` if ``dtype`` is a real floating point type."""
-    dtype = np.dtype(dtype)
+    if isinstance(dtype, torch.dtype):
+        if dtype in [torch.complex64, torch.complex128]:
+            return False
+        else:
+            assert(dtype in [torch.float32, torch.float64])
+            return True
+    dtype = np.dtype( dtype)
     return np.issubdtype(getattr(dtype, 'base', None), np.floating)
 
 
