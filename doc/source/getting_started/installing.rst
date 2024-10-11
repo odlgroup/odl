@@ -21,7 +21,7 @@ or conda:
 
 .. code-block:: bash
 
-    $ conda install -c odlgroup odl matplotlib pytest scikit-image spyder
+    $ conda install conda-forge::odl matplotlib pytest scikit-image spyder
 
 After installation, the installation can be verified by running the tests:
 
