@@ -37,16 +37,16 @@ Otherwise, you need to install it.
 
 On Linux:
 ---------
-In the unlikely event that Python is not installed, consult your distro package manager.
+In the unlikely event that Python 3 is not installed, consult your distro package manager.
 
 On MacOS:
 ---------
-Get the latest release (2 or 3) for MacOS `here <https://www.python.org/downloads/mac-osx/>`_ and install it.
+Get the latest release for MacOS `here <https://www.python.org/downloads/mac-osx/>`_ and install it.
 
 On Windows:
 -----------
 Python installers can be downloaded from `this link <https://www.python.org/downloads/windows/>`_.
-Pick the latest release for your favorite version (2 or 3).
+Pick the latest release for your favorite version.
 
 
 .. _installing_odl_pip__installing:
@@ -54,7 +54,7 @@ Pick the latest release for your favorite version (2 or 3).
 Installing ODL and its dependencies
 ===================================
 You may need to `install pip`_ to be able to install ODL and its dependencies from the `Python Package Index`_ (PyPI).
-If running ``pip`` (alternatively: ``pip2`` or ``pip3``) shows a help message, it is installed -- otherwise you need to install it first.
+If running ``pip`` (alternatively: ``pip3``) shows a help message, it is installed -- otherwise you need to install it first.
 
 For basic installation without extra dependencies, run
 
