@@ -445,12 +445,19 @@ class PytorchTensorSpace(TensorSpace):
                 return inp
 
             # TODO avoid copy when it's not necessary
-            arr = torch.tensor(inp, dtype=self._torch_dtype, device=self._torch_device)
+            # Quieting the annoying message 
+            # arr = torch.tensor(inp, dtype=self._torch_dtype, device=self._torch_device)
 
-            if arr.shape != self.shape:
-                raise ValueError('shape of `inp` not equal to space shape: '
-                                 '{} != {}'.format(arr.shape, self.shape))
-            return self.element_type(self, arr)
+            if isinstance(inp, np.ndarray):
+                inp = torch.from_numpy(inp).to(self._torch_device)
+
+            # Removed as it fails on [Batch, Channels, ...]
+            # if inp.shape != self.shape:
+            #     raise ValueError('shape of `inp` not equal to space shape: '
+            #                      '{} != {}'.format(inp.shape, self.shape))
+            return self.element_type(self, inp)
+            # Why return arr here?
+            # return self.element_type(self, arr)
 
         else:
             raise TypeError('cannot provide both `inp` and `data_ptr`')
@@ -844,8 +851,8 @@ class PytorchTensorSpace(TensorSpace):
             optargs = []
             optmod = ''
 
-        inner_str = signature_string(posargs, optargs, mod=['', optmod])
-        weight_str = self.weighting.repr_part
+        inner_str = signature_string(posargs, optargs, mod=['', optmod]) # type:ignore
+        weight_str = self.weighting.repr_part # type:ignore
         if weight_str:
             inner_str += ', ' + weight_str
 
@@ -1418,7 +1425,7 @@ class PytorchTensor(Tensor):
 
         This method is only useful in Python 2.
         """
-        return long(self.data)
+        return long(self.data) # type:ignore
 
     def __float__(self):
         """Return ``float(self)``."""
