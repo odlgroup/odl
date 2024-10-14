@@ -675,6 +675,7 @@ class Operator(object):
 
         if out is not None:  # In-place evaluation
             if out not in self.range:
+                ### This is a bizarre check, which seems to expect numpy arrays
                 raise OpRangeError('`out` {!r} not an element of the range '
                                    '{!r} of {!r}'
                                    ''.format(out, self.range, self))
@@ -684,6 +685,7 @@ class Operator(object):
                                 'when range is a field')
 
             result = self._call_in_place(x, out=out, **kwargs)
+            ### This is a bizarre check, which seems to expect numpy arrays
             if result is not None and result is not out:
                 raise ValueError('`op` returned a different value than `out`. '
                                  'With in-place evaluation, the operator can '
