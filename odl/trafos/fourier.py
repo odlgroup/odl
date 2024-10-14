@@ -11,6 +11,7 @@
 from __future__ import absolute_import, division, print_function
 
 import numpy as np
+import torch
 
 from odl.discr import DiscretizedSpace, uniform_discr
 from odl.operator import Operator
@@ -187,6 +188,8 @@ class DiscreteFourierTransformBase(Operator):
                 out[:] = self._call_numpy(x.asarray())
             case 'pyfftw':
                 out[:] = self._call_pyfftw(x.asarray(), out.asarray(), **kwargs)
+            case 'pytorch':
+                out[:] = self._call_pytorch(x.data)
             case _:
                 raise NotImplementedError(self.impl)
 
@@ -247,6 +250,21 @@ class DiscreteFourierTransformBase(Operator):
             Result of the transform
         """
         raise NotImplementedError('abstract method')
+
+    def _call_pytorch(self, x):
+        """Return ``self(x)`` for PyTorch back-end.
+
+        Parameters
+        ----------
+        x : `torch.Tensor`
+            Array representing the function to be transformed
+
+        Returns
+        -------
+        out : `torch.Tensor`
+            Result of the transform
+        """
+        raise NotImplementedError(f'abstract method, not implemented on {type(self)}.')
 
     def _call_pyfftw(self, x, out, **kwargs):
         """Implement ``self(x[, out, **kwargs])`` using pyfftw.
@@ -481,6 +499,25 @@ class DiscreteFourierTransform(DiscreteFourierTransformBase):
                 return (np.prod(np.take(self.domain.shape, self.axes)) *
                         np.fft.ifftn(x, axes=self.axes))
 
+    def _call_pytorch(self, x):
+        """Return ``self(x)`` using PyTorch.
+
+        See Also
+        --------
+        DiscreteFourierTransformBase._call_pytorch
+        """
+        assert isinstance(x, torch.Tensor)
+
+        if self.halfcomplex:
+            return torch.fft.rfftn(x, dim=self.axes)
+        else:
+            if self.sign == '-':
+                return torch.fft.fftn(x, dim=self.axes)
+            else:
+                # Need to undo IFFT scaling
+                return (np.prod(np.take(self.domain.shape, self.axes))
+                       * torch.fft.ifftn(x, dim=self.axes))
+
     def _call_pyfftw(self, x, out, **kwargs):
         """Implement ``self(x[, out, **kwargs])`` using pyfftw.
 
@@ -636,6 +673,28 @@ class DiscreteFourierTransformInverse(DiscreteFourierTransformBase):
             else:
                 return (np.fft.fftn(x, axes=self.axes) /
                         np.prod(np.take(self.domain.shape, self.axes)))
+
+    def _call_pytorch(self, x):
+        """Return ``self(x)`` using PyTorch.
+
+        Parameters
+        ----------
+        x : `torch.Tensor`
+            Input array to be transformed
+
+        Returns
+        -------
+        out : `torch.Tensor`
+            Result of the transform
+        """
+        if self.halfcomplex:
+            return torch.fft.irfftn(x, dim=self.axes)
+        else:
+            if self.sign == '+':
+                return torch.fft.ifftn(x, dim=self.axes)
+            else:
+                return (torch.fft.fftn(x, dim=self.axes)
+                       / np.prod(np.take(self.domain.shape, self.axes)))
 
     def _call_pyfftw(self, x, out, **kwargs):
         """Implement ``self(x[, out, **kwargs])`` using pyfftw.
@@ -916,9 +975,10 @@ class FourierTransformBase(Operator):
             case 'pyfftw':
                 # 0-overhead assignment if asarray() does not copy
                 out[:] = self._call_pyfftw(x.asarray(), out.asarray(), **kwargs)
+            case 'pytorch':
+                out[:] = self._call_pytorch(x.asarray(), **kwargs)
             case _:
                 raise NotImplementedError(self.impl)
-
 
     def _call_numpy(self, x):
         """Return ``self(x)`` for numpy back-end.
@@ -934,6 +994,21 @@ class FourierTransformBase(Operator):
             Result of the transform
         """
         raise NotImplementedError('abstract method')
+
+    def _call_pytorch(self, x):
+        """Return ``self(x)`` for PyTorch back-end.
+
+        Parameters
+        ----------
+        x : `torch.Tensor`
+            Array representing the function to be transformed
+
+        Returns
+        -------
+        out : `torch.Tensor`
+            Result of the transform
+        """
+        raise NotImplementedError(f'abstract method, not implemented on {type(self)}.')
 
     def _call_pyfftw(self, x, out, **kwargs):
         """Implement ``self(x[, out, **kwargs])`` for pyfftw back-end.
@@ -1345,6 +1420,42 @@ class FourierTransform(FourierTransformBase):
         self._postprocess(out, out=out)
         return out
 
+    def _call_pytorch(self, x):
+        """Return ``self(x)`` for PyTorch back-end.
+
+        Parameters
+        ----------
+        x : `torch.Tensor`
+            Array representing the function to be transformed
+
+        Returns
+        -------
+        out : `torch.Tensor`
+            Result of the transform
+        """
+
+        preproc = self._preprocess(x)
+
+        # The actual call to the FFT library
+        if self.halfcomplex:
+            out = torch.fft.rfftn(preproc, dim=self.axes)
+        else:
+            if self.sign == '-':
+                out = torch.fft.fftn(preproc, dim=self.axes)
+            else:
+                out = torch.fft.ifftn(preproc, dim=self.axes)
+                # Numpy's FFT normalizes by 1 / prod(shape[axes]), we
+                # need to undo that
+                # TODO(Justus) select PyTorch normalization mode so this
+                # is unnecessary
+                out *= float(np.prod(np.take(self.domain.shape, self.axes)))
+
+        # Post-processing accounting for shift, scaling and interpolation
+        assert(isinstance(out, torch.Tensor))
+        out = self._postprocess(out, out=out)
+        assert(isinstance(out, torch.Tensor))
+        return out
+
     def _call_pyfftw(self, x, out, **kwargs):
         """Implement ``self(x[, out, **kwargs])`` for pyfftw back-end.
 
@@ -1582,6 +1693,46 @@ class FourierTransformInverse(FourierTransformBase):
 
         # Post-processing in IFT = pre-processing in FT (in-place)
         self._postprocess(out, out=out)
+        if self.halfcomplex:
+            assert is_real_dtype(out.dtype)
+
+        if self.range.field == RealNumbers():
+            return out.real
+        else:
+            return out
+
+    def _call_pytorch(self, x):
+        """Return ``self(x)`` for numpy back-end.
+
+        Parameters
+        ----------
+        x : `torch.Tensor`
+            Array representing the function to be transformed
+
+        Returns
+        -------
+        out : `torch.Tensor`
+            Result of the transform
+        """
+        # Pre-processing before calculating the DFT
+        preproc = self._preprocess(x)
+
+        # The actual call to the FFT library
+        # Normalization by 1 / prod(shape[axes]) is done by Numpy's FFT if
+        # one of the "i" functions is used. For sign='-' we need to do it
+        # ourselves.
+        if self.halfcomplex:
+            s = tuple(np.asarray(self.range.shape)[list(self.axes)])
+            out = torch.fft.irfftn(preproc, dim=self.axes, s=s)
+        else:
+            if self.sign == '-':
+                out = torch.fft.fftn(preproc, dim=self.axes)
+                out /= np.prod(np.take(self.domain.shape, self.axes))
+            else:
+                out = torch.fft.ifftn(preproc, dim=self.axes)
+
+        # Post-processing in IFT = pre-processing in FT (in-place)
+        out = self._postprocess(out)
         if self.halfcomplex:
             assert is_real_dtype(out.dtype)
 
