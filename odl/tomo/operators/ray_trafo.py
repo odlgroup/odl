@@ -22,6 +22,7 @@ from odl.tomo.backends import (
 from odl.tomo.backends.astra_cpu import AstraCpuImpl
 from odl.tomo.backends.astra_cuda import AstraCudaImpl
 from odl.tomo.backends.skimage_radon import SkImageImpl
+from odl.tomo.backends.astra_cuda_link import AstraCudaLinkImpl
 from odl.tomo.geometry import Geometry
 from odl.util import is_string
 
@@ -34,6 +35,7 @@ if ASTRA_AVAILABLE:
     RAY_TRAFO_IMPLS['astra_cpu'] = AstraCpuImpl
 if ASTRA_CUDA_AVAILABLE:
     RAY_TRAFO_IMPLS['astra_cuda'] = AstraCudaImpl
+    RAY_TRAFO_IMPLS['astra_cuda_link'] = AstraCudaLinkImpl
 
 __all__ = ('RayTransform',)
 
@@ -60,6 +62,7 @@ class RayTransform(Operator):
 
             - ``'astra_cuda'``: ASTRA toolbox, using CUDA, 2D or 3D
             - ``'astra_cpu'``: ASTRA toolbox using CPU, only 2D
+            - ``'astra_cuda_link'``: ASTRA toolbox, using CUDA and Link API 
             - ``'skimage'``: scikit-image, only 2D parallel with square
               reconstruction space.
 
