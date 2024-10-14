@@ -29,6 +29,7 @@ from odl.util.testutils import simple_fixture
 impl = simple_fixture(
     'impl',
     [pytest.param('numpy'),
+     pytest.param('pytorch'),
      pytest.param('pyfftw', marks=skip_if_no_pyfftw)]
 )
 exponent = simple_fixture('exponent', [2.0, 1.0, float('inf'), 1.5])
@@ -46,7 +47,7 @@ def _params_from_dtype(dtype):
     return halfcomplex, complex_dtype(dtype)
 
 def _dft_domain_impl(impl):
-    'numpy'
+    return 'pytorch' if impl=='pytorch' else 'numpy'
 
 def _dft_space(shape, dtype='float64', impl='numpy'):
     try:
@@ -398,6 +399,9 @@ def test_fourier_trafo_init_plan(impl, odl_floating_dtype):
     # Not supported, skip
     if dtype == np.dtype('float16') and impl == 'pyfftw':
         return
+    elif (dtype in [np.dtype('float128'), np.dtype('complex256')]
+          and impl == 'pytorch'):
+        return
 
     shape = 10
     halfcomplex, _ = _params_from_dtype(dtype)
@@ -476,6 +480,9 @@ def test_fourier_trafo_call(impl, odl_floating_dtype):
 
     # Not supported, skip
     if dtype == np.dtype('float16') and impl == 'pyfftw':
+        return
+    elif (dtype in [np.dtype('float16'), np.dtype('float128'), np.dtype('complex256')]
+          and impl == 'pytorch'):
         return
 
     shape = 10
