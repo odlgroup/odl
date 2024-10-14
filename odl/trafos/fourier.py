@@ -1304,7 +1304,7 @@ class FourierTransform(FourierTransformBase):
         # TODO(kohr-h): Add `interp` to operator or simplify it by not
         # performing interpolation filter
         return dft_postprocess_data(
-            out, real_grid=self.domain.grid, recip_grid=self.range.grid,
+            x, real_grid=self.domain.grid, recip_grid=self.range.grid,
             shift=self.shifts, axes=self.axes, sign=self.sign,
             interp='nearest', op='multiply', out=out)
 
