@@ -33,8 +33,8 @@ __all__ = ('DiscreteFourierTransform', 'DiscreteFourierTransformInverse',
            'FourierTransform', 'FourierTransformInverse')
 
 
-_SUPPORTED_FOURIER_IMPLS = {'numpy': ('numpy',)}
-_DEFAULT_FOURIER_IMPL = {'numpy': 'numpy'}
+_SUPPORTED_FOURIER_IMPLS = {'numpy': ('numpy',), 'pytorch': ('pytorch',)}
+_DEFAULT_FOURIER_IMPL = {'numpy': 'numpy', 'pytorch': 'pytorch'}
 if PYFFTW_AVAILABLE:
     _SUPPORTED_FOURIER_IMPLS['numpy'] += ('pyfftw',)
     _DEFAULT_FOURIER_IMPL['numpy'] = 'pyfftw'
@@ -814,9 +814,12 @@ class FourierTransformBase(Operator):
             is determined from ``domain`` and the other parameters. The
             exponent is chosen to be the conjugate ``p / (p - 1)``,
             which reads as 'inf' for p=1 and 1 for p='inf'.
-        impl : {'numpy', 'pyfftw'}, optional
-            Backend for the FFT implementation. The 'pyfftw' backend
-            is faster but requires the ``pyfftw`` package.
+        impl : {'numpy', 'pyfftw', 'pytorch'}, optional
+            Backend for the FFT implementation. NumPy is slow but always
+            supported. The 'pyfftw' backend is faster but requires the
+            ``pyfftw`` package.
+            'pytorch' requires ``domain`` to be based on PyTorch tensors,
+            in which case this is the fastest option particularly on GPU.
             ``None`` selects the fastest available backend.
         axes : int or sequence of ints, optional
             Dimensions along which to take the transform.
@@ -1655,7 +1658,7 @@ class FourierTransformInverse(FourierTransformBase):
         The result is stored in ``out`` if given, otherwise in
         a temporary or a new array.
         """
-        if out is None:
+        if out is None and self.impl!='pytorch':
             if self.range.field == ComplexNumbers():
                 out = self._tmp_r if self._tmp_r is not None else self._tmp_f
             elif self.range.field == RealNumbers() and not self.halfcomplex:
