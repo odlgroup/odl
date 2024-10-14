@@ -488,7 +488,8 @@ class PytorchTensorSpace(TensorSpace):
         Currently only a conservative selection of the types supported
         by Pytorch.
         """
-        return [np.float32, np.float64, np.complex64, np.complex128]
+        return [np.float16, np.float32, np.float64,
+                np.complex64, np.complex128]
 
     @staticmethod
     def default_dtype(field=None):
