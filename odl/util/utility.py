@@ -533,7 +533,9 @@ def complex_dtype(dtype, default=None):
     else:
         return np.dtype((complex_base_dtype, dtype.shape))
 
-_CORRESPONDING_PYTORCH_DTYPES = {np.dtype('float32'): torch.float32,
+_CORRESPONDING_PYTORCH_DTYPES = {
+                   np.dtype('float16'): torch.float16,
+                   np.dtype('float32'): torch.float32,
                    np.dtype('float64'): torch.float64,
                    np.dtype('complex64'): torch.complex64,
                    np.dtype('complex128'): torch.complex128}
