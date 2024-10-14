@@ -1,0 +1,14 @@
+{
+    "backend":"torch",
+    "script_name":"mri_mlem_adam",
+    "parameters":{
+        "n_points"    : [512],
+        "dimensions"  : [2],
+        "subsampling" : 0.5,
+        "device_name":"cuda:0",
+        "learning_rate": 0.001,
+        "beta1": 0.9,
+        "beta2": 0.999,
+        "eps"  : 1e-8
+    }
+}

@@ -1,0 +1,2 @@
+dimension,n_points,time,error,device,backend,max_iterations,timestamp
+2,512,0.104027271271,114.579210652,cuda:0,torch,100,2024-10-10 09:42:45.245383
