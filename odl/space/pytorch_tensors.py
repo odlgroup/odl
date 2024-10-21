@@ -24,7 +24,7 @@ from odl.space.base_tensors import Tensor, TensorSpace
 from odl.space.weighting import (
     ArrayWeighting, ConstWeighting, CustomDist, CustomInner, CustomNorm,
     Weighting)
-from odl.util.utility import _CORRESPONDING_PYTORCH_DTYPES
+from odl.util.utility import ArrayOnPytorchManager, _CORRESPONDING_PYTORCH_DTYPES
 from odl.util import (
     dtype_str, is_floating_dtype, is_numeric_dtype, is_real_dtype, nullcontext,
     signature_string, writable_array)
@@ -422,10 +422,15 @@ class PytorchTensorSpace(TensorSpace):
         if order is not None and str(order).upper() not in ('C'):
             raise ValueError(f"Only row-major order supported ('C'), not '{order}'.")
 
-        if inp is None and data_ptr is None:
-            arr = torch.empty(self.shape, dtype=self._torch_dtype, device=self._torch_device)
-
+        def wrapped_array(arr):
+            if arr.shape != self.shape:
+                raise ValueError('shape of `inp` not equal to space shape: '
+                                 '{} != {}'.format(arr.shape, self.shape))
             return self.element_type(self, arr)
+
+        if inp is None and data_ptr is None:
+            return wrapped_array(torch.empty(
+               self.shape, dtype=self._torch_dtype, device=self._torch_device))
 
         elif inp is None and data_ptr is not None:
             if order is None:
@@ -437,7 +442,8 @@ class PytorchTensorSpace(TensorSpace):
             as_numpy_array = np.ctypeslib.as_array(as_ctype_array)
             arr = as_numpy_array.view(dtype=self._torch_dtype)
             arr = arr.reshape(self.shape, order=order)
-            return self.element_type(self, torch.Tensor(arr))
+            return wrapped_array(torch.tensor(
+                 arr, dtype=self._torch_dtype, device=self._torch_device))
 
         elif inp is not None and data_ptr is None:
             if inp in self and order is None:
@@ -445,12 +451,8 @@ class PytorchTensorSpace(TensorSpace):
                 return inp
 
             # TODO avoid copy when it's not necessary
-            arr = torch.tensor(inp, dtype=self._torch_dtype, device=self._torch_device)
-
-            if arr.shape != self.shape:
-                raise ValueError('shape of `inp` not equal to space shape: '
-                                 '{} != {}'.format(arr.shape, self.shape))
-            return self.element_type(self, arr)
+            return wrapped_array(ArrayOnPytorchManager(device=self._torch_device)
+                                  .as_compatible_array(inp, dtype=self._torch_dtype))
 
         else:
             raise TypeError('cannot provide both `inp` and `data_ptr`')
