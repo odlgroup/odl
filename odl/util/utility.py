@@ -616,7 +616,17 @@ class ArrayOnPytorchManager(ABC):
     def __init__(self, device):
         self._device = device
     def as_compatible_array(self, arr, **kwargs):
-        return torch.tensor(arr, device = self._device, **kwargs)
+        dtype = kwargs.get('dtype', None)
+        if isinstance(arr, torch.Tensor):
+            arr = arr.detach()
+            if dtype is not None and arr.dtype!=kwargs['dtype']:
+                arr = arr.type(dtype)
+            if self._device is not None and arr.device!=self._device:
+                return arr.to(self._device)
+            else:
+                return arr
+        else:
+            return torch.tensor(arr, device = self._device, **kwargs)
     def compatible_zeros(self, shape, **kwargs):
         return torch.zeros(shape, device = self._device, **kwargs)
     def compatible_ones(self, shape, **kwargs):
