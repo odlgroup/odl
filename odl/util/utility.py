@@ -59,8 +59,17 @@ __all__ = (
 
 
 REPR_PRECISION = 4  # For printing scalars and array entries
-TYPE_MAP_R2C = {np.dtype(dtype): np.result_type(dtype, 1j)
-                for dtype in np.sctypes['float']}
+### https://numpy.org/doc/stable/reference/arrays.scalars.html#floating-point-types
+NP_FLOAT_TYPES = [
+    np.half,
+    np.single,
+    np.double,
+    np.longdouble
+    ]
+
+TYPE_MAP_R2C = {
+    np.dtype(dtype): np.result_type(dtype, 1j) for dtype in NP_FLOAT_TYPES
+    }
 
 TYPE_MAP_C2R = {cdt: np.empty(0, dtype=cdt).real.dtype
                 for rdt, cdt in TYPE_MAP_R2C.items()}
@@ -606,7 +615,17 @@ class ArrayOnPytorchManager(ABC):
     def __init__(self, device):
         self._device = device
     def as_compatible_array(self, arr, **kwargs):
-        return torch.tensor(arr, device = self._device, **kwargs)
+        dtype = kwargs.get('dtype', None)
+        if isinstance(arr, torch.Tensor):
+            arr = arr.detach()
+            if dtype is not None and arr.dtype!=kwargs['dtype']:
+                arr = arr.type(dtype)
+            if self._device is not None and arr.device!=self._device:
+                return arr.to(self._device)
+            else:
+                return arr
+        else:
+            return torch.tensor(arr, device = self._device, **kwargs)
     def compatible_zeros(self, shape, **kwargs):
         return torch.zeros(shape, device = self._device, **kwargs)
     def compatible_ones(self, shape, **kwargs):

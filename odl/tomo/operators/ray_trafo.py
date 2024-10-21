@@ -22,6 +22,7 @@ from odl.tomo.backends import (
 from odl.tomo.backends.astra_cpu import AstraCpuImpl
 from odl.tomo.backends.astra_cuda import AstraCudaImpl
 from odl.tomo.backends.skimage_radon import SkImageImpl
+from odl.tomo.backends.astra_cuda_link import AstraCudaLinkImpl
 from odl.tomo.geometry import Geometry
 from odl.util import is_string
 
@@ -34,6 +35,7 @@ if ASTRA_AVAILABLE:
     RAY_TRAFO_IMPLS['astra_cpu'] = AstraCpuImpl
 if ASTRA_CUDA_AVAILABLE:
     RAY_TRAFO_IMPLS['astra_cuda'] = AstraCudaImpl
+    RAY_TRAFO_IMPLS['astra_cuda_link'] = AstraCudaLinkImpl
 
 __all__ = ('RayTransform',)
 
@@ -60,6 +62,7 @@ class RayTransform(Operator):
 
             - ``'astra_cuda'``: ASTRA toolbox, using CUDA, 2D or 3D
             - ``'astra_cpu'``: ASTRA toolbox using CPU, only 2D
+            - ``'astra_cuda_link'``: ASTRA toolbox, using CUDA and Link API 
             - ``'skimage'``: scikit-image, only 2D parallel with square
               reconstruction space.
 
@@ -124,7 +127,7 @@ class RayTransform(Operator):
 
             proj_tspace = vol_space.tspace_type(
                 geometry.partition.shape,
-                weighting=weighting,
+                weighting=weighting, #type:ignore
                 dtype=dtype,
             )
 
@@ -290,7 +293,7 @@ class RayTransform(Operator):
         if not use_cache or self.__cached_impl is None:
             # Lazily (re)instantiate the backend
             self.__cached_impl = self._impl_type(
-                self.geometry,
+                self.geometry, #type:ignore
                 vol_space=self.domain,
                 proj_space=self.range)
 
@@ -314,7 +317,8 @@ class RayTransform(Operator):
         DiscretizedSpaceElement
             Result of the transform, an element of the range.
         """
-        return self.get_impl(self.use_cache).call_forward(x, out, **kwargs)
+        return self.get_impl(
+            self.use_cache).call_forward(x, out, **kwargs) #type:ignore
 
     @property
     def geometry(self):
@@ -362,7 +366,7 @@ class RayTransform(Operator):
                     """
                     return ray_trafo.get_impl(
                         ray_trafo.use_cache
-                    ).call_backward(x, out, **kwargs)
+                    ).call_backward(x, out, **kwargs)#type:ignore
 
                 @property
                 def geometry(self):
