@@ -16,10 +16,12 @@ def _is_package_available(package):
         return False
 
 
-# Import torch linking facility if torch is available.
-if _is_package_available("torch"):
-    from . import torch
+if _is_package_available("astra"):
 
-# Import cupy linking facility if cupy is available.
-if _is_package_available("cupy"):
-    from . import cupy
+    # Import torch linking facility if torch is available.
+    if _is_package_available("torch"):
+        from . import torch
+
+    # Import cupy linking facility if cupy is available.
+    if _is_package_available("cupy"):
+        from . import cupy

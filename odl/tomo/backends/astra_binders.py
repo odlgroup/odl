@@ -27,7 +27,16 @@ projection geometries (both data and geometry). On this basis, it creates a
 projector and passes it to ASTRA, which performs an all-to-all (back)projection.
 
 """
-import astra.experimental as experimental
+try:
+    import astra.experimental as experimental
+
+    ASTRA_BINDERS_AVAILABLE = True
+except ImportError:
+    ASTRA_BINDERS_AVAILABLE = False
+
+__all__ = (
+    'ASTRA_BINDERS_AVAILABLE',
+)
 from odl.tomo.backends import links
 
 ###############################################################################
