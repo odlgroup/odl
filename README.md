@@ -1,6 +1,6 @@
-[![PyPI version](https://badge.fury.io/py/odl.svg)](https://badge.fury.io/py/odl)
+[![Anaconda-Server Badge](https://anaconda.org/conda-forge/odl/badges/version.svg)](https://anaconda.org/conda-forge/odl) <!-- [![PyPI version](https://badge.fury.io/py/odl.svg)](https://badge.fury.io/py/odl)
 [![Build Status](https://travis-ci.org/odlgroup/odl.svg?branch=master)](https://travis-ci.org/odlgroup/odl?branch=master)
-[![Coverage Status](https://coveralls.io/repos/github/odlgroup/odl/badge.svg)](https://coveralls.io/github/odlgroup/odl)
+[![Coverage Status](https://coveralls.io/repos/github/odlgroup/odl/badge.svg)](https://coveralls.io/github/odlgroup/odl) -->
 [![license](https://img.shields.io/badge/license-MPL--2.0-orange.svg)](https://opensource.org/licenses/MPL-2.0)
 [![DOI](https://zenodo.org/badge/45596393.svg)](https://zenodo.org/badge/latestdoi/45596393)
 
@@ -20,11 +20,7 @@ Installation
 ============
 Installing ODL should be as easy as
 
-    conda install -c odlgroup odl
-
-or
-
-    pip install odl
+    conda install conda-forge::odl
 
 For more detailed instructions, check out the [Installation guide](https://odlgroup.github.io/odl/getting_started/installing.html).
 
