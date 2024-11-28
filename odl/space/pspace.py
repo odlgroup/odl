@@ -16,7 +16,8 @@ from numbers import Integral
 import numpy as np
 
 from odl.set import LinearSpace
-from odl.set.space import LinearSpaceElement
+from odl.set.space import (LinearSpaceElement,
+    SupportedNumOperationParadigms, NumOperationParadigmSupport)
 from odl.space.weighting import (
     ArrayWeighting, ConstWeighting, CustomDist, CustomInner, CustomNorm,
     Weighting)
@@ -387,6 +388,50 @@ class ProductSpace(LinearSpace):
             return dtypes[0]
         else:
             raise AttributeError("`dtype`'s of subspaces not equal")
+
+    @property
+    def supported_num_operation_paradigms(self) -> NumOperationParadigmSupport:
+        """Whether in-place operations an out-of-place operations are supported
+        depends on the subspaces. Only operations that are supported on all the
+        subspaces will be supported on the product space. The style that is
+        preferred on most subspaces (if any) will be chosen as preferred on the
+        product space."""
+        paradigms = [space.supported_num_operation_paradigms
+                        for space in self.spaces]
+
+        ip_supported = True
+        ip_prefers = 0
+        oop_supported = True
+        oop_prefers = 0
+        for parad in paradigms:
+            if parad.in_place == NumOperationParadigmSupport.NOT_SUPPORTED:
+                ip_supported = False
+            elif parad.in_place == NumOperationParadigmSupport.PREFERRED:
+                ip_prefers += 1
+            if parad.out_of_place == NumOperationParadigmSupport.NOT_SUPPORTED:
+                oop_supported = False
+            elif parad.out_of_place == NumOperationParadigmSupport.PREFERRED:
+                oop_prefers += 1
+
+        if ip_supported:
+            if ip_prefers > oop_prefers:
+                in_place_support = NumOperationParadigmSupport.PREFERRED
+            else:
+                in_place_support = NumOperationParadigmSupport.SUPPORTED
+        else:
+            in_place_support = NumOperationParadigmSupport.NOT_SUPPORTED
+
+        if oop_supported:
+            if oop_prefers > ip_prefers:
+                oo_place_support = NumOperationParadigmSupport.PREFERRED
+            else:
+                oo_place_support = NumOperationParadigmSupport.SUPPORTED
+        else:
+            oo_place_support = NumOperationParadigmSupport.NOT_SUPPORTED
+
+        return SupportedNumOperationParadigms(
+                in_place=in_place_support,
+                out_of_place=oo_place_support)
 
     @property
     def is_real(self):
