@@ -18,6 +18,7 @@ from odl.discr.discr_utils import point_collocation, sampling_function
 from odl.discr.partition import (
     RectPartition, uniform_partition, uniform_partition_fromintv)
 from odl.set import IntervalProd, RealNumbers
+from odl.set.space import SupportedNumOperationParadigms, NumOperationParadigmSupport
 from odl.space import ProductSpace
 from odl.space.base_tensors import Tensor, TensorSpace
 from odl.space.entry_points import tensor_space_impl
@@ -100,6 +101,12 @@ class DiscretizedSpace(TensorSpace):
     def element_type(self):
         """`DiscretizedSpaceElement`"""
         return DiscretizedSpaceElement
+
+    @property
+    def supported_num_operation_paradigms(self) -> NumOperationParadigmSupport:
+        """In-place vs out-of-place is not of much concern for the discretization
+        and only depends on the underlying arrays."""
+        return self.tspace.supported_num_operation_paradigms
 
     # --- Constructor args
 

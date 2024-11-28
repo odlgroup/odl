@@ -20,7 +20,8 @@ import numpy as np
 from odl.util.npy_compat import AVOID_UNNECESSARY_COPY
 
 from odl.set.sets import ComplexNumbers, RealNumbers
-from odl.set.space import LinearSpaceTypeError
+from odl.set.space import (LinearSpaceTypeError,
+        SupportedNumOperationParadigms, NumOperationParadigmSupport)
 from odl.space.base_tensors import Tensor, TensorSpace
 from odl.space.weighting import (
     ArrayWeighting, ConstWeighting, CustomDist, CustomInner, CustomNorm,
@@ -295,6 +296,14 @@ class NumpyTensorSpace(TensorSpace):
     def impl(self):
         """Name of the implementation back-end: ``'numpy'``."""
         return 'numpy'
+
+    @property
+    def supported_num_operation_paradigms(self) -> NumOperationParadigmSupport:
+        """NumPy has full support for in-place operation, which is usually
+        advantageous to reduce memory allocations."""
+        return SupportedNumOperationParadigms(
+                in_place = NumOperationParadigmSupport.PREFERRED,
+                out_of_place = NumOperationParadigmSupport.SUPPORTED)
 
     @property
     def default_order(self):
