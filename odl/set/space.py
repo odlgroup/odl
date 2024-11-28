@@ -317,6 +317,43 @@ class LinearSpace(Set):
         else:
             return self.field.element(self._inner(x1, x2))
 
+    def _binary_num_operation(self, low_level_method, x1, x2, out=None):
+        """Apply the numerical operation implemented by `low_level_method` to
+        `x1` and `x2`.
+        This is done either in in-place fashion or out-of-place, depending on
+        which style is preferred for this space."""
+        if (self.supported_num_operation_paradigms.in_place
+                  == NumOperationParadigmSupport.PREFERRED
+             or self.supported_num_operation_paradigms.out_of_place
+                  == NumOperationParadigmSupport.NOT_SUPPORTED
+             or out is not None
+                 and self.supported_num_operation_paradigms.in_place):
+
+            if out is None:
+                out = self.element()
+
+            if out not in self:
+                raise LinearSpaceTypeError('`out` {!r} is not an element of '
+                                           '{!r}'.format(out, self))
+            if x1 not in self:
+                raise LinearSpaceTypeError('`x1` {!r} is not an element of '
+                                           '{!r}'.format(x1, self))
+            if x2 not in self:
+                raise LinearSpaceTypeError('`x2` {!r} is not an element of '
+                                           '{!r}'.format(x2, self))
+
+            low_level_method(x1, x2, out=out)
+
+            return out
+
+        else:
+            assert(self.supported_num_operation_paradigms.out_of_place)
+            if out is not None:
+                out[:] = low_level_method(x1, x2, out=None)
+                return out
+            else:
+                return self.element(low_level_method(x1, x2, out=None))
+
     def multiply(self, x1, x2, out=None):
         """Return the pointwise product of ``x1`` and ``x2``.
 
