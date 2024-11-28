@@ -10,6 +10,8 @@
 
 from __future__ import print_function, division, absolute_import
 from builtins import object
+from enum import Enum
+from dataclasses import dataclass
 import numpy as np
 
 from odl.set.sets import Field, Set, UniversalSet
@@ -17,6 +19,18 @@ from odl.set.sets import Field, Set, UniversalSet
 
 __all__ = ('LinearSpace', 'UniversalSpace')
 
+
+class NumOperationParadigmSupport(Enum):
+    NOT_SUPPORTED = 0
+    SUPPORTED = 1
+    PREFERRED = 2
+    def __bool__(self):
+        return self.value > 0
+
+@dataclass
+class SupportedNumOperationParadigms:
+    in_place: NumOperationParadigmSupport
+    out_of_place: NumOperationParadigmSupport
 
 class LinearSpace(Set):
     """Abstract linear vector space.
@@ -80,6 +94,20 @@ class LinearSpace(Set):
             yield ('One', self.one())
         except NotImplementedError:
             pass
+
+    @property
+    def supported_num_operation_paradigms(self) -> NumOperationParadigmSupport:
+        """Specify whether the low-level numerical operations in this space
+        support in-place style, whether they support out-of-place style, and
+        if one of them is preferred.
+        Generally speaking, for fixed-dimensional spaces whose implementation
+        is a monolithic array, in-place style is preferrable because it avoids
+        allocating new memory.
+        By contrast, in spaces that support e.g. adaptive mesh resolution, the
+        in-place style may have little advantage because allocation can only
+        be decided based on the inputs, and for automatic differentiation it
+        may even be necessary to use purely-functional out-of-place style."""
+        raise NotImplementedError('abstract method')
 
     def _lincomb(self, a, x1, b, x2, out):
         """Implement ``out[:] = a * x1 + b * x2``.
