@@ -390,20 +390,7 @@ class LinearSpace(Set):
             Quotient of the elements. If ``out`` was provided, the
             returned object is a reference to it.
         """
-        if out is None:
-            out = self.element()
-
-        if out not in self:
-            raise LinearSpaceTypeError('`out` {!r} is not an element of '
-                                       '{!r}'.format(out, self))
-        if x1 not in self:
-            raise LinearSpaceTypeError('`x1` {!r} is not an element of '
-                                       '{!r}'.format(x1, self))
-        if x2 not in self:
-            raise LinearSpaceTypeError('`x2` {!r} is not an element of '
-                                       '{!r}'.format(x2, self))
-        self._divide(x1, x2, out)
-        return out
+        return self._binary_num_operation(self._divide, x1, x2, out)
 
     @property
     def element_type(self):
