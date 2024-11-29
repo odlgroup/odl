@@ -333,12 +333,12 @@ class LinearSpace(Set):
         `x1` and `x2`.
         This is done either in in-place fashion or out-of-place, depending on
         which style is preferred for this space."""
-        if (self.supported_num_operation_paradigms.in_place
-                  == NumOperationParadigmSupport.PREFERRED
-             or self.supported_num_operation_paradigms.out_of_place
-                  == NumOperationParadigmSupport.NOT_SUPPORTED
-             or out is not None
-                 and self.supported_num_operation_paradigms.in_place):
+
+        paradigms = self.supported_num_operation_paradigms
+
+        if (paradigms.in_place.is_preferred
+             or not paradigms.out_of_place.is_supported
+             or out is not None and paradigms.in_place.is_supported):
 
             if out is None:
                 out = self.element()
@@ -358,7 +358,7 @@ class LinearSpace(Set):
             return out
 
         else:
-            assert(self.supported_num_operation_paradigms.out_of_place)
+            assert(paradigms.out_of_place.is_supported)
             if out is not None:
                 out[:] = low_level_method(x1, x2, out=None)
                 return out
