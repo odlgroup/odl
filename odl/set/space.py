@@ -232,15 +232,47 @@ class LinearSpace(Set):
 
             ``x = x * (2 + 3.14)``.
         """
+        paradigms = self.supported_num_operation_paradigms
+
+        def assert_x2_has_b():
+            if b is None and x2 is not None:
+                raise ValueError('`x2` provided but not `b`')
+        def assert_x2_in_self():
+            if x2 not in self:
+                raise LinearSpaceTypeError('`x2` {!r} is not an element of '
+                                           '{!r}'.format(x2, self))
+        def assert_a_in_field():
+            if self.field is not None and a not in self.field:
+                raise LinearSpaceTypeError('`a` {!r} not an element of the field '
+                                           '{!r} of {!r}'
+                                           ''.format(a, self.field, self))
+        def assert_b_in_field():
+            if self.field is not None and b not in self.field:
+                raise LinearSpaceTypeError('`b` {!r} not an element of the '
+                                           'field {!r} of {!r}'
+                                           ''.format(b, self.field, self))
+
         if out is None:
-            out = self.element()
+            if (paradigms.in_place.is_preferred
+                 or not paradigms.out_of_place.is_supported):
+                out = self.element()
+            else:
+                if b is None:  # Single element
+                    assert_x2_has_b()
+                    return self._lincomb(a, x1, 0, x1, None)
+                else:  # Two elements
+                    assert_b_in_field()
+                    assert_x2_in_self()
+                    return self._lincomb(a, x1, b, x2, None)
+
+        elif (not paradigms.in_place.is_supported):
+            raise LinearSpaceTypeError(
+              "This space does not support in-place operations, but an out argument was given.")
+
         elif out not in self:
             raise LinearSpaceTypeError('`out` {!r} is not an element of {!r}'
                                        ''.format(out, self))
-        if self.field is not None and a not in self.field:
-            raise LinearSpaceTypeError('`a` {!r} not an element of the field '
-                                       '{!r} of {!r}'
-                                       ''.format(a, self.field, self))
+        assert_a_in_field()
         if x1 not in self:
             raise LinearSpaceTypeError('`x1` {!r} is not an element of {!r}'
                                        ''.format(x1, self))
@@ -249,16 +281,10 @@ class LinearSpace(Set):
             if x2 is not None:
                 raise ValueError('`x2` provided but not `b`')
             self._lincomb(a, x1, 0, x1, out)
-            return out
 
         else:  # Two elements
-            if self.field is not None and b not in self.field:
-                raise LinearSpaceTypeError('`b` {!r} not an element of the '
-                                           'field {!r} of {!r}'
-                                           ''.format(b, self.field, self))
-            if x2 not in self:
-                raise LinearSpaceTypeError('`x2` {!r} is not an element of '
-                                           '{!r}'.format(x2, self))
+            assert_b_in_field()
+            assert_x2_in_self()
 
             self._lincomb(a, x1, b, x2, out)
 
