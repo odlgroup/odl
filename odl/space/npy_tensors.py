@@ -698,7 +698,10 @@ class NumpyTensorSpace(TensorSpace):
         >>> result is out
         True
         """
-        np.multiply(x1.data, x2.data, out=out.data)
+        if out is None:
+            return np.multiply(x1.data, x2.data)
+        else:
+            np.multiply(x1.data, x2.data, out=out.data)
 
     def _divide(self, x1, x2, out):
         """Compute the entry-wise quotient ``x1 / x2``.
@@ -727,7 +730,10 @@ class NumpyTensorSpace(TensorSpace):
         >>> result is out
         True
         """
-        np.divide(x1.data, x2.data, out=out.data)
+        if out is None:
+            return np.divide(x1.data, x2.data)
+        else:
+            np.divide(x1.data, x2.data, out=out.data)
 
     def __eq__(self, other):
         """Return ``self == other``.
