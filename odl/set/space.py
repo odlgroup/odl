@@ -24,13 +24,24 @@ class NumOperationParadigmSupport(Enum):
     NOT_SUPPORTED = 0
     SUPPORTED = 1
     PREFERRED = 2
-    def __bool__(self):
+
+    @property
+    def is_supported(self):
         return self.value > 0
+
+    @property
+    def is_preferred(self):
+        return self.value > 1
+
+    def __bool__(self):
+        return self.is_supported
+
 
 @dataclass
 class SupportedNumOperationParadigms:
     in_place: NumOperationParadigmSupport
     out_of_place: NumOperationParadigmSupport
+
 
 class LinearSpace(Set):
     """Abstract linear vector space.
