@@ -598,8 +598,7 @@ class LinearSpaceElement(object):
         elif self.space.field is None:
             return NotImplemented
         elif other in self.space:
-            tmp = self.space.element()
-            return self.space.lincomb(1, self, 1, other, out=tmp)
+            return self.space.lincomb(1, self, 1, other)
         elif isinstance(other, LinearSpaceElement):
             return NotImplemented
         elif other in self.space.field:
@@ -662,8 +661,7 @@ class LinearSpaceElement(object):
         elif self.space.field is None:
             return NotImplemented
         elif other in self.space:
-            tmp = self.space.element()
-            return self.space.lincomb(1, self, -1, other, out=tmp)
+            return self.space.lincomb(1, self, -1, other)
         elif isinstance(other, LinearSpaceElement):
             return NotImplemented
         elif other in self.space.field:
@@ -740,11 +738,9 @@ class LinearSpaceElement(object):
         elif self.space.field is None:
             return NotImplemented
         elif other in self.space.field:
-            tmp = self.space.element()
-            return self.space.lincomb(other, self, out=tmp)
+            return self.space.lincomb(other, self)
         elif other in self.space:
-            tmp = self.space.element()
-            return self.space.multiply(other, self, out=tmp)
+            return self.space.multiply(other, self)
         elif isinstance(other, LinearSpaceElement):
             return NotImplemented
         else:
@@ -794,11 +790,9 @@ class LinearSpaceElement(object):
         elif self.space.field is None:
             return NotImplemented
         elif other in self.space.field:
-            tmp = self.space.element()
-            return self.space.lincomb(1.0 / other, self, out=tmp)
+            return self.space.lincomb(1.0 / other, self)
         elif other in self.space:
-            tmp = self.space.element()
-            return self.space.divide(self, other, out=tmp)
+            return self.space.divide(self, other)
         elif isinstance(other, LinearSpaceElement):
             return NotImplemented
         else:
