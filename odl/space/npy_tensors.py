@@ -288,6 +288,8 @@ class NumpyTensorSpace(TensorSpace):
             # No weighting, i.e., weighting with constant 1.0
             self.__weighting = NumpyTensorSpaceConstWeighting(1.0, exponent)
 
+        self.__use_in_place_ops = kwargs.pop('use_in_place_ops', True)
+
         # Make sure there are no leftover kwargs
         if kwargs:
             raise TypeError('got unknown keyword arguments {}'.format(kwargs))
@@ -300,11 +302,18 @@ class NumpyTensorSpace(TensorSpace):
     @property
     def supported_num_operation_paradigms(self) -> NumOperationParadigmSupport:
         """NumPy has full support for in-place operation, which is usually
-        advantageous to reduce memory allocations."""
-        return SupportedNumOperationParadigms(
-                in_place = NumOperationParadigmSupport.PREFERRED,
-                out_of_place = NumOperationParadigmSupport.SUPPORTED)
-
+        advantageous to reduce memory allocations.
+        This can be deactivated, mostly for testing purposes, by setting
+        `use_in_place_ops = False` when constructing the space."""
+        if self.__use_in_place_ops:
+            return SupportedNumOperationParadigms(
+                    in_place = NumOperationParadigmSupport.PREFERRED,
+                    out_of_place = NumOperationParadigmSupport.SUPPORTED)
+        else:
+            return SupportedNumOperationParadigms(
+                    in_place = NumOperationParadigmSupport.NOT_SUPPORTED,
+                    out_of_place = NumOperationParadigmSupport.PREFERRED)
+    
     @property
     def default_order(self):
         """Default storage order for new elements in this space: ``'C'``."""
