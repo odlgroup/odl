@@ -517,15 +517,21 @@ class DiscretizedSpace(TensorSpace):
 
     def _lincomb(self, a, x1, b, x2, out):
         """Raw linear combination."""
-        self.tspace._lincomb(a, x1.tensor, b, x2.tensor, out.tensor)
+        return self.element(
+            self.tspace._lincomb(a, x1.tensor, b, x2.tensor,
+                                 out.tensor if out is not None else None))
 
     def _multiply(self, x1, x2, out):
         """Raw pointwise multiplication of two elements."""
-        self.tspace._multiply(x1.tensor, x2.tensor, out.tensor)
+        return self.element(
+                self.tspace._multiply(x1.tensor, x2.tensor,
+                                      out.tensor if out is not None else None))
 
     def _divide(self, x1, x2, out):
         """Raw pointwise multiplication of two elements."""
-        self.tspace._divide(x1.tensor, x2.tensor, out.tensor)
+        return self.element(
+                self.tspace._divide(x1.tensor, x2.tensor,
+                                    out.tensor if out is not None else None))
 
     # The inherited methods by default use a weighting by a constant
     # (the grid cell size). In dimensions where the partitioned set contains
