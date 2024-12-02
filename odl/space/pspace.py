@@ -618,6 +618,10 @@ class ProductSpace(LinearSpace):
 
     def _lincomb(self, a, x, b, y, out):
         """Linear combination ``out = a*x + b*y``."""
+        if out is None:
+            return self.element([
+                space._lincomb(a, xp, b, yp, out=None)
+                  for space, xp, yp in zip(self.spaces, x.parts, y.parts)])
         for space, xp, yp, outp in zip(self.spaces, x.parts, y.parts,
                                        out.parts):
             space._lincomb(a, xp, b, yp, outp)
@@ -636,12 +640,20 @@ class ProductSpace(LinearSpace):
 
     def _multiply(self, x1, x2, out):
         """Product ``out = x1 * x2``."""
+        if out is None:
+            return self.element([
+                spc._multiply(xp, yp, out=None)
+                  for spc, xp, yp in zip(self.spaces, x1.parts, x2.parts)])
         for spc, xp, yp, outp in zip(self.spaces, x1.parts, x2.parts,
                                      out.parts):
             spc._multiply(xp, yp, outp)
 
     def _divide(self, x1, x2, out):
         """Quotient ``out = x1 / x2``."""
+        if out is None:
+            return self.element([
+                spc._divide(xp, yp, out=None)
+                  for spc, xp, yp in zip(self.spaces, x1.parts, x2.parts)])
         for spc, xp, yp, outp in zip(self.spaces, x1.parts, x2.parts,
                                      out.parts):
             spc._divide(xp, yp, outp)
