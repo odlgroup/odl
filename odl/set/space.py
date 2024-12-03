@@ -237,15 +237,23 @@ class LinearSpace(Set):
         def assert_x2_has_b():
             if b is None and x2 is not None:
                 raise ValueError('`x2` provided but not `b`')
+
+        def assert_x1_in_self():
+            if x1 not in self:
+                raise LinearSpaceTypeError('`x1` {!r} is not an element of '
+                                           '{!r}'.format(x1, self))
+
         def assert_x2_in_self():
             if x2 not in self:
                 raise LinearSpaceTypeError('`x2` {!r} is not an element of '
                                            '{!r}'.format(x2, self))
+
         def assert_a_in_field():
             if self.field is not None and a not in self.field:
                 raise LinearSpaceTypeError('`a` {!r} not an element of the field '
                                            '{!r} of {!r}'
                                            ''.format(a, self.field, self))
+
         def assert_b_in_field():
             if self.field is not None and b not in self.field:
                 raise LinearSpaceTypeError('`b` {!r} not an element of the '
@@ -257,29 +265,32 @@ class LinearSpace(Set):
                  or not paradigms.out_of_place.is_supported):
                 out = self.element()
             else:
+                assert_a_in_field()
+                assert_x1_in_self()
                 if b is None:  # Single element
                     assert_x2_has_b()
-                    return self._lincomb(a, x1, 0, x1, None)
+                    result = self._lincomb(a, x1, 0, x1, out=None)
+                    assert(result is not None)
+                    return result
                 else:  # Two elements
                     assert_b_in_field()
                     assert_x2_in_self()
-                    return self._lincomb(a, x1, b, x2, None)
-
-        elif (not paradigms.in_place.is_supported):
-            out.assign(self.lincomb(a, x1, b, x2, out=None), avoid_deep_copy=True)
-            return out
-
+                    result = self._lincomb(a, x1, b, x2, out=None)
+                    assert(result is not None)
+                    return result
         elif out not in self:
             raise LinearSpaceTypeError('`out` {!r} is not an element of {!r}'
                                        ''.format(out, self))
+
+        if (not paradigms.in_place.is_supported):
+            out.assign(self.lincomb(a, x1, b, x2, out=None), avoid_deep_copy=True)
+            return out
+
         assert_a_in_field()
-        if x1 not in self:
-            raise LinearSpaceTypeError('`x1` {!r} is not an element of {!r}'
-                                       ''.format(x1, self))
+        assert_x1_in_self()
 
         if b is None:  # Single element
-            if x2 is not None:
-                raise ValueError('`x2` provided but not `b`')
+            assert_x2_has_b()
             self._lincomb(a, x1, 0, x1, out)
 
         else:  # Two elements
@@ -369,16 +380,16 @@ class LinearSpace(Set):
             raise LinearSpaceTypeError('`x2` {!r} is not an element of '
                                        '{!r}'.format(x2, self))
 
+        if out is not None and out not in self:
+            raise LinearSpaceTypeError('`out` {!r} is not an element of '
+                                       '{!r}'.format(out, self))
+
         if (paradigms.in_place.is_preferred
              or not paradigms.out_of_place.is_supported
              or out is not None and paradigms.in_place.is_supported):
 
             if out is None:
                 out = self.element()
-
-            if out not in self:
-                raise LinearSpaceTypeError('`out` {!r} is not an element of '
-                                           '{!r}'.format(out, self))
 
             low_level_method(x1, x2, out=out)
 
