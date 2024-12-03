@@ -564,7 +564,12 @@ class NumpyTensorSpace(TensorSpace):
         >>> result is out
         True
         """
-        _lincomb_impl(a, x1, b, x2, out)
+        if self.__use_in_place_ops:
+            assert(out is not None)
+            _lincomb_impl(a, x1, b, x2, out)
+        else:
+            assert(out is None)
+            return self.element(a * x1.data + b * x2.data)
 
     def _dist(self, x1, x2):
         """Return the distance between ``x1`` and ``x2``.
