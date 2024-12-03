@@ -19,7 +19,8 @@ import numpy as np
 import torch
 
 from odl.set.sets import ComplexNumbers, RealNumbers
-from odl.set.space import LinearSpaceTypeError
+from odl.set.space import (LinearSpaceTypeError,
+        NumOperationParadigmSupport, SupportedNumOperationParadigms)
 from odl.space.base_tensors import Tensor, TensorSpace
 from odl.space.weighting import (
     ArrayWeighting, ConstWeighting, CustomDist, CustomInner, CustomNorm,
@@ -285,6 +286,8 @@ class PytorchTensorSpace(TensorSpace):
             # No weighting, i.e., weighting with constant 1.0
             self.__weighting = PytorchTensorSpaceConstWeighting(1.0, exponent)
 
+        self._use_in_place_ops = kwargs.pop('use_in_place_ops', True)
+
         # Make sure there are no leftover kwargs
         if kwargs:
             raise TypeError('got unknown keyword arguments {}'.format(kwargs))
@@ -293,6 +296,22 @@ class PytorchTensorSpace(TensorSpace):
     def impl(self):
         """Name of the implementation back-end: ``'pytorch'``."""
         return 'pytorch'
+
+    @property
+    def supported_num_operation_paradigms(self) -> NumOperationParadigmSupport:
+        """PyTorch supports both in-place and out of place operations, but the
+        former are problematic especially when automatic differentiation is
+        used: PyTorch needs to ensure the modification does not interfere with
+        the backwards pass. This makes the performance much worse than for the
+        out-of-place style."""
+        if self._use_in_place_ops:
+            return SupportedNumOperationParadigms(
+                    in_place = NumOperationParadigmSupport.SUPPORTED,
+                    out_of_place = NumOperationParadigmSupport.PREFERRED)
+        else:
+            return SupportedNumOperationParadigms(
+                    in_place = NumOperationParadigmSupport.NOT_SUPPORTED,
+                    out_of_place = NumOperationParadigmSupport.PREFERRED)
 
     @property
     def default_order(self):
@@ -554,7 +573,11 @@ class PytorchTensorSpace(TensorSpace):
         >>> result is out
         True
         """
-        torch.add(input=a*x1.data, other=x2.data, alpha=b, out=out.data)
+        if self._use_in_place_ops and out is not None:
+            torch.add(input=a*x1.data, other=x2.data, alpha=b, out=out.data)
+        else:
+            assert(out is None)
+            return self.element(a * x1.data + b * x2.data)
 
     def _dist(self, x1, x2):
         """Return the distance between ``x1`` and ``x2``.
@@ -872,6 +895,14 @@ class PytorchTensor(Tensor):
     def data(self):
         """The `torch.Tensor` representing the data of ``self``."""
         return self.__data
+
+    def _assign(self, other, avoid_deep_copy):
+        """Assign the values of ``other``, which is assumed to be in the
+        same space, to ``self``."""
+        if avoid_deep_copy or not self.space._use_in_place_ops:
+            self.__data = other.__data
+        else:
+            self.__data[:] = other.__data
 
     def asarray(self, out=None):
         """Extract the data of this array as a ``torch.Tensor``.
