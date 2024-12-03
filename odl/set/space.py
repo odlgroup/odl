@@ -362,6 +362,13 @@ class LinearSpace(Set):
 
         paradigms = self.supported_num_operation_paradigms
 
+        if x1 not in self:
+            raise LinearSpaceTypeError('`x1` {!r} is not an element of '
+                                       '{!r}'.format(x1, self))
+        if x2 not in self:
+            raise LinearSpaceTypeError('`x2` {!r} is not an element of '
+                                       '{!r}'.format(x2, self))
+
         if (paradigms.in_place.is_preferred
              or not paradigms.out_of_place.is_supported
              or out is not None and paradigms.in_place.is_supported):
@@ -372,12 +379,6 @@ class LinearSpace(Set):
             if out not in self:
                 raise LinearSpaceTypeError('`out` {!r} is not an element of '
                                            '{!r}'.format(out, self))
-            if x1 not in self:
-                raise LinearSpaceTypeError('`x1` {!r} is not an element of '
-                                           '{!r}'.format(x1, self))
-            if x2 not in self:
-                raise LinearSpaceTypeError('`x2` {!r} is not an element of '
-                                           '{!r}'.format(x2, self))
 
             low_level_method(x1, x2, out=out)
 
