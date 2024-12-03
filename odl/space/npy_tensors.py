@@ -889,6 +889,14 @@ class NumpyTensor(Tensor):
         """The `numpy.ndarray` representing the data of ``self``."""
         return self.__data
 
+    def _assign(self, other, avoid_deep_copy):
+        """Assign the values of ``other``, which is assumed to be in the
+        same space, to ``self``."""
+        if avoid_deep_copy:
+            self.__data = other.__data
+        else:
+            self.__data[:] = other.__data
+
     def asarray(self, out=None):
         """Extract the data of this array as a ``numpy.ndarray``.
 

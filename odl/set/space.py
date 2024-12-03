@@ -520,9 +520,32 @@ class LinearSpaceElement(object):
         return self.__space
 
     # Convenience functions
-    def assign(self, other):
-        """Assign the values of ``other`` to ``self``."""
-        return self.space.lincomb(1, other, out=self)
+    def assign(self, other, avoid_deep_copy: bool = False):
+        """Assign the values of ``other`` to ``self``, like `self[:] = other`.
+
+        If ``avoid_deep_copy`` is True, an attempt is made to reuse the
+        storage of ``other`` for ``self``.
+        This is in general unsafe (later modifications to ``self`` would
+        impact also ``other``, vice versa), but faster and useful particularly
+        when ``other`` is ephemeral (rvalue, in C++ terminology).
+
+        Spaces with immutable elements (i.e., `in_place=NOT_SUPPORTED` in
+        `supported_num_operation_paradigms`) may opt for performing only a
+        shallow copy even if ``avoid_deep_copy`` is False.
+        On the other hand, if some type conversion is necessary on ``other``
+        then this will usually prompt a copy even if ``avoid_deep_copy``
+        is True."""
+        if other in self.space:
+            self._assign(other, avoid_deep_copy=avoid_deep_copy)
+        else:
+            self._assign(self.space.element(other),
+                         avoid_deep_copy=avoid_deep_copy)
+
+    def _assign(self, other, avoid_deep_copy):
+        """Low-level implementation of `self = other`. Assign the values of
+        ``other``, which is assumed to be in the same space, to ``self``."""
+        raise NotImplementedError(
+                f"Abstract method, not implemented for {type(self)}")
 
     def copy(self):
         """Create an identical (deep) copy of self."""
