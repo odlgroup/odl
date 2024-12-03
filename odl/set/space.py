@@ -266,8 +266,8 @@ class LinearSpace(Set):
                     return self._lincomb(a, x1, b, x2, None)
 
         elif (not paradigms.in_place.is_supported):
-            raise LinearSpaceTypeError(
-              "This space does not support in-place operations, but an out argument was given.")
+            out.assign(self.lincomb(a, x1, b, x2, out=None), avoid_deep_copy=True)
+            return out
 
         elif out not in self:
             raise LinearSpaceTypeError('`out` {!r} is not an element of {!r}'
