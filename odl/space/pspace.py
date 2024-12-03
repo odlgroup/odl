@@ -931,6 +931,12 @@ class ProductSpaceElement(LinearSpaceElement):
         """The data type of the space of this element."""
         return self.space.dtype
 
+    def _assign(self, other, avoid_deep_copy):
+        """Assign the values of ``other``, which is assumed to be in the
+        same product space, to ``self``."""
+        for tgt, src in zip(self.parts, other.parts):
+            tgt.assign(src, avoid_deep_copy=avoid_deep_copy)
+
     def __len__(self):
         """Return ``len(self)``."""
         return len(self.space)

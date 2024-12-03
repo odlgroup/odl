@@ -737,6 +737,11 @@ class DiscretizedSpaceElement(Tensor):
         """
         return self.space.astype(dtype).element(self.tensor.astype(dtype))
 
+    def _assign(self, other, avoid_deep_copy):
+        """Assign the values of ``other``, which is assumed to be in the
+        same discretized space, to ``self``."""
+        self.__tensor.assign(other.tensor, avoid_deep_copy=avoid_deep_copy)
+
     def __eq__(self, other):
         """Return ``self == other``.
 
