@@ -397,11 +397,12 @@ class LinearSpace(Set):
 
         else:
             assert(paradigms.out_of_place.is_supported)
+            result = self.element(low_level_method(x1, x2, out=None))
             if out is not None:
-                out[:] = low_level_method(x1, x2, out=None)
+                out.assign(result, avoid_deep_copy=True)
                 return out
             else:
-                return self.element(low_level_method(x1, x2, out=None))
+                return result
 
     def multiply(self, x1, x2, out=None):
         """Return the pointwise product of ``x1`` and ``x2``.
