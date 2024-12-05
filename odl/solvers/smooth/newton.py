@@ -272,8 +272,7 @@ def bfgs_method(f, x, line_search=1.0, maxiter=1000, tol=1e-15, num_store=None,
 
     The algorithm is described in [GNS2009], Section 12.3 and in the
     `BFGS Wikipedia article
-    <https://en.wikipedia.org/wiki/Broyden%E2%80%93Fletcher%E2%80%93\
-Goldfarb%E2%80%93Shanno_algorithm>`_
+    <https://en.wikipedia.org/wiki/BFGS_algorithm>`_.
 
     Parameters
     ----------
