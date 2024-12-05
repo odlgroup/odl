@@ -1,106 +1,62 @@
-
-
 <!DOCTYPE html>
-<html class="writer-html5" lang="en" >
+<html class="writer-html5" lang="english" data-content_root="../../../">
 <head>
   <meta charset="utf-8" />
-  
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  
   <title>odl.util.vectorization &mdash; odl 1.0.0.dev0 documentation</title>
-  
-
-  
-  <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
-  <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
-  <link rel="stylesheet" href="../../../_static/custom.css" type="text/css" />
-
-  
-  
-
-  
-  
-
-  
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b76e3c8a" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=19f00094" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/custom.css?v=d6003e95" />
 
   
   <!--[if lt IE 9]>
     <script src="../../../_static/js/html5shiv.min.js"></script>
   <![endif]-->
   
-    
-      <script type="text/javascript" id="documentation_options" data-url_root="../../../" src="../../../_static/documentation_options.js"></script>
-        <script src="../../../_static/jquery.js"></script>
-        <script src="../../../_static/underscore.js"></script>
-        <script src="../../../_static/doctools.js"></script>
-    
-    <script type="text/javascript" src="../../../_static/js/theme.js"></script>
-
-    
+        <script src="../../../_static/documentation_options.js?v=293a974f"></script>
+        <script src="../../../_static/doctools.js?v=9a2dae69"></script>
+        <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../../../genindex.html" />
     <link rel="search" title="Search" href="../../../search.html" /> 
 </head>
 
-<body class="wy-body-for-nav">
-
-   
+<body class="wy-body-for-nav"> 
   <div class="wy-grid-for-nav">
-    
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
         <div class="wy-side-nav-search" >
-          
 
           
-            <a href="../../../index.html" class="icon icon-home"> odl
           
-
-          
+          <a href="../../../index.html" class="icon icon-home">
+            odl
           </a>
-
-          
-            
-            
               <div class="version">
                 1.0.0.dev0
               </div>
-            
-          
-
-          
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
-    <input type="text" name="q" placeholder="Search docs" />
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
     <input type="hidden" name="check_keywords" value="yes" />
     <input type="hidden" name="area" value="default" />
   </form>
 </div>
-
-          
-        </div>
-
-        
-        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
-          
-            
-            
-              
-            
-            
-              <p class="caption"><span class="caption-text">Getting Started</span></p>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Getting Started</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../../../getting_started/getting_started.html">Getting Started</a></li>
 </ul>
-<p class="caption"><span class="caption-text">Working with ODL</span></p>
+<p class="caption" role="heading"><span class="caption-text">Working with ODL</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="../../../guide/guide.html">User’s guide – selected topics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../guide/guide.html">User's guide -- selected topics</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../math/math.html">Mathematical Background</a></li>
 </ul>
-<p class="caption"><span class="caption-text">Developer zone</span></p>
+<p class="caption" role="heading"><span class="caption-text">Developer zone</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../../../dev/dev.html">Contributing to ODL</a></li>
 </ul>
-<p class="caption"><span class="caption-text">Useful facts</span></p>
+<p class="caption" role="heading"><span class="caption-text">Useful facts</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../../../guide/faq.html">Frequently asked questions</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../guide/glossary.html">Glossary</a></li>
@@ -109,74 +65,35 @@
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../../../refs.html">References</a></li>
 </ul>
-<p class="caption"><span class="caption-text">API Reference</span></p>
+<p class="caption" role="heading"><span class="caption-text">API Reference</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../../../odl.html">odl</a></li>
 </ul>
 
-            
-          
         </div>
-        
       </div>
     </nav>
 
-    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
-
-      
-      <nav class="wy-nav-top" aria-label="top navigation">
-        
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
           <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
           <a href="../../../index.html">odl</a>
-        
       </nav>
 
-
       <div class="wy-nav-content">
-        
         <div class="rst-content">
-        
-          
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-<div role="navigation" aria-label="breadcrumbs navigation">
-
+          <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
-    
-      <li><a href="../../../index.html" class="icon icon-home"></a> &raquo;</li>
-        
-          <li><a href="../../index.html">Module code</a> &raquo;</li>
-        
-      <li>odl.util.vectorization</li>
-    
-    
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">odl.util.vectorization</li>
       <li class="wy-breadcrumbs-aside">
-        
       </li>
-    
   </ul>
-
-  
   <hr/>
 </div>
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
-            
+             
   <h1>Source code for odl.util.vectorization</h1><div class="highlight"><pre>
 <span></span><span class="c1"># Copyright 2014-2019 The ODL contributors</span>
 <span class="c1">#</span>
@@ -199,9 +116,14 @@
            <span class="s1">&#39;OptionalArgDecorator&#39;</span><span class="p">,</span> <span class="s1">&#39;vectorize&#39;</span><span class="p">)</span>
 
 
-<div class="viewcode-block" id="is_valid_input_array"><a class="viewcode-back" href="../../../generated/odl.util.vectorization.is_valid_input_array.html#odl.util.vectorization.is_valid_input_array">[docs]</a><span class="k">def</span> <span class="nf">is_valid_input_array</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">ndim</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Test if ``x`` is a correctly shaped point array in R^d.&quot;&quot;&quot;</span>
-    <span class="n">x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+<div class="viewcode-block" id="is_valid_input_array">
+<a class="viewcode-back" href="../../../generated/odl.util.vectorization.is_valid_input_array.html#odl.util.vectorization.is_valid_input_array">[docs]</a>
+<span class="k">def</span> <span class="nf">is_valid_input_array</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">ndim</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Test if ``x`` is a correctly shaped point array in R^d.&quot;&quot;&quot;</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">False</span>
 
     <span class="k">if</span> <span class="n">ndim</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">ndim</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
         <span class="k">return</span> <span class="n">x</span><span class="o">.</span><span class="n">ndim</span> <span class="o">==</span> <span class="mi">1</span> <span class="ow">and</span> <span class="n">x</span><span class="o">.</span><span class="n">size</span> <span class="o">&gt;</span> <span class="mi">1</span> <span class="ow">or</span> <span class="n">x</span><span class="o">.</span><span class="n">ndim</span> <span class="o">==</span> <span class="mi">2</span> <span class="ow">and</span> <span class="n">x</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="mi">1</span>
@@ -209,8 +131,11 @@
         <span class="k">return</span> <span class="n">x</span><span class="o">.</span><span class="n">ndim</span> <span class="o">==</span> <span class="mi">2</span> <span class="ow">and</span> <span class="n">x</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="n">ndim</span></div>
 
 
-<div class="viewcode-block" id="is_valid_input_meshgrid"><a class="viewcode-back" href="../../../generated/odl.util.vectorization.is_valid_input_meshgrid.html#odl.util.vectorization.is_valid_input_meshgrid">[docs]</a><span class="k">def</span> <span class="nf">is_valid_input_meshgrid</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">ndim</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Test if ``x`` is a `meshgrid` sequence for points in R^d.&quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="is_valid_input_meshgrid">
+<a class="viewcode-back" href="../../../generated/odl.util.vectorization.is_valid_input_meshgrid.html#odl.util.vectorization.is_valid_input_meshgrid">[docs]</a>
+<span class="k">def</span> <span class="nf">is_valid_input_meshgrid</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">ndim</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Test if ``x`` is a `meshgrid` sequence for points in R^d.&quot;&quot;&quot;</span>
     <span class="c1"># This case is triggered in FunctionSpaceElement.__call__ if the</span>
     <span class="c1"># domain does not have an &#39;ndim&#39; attribute. We return False and</span>
     <span class="c1"># continue.</span>
@@ -231,16 +156,22 @@
             <span class="nb">all</span><span class="p">(</span><span class="n">xi</span><span class="o">.</span><span class="n">ndim</span> <span class="o">==</span> <span class="n">ndim</span> <span class="k">for</span> <span class="n">xi</span> <span class="ow">in</span> <span class="n">x</span><span class="p">))</span></div>
 
 
-<div class="viewcode-block" id="out_shape_from_meshgrid"><a class="viewcode-back" href="../../../generated/odl.util.vectorization.out_shape_from_meshgrid.html#odl.util.vectorization.out_shape_from_meshgrid">[docs]</a><span class="k">def</span> <span class="nf">out_shape_from_meshgrid</span><span class="p">(</span><span class="n">mesh</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Get the broadcast output shape from a `meshgrid`.&quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="out_shape_from_meshgrid">
+<a class="viewcode-back" href="../../../generated/odl.util.vectorization.out_shape_from_meshgrid.html#odl.util.vectorization.out_shape_from_meshgrid">[docs]</a>
+<span class="k">def</span> <span class="nf">out_shape_from_meshgrid</span><span class="p">(</span><span class="n">mesh</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Get the broadcast output shape from a `meshgrid`.&quot;&quot;&quot;</span>
     <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">mesh</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
         <span class="k">return</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">mesh</span><span class="p">[</span><span class="mi">0</span><span class="p">]),)</span>
     <span class="k">else</span><span class="p">:</span>
         <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">broadcast</span><span class="p">(</span><span class="o">*</span><span class="n">mesh</span><span class="p">)</span><span class="o">.</span><span class="n">shape</span></div>
 
 
-<div class="viewcode-block" id="out_shape_from_array"><a class="viewcode-back" href="../../../generated/odl.util.vectorization.out_shape_from_array.html#odl.util.vectorization.out_shape_from_array">[docs]</a><span class="k">def</span> <span class="nf">out_shape_from_array</span><span class="p">(</span><span class="n">arr</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Get the output shape from an array.&quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="out_shape_from_array">
+<a class="viewcode-back" href="../../../generated/odl.util.vectorization.out_shape_from_array.html#odl.util.vectorization.out_shape_from_array">[docs]</a>
+<span class="k">def</span> <span class="nf">out_shape_from_array</span><span class="p">(</span><span class="n">arr</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Get the output shape from an array.&quot;&quot;&quot;</span>
     <span class="n">arr</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">arr</span><span class="p">)</span>
     <span class="k">if</span> <span class="n">arr</span><span class="o">.</span><span class="n">ndim</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
         <span class="k">return</span> <span class="n">arr</span><span class="o">.</span><span class="n">shape</span>
@@ -248,9 +179,12 @@
         <span class="k">return</span> <span class="p">(</span><span class="n">arr</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">],)</span></div>
 
 
-<div class="viewcode-block" id="OptionalArgDecorator"><a class="viewcode-back" href="../../../generated/odl.util.vectorization.OptionalArgDecorator.html#odl.util.vectorization.OptionalArgDecorator">[docs]</a><span class="k">class</span> <span class="nc">OptionalArgDecorator</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
 
-    <span class="sd">&quot;&quot;&quot;Abstract class to create decorators with optional arguments.</span>
+<div class="viewcode-block" id="OptionalArgDecorator">
+<a class="viewcode-back" href="../../../generated/odl.util.vectorization.OptionalArgDecorator.html#odl.util.vectorization.OptionalArgDecorator">[docs]</a>
+<span class="k">class</span> <span class="nc">OptionalArgDecorator</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Abstract class to create decorators with optional arguments.</span>
 
 <span class="sd">    This class implements the functionality of a decorator that can</span>
 <span class="sd">    be used with and without arguments, i.e. the following patterns</span>
@@ -272,7 +206,7 @@
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="k">def</span> <span class="fm">__new__</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Create a new decorator instance.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Create a new decorator instance.</span>
 
 <span class="sd">        There are two cases to distinguish:</span>
 
@@ -317,7 +251,7 @@
 
         <span class="k">if</span> <span class="p">(</span><span class="ow">not</span> <span class="n">kwargs</span> <span class="ow">and</span>
                 <span class="nb">len</span><span class="p">(</span><span class="n">args</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span> <span class="ow">and</span>
-                <span class="n">callable</span><span class="p">(</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">])):</span>
+                <span class="nb">callable</span><span class="p">(</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">])):</span>
             <span class="n">func</span> <span class="o">=</span> <span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
 
             <span class="k">return</span> <span class="n">instance</span><span class="o">.</span><span class="n">_wrapper</span><span class="p">(</span><span class="n">func</span><span class="p">)</span>
@@ -328,8 +262,10 @@
             <span class="n">instance</span><span class="o">.</span><span class="n">wrapper_kwargs</span> <span class="o">=</span> <span class="n">kwargs</span>
             <span class="k">return</span> <span class="n">instance</span>
 
-<div class="viewcode-block" id="OptionalArgDecorator.__call__"><a class="viewcode-back" href="../../../generated/odl.util.vectorization.OptionalArgDecorator.__call__.html#odl.util.vectorization.OptionalArgDecorator.__call__">[docs]</a>    <span class="k">def</span> <span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">func</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Return ``self(func)``.</span>
+<div class="viewcode-block" id="OptionalArgDecorator.__call__">
+<a class="viewcode-back" href="../../../generated/odl.util.vectorization.OptionalArgDecorator.__call__.html#odl.util.vectorization.OptionalArgDecorator.__call__">[docs]</a>
+    <span class="k">def</span> <span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">func</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return ``self(func)``.</span>
 
 <span class="sd">        This method is invoked when the decorator was created with</span>
 <span class="sd">        arguments.</span>
@@ -346,9 +282,10 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_wrapper</span><span class="p">(</span><span class="n">func</span><span class="p">,</span> <span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">wrapper_args</span><span class="p">,</span> <span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">wrapper_kwargs</span><span class="p">)</span></div>
 
+
     <span class="nd">@staticmethod</span>
     <span class="k">def</span> <span class="nf">_wrapper</span><span class="p">(</span><span class="n">func</span><span class="p">,</span> <span class="o">*</span><span class="n">wrapper_args</span><span class="p">,</span> <span class="o">**</span><span class="n">wrapper_kwargs</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Make a wrapper for ``func`` and return it.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Make a wrapper for ``func`` and return it.</span>
 
 <span class="sd">        This is a default implementation that simply returns the wrapped</span>
 <span class="sd">        function, i.e., the resulting decorator is the identity.</span>
@@ -356,9 +293,12 @@
         <span class="k">return</span> <span class="n">func</span></div>
 
 
-<div class="viewcode-block" id="vectorize"><a class="viewcode-back" href="../../../generated/odl.util.vectorization.vectorize.html#odl.util.vectorization.vectorize">[docs]</a><span class="k">class</span> <span class="nc">vectorize</span><span class="p">(</span><span class="n">OptionalArgDecorator</span><span class="p">):</span>
 
-    <span class="sd">&quot;&quot;&quot;Decorator class for function vectorization.</span>
+<div class="viewcode-block" id="vectorize">
+<a class="viewcode-back" href="../../../generated/odl.util.vectorization.vectorize.html#odl.util.vectorization.vectorize">[docs]</a>
+<span class="k">class</span> <span class="nc">vectorize</span><span class="p">(</span><span class="n">OptionalArgDecorator</span><span class="p">):</span>
+
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Decorator class for function vectorization.</span>
 
 <span class="sd">    This vectorizer expects a function with exactly one positional</span>
 <span class="sd">    argument (input) and optional keyword arguments. The decorated</span>
@@ -399,7 +339,7 @@
 
     <span class="nd">@staticmethod</span>
     <span class="k">def</span> <span class="nf">_wrapper</span><span class="p">(</span><span class="n">func</span><span class="p">,</span> <span class="o">*</span><span class="n">vect_args</span><span class="p">,</span> <span class="o">**</span><span class="n">vect_kwargs</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Return the vectorized wrapper function.&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return the vectorized wrapper function.&quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">func</span><span class="p">,</span> <span class="s1">&#39;__name__&#39;</span><span class="p">):</span>
             <span class="c1"># Set name if not available. Happens if func is actually a function</span>
             <span class="n">func</span><span class="o">.</span><span class="vm">__name__</span> <span class="o">=</span> <span class="s1">&#39;</span><span class="si">{}</span><span class="s1">.__call__&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">func</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="p">)</span>
@@ -408,16 +348,17 @@
                                                   <span class="o">**</span><span class="n">vect_kwargs</span><span class="p">))</span></div>
 
 
+
 <span class="k">class</span> <span class="nc">_NumpyVectorizeWrapper</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
 
-    <span class="sd">&quot;&quot;&quot;Class for vectorization wrapping using `numpy.vectorize`.</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Class for vectorization wrapping using `numpy.vectorize`.</span>
 
 <span class="sd">    The purpose of this class is to store the vectorized version of</span>
 <span class="sd">    a function when it is called for the first time.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">func</span><span class="p">,</span> <span class="o">*</span><span class="n">vect_args</span><span class="p">,</span> <span class="o">**</span><span class="n">vect_kwargs</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Initialize a new instance.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Initialize a new instance.</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
@@ -435,7 +376,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">vect_kwargs</span> <span class="o">=</span> <span class="n">vect_kwargs</span>
 
     <span class="k">def</span> <span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">out</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Vectorized function call.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Vectorized function call.</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
@@ -475,46 +416,30 @@
 </pre></div>
 
            </div>
-           
           </div>
           <footer>
 
   <hr/>
 
   <div role="contentinfo">
-    <p>
-        &#169; Copyright 2014-2020 The ODL Contributors.
-
-    </p>
+    <p>&#169; Copyright 2014-2020 The ODL Contributors.</p>
   </div>
-    
-    
-    
-    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
-    
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
     <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
-    
-    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
 
 </footer>
         </div>
       </div>
-
     </section>
-
   </div>
-  
-
-  <script type="text/javascript">
+  <script>
       jQuery(function () {
           SphinxRtdTheme.Navigation.enable(true);
       });
-  </script>
-
-  
-  
-    
-   
+  </script> 
 
 </body>
 </html>

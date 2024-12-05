@@ -1,106 +1,62 @@
-
-
 <!DOCTYPE html>
-<html class="writer-html5" lang="en" >
+<html class="writer-html5" lang="english" data-content_root="../../../../">
 <head>
   <meta charset="utf-8" />
-  
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  
   <title>odl.tomo.backends.skimage_radon &mdash; odl 1.0.0.dev0 documentation</title>
-  
-
-  
-  <link rel="stylesheet" href="../../../../_static/css/theme.css" type="text/css" />
-  <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
-  <link rel="stylesheet" href="../../../../_static/custom.css" type="text/css" />
-
-  
-  
-
-  
-  
-
-  
+      <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=b76e3c8a" />
+      <link rel="stylesheet" type="text/css" href="../../../../_static/css/theme.css?v=19f00094" />
+      <link rel="stylesheet" type="text/css" href="../../../../_static/custom.css?v=d6003e95" />
 
   
   <!--[if lt IE 9]>
     <script src="../../../../_static/js/html5shiv.min.js"></script>
   <![endif]-->
   
-    
-      <script type="text/javascript" id="documentation_options" data-url_root="../../../../" src="../../../../_static/documentation_options.js"></script>
-        <script src="../../../../_static/jquery.js"></script>
-        <script src="../../../../_static/underscore.js"></script>
-        <script src="../../../../_static/doctools.js"></script>
-    
-    <script type="text/javascript" src="../../../../_static/js/theme.js"></script>
-
-    
+        <script src="../../../../_static/documentation_options.js?v=293a974f"></script>
+        <script src="../../../../_static/doctools.js?v=9a2dae69"></script>
+        <script src="../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../../../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../../../../genindex.html" />
     <link rel="search" title="Search" href="../../../../search.html" /> 
 </head>
 
-<body class="wy-body-for-nav">
-
-   
+<body class="wy-body-for-nav"> 
   <div class="wy-grid-for-nav">
-    
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
         <div class="wy-side-nav-search" >
-          
 
           
-            <a href="../../../../index.html" class="icon icon-home"> odl
           
-
-          
+          <a href="../../../../index.html" class="icon icon-home">
+            odl
           </a>
-
-          
-            
-            
               <div class="version">
                 1.0.0.dev0
               </div>
-            
-          
-
-          
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../../../../search.html" method="get">
-    <input type="text" name="q" placeholder="Search docs" />
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
     <input type="hidden" name="check_keywords" value="yes" />
     <input type="hidden" name="area" value="default" />
   </form>
 </div>
-
-          
-        </div>
-
-        
-        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
-          
-            
-            
-              
-            
-            
-              <p class="caption"><span class="caption-text">Getting Started</span></p>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Getting Started</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../../../../getting_started/getting_started.html">Getting Started</a></li>
 </ul>
-<p class="caption"><span class="caption-text">Working with ODL</span></p>
+<p class="caption" role="heading"><span class="caption-text">Working with ODL</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="../../../../guide/guide.html">User’s guide – selected topics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../guide/guide.html">User's guide -- selected topics</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../math/math.html">Mathematical Background</a></li>
 </ul>
-<p class="caption"><span class="caption-text">Developer zone</span></p>
+<p class="caption" role="heading"><span class="caption-text">Developer zone</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../../../../dev/dev.html">Contributing to ODL</a></li>
 </ul>
-<p class="caption"><span class="caption-text">Useful facts</span></p>
+<p class="caption" role="heading"><span class="caption-text">Useful facts</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../../../../guide/faq.html">Frequently asked questions</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../guide/glossary.html">Glossary</a></li>
@@ -109,74 +65,35 @@
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../../../../refs.html">References</a></li>
 </ul>
-<p class="caption"><span class="caption-text">API Reference</span></p>
+<p class="caption" role="heading"><span class="caption-text">API Reference</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../../../../odl.html">odl</a></li>
 </ul>
 
-            
-          
         </div>
-        
       </div>
     </nav>
 
-    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
-
-      
-      <nav class="wy-nav-top" aria-label="top navigation">
-        
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
           <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
           <a href="../../../../index.html">odl</a>
-        
       </nav>
 
-
       <div class="wy-nav-content">
-        
         <div class="rst-content">
-        
-          
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-<div role="navigation" aria-label="breadcrumbs navigation">
-
+          <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
-    
-      <li><a href="../../../../index.html" class="icon icon-home"></a> &raquo;</li>
-        
-          <li><a href="../../../index.html">Module code</a> &raquo;</li>
-        
-      <li>odl.tomo.backends.skimage_radon</li>
-    
-    
+      <li><a href="../../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">odl.tomo.backends.skimage_radon</li>
       <li class="wy-breadcrumbs-aside">
-        
       </li>
-    
   </ul>
-
-  
   <hr/>
 </div>
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
-            
+             
   <h1>Source code for odl.tomo.backends.skimage_radon</h1><div class="highlight"><pre>
 <span></span><span class="c1"># Copyright 2014-2020 The ODL contributors</span>
 <span class="c1">#</span>
@@ -215,8 +132,10 @@
 <span class="p">)</span>
 
 
-<div class="viewcode-block" id="skimage_proj_space"><a class="viewcode-back" href="../../../../generated/odl.tomo.backends.skimage_radon.skimage_proj_space.html#odl.tomo.backends.skimage_radon.skimage_proj_space">[docs]</a><span class="k">def</span> <span class="nf">skimage_proj_space</span><span class="p">(</span><span class="n">geometry</span><span class="p">,</span> <span class="n">volume_space</span><span class="p">,</span> <span class="n">proj_space</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Create a projection space adapted to the skimage radon geometry.&quot;&quot;&quot;</span>
+<div class="viewcode-block" id="skimage_proj_space">
+<a class="viewcode-back" href="../../../../generated/odl.tomo.backends.skimage_radon.skimage_proj_space.html#odl.tomo.backends.skimage_radon.skimage_proj_space">[docs]</a>
+<span class="k">def</span> <span class="nf">skimage_proj_space</span><span class="p">(</span><span class="n">geometry</span><span class="p">,</span> <span class="n">volume_space</span><span class="p">,</span> <span class="n">proj_space</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Create a projection space adapted to the skimage radon geometry.&quot;&quot;&quot;</span>
     <span class="n">padded_size</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">ceil</span><span class="p">(</span><span class="n">volume_space</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">2</span><span class="p">)))</span>
     <span class="n">det_width</span> <span class="o">=</span> <span class="n">volume_space</span><span class="o">.</span><span class="n">domain</span><span class="o">.</span><span class="n">extent</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
     <span class="n">det_part</span> <span class="o">=</span> <span class="n">uniform_partition</span><span class="p">(</span><span class="o">-</span><span class="n">det_width</span> <span class="o">/</span> <span class="mi">2</span><span class="p">,</span> <span class="n">det_width</span> <span class="o">/</span> <span class="mi">2</span><span class="p">,</span> <span class="n">padded_size</span><span class="p">)</span>
@@ -226,8 +145,11 @@
     <span class="k">return</span> <span class="n">space</span></div>
 
 
-<div class="viewcode-block" id="clamped_interpolation"><a class="viewcode-back" href="../../../../generated/odl.tomo.backends.skimage_radon.clamped_interpolation.html#odl.tomo.backends.skimage_radon.clamped_interpolation">[docs]</a><span class="k">def</span> <span class="nf">clamped_interpolation</span><span class="p">(</span><span class="n">skimage_range</span><span class="p">,</span> <span class="n">sinogram</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Return interpolator that clamps points to min/max of the space.&quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="clamped_interpolation">
+<a class="viewcode-back" href="../../../../generated/odl.tomo.backends.skimage_radon.clamped_interpolation.html#odl.tomo.backends.skimage_radon.clamped_interpolation">[docs]</a>
+<span class="k">def</span> <span class="nf">clamped_interpolation</span><span class="p">(</span><span class="n">skimage_range</span><span class="p">,</span> <span class="n">sinogram</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Return interpolator that clamps points to min/max of the space.&quot;&quot;&quot;</span>
     <span class="n">min_x</span> <span class="o">=</span> <span class="n">skimage_range</span><span class="o">.</span><span class="n">domain</span><span class="o">.</span><span class="n">min</span><span class="p">()[</span><span class="mi">1</span><span class="p">]</span>
     <span class="n">max_x</span> <span class="o">=</span> <span class="n">skimage_range</span><span class="o">.</span><span class="n">domain</span><span class="o">.</span><span class="n">max</span><span class="p">()[</span><span class="mi">1</span><span class="p">]</span>
 
@@ -241,8 +163,11 @@
     <span class="k">return</span> <span class="n">_interpolator</span></div>
 
 
-<div class="viewcode-block" id="skimage_radon_forward_projector"><a class="viewcode-back" href="../../../../generated/odl.tomo.backends.skimage_radon.skimage_radon_forward_projector.html#odl.tomo.backends.skimage_radon.skimage_radon_forward_projector">[docs]</a><span class="k">def</span> <span class="nf">skimage_radon_forward_projector</span><span class="p">(</span><span class="n">volume</span><span class="p">,</span> <span class="n">geometry</span><span class="p">,</span> <span class="n">proj_space</span><span class="p">,</span> <span class="n">out</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Calculate forward projection using skimage.</span>
+
+<div class="viewcode-block" id="skimage_radon_forward_projector">
+<a class="viewcode-back" href="../../../../generated/odl.tomo.backends.skimage_radon.skimage_radon_forward_projector.html#odl.tomo.backends.skimage_radon.skimage_radon_forward_projector">[docs]</a>
+<span class="k">def</span> <span class="nf">skimage_radon_forward_projector</span><span class="p">(</span><span class="n">volume</span><span class="p">,</span> <span class="n">geometry</span><span class="p">,</span> <span class="n">proj_space</span><span class="p">,</span> <span class="n">out</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Calculate forward projection using skimage.</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
@@ -292,8 +217,11 @@
     <span class="k">return</span> <span class="n">out</span></div>
 
 
-<div class="viewcode-block" id="skimage_radon_back_projector"><a class="viewcode-back" href="../../../../generated/odl.tomo.backends.skimage_radon.skimage_radon_back_projector.html#odl.tomo.backends.skimage_radon.skimage_radon_back_projector">[docs]</a><span class="k">def</span> <span class="nf">skimage_radon_back_projector</span><span class="p">(</span><span class="n">sinogram</span><span class="p">,</span> <span class="n">geometry</span><span class="p">,</span> <span class="n">vol_space</span><span class="p">,</span> <span class="n">out</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Calculate forward projection using skimage.</span>
+
+<div class="viewcode-block" id="skimage_radon_back_projector">
+<a class="viewcode-back" href="../../../../generated/odl.tomo.backends.skimage_radon.skimage_radon_back_projector.html#odl.tomo.backends.skimage_radon.skimage_radon_back_projector">[docs]</a>
+<span class="k">def</span> <span class="nf">skimage_radon_back_projector</span><span class="p">(</span><span class="n">sinogram</span><span class="p">,</span> <span class="n">geometry</span><span class="p">,</span> <span class="n">vol_space</span><span class="p">,</span> <span class="n">out</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Calculate forward projection using skimage.</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
@@ -332,13 +260,19 @@
         <span class="c1"># Only do asserts here since these are backend functions</span>
         <span class="k">assert</span> <span class="n">out</span> <span class="ow">in</span> <span class="n">vol_space</span>
 
+    <span class="c1"># scikit-image changed the name of this parameter in version 0.17</span>
+    <span class="k">if</span> <span class="p">(</span><span class="n">skimage</span><span class="o">.</span><span class="n">__version__</span> <span class="o">&lt;</span> <span class="s1">&#39;0.17&#39;</span><span class="p">):</span>
+        <span class="n">filter_disable</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;filter&quot;</span><span class="p">:</span> <span class="kc">None</span><span class="p">}</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">filter_disable</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;filter_name&quot;</span><span class="p">:</span> <span class="kc">None</span><span class="p">}</span>
+
     <span class="c1"># Rotate back from (rows, cols) to (x, y), then back-project (no filter)</span>
     <span class="n">backproj</span> <span class="o">=</span> <span class="n">iradon</span><span class="p">(</span>
         <span class="n">skimage_sinogram</span><span class="o">.</span><span class="n">asarray</span><span class="p">()</span><span class="o">.</span><span class="n">T</span><span class="p">,</span>
         <span class="n">theta</span><span class="p">,</span>
         <span class="n">output_size</span><span class="o">=</span><span class="n">vol_space</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
-        <span class="nb">filter</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
         <span class="n">circle</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+        <span class="o">**</span><span class="n">filter_disable</span>
     <span class="p">)</span>
     <span class="n">out</span><span class="p">[:]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">rot90</span><span class="p">(</span><span class="n">backproj</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span>
 
@@ -359,11 +293,16 @@
     <span class="k">return</span> <span class="n">out</span></div>
 
 
-<div class="viewcode-block" id="SkImageImpl"><a class="viewcode-back" href="../../../../generated/odl.tomo.backends.skimage_radon.SkImageImpl.html#odl.tomo.backends.skimage_radon.SkImageImpl">[docs]</a><span class="k">class</span> <span class="nc">SkImageImpl</span><span class="p">:</span>
-    <span class="sd">&quot;&quot;&quot;Scikit-image backend of the `RayTransform` operator.&quot;&quot;&quot;</span>
 
-<div class="viewcode-block" id="SkImageImpl.__init__"><a class="viewcode-back" href="../../../../generated/odl.tomo.backends.skimage_radon.SkImageImpl.html#odl.tomo.backends.skimage_radon.SkImageImpl.__init__">[docs]</a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">geometry</span><span class="p">,</span> <span class="n">vol_space</span><span class="p">,</span> <span class="n">proj_space</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Initialize a new instance.</span>
+<div class="viewcode-block" id="SkImageImpl">
+<a class="viewcode-back" href="../../../../generated/odl.tomo.backends.skimage_radon.SkImageImpl.html#odl.tomo.backends.skimage_radon.SkImageImpl">[docs]</a>
+<span class="k">class</span> <span class="nc">SkImageImpl</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Scikit-image backend of the `RayTransform` operator.&quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="SkImageImpl.__init__">
+<a class="viewcode-back" href="../../../../generated/odl.tomo.backends.skimage_radon.SkImageImpl.html#odl.tomo.backends.skimage_radon.SkImageImpl.__init__">[docs]</a>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">geometry</span><span class="p">,</span> <span class="n">vol_space</span><span class="p">,</span> <span class="n">proj_space</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Initialize a new instance.</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
@@ -426,6 +365,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_vol_space</span> <span class="o">=</span> <span class="n">vol_space</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_proj_space</span> <span class="o">=</span> <span class="n">proj_space</span></div>
 
+
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">vol_space</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_vol_space</span>
@@ -434,17 +374,24 @@
     <span class="k">def</span> <span class="nf">proj_space</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_proj_space</span>
 
-<div class="viewcode-block" id="SkImageImpl.call_forward"><a class="viewcode-back" href="../../../../generated/odl.tomo.backends.skimage_radon.SkImageImpl.call_forward.html#odl.tomo.backends.skimage_radon.SkImageImpl.call_forward">[docs]</a>    <span class="nd">@_add_default_complex_impl</span>
+<div class="viewcode-block" id="SkImageImpl.call_forward">
+<a class="viewcode-back" href="../../../../generated/odl.tomo.backends.skimage_radon.SkImageImpl.call_forward.html#odl.tomo.backends.skimage_radon.SkImageImpl.call_forward">[docs]</a>
+    <span class="nd">@_add_default_complex_impl</span>
     <span class="k">def</span> <span class="nf">call_forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">out</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
         <span class="k">return</span> <span class="n">skimage_radon_forward_projector</span><span class="p">(</span>
             <span class="n">x</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">geometry</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">proj_space</span><span class="o">.</span><span class="n">real_space</span><span class="p">,</span> <span class="n">out</span>
         <span class="p">)</span></div>
 
-<div class="viewcode-block" id="SkImageImpl.call_backward"><a class="viewcode-back" href="../../../../generated/odl.tomo.backends.skimage_radon.SkImageImpl.call_backward.html#odl.tomo.backends.skimage_radon.SkImageImpl.call_backward">[docs]</a>    <span class="nd">@_add_default_complex_impl</span>
+
+<div class="viewcode-block" id="SkImageImpl.call_backward">
+<a class="viewcode-back" href="../../../../generated/odl.tomo.backends.skimage_radon.SkImageImpl.call_backward.html#odl.tomo.backends.skimage_radon.SkImageImpl.call_backward">[docs]</a>
+    <span class="nd">@_add_default_complex_impl</span>
     <span class="k">def</span> <span class="nf">call_backward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">out</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
         <span class="k">return</span> <span class="n">skimage_radon_back_projector</span><span class="p">(</span>
             <span class="n">x</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">geometry</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">vol_space</span><span class="o">.</span><span class="n">real_space</span><span class="p">,</span> <span class="n">out</span>
-        <span class="p">)</span></div></div>
+        <span class="p">)</span></div>
+</div>
+
 
 
 <span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s1">&#39;__main__&#39;</span><span class="p">:</span>
@@ -454,46 +401,30 @@
 </pre></div>
 
            </div>
-           
           </div>
           <footer>
 
   <hr/>
 
   <div role="contentinfo">
-    <p>
-        &#169; Copyright 2014-2020 The ODL Contributors.
-
-    </p>
+    <p>&#169; Copyright 2014-2020 The ODL Contributors.</p>
   </div>
-    
-    
-    
-    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
-    
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
     <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
-    
-    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
 
 </footer>
         </div>
       </div>
-
     </section>
-
   </div>
-  
-
-  <script type="text/javascript">
+  <script>
       jQuery(function () {
           SphinxRtdTheme.Navigation.enable(true);
       });
-  </script>
-
-  
-  
-    
-   
+  </script> 
 
 </body>
 </html>

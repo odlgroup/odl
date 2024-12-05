@@ -1,101 +1,58 @@
-
-
 <!DOCTYPE html>
-<html class="writer-html5" lang="en" >
+<html class="writer-html5" lang="english" data-content_root="../">
 <head>
-  <meta charset="utf-8" />
-  
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  
-  <title>On the different notions of derivative &mdash; odl 1.0.0.dev0 documentation</title>
-  
-
-  
-  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
-  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
-  <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
-
-  
-  
-
-  
-  
-
-  
+  <title>On the different notions of derivative &mdash; odl 0.8.1 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b76e3c8a" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=19f00094" />
+      <link rel="stylesheet" type="text/css" href="../_static/custom.css?v=d6003e95" />
 
   
   <!--[if lt IE 9]>
     <script src="../_static/js/html5shiv.min.js"></script>
   <![endif]-->
   
-    
-      <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
-        <script src="../_static/jquery.js"></script>
-        <script src="../_static/underscore.js"></script>
-        <script src="../_static/doctools.js"></script>
-    
-    <script type="text/javascript" src="../_static/js/theme.js"></script>
-
-    
+        <script src="../_static/documentation_options.js?v=51bb0171"></script>
+        <script src="../_static/doctools.js?v=9a2dae69"></script>
+        <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
     <link rel="next" title="Transformations" href="trafos/index.html" />
     <link rel="prev" title="Resizing Operators" href="resizing_ops.html" /> 
 </head>
 
-<body class="wy-body-for-nav">
-
-   
+<body class="wy-body-for-nav"> 
   <div class="wy-grid-for-nav">
-    
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
         <div class="wy-side-nav-search" >
-          
 
           
-            <a href="../index.html" class="icon icon-home"> odl
           
-
-          
+          <a href="../index.html" class="icon icon-home">
+            odl
           </a>
-
-          
-            
-            
               <div class="version">
-                1.0.0.dev0
+                0.8.1
               </div>
-            
-          
-
-          
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
-    <input type="text" name="q" placeholder="Search docs" />
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
     <input type="hidden" name="check_keywords" value="yes" />
     <input type="hidden" name="area" value="default" />
   </form>
 </div>
-
-          
-        </div>
-
-        
-        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
-          
-            
-            
-              
-            
-            
-              <p class="caption"><span class="caption-text">Getting Started</span></p>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Getting Started</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../getting_started/getting_started.html">Getting Started</a></li>
 </ul>
-<p class="caption"><span class="caption-text">Working with ODL</span></p>
+<p class="caption" role="heading"><span class="caption-text">Working with ODL</span></p>
 <ul class="current">
-<li class="toctree-l1"><a class="reference internal" href="../guide/guide.html">User’s guide – selected topics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../guide/guide.html">User's guide -- selected topics</a></li>
 <li class="toctree-l1 current"><a class="reference internal" href="math.html">Mathematical Background</a><ul class="current">
 <li class="toctree-l2"><a class="reference internal" href="linear_spaces.html">Linear Spaces</a></li>
 <li class="toctree-l2"><a class="reference internal" href="discretization.html">Discretizations</a></li>
@@ -135,11 +92,11 @@
 </ul>
 </li>
 </ul>
-<p class="caption"><span class="caption-text">Developer zone</span></p>
+<p class="caption" role="heading"><span class="caption-text">Developer zone</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../dev/dev.html">Contributing to ODL</a></li>
 </ul>
-<p class="caption"><span class="caption-text">Useful facts</span></p>
+<p class="caption" role="heading"><span class="caption-text">Useful facts</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../guide/faq.html">Frequently asked questions</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../guide/glossary.html">Glossary</a></li>
@@ -148,87 +105,45 @@
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../refs.html">References</a></li>
 </ul>
-<p class="caption"><span class="caption-text">API Reference</span></p>
+<p class="caption" role="heading"><span class="caption-text">API Reference</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../odl.html">odl</a></li>
 </ul>
 
-            
-          
         </div>
-        
       </div>
     </nav>
 
-    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
-
-      
-      <nav class="wy-nav-top" aria-label="top navigation">
-        
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
           <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
           <a href="../index.html">odl</a>
-        
       </nav>
 
-
       <div class="wy-nav-content">
-        
         <div class="rst-content">
-        
-          
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-<div role="navigation" aria-label="breadcrumbs navigation">
-
+          <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
-    
-      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
-        
-          <li><a href="math.html">Mathematical Background</a> &raquo;</li>
-        
-      <li>On the different notions of derivative</li>
-    
-    
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="math.html">Mathematical Background</a></li>
+      <li class="breadcrumb-item active">On the different notions of derivative</li>
       <li class="wy-breadcrumbs-aside">
-        
-          
             <a href="../_sources/math/derivatives_guide.rst.txt" rel="nofollow"> View page source</a>
-          
-        
       </li>
-    
   </ul>
-
-  
   <hr/>
 </div>
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
-            
-  <div class="section" id="on-the-different-notions-of-derivative">
-<span id="derivatives-in-depth"></span><h1>On the different notions of derivative<a class="headerlink" href="#on-the-different-notions-of-derivative" title="Permalink to this headline">¶</a></h1>
+             
+  <section id="on-the-different-notions-of-derivative">
+<span id="derivatives-in-depth"></span><h1>On the different notions of derivative<a class="headerlink" href="#on-the-different-notions-of-derivative" title="Link to this heading">¶</a></h1>
 <p>The concept of a derivative is one of the core concepts of mathematical analysis, and it is essential whenever a linear approximation of a function in some point is required.
 Since the notion of derivative has different meanings in different contexts, the intention of this guide is to introduce the derivative concepts as used in ODL.</p>
 <p>In short, the derivative notions that will be discussed here are:</p>
 <ul class="simple">
-<li><p><strong>Derivative</strong>. When we write “derivative” in ODL code and documentation, we mean the derivative of an <a class="reference internal" href="../guide/glossary.html#term-operator"><code class="xref any std std-term docutils literal notranslate"><span class="pre">Operator</span></code></a> <img class="math" src="../_images/math/fb1a8cc8f45bb8eb4e9a91b57bff655e5b5ffb83.png" alt="A : X \to Y"/> w.r.t to a disturbance in its argument, i.e a linear approximation of <img class="math" src="../_images/math/50a903dfcdc4ab76e6258893ad8b6dba6dbe89a8.png" alt="A(x + h)"/> for small <img class="math" src="../_images/math/4c120f773ab4e1c59ad2bd44aae969ce24dd190a.png" alt="h"/>.
+<li><p><strong>Derivative</strong>. When we write &quot;derivative&quot; in ODL code and documentation, we mean the derivative of an <a class="reference internal" href="../guide/glossary.html#term-operator"><code class="xref any std std-term docutils literal notranslate"><span class="pre">Operator</span></code></a> <img class="math" src="../_images/math/fb1a8cc8f45bb8eb4e9a91b57bff655e5b5ffb83.png" alt="A : X \to Y"/> w.r.t to a disturbance in its argument, i.e a linear approximation of <img class="math" src="../_images/math/50a903dfcdc4ab76e6258893ad8b6dba6dbe89a8.png" alt="A(x + h)"/> for small <img class="math" src="../_images/math/4c120f773ab4e1c59ad2bd44aae969ce24dd190a.png" alt="h"/>.
 The derivative in a point <img class="math" src="../_images/math/888f7c323ac0341871e867220ae2d76467d74d6e.png" alt="x"/> is an <a class="reference internal" href="../guide/glossary.html#term-operator"><code class="xref any std std-term docutils literal notranslate"><span class="pre">Operator</span></code></a> <img class="math" src="../_images/math/acc80c51bc033102eda5568f26a0c8c176a855e7.png" alt="A'(x) : X \to Y"/>.</p></li>
-<li><p><strong>Gradient</strong>. If the operator <img class="math" src="../_images/math/211284f68205c3e66773eaf026f32a0acdd3dfb3.png" alt="A"/> is a <a class="reference internal" href="../generated/odl.operator.operator.FunctionalLeftVectorMult.functional.html#odl.operator.operator.FunctionalLeftVectorMult.functional" title="odl.operator.operator.FunctionalLeftVectorMult.functional"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">functional</span></code></a>, i.e. <img class="math" src="../_images/math/7403a84a151297c7acf520bd50b01ace5aea5ad9.png" alt="A : X \to \mathbb{R}"/>, then the gradient is the direction in which <img class="math" src="../_images/math/211284f68205c3e66773eaf026f32a0acdd3dfb3.png" alt="A"/> increases the most.
+<li><p><strong>Gradient</strong>. If the operator <img class="math" src="../_images/math/211284f68205c3e66773eaf026f32a0acdd3dfb3.png" alt="A"/> is a <a class="reference internal" href="../generated/odl.operator.operator.FunctionalLeftVectorMult.functional.html#odl.operator.operator.FunctionalLeftVectorMult.functional" title="odl.operator.operator.FunctionalLeftVectorMult.functional"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">functional</span></code></a>, i.e. <img class="math" src="../_images/math/7403a84a151297c7acf520bd50b01ace5aea5ad9.png" alt="A : X \to \mathbb{R}"/>, then the gradient is the direction in which <img class="math" src="../_images/math/211284f68205c3e66773eaf026f32a0acdd3dfb3.png" alt="A"/> increases the most.
 The gradient in a point <img class="math" src="../_images/math/888f7c323ac0341871e867220ae2d76467d74d6e.png" alt="x"/> is a vector <img class="math" src="../_images/math/e67e6f5621eeb65c451db8661dac767b19eed2ec.png" alt="[\nabla A](x)"/> in <img class="math" src="../_images/math/ed38fa24f1c94891bd312012aab3f6673be3eb83.png" alt="X"/> such that <img class="math" src="../_images/math/c00c530fe47422d9cb2bc547c792eb4077040208.png" alt="A'(x)(y) = \langle [\nabla A](x), y \rangle"/>.
 The gradient operator is the operator <img class="math" src="../_images/math/d480c9b9dd5d75e67732a9905a22ba555383f8d4.png" alt="x \to [\nabla A](x)"/>.</p></li>
 <li><p><strong>Hessian</strong>. The hessian in a point <img class="math" src="../_images/math/888f7c323ac0341871e867220ae2d76467d74d6e.png" alt="x"/> is the derivative operator of the gradient operator, i.e. <img class="math" src="../_images/math/09b7848670607822e73e6fef0ff1f20828d87ec1.png" alt="H(x) = [\nabla A]'(x)"/>.</p></li>
@@ -236,14 +151,14 @@ The gradient operator is the operator <img class="math" src="../_images/math/d48
 It can be seen as a vectorized version of the usual gradient, taken in each point in <img class="math" src="../_images/math/8b79605e88e6ebb950c74a1319cdc046dae2069c.png" alt="\Omega"/>.</p></li>
 <li><p><strong>Subgradient</strong>. The subgradient extends the notion of derivative to any convex functional and is used in some optimization solvers where the objective function is not differentiable.</p></li>
 </ul>
-<div class="section" id="derivative">
-<h2>Derivative<a class="headerlink" href="#derivative" title="Permalink to this headline">¶</a></h2>
+<section id="derivative">
+<h2>Derivative<a class="headerlink" href="#derivative" title="Link to this heading">¶</a></h2>
 <p>The derivative is usually introduced for functions <img class="math" src="../_images/math/c54f1f18c7e64f40fa469d1ea697ecc0e14baa88.png" alt="f: \mathbb{R} \to \mathbb{R}"/> via the limit</p>
 <div class="math">
 <p><img src="../_images/math/9e15c6eb084c0319649bf7a06e60f51437d3cfc9.png" alt="f'(x) = \lim_{h \to 0} \frac{f(x + h) - f(x)}{h}."/></p>
 </div><p>Here we say that the derivative of <img class="math" src="../_images/math/5b7752c757e0b691a80ab8227eadb8a8389dc58a.png" alt="f"/> in <img class="math" src="../_images/math/888f7c323ac0341871e867220ae2d76467d74d6e.png" alt="x"/> is <img class="math" src="../_images/math/790cd2591720f629a3fcc78fb35fcb5d9122d878.png" alt="f'(x)"/>.</p>
 <p>This limit makes sense in one dimension, but once we start considering functions in higher dimension we get into trouble.
-Consider <img class="math" src="../_images/math/339f9b7fc3da768ad019875049b50b448f64e9aa.png" alt="f: \mathbb{R}^n \to \mathbb{R}^m"/> – what would <img class="math" src="../_images/math/4c120f773ab4e1c59ad2bd44aae969ce24dd190a.png" alt="h"/> mean in this case?
+Consider <img class="math" src="../_images/math/339f9b7fc3da768ad019875049b50b448f64e9aa.png" alt="f: \mathbb{R}^n \to \mathbb{R}^m"/> -- what would <img class="math" src="../_images/math/4c120f773ab4e1c59ad2bd44aae969ce24dd190a.png" alt="h"/> mean in this case?
 An extension is the concept of a directional derivative.
 The derivative of <img class="math" src="../_images/math/5b7752c757e0b691a80ab8227eadb8a8389dc58a.png" alt="f"/> in <img class="math" src="../_images/math/888f7c323ac0341871e867220ae2d76467d74d6e.png" alt="x"/> in <em>direction</em> <img class="math" src="../_images/math/badad346f6fbe2e237af99bfbd9a93a4da53a3da.png" alt="d"/> is <img class="math" src="../_images/math/5ede779d3403ee0c149ffb554e7ba3a9a5c9e9eb.png" alt="f'(x)(d)"/>:</p>
 <div class="math">
@@ -263,10 +178,10 @@ Here <img class="math" src="../_images/math/790cd2591720f629a3fcc78fb35fcb5d9122
 </div><p>This definition of the derivative is called the <strong>Fréchet derivative</strong>.
 If it exists, it coincides with the Gâteaux derivative.
 This is the case for most operators, but some are only differentiable in the Gâteaux sense, not in the Fréchet sense.</p>
-<p>Another important difference between the two notions is that the Gâteaux variant (directional derivative) can be approximated by finite differences in a simple way, as it is done in ODL’s <a class="reference internal" href="../generated/odl.solvers.functional.derivatives.NumericalDerivative.html#odl.solvers.functional.derivatives.NumericalDerivative" title="odl.solvers.functional.derivatives.NumericalDerivative"><code class="xref any py py-class docutils literal notranslate"><span class="pre">NumericalDerivative</span></code></a>, while there is no simple way to computationally realize the Fréchet definition.
-Therefore, “derivative” in ODL generally means “Gâteaux derivative”, which is the same as “Fréchet derivative” except for a few special cases.</p>
-<div class="section" id="rules-for-the-derivative">
-<h3>Rules for the derivative<a class="headerlink" href="#rules-for-the-derivative" title="Permalink to this headline">¶</a></h3>
+<p>Another important difference between the two notions is that the Gâteaux variant (directional derivative) can be approximated by finite differences in a simple way, as it is done in ODL's <a class="reference internal" href="../generated/odl.solvers.functional.derivatives.NumericalDerivative.html#odl.solvers.functional.derivatives.NumericalDerivative" title="odl.solvers.functional.derivatives.NumericalDerivative"><code class="xref any py py-class docutils literal notranslate"><span class="pre">NumericalDerivative</span></code></a>, while there is no simple way to computationally realize the Fréchet definition.
+Therefore, &quot;derivative&quot; in ODL generally means &quot;Gâteaux derivative&quot;, which is the same as &quot;Fréchet derivative&quot; except for a few special cases.</p>
+<section id="rules-for-the-derivative">
+<h3>Rules for the derivative<a class="headerlink" href="#rules-for-the-derivative" title="Link to this heading">¶</a></h3>
 <p>Many of the usual rules for derivatives also hold for the operator derivatives, i.e.</p>
 <ul>
 <li><p>Linearity</p>
@@ -282,18 +197,18 @@ Therefore, “derivative” in ODL generally means “Gâteaux derivative”, wh
 <p><img src="../_images/math/ae81c5f7e0404a1ed68aef66a6412cbf822e7ddd.png" alt="f'(x)(y) = f(y)"/></p>
 </div></li>
 </ul>
-</div>
-<div class="section" id="implementations-in-odl">
-<h3>Implementations in ODL<a class="headerlink" href="#implementations-in-odl" title="Permalink to this headline">¶</a></h3>
+</section>
+<section id="implementations-in-odl">
+<h3>Implementations in ODL<a class="headerlink" href="#implementations-in-odl" title="Link to this heading">¶</a></h3>
 <ul class="simple">
-<li><p>The derivative is implemented in ODL for <a class="reference internal" href="../guide/glossary.html#term-operator"><code class="xref any std std-term docutils literal notranslate"><span class="pre">Operator</span></code></a>’s via the <a class="reference internal" href="../generated/odl.operator.operator.Operator.derivative.html#odl.operator.operator.Operator.derivative" title="odl.operator.operator.Operator.derivative"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">Operator.derivative</span></code></a> method.</p></li>
+<li><p>The derivative is implemented in ODL for <a class="reference internal" href="../guide/glossary.html#term-operator"><code class="xref any std std-term docutils literal notranslate"><span class="pre">Operator</span></code></a>'s via the <a class="reference internal" href="../generated/odl.operator.operator.Operator.derivative.html#odl.operator.operator.Operator.derivative" title="odl.operator.operator.Operator.derivative"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">Operator.derivative</span></code></a> method.</p></li>
 <li><p>It can be numerically computed using the <a class="reference internal" href="../generated/odl.solvers.functional.derivatives.NumericalDerivative.html#odl.solvers.functional.derivatives.NumericalDerivative" title="odl.solvers.functional.derivatives.NumericalDerivative"><code class="xref any py py-class docutils literal notranslate"><span class="pre">NumericalDerivative</span></code></a> operator.</p></li>
 <li><p>Many of the operator arithmetic classes implement the usual rules for the derivative, such as the chain rule, distributivity over addition etc.</p></li>
 </ul>
-</div>
-</div>
-<div class="section" id="gradient">
-<h2>Gradient<a class="headerlink" href="#gradient" title="Permalink to this headline">¶</a></h2>
+</section>
+</section>
+<section id="gradient">
+<h2>Gradient<a class="headerlink" href="#gradient" title="Link to this heading">¶</a></h2>
 <p>In the classical setting of functions <img class="math" src="../_images/math/0606acc12676b526247bca3ac957f07392f3a8f2.png" alt="f : \mathbb{R}^n \to \mathbb{R}"/>, the gradient is the vector</p>
 <div class="math">
 <p><img src="../_images/math/07564b573a3e8f6548d1b1a864986b3beed75802.png" alt="\nabla f =
@@ -307,16 +222,16 @@ Therefore, “derivative” in ODL generally means “Gâteaux derivative”, wh
 <p><img src="../_images/math/8c6c2bc05c5f9edfc252f01981d257840d1ae3e2.png" alt="f'(x)(y) = \langle y, [\nabla f](x) \rangle,"/></p>
 </div><p>where <img class="math" src="../_images/math/fe2d6b88eb8fa3a322574a182b215a2dbe2e9321.png" alt="[\nabla f](x)"/> lies in the dual space of <img class="math" src="../_images/math/ed38fa24f1c94891bd312012aab3f6673be3eb83.png" alt="X"/>, denoted <img class="math" src="../_images/math/99fae140d4794fc8ca645dc9392d01f6bea8a154.png" alt="X^*"/>. For most spaces in ODL, the spaces are <em>Hilbert</em> spaces where <img class="math" src="../_images/math/29c413bc5ac15193174eb4f4e4deb8dcd8a1ea08.png" alt="X = X^*"/> by the <a class="reference external" href="https://en.wikipedia.org/wiki/Riesz_representation_theorem">Riesz representation theorem</a> and hence <img class="math" src="../_images/math/c78035886f7fd6d98610137eb63624277fc1c413.png" alt="[\nabla f](x) \in X"/>.</p>
 <p>We call the (possibly nonlinear) operator <img class="math" src="../_images/math/daf3ababae2581cdedf0e3f42fdc749a0fb8656d.png" alt="x \to [\nabla f](x)"/> the <em>Gradient operator</em> of <img class="math" src="../_images/math/5b7752c757e0b691a80ab8227eadb8a8389dc58a.png" alt="f"/>.</p>
-<div class="section" id="id1">
-<h3>Implementations in ODL<a class="headerlink" href="#id1" title="Permalink to this headline">¶</a></h3>
+<section id="id1">
+<h3>Implementations in ODL<a class="headerlink" href="#id1" title="Link to this heading">¶</a></h3>
 <ul class="simple">
-<li><p>The gradient is implemented in ODL <a class="reference internal" href="../generated/odl.solvers.functional.functional.Functional.html#odl.solvers.functional.functional.Functional" title="odl.solvers.functional.functional.Functional"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Functional</span></code></a>’s via the <a class="reference internal" href="../generated/odl.solvers.functional.functional.Functional.gradient.html#odl.solvers.functional.functional.Functional.gradient" title="odl.solvers.functional.functional.Functional.gradient"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">Functional.gradient</span></code></a> method.</p></li>
+<li><p>The gradient is implemented in ODL <a class="reference internal" href="../generated/odl.solvers.functional.functional.Functional.html#odl.solvers.functional.functional.Functional" title="odl.solvers.functional.functional.Functional"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Functional</span></code></a>'s via the <a class="reference internal" href="../generated/odl.solvers.functional.functional.Functional.gradient.html#odl.solvers.functional.functional.Functional.gradient" title="odl.solvers.functional.functional.Functional.gradient"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">Functional.gradient</span></code></a> method.</p></li>
 <li><p>It can be numerically computed using the <a class="reference internal" href="../generated/odl.solvers.functional.derivatives.NumericalGradient.html#odl.solvers.functional.derivatives.NumericalGradient" title="odl.solvers.functional.derivatives.NumericalGradient"><code class="xref any py py-class docutils literal notranslate"><span class="pre">NumericalGradient</span></code></a> operator.</p></li>
 </ul>
-</div>
-</div>
-<div class="section" id="hessian">
-<h2>Hessian<a class="headerlink" href="#hessian" title="Permalink to this headline">¶</a></h2>
+</section>
+</section>
+<section id="hessian">
+<h2>Hessian<a class="headerlink" href="#hessian" title="Link to this heading">¶</a></h2>
 <p>For functions <img class="math" src="../_images/math/0606acc12676b526247bca3ac957f07392f3a8f2.png" alt="f : \mathbb{R}^n \to \mathbb{R}"/>, the Hessian in a point <img class="math" src="../_images/math/888f7c323ac0341871e867220ae2d76467d74d6e.png" alt="x"/> is the matrix <img class="math" src="../_images/math/313eeddbefe309857d8a10cec63665e96b5e70a5.png" alt="H(x)"/> such that</p>
 <div class="math">
 <p><img src="../_images/math/ecdc5b8b0e728947d978c1b46627c4ee6f29e7a1.png" alt="H(x) =
@@ -334,8 +249,8 @@ It has the property that that the quadratic variation of <img class="math" src="
 <div class="math">
 <p><img src="../_images/math/449fe7d8cc27ce18552cb5f5dd9113195421d9da.png" alt="\nabla f(x + d) = [\nabla f](x) + [H(x)](d) + o(\|d\|)."/></p>
 </div><p>If we take this second property as the <em>definition</em> of the Hessian, it can easily be generalized to the setting of functionals <img class="math" src="../_images/math/1791c9d3225312ba8ca09fa9a0188f1161cd4980.png" alt="f : X \to \mathbb{R}"/> mapping elements in some Hilbert space <img class="math" src="../_images/math/ed38fa24f1c94891bd312012aab3f6673be3eb83.png" alt="X"/> to the real numbers.</p>
-<div class="section" id="id2">
-<h3>Implementations in ODL<a class="headerlink" href="#id2" title="Permalink to this headline">¶</a></h3>
+<section id="id2">
+<h3>Implementations in ODL<a class="headerlink" href="#id2" title="Link to this heading">¶</a></h3>
 <p>The Hessian is not explicitly implemented anywhere in ODL.
 Instead it can be used in the form of the derivative of the gradient operator.
 This is however not implemented for all functionals.</p>
@@ -343,48 +258,48 @@ This is however not implemented for all functionals.</p>
 <li><p>For an example of a functional whose gradient has a derivative, see <a class="reference internal" href="../generated/odl.solvers.functional.example_funcs.RosenbrockFunctional.html#odl.solvers.functional.example_funcs.RosenbrockFunctional" title="odl.solvers.functional.example_funcs.RosenbrockFunctional"><code class="xref any py py-class docutils literal notranslate"><span class="pre">RosenbrockFunctional</span></code></a>.</p></li>
 <li><p>It can be computed by taking the <a class="reference internal" href="../generated/odl.solvers.functional.derivatives.NumericalDerivative.html#odl.solvers.functional.derivatives.NumericalDerivative" title="odl.solvers.functional.derivatives.NumericalDerivative"><code class="xref any py py-class docutils literal notranslate"><span class="pre">NumericalDerivative</span></code></a> of the gradient, which can in turn be computed using the <a class="reference internal" href="../generated/odl.solvers.functional.derivatives.NumericalGradient.html#odl.solvers.functional.derivatives.NumericalGradient" title="odl.solvers.functional.derivatives.NumericalGradient"><code class="xref any py py-class docutils literal notranslate"><span class="pre">NumericalGradient</span></code></a>.</p></li>
 </ul>
-</div>
-</div>
-<div class="section" id="spatial-gradient">
-<h2>Spatial Gradient<a class="headerlink" href="#spatial-gradient" title="Permalink to this headline">¶</a></h2>
+</section>
+</section>
+<section id="spatial-gradient">
+<h2>Spatial Gradient<a class="headerlink" href="#spatial-gradient" title="Link to this heading">¶</a></h2>
 <p>The spatial gradient of a function <img class="math" src="../_images/math/f4502d6d48dd8fd0b317271e537a8984134738b9.png" alt="f \in \mathcal{F}(\Omega, \mathbb{R}) = \{f: \Omega \to \mathbb{R}\}"/> (with adequate differentiability properties) is an element in the function space <img class="math" src="../_images/math/55aa5437f4c710eb2c04a58ba55079b2d721c3a0.png" alt="\mathcal{F}(\Omega, \mathbb{R}^n)"/> such that for any <img class="math" src="../_images/math/5f0ea374ce0c70468e5bb4d66ab49c8dac9152f0.png" alt="x, d \in \Omega"/>:</p>
 <div class="math">
 <p><img src="../_images/math/520045bf52b1f545cbbff12bf4c0a01c8c719522.png" alt="\lim_{h \to 0} \frac{\| f(x + h d) - f(x) - \langle h d, \text{grad} f(x) \rangle \|}{h} = 0"/></p>
 </div><p>It is identical to the above notion of functional gradient for the special case of functions <img class="math" src="../_images/math/2d52284fd8de845c05a696ee7974b24286cce627.png" alt="\Omega \to \mathbb{R}"/>.</p>
-<div class="section" id="id3">
-<h3>Implementations in ODL<a class="headerlink" href="#id3" title="Permalink to this headline">¶</a></h3>
+<section id="id3">
+<h3>Implementations in ODL<a class="headerlink" href="#id3" title="Link to this heading">¶</a></h3>
 <ul class="simple">
 <li><p>The spatial gradient is implemented in ODL in the <a class="reference internal" href="../generated/odl.discr.diff_ops.Gradient.html#odl.discr.diff_ops.Gradient" title="odl.discr.diff_ops.Gradient"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Gradient</span></code></a> operator.</p></li>
 <li><p>Several related operators such as the <a class="reference internal" href="../generated/odl.discr.diff_ops.PartialDerivative.html#odl.discr.diff_ops.PartialDerivative" title="odl.discr.diff_ops.PartialDerivative"><code class="xref any py py-class docutils literal notranslate"><span class="pre">PartialDerivative</span></code></a> and <a class="reference internal" href="../generated/odl.discr.diff_ops.Laplacian.html#odl.discr.diff_ops.Laplacian" title="odl.discr.diff_ops.Laplacian"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Laplacian</span></code></a> are also available.</p></li>
 </ul>
-</div>
-</div>
-<div class="section" id="subgradient">
-<h2>Subgradient<a class="headerlink" href="#subgradient" title="Permalink to this headline">¶</a></h2>
+</section>
+</section>
+<section id="subgradient">
+<h2>Subgradient<a class="headerlink" href="#subgradient" title="Link to this heading">¶</a></h2>
 <p>The Subgradient (also <em>subderivative</em> or <em>subdifferential</em>) of a <em>convex</em> function <img class="math" src="../_images/math/1791c9d3225312ba8ca09fa9a0188f1161cd4980.png" alt="f : X \to \mathbb{R}"/>, mapping a Banach space <img class="math" src="../_images/math/ed38fa24f1c94891bd312012aab3f6673be3eb83.png" alt="X"/> to <img class="math" src="../_images/math/f251750bce4b8396fda0e8f85fb770b8d31f49a8.png" alt="\mathbb{R}"/>, is defined as the set-valued function <img class="math" src="../_images/math/30634f18c4d451919105c68e925e273701a415ae.png" alt="\partial f : X \to 2^{X^*}"/> whose values are:</p>
 <div class="math">
 <p><img src="../_images/math/58af366725b044c5b2a5b3876e908fc8981bd43f.png" alt="[\partial f](x_0) = \{c \in X^* \ s.t. \ f(x) - f(x_0) \geq \langle c , x - x_0 \rangle \forall x \in X \}."/></p>
 </div><p>For differentiable functions, this reduces to the singleton set containing the usual gradient.</p>
-<div class="section" id="id4">
-<h3>Implementations in ODL<a class="headerlink" href="#id4" title="Permalink to this headline">¶</a></h3>
+<section id="id4">
+<h3>Implementations in ODL<a class="headerlink" href="#id4" title="Link to this heading">¶</a></h3>
 <p>The subgradient is not explicitly implemented in ODL, but is implicitly used in the proximal operators.
 See <a class="reference internal" href="solvers/nonsmooth/proximal_operators.html#proximal-operators"><span class="std std-ref">Proximal Operators</span></a> for more information.</p>
-</div>
-</div>
-<div class="section" id="notes-on-complex-spaces">
-<h2>Notes on complex spaces<a class="headerlink" href="#notes-on-complex-spaces" title="Permalink to this headline">¶</a></h2>
+</section>
+</section>
+<section id="notes-on-complex-spaces">
+<h2>Notes on complex spaces<a class="headerlink" href="#notes-on-complex-spaces" title="Link to this heading">¶</a></h2>
 <p>All of the above definitions assume that the involved spaces are vector spaces over the field of real numbers.
 For complex spaces, there are two possible ways to generalize the above concepts:</p>
-<div class="section" id="complex-space-as-the-product-of-two-real-spaces">
-<h3>1. Complex space as the product of two real spaces<a class="headerlink" href="#complex-space-as-the-product-of-two-real-spaces" title="Permalink to this headline">¶</a></h3>
+<section id="complex-space-as-the-product-of-two-real-spaces">
+<h3>1. Complex space as the product of two real spaces<a class="headerlink" href="#complex-space-as-the-product-of-two-real-spaces" title="Link to this heading">¶</a></h3>
 <p>Here we indentify a space <img class="math" src="../_images/math/63d00445662bd7f04f8d909db3c8605b05086459.png" alt="X(\mathbb{C})"/>, for instance <img class="math" src="../_images/math/5c8f94eb9ec01a7d2f3b33f2ac6890a70027eb90.png" alt="L^2(\Omega, \mathbb{C})"/> or <img class="math" src="../_images/math/a7a033eacced495d41cddd2c79433460e9964f8a.png" alt="\mathbb{C}^n"/>, with the product space <img class="math" src="../_images/math/caa546bf769cb72743340d6306280433224eb933.png" alt="X(\mathbb{R})^2"/> using the bijective mapping</p>
 <div class="math">
 <p><img src="../_images/math/6e23e85bdfe3987fc146abad3b8fcada0afae339.png" alt="E(f) = \big( \Re(f),\, \Im(f) \big)."/></p>
 </div><p>This purely geometric view is the practically more relevant one since it allows to simply adopt all rules for real spaces in the complex case.
 It is endorsed in ODL unless otherwise stated.</p>
-</div>
-<div class="section" id="complex-derivative">
-<h3>2. Complex derivative<a class="headerlink" href="#complex-derivative" title="Permalink to this headline">¶</a></h3>
+</section>
+<section id="complex-derivative">
+<h3>2. Complex derivative<a class="headerlink" href="#complex-derivative" title="Link to this heading">¶</a></h3>
 <p>The complex derivative is a notion from <a class="reference external" href="https://en.wikipedia.org/wiki/Complex_analysis">complex analysis</a> that has vastly more far-reaching consequences than differentiability of real and imaginary parts separately.
 Since complex differentiable functions are automatically infinitely many times differetiable, this derivative notion strongly restricts the class of functions to which its rules can be applied, thereby limiting the usefulness for our purposes.</p>
 <p>For instance, the Gâteaux derivative of an operator <img class="math" src="../_images/math/5b7752c757e0b691a80ab8227eadb8a8389dc58a.png" alt="f"/> between complex spaces would be defined as</p>
@@ -392,15 +307,15 @@ Since complex differentiable functions are automatically infinitely many times d
 <p><img src="../_images/math/1a55813e70fe3e3f8d1bd51e1125b8a7acd79a5b.png" alt="f'(x)(y) = \lim_{z \to 0} z^{-1} \big( f(x + zy) - f(x) \big),"/></p>
 </div><p>with the difference that here, the limit <img class="math" src="../_images/math/f711b073b85045a4d32d7e34f8cf511e853f2a93.png" alt="z \to 0"/> is understood as going along arbitrary curves in the complex plane that end up at 0.
 This definition is both harder to calculate explicitly and harder to approximate numerically.</p>
-</div>
-<div class="section" id="complex-real-mappings">
-<h3>Complex &lt;-&gt; Real mappings<a class="headerlink" href="#complex-real-mappings" title="Permalink to this headline">¶</a></h3>
+</section>
+<section id="complex-real-mappings">
+<h3>Complex &lt;-&gt; Real mappings<a class="headerlink" href="#complex-real-mappings" title="Link to this heading">¶</a></h3>
 <p>Some operators are defined as mapping from a complex space to a real space, or vice versa.
 Typical examples are the real-to-complex Fourier transform, or taking the real part of a function or vector.
 Such operators are somewhat corner cases of functional analysis that are not well covered in the literature.</p>
 <p>A peculiar issue with this setup is that linearity in domain and range have to be checked with different sets of scalars.
 In particular, testing linearity with complex scalars is invalid in real spaces, such that these kinds of operators can never be formally complex-linear, only linear in the sense of identifying a complex number with a 2-vector of real numbers.</p>
-<p>Another issue is adjointness: When defining the adjoint with respect to the <img class="math" src="../_images/math/a506df96281409a5df0397d92c349c0515a73e86.png" alt="\mathbb{C} = \mathbb{R}^2"/> identification, “lossy” operators do not satisfy the adjoint condition fully.
+<p>Another issue is adjointness: When defining the adjoint with respect to the <img class="math" src="../_images/math/a506df96281409a5df0397d92c349c0515a73e86.png" alt="\mathbb{C} = \mathbb{R}^2"/> identification, &quot;lossy&quot; operators do not satisfy the adjoint condition fully.
 For instance, the real part operator <img class="math" src="../_images/math/3a85aa2a5fe35ccabfe7ae7a951317c6dc61814c.png" alt="\Re: L^2(\Omega, \mathbb{C}) \to L^2(\Omega, \mathbb{R})"/> can be rewritten as a projection operator</p>
 <div class="math">
 <p><img src="../_images/math/aeca478767d9261a7d594a1fb59cd4f2ceed4d38.png" alt="\Re: L^2(\Omega, \mathbb{R})^2 \to L^2(\Omega, \mathbb{R}), \quad
@@ -415,62 +330,45 @@ However, when transferring this back to the complex interpretation, we get</p>
 </div><p>Therefore, ODL takes the following pragmatic approach for complex &lt;-&gt; real operators:</p>
 <ul class="simple">
 <li><p>Derivatives are taken in the real sense.
-Linearity is set to <a class="reference external" href="https://docs.python.org/3/library/constants.html#True" title="(in Python v3.9)"><code class="xref any docutils literal notranslate"><span class="pre">True</span></code></a> for an operator <img class="math" src="../_images/math/5d41fefb23bb3e5c8e483a0f23802769bed86bc5.png" alt="A: X \to Y"/> if <img class="math" src="../_images/math/65d6926776fb08d844ae64b7bda65000162b58d2.png" alt="A'(x) = A"/> for all <img class="math" src="../_images/math/e84ab0ccb472ec7e5655e00a919c8cd1236ea2d4.png" alt="x\in X"/>.
+Linearity is set to <a class="reference external" href="https://docs.python.org/3/library/constants.html#True" title="(in Python v3.13)"><code class="xref any docutils literal notranslate"><span class="pre">True</span></code></a> for an operator <img class="math" src="../_images/math/5d41fefb23bb3e5c8e483a0f23802769bed86bc5.png" alt="A: X \to Y"/> if <img class="math" src="../_images/math/65d6926776fb08d844ae64b7bda65000162b58d2.png" alt="A'(x) = A"/> for all <img class="math" src="../_images/math/e84ab0ccb472ec7e5655e00a919c8cd1236ea2d4.png" alt="x\in X"/>.
 This property can be used to optimize calculations with derivatives, since the derivative operator does not depend on the point.
 Linearity in the sense of complex vector spaces is currently not reflected by any flag in ODL.</p></li>
 <li><p>Even for formally non-linear derivative operators, an adjoint can be defined, which will not be complex-linear, either.
 It satisfies the adjointness test only when comparing real-valued inner products.</p></li>
 </ul>
-</div>
-</div>
-</div>
+</section>
+</section>
+</section>
 
 
            </div>
-           
           </div>
-          <footer>
-    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
-        <a href="trafos/index.html" class="btn btn-neutral float-right" title="Transformations" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
         <a href="resizing_ops.html" class="btn btn-neutral float-left" title="Resizing Operators" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="trafos/index.html" class="btn btn-neutral float-right" title="Transformations" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>
 
   <div role="contentinfo">
-    <p>
-        &#169; Copyright 2014-2020 The ODL Contributors.
-
-    </p>
+    <p>&#169; Copyright 2014-2020 The ODL Contributors.</p>
   </div>
-    
-    
-    
-    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
-    
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
     <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
-    
-    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
 
 </footer>
         </div>
       </div>
-
     </section>
-
   </div>
-  
-
-  <script type="text/javascript">
+  <script>
       jQuery(function () {
           SphinxRtdTheme.Navigation.enable(true);
       });
-  </script>
-
-  
-  
-    
-   
+  </script> 
 
 </body>
 </html>

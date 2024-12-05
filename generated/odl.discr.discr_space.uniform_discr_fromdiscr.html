@@ -1,108 +1,65 @@
-
-
 <!DOCTYPE html>
-<html class="writer-html5" lang="en" >
+<html class="writer-html5" lang="english" data-content_root="../">
 <head>
-  <meta charset="utf-8" />
-  
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  
-  <title>uniform_discr_fromdiscr &mdash; odl 1.0.0.dev0 documentation</title>
-  
-
-  
-  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
-  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
-  <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
-
-  
-  
-
-  
-  
-
-  
+  <title>uniform_discr_fromdiscr &mdash; odl 0.8.1 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b76e3c8a" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=19f00094" />
+      <link rel="stylesheet" type="text/css" href="../_static/custom.css?v=d6003e95" />
 
   
   <!--[if lt IE 9]>
     <script src="../_static/js/html5shiv.min.js"></script>
   <![endif]-->
   
-    
-      <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
-        <script src="../_static/jquery.js"></script>
-        <script src="../_static/underscore.js"></script>
-        <script src="../_static/doctools.js"></script>
-    
-    <script type="text/javascript" src="../_static/js/theme.js"></script>
-
-    
+        <script src="../_static/documentation_options.js?v=51bb0171"></script>
+        <script src="../_static/doctools.js?v=9a2dae69"></script>
+        <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
     <link rel="next" title="uniform_discr_fromintv" href="odl.discr.discr_space.uniform_discr_fromintv.html" />
     <link rel="prev" title="uniform_discr" href="odl.discr.discr_space.uniform_discr.html" /> 
 </head>
 
-<body class="wy-body-for-nav">
-
-   
+<body class="wy-body-for-nav"> 
   <div class="wy-grid-for-nav">
-    
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
         <div class="wy-side-nav-search" >
-          
 
           
-            <a href="../index.html" class="icon icon-home"> odl
           
-
-          
+          <a href="../index.html" class="icon icon-home">
+            odl
           </a>
-
-          
-            
-            
               <div class="version">
-                1.0.0.dev0
+                0.8.1
               </div>
-            
-          
-
-          
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
-    <input type="text" name="q" placeholder="Search docs" />
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
     <input type="hidden" name="check_keywords" value="yes" />
     <input type="hidden" name="area" value="default" />
   </form>
 </div>
-
-          
-        </div>
-
-        
-        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
-          
-            
-            
-              
-            
-            
-              <p class="caption"><span class="caption-text">Getting Started</span></p>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Getting Started</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../getting_started/getting_started.html">Getting Started</a></li>
 </ul>
-<p class="caption"><span class="caption-text">Working with ODL</span></p>
+<p class="caption" role="heading"><span class="caption-text">Working with ODL</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="../guide/guide.html">User’s guide – selected topics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../guide/guide.html">User's guide -- selected topics</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../math/math.html">Mathematical Background</a></li>
 </ul>
-<p class="caption"><span class="caption-text">Developer zone</span></p>
+<p class="caption" role="heading"><span class="caption-text">Developer zone</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../dev/dev.html">Contributing to ODL</a></li>
 </ul>
-<p class="caption"><span class="caption-text">Useful facts</span></p>
+<p class="caption" role="heading"><span class="caption-text">Useful facts</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../guide/faq.html">Frequently asked questions</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../guide/glossary.html">Glossary</a></li>
@@ -111,7 +68,7 @@
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../refs.html">References</a></li>
 </ul>
-<p class="caption"><span class="caption-text">API Reference</span></p>
+<p class="caption" role="heading"><span class="caption-text">API Reference</span></p>
 <ul class="current">
 <li class="toctree-l1 current"><a class="reference internal" href="../odl.html">odl</a><ul class="current">
 <li class="toctree-l2"><a class="reference internal" href="../odl.contrib.html">contrib</a></li>
@@ -147,88 +104,44 @@
 </li>
 </ul>
 
-            
-          
         </div>
-        
       </div>
     </nav>
 
-    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
-
-      
-      <nav class="wy-nav-top" aria-label="top navigation">
-        
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
           <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
           <a href="../index.html">odl</a>
-        
       </nav>
 
-
       <div class="wy-nav-content">
-        
         <div class="rst-content">
-        
-          
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-<div role="navigation" aria-label="breadcrumbs navigation">
-
+          <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
-    
-      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
-        
-          <li><a href="../odl.html">odl</a> &raquo;</li>
-        
-          <li><a href="../odl.discr.html">discr</a> &raquo;</li>
-        
-          <li><a href="../odl.discr.discr_space.html">discr_space</a> &raquo;</li>
-        
-      <li>uniform_discr_fromdiscr</li>
-    
-    
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../odl.html">odl</a></li>
+          <li class="breadcrumb-item"><a href="../odl.discr.html">discr</a></li>
+          <li class="breadcrumb-item"><a href="../odl.discr.discr_space.html">discr_space</a></li>
+      <li class="breadcrumb-item active">uniform_discr_fromdiscr</li>
       <li class="wy-breadcrumbs-aside">
-        
-          
             <a href="../_sources/generated/odl.discr.discr_space.uniform_discr_fromdiscr.rst.txt" rel="nofollow"> View page source</a>
-          
-        
       </li>
-    
   </ul>
-
-  
   <hr/>
 </div>
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
-            
-  <div class="section" id="uniform-discr-fromdiscr">
-<h1>uniform_discr_fromdiscr<a class="headerlink" href="#uniform-discr-fromdiscr" title="Permalink to this headline">¶</a></h1>
+             
+  <section id="uniform-discr-fromdiscr">
+<h1>uniform_discr_fromdiscr<a class="headerlink" href="#uniform-discr-fromdiscr" title="Link to this heading">¶</a></h1>
 <dl class="py function">
-<dt id="odl.discr.discr_space.uniform_discr_fromdiscr">
-<code class="sig-prename descclassname"><span class="pre">odl.discr.discr_space.</span></code><code class="sig-name descname"><span class="pre">uniform_discr_fromdiscr</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="pre">discr</span></em>, <em class="sig-param"><span class="pre">min_pt=None</span></em>, <em class="sig-param"><span class="pre">max_pt=None</span></em>, <em class="sig-param"><span class="pre">shape=None</span></em>, <em class="sig-param"><span class="pre">cell_sides=None</span></em>, <em class="sig-param"><span class="pre">\*\*kwargs</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/odl/discr/discr_space.html#uniform_discr_fromdiscr"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#odl.discr.discr_space.uniform_discr_fromdiscr" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="odl.discr.discr_space.uniform_discr_fromdiscr">
+<span class="sig-prename descclassname"><span class="pre">odl.discr.discr_space.</span></span><span class="sig-name descname"><span class="pre">uniform_discr_fromdiscr</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">discr</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">min_pt</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_pt</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">shape</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cell_sides</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/odl/discr/discr_space.html#uniform_discr_fromdiscr"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#odl.discr.discr_space.uniform_discr_fromdiscr" title="Link to this definition">¶</a></dt>
 <dd><p>Return a discretization based on an existing one.</p>
 <p>The parameters that are explicitly given are used to create the
 new discretization, and the missing information is taken from
 the template space. See Notes for the exact functionality.</p>
 <dl class="field-list">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl>
 <dt><strong>discr</strong><span class="classifier"><a class="reference internal" href="odl.discr.discr_space.DiscretizedSpace.html#odl.discr.discr_space.DiscretizedSpace" title="odl.discr.discr_space.DiscretizedSpace"><code class="xref any py py-class docutils literal notranslate"><span class="pre">DiscretizedSpace</span></code></a></span></dt><dd><p>Uniformly discretized space used as a template.</p>
 </dd>
@@ -236,11 +149,11 @@ the template space. See Notes for the exact functionality.</p>
 </dd>
 <dt><strong>shape</strong><span class="classifier">int or sequence of ints, optional</span></dt><dd><p>Desired number of samples per axis of the new space.</p>
 </dd>
-<dt><strong>cell_sides</strong><span class="classifier">float or sequence of floats, optional</span></dt><dd><p>Desired cell side lenghts of the new space’s partition.</p>
+<dt><strong>cell_sides</strong><span class="classifier">float or sequence of floats, optional</span></dt><dd><p>Desired cell side lenghts of the new space's partition.</p>
 </dd>
 </dl>
 </dd>
-<dt class="field-even">Other Parameters</dt>
+<dt class="field-even">Other Parameters<span class="colon">:</span></dt>
 <dd class="field-even"><dl>
 <dt><strong>nodes_on_bdry</strong><span class="classifier">bool or sequence, optional</span></dt><dd><p>If a sequence is provided, it determines per axis whether to
 place the last grid point on the boundary (<code class="docutils literal notranslate"><span class="pre">True</span></code>) or shift it
@@ -253,7 +166,7 @@ sequence must be <code class="docutils literal notranslate"><span class="pre">di
 boundaries.</p>
 <p>Default: <code class="docutils literal notranslate"><span class="pre">False</span></code>.</p>
 </dd>
-<dt><strong>kwargs :</strong></dt><dd><p>Additional keyword parameters passed to the <a class="reference internal" href="odl.discr.discr_space.DiscretizedSpace.html#odl.discr.discr_space.DiscretizedSpace" title="odl.discr.discr_space.DiscretizedSpace"><code class="xref any py py-class docutils literal notranslate"><span class="pre">DiscretizedSpace</span></code></a>
+<dt><strong>kwargs</strong></dt><dd><p>Additional keyword parameters passed to the <a class="reference internal" href="odl.discr.discr_space.DiscretizedSpace.html#odl.discr.discr_space.DiscretizedSpace" title="odl.discr.discr_space.DiscretizedSpace"><code class="xref any py py-class docutils literal notranslate"><span class="pre">DiscretizedSpace</span></code></a>
 initializer.</p>
 </dd>
 </dl>
@@ -325,8 +238,8 @@ for specifying quantities per axis is illustrated in the following:</p>
 # axis 1: recompute max_pt using the original shape with the
 # new min_pt and cell_sides
 &gt;&gt;&gt; new_discr = odl.uniform_discr_fromdiscr(discr, min_pt=[None, 1],
-…                                         max_pt=[3, None],
-…                                         cell_sides=[None, 0.25])
+...                                         max_pt=[3, None],
+...                                         cell_sides=[None, 0.25])
 &gt;&gt;&gt; new_discr
 uniform_discr([ 2.,  1.], [ 3.  ,  2.25], (10, 5))
 &gt;&gt;&gt; new_discr.cell_sides
@@ -335,63 +248,46 @@ array([ 0.1 ,  0.25])</p>
 # max_pt and shape
 # axis 1: use new min_pt, shape and cell_sides only
 &gt;&gt;&gt; new_discr = odl.uniform_discr_fromdiscr(discr, min_pt=[None, 1],
-…                                         max_pt=[3, None],
-…                                         shape=[5, 5],
-…                                         cell_sides=[None, 0.25])
+...                                         max_pt=[3, None],
+...                                         shape=[5, 5],
+...                                         cell_sides=[None, 0.25])
 &gt;&gt;&gt; new_discr
 uniform_discr([ 2.5,  1. ], [ 3.  ,  2.25], (5, 5))
 &gt;&gt;&gt; new_discr.cell_sides
 array([ 0.1 ,  0.25])</p>
 </dd></dl>
 
-</div>
+</section>
 
 
            </div>
-           
           </div>
-          <footer>
-    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
-        <a href="odl.discr.discr_space.uniform_discr_fromintv.html" class="btn btn-neutral float-right" title="uniform_discr_fromintv" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
         <a href="odl.discr.discr_space.uniform_discr.html" class="btn btn-neutral float-left" title="uniform_discr" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="odl.discr.discr_space.uniform_discr_fromintv.html" class="btn btn-neutral float-right" title="uniform_discr_fromintv" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>
 
   <div role="contentinfo">
-    <p>
-        &#169; Copyright 2014-2020 The ODL Contributors.
-
-    </p>
+    <p>&#169; Copyright 2014-2020 The ODL Contributors.</p>
   </div>
-    
-    
-    
-    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
-    
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
     <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
-    
-    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
 
 </footer>
         </div>
       </div>
-
     </section>
-
   </div>
-  
-
-  <script type="text/javascript">
+  <script>
       jQuery(function () {
           SphinxRtdTheme.Navigation.enable(true);
       });
-  </script>
-
-  
-  
-    
-   
+  </script> 
 
 </body>
 </html>

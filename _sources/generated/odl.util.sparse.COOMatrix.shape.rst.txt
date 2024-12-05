@@ -1,0 +1,6 @@
+COOMatrix.shape
+===============================
+
+.. currentmodule:: odl.util.sparse
+
+.. autoproperty:: COOMatrix.shape

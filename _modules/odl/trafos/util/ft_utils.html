@@ -1,106 +1,62 @@
-
-
 <!DOCTYPE html>
-<html class="writer-html5" lang="en" >
+<html class="writer-html5" lang="english" data-content_root="../../../../">
 <head>
   <meta charset="utf-8" />
-  
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  
   <title>odl.trafos.util.ft_utils &mdash; odl 1.0.0.dev0 documentation</title>
-  
-
-  
-  <link rel="stylesheet" href="../../../../_static/css/theme.css" type="text/css" />
-  <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
-  <link rel="stylesheet" href="../../../../_static/custom.css" type="text/css" />
-
-  
-  
-
-  
-  
-
-  
+      <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=b76e3c8a" />
+      <link rel="stylesheet" type="text/css" href="../../../../_static/css/theme.css?v=19f00094" />
+      <link rel="stylesheet" type="text/css" href="../../../../_static/custom.css?v=d6003e95" />
 
   
   <!--[if lt IE 9]>
     <script src="../../../../_static/js/html5shiv.min.js"></script>
   <![endif]-->
   
-    
-      <script type="text/javascript" id="documentation_options" data-url_root="../../../../" src="../../../../_static/documentation_options.js"></script>
-        <script src="../../../../_static/jquery.js"></script>
-        <script src="../../../../_static/underscore.js"></script>
-        <script src="../../../../_static/doctools.js"></script>
-    
-    <script type="text/javascript" src="../../../../_static/js/theme.js"></script>
-
-    
+        <script src="../../../../_static/documentation_options.js?v=293a974f"></script>
+        <script src="../../../../_static/doctools.js?v=9a2dae69"></script>
+        <script src="../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../../../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../../../../genindex.html" />
     <link rel="search" title="Search" href="../../../../search.html" /> 
 </head>
 
-<body class="wy-body-for-nav">
-
-   
+<body class="wy-body-for-nav"> 
   <div class="wy-grid-for-nav">
-    
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
         <div class="wy-side-nav-search" >
-          
 
           
-            <a href="../../../../index.html" class="icon icon-home"> odl
           
-
-          
+          <a href="../../../../index.html" class="icon icon-home">
+            odl
           </a>
-
-          
-            
-            
               <div class="version">
                 1.0.0.dev0
               </div>
-            
-          
-
-          
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../../../../search.html" method="get">
-    <input type="text" name="q" placeholder="Search docs" />
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
     <input type="hidden" name="check_keywords" value="yes" />
     <input type="hidden" name="area" value="default" />
   </form>
 </div>
-
-          
-        </div>
-
-        
-        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
-          
-            
-            
-              
-            
-            
-              <p class="caption"><span class="caption-text">Getting Started</span></p>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Getting Started</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../../../../getting_started/getting_started.html">Getting Started</a></li>
 </ul>
-<p class="caption"><span class="caption-text">Working with ODL</span></p>
+<p class="caption" role="heading"><span class="caption-text">Working with ODL</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="../../../../guide/guide.html">User’s guide – selected topics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../guide/guide.html">User's guide -- selected topics</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../math/math.html">Mathematical Background</a></li>
 </ul>
-<p class="caption"><span class="caption-text">Developer zone</span></p>
+<p class="caption" role="heading"><span class="caption-text">Developer zone</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../../../../dev/dev.html">Contributing to ODL</a></li>
 </ul>
-<p class="caption"><span class="caption-text">Useful facts</span></p>
+<p class="caption" role="heading"><span class="caption-text">Useful facts</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../../../../guide/faq.html">Frequently asked questions</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../guide/glossary.html">Glossary</a></li>
@@ -109,74 +65,35 @@
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../../../../refs.html">References</a></li>
 </ul>
-<p class="caption"><span class="caption-text">API Reference</span></p>
+<p class="caption" role="heading"><span class="caption-text">API Reference</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../../../../odl.html">odl</a></li>
 </ul>
 
-            
-          
         </div>
-        
       </div>
     </nav>
 
-    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
-
-      
-      <nav class="wy-nav-top" aria-label="top navigation">
-        
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
           <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
           <a href="../../../../index.html">odl</a>
-        
       </nav>
 
-
       <div class="wy-nav-content">
-        
         <div class="rst-content">
-        
-          
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-<div role="navigation" aria-label="breadcrumbs navigation">
-
+          <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
-    
-      <li><a href="../../../../index.html" class="icon icon-home"></a> &raquo;</li>
-        
-          <li><a href="../../../index.html">Module code</a> &raquo;</li>
-        
-      <li>odl.trafos.util.ft_utils</li>
-    
-    
+      <li><a href="../../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">odl.trafos.util.ft_utils</li>
       <li class="wy-breadcrumbs-aside">
-        
       </li>
-    
   </ul>
-
-  
   <hr/>
 </div>
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
-            
+             
   <h1>Source code for odl.trafos.util.ft_utils</h1><div class="highlight"><pre>
 <span></span><span class="c1"># Copyright 2014-2020 The ODL contributors</span>
 <span class="c1">#</span>
@@ -207,8 +124,10 @@
            <span class="s1">&#39;dft_preprocess_data&#39;</span><span class="p">,</span> <span class="s1">&#39;dft_postprocess_data&#39;</span><span class="p">)</span>
 
 
-<div class="viewcode-block" id="reciprocal_grid"><a class="viewcode-back" href="../../../../generated/odl.trafos.util.ft_utils.reciprocal_grid.html#odl.trafos.util.ft_utils.reciprocal_grid">[docs]</a><span class="k">def</span> <span class="nf">reciprocal_grid</span><span class="p">(</span><span class="n">grid</span><span class="p">,</span> <span class="n">shift</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">axes</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">halfcomplex</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Return the reciprocal of the given regular grid.</span>
+<div class="viewcode-block" id="reciprocal_grid">
+<a class="viewcode-back" href="../../../../generated/odl.trafos.util.ft_utils.reciprocal_grid.html#odl.trafos.util.ft_utils.reciprocal_grid">[docs]</a>
+<span class="k">def</span> <span class="nf">reciprocal_grid</span><span class="p">(</span><span class="n">grid</span><span class="p">,</span> <span class="n">shift</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">axes</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">halfcomplex</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Return the reciprocal of the given regular grid.</span>
 
 <span class="sd">    This function calculates the reciprocal (Fourier/frequency space)</span>
 <span class="sd">    grid for a given regular grid defined by the nodes::</span>
@@ -328,9 +247,12 @@
     <span class="k">return</span> <span class="n">uniform_grid</span><span class="p">(</span><span class="n">rmin</span><span class="p">,</span> <span class="n">rmax</span><span class="p">,</span> <span class="n">rshape</span><span class="p">)</span></div>
 
 
-<div class="viewcode-block" id="realspace_grid"><a class="viewcode-back" href="../../../../generated/odl.trafos.util.ft_utils.realspace_grid.html#odl.trafos.util.ft_utils.realspace_grid">[docs]</a><span class="k">def</span> <span class="nf">realspace_grid</span><span class="p">(</span><span class="n">recip_grid</span><span class="p">,</span> <span class="n">x0</span><span class="p">,</span> <span class="n">axes</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">halfcomplex</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+
+<div class="viewcode-block" id="realspace_grid">
+<a class="viewcode-back" href="../../../../generated/odl.trafos.util.ft_utils.realspace_grid.html#odl.trafos.util.ft_utils.realspace_grid">[docs]</a>
+<span class="k">def</span> <span class="nf">realspace_grid</span><span class="p">(</span><span class="n">recip_grid</span><span class="p">,</span> <span class="n">x0</span><span class="p">,</span> <span class="n">axes</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">halfcomplex</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
                    <span class="n">halfcx_parity</span><span class="o">=</span><span class="s1">&#39;even&#39;</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Return the real space grid from the given reciprocal grid.</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Return the real space grid from the given reciprocal grid.</span>
 
 <span class="sd">    Given a reciprocal grid::</span>
 
@@ -414,8 +336,11 @@
     <span class="k">return</span> <span class="n">uniform_grid</span><span class="p">(</span><span class="n">irmin</span><span class="p">,</span> <span class="n">irmax</span><span class="p">,</span> <span class="n">irshape</span><span class="p">)</span></div>
 
 
-<div class="viewcode-block" id="dft_preprocess_data"><a class="viewcode-back" href="../../../../generated/odl.trafos.util.ft_utils.dft_preprocess_data.html#odl.trafos.util.ft_utils.dft_preprocess_data">[docs]</a><span class="k">def</span> <span class="nf">dft_preprocess_data</span><span class="p">(</span><span class="n">arr</span><span class="p">,</span> <span class="n">shift</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">axes</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">sign</span><span class="o">=</span><span class="s1">&#39;-&#39;</span><span class="p">,</span> <span class="n">out</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Pre-process the real-space data before DFT.</span>
+
+<div class="viewcode-block" id="dft_preprocess_data">
+<a class="viewcode-back" href="../../../../generated/odl.trafos.util.ft_utils.dft_preprocess_data.html#odl.trafos.util.ft_utils.dft_preprocess_data">[docs]</a>
+<span class="k">def</span> <span class="nf">dft_preprocess_data</span><span class="p">(</span><span class="n">arr</span><span class="p">,</span> <span class="n">shift</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">axes</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">sign</span><span class="o">=</span><span class="s1">&#39;-&#39;</span><span class="p">,</span> <span class="n">out</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Pre-process the real-space data before DFT.</span>
 
 <span class="sd">    This function multiplies the given data with the separable</span>
 <span class="sd">    function::</span>
@@ -533,8 +458,9 @@
     <span class="k">return</span> <span class="n">out</span></div>
 
 
+
 <span class="k">def</span> <span class="nf">_interp_kernel_ft</span><span class="p">(</span><span class="n">norm_freqs</span><span class="p">,</span> <span class="n">interp</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Scaled FT of a one-dimensional interpolation kernel.</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Scaled FT of a one-dimensional interpolation kernel.</span>
 
 <span class="sd">    For normalized frequencies ``-1/2 &lt;= xi &lt;= 1/2``, this</span>
 <span class="sd">    function returns::</span>
@@ -569,9 +495,11 @@
     <span class="k">return</span> <span class="n">ker_ft</span>
 
 
-<div class="viewcode-block" id="dft_postprocess_data"><a class="viewcode-back" href="../../../../generated/odl.trafos.util.ft_utils.dft_postprocess_data.html#odl.trafos.util.ft_utils.dft_postprocess_data">[docs]</a><span class="k">def</span> <span class="nf">dft_postprocess_data</span><span class="p">(</span><span class="n">arr</span><span class="p">,</span> <span class="n">real_grid</span><span class="p">,</span> <span class="n">recip_grid</span><span class="p">,</span> <span class="n">shift</span><span class="p">,</span> <span class="n">axes</span><span class="p">,</span>
+<div class="viewcode-block" id="dft_postprocess_data">
+<a class="viewcode-back" href="../../../../generated/odl.trafos.util.ft_utils.dft_postprocess_data.html#odl.trafos.util.ft_utils.dft_postprocess_data">[docs]</a>
+<span class="k">def</span> <span class="nf">dft_postprocess_data</span><span class="p">(</span><span class="n">arr</span><span class="p">,</span> <span class="n">real_grid</span><span class="p">,</span> <span class="n">recip_grid</span><span class="p">,</span> <span class="n">shift</span><span class="p">,</span> <span class="n">axes</span><span class="p">,</span>
                          <span class="n">interp</span><span class="p">,</span> <span class="n">sign</span><span class="o">=</span><span class="s1">&#39;-&#39;</span><span class="p">,</span> <span class="n">op</span><span class="o">=</span><span class="s1">&#39;multiply&#39;</span><span class="p">,</span> <span class="n">out</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Post-process the Fourier-space data after DFT.</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Post-process the Fourier-space data after DFT.</span>
 
 <span class="sd">    This function multiplies the given data with the separable</span>
 <span class="sd">    function::</span>
@@ -726,9 +654,12 @@
     <span class="k">return</span> <span class="n">out</span></div>
 
 
-<div class="viewcode-block" id="reciprocal_space"><a class="viewcode-back" href="../../../../generated/odl.trafos.util.ft_utils.reciprocal_space.html#odl.trafos.util.ft_utils.reciprocal_space">[docs]</a><span class="k">def</span> <span class="nf">reciprocal_space</span><span class="p">(</span><span class="n">space</span><span class="p">,</span> <span class="n">axes</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">halfcomplex</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">shift</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+
+<div class="viewcode-block" id="reciprocal_space">
+<a class="viewcode-back" href="../../../../generated/odl.trafos.util.ft_utils.reciprocal_space.html#odl.trafos.util.ft_utils.reciprocal_space">[docs]</a>
+<span class="k">def</span> <span class="nf">reciprocal_space</span><span class="p">(</span><span class="n">space</span><span class="p">,</span> <span class="n">axes</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">halfcomplex</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">shift</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
                      <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Return the range of the Fourier transform on ``space``.</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Return the range of the Fourier transform on ``space``.</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
@@ -828,52 +759,37 @@
     <span class="k">return</span> <span class="n">recip_spc</span></div>
 
 
+
 <span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s1">&#39;__main__&#39;</span><span class="p">:</span>
     <span class="kn">from</span> <span class="nn">doctest</span> <span class="kn">import</span> <span class="n">testmod</span><span class="p">,</span> <span class="n">NORMALIZE_WHITESPACE</span>
     <span class="n">testmod</span><span class="p">(</span><span class="n">optionflags</span><span class="o">=</span><span class="n">NORMALIZE_WHITESPACE</span><span class="p">)</span>
 </pre></div>
 
            </div>
-           
           </div>
           <footer>
 
   <hr/>
 
   <div role="contentinfo">
-    <p>
-        &#169; Copyright 2014-2020 The ODL Contributors.
-
-    </p>
+    <p>&#169; Copyright 2014-2020 The ODL Contributors.</p>
   </div>
-    
-    
-    
-    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
-    
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
     <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
-    
-    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
 
 </footer>
         </div>
       </div>
-
     </section>
-
   </div>
-  
-
-  <script type="text/javascript">
+  <script>
       jQuery(function () {
           SphinxRtdTheme.Navigation.enable(true);
       });
-  </script>
-
-  
-  
-    
-   
+  </script> 
 
 </body>
 </html>

@@ -1,106 +1,62 @@
-
-
 <!DOCTYPE html>
-<html class="writer-html5" lang="en" >
+<html class="writer-html5" lang="english" data-content_root="../../../../">
 <head>
   <meta charset="utf-8" />
-  
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  
   <title>odl.tomo.analytic.filtered_back_projection &mdash; odl 1.0.0.dev0 documentation</title>
-  
-
-  
-  <link rel="stylesheet" href="../../../../_static/css/theme.css" type="text/css" />
-  <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
-  <link rel="stylesheet" href="../../../../_static/custom.css" type="text/css" />
-
-  
-  
-
-  
-  
-
-  
+      <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=b76e3c8a" />
+      <link rel="stylesheet" type="text/css" href="../../../../_static/css/theme.css?v=19f00094" />
+      <link rel="stylesheet" type="text/css" href="../../../../_static/custom.css?v=d6003e95" />
 
   
   <!--[if lt IE 9]>
     <script src="../../../../_static/js/html5shiv.min.js"></script>
   <![endif]-->
   
-    
-      <script type="text/javascript" id="documentation_options" data-url_root="../../../../" src="../../../../_static/documentation_options.js"></script>
-        <script src="../../../../_static/jquery.js"></script>
-        <script src="../../../../_static/underscore.js"></script>
-        <script src="../../../../_static/doctools.js"></script>
-    
-    <script type="text/javascript" src="../../../../_static/js/theme.js"></script>
-
-    
+        <script src="../../../../_static/documentation_options.js?v=293a974f"></script>
+        <script src="../../../../_static/doctools.js?v=9a2dae69"></script>
+        <script src="../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../../../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../../../../genindex.html" />
     <link rel="search" title="Search" href="../../../../search.html" /> 
 </head>
 
-<body class="wy-body-for-nav">
-
-   
+<body class="wy-body-for-nav"> 
   <div class="wy-grid-for-nav">
-    
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
         <div class="wy-side-nav-search" >
-          
 
           
-            <a href="../../../../index.html" class="icon icon-home"> odl
           
-
-          
+          <a href="../../../../index.html" class="icon icon-home">
+            odl
           </a>
-
-          
-            
-            
               <div class="version">
                 1.0.0.dev0
               </div>
-            
-          
-
-          
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../../../../search.html" method="get">
-    <input type="text" name="q" placeholder="Search docs" />
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
     <input type="hidden" name="check_keywords" value="yes" />
     <input type="hidden" name="area" value="default" />
   </form>
 </div>
-
-          
-        </div>
-
-        
-        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
-          
-            
-            
-              
-            
-            
-              <p class="caption"><span class="caption-text">Getting Started</span></p>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Getting Started</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../../../../getting_started/getting_started.html">Getting Started</a></li>
 </ul>
-<p class="caption"><span class="caption-text">Working with ODL</span></p>
+<p class="caption" role="heading"><span class="caption-text">Working with ODL</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="../../../../guide/guide.html">User’s guide – selected topics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../guide/guide.html">User's guide -- selected topics</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../math/math.html">Mathematical Background</a></li>
 </ul>
-<p class="caption"><span class="caption-text">Developer zone</span></p>
+<p class="caption" role="heading"><span class="caption-text">Developer zone</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../../../../dev/dev.html">Contributing to ODL</a></li>
 </ul>
-<p class="caption"><span class="caption-text">Useful facts</span></p>
+<p class="caption" role="heading"><span class="caption-text">Useful facts</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../../../../guide/faq.html">Frequently asked questions</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../guide/glossary.html">Glossary</a></li>
@@ -109,74 +65,35 @@
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../../../../refs.html">References</a></li>
 </ul>
-<p class="caption"><span class="caption-text">API Reference</span></p>
+<p class="caption" role="heading"><span class="caption-text">API Reference</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../../../../odl.html">odl</a></li>
 </ul>
 
-            
-          
         </div>
-        
       </div>
     </nav>
 
-    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
-
-      
-      <nav class="wy-nav-top" aria-label="top navigation">
-        
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
           <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
           <a href="../../../../index.html">odl</a>
-        
       </nav>
 
-
       <div class="wy-nav-content">
-        
         <div class="rst-content">
-        
-          
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-<div role="navigation" aria-label="breadcrumbs navigation">
-
+          <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
-    
-      <li><a href="../../../../index.html" class="icon icon-home"></a> &raquo;</li>
-        
-          <li><a href="../../../index.html">Module code</a> &raquo;</li>
-        
-      <li>odl.tomo.analytic.filtered_back_projection</li>
-    
-    
+      <li><a href="../../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">odl.tomo.analytic.filtered_back_projection</li>
       <li class="wy-breadcrumbs-aside">
-        
       </li>
-    
   </ul>
-
-  
   <hr/>
 </div>
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
-            
+             
   <h1>Source code for odl.tomo.analytic.filtered_back_projection</h1><div class="highlight"><pre>
 <span></span><span class="c1"># coding: utf-8</span>
 <span class="c1"># Copyright 2014-2019 The ODL contributors</span>
@@ -199,7 +116,7 @@
 
 
 <span class="k">def</span> <span class="nf">_axis_in_detector</span><span class="p">(</span><span class="n">geometry</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;A vector in the detector plane that points along the rotation axis.&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;A vector in the detector plane that points along the rotation axis.&quot;&quot;&quot;</span>
     <span class="n">du</span><span class="p">,</span> <span class="n">dv</span> <span class="o">=</span> <span class="n">geometry</span><span class="o">.</span><span class="n">det_axes_init</span>
     <span class="n">axis</span> <span class="o">=</span> <span class="n">geometry</span><span class="o">.</span><span class="n">axis</span>
     <span class="n">c</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">np</span><span class="o">.</span><span class="n">vdot</span><span class="p">(</span><span class="n">axis</span><span class="p">,</span> <span class="n">du</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">vdot</span><span class="p">(</span><span class="n">axis</span><span class="p">,</span> <span class="n">dv</span><span class="p">)])</span>
@@ -212,7 +129,7 @@
 
 
 <span class="k">def</span> <span class="nf">_rotation_direction_in_detector</span><span class="p">(</span><span class="n">geometry</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;A vector in the detector plane that points in the rotation direction.&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;A vector in the detector plane that points in the rotation direction.&quot;&quot;&quot;</span>
     <span class="n">du</span><span class="p">,</span> <span class="n">dv</span> <span class="o">=</span> <span class="n">geometry</span><span class="o">.</span><span class="n">det_axes_init</span>
     <span class="n">axis</span> <span class="o">=</span> <span class="n">geometry</span><span class="o">.</span><span class="n">axis</span>
     <span class="n">det_normal</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">cross</span><span class="p">(</span><span class="n">dv</span><span class="p">,</span> <span class="n">du</span><span class="p">)</span>
@@ -227,7 +144,7 @@
 
 
 <span class="k">def</span> <span class="nf">_fbp_filter</span><span class="p">(</span><span class="n">norm_freq</span><span class="p">,</span> <span class="n">filter_type</span><span class="p">,</span> <span class="n">frequency_scaling</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Create a smoothing filter for FBP.</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Create a smoothing filter for FBP.</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
@@ -258,7 +175,7 @@
 <span class="sd">    ...                    frequency_scaling=0.8)</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">filter_type</span><span class="p">,</span> <span class="n">filter_type_in</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">filter_type</span><span class="p">)</span><span class="o">.</span><span class="n">lower</span><span class="p">(),</span> <span class="n">filter_type</span>
-    <span class="k">if</span> <span class="n">callable</span><span class="p">(</span><span class="n">filter_type</span><span class="p">):</span>
+    <span class="k">if</span> <span class="nb">callable</span><span class="p">(</span><span class="n">filter_type</span><span class="p">):</span>
         <span class="n">filt</span> <span class="o">=</span> <span class="n">filter_type</span><span class="p">(</span><span class="n">norm_freq</span><span class="p">)</span>
     <span class="k">elif</span> <span class="n">filter_type</span> <span class="o">==</span> <span class="s1">&#39;ram-lak&#39;</span><span class="p">:</span>
         <span class="n">filt</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="n">norm_freq</span><span class="p">)</span>
@@ -281,8 +198,10 @@
     <span class="k">return</span> <span class="n">filt</span>
 
 
-<div class="viewcode-block" id="tam_danielson_window"><a class="viewcode-back" href="../../../../generated/odl.tomo.analytic.filtered_back_projection.tam_danielson_window.html#odl.tomo.analytic.filtered_back_projection.tam_danielson_window">[docs]</a><span class="k">def</span> <span class="nf">tam_danielson_window</span><span class="p">(</span><span class="n">ray_trafo</span><span class="p">,</span> <span class="n">smoothing_width</span><span class="o">=</span><span class="mf">0.05</span><span class="p">,</span> <span class="n">n_pi</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Create Tam-Danielson window from a `RayTransform`.</span>
+<div class="viewcode-block" id="tam_danielson_window">
+<a class="viewcode-back" href="../../../../generated/odl.tomo.analytic.filtered_back_projection.tam_danielson_window.html#odl.tomo.analytic.filtered_back_projection.tam_danielson_window">[docs]</a>
+<span class="k">def</span> <span class="nf">tam_danielson_window</span><span class="p">(</span><span class="n">ray_trafo</span><span class="p">,</span> <span class="n">smoothing_width</span><span class="o">=</span><span class="mf">0.05</span><span class="p">,</span> <span class="n">n_pi</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Create Tam-Danielson window from a `RayTransform`.</span>
 
 <span class="sd">    The Tam-Danielson window is an indicator function on the minimal set of</span>
 <span class="sd">    data needed to reconstruct a volume from given data. It is useful in</span>
@@ -388,8 +307,11 @@
     <span class="k">return</span> <span class="n">ray_trafo</span><span class="o">.</span><span class="n">range</span><span class="o">.</span><span class="n">element</span><span class="p">(</span><span class="n">window_fcn</span><span class="p">)</span> <span class="o">/</span> <span class="n">n_pi</span></div>
 
 
-<div class="viewcode-block" id="parker_weighting"><a class="viewcode-back" href="../../../../generated/odl.tomo.analytic.filtered_back_projection.parker_weighting.html#odl.tomo.analytic.filtered_back_projection.parker_weighting">[docs]</a><span class="k">def</span> <span class="nf">parker_weighting</span><span class="p">(</span><span class="n">ray_trafo</span><span class="p">,</span> <span class="n">q</span><span class="o">=</span><span class="mf">0.25</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Create parker weighting for a `RayTransform`.</span>
+
+<div class="viewcode-block" id="parker_weighting">
+<a class="viewcode-back" href="../../../../generated/odl.tomo.analytic.filtered_back_projection.parker_weighting.html#odl.tomo.analytic.filtered_back_projection.parker_weighting">[docs]</a>
+<span class="k">def</span> <span class="nf">parker_weighting</span><span class="p">(</span><span class="n">ray_trafo</span><span class="p">,</span> <span class="n">q</span><span class="o">=</span><span class="mf">0.25</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Create parker weighting for a `RayTransform`.</span>
 
 <span class="sd">    Parker weighting is a weighting function that ensures that oversampled</span>
 <span class="sd">    fan/cone beam data are weighted such that each line has unit weight. It is</span>
@@ -490,9 +412,12 @@
         <span class="n">np</span><span class="o">.</span><span class="n">broadcast_to</span><span class="p">(</span><span class="n">S_sum</span> <span class="o">*</span> <span class="n">scale</span><span class="p">,</span> <span class="n">ray_trafo</span><span class="o">.</span><span class="n">range</span><span class="o">.</span><span class="n">shape</span><span class="p">))</span></div>
 
 
-<div class="viewcode-block" id="fbp_filter_op"><a class="viewcode-back" href="../../../../generated/odl.tomo.analytic.filtered_back_projection.fbp_filter_op.html#odl.tomo.analytic.filtered_back_projection.fbp_filter_op">[docs]</a><span class="k">def</span> <span class="nf">fbp_filter_op</span><span class="p">(</span><span class="n">ray_trafo</span><span class="p">,</span> <span class="n">padding</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">filter_type</span><span class="o">=</span><span class="s1">&#39;Ram-Lak&#39;</span><span class="p">,</span>
+
+<div class="viewcode-block" id="fbp_filter_op">
+<a class="viewcode-back" href="../../../../generated/odl.tomo.analytic.filtered_back_projection.fbp_filter_op.html#odl.tomo.analytic.filtered_back_projection.fbp_filter_op">[docs]</a>
+<span class="k">def</span> <span class="nf">fbp_filter_op</span><span class="p">(</span><span class="n">ray_trafo</span><span class="p">,</span> <span class="n">padding</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">filter_type</span><span class="o">=</span><span class="s1">&#39;Ram-Lak&#39;</span><span class="p">,</span>
                   <span class="n">frequency_scaling</span><span class="o">=</span><span class="mf">1.0</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Create a filter operator for FBP from a `RayTransform`.</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Create a filter operator for FBP from a `RayTransform`.</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
@@ -654,9 +579,12 @@
     <span class="k">return</span> <span class="n">fourier</span><span class="o">.</span><span class="n">inverse</span> <span class="o">*</span> <span class="n">ramp_function</span> <span class="o">*</span> <span class="n">fourier</span></div>
 
 
-<div class="viewcode-block" id="fbp_op"><a class="viewcode-back" href="../../../../generated/odl.tomo.analytic.filtered_back_projection.fbp_op.html#odl.tomo.analytic.filtered_back_projection.fbp_op">[docs]</a><span class="k">def</span> <span class="nf">fbp_op</span><span class="p">(</span><span class="n">ray_trafo</span><span class="p">,</span> <span class="n">padding</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">filter_type</span><span class="o">=</span><span class="s1">&#39;Ram-Lak&#39;</span><span class="p">,</span>
+
+<div class="viewcode-block" id="fbp_op">
+<a class="viewcode-back" href="../../../../generated/odl.tomo.analytic.filtered_back_projection.fbp_op.html#odl.tomo.analytic.filtered_back_projection.fbp_op">[docs]</a>
+<span class="k">def</span> <span class="nf">fbp_op</span><span class="p">(</span><span class="n">ray_trafo</span><span class="p">,</span> <span class="n">padding</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">filter_type</span><span class="o">=</span><span class="s1">&#39;Ram-Lak&#39;</span><span class="p">,</span>
            <span class="n">frequency_scaling</span><span class="o">=</span><span class="mf">1.0</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Create filtered back-projection operator from a `RayTransform`.</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Create filtered back-projection operator from a `RayTransform`.</span>
 
 <span class="sd">    The filtered back-projection is an approximate inverse to the ray</span>
 <span class="sd">    transform.</span>
@@ -715,6 +643,7 @@
                                              <span class="n">frequency_scaling</span><span class="p">)</span></div>
 
 
+
 <span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s1">&#39;__main__&#39;</span><span class="p">:</span>
     <span class="kn">import</span> <span class="nn">odl</span>
     <span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
@@ -764,46 +693,30 @@
 </pre></div>
 
            </div>
-           
           </div>
           <footer>
 
   <hr/>
 
   <div role="contentinfo">
-    <p>
-        &#169; Copyright 2014-2020 The ODL Contributors.
-
-    </p>
+    <p>&#169; Copyright 2014-2020 The ODL Contributors.</p>
   </div>
-    
-    
-    
-    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
-    
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
     <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
-    
-    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
 
 </footer>
         </div>
       </div>
-
     </section>
-
   </div>
-  
-
-  <script type="text/javascript">
+  <script>
       jQuery(function () {
           SphinxRtdTheme.Navigation.enable(true);
       });
-  </script>
-
-  
-  
-    
-   
+  </script> 
 
 </body>
 </html>

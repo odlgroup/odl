@@ -20,7 +20,7 @@ Instructions for the impatient:
 
   .. code-block:: bash
 
-    $ conda create -c odlgroup -n odl-py35 python=3.5 odl matplotlib pytest scikit-image spyder
+    $ conda create -n odl-py310 python=3.10 conda-forge::odl matplotlib pytest scikit-image spyder
 
 - Activate the conda enviroment and start working!
 
@@ -54,9 +54,9 @@ This is a very convenient way to have several "ecosystems" of Python packages in
 
 .. code-block:: bash
 
-    $ conda create --name odl-py35 python=3.5
+    $ conda create --name odl-py310 python=3.10
 
-Enter the newly created conda environment by running ``source activate odl-py35`` (Linux/MacOS) or ``activate odl-py35`` (Windows).
+Enter the newly created conda environment by running ``source activate odl-py310`` (Linux/MacOS) or ``activate odl-py310`` (Windows).
 If you want to exit later on, run ``source deactivate`` (Linux/MacOS) or ``deactivate`` (Windows), respectively.
 See the `Managing conda environments`_ documentation for further information.
 
@@ -72,7 +72,7 @@ See the `Managing conda environments`_ documentation for further information.
     To do this, open Spyder and use the navigation bar to open "Tools -> Preferences".
     Click on "Python interpreter" and change the first setting "Select the Python interpreter for all Spyder consoles" from the default setting to "Use the following Python interpreter:".
     In the text field, fill in the path to the Python executable in your newly created conda environment.
-    For example, if you installed Miniconda (or Anaconda) in ``C:\Programs\Miniconda3``, then the environment's Python interpreter is ``C:\Programs\Miniconda3\envs\odl-py35\bin\python.exe``.
+    For example, if you installed Miniconda (or Anaconda) in ``C:\Programs\Miniconda3``, then the environment's Python interpreter is ``C:\Programs\Miniconda3\envs\odl-py310\bin\python.exe``.
     You can use the file system browser (symbol to the right of the text field) to find the interpreter on your system.
 
 
@@ -82,16 +82,20 @@ Install ODL and all its (minimal) dependencies in a ``conda`` environment of you
 
 .. code-block:: bash
 
-    $ conda install -c odlgroup odl
+    $ conda install -c conda-forge odl
 
 .. note::
-    To skip the ``-c odlgroup`` option in the future, you can permanently add the ``odlgroup`` conda channel (see `Managing conda channels`_):
+    To skip the ``-c conda-forge`` option in the future, you can permanently add the ``conda-forge`` conda channel (see `Managing conda channels`_):
 
     .. code-block:: bash
 
-        $ conda config --append channels odlgroup
+        $ conda config --append channels conda-forge
 
     After that, ``conda install odl`` and ``conda update odl`` work without the ``-c`` option.
+
+    Alternatively, you can always directly refer to the conda-forge version of odl by writing
+
+    $ conda install conda-forge::odl
 
 
 .. _installing_odl_conda__extensions:

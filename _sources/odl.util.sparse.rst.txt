@@ -1,0 +1,19 @@
+sparse
+======
+
+
+Sparse matrix representation for creating product space operators.
+
+
+.. currentmodule:: odl.util.sparse
+
+
+
+.. rubric:: Classes
+
+.. autosummary::
+   :toctree: generated/
+
+   ~odl.util.sparse.COOMatrix
+
+

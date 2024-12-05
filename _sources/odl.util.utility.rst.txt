@@ -27,7 +27,6 @@ Utilities mainly for internal use.
    ~odl.util.utility.nd_iterator
    ~odl.util.utility.npy_printoptions
    ~odl.util.utility.npy_random_seed
-   ~odl.util.utility.nullcontext
    ~odl.util.utility.pkg_supports
    ~odl.util.utility.real_dtype
    ~odl.util.utility.repr_string

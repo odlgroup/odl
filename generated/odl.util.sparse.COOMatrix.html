@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="english" data-content_root="../">
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>COOMatrix &mdash; odl 0.8.1 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b76e3c8a" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=19f00094" />
+      <link rel="stylesheet" type="text/css" href="../_static/custom.css?v=d6003e95" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../_static/documentation_options.js?v=51bb0171"></script>
+        <script src="../_static/doctools.js?v=9a2dae69"></script>
+        <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="testutils" href="../odl.util.testutils.html" />
+    <link rel="prev" title="sparse" href="../odl.util.sparse.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            odl
+          </a>
+              <div class="version">
+                0.8.1
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Getting Started</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../getting_started/getting_started.html">Getting Started</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Working with ODL</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../guide/guide.html">User's guide -- selected topics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../math/math.html">Mathematical Background</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Developer zone</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../dev/dev.html">Contributing to ODL</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Useful facts</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../guide/faq.html">Frequently asked questions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../guide/glossary.html">Glossary</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../release_notes.html">Release Notes</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../refs.html">References</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">API Reference</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../odl.html">odl</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../odl.contrib.html">contrib</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../odl.deform.html">deform</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../odl.diagnostics.html">diagnostics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../odl.discr.html">discr</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../odl.operator.html">operator</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../odl.phantom.html">phantom</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../odl.set.html">set</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../odl.solvers.html">solvers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../odl.space.html">space</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../odl.tomo.html">tomo</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../odl.trafos.html">trafos</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../odl.ufunc_ops.html">ufunc_ops</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="../odl.util.html">util</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="../odl.util.graphics.html">graphics</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../odl.util.normalize.html">normalize</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../odl.util.npy_compat.html">npy_compat</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../odl.util.numerics.html">numerics</a></li>
+<li class="toctree-l3 current"><a class="reference internal" href="../odl.util.sparse.html">sparse</a><ul class="current">
+<li class="toctree-l4 current"><a class="current reference internal" href="#">COOMatrix</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../odl.util.testutils.html">testutils</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../odl.util.ufuncs.html">ufuncs</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../odl.util.utility.html">utility</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../odl.util.vectorization.html">vectorization</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">odl</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../odl.html">odl</a></li>
+          <li class="breadcrumb-item"><a href="../odl.util.html">util</a></li>
+          <li class="breadcrumb-item"><a href="../odl.util.sparse.html">sparse</a></li>
+      <li class="breadcrumb-item active">COOMatrix</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/generated/odl.util.sparse.COOMatrix.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="coomatrix">
+<h1>COOMatrix<a class="headerlink" href="#coomatrix" title="Link to this heading">¶</a></h1>
+<dl class="py class">
+<dt class="sig sig-object py" id="odl.util.sparse.COOMatrix">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">odl.util.sparse.</span></span><span class="sig-name descname"><span class="pre">COOMatrix</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">index</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">shape</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/odl/util/sparse.html#COOMatrix"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#odl.util.sparse.COOMatrix" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.13)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
+<p>Custom coo matrix representation for creating product space operators.</p>
+<p>The columns, rows and data are stored in separate lists such that
+A[i[k], j[k]] = data[k].</p>
+<p>Note that, the class is only used as a container and does not provide
+any matrix operations. Further, no checks are performed on the data thus
+duplicate and out-of-order indices are allowed and the user is responsible
+for ensuring the correct shape of the matrix.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Attributes<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><a class="reference internal" href="odl.util.sparse.COOMatrix.col.html#odl.util.sparse.COOMatrix.col" title="odl.util.sparse.COOMatrix.col"><code class="xref py py-obj docutils literal notranslate"><span class="pre">col</span></code></a></dt><dd><p>Return the column indices of the matrix.</p>
+</dd>
+<dt><a class="reference internal" href="odl.util.sparse.COOMatrix.data.html#odl.util.sparse.COOMatrix.data" title="odl.util.sparse.COOMatrix.data"><code class="xref py py-obj docutils literal notranslate"><span class="pre">data</span></code></a></dt><dd><p>Return the data of the matrix.</p>
+</dd>
+<dt><a class="reference internal" href="odl.util.sparse.COOMatrix.row.html#odl.util.sparse.COOMatrix.row" title="odl.util.sparse.COOMatrix.row"><code class="xref py py-obj docutils literal notranslate"><span class="pre">row</span></code></a></dt><dd><p>Return the row indices of the matrix.</p>
+</dd>
+<dt><a class="reference internal" href="odl.util.sparse.COOMatrix.shape.html#odl.util.sparse.COOMatrix.shape" title="odl.util.sparse.COOMatrix.shape"><code class="xref py py-obj docutils literal notranslate"><span class="pre">shape</span></code></a></dt><dd><p>Return the shape of the matrix.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="odl.util.sparse.COOMatrix.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">index</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">shape</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/odl/util/sparse.html#COOMatrix.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#odl.util.sparse.COOMatrix.__init__" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="../odl.util.sparse.html" class="btn btn-neutral float-left" title="sparse" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="../odl.util.testutils.html" class="btn btn-neutral float-right" title="testutils" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2014-2020 The ODL Contributors.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

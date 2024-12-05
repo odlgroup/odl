@@ -1,106 +1,62 @@
-
-
 <!DOCTYPE html>
-<html class="writer-html5" lang="en" >
+<html class="writer-html5" lang="english" data-content_root="../../../../">
 <head>
   <meta charset="utf-8" />
-  
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  
   <title>odl.tomo.backends.astra_setup &mdash; odl 1.0.0.dev0 documentation</title>
-  
-
-  
-  <link rel="stylesheet" href="../../../../_static/css/theme.css" type="text/css" />
-  <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
-  <link rel="stylesheet" href="../../../../_static/custom.css" type="text/css" />
-
-  
-  
-
-  
-  
-
-  
+      <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=b76e3c8a" />
+      <link rel="stylesheet" type="text/css" href="../../../../_static/css/theme.css?v=19f00094" />
+      <link rel="stylesheet" type="text/css" href="../../../../_static/custom.css?v=d6003e95" />
 
   
   <!--[if lt IE 9]>
     <script src="../../../../_static/js/html5shiv.min.js"></script>
   <![endif]-->
   
-    
-      <script type="text/javascript" id="documentation_options" data-url_root="../../../../" src="../../../../_static/documentation_options.js"></script>
-        <script src="../../../../_static/jquery.js"></script>
-        <script src="../../../../_static/underscore.js"></script>
-        <script src="../../../../_static/doctools.js"></script>
-    
-    <script type="text/javascript" src="../../../../_static/js/theme.js"></script>
-
-    
+        <script src="../../../../_static/documentation_options.js?v=293a974f"></script>
+        <script src="../../../../_static/doctools.js?v=9a2dae69"></script>
+        <script src="../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../../../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../../../../genindex.html" />
     <link rel="search" title="Search" href="../../../../search.html" /> 
 </head>
 
-<body class="wy-body-for-nav">
-
-   
+<body class="wy-body-for-nav"> 
   <div class="wy-grid-for-nav">
-    
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
         <div class="wy-side-nav-search" >
-          
 
           
-            <a href="../../../../index.html" class="icon icon-home"> odl
           
-
-          
+          <a href="../../../../index.html" class="icon icon-home">
+            odl
           </a>
-
-          
-            
-            
               <div class="version">
                 1.0.0.dev0
               </div>
-            
-          
-
-          
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../../../../search.html" method="get">
-    <input type="text" name="q" placeholder="Search docs" />
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
     <input type="hidden" name="check_keywords" value="yes" />
     <input type="hidden" name="area" value="default" />
   </form>
 </div>
-
-          
-        </div>
-
-        
-        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
-          
-            
-            
-              
-            
-            
-              <p class="caption"><span class="caption-text">Getting Started</span></p>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Getting Started</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../../../../getting_started/getting_started.html">Getting Started</a></li>
 </ul>
-<p class="caption"><span class="caption-text">Working with ODL</span></p>
+<p class="caption" role="heading"><span class="caption-text">Working with ODL</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="../../../../guide/guide.html">User’s guide – selected topics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../guide/guide.html">User's guide -- selected topics</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../math/math.html">Mathematical Background</a></li>
 </ul>
-<p class="caption"><span class="caption-text">Developer zone</span></p>
+<p class="caption" role="heading"><span class="caption-text">Developer zone</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../../../../dev/dev.html">Contributing to ODL</a></li>
 </ul>
-<p class="caption"><span class="caption-text">Useful facts</span></p>
+<p class="caption" role="heading"><span class="caption-text">Useful facts</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../../../../guide/faq.html">Frequently asked questions</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../guide/glossary.html">Glossary</a></li>
@@ -109,74 +65,35 @@
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../../../../refs.html">References</a></li>
 </ul>
-<p class="caption"><span class="caption-text">API Reference</span></p>
+<p class="caption" role="heading"><span class="caption-text">API Reference</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../../../../odl.html">odl</a></li>
 </ul>
 
-            
-          
         </div>
-        
       </div>
     </nav>
 
-    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
-
-      
-      <nav class="wy-nav-top" aria-label="top navigation">
-        
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
           <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
           <a href="../../../../index.html">odl</a>
-        
       </nav>
 
-
       <div class="wy-nav-content">
-        
         <div class="rst-content">
-        
-          
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-<div role="navigation" aria-label="breadcrumbs navigation">
-
+          <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
-    
-      <li><a href="../../../../index.html" class="icon icon-home"></a> &raquo;</li>
-        
-          <li><a href="../../../index.html">Module code</a> &raquo;</li>
-        
-      <li>odl.tomo.backends.astra_setup</li>
-    
-    
+      <li><a href="../../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">odl.tomo.backends.astra_setup</li>
       <li class="wy-breadcrumbs-aside">
-        
       </li>
-    
   </ul>
-
-  
   <hr/>
 </div>
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
-            
+             
   <h1>Source code for odl.tomo.backends.astra_setup</h1><div class="highlight"><pre>
 <span></span><span class="c1"># Copyright 2014-2020 The ODL contributors</span>
 <span class="c1">#</span>
@@ -306,8 +223,10 @@
 <span class="p">}</span>
 
 
-<div class="viewcode-block" id="astra_supports"><a class="viewcode-back" href="../../../../generated/odl.tomo.backends.astra_setup.astra_supports.html#odl.tomo.backends.astra_setup.astra_supports">[docs]</a><span class="k">def</span> <span class="nf">astra_supports</span><span class="p">(</span><span class="n">feature</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Return bool indicating whether current ASTRA supports ``feature``.</span>
+<div class="viewcode-block" id="astra_supports">
+<a class="viewcode-back" href="../../../../generated/odl.tomo.backends.astra_setup.astra_supports.html#odl.tomo.backends.astra_setup.astra_supports">[docs]</a>
+<span class="k">def</span> <span class="nf">astra_supports</span><span class="p">(</span><span class="n">feature</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Return bool indicating whether current ASTRA supports ``feature``.</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
@@ -325,8 +244,11 @@
     <span class="k">return</span> <span class="n">pkg_supports</span><span class="p">(</span><span class="n">feature</span><span class="p">,</span> <span class="n">ASTRA_VERSION</span><span class="p">,</span> <span class="n">ASTRA_FEATURES</span><span class="p">)</span></div>
 
 
-<div class="viewcode-block" id="astra_versions_supporting"><a class="viewcode-back" href="../../../../generated/odl.tomo.backends.astra_setup.astra_versions_supporting.html#odl.tomo.backends.astra_setup.astra_versions_supporting">[docs]</a><span class="k">def</span> <span class="nf">astra_versions_supporting</span><span class="p">(</span><span class="n">feature</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Return version spec for support of the given feature.</span>
+
+<div class="viewcode-block" id="astra_versions_supporting">
+<a class="viewcode-back" href="../../../../generated/odl.tomo.backends.astra_setup.astra_versions_supporting.html#odl.tomo.backends.astra_setup.astra_versions_supporting">[docs]</a>
+<span class="k">def</span> <span class="nf">astra_versions_supporting</span><span class="p">(</span><span class="n">feature</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Return version spec for support of the given feature.</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
@@ -346,8 +268,11 @@
         <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;unknown feature </span><span class="si">{!r}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">feature</span><span class="p">))</span></div>
 
 
-<div class="viewcode-block" id="astra_volume_geometry"><a class="viewcode-back" href="../../../../generated/odl.tomo.backends.astra_setup.astra_volume_geometry.html#odl.tomo.backends.astra_setup.astra_volume_geometry">[docs]</a><span class="k">def</span> <span class="nf">astra_volume_geometry</span><span class="p">(</span><span class="n">vol_space</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Create an ASTRA volume geometry from the discretized domain.</span>
+
+<div class="viewcode-block" id="astra_volume_geometry">
+<a class="viewcode-back" href="../../../../generated/odl.tomo.backends.astra_setup.astra_volume_geometry.html#odl.tomo.backends.astra_setup.astra_volume_geometry">[docs]</a>
+<span class="k">def</span> <span class="nf">astra_volume_geometry</span><span class="p">(</span><span class="n">vol_space</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Create an ASTRA volume geometry from the discretized domain.</span>
 
 <span class="sd">    From the ASTRA documentation:</span>
 
@@ -451,8 +376,11 @@
     <span class="k">return</span> <span class="n">vol_geom</span></div>
 
 
-<div class="viewcode-block" id="astra_conebeam_3d_geom_to_vec"><a class="viewcode-back" href="../../../../generated/odl.tomo.backends.astra_setup.astra_conebeam_3d_geom_to_vec.html#odl.tomo.backends.astra_setup.astra_conebeam_3d_geom_to_vec">[docs]</a><span class="k">def</span> <span class="nf">astra_conebeam_3d_geom_to_vec</span><span class="p">(</span><span class="n">geometry</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Create vectors for ASTRA projection geometries from ODL geometry.</span>
+
+<div class="viewcode-block" id="astra_conebeam_3d_geom_to_vec">
+<a class="viewcode-back" href="../../../../generated/odl.tomo.backends.astra_setup.astra_conebeam_3d_geom_to_vec.html#odl.tomo.backends.astra_setup.astra_conebeam_3d_geom_to_vec">[docs]</a>
+<span class="k">def</span> <span class="nf">astra_conebeam_3d_geom_to_vec</span><span class="p">(</span><span class="n">geometry</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Create vectors for ASTRA projection geometries from ODL geometry.</span>
 
 <span class="sd">    The 3D vectors are used to create an ASTRA projection geometry for</span>
 <span class="sd">    cone beam geometries, see ``&#39;cone_vec&#39;`` in the</span>
@@ -519,8 +447,11 @@
     <span class="k">return</span> <span class="n">vectors</span></div>
 
 
-<div class="viewcode-block" id="astra_conebeam_2d_geom_to_vec"><a class="viewcode-back" href="../../../../generated/odl.tomo.backends.astra_setup.astra_conebeam_2d_geom_to_vec.html#odl.tomo.backends.astra_setup.astra_conebeam_2d_geom_to_vec">[docs]</a><span class="k">def</span> <span class="nf">astra_conebeam_2d_geom_to_vec</span><span class="p">(</span><span class="n">geometry</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Create vectors for ASTRA projection geometries from ODL geometry.</span>
+
+<div class="viewcode-block" id="astra_conebeam_2d_geom_to_vec">
+<a class="viewcode-back" href="../../../../generated/odl.tomo.backends.astra_setup.astra_conebeam_2d_geom_to_vec.html#odl.tomo.backends.astra_setup.astra_conebeam_2d_geom_to_vec">[docs]</a>
+<span class="k">def</span> <span class="nf">astra_conebeam_2d_geom_to_vec</span><span class="p">(</span><span class="n">geometry</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Create vectors for ASTRA projection geometries from ODL geometry.</span>
 
 <span class="sd">    The 2D vectors are used to create an ASTRA projection geometry for</span>
 <span class="sd">    fan beam geometries, see ``&#39;fanflat_vec&#39;`` in the</span>
@@ -578,8 +509,11 @@
     <span class="k">return</span> <span class="n">vectors</span></div>
 
 
-<div class="viewcode-block" id="astra_parallel_3d_geom_to_vec"><a class="viewcode-back" href="../../../../generated/odl.tomo.backends.astra_setup.astra_parallel_3d_geom_to_vec.html#odl.tomo.backends.astra_setup.astra_parallel_3d_geom_to_vec">[docs]</a><span class="k">def</span> <span class="nf">astra_parallel_3d_geom_to_vec</span><span class="p">(</span><span class="n">geometry</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Create vectors for ASTRA projection geometries from ODL geometry.</span>
+
+<div class="viewcode-block" id="astra_parallel_3d_geom_to_vec">
+<a class="viewcode-back" href="../../../../generated/odl.tomo.backends.astra_setup.astra_parallel_3d_geom_to_vec.html#odl.tomo.backends.astra_setup.astra_parallel_3d_geom_to_vec">[docs]</a>
+<span class="k">def</span> <span class="nf">astra_parallel_3d_geom_to_vec</span><span class="p">(</span><span class="n">geometry</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Create vectors for ASTRA projection geometries from ODL geometry.</span>
 
 <span class="sd">    The 3D vectors are used to create an ASTRA projection geometry for</span>
 <span class="sd">    parallel beam geometries, see ``&#39;parallel3d_vec&#39;`` in the</span>
@@ -646,8 +580,11 @@
     <span class="k">return</span> <span class="n">vectors</span></div>
 
 
-<div class="viewcode-block" id="astra_projection_geometry"><a class="viewcode-back" href="../../../../generated/odl.tomo.backends.astra_setup.astra_projection_geometry.html#odl.tomo.backends.astra_setup.astra_projection_geometry">[docs]</a><span class="k">def</span> <span class="nf">astra_projection_geometry</span><span class="p">(</span><span class="n">geometry</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Create an ASTRA projection geometry from an ODL geometry object.</span>
+
+<div class="viewcode-block" id="astra_projection_geometry">
+<a class="viewcode-back" href="../../../../generated/odl.tomo.backends.astra_setup.astra_projection_geometry.html#odl.tomo.backends.astra_setup.astra_projection_geometry">[docs]</a>
+<span class="k">def</span> <span class="nf">astra_projection_geometry</span><span class="p">(</span><span class="n">geometry</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Create an ASTRA projection geometry from an ODL geometry object.</span>
 
 <span class="sd">    As of ASTRA version 1.7, the length values are not required any more to be</span>
 <span class="sd">    rescaled for 3D geometries and non-unit (but isotropic) voxel sizes.</span>
@@ -723,8 +660,11 @@
     <span class="k">return</span> <span class="n">proj_geom</span></div>
 
 
-<div class="viewcode-block" id="astra_data"><a class="viewcode-back" href="../../../../generated/odl.tomo.backends.astra_setup.astra_data.html#odl.tomo.backends.astra_setup.astra_data">[docs]</a><span class="k">def</span> <span class="nf">astra_data</span><span class="p">(</span><span class="n">astra_geom</span><span class="p">,</span> <span class="n">datatype</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">ndim</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">allow_copy</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Create an ASTRA data object.</span>
+
+<div class="viewcode-block" id="astra_data">
+<a class="viewcode-back" href="../../../../generated/odl.tomo.backends.astra_setup.astra_data.html#odl.tomo.backends.astra_setup.astra_data">[docs]</a>
+<span class="k">def</span> <span class="nf">astra_data</span><span class="p">(</span><span class="n">astra_geom</span><span class="p">,</span> <span class="n">datatype</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">ndim</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">allow_copy</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Create an ASTRA data object.</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
@@ -795,8 +735,11 @@
         <span class="k">return</span> <span class="n">create</span><span class="p">(</span><span class="n">astra_dtype_str</span><span class="p">,</span> <span class="n">astra_geom</span><span class="p">)</span></div>
 
 
-<div class="viewcode-block" id="astra_projector"><a class="viewcode-back" href="../../../../generated/odl.tomo.backends.astra_setup.astra_projector.html#odl.tomo.backends.astra_setup.astra_projector">[docs]</a><span class="k">def</span> <span class="nf">astra_projector</span><span class="p">(</span><span class="n">astra_proj_type</span><span class="p">,</span> <span class="n">astra_vol_geom</span><span class="p">,</span> <span class="n">astra_proj_geom</span><span class="p">,</span> <span class="n">ndim</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Create an ASTRA projector configuration dictionary.</span>
+
+<div class="viewcode-block" id="astra_projector">
+<a class="viewcode-back" href="../../../../generated/odl.tomo.backends.astra_setup.astra_projector.html#odl.tomo.backends.astra_setup.astra_projector">[docs]</a>
+<span class="k">def</span> <span class="nf">astra_projector</span><span class="p">(</span><span class="n">astra_proj_type</span><span class="p">,</span> <span class="n">astra_vol_geom</span><span class="p">,</span> <span class="n">astra_proj_geom</span><span class="p">,</span> <span class="n">ndim</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Create an ASTRA projector configuration dictionary.</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
@@ -887,8 +830,11 @@
         <span class="k">return</span> <span class="n">astra</span><span class="o">.</span><span class="n">projector3d</span><span class="o">.</span><span class="n">create</span><span class="p">(</span><span class="n">proj_cfg</span><span class="p">)</span></div>
 
 
-<div class="viewcode-block" id="astra_algorithm"><a class="viewcode-back" href="../../../../generated/odl.tomo.backends.astra_setup.astra_algorithm.html#odl.tomo.backends.astra_setup.astra_algorithm">[docs]</a><span class="k">def</span> <span class="nf">astra_algorithm</span><span class="p">(</span><span class="n">direction</span><span class="p">,</span> <span class="n">ndim</span><span class="p">,</span> <span class="n">vol_id</span><span class="p">,</span> <span class="n">sino_id</span><span class="p">,</span> <span class="n">proj_id</span><span class="p">,</span> <span class="n">impl</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Create an ASTRA algorithm object to run the projector.</span>
+
+<div class="viewcode-block" id="astra_algorithm">
+<a class="viewcode-back" href="../../../../generated/odl.tomo.backends.astra_setup.astra_algorithm.html#odl.tomo.backends.astra_setup.astra_algorithm">[docs]</a>
+<span class="k">def</span> <span class="nf">astra_algorithm</span><span class="p">(</span><span class="n">direction</span><span class="p">,</span> <span class="n">ndim</span><span class="p">,</span> <span class="n">vol_id</span><span class="p">,</span> <span class="n">sino_id</span><span class="p">,</span> <span class="n">proj_id</span><span class="p">,</span> <span class="n">impl</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Create an ASTRA algorithm object to run the projector.</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
@@ -942,52 +888,37 @@
     <span class="k">return</span> <span class="n">astra</span><span class="o">.</span><span class="n">algorithm</span><span class="o">.</span><span class="n">create</span><span class="p">(</span><span class="n">algo_cfg</span><span class="p">)</span></div>
 
 
+
 <span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s1">&#39;__main__&#39;</span><span class="p">:</span>
     <span class="kn">from</span> <span class="nn">odl.util.testutils</span> <span class="kn">import</span> <span class="n">run_doctests</span>
     <span class="n">run_doctests</span><span class="p">()</span>
 </pre></div>
 
            </div>
-           
           </div>
           <footer>
 
   <hr/>
 
   <div role="contentinfo">
-    <p>
-        &#169; Copyright 2014-2020 The ODL Contributors.
-
-    </p>
+    <p>&#169; Copyright 2014-2020 The ODL Contributors.</p>
   </div>
-    
-    
-    
-    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
-    
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
     <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
-    
-    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
 
 </footer>
         </div>
       </div>
-
     </section>
-
   </div>
-  
-
-  <script type="text/javascript">
+  <script>
       jQuery(function () {
           SphinxRtdTheme.Navigation.enable(true);
       });
-  </script>
-
-  
-  
-    
-   
+  </script> 
 
 </body>
 </html>

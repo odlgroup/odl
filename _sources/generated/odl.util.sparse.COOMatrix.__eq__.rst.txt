@@ -1,0 +1,8 @@
+:orphan:
+
+COOMatrix.__eq__
+================================
+
+.. currentmodule:: odl.util.sparse
+
+.. automethod:: COOMatrix.__eq__

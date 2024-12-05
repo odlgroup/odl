@@ -1,106 +1,62 @@
-
-
 <!DOCTYPE html>
-<html class="writer-html5" lang="en" >
+<html class="writer-html5" lang="english" data-content_root="../../../">
 <head>
   <meta charset="utf-8" />
-  
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  
   <title>odl.operator.tensor_ops &mdash; odl 1.0.0.dev0 documentation</title>
-  
-
-  
-  <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
-  <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
-  <link rel="stylesheet" href="../../../_static/custom.css" type="text/css" />
-
-  
-  
-
-  
-  
-
-  
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b76e3c8a" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=19f00094" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/custom.css?v=d6003e95" />
 
   
   <!--[if lt IE 9]>
     <script src="../../../_static/js/html5shiv.min.js"></script>
   <![endif]-->
   
-    
-      <script type="text/javascript" id="documentation_options" data-url_root="../../../" src="../../../_static/documentation_options.js"></script>
-        <script src="../../../_static/jquery.js"></script>
-        <script src="../../../_static/underscore.js"></script>
-        <script src="../../../_static/doctools.js"></script>
-    
-    <script type="text/javascript" src="../../../_static/js/theme.js"></script>
-
-    
+        <script src="../../../_static/documentation_options.js?v=293a974f"></script>
+        <script src="../../../_static/doctools.js?v=9a2dae69"></script>
+        <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../../../genindex.html" />
     <link rel="search" title="Search" href="../../../search.html" /> 
 </head>
 
-<body class="wy-body-for-nav">
-
-   
+<body class="wy-body-for-nav"> 
   <div class="wy-grid-for-nav">
-    
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
         <div class="wy-side-nav-search" >
-          
 
           
-            <a href="../../../index.html" class="icon icon-home"> odl
           
-
-          
+          <a href="../../../index.html" class="icon icon-home">
+            odl
           </a>
-
-          
-            
-            
               <div class="version">
                 1.0.0.dev0
               </div>
-            
-          
-
-          
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
-    <input type="text" name="q" placeholder="Search docs" />
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
     <input type="hidden" name="check_keywords" value="yes" />
     <input type="hidden" name="area" value="default" />
   </form>
 </div>
-
-          
-        </div>
-
-        
-        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
-          
-            
-            
-              
-            
-            
-              <p class="caption"><span class="caption-text">Getting Started</span></p>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Getting Started</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../../../getting_started/getting_started.html">Getting Started</a></li>
 </ul>
-<p class="caption"><span class="caption-text">Working with ODL</span></p>
+<p class="caption" role="heading"><span class="caption-text">Working with ODL</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="../../../guide/guide.html">User’s guide – selected topics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../guide/guide.html">User's guide -- selected topics</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../math/math.html">Mathematical Background</a></li>
 </ul>
-<p class="caption"><span class="caption-text">Developer zone</span></p>
+<p class="caption" role="heading"><span class="caption-text">Developer zone</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../../../dev/dev.html">Contributing to ODL</a></li>
 </ul>
-<p class="caption"><span class="caption-text">Useful facts</span></p>
+<p class="caption" role="heading"><span class="caption-text">Useful facts</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../../../guide/faq.html">Frequently asked questions</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../guide/glossary.html">Glossary</a></li>
@@ -109,74 +65,35 @@
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../../../refs.html">References</a></li>
 </ul>
-<p class="caption"><span class="caption-text">API Reference</span></p>
+<p class="caption" role="heading"><span class="caption-text">API Reference</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../../../odl.html">odl</a></li>
 </ul>
 
-            
-          
         </div>
-        
       </div>
     </nav>
 
-    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
-
-      
-      <nav class="wy-nav-top" aria-label="top navigation">
-        
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
           <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
           <a href="../../../index.html">odl</a>
-        
       </nav>
 
-
       <div class="wy-nav-content">
-        
         <div class="rst-content">
-        
-          
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-<div role="navigation" aria-label="breadcrumbs navigation">
-
+          <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
-    
-      <li><a href="../../../index.html" class="icon icon-home"></a> &raquo;</li>
-        
-          <li><a href="../../index.html">Module code</a> &raquo;</li>
-        
-      <li>odl.operator.tensor_ops</li>
-    
-    
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">odl.operator.tensor_ops</li>
       <li class="wy-breadcrumbs-aside">
-        
       </li>
-    
   </ul>
-
-  
   <hr/>
 </div>
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
-            
+             
   <h1>Source code for odl.operator.tensor_ops</h1><div class="highlight"><pre>
 <span></span><span class="c1"># Copyright 2014-2020 The ODL contributors</span>
 <span class="c1">#</span>
@@ -208,9 +125,11 @@
 <span class="n">_SUPPORTED_DIFF_METHODS</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;central&#39;</span><span class="p">,</span> <span class="s1">&#39;forward&#39;</span><span class="p">,</span> <span class="s1">&#39;backward&#39;</span><span class="p">)</span>
 
 
-<div class="viewcode-block" id="PointwiseTensorFieldOperator"><a class="viewcode-back" href="../../../generated/odl.operator.tensor_ops.PointwiseTensorFieldOperator.html#odl.operator.tensor_ops.PointwiseTensorFieldOperator">[docs]</a><span class="k">class</span> <span class="nc">PointwiseTensorFieldOperator</span><span class="p">(</span><span class="n">Operator</span><span class="p">):</span>
+<div class="viewcode-block" id="PointwiseTensorFieldOperator">
+<a class="viewcode-back" href="../../../generated/odl.operator.tensor_ops.PointwiseTensorFieldOperator.html#odl.operator.tensor_ops.PointwiseTensorFieldOperator">[docs]</a>
+<span class="k">class</span> <span class="nc">PointwiseTensorFieldOperator</span><span class="p">(</span><span class="n">Operator</span><span class="p">):</span>
 
-    <span class="sd">&quot;&quot;&quot;Abstract operator for point-wise tensor field manipulations.</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Abstract operator for point-wise tensor field manipulations.</span>
 
 <span class="sd">    A point-wise operator acts on a space of vector or tensor fields,</span>
 <span class="sd">    i.e. a power space ``X^d`` of a discretized function space ``X``.</span>
@@ -233,8 +152,10 @@
 <span class="sd">    odl.space.pspace.ProductSpace</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-<div class="viewcode-block" id="PointwiseTensorFieldOperator.__init__"><a class="viewcode-back" href="../../../generated/odl.operator.tensor_ops.PointwiseTensorFieldOperator.html#odl.operator.tensor_ops.PointwiseTensorFieldOperator.__init__">[docs]</a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">domain</span><span class="p">,</span> <span class="nb">range</span><span class="p">,</span> <span class="n">base_space</span><span class="p">,</span> <span class="n">linear</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Initialize a new instance.</span>
+<div class="viewcode-block" id="PointwiseTensorFieldOperator.__init__">
+<a class="viewcode-back" href="../../../generated/odl.operator.tensor_ops.PointwiseTensorFieldOperator.html#odl.operator.tensor_ops.PointwiseTensorFieldOperator.__init__">[docs]</a>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">domain</span><span class="p">,</span> <span class="nb">range</span><span class="p">,</span> <span class="n">base_space</span><span class="p">,</span> <span class="n">linear</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Initialize a new instance.</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
@@ -262,15 +183,19 @@
             <span class="n">domain</span><span class="o">=</span><span class="n">domain</span><span class="p">,</span> <span class="nb">range</span><span class="o">=</span><span class="nb">range</span><span class="p">,</span> <span class="n">linear</span><span class="o">=</span><span class="n">linear</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">__base_space</span> <span class="o">=</span> <span class="n">base_space</span></div>
 
+
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">base_space</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Base space ``X`` of this operator&#39;s domain and range.&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Base space ``X`` of this operator&#39;s domain and range.&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__base_space</span></div>
 
 
-<div class="viewcode-block" id="PointwiseNorm"><a class="viewcode-back" href="../../../generated/odl.operator.tensor_ops.PointwiseNorm.html#odl.operator.tensor_ops.PointwiseNorm">[docs]</a><span class="k">class</span> <span class="nc">PointwiseNorm</span><span class="p">(</span><span class="n">PointwiseTensorFieldOperator</span><span class="p">):</span>
 
-    <span class="sd">&quot;&quot;&quot;Take the point-wise norm of a vector field.</span>
+<div class="viewcode-block" id="PointwiseNorm">
+<a class="viewcode-back" href="../../../generated/odl.operator.tensor_ops.PointwiseNorm.html#odl.operator.tensor_ops.PointwiseNorm">[docs]</a>
+<span class="k">class</span> <span class="nc">PointwiseNorm</span><span class="p">(</span><span class="n">PointwiseTensorFieldOperator</span><span class="p">):</span>
+
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Take the point-wise norm of a vector field.</span>
 
 <span class="sd">    This operator computes the (weighted) p-norm in each point of</span>
 <span class="sd">    a vector field, thus producing a scalar-valued function.</span>
@@ -289,8 +214,10 @@
 <span class="sd">    ``d``.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-<div class="viewcode-block" id="PointwiseNorm.__init__"><a class="viewcode-back" href="../../../generated/odl.operator.tensor_ops.PointwiseNorm.html#odl.operator.tensor_ops.PointwiseNorm.__init__">[docs]</a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">vfspace</span><span class="p">,</span> <span class="n">exponent</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">weighting</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Initialize a new instance.</span>
+<div class="viewcode-block" id="PointwiseNorm.__init__">
+<a class="viewcode-back" href="../../../generated/odl.operator.tensor_ops.PointwiseNorm.html#odl.operator.tensor_ops.PointwiseNorm.__init__">[docs]</a>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">vfspace</span><span class="p">,</span> <span class="n">exponent</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">weighting</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Initialize a new instance.</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
@@ -387,23 +314,26 @@
                                  <span class="s1">&#39;entries&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">weighting</span><span class="p">))</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">__is_weighted</span> <span class="o">=</span> <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">array_equiv</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">weights</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">)</span></div>
 
+
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">exponent</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Exponent ``p`` of this norm.&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Exponent ``p`` of this norm.&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_exponent</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">weights</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Weighting array of this operator.&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Weighting array of this operator.&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__weights</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">is_weighted</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;``True`` if weighting is not 1 or all ones.&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;``True`` if weighting is not 1 or all ones.&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__is_weighted</span>
 
-<div class="viewcode-block" id="PointwiseNorm._call"><a class="viewcode-back" href="../../../generated/odl.operator.tensor_ops.PointwiseNorm._call.html#odl.operator.tensor_ops.PointwiseNorm._call">[docs]</a>    <span class="k">def</span> <span class="nf">_call</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">f</span><span class="p">,</span> <span class="n">out</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Implement ``self(f, out)``.&quot;&quot;&quot;</span>
+<div class="viewcode-block" id="PointwiseNorm._call">
+<a class="viewcode-back" href="../../../generated/odl.operator.tensor_ops.PointwiseNorm._call.html#odl.operator.tensor_ops.PointwiseNorm._call">[docs]</a>
+    <span class="k">def</span> <span class="nf">_call</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">f</span><span class="p">,</span> <span class="n">out</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Implement ``self(f, out)``.&quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">exponent</span> <span class="o">==</span> <span class="mf">1.0</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_call_vecfield_1</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">out</span><span class="p">)</span>
         <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">exponent</span> <span class="o">==</span> <span class="nb">float</span><span class="p">(</span><span class="s1">&#39;inf&#39;</span><span class="p">):</span>
@@ -411,8 +341,9 @@
         <span class="k">else</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_call_vecfield_p</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">out</span><span class="p">)</span></div>
 
+
     <span class="k">def</span> <span class="nf">_call_vecfield_1</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">vf</span><span class="p">,</span> <span class="n">out</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Implement ``self(vf, out)`` for exponent 1.&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Implement ``self(vf, out)`` for exponent 1.&quot;&quot;&quot;</span>
         <span class="n">vf</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">ufuncs</span><span class="o">.</span><span class="n">absolute</span><span class="p">(</span><span class="n">out</span><span class="o">=</span><span class="n">out</span><span class="p">)</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_weighted</span><span class="p">:</span>
             <span class="n">out</span> <span class="o">*=</span> <span class="bp">self</span><span class="o">.</span><span class="n">weights</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
@@ -428,7 +359,7 @@
             <span class="n">out</span> <span class="o">+=</span> <span class="n">tmp</span>
 
     <span class="k">def</span> <span class="nf">_call_vecfield_inf</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">vf</span><span class="p">,</span> <span class="n">out</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Implement ``self(vf, out)`` for exponent ``inf``.&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Implement ``self(vf, out)`` for exponent ``inf``.&quot;&quot;&quot;</span>
         <span class="n">vf</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">ufuncs</span><span class="o">.</span><span class="n">absolute</span><span class="p">(</span><span class="n">out</span><span class="o">=</span><span class="n">out</span><span class="p">)</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_weighted</span><span class="p">:</span>
             <span class="n">out</span> <span class="o">*=</span> <span class="bp">self</span><span class="o">.</span><span class="n">weights</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
@@ -444,7 +375,7 @@
             <span class="n">out</span><span class="o">.</span><span class="n">ufuncs</span><span class="o">.</span><span class="n">maximum</span><span class="p">(</span><span class="n">tmp</span><span class="p">,</span> <span class="n">out</span><span class="o">=</span><span class="n">out</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">_call_vecfield_p</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">vf</span><span class="p">,</span> <span class="n">out</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Implement ``self(vf, out)`` for exponent 1 &lt; p &lt; ``inf``.&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Implement ``self(vf, out)`` for exponent 1 &lt; p &lt; ``inf``.&quot;&quot;&quot;</span>
         <span class="c1"># Optimization for 1 component - just absolute value (maybe weighted)</span>
         <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">domain</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
             <span class="n">vf</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">ufuncs</span><span class="o">.</span><span class="n">absolute</span><span class="p">(</span><span class="n">out</span><span class="o">=</span><span class="n">out</span><span class="p">)</span>
@@ -467,7 +398,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_abs_pow_ufunc</span><span class="p">(</span><span class="n">out</span><span class="p">,</span> <span class="n">out</span><span class="o">=</span><span class="n">out</span><span class="p">,</span> <span class="n">p</span><span class="o">=</span><span class="p">(</span><span class="mi">1</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">exponent</span><span class="p">))</span>
 
     <span class="k">def</span> <span class="nf">_abs_pow_ufunc</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fi</span><span class="p">,</span> <span class="n">out</span><span class="p">,</span> <span class="n">p</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Compute |F_i(x)|^p point-wise and write to ``out``.&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Compute |F_i(x)|^p point-wise and write to ``out``.&quot;&quot;&quot;</span>
         <span class="c1"># Optimization for very common cases</span>
         <span class="k">if</span> <span class="n">p</span> <span class="o">==</span> <span class="mf">0.5</span><span class="p">:</span>
             <span class="n">fi</span><span class="o">.</span><span class="n">ufuncs</span><span class="o">.</span><span class="n">absolute</span><span class="p">(</span><span class="n">out</span><span class="o">=</span><span class="n">out</span><span class="p">)</span>
@@ -478,8 +409,10 @@
             <span class="n">fi</span><span class="o">.</span><span class="n">ufuncs</span><span class="o">.</span><span class="n">absolute</span><span class="p">(</span><span class="n">out</span><span class="o">=</span><span class="n">out</span><span class="p">)</span>
             <span class="n">out</span><span class="o">.</span><span class="n">ufuncs</span><span class="o">.</span><span class="n">power</span><span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="n">out</span><span class="o">=</span><span class="n">out</span><span class="p">)</span>
 
-<div class="viewcode-block" id="PointwiseNorm.derivative"><a class="viewcode-back" href="../../../generated/odl.operator.tensor_ops.PointwiseNorm.derivative.html#odl.operator.tensor_ops.PointwiseNorm.derivative">[docs]</a>    <span class="k">def</span> <span class="nf">derivative</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">vf</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Derivative of the point-wise norm operator at ``vf``.</span>
+<div class="viewcode-block" id="PointwiseNorm.derivative">
+<a class="viewcode-back" href="../../../generated/odl.operator.tensor_ops.PointwiseNorm.derivative.html#odl.operator.tensor_ops.PointwiseNorm.derivative">[docs]</a>
+    <span class="k">def</span> <span class="nf">derivative</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">vf</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Derivative of the point-wise norm operator at ``vf``.</span>
 
 <span class="sd">        The derivative at ``F`` of the point-wise norm operator ``N``</span>
 <span class="sd">        with finite exponent ``p`` and weights ``w`` is the pointwise</span>
@@ -534,17 +467,23 @@
                 <span class="c1"># documentation for further details.</span>
                 <span class="n">gi</span> <span class="o">/=</span> <span class="n">vf_pwnorm_fac</span>
 
-        <span class="k">return</span> <span class="n">PointwiseInner</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">domain</span><span class="p">,</span> <span class="n">inner_vf</span><span class="p">,</span> <span class="n">weighting</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">weights</span><span class="p">)</span></div></div>
+        <span class="k">return</span> <span class="n">PointwiseInner</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">domain</span><span class="p">,</span> <span class="n">inner_vf</span><span class="p">,</span> <span class="n">weighting</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">weights</span><span class="p">)</span></div>
+</div>
 
 
-<div class="viewcode-block" id="PointwiseInnerBase"><a class="viewcode-back" href="../../../generated/odl.operator.tensor_ops.PointwiseInnerBase.html#odl.operator.tensor_ops.PointwiseInnerBase">[docs]</a><span class="k">class</span> <span class="nc">PointwiseInnerBase</span><span class="p">(</span><span class="n">PointwiseTensorFieldOperator</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Base class for `PointwiseInner` and `PointwiseInnerAdjoint`.</span>
+
+<div class="viewcode-block" id="PointwiseInnerBase">
+<a class="viewcode-back" href="../../../generated/odl.operator.tensor_ops.PointwiseInnerBase.html#odl.operator.tensor_ops.PointwiseInnerBase">[docs]</a>
+<span class="k">class</span> <span class="nc">PointwiseInnerBase</span><span class="p">(</span><span class="n">PointwiseTensorFieldOperator</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Base class for `PointwiseInner` and `PointwiseInnerAdjoint`.</span>
 
 <span class="sd">    Implemented to allow code reuse between the classes.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-<div class="viewcode-block" id="PointwiseInnerBase.__init__"><a class="viewcode-back" href="../../../generated/odl.operator.tensor_ops.PointwiseInnerBase.html#odl.operator.tensor_ops.PointwiseInnerBase.__init__">[docs]</a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">adjoint</span><span class="p">,</span> <span class="n">vfspace</span><span class="p">,</span> <span class="n">vecfield</span><span class="p">,</span> <span class="n">weighting</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Initialize a new instance.</span>
+<div class="viewcode-block" id="PointwiseInnerBase.__init__">
+<a class="viewcode-back" href="../../../generated/odl.operator.tensor_ops.PointwiseInnerBase.html#odl.operator.tensor_ops.PointwiseInnerBase.__init__">[docs]</a>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">adjoint</span><span class="p">,</span> <span class="n">vfspace</span><span class="p">,</span> <span class="n">vecfield</span><span class="p">,</span> <span class="n">weighting</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Initialize a new instance.</span>
 
 <span class="sd">        All parameters are given according to the specifics of the &quot;usual&quot;</span>
 <span class="sd">        operator. The ``adjoint`` parameter is used to control conversions</span>
@@ -609,30 +548,34 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">__weights</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">weighting</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="s1">&#39;float64&#39;</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">__is_weighted</span> <span class="o">=</span> <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">array_equiv</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">weights</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">)</span></div>
 
+
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">vecfield</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Fixed vector field ``G`` of this inner product.&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Fixed vector field ``G`` of this inner product.&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_vecfield</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">weights</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Weighting array of this operator.&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Weighting array of this operator.&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__weights</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">is_weighted</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;``True`` if weighting is not 1 or all ones.&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;``True`` if weighting is not 1 or all ones.&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__is_weighted</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">adjoint</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Adjoint operator.&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Adjoint operator.&quot;&quot;&quot;</span>
         <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s1">&#39;abstract method&#39;</span><span class="p">)</span></div>
 
 
-<div class="viewcode-block" id="PointwiseInner"><a class="viewcode-back" href="../../../generated/odl.operator.tensor_ops.PointwiseInner.html#odl.operator.tensor_ops.PointwiseInner">[docs]</a><span class="k">class</span> <span class="nc">PointwiseInner</span><span class="p">(</span><span class="n">PointwiseInnerBase</span><span class="p">):</span>
 
-    <span class="sd">&quot;&quot;&quot;Take the point-wise inner product with a given vector field.</span>
+<div class="viewcode-block" id="PointwiseInner">
+<a class="viewcode-back" href="../../../generated/odl.operator.tensor_ops.PointwiseInner.html#odl.operator.tensor_ops.PointwiseInner">[docs]</a>
+<span class="k">class</span> <span class="nc">PointwiseInner</span><span class="p">(</span><span class="n">PointwiseInnerBase</span><span class="p">):</span>
+
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Take the point-wise inner product with a given vector field.</span>
 
 <span class="sd">    This operator takes the (weighted) inner product ::</span>
 
@@ -647,8 +590,10 @@
 <span class="sd">    positive integer ``d``.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-<div class="viewcode-block" id="PointwiseInner.__init__"><a class="viewcode-back" href="../../../generated/odl.operator.tensor_ops.PointwiseInner.html#odl.operator.tensor_ops.PointwiseInner.__init__">[docs]</a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">vfspace</span><span class="p">,</span> <span class="n">vecfield</span><span class="p">,</span> <span class="n">weighting</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Initialize a new instance.</span>
+<div class="viewcode-block" id="PointwiseInner.__init__">
+<a class="viewcode-back" href="../../../generated/odl.operator.tensor_ops.PointwiseInner.html#odl.operator.tensor_ops.PointwiseInner.__init__">[docs]</a>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">vfspace</span><span class="p">,</span> <span class="n">vecfield</span><span class="p">,</span> <span class="n">weighting</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Initialize a new instance.</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
@@ -692,13 +637,16 @@
             <span class="n">adjoint</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">vfspace</span><span class="o">=</span><span class="n">vfspace</span><span class="p">,</span> <span class="n">vecfield</span><span class="o">=</span><span class="n">vecfield</span><span class="p">,</span>
             <span class="n">weighting</span><span class="o">=</span><span class="n">weighting</span><span class="p">)</span></div>
 
+
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">vecfield</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Fixed vector field ``G`` of this inner product.&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Fixed vector field ``G`` of this inner product.&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_vecfield</span>
 
-<div class="viewcode-block" id="PointwiseInner._call"><a class="viewcode-back" href="../../../generated/odl.operator.tensor_ops.PointwiseInner._call.html#odl.operator.tensor_ops.PointwiseInner._call">[docs]</a>    <span class="k">def</span> <span class="nf">_call</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">vf</span><span class="p">,</span> <span class="n">out</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Implement ``self(vf, out)``.&quot;&quot;&quot;</span>
+<div class="viewcode-block" id="PointwiseInner._call">
+<a class="viewcode-back" href="../../../generated/odl.operator.tensor_ops.PointwiseInner._call.html#odl.operator.tensor_ops.PointwiseInner._call">[docs]</a>
+    <span class="k">def</span> <span class="nf">_call</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">vf</span><span class="p">,</span> <span class="n">out</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Implement ``self(vf, out)``.&quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">domain</span><span class="o">.</span><span class="n">field</span> <span class="o">==</span> <span class="n">ComplexNumbers</span><span class="p">():</span>
             <span class="n">vf</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">multiply</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_vecfield</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">conj</span><span class="p">(),</span> <span class="n">out</span><span class="o">=</span><span class="n">out</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
@@ -723,9 +671,10 @@
                 <span class="n">tmp</span> <span class="o">*=</span> <span class="n">wi</span>
             <span class="n">out</span> <span class="o">+=</span> <span class="n">tmp</span></div>
 
+
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">adjoint</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Adjoint of this operator.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Adjoint of this operator.</span>
 
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
@@ -736,9 +685,12 @@
             <span class="n">vfspace</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">domain</span><span class="p">,</span> <span class="n">weighting</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">weights</span><span class="p">)</span></div>
 
 
-<div class="viewcode-block" id="PointwiseInnerAdjoint"><a class="viewcode-back" href="../../../generated/odl.operator.tensor_ops.PointwiseInnerAdjoint.html#odl.operator.tensor_ops.PointwiseInnerAdjoint">[docs]</a><span class="k">class</span> <span class="nc">PointwiseInnerAdjoint</span><span class="p">(</span><span class="n">PointwiseInnerBase</span><span class="p">):</span>
 
-    <span class="sd">&quot;&quot;&quot;Adjoint of the point-wise inner product operator.</span>
+<div class="viewcode-block" id="PointwiseInnerAdjoint">
+<a class="viewcode-back" href="../../../generated/odl.operator.tensor_ops.PointwiseInnerAdjoint.html#odl.operator.tensor_ops.PointwiseInnerAdjoint">[docs]</a>
+<span class="k">class</span> <span class="nc">PointwiseInnerAdjoint</span><span class="p">(</span><span class="n">PointwiseInnerBase</span><span class="p">):</span>
+
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Adjoint of the point-wise inner product operator.</span>
 
 <span class="sd">    The adjoint of the inner product operator is a mapping ::</span>
 
@@ -755,8 +707,10 @@
 <span class="sd">    component-wise.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-<div class="viewcode-block" id="PointwiseInnerAdjoint.__init__"><a class="viewcode-back" href="../../../generated/odl.operator.tensor_ops.PointwiseInnerAdjoint.html#odl.operator.tensor_ops.PointwiseInnerAdjoint.__init__">[docs]</a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">sspace</span><span class="p">,</span> <span class="n">vecfield</span><span class="p">,</span> <span class="n">vfspace</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">weighting</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Initialize a new instance.</span>
+<div class="viewcode-block" id="PointwiseInnerAdjoint.__init__">
+<a class="viewcode-back" href="../../../generated/odl.operator.tensor_ops.PointwiseInnerAdjoint.html#odl.operator.tensor_ops.PointwiseInnerAdjoint.__init__">[docs]</a>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">sspace</span><span class="p">,</span> <span class="n">vecfield</span><span class="p">,</span> <span class="n">vfspace</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">weighting</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Initialize a new instance.</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
@@ -804,17 +758,21 @@
                              <span class="s1">&#39;not define a weighting array or constant&#39;</span>
                              <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">range</span><span class="o">.</span><span class="n">weighting</span><span class="p">))</span></div>
 
-<div class="viewcode-block" id="PointwiseInnerAdjoint._call"><a class="viewcode-back" href="../../../generated/odl.operator.tensor_ops.PointwiseInnerAdjoint._call.html#odl.operator.tensor_ops.PointwiseInnerAdjoint._call">[docs]</a>    <span class="k">def</span> <span class="nf">_call</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">f</span><span class="p">,</span> <span class="n">out</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Implement ``self(vf, out)``.&quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="PointwiseInnerAdjoint._call">
+<a class="viewcode-back" href="../../../generated/odl.operator.tensor_ops.PointwiseInnerAdjoint._call.html#odl.operator.tensor_ops.PointwiseInnerAdjoint._call">[docs]</a>
+    <span class="k">def</span> <span class="nf">_call</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">f</span><span class="p">,</span> <span class="n">out</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Implement ``self(vf, out)``.&quot;&quot;&quot;</span>
         <span class="k">for</span> <span class="n">vfi</span><span class="p">,</span> <span class="n">oi</span><span class="p">,</span> <span class="n">ran_wi</span><span class="p">,</span> <span class="n">dom_wi</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">vecfield</span><span class="p">,</span> <span class="n">out</span><span class="p">,</span>
                                            <span class="bp">self</span><span class="o">.</span><span class="n">__ran_weights</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">weights</span><span class="p">):</span>
             <span class="n">vfi</span><span class="o">.</span><span class="n">multiply</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">out</span><span class="o">=</span><span class="n">oi</span><span class="p">)</span>
             <span class="k">if</span> <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">isclose</span><span class="p">(</span><span class="n">ran_wi</span><span class="p">,</span> <span class="n">dom_wi</span><span class="p">):</span>
                 <span class="n">oi</span> <span class="o">*=</span> <span class="n">dom_wi</span> <span class="o">/</span> <span class="n">ran_wi</span></div>
 
+
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">adjoint</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Adjoint of this operator.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Adjoint of this operator.</span>
 
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
@@ -824,10 +782,13 @@
                               <span class="n">weighting</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">weights</span><span class="p">)</span></div>
 
 
-<span class="c1"># TODO: Make this an optimized operator on its own.</span>
-<div class="viewcode-block" id="PointwiseSum"><a class="viewcode-back" href="../../../generated/odl.operator.tensor_ops.PointwiseSum.html#odl.operator.tensor_ops.PointwiseSum">[docs]</a><span class="k">class</span> <span class="nc">PointwiseSum</span><span class="p">(</span><span class="n">PointwiseInner</span><span class="p">):</span>
 
-    <span class="sd">&quot;&quot;&quot;Take the point-wise sum of a vector field.</span>
+<span class="c1"># TODO: Make this an optimized operator on its own.</span>
+<div class="viewcode-block" id="PointwiseSum">
+<a class="viewcode-back" href="../../../generated/odl.operator.tensor_ops.PointwiseSum.html#odl.operator.tensor_ops.PointwiseSum">[docs]</a>
+<span class="k">class</span> <span class="nc">PointwiseSum</span><span class="p">(</span><span class="n">PointwiseInner</span><span class="p">):</span>
+
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Take the point-wise sum of a vector field.</span>
 
 <span class="sd">    This operator takes the (weighted) sum ::</span>
 
@@ -840,8 +801,10 @@
 <span class="sd">    ``d``.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-<div class="viewcode-block" id="PointwiseSum.__init__"><a class="viewcode-back" href="../../../generated/odl.operator.tensor_ops.PointwiseSum.html#odl.operator.tensor_ops.PointwiseSum.__init__">[docs]</a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">vfspace</span><span class="p">,</span> <span class="n">weighting</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Initialize a new instance.</span>
+<div class="viewcode-block" id="PointwiseSum.__init__">
+<a class="viewcode-back" href="../../../generated/odl.operator.tensor_ops.PointwiseSum.html#odl.operator.tensor_ops.PointwiseSum.__init__">[docs]</a>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">vfspace</span><span class="p">,</span> <span class="n">weighting</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Initialize a new instance.</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
@@ -881,12 +844,16 @@
 
         <span class="n">ones</span> <span class="o">=</span> <span class="n">vfspace</span><span class="o">.</span><span class="n">one</span><span class="p">()</span>
         <span class="nb">super</span><span class="p">(</span><span class="n">PointwiseSum</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span>
-            <span class="n">vfspace</span><span class="p">,</span> <span class="n">vecfield</span><span class="o">=</span><span class="n">ones</span><span class="p">,</span> <span class="n">weighting</span><span class="o">=</span><span class="n">weighting</span><span class="p">)</span></div></div>
+            <span class="n">vfspace</span><span class="p">,</span> <span class="n">vecfield</span><span class="o">=</span><span class="n">ones</span><span class="p">,</span> <span class="n">weighting</span><span class="o">=</span><span class="n">weighting</span><span class="p">)</span></div>
+</div>
 
 
-<div class="viewcode-block" id="MatrixOperator"><a class="viewcode-back" href="../../../generated/odl.operator.tensor_ops.MatrixOperator.html#odl.operator.tensor_ops.MatrixOperator">[docs]</a><span class="k">class</span> <span class="nc">MatrixOperator</span><span class="p">(</span><span class="n">Operator</span><span class="p">):</span>
 
-    <span class="sd">&quot;&quot;&quot;A matrix acting as a linear operator.</span>
+<div class="viewcode-block" id="MatrixOperator">
+<a class="viewcode-back" href="../../../generated/odl.operator.tensor_ops.MatrixOperator.html#odl.operator.tensor_ops.MatrixOperator">[docs]</a>
+<span class="k">class</span> <span class="nc">MatrixOperator</span><span class="p">(</span><span class="n">Operator</span><span class="p">):</span>
+
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;A matrix acting as a linear operator.</span>
 
 <span class="sd">    This operator uses a matrix to represent an operator, and get its</span>
 <span class="sd">    adjoint and inverse by doing computations on the matrix. This is in</span>
@@ -894,8 +861,10 @@
 <span class="sd">    recommended to use other alternatives if possible.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-<div class="viewcode-block" id="MatrixOperator.__init__"><a class="viewcode-back" href="../../../generated/odl.operator.tensor_ops.MatrixOperator.html#odl.operator.tensor_ops.MatrixOperator.__init__">[docs]</a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">matrix</span><span class="p">,</span> <span class="n">domain</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="nb">range</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
-        <span class="sa">r</span><span class="sd">&quot;&quot;&quot;Initialize a new instance.</span>
+<div class="viewcode-block" id="MatrixOperator.__init__">
+<a class="viewcode-back" href="../../../generated/odl.operator.tensor_ops.MatrixOperator.html#odl.operator.tensor_ops.MatrixOperator.__init__">[docs]</a>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">matrix</span><span class="p">,</span> <span class="n">domain</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="nb">range</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+<span class="w">        </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;Initialize a new instance.</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
@@ -1040,19 +1009,20 @@
 
         <span class="nb">super</span><span class="p">(</span><span class="n">MatrixOperator</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">domain</span><span class="p">,</span> <span class="nb">range</span><span class="p">,</span> <span class="n">linear</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span></div>
 
+
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">matrix</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Matrix representing this operator.&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Matrix representing this operator.&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__matrix</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">axis</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Axis of domain elements over which is summed.&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Axis of domain elements over which is summed.&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__axis</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">adjoint</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Adjoint operator represented by the adjoint matrix.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Adjoint operator represented by the adjoint matrix.</span>
 
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
@@ -1064,7 +1034,7 @@
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">inverse</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Inverse operator represented by the inverse matrix.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Inverse operator represented by the inverse matrix.</span>
 
 <span class="sd">        Taking the inverse causes sparse matrices to become dense and is</span>
 <span class="sd">        generally very heavy computationally since the matrix is inverted</span>
@@ -1087,8 +1057,10 @@
                               <span class="n">domain</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">range</span><span class="p">,</span> <span class="nb">range</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">domain</span><span class="p">,</span>
                               <span class="n">axis</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">axis</span><span class="p">)</span>
 
-<div class="viewcode-block" id="MatrixOperator._call"><a class="viewcode-back" href="../../../generated/odl.operator.tensor_ops.MatrixOperator._call.html#odl.operator.tensor_ops.MatrixOperator._call">[docs]</a>    <span class="k">def</span> <span class="nf">_call</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">out</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Return ``self(x[, out])``.&quot;&quot;&quot;</span>
+<div class="viewcode-block" id="MatrixOperator._call">
+<a class="viewcode-back" href="../../../generated/odl.operator.tensor_ops.MatrixOperator._call.html#odl.operator.tensor_ops.MatrixOperator._call">[docs]</a>
+    <span class="k">def</span> <span class="nf">_call</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">out</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return ``self(x[, out])``.&quot;&quot;&quot;</span>
         <span class="c1"># Lazy import to improve `import odl` time</span>
         <span class="kn">import</span> <span class="nn">scipy.sparse</span>
 
@@ -1116,8 +1088,9 @@
 
         <span class="k">return</span> <span class="n">out</span></div>
 
+
     <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Return ``repr(self)``.&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return ``repr(self)``.&quot;&quot;&quot;</span>
         <span class="c1"># Lazy import to improve `import odl` time</span>
         <span class="kn">import</span> <span class="nn">scipy.sparse</span>
 
@@ -1145,12 +1118,13 @@
         <span class="k">return</span> <span class="s1">&#39;</span><span class="si">{}</span><span class="s1">(</span><span class="se">\n</span><span class="si">{}</span><span class="se">\n</span><span class="s1">)&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="p">,</span> <span class="n">indent</span><span class="p">(</span><span class="n">inner_str</span><span class="p">))</span>
 
     <span class="k">def</span> <span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Return ``str(self)``.&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return ``str(self)``.&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="nb">repr</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span></div>
 
 
+
 <span class="k">def</span> <span class="nf">_normalize_sampling_points</span><span class="p">(</span><span class="n">sampling_points</span><span class="p">,</span> <span class="n">ndim</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Normalize points to an ndim-long list of linear index arrays.</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Normalize points to an ndim-long list of linear index arrays.</span>
 
 <span class="sd">    This helper converts sampling indices for `SamplingOperator` from</span>
 <span class="sd">    integers or array-like objects to a list of length ``ndim``, where</span>
@@ -1204,9 +1178,11 @@
     <span class="k">return</span> <span class="n">sampling_points</span>
 
 
-<div class="viewcode-block" id="SamplingOperator"><a class="viewcode-back" href="../../../generated/odl.operator.tensor_ops.SamplingOperator.html#odl.operator.tensor_ops.SamplingOperator">[docs]</a><span class="k">class</span> <span class="nc">SamplingOperator</span><span class="p">(</span><span class="n">Operator</span><span class="p">):</span>
+<div class="viewcode-block" id="SamplingOperator">
+<a class="viewcode-back" href="../../../generated/odl.operator.tensor_ops.SamplingOperator.html#odl.operator.tensor_ops.SamplingOperator">[docs]</a>
+<span class="k">class</span> <span class="nc">SamplingOperator</span><span class="p">(</span><span class="n">Operator</span><span class="p">):</span>
 
-    <span class="sd">&quot;&quot;&quot;Operator that samples coefficients.</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Operator that samples coefficients.</span>
 
 <span class="sd">    The operator is defined by ::</span>
 
@@ -1219,8 +1195,10 @@
 <span class="sd">    ``f`` over the indexed cells, see option ``variant=&#39;integrate&#39;``.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-<div class="viewcode-block" id="SamplingOperator.__init__"><a class="viewcode-back" href="../../../generated/odl.operator.tensor_ops.SamplingOperator.html#odl.operator.tensor_ops.SamplingOperator.__init__">[docs]</a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">domain</span><span class="p">,</span> <span class="n">sampling_points</span><span class="p">,</span> <span class="n">variant</span><span class="o">=</span><span class="s1">&#39;point_eval&#39;</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Initialize a new instance.</span>
+<div class="viewcode-block" id="SamplingOperator.__init__">
+<a class="viewcode-back" href="../../../generated/odl.operator.tensor_ops.SamplingOperator.html#odl.operator.tensor_ops.SamplingOperator.__init__">[docs]</a>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">domain</span><span class="p">,</span> <span class="n">sampling_points</span><span class="p">,</span> <span class="n">variant</span><span class="o">=</span><span class="s1">&#39;point_eval&#39;</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Initialize a new instance.</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
@@ -1302,18 +1280,21 @@
         <span class="n">ran</span> <span class="o">=</span> <span class="n">tensor_space</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">sampling_points</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">size</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">domain</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span>
         <span class="nb">super</span><span class="p">(</span><span class="n">SamplingOperator</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">domain</span><span class="p">,</span> <span class="n">ran</span><span class="p">,</span> <span class="n">linear</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span></div>
 
+
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">variant</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Weighting scheme for the sampling operator.&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Weighting scheme for the sampling operator.&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__variant</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">sampling_points</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Indices where to sample the function.&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Indices where to sample the function.&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__sampling_points</span>
 
-<div class="viewcode-block" id="SamplingOperator._call"><a class="viewcode-back" href="../../../generated/odl.operator.tensor_ops.SamplingOperator._call.html#odl.operator.tensor_ops.SamplingOperator._call">[docs]</a>    <span class="k">def</span> <span class="nf">_call</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Return values at indices, possibly weighted.&quot;&quot;&quot;</span>
+<div class="viewcode-block" id="SamplingOperator._call">
+<a class="viewcode-back" href="../../../generated/odl.operator.tensor_ops.SamplingOperator._call.html#odl.operator.tensor_ops.SamplingOperator._call">[docs]</a>
+    <span class="k">def</span> <span class="nf">_call</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return values at indices, possibly weighted.&quot;&quot;&quot;</span>
         <span class="n">out</span> <span class="o">=</span> <span class="n">x</span><span class="o">.</span><span class="n">asarray</span><span class="p">()</span><span class="o">.</span><span class="n">ravel</span><span class="p">()[</span><span class="bp">self</span><span class="o">.</span><span class="n">_indices_flat</span><span class="p">]</span>
 
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">variant</span> <span class="o">==</span> <span class="s1">&#39;point_eval&#39;</span><span class="p">:</span>
@@ -1328,9 +1309,10 @@
 
         <span class="k">return</span> <span class="n">out</span></div>
 
+
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">adjoint</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Adjoint of the sampling operator, a `WeightedSumSamplingOperator`.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Adjoint of the sampling operator, a `WeightedSumSamplingOperator`.</span>
 
 <span class="sd">        If each sampling point occurs only once, the adjoint consists</span>
 <span class="sd">        in inserting the given values into the output at the sampling</span>
@@ -1372,7 +1354,7 @@
                                            <span class="n">variant</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Return ``repr(self)``.&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return ``repr(self)``.&quot;&quot;&quot;</span>
         <span class="n">posargs</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">domain</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">sampling_points</span><span class="p">]</span>
         <span class="n">optargs</span> <span class="o">=</span> <span class="p">[(</span><span class="s1">&#39;variant&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">variant</span><span class="p">,</span> <span class="s1">&#39;point_eval&#39;</span><span class="p">)]</span>
         <span class="n">sig_str</span> <span class="o">=</span> <span class="n">signature_string</span><span class="p">(</span><span class="n">posargs</span><span class="p">,</span> <span class="n">optargs</span><span class="p">,</span> <span class="n">mod</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;!r&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">],</span>
@@ -1380,13 +1362,16 @@
         <span class="k">return</span> <span class="s1">&#39;</span><span class="si">{}</span><span class="s1">(</span><span class="se">\n</span><span class="si">{}</span><span class="se">\n</span><span class="s1">)&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="p">,</span> <span class="n">indent</span><span class="p">(</span><span class="n">sig_str</span><span class="p">))</span>
 
     <span class="k">def</span> <span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Return ``str(self)``.&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return ``str(self)``.&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="nb">repr</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span></div>
 
 
-<div class="viewcode-block" id="WeightedSumSamplingOperator"><a class="viewcode-back" href="../../../generated/odl.operator.tensor_ops.WeightedSumSamplingOperator.html#odl.operator.tensor_ops.WeightedSumSamplingOperator">[docs]</a><span class="k">class</span> <span class="nc">WeightedSumSamplingOperator</span><span class="p">(</span><span class="n">Operator</span><span class="p">):</span>
 
-    <span class="sa">r</span><span class="sd">&quot;&quot;&quot;Operator computing the sum of coefficients at sampling locations.</span>
+<div class="viewcode-block" id="WeightedSumSamplingOperator">
+<a class="viewcode-back" href="../../../generated/odl.operator.tensor_ops.WeightedSumSamplingOperator.html#odl.operator.tensor_ops.WeightedSumSamplingOperator">[docs]</a>
+<span class="k">class</span> <span class="nc">WeightedSumSamplingOperator</span><span class="p">(</span><span class="n">Operator</span><span class="p">):</span>
+
+<span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;Operator computing the sum of coefficients at sampling locations.</span>
 
 <span class="sd">    This operator is the adjoint of `SamplingOperator`.</span>
 
@@ -1404,8 +1389,10 @@
 <span class="sd">    the cell centered around the point indexed by :math:`i`.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-<div class="viewcode-block" id="WeightedSumSamplingOperator.__init__"><a class="viewcode-back" href="../../../generated/odl.operator.tensor_ops.WeightedSumSamplingOperator.html#odl.operator.tensor_ops.WeightedSumSamplingOperator.__init__">[docs]</a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="nb">range</span><span class="p">,</span> <span class="n">sampling_points</span><span class="p">,</span> <span class="n">variant</span><span class="o">=</span><span class="s1">&#39;char_fun&#39;</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Initialize a new instance.</span>
+<div class="viewcode-block" id="WeightedSumSamplingOperator.__init__">
+<a class="viewcode-back" href="../../../generated/odl.operator.tensor_ops.WeightedSumSamplingOperator.html#odl.operator.tensor_ops.WeightedSumSamplingOperator.__init__">[docs]</a>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="nb">range</span><span class="p">,</span> <span class="n">sampling_points</span><span class="p">,</span> <span class="n">variant</span><span class="o">=</span><span class="s1">&#39;char_fun&#39;</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Initialize a new instance.</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
@@ -1501,18 +1488,21 @@
         <span class="nb">super</span><span class="p">(</span><span class="n">WeightedSumSamplingOperator</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span>
             <span class="n">domain</span><span class="p">,</span> <span class="nb">range</span><span class="p">,</span> <span class="n">linear</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span></div>
 
+
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">variant</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Weighting scheme for the operator.&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Weighting scheme for the operator.&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__variant</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">sampling_points</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Indices where to sample the function.&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Indices where to sample the function.&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__sampling_points</span>
 
-<div class="viewcode-block" id="WeightedSumSamplingOperator._call"><a class="viewcode-back" href="../../../generated/odl.operator.tensor_ops.WeightedSumSamplingOperator._call.html#odl.operator.tensor_ops.WeightedSumSamplingOperator._call">[docs]</a>    <span class="k">def</span> <span class="nf">_call</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Sum all values if indices are given multiple times.&quot;&quot;&quot;</span>
+<div class="viewcode-block" id="WeightedSumSamplingOperator._call">
+<a class="viewcode-back" href="../../../generated/odl.operator.tensor_ops.WeightedSumSamplingOperator._call.html#odl.operator.tensor_ops.WeightedSumSamplingOperator._call">[docs]</a>
+    <span class="k">def</span> <span class="nf">_call</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Sum all values if indices are given multiple times.&quot;&quot;&quot;</span>
         <span class="n">y</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">bincount</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_indices_flat</span><span class="p">,</span> <span class="n">weights</span><span class="o">=</span><span class="n">x</span><span class="p">,</span>
                         <span class="n">minlength</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">range</span><span class="o">.</span><span class="n">size</span><span class="p">)</span>
 
@@ -1531,9 +1521,10 @@
 
         <span class="k">return</span> <span class="n">out</span></div>
 
+
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">adjoint</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Adjoint of this operator, a `SamplingOperator`.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Adjoint of this operator, a `SamplingOperator`.</span>
 
 <span class="sd">        The ``&#39;char_fun&#39;`` variant of this operator corresponds to the</span>
 <span class="sd">        ``&#39;integrate&#39;`` sampling operator, and ``&#39;dirac&#39;`` corresponds to</span>
@@ -1570,7 +1561,7 @@
         <span class="k">return</span> <span class="n">SamplingOperator</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">range</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">sampling_points</span><span class="p">,</span> <span class="n">variant</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Return ``repr(self)``.&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return ``repr(self)``.&quot;&quot;&quot;</span>
         <span class="n">posargs</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">range</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">sampling_points</span><span class="p">]</span>
         <span class="n">optargs</span> <span class="o">=</span> <span class="p">[(</span><span class="s1">&#39;variant&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">variant</span><span class="p">,</span> <span class="s1">&#39;char_fun&#39;</span><span class="p">)]</span>
         <span class="n">sig_str</span> <span class="o">=</span> <span class="n">signature_string</span><span class="p">(</span><span class="n">posargs</span><span class="p">,</span> <span class="n">optargs</span><span class="p">,</span> <span class="n">mod</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;!r&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">],</span>
@@ -1578,13 +1569,16 @@
         <span class="k">return</span> <span class="s1">&#39;</span><span class="si">{}</span><span class="s1">(</span><span class="se">\n</span><span class="si">{}</span><span class="se">\n</span><span class="s1">)&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="p">,</span> <span class="n">indent</span><span class="p">(</span><span class="n">sig_str</span><span class="p">))</span>
 
     <span class="k">def</span> <span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Return ``str(self)``.&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return ``str(self)``.&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="nb">repr</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span></div>
 
 
-<div class="viewcode-block" id="FlatteningOperator"><a class="viewcode-back" href="../../../generated/odl.operator.tensor_ops.FlatteningOperator.html#odl.operator.tensor_ops.FlatteningOperator">[docs]</a><span class="k">class</span> <span class="nc">FlatteningOperator</span><span class="p">(</span><span class="n">Operator</span><span class="p">):</span>
 
-    <span class="sd">&quot;&quot;&quot;Operator that reshapes the object as a column vector.</span>
+<div class="viewcode-block" id="FlatteningOperator">
+<a class="viewcode-back" href="../../../generated/odl.operator.tensor_ops.FlatteningOperator.html#odl.operator.tensor_ops.FlatteningOperator">[docs]</a>
+<span class="k">class</span> <span class="nc">FlatteningOperator</span><span class="p">(</span><span class="n">Operator</span><span class="p">):</span>
+
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Operator that reshapes the object as a column vector.</span>
 
 <span class="sd">    The operation performed by this operator is ::</span>
 
@@ -1594,8 +1588,10 @@
 <span class="sd">    the domain is a discrete function space.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-<div class="viewcode-block" id="FlatteningOperator.__init__"><a class="viewcode-back" href="../../../generated/odl.operator.tensor_ops.FlatteningOperator.html#odl.operator.tensor_ops.FlatteningOperator.__init__">[docs]</a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">domain</span><span class="p">,</span> <span class="n">order</span><span class="o">=</span><span class="s1">&#39;C&#39;</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Initialize a new instance.</span>
+<div class="viewcode-block" id="FlatteningOperator.__init__">
+<a class="viewcode-back" href="../../../generated/odl.operator.tensor_ops.FlatteningOperator.html#odl.operator.tensor_ops.FlatteningOperator.__init__">[docs]</a>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">domain</span><span class="p">,</span> <span class="n">order</span><span class="o">=</span><span class="s1">&#39;C&#39;</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Initialize a new instance.</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
@@ -1631,18 +1627,22 @@
         <span class="nb">range</span> <span class="o">=</span> <span class="n">tensor_space</span><span class="p">(</span><span class="n">domain</span><span class="o">.</span><span class="n">size</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">domain</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span>
         <span class="nb">super</span><span class="p">(</span><span class="n">FlatteningOperator</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">domain</span><span class="p">,</span> <span class="nb">range</span><span class="p">,</span> <span class="n">linear</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="FlatteningOperator._call"><a class="viewcode-back" href="../../../generated/odl.operator.tensor_ops.FlatteningOperator._call.html#odl.operator.tensor_ops.FlatteningOperator._call">[docs]</a>    <span class="k">def</span> <span class="nf">_call</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Flatten ``x``.&quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="FlatteningOperator._call">
+<a class="viewcode-back" href="../../../generated/odl.operator.tensor_ops.FlatteningOperator._call.html#odl.operator.tensor_ops.FlatteningOperator._call">[docs]</a>
+    <span class="k">def</span> <span class="nf">_call</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Flatten ``x``.&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">ravel</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">order</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">order</span><span class="p">)</span></div>
+
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">order</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;order of the flattening operation.&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;order of the flattening operation.&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__order</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">adjoint</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Adjoint of the flattening, a scaled version of the `inverse`.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Adjoint of the flattening, a scaled version of the `inverse`.</span>
 
 <span class="sd">        Examples</span>
 <span class="sd">        --------</span>
@@ -1666,7 +1666,7 @@
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">inverse</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Operator that reshapes to original shape.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Operator that reshapes to original shape.</span>
 
 <span class="sd">        Examples</span>
 <span class="sd">        --------</span>
@@ -1692,7 +1692,7 @@
 
         <span class="k">class</span> <span class="nc">FlatteningOperatorInverse</span><span class="p">(</span><span class="n">Operator</span><span class="p">):</span>
 
-            <span class="sd">&quot;&quot;&quot;Inverse of `FlatteningOperator`.</span>
+<span class="w">            </span><span class="sd">&quot;&quot;&quot;Inverse of `FlatteningOperator`.</span>
 
 <span class="sd">            This operator reshapes a flat vector back to original shape::</span>
 
@@ -1700,37 +1700,37 @@
 <span class="sd">            &quot;&quot;&quot;</span>
 
             <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-                <span class="sd">&quot;&quot;&quot;Initialize a new instance.&quot;&quot;&quot;</span>
+<span class="w">                </span><span class="sd">&quot;&quot;&quot;Initialize a new instance.&quot;&quot;&quot;</span>
                 <span class="nb">super</span><span class="p">(</span><span class="n">FlatteningOperatorInverse</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span>
                     <span class="n">op</span><span class="o">.</span><span class="n">range</span><span class="p">,</span> <span class="n">op</span><span class="o">.</span><span class="n">domain</span><span class="p">,</span> <span class="n">linear</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 
             <span class="k">def</span> <span class="nf">_call</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
-                <span class="sd">&quot;&quot;&quot;Reshape ``x`` back to n-dim. shape.&quot;&quot;&quot;</span>
+<span class="w">                </span><span class="sd">&quot;&quot;&quot;Reshape ``x`` back to n-dim. shape.&quot;&quot;&quot;</span>
                 <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">asarray</span><span class="p">(),</span> <span class="bp">self</span><span class="o">.</span><span class="n">range</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span>
                                   <span class="n">order</span><span class="o">=</span><span class="n">op</span><span class="o">.</span><span class="n">order</span><span class="p">)</span>
 
             <span class="nd">@property</span>
             <span class="k">def</span> <span class="nf">adjoint</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-                <span class="sd">&quot;&quot;&quot;Adjoint of this operator, a scaled `FlatteningOperator`.&quot;&quot;&quot;</span>
+<span class="w">                </span><span class="sd">&quot;&quot;&quot;Adjoint of this operator, a scaled `FlatteningOperator`.&quot;&quot;&quot;</span>
                 <span class="k">return</span> <span class="n">scaling</span> <span class="o">*</span> <span class="n">op</span>
 
             <span class="nd">@property</span>
             <span class="k">def</span> <span class="nf">inverse</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-                <span class="sd">&quot;&quot;&quot;Inverse of this operator.&quot;&quot;&quot;</span>
+<span class="w">                </span><span class="sd">&quot;&quot;&quot;Inverse of this operator.&quot;&quot;&quot;</span>
                 <span class="k">return</span> <span class="n">op</span>
 
             <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-                <span class="sd">&quot;&quot;&quot;Return ``repr(self)``.&quot;&quot;&quot;</span>
+<span class="w">                </span><span class="sd">&quot;&quot;&quot;Return ``repr(self)``.&quot;&quot;&quot;</span>
                 <span class="k">return</span> <span class="s1">&#39;</span><span class="si">{!r}</span><span class="s1">.inverse&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">op</span><span class="p">)</span>
 
             <span class="k">def</span> <span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-                <span class="sd">&quot;&quot;&quot;Return ``str(self)``.&quot;&quot;&quot;</span>
+<span class="w">                </span><span class="sd">&quot;&quot;&quot;Return ``str(self)``.&quot;&quot;&quot;</span>
                 <span class="k">return</span> <span class="nb">repr</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
 
         <span class="k">return</span> <span class="n">FlatteningOperatorInverse</span><span class="p">()</span>
 
     <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Return ``repr(self)``.&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return ``repr(self)``.&quot;&quot;&quot;</span>
         <span class="n">posargs</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">domain</span><span class="p">]</span>
         <span class="n">optargs</span> <span class="o">=</span> <span class="p">[(</span><span class="s1">&#39;order&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">order</span><span class="p">,</span> <span class="s1">&#39;C&#39;</span><span class="p">)]</span>
         <span class="n">sig_str</span> <span class="o">=</span> <span class="n">signature_string</span><span class="p">(</span><span class="n">posargs</span><span class="p">,</span> <span class="n">optargs</span><span class="p">,</span> <span class="n">mod</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;!r&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">],</span>
@@ -1738,12 +1738,15 @@
         <span class="k">return</span> <span class="s1">&#39;</span><span class="si">{}</span><span class="s1">(</span><span class="se">\n</span><span class="si">{}</span><span class="se">\n</span><span class="s1">)&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="p">,</span> <span class="n">indent</span><span class="p">(</span><span class="n">sig_str</span><span class="p">))</span>
 
     <span class="k">def</span> <span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Return ``str(self)``.&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return ``str(self)``.&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="nb">repr</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span></div>
 
 
-<div class="viewcode-block" id="is_compatible_space"><a class="viewcode-back" href="../../../generated/odl.operator.tensor_ops.is_compatible_space.html#odl.operator.tensor_ops.is_compatible_space">[docs]</a><span class="k">def</span> <span class="nf">is_compatible_space</span><span class="p">(</span><span class="n">space</span><span class="p">,</span> <span class="n">base_space</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Check compatibility of a (power) space with a base space.</span>
+
+<div class="viewcode-block" id="is_compatible_space">
+<a class="viewcode-back" href="../../../generated/odl.operator.tensor_ops.is_compatible_space.html#odl.operator.tensor_ops.is_compatible_space">[docs]</a>
+<span class="k">def</span> <span class="nf">is_compatible_space</span><span class="p">(</span><span class="n">space</span><span class="p">,</span> <span class="n">base_space</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Check compatibility of a (power) space with a base space.</span>
 
 <span class="sd">    Compatibility here means that the spaces are equal or ``space``</span>
 <span class="sd">    is a non-empty power space of ``base_space`` up to different</span>
@@ -1809,52 +1812,37 @@
         <span class="k">return</span> <span class="n">comp_space</span> <span class="o">==</span> <span class="n">base_space</span></div>
 
 
+
 <span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s1">&#39;__main__&#39;</span><span class="p">:</span>
     <span class="kn">from</span> <span class="nn">odl.util.testutils</span> <span class="kn">import</span> <span class="n">run_doctests</span>
     <span class="n">run_doctests</span><span class="p">()</span>
 </pre></div>
 
            </div>
-           
           </div>
           <footer>
 
   <hr/>
 
   <div role="contentinfo">
-    <p>
-        &#169; Copyright 2014-2020 The ODL Contributors.
-
-    </p>
+    <p>&#169; Copyright 2014-2020 The ODL Contributors.</p>
   </div>
-    
-    
-    
-    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
-    
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
     <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
-    
-    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
 
 </footer>
         </div>
       </div>
-
     </section>
-
   </div>
-  
-
-  <script type="text/javascript">
+  <script>
       jQuery(function () {
           SphinxRtdTheme.Navigation.enable(true);
       });
-  </script>
-
-  
-  
-    
-   
+  </script> 
 
 </body>
 </html>

@@ -1,106 +1,62 @@
-
-
 <!DOCTYPE html>
-<html class="writer-html5" lang="en" >
+<html class="writer-html5" lang="english" data-content_root="../../../">
 <head>
   <meta charset="utf-8" />
-  
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  
   <title>odl.operator.pspace_ops &mdash; odl 1.0.0.dev0 documentation</title>
-  
-
-  
-  <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
-  <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
-  <link rel="stylesheet" href="../../../_static/custom.css" type="text/css" />
-
-  
-  
-
-  
-  
-
-  
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b76e3c8a" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=19f00094" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/custom.css?v=d6003e95" />
 
   
   <!--[if lt IE 9]>
     <script src="../../../_static/js/html5shiv.min.js"></script>
   <![endif]-->
   
-    
-      <script type="text/javascript" id="documentation_options" data-url_root="../../../" src="../../../_static/documentation_options.js"></script>
-        <script src="../../../_static/jquery.js"></script>
-        <script src="../../../_static/underscore.js"></script>
-        <script src="../../../_static/doctools.js"></script>
-    
-    <script type="text/javascript" src="../../../_static/js/theme.js"></script>
-
-    
+        <script src="../../../_static/documentation_options.js?v=293a974f"></script>
+        <script src="../../../_static/doctools.js?v=9a2dae69"></script>
+        <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../../../genindex.html" />
     <link rel="search" title="Search" href="../../../search.html" /> 
 </head>
 
-<body class="wy-body-for-nav">
-
-   
+<body class="wy-body-for-nav"> 
   <div class="wy-grid-for-nav">
-    
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
         <div class="wy-side-nav-search" >
-          
 
           
-            <a href="../../../index.html" class="icon icon-home"> odl
           
-
-          
+          <a href="../../../index.html" class="icon icon-home">
+            odl
           </a>
-
-          
-            
-            
               <div class="version">
                 1.0.0.dev0
               </div>
-            
-          
-
-          
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
-    <input type="text" name="q" placeholder="Search docs" />
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
     <input type="hidden" name="check_keywords" value="yes" />
     <input type="hidden" name="area" value="default" />
   </form>
 </div>
-
-          
-        </div>
-
-        
-        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
-          
-            
-            
-              
-            
-            
-              <p class="caption"><span class="caption-text">Getting Started</span></p>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Getting Started</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../../../getting_started/getting_started.html">Getting Started</a></li>
 </ul>
-<p class="caption"><span class="caption-text">Working with ODL</span></p>
+<p class="caption" role="heading"><span class="caption-text">Working with ODL</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="../../../guide/guide.html">User’s guide – selected topics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../guide/guide.html">User's guide -- selected topics</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../math/math.html">Mathematical Background</a></li>
 </ul>
-<p class="caption"><span class="caption-text">Developer zone</span></p>
+<p class="caption" role="heading"><span class="caption-text">Developer zone</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../../../dev/dev.html">Contributing to ODL</a></li>
 </ul>
-<p class="caption"><span class="caption-text">Useful facts</span></p>
+<p class="caption" role="heading"><span class="caption-text">Useful facts</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../../../guide/faq.html">Frequently asked questions</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../guide/glossary.html">Glossary</a></li>
@@ -109,74 +65,35 @@
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../../../refs.html">References</a></li>
 </ul>
-<p class="caption"><span class="caption-text">API Reference</span></p>
+<p class="caption" role="heading"><span class="caption-text">API Reference</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../../../odl.html">odl</a></li>
 </ul>
 
-            
-          
         </div>
-        
       </div>
     </nav>
 
-    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
-
-      
-      <nav class="wy-nav-top" aria-label="top navigation">
-        
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
           <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
           <a href="../../../index.html">odl</a>
-        
       </nav>
 
-
       <div class="wy-nav-content">
-        
         <div class="rst-content">
-        
-          
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-<div role="navigation" aria-label="breadcrumbs navigation">
-
+          <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
-    
-      <li><a href="../../../index.html" class="icon icon-home"></a> &raquo;</li>
-        
-          <li><a href="../../index.html">Module code</a> &raquo;</li>
-        
-      <li>odl.operator.pspace_ops</li>
-    
-    
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">odl.operator.pspace_ops</li>
       <li class="wy-breadcrumbs-aside">
-        
       </li>
-    
   </ul>
-
-  
   <hr/>
 </div>
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
-            
+             
   <h1>Source code for odl.operator.pspace_ops</h1><div class="highlight"><pre>
 <span></span><span class="c1"># Copyright 2014-2019 The ODL contributors</span>
 <span class="c1">#</span>
@@ -195,6 +112,7 @@
 <span class="kn">from</span> <span class="nn">odl.operator.operator</span> <span class="kn">import</span> <span class="n">Operator</span>
 <span class="kn">from</span> <span class="nn">odl.operator.default_ops</span> <span class="kn">import</span> <span class="n">ZeroOperator</span>
 <span class="kn">from</span> <span class="nn">odl.space</span> <span class="kn">import</span> <span class="n">ProductSpace</span>
+<span class="kn">from</span> <span class="nn">odl.util</span> <span class="kn">import</span> <span class="n">COOMatrix</span>
 
 
 <span class="n">__all__</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;ProductSpaceOperator&#39;</span><span class="p">,</span>
@@ -202,9 +120,11 @@
            <span class="s1">&#39;BroadcastOperator&#39;</span><span class="p">,</span> <span class="s1">&#39;ReductionOperator&#39;</span><span class="p">,</span> <span class="s1">&#39;DiagonalOperator&#39;</span><span class="p">)</span>
 
 
-<div class="viewcode-block" id="ProductSpaceOperator"><a class="viewcode-back" href="../../../generated/odl.operator.pspace_ops.ProductSpaceOperator.html#odl.operator.pspace_ops.ProductSpaceOperator">[docs]</a><span class="k">class</span> <span class="nc">ProductSpaceOperator</span><span class="p">(</span><span class="n">Operator</span><span class="p">):</span>
+<div class="viewcode-block" id="ProductSpaceOperator">
+<a class="viewcode-back" href="../../../generated/odl.operator.pspace_ops.ProductSpaceOperator.html#odl.operator.pspace_ops.ProductSpaceOperator">[docs]</a>
+<span class="k">class</span> <span class="nc">ProductSpaceOperator</span><span class="p">(</span><span class="n">Operator</span><span class="p">):</span>
 
-    <span class="sa">r</span><span class="sd">&quot;&quot;&quot;A &quot;matrix of operators&quot; on product spaces.</span>
+<span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;A &quot;matrix of operators&quot; on product spaces.</span>
 
 <span class="sd">    For example a matrix of operators can act on a vector by</span>
 
@@ -268,8 +188,10 @@
 <span class="sd">    DiagonalOperator : Case where the &#39;matrix&#39; is diagonal.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-<div class="viewcode-block" id="ProductSpaceOperator.__init__"><a class="viewcode-back" href="../../../generated/odl.operator.pspace_ops.ProductSpaceOperator.html#odl.operator.pspace_ops.ProductSpaceOperator.__init__">[docs]</a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">operators</span><span class="p">,</span> <span class="n">domain</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="nb">range</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Initialize a new instance.</span>
+<div class="viewcode-block" id="ProductSpaceOperator.__init__">
+<a class="viewcode-back" href="../../../generated/odl.operator.pspace_ops.ProductSpaceOperator.html#odl.operator.pspace_ops.ProductSpaceOperator.__init__">[docs]</a>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">operators</span><span class="p">,</span> <span class="n">domain</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="nb">range</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Initialize a new instance.</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
@@ -351,7 +273,16 @@
             <span class="k">if</span> <span class="ow">not</span> <span class="nb">all</span><span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">op</span><span class="p">,</span> <span class="n">Operator</span><span class="p">)</span> <span class="k">for</span> <span class="n">op</span> <span class="ow">in</span> <span class="n">operators</span><span class="o">.</span><span class="n">data</span><span class="p">):</span>
                 <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;sparse matrix `operator` contains non-&#39;</span>
                                  <span class="s1">&#39;`Operator` entries&#39;</span><span class="p">)</span>
+            <span class="c1"># scipy sparse matrix not supported (deprecated due to API changes)</span>
+            <span class="c1"># keep now for backward compatibility</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Warning: scipy.sparse.spmatrix is deprecated.&#39;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">__ops</span> <span class="o">=</span> <span class="n">COOMatrix</span><span class="p">(</span><span class="n">operators</span><span class="o">.</span><span class="n">data</span><span class="p">,</span>
+                                   <span class="p">(</span><span class="n">operators</span><span class="o">.</span><span class="n">row</span><span class="p">,</span> <span class="n">operators</span><span class="o">.</span><span class="n">col</span><span class="p">),</span>
+                                   <span class="n">operators</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">operators</span><span class="p">,</span> <span class="n">COOMatrix</span><span class="p">):</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">__ops</span> <span class="o">=</span> <span class="n">operators</span>
+
         <span class="k">else</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">__ops</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_convert_to_spmatrix</span><span class="p">(</span><span class="n">operators</span><span class="p">)</span>
 
@@ -406,11 +337,13 @@
         <span class="nb">super</span><span class="p">(</span><span class="n">ProductSpaceOperator</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span>
             <span class="n">domain</span><span class="o">=</span><span class="n">domain</span><span class="p">,</span> <span class="nb">range</span><span class="o">=</span><span class="nb">range</span><span class="p">,</span> <span class="n">linear</span><span class="o">=</span><span class="n">linear</span><span class="p">)</span></div>
 
+
     <span class="nd">@staticmethod</span>
     <span class="k">def</span> <span class="nf">_convert_to_spmatrix</span><span class="p">(</span><span class="n">operators</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Convert an array-like object of operators to a sparse matrix.&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Convert an array-like object of operators to a sparse matrix.&quot;&quot;&quot;</span>
+
         <span class="c1"># Lazy import to improve `import odl` time</span>
-        <span class="kn">import</span> <span class="nn">scipy.sparse</span>
+        <span class="c1"># import scipy.sparse</span>
 
         <span class="c1"># Convert ops to sparse representation. This is not trivial because</span>
         <span class="c1"># operators can be indexable themselves and give the wrong impression</span>
@@ -443,7 +376,7 @@
                     <span class="s1">&#39;</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">row</span><span class="p">),</span> <span class="n">i</span><span class="p">,</span> <span class="n">ncols</span><span class="p">))</span>
 
             <span class="k">for</span> <span class="n">j</span><span class="p">,</span> <span class="n">col</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">row</span><span class="p">):</span>
-                <span class="k">if</span> <span class="n">col</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">col</span> <span class="ow">is</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">col</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">col</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
                     <span class="k">pass</span>
                 <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">col</span><span class="p">,</span> <span class="n">Operator</span><span class="p">):</span>
                     <span class="n">irow</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
@@ -459,16 +392,18 @@
         <span class="c1"># in `coo_matrix.__init__`</span>
         <span class="n">data_arr</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">data</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">object</span><span class="p">)</span>
         <span class="n">data_arr</span><span class="p">[:]</span> <span class="o">=</span> <span class="n">data</span>
-        <span class="k">return</span> <span class="n">scipy</span><span class="o">.</span><span class="n">sparse</span><span class="o">.</span><span class="n">coo_matrix</span><span class="p">((</span><span class="n">data_arr</span><span class="p">,</span> <span class="p">(</span><span class="n">irow</span><span class="p">,</span> <span class="n">icol</span><span class="p">)),</span>
-                                       <span class="n">shape</span><span class="o">=</span><span class="p">(</span><span class="n">nrows</span><span class="p">,</span> <span class="n">ncols</span><span class="p">))</span>
+
+        <span class="k">return</span> <span class="n">COOMatrix</span><span class="p">(</span><span class="n">data_arr</span><span class="p">,</span> <span class="p">(</span><span class="n">irow</span><span class="p">,</span> <span class="n">icol</span><span class="p">),</span> <span class="p">(</span><span class="n">nrows</span><span class="p">,</span> <span class="n">ncols</span><span class="p">))</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">ops</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;The sparse operator matrix representing this operator.&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;The sparse operator matrix representing this operator.&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__ops</span>
 
-<div class="viewcode-block" id="ProductSpaceOperator._call"><a class="viewcode-back" href="../../../generated/odl.operator.pspace_ops.ProductSpaceOperator._call.html#odl.operator.pspace_ops.ProductSpaceOperator._call">[docs]</a>    <span class="k">def</span> <span class="nf">_call</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">out</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Call the operators on the parts of ``x``.&quot;&quot;&quot;</span>
+<div class="viewcode-block" id="ProductSpaceOperator._call">
+<a class="viewcode-back" href="../../../generated/odl.operator.pspace_ops.ProductSpaceOperator._call.html#odl.operator.pspace_ops.ProductSpaceOperator._call">[docs]</a>
+    <span class="k">def</span> <span class="nf">_call</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">out</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Call the operators on the parts of ``x``.&quot;&quot;&quot;</span>
         <span class="c1"># TODO: add optimization in case an operator appears repeatedly in a</span>
         <span class="c1"># row</span>
         <span class="k">if</span> <span class="n">out</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
@@ -492,8 +427,11 @@
 
         <span class="k">return</span> <span class="n">out</span></div>
 
-<div class="viewcode-block" id="ProductSpaceOperator.derivative"><a class="viewcode-back" href="../../../generated/odl.operator.pspace_ops.ProductSpaceOperator.derivative.html#odl.operator.pspace_ops.ProductSpaceOperator.derivative">[docs]</a>    <span class="k">def</span> <span class="nf">derivative</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Derivative of the product space operator.</span>
+
+<div class="viewcode-block" id="ProductSpaceOperator.derivative">
+<a class="viewcode-back" href="../../../generated/odl.operator.pspace_ops.ProductSpaceOperator.derivative.html#odl.operator.pspace_ops.ProductSpaceOperator.derivative">[docs]</a>
+    <span class="k">def</span> <span class="nf">derivative</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Derivative of the product space operator.</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
@@ -562,12 +500,13 @@
         <span class="n">data</span><span class="p">[:]</span> <span class="o">=</span> <span class="n">deriv_ops</span>
         <span class="n">indices</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">ops</span><span class="o">.</span><span class="n">row</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">ops</span><span class="o">.</span><span class="n">col</span><span class="p">]</span>
         <span class="n">shape</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ops</span><span class="o">.</span><span class="n">shape</span>
-        <span class="n">deriv_matrix</span> <span class="o">=</span> <span class="n">scipy</span><span class="o">.</span><span class="n">sparse</span><span class="o">.</span><span class="n">coo_matrix</span><span class="p">((</span><span class="n">data</span><span class="p">,</span> <span class="n">indices</span><span class="p">),</span> <span class="n">shape</span><span class="p">)</span>
+        <span class="n">deriv_matrix</span> <span class="o">=</span> <span class="n">COOMatrix</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">indices</span><span class="p">,</span> <span class="n">shape</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">ProductSpaceOperator</span><span class="p">(</span><span class="n">deriv_matrix</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">domain</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">range</span><span class="p">)</span></div>
+
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">adjoint</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Adjoint of this operator.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Adjoint of this operator.</span>
 
 <span class="sd">        The adjoint is given by taking the transpose of the matrix</span>
 <span class="sd">        and the adjoint of each component operator.</span>
@@ -611,11 +550,13 @@
         <span class="n">data</span><span class="p">[:]</span> <span class="o">=</span> <span class="n">adjoint_ops</span>
         <span class="n">indices</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">ops</span><span class="o">.</span><span class="n">col</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">ops</span><span class="o">.</span><span class="n">row</span><span class="p">]</span>  <span class="c1"># Swap col/row -&gt; transpose</span>
         <span class="n">shape</span> <span class="o">=</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ops</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">ops</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
-        <span class="n">adj_matrix</span> <span class="o">=</span> <span class="n">scipy</span><span class="o">.</span><span class="n">sparse</span><span class="o">.</span><span class="n">coo_matrix</span><span class="p">((</span><span class="n">data</span><span class="p">,</span> <span class="n">indices</span><span class="p">),</span> <span class="n">shape</span><span class="p">)</span>
+        <span class="n">adj_matrix</span> <span class="o">=</span> <span class="n">COOMatrix</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">indices</span><span class="p">,</span> <span class="n">shape</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">ProductSpaceOperator</span><span class="p">(</span><span class="n">adj_matrix</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">range</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">domain</span><span class="p">)</span>
 
-<div class="viewcode-block" id="ProductSpaceOperator.__getitem__"><a class="viewcode-back" href="../../../generated/odl.operator.pspace_ops.ProductSpaceOperator.__getitem__.html#odl.operator.pspace_ops.ProductSpaceOperator.__getitem__">[docs]</a>    <span class="k">def</span> <span class="fm">__getitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">index</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Get sub-operator by index.</span>
+<div class="viewcode-block" id="ProductSpaceOperator.__getitem__">
+<a class="viewcode-back" href="../../../generated/odl.operator.pspace_ops.ProductSpaceOperator.__getitem__.html#odl.operator.pspace_ops.ProductSpaceOperator.__getitem__">[docs]</a>
+    <span class="k">def</span> <span class="fm">__getitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">index</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Get sub-operator by index.</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
@@ -677,31 +618,35 @@
 
             <span class="k">return</span> <span class="n">ReductionOperator</span><span class="p">(</span><span class="o">*</span><span class="n">ops</span><span class="p">)</span></div>
 
+
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">shape</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Shape of the matrix of operators.&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Shape of the matrix of operators.&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">ops</span><span class="o">.</span><span class="n">shape</span>
 
     <span class="k">def</span> <span class="fm">__len__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Return ``len(self)``.&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return ``len(self)``.&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">size</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Total size of the matrix of operators.&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Total size of the matrix of operators.&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">prod</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="s1">&#39;int64&#39;</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Return ``repr(self)``.&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return ``repr(self)``.&quot;&quot;&quot;</span>
         <span class="n">aslist</span> <span class="o">=</span> <span class="p">[[</span><span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">domain</span><span class="p">)</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">range</span><span class="p">))]</span>
         <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">,</span> <span class="n">op</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ops</span><span class="o">.</span><span class="n">row</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">ops</span><span class="o">.</span><span class="n">col</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">ops</span><span class="o">.</span><span class="n">data</span><span class="p">):</span>
             <span class="n">aslist</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">j</span><span class="p">]</span> <span class="o">=</span> <span class="n">op</span>
         <span class="k">return</span> <span class="s1">&#39;</span><span class="si">{}</span><span class="s1">(</span><span class="si">{!r}</span><span class="s1">)&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="p">,</span> <span class="n">aslist</span><span class="p">)</span></div>
 
 
-<div class="viewcode-block" id="ComponentProjection"><a class="viewcode-back" href="../../../generated/odl.operator.pspace_ops.ComponentProjection.html#odl.operator.pspace_ops.ComponentProjection">[docs]</a><span class="k">class</span> <span class="nc">ComponentProjection</span><span class="p">(</span><span class="n">Operator</span><span class="p">):</span>
 
-    <span class="sa">r</span><span class="sd">&quot;&quot;&quot;Projection onto the subspace identified by an index.</span>
+<div class="viewcode-block" id="ComponentProjection">
+<a class="viewcode-back" href="../../../generated/odl.operator.pspace_ops.ComponentProjection.html#odl.operator.pspace_ops.ComponentProjection">[docs]</a>
+<span class="k">class</span> <span class="nc">ComponentProjection</span><span class="p">(</span><span class="n">Operator</span><span class="p">):</span>
+
+<span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;Projection onto the subspace identified by an index.</span>
 
 <span class="sd">    For a product space :math:`\mathcal{X} = \mathcal{X}_1 \times \dots</span>
 <span class="sd">    \times \mathcal{X}_n`, the component projection</span>
@@ -721,8 +666,10 @@
 <span class="sd">    identity operators.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-<div class="viewcode-block" id="ComponentProjection.__init__"><a class="viewcode-back" href="../../../generated/odl.operator.pspace_ops.ComponentProjection.html#odl.operator.pspace_ops.ComponentProjection.__init__">[docs]</a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">space</span><span class="p">,</span> <span class="n">index</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Initialize a new instance.</span>
+<div class="viewcode-block" id="ComponentProjection.__init__">
+<a class="viewcode-back" href="../../../generated/odl.operator.pspace_ops.ComponentProjection.html#odl.operator.pspace_ops.ComponentProjection.__init__">[docs]</a>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">space</span><span class="p">,</span> <span class="n">index</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Initialize a new instance.</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
@@ -761,22 +708,26 @@
         <span class="nb">super</span><span class="p">(</span><span class="n">ComponentProjection</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span>
             <span class="n">space</span><span class="p">,</span> <span class="n">space</span><span class="p">[</span><span class="n">index</span><span class="p">],</span> <span class="n">linear</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span></div>
 
+
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">index</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Index of the subspace.&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Index of the subspace.&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__index</span>
 
-<div class="viewcode-block" id="ComponentProjection._call"><a class="viewcode-back" href="../../../generated/odl.operator.pspace_ops.ComponentProjection._call.html#odl.operator.pspace_ops.ComponentProjection._call">[docs]</a>    <span class="k">def</span> <span class="nf">_call</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">out</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Project ``x`` onto the subspace.&quot;&quot;&quot;</span>
+<div class="viewcode-block" id="ComponentProjection._call">
+<a class="viewcode-back" href="../../../generated/odl.operator.pspace_ops.ComponentProjection._call.html#odl.operator.pspace_ops.ComponentProjection._call">[docs]</a>
+    <span class="k">def</span> <span class="nf">_call</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">out</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Project ``x`` onto the subspace.&quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="n">out</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">out</span> <span class="o">=</span> <span class="n">x</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">index</span><span class="p">]</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="n">out</span><span class="o">.</span><span class="n">assign</span><span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">index</span><span class="p">])</span>
         <span class="k">return</span> <span class="n">out</span></div>
 
+
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">adjoint</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;The adjoint operator.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;The adjoint operator.</span>
 
 <span class="sd">        The adjoint is given by extending along `ComponentProjection.index`,</span>
 <span class="sd">        and setting zero along the others.</span>
@@ -788,7 +739,7 @@
         <span class="k">return</span> <span class="n">ComponentProjectionAdjoint</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">domain</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">index</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Return ``repr(self)``.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return ``repr(self)``.</span>
 
 <span class="sd">        Examples</span>
 <span class="sd">        --------</span>
@@ -800,9 +751,12 @@
                                      <span class="bp">self</span><span class="o">.</span><span class="n">domain</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">index</span><span class="p">)</span></div>
 
 
-<div class="viewcode-block" id="ComponentProjectionAdjoint"><a class="viewcode-back" href="../../../generated/odl.operator.pspace_ops.ComponentProjectionAdjoint.html#odl.operator.pspace_ops.ComponentProjectionAdjoint">[docs]</a><span class="k">class</span> <span class="nc">ComponentProjectionAdjoint</span><span class="p">(</span><span class="n">Operator</span><span class="p">):</span>
 
-    <span class="sd">&quot;&quot;&quot;Adjoint operator to `ComponentProjection`.</span>
+<div class="viewcode-block" id="ComponentProjectionAdjoint">
+<a class="viewcode-back" href="../../../generated/odl.operator.pspace_ops.ComponentProjectionAdjoint.html#odl.operator.pspace_ops.ComponentProjectionAdjoint">[docs]</a>
+<span class="k">class</span> <span class="nc">ComponentProjectionAdjoint</span><span class="p">(</span><span class="n">Operator</span><span class="p">):</span>
+
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Adjoint operator to `ComponentProjection`.</span>
 
 <span class="sd">    As a special case of the adjoint of a `ProductSpaceOperator`,</span>
 <span class="sd">    this operator is given as a column vector of identity operators</span>
@@ -813,8 +767,10 @@
 <span class="sd">    weightings into account. This is currently not supported.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-<div class="viewcode-block" id="ComponentProjectionAdjoint.__init__"><a class="viewcode-back" href="../../../generated/odl.operator.pspace_ops.ComponentProjectionAdjoint.html#odl.operator.pspace_ops.ComponentProjectionAdjoint.__init__">[docs]</a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">space</span><span class="p">,</span> <span class="n">index</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Initialize a new instance</span>
+<div class="viewcode-block" id="ComponentProjectionAdjoint.__init__">
+<a class="viewcode-back" href="../../../generated/odl.operator.pspace_ops.ComponentProjectionAdjoint.html#odl.operator.pspace_ops.ComponentProjectionAdjoint.__init__">[docs]</a>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">space</span><span class="p">,</span> <span class="n">index</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Initialize a new instance</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
@@ -857,13 +813,16 @@
         <span class="nb">super</span><span class="p">(</span><span class="n">ComponentProjectionAdjoint</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span>
             <span class="n">space</span><span class="p">[</span><span class="n">index</span><span class="p">],</span> <span class="n">space</span><span class="p">,</span> <span class="n">linear</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span></div>
 
+
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">index</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Index of the subspace.&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Index of the subspace.&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__index</span>
 
-<div class="viewcode-block" id="ComponentProjectionAdjoint._call"><a class="viewcode-back" href="../../../generated/odl.operator.pspace_ops.ComponentProjectionAdjoint._call.html#odl.operator.pspace_ops.ComponentProjectionAdjoint._call">[docs]</a>    <span class="k">def</span> <span class="nf">_call</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">out</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Extend ``x`` from the subspace.&quot;&quot;&quot;</span>
+<div class="viewcode-block" id="ComponentProjectionAdjoint._call">
+<a class="viewcode-back" href="../../../generated/odl.operator.pspace_ops.ComponentProjectionAdjoint._call.html#odl.operator.pspace_ops.ComponentProjectionAdjoint._call">[docs]</a>
+    <span class="k">def</span> <span class="nf">_call</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">out</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Extend ``x`` from the subspace.&quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="n">out</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">out</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">range</span><span class="o">.</span><span class="n">zero</span><span class="p">()</span>
         <span class="k">else</span><span class="p">:</span>
@@ -872,9 +831,10 @@
         <span class="n">out</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">index</span><span class="p">]</span> <span class="o">=</span> <span class="n">x</span>
         <span class="k">return</span> <span class="n">out</span></div>
 
+
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">adjoint</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Adjoint of this operator.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Adjoint of this operator.</span>
 
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
@@ -885,7 +845,7 @@
         <span class="k">return</span> <span class="n">ComponentProjection</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">range</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">index</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Return ``repr(self)``.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return ``repr(self)``.</span>
 
 <span class="sd">        Examples</span>
 <span class="sd">        --------</span>
@@ -897,8 +857,11 @@
                                      <span class="bp">self</span><span class="o">.</span><span class="n">range</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">index</span><span class="p">)</span></div>
 
 
-<div class="viewcode-block" id="BroadcastOperator"><a class="viewcode-back" href="../../../generated/odl.operator.pspace_ops.BroadcastOperator.html#odl.operator.pspace_ops.BroadcastOperator">[docs]</a><span class="k">class</span> <span class="nc">BroadcastOperator</span><span class="p">(</span><span class="n">Operator</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Broadcast argument to set of operators.</span>
+
+<div class="viewcode-block" id="BroadcastOperator">
+<a class="viewcode-back" href="../../../generated/odl.operator.pspace_ops.BroadcastOperator.html#odl.operator.pspace_ops.BroadcastOperator">[docs]</a>
+<span class="k">class</span> <span class="nc">BroadcastOperator</span><span class="p">(</span><span class="n">Operator</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Broadcast argument to set of operators.</span>
 
 <span class="sd">    An argument is broadcast by evaluating several operators in the same</span>
 <span class="sd">    point::</span>
@@ -911,8 +874,11 @@
 <span class="sd">    ReductionOperator : Calculates sum of operator results.</span>
 <span class="sd">    DiagonalOperator : Case where each operator should have its own argument.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-<div class="viewcode-block" id="BroadcastOperator.__init__"><a class="viewcode-back" href="../../../generated/odl.operator.pspace_ops.BroadcastOperator.html#odl.operator.pspace_ops.BroadcastOperator.__init__">[docs]</a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">operators</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Initialize a new instance</span>
+
+<div class="viewcode-block" id="BroadcastOperator.__init__">
+<a class="viewcode-back" href="../../../generated/odl.operator.pspace_ops.BroadcastOperator.html#odl.operator.pspace_ops.BroadcastOperator.__init__">[docs]</a>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">operators</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Initialize a new instance</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
@@ -959,36 +925,45 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">prod_op</span><span class="o">.</span><span class="n">domain</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">prod_op</span><span class="o">.</span><span class="n">range</span><span class="p">,</span>
             <span class="n">linear</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">prod_op</span><span class="o">.</span><span class="n">is_linear</span><span class="p">)</span></div>
 
+
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">prod_op</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;`ProductSpaceOperator` implementation.&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;`ProductSpaceOperator` implementation.&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__prod_op</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">operators</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Tuple of sub-operators that comprise ``self``.&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Tuple of sub-operators that comprise ``self``.&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__operators</span>
 
-<div class="viewcode-block" id="BroadcastOperator.__getitem__"><a class="viewcode-back" href="../../../generated/odl.operator.pspace_ops.BroadcastOperator.__getitem__.html#odl.operator.pspace_ops.BroadcastOperator.__getitem__">[docs]</a>    <span class="k">def</span> <span class="fm">__getitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">index</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Return ``self(index)``.&quot;&quot;&quot;</span>
+<div class="viewcode-block" id="BroadcastOperator.__getitem__">
+<a class="viewcode-back" href="../../../generated/odl.operator.pspace_ops.BroadcastOperator.__getitem__.html#odl.operator.pspace_ops.BroadcastOperator.__getitem__">[docs]</a>
+    <span class="k">def</span> <span class="fm">__getitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">index</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return ``self(index)``.&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">operators</span><span class="p">[</span><span class="n">index</span><span class="p">]</span></div>
 
+
     <span class="k">def</span> <span class="fm">__len__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Return ``len(self)``.&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return ``len(self)``.&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">operators</span><span class="p">)</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">size</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Total number of sub-operators.&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Total number of sub-operators.&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
 
-<div class="viewcode-block" id="BroadcastOperator._call"><a class="viewcode-back" href="../../../generated/odl.operator.pspace_ops.BroadcastOperator._call.html#odl.operator.pspace_ops.BroadcastOperator._call">[docs]</a>    <span class="k">def</span> <span class="nf">_call</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">out</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Evaluate all operators in ``x`` and broadcast.&quot;&quot;&quot;</span>
+<div class="viewcode-block" id="BroadcastOperator._call">
+<a class="viewcode-back" href="../../../generated/odl.operator.pspace_ops.BroadcastOperator._call.html#odl.operator.pspace_ops.BroadcastOperator._call">[docs]</a>
+    <span class="k">def</span> <span class="nf">_call</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">out</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Evaluate all operators in ``x`` and broadcast.&quot;&quot;&quot;</span>
         <span class="n">wrapped_x</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">prod_op</span><span class="o">.</span><span class="n">domain</span><span class="o">.</span><span class="n">element</span><span class="p">([</span><span class="n">x</span><span class="p">],</span> <span class="n">cast</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">prod_op</span><span class="p">(</span><span class="n">wrapped_x</span><span class="p">,</span> <span class="n">out</span><span class="o">=</span><span class="n">out</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="BroadcastOperator.derivative"><a class="viewcode-back" href="../../../generated/odl.operator.pspace_ops.BroadcastOperator.derivative.html#odl.operator.pspace_ops.BroadcastOperator.derivative">[docs]</a>    <span class="k">def</span> <span class="nf">derivative</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Derivative of the broadcast operator.</span>
+
+<div class="viewcode-block" id="BroadcastOperator.derivative">
+<a class="viewcode-back" href="../../../generated/odl.operator.pspace_ops.BroadcastOperator.derivative.html#odl.operator.pspace_ops.BroadcastOperator.derivative">[docs]</a>
+    <span class="k">def</span> <span class="nf">derivative</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Derivative of the broadcast operator.</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
@@ -1028,9 +1003,10 @@
         <span class="k">return</span> <span class="n">BroadcastOperator</span><span class="p">(</span><span class="o">*</span><span class="p">[</span><span class="n">op</span><span class="o">.</span><span class="n">derivative</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="k">for</span> <span class="n">op</span> <span class="ow">in</span>
                                    <span class="bp">self</span><span class="o">.</span><span class="n">operators</span><span class="p">])</span></div>
 
+
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">adjoint</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Adjoint of this operator.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Adjoint of this operator.</span>
 
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
@@ -1046,7 +1022,7 @@
         <span class="k">return</span> <span class="n">ReductionOperator</span><span class="p">(</span><span class="o">*</span><span class="p">[</span><span class="n">op</span><span class="o">.</span><span class="n">adjoint</span> <span class="k">for</span> <span class="n">op</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">operators</span><span class="p">])</span>
 
     <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Return ``repr(self)``.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return ``repr(self)``.</span>
 
 <span class="sd">        Examples</span>
 <span class="sd">        --------</span>
@@ -1066,8 +1042,11 @@
             <span class="k">return</span> <span class="s1">&#39;</span><span class="si">{}</span><span class="s1">(</span><span class="si">{}</span><span class="s1">)&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="p">,</span> <span class="n">op_repr</span><span class="p">)</span></div>
 
 
-<div class="viewcode-block" id="ReductionOperator"><a class="viewcode-back" href="../../../generated/odl.operator.pspace_ops.ReductionOperator.html#odl.operator.pspace_ops.ReductionOperator">[docs]</a><span class="k">class</span> <span class="nc">ReductionOperator</span><span class="p">(</span><span class="n">Operator</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Reduce argument over set of operators.</span>
+
+<div class="viewcode-block" id="ReductionOperator">
+<a class="viewcode-back" href="../../../generated/odl.operator.pspace_ops.ReductionOperator.html#odl.operator.pspace_ops.ReductionOperator">[docs]</a>
+<span class="k">class</span> <span class="nc">ReductionOperator</span><span class="p">(</span><span class="n">Operator</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Reduce argument over set of operators.</span>
 
 <span class="sd">    An argument is reduced by evaluating several operators and summing the</span>
 <span class="sd">    result::</span>
@@ -1081,8 +1060,11 @@
 <span class="sd">    DiagonalOperator : Case where each operator should have its own argument.</span>
 <span class="sd">    SeparableSum : Corresponding construction for functionals.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-<div class="viewcode-block" id="ReductionOperator.__init__"><a class="viewcode-back" href="../../../generated/odl.operator.pspace_ops.ReductionOperator.html#odl.operator.pspace_ops.ReductionOperator.__init__">[docs]</a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">operators</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Initialize a new instance.</span>
+
+<div class="viewcode-block" id="ReductionOperator.__init__">
+<a class="viewcode-back" href="../../../generated/odl.operator.pspace_ops.ReductionOperator.html#odl.operator.pspace_ops.ReductionOperator.__init__">[docs]</a>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">operators</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Initialize a new instance.</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
@@ -1136,31 +1118,37 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">prod_op</span><span class="o">.</span><span class="n">domain</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">prod_op</span><span class="o">.</span><span class="n">range</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
             <span class="n">linear</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">prod_op</span><span class="o">.</span><span class="n">is_linear</span><span class="p">)</span></div>
 
+
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">prod_op</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;`ProductSpaceOperator` implementation.&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;`ProductSpaceOperator` implementation.&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__prod_op</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">operators</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Tuple of sub-operators that comprise ``self``.&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Tuple of sub-operators that comprise ``self``.&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__operators</span>
 
-<div class="viewcode-block" id="ReductionOperator.__getitem__"><a class="viewcode-back" href="../../../generated/odl.operator.pspace_ops.ReductionOperator.__getitem__.html#odl.operator.pspace_ops.ReductionOperator.__getitem__">[docs]</a>    <span class="k">def</span> <span class="fm">__getitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">index</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Return an operator by index.&quot;&quot;&quot;</span>
+<div class="viewcode-block" id="ReductionOperator.__getitem__">
+<a class="viewcode-back" href="../../../generated/odl.operator.pspace_ops.ReductionOperator.__getitem__.html#odl.operator.pspace_ops.ReductionOperator.__getitem__">[docs]</a>
+    <span class="k">def</span> <span class="fm">__getitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">index</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return an operator by index.&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">operators</span><span class="p">[</span><span class="n">index</span><span class="p">]</span></div>
 
+
     <span class="k">def</span> <span class="fm">__len__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Return ``len(self)``.&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return ``len(self)``.&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">operators</span><span class="p">)</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">size</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Total number of sub-operators.&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Total number of sub-operators.&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
 
-<div class="viewcode-block" id="ReductionOperator._call"><a class="viewcode-back" href="../../../generated/odl.operator.pspace_ops.ReductionOperator._call.html#odl.operator.pspace_ops.ReductionOperator._call">[docs]</a>    <span class="k">def</span> <span class="nf">_call</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">out</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Apply operators to ``x`` and sum.&quot;&quot;&quot;</span>
+<div class="viewcode-block" id="ReductionOperator._call">
+<a class="viewcode-back" href="../../../generated/odl.operator.pspace_ops.ReductionOperator._call.html#odl.operator.pspace_ops.ReductionOperator._call">[docs]</a>
+    <span class="k">def</span> <span class="nf">_call</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">out</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Apply operators to ``x`` and sum.&quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="n">out</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">prod_op</span><span class="p">(</span><span class="n">x</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
         <span class="k">else</span><span class="p">:</span>
@@ -1168,8 +1156,11 @@
             <span class="n">pspace_result</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">prod_op</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">out</span><span class="o">=</span><span class="n">wrapped_out</span><span class="p">)</span>
             <span class="k">return</span> <span class="n">pspace_result</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span></div>
 
-<div class="viewcode-block" id="ReductionOperator.derivative"><a class="viewcode-back" href="../../../generated/odl.operator.pspace_ops.ReductionOperator.derivative.html#odl.operator.pspace_ops.ReductionOperator.derivative">[docs]</a>    <span class="k">def</span> <span class="nf">derivative</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Derivative of the reduction operator.</span>
+
+<div class="viewcode-block" id="ReductionOperator.derivative">
+<a class="viewcode-back" href="../../../generated/odl.operator.pspace_ops.ReductionOperator.derivative.html#odl.operator.pspace_ops.ReductionOperator.derivative">[docs]</a>
+    <span class="k">def</span> <span class="nf">derivative</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Derivative of the reduction operator.</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
@@ -1213,9 +1204,10 @@
         <span class="k">return</span> <span class="n">ReductionOperator</span><span class="p">(</span><span class="o">*</span><span class="p">[</span><span class="n">op</span><span class="o">.</span><span class="n">derivative</span><span class="p">(</span><span class="n">xi</span><span class="p">)</span>
                                    <span class="k">for</span> <span class="n">op</span><span class="p">,</span> <span class="n">xi</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">operators</span><span class="p">,</span> <span class="n">x</span><span class="p">)])</span></div>
 
+
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">adjoint</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Adjoint of this operator.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Adjoint of this operator.</span>
 
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
@@ -1234,7 +1226,7 @@
         <span class="k">return</span> <span class="n">BroadcastOperator</span><span class="p">(</span><span class="o">*</span><span class="p">[</span><span class="n">op</span><span class="o">.</span><span class="n">adjoint</span> <span class="k">for</span> <span class="n">op</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">operators</span><span class="p">])</span>
 
     <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Return ``repr(self)``.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return ``repr(self)``.</span>
 
 <span class="sd">        Examples</span>
 <span class="sd">        --------</span>
@@ -1254,8 +1246,11 @@
             <span class="k">return</span> <span class="s1">&#39;</span><span class="si">{}</span><span class="s1">(</span><span class="si">{}</span><span class="s1">)&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="p">,</span> <span class="n">op_repr</span><span class="p">)</span></div>
 
 
-<div class="viewcode-block" id="DiagonalOperator"><a class="viewcode-back" href="../../../generated/odl.operator.pspace_ops.DiagonalOperator.html#odl.operator.pspace_ops.DiagonalOperator">[docs]</a><span class="k">class</span> <span class="nc">DiagonalOperator</span><span class="p">(</span><span class="n">ProductSpaceOperator</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Diagonal &#39;matrix&#39; of operators.</span>
+
+<div class="viewcode-block" id="DiagonalOperator">
+<a class="viewcode-back" href="../../../generated/odl.operator.pspace_ops.DiagonalOperator.html#odl.operator.pspace_ops.DiagonalOperator">[docs]</a>
+<span class="k">class</span> <span class="nc">DiagonalOperator</span><span class="p">(</span><span class="n">ProductSpaceOperator</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Diagonal &#39;matrix&#39; of operators.</span>
 
 <span class="sd">    For example, if ``A`` and ``B`` are operators, the diagonal operator</span>
 <span class="sd">    can be seen as a matrix of operators::</span>
@@ -1274,8 +1269,10 @@
 <span class="sd">    ReductionOperator : Calculates sum of operator results.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-<div class="viewcode-block" id="DiagonalOperator.__init__"><a class="viewcode-back" href="../../../generated/odl.operator.pspace_ops.DiagonalOperator.html#odl.operator.pspace_ops.DiagonalOperator.__init__">[docs]</a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">operators</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Initialize a new instance.</span>
+<div class="viewcode-block" id="DiagonalOperator.__init__">
+<a class="viewcode-back" href="../../../generated/odl.operator.pspace_ops.DiagonalOperator.html#odl.operator.pspace_ops.DiagonalOperator.__init__">[docs]</a>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">operators</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Initialize a new instance.</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
@@ -1325,31 +1322,37 @@
         <span class="n">data</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">(</span><span class="n">n_ops</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">object</span><span class="p">)</span>
         <span class="n">data</span><span class="p">[:]</span> <span class="o">=</span> <span class="n">operators</span>
         <span class="n">shape</span> <span class="o">=</span> <span class="p">(</span><span class="n">n_ops</span><span class="p">,</span> <span class="n">n_ops</span><span class="p">)</span>
-        <span class="n">op_matrix</span> <span class="o">=</span> <span class="n">scipy</span><span class="o">.</span><span class="n">sparse</span><span class="o">.</span><span class="n">coo_matrix</span><span class="p">((</span><span class="n">data</span><span class="p">,</span> <span class="p">(</span><span class="n">irow</span><span class="p">,</span> <span class="n">icol</span><span class="p">)),</span> <span class="n">shape</span><span class="p">)</span>
+        <span class="n">op_matrix</span> <span class="o">=</span> <span class="n">COOMatrix</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="p">(</span><span class="n">irow</span><span class="p">,</span> <span class="n">icol</span><span class="p">),</span> <span class="n">shape</span><span class="p">)</span>
         <span class="nb">super</span><span class="p">(</span><span class="n">DiagonalOperator</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">op_matrix</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">__operators</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">operators</span><span class="p">)</span></div>
 
+
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">operators</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Tuple of sub-operators that comprise ``self``.&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Tuple of sub-operators that comprise ``self``.&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__operators</span>
 
-<div class="viewcode-block" id="DiagonalOperator.__getitem__"><a class="viewcode-back" href="../../../generated/odl.operator.pspace_ops.DiagonalOperator.__getitem__.html#odl.operator.pspace_ops.DiagonalOperator.__getitem__">[docs]</a>    <span class="k">def</span> <span class="fm">__getitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">index</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Return an operator by index.&quot;&quot;&quot;</span>
+<div class="viewcode-block" id="DiagonalOperator.__getitem__">
+<a class="viewcode-back" href="../../../generated/odl.operator.pspace_ops.DiagonalOperator.__getitem__.html#odl.operator.pspace_ops.DiagonalOperator.__getitem__">[docs]</a>
+    <span class="k">def</span> <span class="fm">__getitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">index</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return an operator by index.&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">operators</span><span class="p">[</span><span class="n">index</span><span class="p">]</span></div>
 
+
     <span class="k">def</span> <span class="fm">__len__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Return ``len(self)``.&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return ``len(self)``.&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">operators</span><span class="p">)</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">size</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Total number of sub-operators.&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Total number of sub-operators.&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
 
-<div class="viewcode-block" id="DiagonalOperator.derivative"><a class="viewcode-back" href="../../../generated/odl.operator.pspace_ops.DiagonalOperator.derivative.html#odl.operator.pspace_ops.DiagonalOperator.derivative">[docs]</a>    <span class="k">def</span> <span class="nf">derivative</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">point</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Derivative of this operator.</span>
+<div class="viewcode-block" id="DiagonalOperator.derivative">
+<a class="viewcode-back" href="../../../generated/odl.operator.pspace_ops.DiagonalOperator.derivative.html#odl.operator.pspace_ops.DiagonalOperator.derivative">[docs]</a>
+    <span class="k">def</span> <span class="nf">derivative</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">point</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Derivative of this operator.</span>
 
 <span class="sd">        For example, if A and B are operators</span>
 
@@ -1383,9 +1386,10 @@
         <span class="k">return</span> <span class="n">DiagonalOperator</span><span class="p">(</span><span class="o">*</span><span class="n">derivs</span><span class="p">,</span>
                                 <span class="n">domain</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">domain</span><span class="p">,</span> <span class="nb">range</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">range</span><span class="p">)</span></div>
 
+
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">adjoint</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Adjoint of this operator.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Adjoint of this operator.</span>
 
 <span class="sd">        For example, if A and B are operators::</span>
 
@@ -1414,7 +1418,7 @@
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">inverse</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Inverse of this operator.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Inverse of this operator.</span>
 
 <span class="sd">        For example, if A and B are operators::</span>
 
@@ -1442,7 +1446,7 @@
                                 <span class="n">domain</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">range</span><span class="p">,</span> <span class="nb">range</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">domain</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Return ``repr(self)``.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return ``repr(self)``.</span>
 
 <span class="sd">        Examples</span>
 <span class="sd">        --------</span>
@@ -1462,52 +1466,37 @@
             <span class="k">return</span> <span class="s1">&#39;</span><span class="si">{}</span><span class="s1">(</span><span class="si">{}</span><span class="s1">)&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="p">,</span> <span class="n">op_repr</span><span class="p">)</span></div>
 
 
+
 <span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s1">&#39;__main__&#39;</span><span class="p">:</span>
     <span class="kn">from</span> <span class="nn">odl.util.testutils</span> <span class="kn">import</span> <span class="n">run_doctests</span>
     <span class="n">run_doctests</span><span class="p">()</span>
 </pre></div>
 
            </div>
-           
           </div>
           <footer>
 
   <hr/>
 
   <div role="contentinfo">
-    <p>
-        &#169; Copyright 2014-2020 The ODL Contributors.
-
-    </p>
+    <p>&#169; Copyright 2014-2020 The ODL Contributors.</p>
   </div>
-    
-    
-    
-    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
-    
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
     <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
-    
-    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
 
 </footer>
         </div>
       </div>
-
     </section>
-
   </div>
-  
-
-  <script type="text/javascript">
+  <script>
       jQuery(function () {
           SphinxRtdTheme.Navigation.enable(true);
       });
-  </script>
-
-  
-  
-    
-   
+  </script> 
 
 </body>
 </html>

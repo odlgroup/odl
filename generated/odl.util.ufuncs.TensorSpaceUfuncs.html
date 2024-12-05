@@ -1,108 +1,65 @@
-
-
 <!DOCTYPE html>
-<html class="writer-html5" lang="en" >
+<html class="writer-html5" lang="english" data-content_root="../">
 <head>
-  <meta charset="utf-8" />
-  
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  
-  <title>TensorSpaceUfuncs &mdash; odl 1.0.0.dev0 documentation</title>
-  
-
-  
-  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
-  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
-  <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
-
-  
-  
-
-  
-  
-
-  
+  <title>TensorSpaceUfuncs &mdash; odl 0.8.1 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b76e3c8a" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=19f00094" />
+      <link rel="stylesheet" type="text/css" href="../_static/custom.css?v=d6003e95" />
 
   
   <!--[if lt IE 9]>
     <script src="../_static/js/html5shiv.min.js"></script>
   <![endif]-->
   
-    
-      <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
-        <script src="../_static/jquery.js"></script>
-        <script src="../_static/underscore.js"></script>
-        <script src="../_static/doctools.js"></script>
-    
-    <script type="text/javascript" src="../_static/js/theme.js"></script>
-
-    
+        <script src="../_static/documentation_options.js?v=51bb0171"></script>
+        <script src="../_static/doctools.js?v=9a2dae69"></script>
+        <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
     <link rel="next" title="TensorSpaceUfuncs.absolute" href="odl.util.ufuncs.TensorSpaceUfuncs.absolute.html" />
     <link rel="prev" title="ProductSpaceUfuncs.trunc" href="odl.util.ufuncs.ProductSpaceUfuncs.trunc.html" /> 
 </head>
 
-<body class="wy-body-for-nav">
-
-   
+<body class="wy-body-for-nav"> 
   <div class="wy-grid-for-nav">
-    
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
         <div class="wy-side-nav-search" >
-          
 
           
-            <a href="../index.html" class="icon icon-home"> odl
           
-
-          
+          <a href="../index.html" class="icon icon-home">
+            odl
           </a>
-
-          
-            
-            
               <div class="version">
-                1.0.0.dev0
+                0.8.1
               </div>
-            
-          
-
-          
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
-    <input type="text" name="q" placeholder="Search docs" />
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
     <input type="hidden" name="check_keywords" value="yes" />
     <input type="hidden" name="area" value="default" />
   </form>
 </div>
-
-          
-        </div>
-
-        
-        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
-          
-            
-            
-              
-            
-            
-              <p class="caption"><span class="caption-text">Getting Started</span></p>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Getting Started</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../getting_started/getting_started.html">Getting Started</a></li>
 </ul>
-<p class="caption"><span class="caption-text">Working with ODL</span></p>
+<p class="caption" role="heading"><span class="caption-text">Working with ODL</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="../guide/guide.html">User’s guide – selected topics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../guide/guide.html">User's guide -- selected topics</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../math/math.html">Mathematical Background</a></li>
 </ul>
-<p class="caption"><span class="caption-text">Developer zone</span></p>
+<p class="caption" role="heading"><span class="caption-text">Developer zone</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../dev/dev.html">Contributing to ODL</a></li>
 </ul>
-<p class="caption"><span class="caption-text">Useful facts</span></p>
+<p class="caption" role="heading"><span class="caption-text">Useful facts</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../guide/faq.html">Frequently asked questions</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../guide/glossary.html">Glossary</a></li>
@@ -111,7 +68,7 @@
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../refs.html">References</a></li>
 </ul>
-<p class="caption"><span class="caption-text">API Reference</span></p>
+<p class="caption" role="heading"><span class="caption-text">API Reference</span></p>
 <ul class="current">
 <li class="toctree-l1 current"><a class="reference internal" href="../odl.html">odl</a><ul class="current">
 <li class="toctree-l2"><a class="reference internal" href="../odl.contrib.html">contrib</a></li>
@@ -131,6 +88,7 @@
 <li class="toctree-l3"><a class="reference internal" href="../odl.util.normalize.html">normalize</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../odl.util.npy_compat.html">npy_compat</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../odl.util.numerics.html">numerics</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../odl.util.sparse.html">sparse</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../odl.util.testutils.html">testutils</a></li>
 <li class="toctree-l3 current"><a class="reference internal" href="../odl.util.ufuncs.html">ufuncs</a><ul class="current">
 <li class="toctree-l4 current"><a class="reference internal" href="../odl.util.ufuncs.html#notes">Notes</a></li>
@@ -144,378 +102,313 @@
 </li>
 </ul>
 
-            
-          
         </div>
-        
       </div>
     </nav>
 
-    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
-
-      
-      <nav class="wy-nav-top" aria-label="top navigation">
-        
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
           <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
           <a href="../index.html">odl</a>
-        
       </nav>
 
-
       <div class="wy-nav-content">
-        
         <div class="rst-content">
-        
-          
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-<div role="navigation" aria-label="breadcrumbs navigation">
-
+          <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
-    
-      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
-        
-          <li><a href="../odl.html">odl</a> &raquo;</li>
-        
-          <li><a href="../odl.util.html">util</a> &raquo;</li>
-        
-          <li><a href="../odl.util.ufuncs.html">ufuncs</a> &raquo;</li>
-        
-      <li>TensorSpaceUfuncs</li>
-    
-    
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../odl.html">odl</a></li>
+          <li class="breadcrumb-item"><a href="../odl.util.html">util</a></li>
+          <li class="breadcrumb-item"><a href="../odl.util.ufuncs.html">ufuncs</a></li>
+      <li class="breadcrumb-item active">TensorSpaceUfuncs</li>
       <li class="wy-breadcrumbs-aside">
-        
-          
             <a href="../_sources/generated/odl.util.ufuncs.TensorSpaceUfuncs.rst.txt" rel="nofollow"> View page source</a>
-          
-        
       </li>
-    
   </ul>
-
-  
   <hr/>
 </div>
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
-            
-  <div class="section" id="tensorspaceufuncs">
-<h1>TensorSpaceUfuncs<a class="headerlink" href="#tensorspaceufuncs" title="Permalink to this headline">¶</a></h1>
+             
+  <section id="tensorspaceufuncs">
+<h1>TensorSpaceUfuncs<a class="headerlink" href="#tensorspaceufuncs" title="Link to this heading">¶</a></h1>
 <dl class="py class">
-<dt id="odl.util.ufuncs.TensorSpaceUfuncs">
-<em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">odl.util.ufuncs.</span></code><code class="sig-name descname"><span class="pre">TensorSpaceUfuncs</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">elem</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/odl/util/ufuncs.html#TensorSpaceUfuncs"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#odl.util.ufuncs.TensorSpaceUfuncs" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
+<dt class="sig sig-object py" id="odl.util.ufuncs.TensorSpaceUfuncs">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">odl.util.ufuncs.</span></span><span class="sig-name descname"><span class="pre">TensorSpaceUfuncs</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">elem</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/odl/util/ufuncs.html#TensorSpaceUfuncs"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#odl.util.ufuncs.TensorSpaceUfuncs" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.13)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
 <p>Ufuncs for <a class="reference internal" href="odl.space.base_tensors.Tensor.html#odl.space.base_tensors.Tensor" title="odl.space.base_tensors.Tensor"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Tensor</span></code></a> objects.</p>
 <p>Internal object, should not be created except in <a class="reference internal" href="odl.space.base_tensors.Tensor.html#odl.space.base_tensors.Tensor" title="odl.space.base_tensors.Tensor"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Tensor</span></code></a>.</p>
 <p class="rubric">Methods</p>
-<table class="longtable docutils align-default">
-<colgroup>
-<col style="width: 10%" />
-<col style="width: 90%" />
-</colgroup>
+<table class="autosummary longtable docutils align-default">
 <tbody>
-<tr class="row-odd"><td><p><a class="reference internal" href="odl.util.ufuncs.TensorSpaceUfuncs.absolute.html#odl.util.ufuncs.TensorSpaceUfuncs.absolute" title="odl.util.ufuncs.TensorSpaceUfuncs.absolute"><code class="xref py py-obj docutils literal notranslate"><span class="pre">absolute</span></code></a>(self[, out])</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="odl.util.ufuncs.TensorSpaceUfuncs.absolute.html#odl.util.ufuncs.TensorSpaceUfuncs.absolute" title="odl.util.ufuncs.TensorSpaceUfuncs.absolute"><code class="xref py py-obj docutils literal notranslate"><span class="pre">absolute</span></code></a>([out])</p></td>
 <td><p>Calculate the absolute value element-wise.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="odl.util.ufuncs.TensorSpaceUfuncs.add.html#odl.util.ufuncs.TensorSpaceUfuncs.add" title="odl.util.ufuncs.TensorSpaceUfuncs.add"><code class="xref py py-obj docutils literal notranslate"><span class="pre">add</span></code></a>(self, x2[, out])</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="odl.util.ufuncs.TensorSpaceUfuncs.add.html#odl.util.ufuncs.TensorSpaceUfuncs.add" title="odl.util.ufuncs.TensorSpaceUfuncs.add"><code class="xref py py-obj docutils literal notranslate"><span class="pre">add</span></code></a>(x2[, out])</p></td>
 <td><p>Add arguments element-wise.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="odl.util.ufuncs.TensorSpaceUfuncs.arccos.html#odl.util.ufuncs.TensorSpaceUfuncs.arccos" title="odl.util.ufuncs.TensorSpaceUfuncs.arccos"><code class="xref py py-obj docutils literal notranslate"><span class="pre">arccos</span></code></a>(self[, out])</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="odl.util.ufuncs.TensorSpaceUfuncs.arccos.html#odl.util.ufuncs.TensorSpaceUfuncs.arccos" title="odl.util.ufuncs.TensorSpaceUfuncs.arccos"><code class="xref py py-obj docutils literal notranslate"><span class="pre">arccos</span></code></a>([out])</p></td>
 <td><p>Trigonometric inverse cosine, element-wise.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="odl.util.ufuncs.TensorSpaceUfuncs.arccosh.html#odl.util.ufuncs.TensorSpaceUfuncs.arccosh" title="odl.util.ufuncs.TensorSpaceUfuncs.arccosh"><code class="xref py py-obj docutils literal notranslate"><span class="pre">arccosh</span></code></a>(self[, out])</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="odl.util.ufuncs.TensorSpaceUfuncs.arccosh.html#odl.util.ufuncs.TensorSpaceUfuncs.arccosh" title="odl.util.ufuncs.TensorSpaceUfuncs.arccosh"><code class="xref py py-obj docutils literal notranslate"><span class="pre">arccosh</span></code></a>([out])</p></td>
 <td><p>Inverse hyperbolic cosine, element-wise.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="odl.util.ufuncs.TensorSpaceUfuncs.arcsin.html#odl.util.ufuncs.TensorSpaceUfuncs.arcsin" title="odl.util.ufuncs.TensorSpaceUfuncs.arcsin"><code class="xref py py-obj docutils literal notranslate"><span class="pre">arcsin</span></code></a>(self[, out])</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="odl.util.ufuncs.TensorSpaceUfuncs.arcsin.html#odl.util.ufuncs.TensorSpaceUfuncs.arcsin" title="odl.util.ufuncs.TensorSpaceUfuncs.arcsin"><code class="xref py py-obj docutils literal notranslate"><span class="pre">arcsin</span></code></a>([out])</p></td>
 <td><p>Inverse sine, element-wise.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="odl.util.ufuncs.TensorSpaceUfuncs.arcsinh.html#odl.util.ufuncs.TensorSpaceUfuncs.arcsinh" title="odl.util.ufuncs.TensorSpaceUfuncs.arcsinh"><code class="xref py py-obj docutils literal notranslate"><span class="pre">arcsinh</span></code></a>(self[, out])</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="odl.util.ufuncs.TensorSpaceUfuncs.arcsinh.html#odl.util.ufuncs.TensorSpaceUfuncs.arcsinh" title="odl.util.ufuncs.TensorSpaceUfuncs.arcsinh"><code class="xref py py-obj docutils literal notranslate"><span class="pre">arcsinh</span></code></a>([out])</p></td>
 <td><p>Inverse hyperbolic sine element-wise.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="odl.util.ufuncs.TensorSpaceUfuncs.arctan.html#odl.util.ufuncs.TensorSpaceUfuncs.arctan" title="odl.util.ufuncs.TensorSpaceUfuncs.arctan"><code class="xref py py-obj docutils literal notranslate"><span class="pre">arctan</span></code></a>(self[, out])</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="odl.util.ufuncs.TensorSpaceUfuncs.arctan.html#odl.util.ufuncs.TensorSpaceUfuncs.arctan" title="odl.util.ufuncs.TensorSpaceUfuncs.arctan"><code class="xref py py-obj docutils literal notranslate"><span class="pre">arctan</span></code></a>([out])</p></td>
 <td><p>Trigonometric inverse tangent, element-wise.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="odl.util.ufuncs.TensorSpaceUfuncs.arctan2.html#odl.util.ufuncs.TensorSpaceUfuncs.arctan2" title="odl.util.ufuncs.TensorSpaceUfuncs.arctan2"><code class="xref py py-obj docutils literal notranslate"><span class="pre">arctan2</span></code></a>(self, x2[, out])</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="odl.util.ufuncs.TensorSpaceUfuncs.arctan2.html#odl.util.ufuncs.TensorSpaceUfuncs.arctan2" title="odl.util.ufuncs.TensorSpaceUfuncs.arctan2"><code class="xref py py-obj docutils literal notranslate"><span class="pre">arctan2</span></code></a>(x2[, out])</p></td>
 <td><p>Element-wise arc tangent of <code class="docutils literal notranslate"><span class="pre">x1/x2</span></code> choosing the quadrant correctly.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="odl.util.ufuncs.TensorSpaceUfuncs.arctanh.html#odl.util.ufuncs.TensorSpaceUfuncs.arctanh" title="odl.util.ufuncs.TensorSpaceUfuncs.arctanh"><code class="xref py py-obj docutils literal notranslate"><span class="pre">arctanh</span></code></a>(self[, out])</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="odl.util.ufuncs.TensorSpaceUfuncs.arctanh.html#odl.util.ufuncs.TensorSpaceUfuncs.arctanh" title="odl.util.ufuncs.TensorSpaceUfuncs.arctanh"><code class="xref py py-obj docutils literal notranslate"><span class="pre">arctanh</span></code></a>([out])</p></td>
 <td><p>Inverse hyperbolic tangent element-wise.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="odl.util.ufuncs.TensorSpaceUfuncs.bitwise_and.html#odl.util.ufuncs.TensorSpaceUfuncs.bitwise_and" title="odl.util.ufuncs.TensorSpaceUfuncs.bitwise_and"><code class="xref py py-obj docutils literal notranslate"><span class="pre">bitwise_and</span></code></a>(self, x2[, out])</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="odl.util.ufuncs.TensorSpaceUfuncs.bitwise_and.html#odl.util.ufuncs.TensorSpaceUfuncs.bitwise_and" title="odl.util.ufuncs.TensorSpaceUfuncs.bitwise_and"><code class="xref py py-obj docutils literal notranslate"><span class="pre">bitwise_and</span></code></a>(x2[, out])</p></td>
 <td><p>Compute the bit-wise AND of two arrays element-wise.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="odl.util.ufuncs.TensorSpaceUfuncs.bitwise_or.html#odl.util.ufuncs.TensorSpaceUfuncs.bitwise_or" title="odl.util.ufuncs.TensorSpaceUfuncs.bitwise_or"><code class="xref py py-obj docutils literal notranslate"><span class="pre">bitwise_or</span></code></a>(self, x2[, out])</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="odl.util.ufuncs.TensorSpaceUfuncs.bitwise_or.html#odl.util.ufuncs.TensorSpaceUfuncs.bitwise_or" title="odl.util.ufuncs.TensorSpaceUfuncs.bitwise_or"><code class="xref py py-obj docutils literal notranslate"><span class="pre">bitwise_or</span></code></a>(x2[, out])</p></td>
 <td><p>Compute the bit-wise OR of two arrays element-wise.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="odl.util.ufuncs.TensorSpaceUfuncs.bitwise_xor.html#odl.util.ufuncs.TensorSpaceUfuncs.bitwise_xor" title="odl.util.ufuncs.TensorSpaceUfuncs.bitwise_xor"><code class="xref py py-obj docutils literal notranslate"><span class="pre">bitwise_xor</span></code></a>(self, x2[, out])</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="odl.util.ufuncs.TensorSpaceUfuncs.bitwise_xor.html#odl.util.ufuncs.TensorSpaceUfuncs.bitwise_xor" title="odl.util.ufuncs.TensorSpaceUfuncs.bitwise_xor"><code class="xref py py-obj docutils literal notranslate"><span class="pre">bitwise_xor</span></code></a>(x2[, out])</p></td>
 <td><p>Compute the bit-wise XOR of two arrays element-wise.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="odl.util.ufuncs.TensorSpaceUfuncs.ceil.html#odl.util.ufuncs.TensorSpaceUfuncs.ceil" title="odl.util.ufuncs.TensorSpaceUfuncs.ceil"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ceil</span></code></a>(self[, out])</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="odl.util.ufuncs.TensorSpaceUfuncs.ceil.html#odl.util.ufuncs.TensorSpaceUfuncs.ceil" title="odl.util.ufuncs.TensorSpaceUfuncs.ceil"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ceil</span></code></a>([out])</p></td>
 <td><p>Return the ceiling of the input, element-wise.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="odl.util.ufuncs.TensorSpaceUfuncs.conj.html#odl.util.ufuncs.TensorSpaceUfuncs.conj" title="odl.util.ufuncs.TensorSpaceUfuncs.conj"><code class="xref py py-obj docutils literal notranslate"><span class="pre">conj</span></code></a>(self[, out])</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="odl.util.ufuncs.TensorSpaceUfuncs.conj.html#odl.util.ufuncs.TensorSpaceUfuncs.conj" title="odl.util.ufuncs.TensorSpaceUfuncs.conj"><code class="xref py py-obj docutils literal notranslate"><span class="pre">conj</span></code></a>([out])</p></td>
 <td><p>Return the complex conjugate, element-wise.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="odl.util.ufuncs.TensorSpaceUfuncs.copysign.html#odl.util.ufuncs.TensorSpaceUfuncs.copysign" title="odl.util.ufuncs.TensorSpaceUfuncs.copysign"><code class="xref py py-obj docutils literal notranslate"><span class="pre">copysign</span></code></a>(self, x2[, out])</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="odl.util.ufuncs.TensorSpaceUfuncs.copysign.html#odl.util.ufuncs.TensorSpaceUfuncs.copysign" title="odl.util.ufuncs.TensorSpaceUfuncs.copysign"><code class="xref py py-obj docutils literal notranslate"><span class="pre">copysign</span></code></a>(x2[, out])</p></td>
 <td><p>Change the sign of x1 to that of x2, element-wise.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="odl.util.ufuncs.TensorSpaceUfuncs.cos.html#odl.util.ufuncs.TensorSpaceUfuncs.cos" title="odl.util.ufuncs.TensorSpaceUfuncs.cos"><code class="xref py py-obj docutils literal notranslate"><span class="pre">cos</span></code></a>(self[, out])</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="odl.util.ufuncs.TensorSpaceUfuncs.cos.html#odl.util.ufuncs.TensorSpaceUfuncs.cos" title="odl.util.ufuncs.TensorSpaceUfuncs.cos"><code class="xref py py-obj docutils literal notranslate"><span class="pre">cos</span></code></a>([out])</p></td>
 <td><p>Cosine element-wise.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="odl.util.ufuncs.TensorSpaceUfuncs.cosh.html#odl.util.ufuncs.TensorSpaceUfuncs.cosh" title="odl.util.ufuncs.TensorSpaceUfuncs.cosh"><code class="xref py py-obj docutils literal notranslate"><span class="pre">cosh</span></code></a>(self[, out])</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="odl.util.ufuncs.TensorSpaceUfuncs.cosh.html#odl.util.ufuncs.TensorSpaceUfuncs.cosh" title="odl.util.ufuncs.TensorSpaceUfuncs.cosh"><code class="xref py py-obj docutils literal notranslate"><span class="pre">cosh</span></code></a>([out])</p></td>
 <td><p>Hyperbolic cosine, element-wise.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="odl.util.ufuncs.TensorSpaceUfuncs.deg2rad.html#odl.util.ufuncs.TensorSpaceUfuncs.deg2rad" title="odl.util.ufuncs.TensorSpaceUfuncs.deg2rad"><code class="xref py py-obj docutils literal notranslate"><span class="pre">deg2rad</span></code></a>(self[, out])</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="odl.util.ufuncs.TensorSpaceUfuncs.deg2rad.html#odl.util.ufuncs.TensorSpaceUfuncs.deg2rad" title="odl.util.ufuncs.TensorSpaceUfuncs.deg2rad"><code class="xref py py-obj docutils literal notranslate"><span class="pre">deg2rad</span></code></a>([out])</p></td>
 <td><p>Convert angles from degrees to radians.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="odl.util.ufuncs.TensorSpaceUfuncs.divide.html#odl.util.ufuncs.TensorSpaceUfuncs.divide" title="odl.util.ufuncs.TensorSpaceUfuncs.divide"><code class="xref py py-obj docutils literal notranslate"><span class="pre">divide</span></code></a>(self, x2[, out])</p></td>
-<td><p>Returns a true division of the inputs, element-wise.</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="odl.util.ufuncs.TensorSpaceUfuncs.divide.html#odl.util.ufuncs.TensorSpaceUfuncs.divide" title="odl.util.ufuncs.TensorSpaceUfuncs.divide"><code class="xref py py-obj docutils literal notranslate"><span class="pre">divide</span></code></a>(x2[, out])</p></td>
+<td><p>Divide arguments element-wise.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="odl.util.ufuncs.TensorSpaceUfuncs.equal.html#odl.util.ufuncs.TensorSpaceUfuncs.equal" title="odl.util.ufuncs.TensorSpaceUfuncs.equal"><code class="xref py py-obj docutils literal notranslate"><span class="pre">equal</span></code></a>(self, x2[, out])</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="odl.util.ufuncs.TensorSpaceUfuncs.equal.html#odl.util.ufuncs.TensorSpaceUfuncs.equal" title="odl.util.ufuncs.TensorSpaceUfuncs.equal"><code class="xref py py-obj docutils literal notranslate"><span class="pre">equal</span></code></a>(x2[, out])</p></td>
 <td><p>Return (x1 == x2) element-wise.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="odl.util.ufuncs.TensorSpaceUfuncs.exp.html#odl.util.ufuncs.TensorSpaceUfuncs.exp" title="odl.util.ufuncs.TensorSpaceUfuncs.exp"><code class="xref py py-obj docutils literal notranslate"><span class="pre">exp</span></code></a>(self[, out])</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="odl.util.ufuncs.TensorSpaceUfuncs.exp.html#odl.util.ufuncs.TensorSpaceUfuncs.exp" title="odl.util.ufuncs.TensorSpaceUfuncs.exp"><code class="xref py py-obj docutils literal notranslate"><span class="pre">exp</span></code></a>([out])</p></td>
 <td><p>Calculate the exponential of all elements in the input array.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="odl.util.ufuncs.TensorSpaceUfuncs.exp2.html#odl.util.ufuncs.TensorSpaceUfuncs.exp2" title="odl.util.ufuncs.TensorSpaceUfuncs.exp2"><code class="xref py py-obj docutils literal notranslate"><span class="pre">exp2</span></code></a>(self[, out])</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="odl.util.ufuncs.TensorSpaceUfuncs.exp2.html#odl.util.ufuncs.TensorSpaceUfuncs.exp2" title="odl.util.ufuncs.TensorSpaceUfuncs.exp2"><code class="xref py py-obj docutils literal notranslate"><span class="pre">exp2</span></code></a>([out])</p></td>
 <td><p>Calculate <code class="docutils literal notranslate"><span class="pre">2**p</span></code> for all <code class="docutils literal notranslate"><span class="pre">p</span></code> in the input array.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="odl.util.ufuncs.TensorSpaceUfuncs.expm1.html#odl.util.ufuncs.TensorSpaceUfuncs.expm1" title="odl.util.ufuncs.TensorSpaceUfuncs.expm1"><code class="xref py py-obj docutils literal notranslate"><span class="pre">expm1</span></code></a>(self[, out])</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="odl.util.ufuncs.TensorSpaceUfuncs.expm1.html#odl.util.ufuncs.TensorSpaceUfuncs.expm1" title="odl.util.ufuncs.TensorSpaceUfuncs.expm1"><code class="xref py py-obj docutils literal notranslate"><span class="pre">expm1</span></code></a>([out])</p></td>
 <td><p>Calculate <code class="docutils literal notranslate"><span class="pre">exp(x)</span> <span class="pre">-</span> <span class="pre">1</span></code> for all elements in the array.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="odl.util.ufuncs.TensorSpaceUfuncs.floor.html#odl.util.ufuncs.TensorSpaceUfuncs.floor" title="odl.util.ufuncs.TensorSpaceUfuncs.floor"><code class="xref py py-obj docutils literal notranslate"><span class="pre">floor</span></code></a>(self[, out])</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="odl.util.ufuncs.TensorSpaceUfuncs.floor.html#odl.util.ufuncs.TensorSpaceUfuncs.floor" title="odl.util.ufuncs.TensorSpaceUfuncs.floor"><code class="xref py py-obj docutils literal notranslate"><span class="pre">floor</span></code></a>([out])</p></td>
 <td><p>Return the floor of the input, element-wise.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="odl.util.ufuncs.TensorSpaceUfuncs.floor_divide.html#odl.util.ufuncs.TensorSpaceUfuncs.floor_divide" title="odl.util.ufuncs.TensorSpaceUfuncs.floor_divide"><code class="xref py py-obj docutils literal notranslate"><span class="pre">floor_divide</span></code></a>(self, x2[, out])</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="odl.util.ufuncs.TensorSpaceUfuncs.floor_divide.html#odl.util.ufuncs.TensorSpaceUfuncs.floor_divide" title="odl.util.ufuncs.TensorSpaceUfuncs.floor_divide"><code class="xref py py-obj docutils literal notranslate"><span class="pre">floor_divide</span></code></a>(x2[, out])</p></td>
 <td><p>Return the largest integer smaller or equal to the division of the inputs.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="odl.util.ufuncs.TensorSpaceUfuncs.fmax.html#odl.util.ufuncs.TensorSpaceUfuncs.fmax" title="odl.util.ufuncs.TensorSpaceUfuncs.fmax"><code class="xref py py-obj docutils literal notranslate"><span class="pre">fmax</span></code></a>(self, x2[, out])</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="odl.util.ufuncs.TensorSpaceUfuncs.fmax.html#odl.util.ufuncs.TensorSpaceUfuncs.fmax" title="odl.util.ufuncs.TensorSpaceUfuncs.fmax"><code class="xref py py-obj docutils literal notranslate"><span class="pre">fmax</span></code></a>(x2[, out])</p></td>
 <td><p>Element-wise maximum of array elements.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="odl.util.ufuncs.TensorSpaceUfuncs.fmin.html#odl.util.ufuncs.TensorSpaceUfuncs.fmin" title="odl.util.ufuncs.TensorSpaceUfuncs.fmin"><code class="xref py py-obj docutils literal notranslate"><span class="pre">fmin</span></code></a>(self, x2[, out])</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="odl.util.ufuncs.TensorSpaceUfuncs.fmin.html#odl.util.ufuncs.TensorSpaceUfuncs.fmin" title="odl.util.ufuncs.TensorSpaceUfuncs.fmin"><code class="xref py py-obj docutils literal notranslate"><span class="pre">fmin</span></code></a>(x2[, out])</p></td>
 <td><p>Element-wise minimum of array elements.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="odl.util.ufuncs.TensorSpaceUfuncs.fmod.html#odl.util.ufuncs.TensorSpaceUfuncs.fmod" title="odl.util.ufuncs.TensorSpaceUfuncs.fmod"><code class="xref py py-obj docutils literal notranslate"><span class="pre">fmod</span></code></a>(self, x2[, out])</p></td>
-<td><p>Return the element-wise remainder of division.</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="odl.util.ufuncs.TensorSpaceUfuncs.fmod.html#odl.util.ufuncs.TensorSpaceUfuncs.fmod" title="odl.util.ufuncs.TensorSpaceUfuncs.fmod"><code class="xref py py-obj docutils literal notranslate"><span class="pre">fmod</span></code></a>(x2[, out])</p></td>
+<td><p>Returns the element-wise remainder of division.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="odl.util.ufuncs.TensorSpaceUfuncs.greater.html#odl.util.ufuncs.TensorSpaceUfuncs.greater" title="odl.util.ufuncs.TensorSpaceUfuncs.greater"><code class="xref py py-obj docutils literal notranslate"><span class="pre">greater</span></code></a>(self, x2[, out])</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="odl.util.ufuncs.TensorSpaceUfuncs.greater.html#odl.util.ufuncs.TensorSpaceUfuncs.greater" title="odl.util.ufuncs.TensorSpaceUfuncs.greater"><code class="xref py py-obj docutils literal notranslate"><span class="pre">greater</span></code></a>(x2[, out])</p></td>
 <td><p>Return the truth value of (x1 &gt; x2) element-wise.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="odl.util.ufuncs.TensorSpaceUfuncs.greater_equal.html#odl.util.ufuncs.TensorSpaceUfuncs.greater_equal" title="odl.util.ufuncs.TensorSpaceUfuncs.greater_equal"><code class="xref py py-obj docutils literal notranslate"><span class="pre">greater_equal</span></code></a>(self, x2[, out])</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="odl.util.ufuncs.TensorSpaceUfuncs.greater_equal.html#odl.util.ufuncs.TensorSpaceUfuncs.greater_equal" title="odl.util.ufuncs.TensorSpaceUfuncs.greater_equal"><code class="xref py py-obj docutils literal notranslate"><span class="pre">greater_equal</span></code></a>(x2[, out])</p></td>
 <td><p>Return the truth value of (x1 &gt;= x2) element-wise.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="odl.util.ufuncs.TensorSpaceUfuncs.hypot.html#odl.util.ufuncs.TensorSpaceUfuncs.hypot" title="odl.util.ufuncs.TensorSpaceUfuncs.hypot"><code class="xref py py-obj docutils literal notranslate"><span class="pre">hypot</span></code></a>(self, x2[, out])</p></td>
-<td><p>Given the “legs” of a right triangle, return its hypotenuse.</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="odl.util.ufuncs.TensorSpaceUfuncs.hypot.html#odl.util.ufuncs.TensorSpaceUfuncs.hypot" title="odl.util.ufuncs.TensorSpaceUfuncs.hypot"><code class="xref py py-obj docutils literal notranslate"><span class="pre">hypot</span></code></a>(x2[, out])</p></td>
+<td><p>Given the &quot;legs&quot; of a right triangle, return its hypotenuse.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="odl.util.ufuncs.TensorSpaceUfuncs.invert.html#odl.util.ufuncs.TensorSpaceUfuncs.invert" title="odl.util.ufuncs.TensorSpaceUfuncs.invert"><code class="xref py py-obj docutils literal notranslate"><span class="pre">invert</span></code></a>(self[, out])</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="odl.util.ufuncs.TensorSpaceUfuncs.invert.html#odl.util.ufuncs.TensorSpaceUfuncs.invert" title="odl.util.ufuncs.TensorSpaceUfuncs.invert"><code class="xref py py-obj docutils literal notranslate"><span class="pre">invert</span></code></a>([out])</p></td>
 <td><p>Compute bit-wise inversion, or bit-wise NOT, element-wise.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="odl.util.ufuncs.TensorSpaceUfuncs.isfinite.html#odl.util.ufuncs.TensorSpaceUfuncs.isfinite" title="odl.util.ufuncs.TensorSpaceUfuncs.isfinite"><code class="xref py py-obj docutils literal notranslate"><span class="pre">isfinite</span></code></a>(self[, out])</p></td>
-<td><p>Test element-wise for finiteness (not infinity or not Not a Number).</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="odl.util.ufuncs.TensorSpaceUfuncs.isfinite.html#odl.util.ufuncs.TensorSpaceUfuncs.isfinite" title="odl.util.ufuncs.TensorSpaceUfuncs.isfinite"><code class="xref py py-obj docutils literal notranslate"><span class="pre">isfinite</span></code></a>([out])</p></td>
+<td><p>Test element-wise for finiteness (not infinity and not Not a Number).</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="odl.util.ufuncs.TensorSpaceUfuncs.isinf.html#odl.util.ufuncs.TensorSpaceUfuncs.isinf" title="odl.util.ufuncs.TensorSpaceUfuncs.isinf"><code class="xref py py-obj docutils literal notranslate"><span class="pre">isinf</span></code></a>(self[, out])</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="odl.util.ufuncs.TensorSpaceUfuncs.isinf.html#odl.util.ufuncs.TensorSpaceUfuncs.isinf" title="odl.util.ufuncs.TensorSpaceUfuncs.isinf"><code class="xref py py-obj docutils literal notranslate"><span class="pre">isinf</span></code></a>([out])</p></td>
 <td><p>Test element-wise for positive or negative infinity.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="odl.util.ufuncs.TensorSpaceUfuncs.isnan.html#odl.util.ufuncs.TensorSpaceUfuncs.isnan" title="odl.util.ufuncs.TensorSpaceUfuncs.isnan"><code class="xref py py-obj docutils literal notranslate"><span class="pre">isnan</span></code></a>(self[, out])</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="odl.util.ufuncs.TensorSpaceUfuncs.isnan.html#odl.util.ufuncs.TensorSpaceUfuncs.isnan" title="odl.util.ufuncs.TensorSpaceUfuncs.isnan"><code class="xref py py-obj docutils literal notranslate"><span class="pre">isnan</span></code></a>([out])</p></td>
 <td><p>Test element-wise for NaN and return result as a boolean array.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="odl.util.ufuncs.TensorSpaceUfuncs.left_shift.html#odl.util.ufuncs.TensorSpaceUfuncs.left_shift" title="odl.util.ufuncs.TensorSpaceUfuncs.left_shift"><code class="xref py py-obj docutils literal notranslate"><span class="pre">left_shift</span></code></a>(self, x2[, out])</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="odl.util.ufuncs.TensorSpaceUfuncs.left_shift.html#odl.util.ufuncs.TensorSpaceUfuncs.left_shift" title="odl.util.ufuncs.TensorSpaceUfuncs.left_shift"><code class="xref py py-obj docutils literal notranslate"><span class="pre">left_shift</span></code></a>(x2[, out])</p></td>
 <td><p>Shift the bits of an integer to the left.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="odl.util.ufuncs.TensorSpaceUfuncs.less.html#odl.util.ufuncs.TensorSpaceUfuncs.less" title="odl.util.ufuncs.TensorSpaceUfuncs.less"><code class="xref py py-obj docutils literal notranslate"><span class="pre">less</span></code></a>(self, x2[, out])</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="odl.util.ufuncs.TensorSpaceUfuncs.less.html#odl.util.ufuncs.TensorSpaceUfuncs.less" title="odl.util.ufuncs.TensorSpaceUfuncs.less"><code class="xref py py-obj docutils literal notranslate"><span class="pre">less</span></code></a>(x2[, out])</p></td>
 <td><p>Return the truth value of (x1 &lt; x2) element-wise.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="odl.util.ufuncs.TensorSpaceUfuncs.less_equal.html#odl.util.ufuncs.TensorSpaceUfuncs.less_equal" title="odl.util.ufuncs.TensorSpaceUfuncs.less_equal"><code class="xref py py-obj docutils literal notranslate"><span class="pre">less_equal</span></code></a>(self, x2[, out])</p></td>
-<td><p>Return the truth value of (x1 =&lt; x2) element-wise.</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="odl.util.ufuncs.TensorSpaceUfuncs.less_equal.html#odl.util.ufuncs.TensorSpaceUfuncs.less_equal" title="odl.util.ufuncs.TensorSpaceUfuncs.less_equal"><code class="xref py py-obj docutils literal notranslate"><span class="pre">less_equal</span></code></a>(x2[, out])</p></td>
+<td><p>Return the truth value of (x1 &lt;= x2) element-wise.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="odl.util.ufuncs.TensorSpaceUfuncs.log.html#odl.util.ufuncs.TensorSpaceUfuncs.log" title="odl.util.ufuncs.TensorSpaceUfuncs.log"><code class="xref py py-obj docutils literal notranslate"><span class="pre">log</span></code></a>(self[, out])</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="odl.util.ufuncs.TensorSpaceUfuncs.log.html#odl.util.ufuncs.TensorSpaceUfuncs.log" title="odl.util.ufuncs.TensorSpaceUfuncs.log"><code class="xref py py-obj docutils literal notranslate"><span class="pre">log</span></code></a>([out])</p></td>
 <td><p>Natural logarithm, element-wise.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="odl.util.ufuncs.TensorSpaceUfuncs.log10.html#odl.util.ufuncs.TensorSpaceUfuncs.log10" title="odl.util.ufuncs.TensorSpaceUfuncs.log10"><code class="xref py py-obj docutils literal notranslate"><span class="pre">log10</span></code></a>(self[, out])</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="odl.util.ufuncs.TensorSpaceUfuncs.log10.html#odl.util.ufuncs.TensorSpaceUfuncs.log10" title="odl.util.ufuncs.TensorSpaceUfuncs.log10"><code class="xref py py-obj docutils literal notranslate"><span class="pre">log10</span></code></a>([out])</p></td>
 <td><p>Return the base 10 logarithm of the input array, element-wise.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="odl.util.ufuncs.TensorSpaceUfuncs.log1p.html#odl.util.ufuncs.TensorSpaceUfuncs.log1p" title="odl.util.ufuncs.TensorSpaceUfuncs.log1p"><code class="xref py py-obj docutils literal notranslate"><span class="pre">log1p</span></code></a>(self[, out])</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="odl.util.ufuncs.TensorSpaceUfuncs.log1p.html#odl.util.ufuncs.TensorSpaceUfuncs.log1p" title="odl.util.ufuncs.TensorSpaceUfuncs.log1p"><code class="xref py py-obj docutils literal notranslate"><span class="pre">log1p</span></code></a>([out])</p></td>
 <td><p>Return the natural logarithm of one plus the input array, element-wise.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="odl.util.ufuncs.TensorSpaceUfuncs.log2.html#odl.util.ufuncs.TensorSpaceUfuncs.log2" title="odl.util.ufuncs.TensorSpaceUfuncs.log2"><code class="xref py py-obj docutils literal notranslate"><span class="pre">log2</span></code></a>(self[, out])</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="odl.util.ufuncs.TensorSpaceUfuncs.log2.html#odl.util.ufuncs.TensorSpaceUfuncs.log2" title="odl.util.ufuncs.TensorSpaceUfuncs.log2"><code class="xref py py-obj docutils literal notranslate"><span class="pre">log2</span></code></a>([out])</p></td>
 <td><p>Base-2 logarithm of <code class="docutils literal notranslate"><span class="pre">x</span></code>.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="odl.util.ufuncs.TensorSpaceUfuncs.logaddexp.html#odl.util.ufuncs.TensorSpaceUfuncs.logaddexp" title="odl.util.ufuncs.TensorSpaceUfuncs.logaddexp"><code class="xref py py-obj docutils literal notranslate"><span class="pre">logaddexp</span></code></a>(self, x2[, out])</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="odl.util.ufuncs.TensorSpaceUfuncs.logaddexp.html#odl.util.ufuncs.TensorSpaceUfuncs.logaddexp" title="odl.util.ufuncs.TensorSpaceUfuncs.logaddexp"><code class="xref py py-obj docutils literal notranslate"><span class="pre">logaddexp</span></code></a>(x2[, out])</p></td>
 <td><p>Logarithm of the sum of exponentiations of the inputs.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="odl.util.ufuncs.TensorSpaceUfuncs.logaddexp2.html#odl.util.ufuncs.TensorSpaceUfuncs.logaddexp2" title="odl.util.ufuncs.TensorSpaceUfuncs.logaddexp2"><code class="xref py py-obj docutils literal notranslate"><span class="pre">logaddexp2</span></code></a>(self, x2[, out])</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="odl.util.ufuncs.TensorSpaceUfuncs.logaddexp2.html#odl.util.ufuncs.TensorSpaceUfuncs.logaddexp2" title="odl.util.ufuncs.TensorSpaceUfuncs.logaddexp2"><code class="xref py py-obj docutils literal notranslate"><span class="pre">logaddexp2</span></code></a>(x2[, out])</p></td>
 <td><p>Logarithm of the sum of exponentiations of the inputs in base-2.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="odl.util.ufuncs.TensorSpaceUfuncs.logical_and.html#odl.util.ufuncs.TensorSpaceUfuncs.logical_and" title="odl.util.ufuncs.TensorSpaceUfuncs.logical_and"><code class="xref py py-obj docutils literal notranslate"><span class="pre">logical_and</span></code></a>(self, x2[, out])</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="odl.util.ufuncs.TensorSpaceUfuncs.logical_and.html#odl.util.ufuncs.TensorSpaceUfuncs.logical_and" title="odl.util.ufuncs.TensorSpaceUfuncs.logical_and"><code class="xref py py-obj docutils literal notranslate"><span class="pre">logical_and</span></code></a>(x2[, out])</p></td>
 <td><p>Compute the truth value of x1 AND x2 element-wise.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="odl.util.ufuncs.TensorSpaceUfuncs.logical_not.html#odl.util.ufuncs.TensorSpaceUfuncs.logical_not" title="odl.util.ufuncs.TensorSpaceUfuncs.logical_not"><code class="xref py py-obj docutils literal notranslate"><span class="pre">logical_not</span></code></a>(self[, out])</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="odl.util.ufuncs.TensorSpaceUfuncs.logical_not.html#odl.util.ufuncs.TensorSpaceUfuncs.logical_not" title="odl.util.ufuncs.TensorSpaceUfuncs.logical_not"><code class="xref py py-obj docutils literal notranslate"><span class="pre">logical_not</span></code></a>([out])</p></td>
 <td><p>Compute the truth value of NOT x element-wise.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="odl.util.ufuncs.TensorSpaceUfuncs.logical_or.html#odl.util.ufuncs.TensorSpaceUfuncs.logical_or" title="odl.util.ufuncs.TensorSpaceUfuncs.logical_or"><code class="xref py py-obj docutils literal notranslate"><span class="pre">logical_or</span></code></a>(self, x2[, out])</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="odl.util.ufuncs.TensorSpaceUfuncs.logical_or.html#odl.util.ufuncs.TensorSpaceUfuncs.logical_or" title="odl.util.ufuncs.TensorSpaceUfuncs.logical_or"><code class="xref py py-obj docutils literal notranslate"><span class="pre">logical_or</span></code></a>(x2[, out])</p></td>
 <td><p>Compute the truth value of x1 OR x2 element-wise.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="odl.util.ufuncs.TensorSpaceUfuncs.logical_xor.html#odl.util.ufuncs.TensorSpaceUfuncs.logical_xor" title="odl.util.ufuncs.TensorSpaceUfuncs.logical_xor"><code class="xref py py-obj docutils literal notranslate"><span class="pre">logical_xor</span></code></a>(self, x2[, out])</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="odl.util.ufuncs.TensorSpaceUfuncs.logical_xor.html#odl.util.ufuncs.TensorSpaceUfuncs.logical_xor" title="odl.util.ufuncs.TensorSpaceUfuncs.logical_xor"><code class="xref py py-obj docutils literal notranslate"><span class="pre">logical_xor</span></code></a>(x2[, out])</p></td>
 <td><p>Compute the truth value of x1 XOR x2, element-wise.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="odl.util.ufuncs.TensorSpaceUfuncs.max.html#odl.util.ufuncs.TensorSpaceUfuncs.max" title="odl.util.ufuncs.TensorSpaceUfuncs.max"><code class="xref py py-obj docutils literal notranslate"><span class="pre">max</span></code></a>(self[, axis, dtype, out, keepdims])</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="odl.util.ufuncs.TensorSpaceUfuncs.max.html#odl.util.ufuncs.TensorSpaceUfuncs.max" title="odl.util.ufuncs.TensorSpaceUfuncs.max"><code class="xref py py-obj docutils literal notranslate"><span class="pre">max</span></code></a>([axis, dtype, out, keepdims])</p></td>
 <td><p>Return the maximum of <code class="docutils literal notranslate"><span class="pre">self</span></code>.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="odl.util.ufuncs.TensorSpaceUfuncs.maximum.html#odl.util.ufuncs.TensorSpaceUfuncs.maximum" title="odl.util.ufuncs.TensorSpaceUfuncs.maximum"><code class="xref py py-obj docutils literal notranslate"><span class="pre">maximum</span></code></a>(self, x2[, out])</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="odl.util.ufuncs.TensorSpaceUfuncs.maximum.html#odl.util.ufuncs.TensorSpaceUfuncs.maximum" title="odl.util.ufuncs.TensorSpaceUfuncs.maximum"><code class="xref py py-obj docutils literal notranslate"><span class="pre">maximum</span></code></a>(x2[, out])</p></td>
 <td><p>Element-wise maximum of array elements.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="odl.util.ufuncs.TensorSpaceUfuncs.min.html#odl.util.ufuncs.TensorSpaceUfuncs.min" title="odl.util.ufuncs.TensorSpaceUfuncs.min"><code class="xref py py-obj docutils literal notranslate"><span class="pre">min</span></code></a>(self[, axis, dtype, out, keepdims])</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="odl.util.ufuncs.TensorSpaceUfuncs.min.html#odl.util.ufuncs.TensorSpaceUfuncs.min" title="odl.util.ufuncs.TensorSpaceUfuncs.min"><code class="xref py py-obj docutils literal notranslate"><span class="pre">min</span></code></a>([axis, dtype, out, keepdims])</p></td>
 <td><p>Return the minimum of <code class="docutils literal notranslate"><span class="pre">self</span></code>.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="odl.util.ufuncs.TensorSpaceUfuncs.minimum.html#odl.util.ufuncs.TensorSpaceUfuncs.minimum" title="odl.util.ufuncs.TensorSpaceUfuncs.minimum"><code class="xref py py-obj docutils literal notranslate"><span class="pre">minimum</span></code></a>(self, x2[, out])</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="odl.util.ufuncs.TensorSpaceUfuncs.minimum.html#odl.util.ufuncs.TensorSpaceUfuncs.minimum" title="odl.util.ufuncs.TensorSpaceUfuncs.minimum"><code class="xref py py-obj docutils literal notranslate"><span class="pre">minimum</span></code></a>(x2[, out])</p></td>
 <td><p>Element-wise minimum of array elements.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="odl.util.ufuncs.TensorSpaceUfuncs.mod.html#odl.util.ufuncs.TensorSpaceUfuncs.mod" title="odl.util.ufuncs.TensorSpaceUfuncs.mod"><code class="xref py py-obj docutils literal notranslate"><span class="pre">mod</span></code></a>(self, x2[, out])</p></td>
-<td><p>Return element-wise remainder of division.</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="odl.util.ufuncs.TensorSpaceUfuncs.mod.html#odl.util.ufuncs.TensorSpaceUfuncs.mod" title="odl.util.ufuncs.TensorSpaceUfuncs.mod"><code class="xref py py-obj docutils literal notranslate"><span class="pre">mod</span></code></a>(x2[, out])</p></td>
+<td><p>Returns the element-wise remainder of division.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="odl.util.ufuncs.TensorSpaceUfuncs.modf.html#odl.util.ufuncs.TensorSpaceUfuncs.modf" title="odl.util.ufuncs.TensorSpaceUfuncs.modf"><code class="xref py py-obj docutils literal notranslate"><span class="pre">modf</span></code></a>(self[, out])</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="odl.util.ufuncs.TensorSpaceUfuncs.modf.html#odl.util.ufuncs.TensorSpaceUfuncs.modf" title="odl.util.ufuncs.TensorSpaceUfuncs.modf"><code class="xref py py-obj docutils literal notranslate"><span class="pre">modf</span></code></a>([out])</p></td>
 <td><p>Return the fractional and integral parts of an array, element-wise.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="odl.util.ufuncs.TensorSpaceUfuncs.multiply.html#odl.util.ufuncs.TensorSpaceUfuncs.multiply" title="odl.util.ufuncs.TensorSpaceUfuncs.multiply"><code class="xref py py-obj docutils literal notranslate"><span class="pre">multiply</span></code></a>(self, x2[, out])</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="odl.util.ufuncs.TensorSpaceUfuncs.multiply.html#odl.util.ufuncs.TensorSpaceUfuncs.multiply" title="odl.util.ufuncs.TensorSpaceUfuncs.multiply"><code class="xref py py-obj docutils literal notranslate"><span class="pre">multiply</span></code></a>(x2[, out])</p></td>
 <td><p>Multiply arguments element-wise.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="odl.util.ufuncs.TensorSpaceUfuncs.negative.html#odl.util.ufuncs.TensorSpaceUfuncs.negative" title="odl.util.ufuncs.TensorSpaceUfuncs.negative"><code class="xref py py-obj docutils literal notranslate"><span class="pre">negative</span></code></a>(self[, out])</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="odl.util.ufuncs.TensorSpaceUfuncs.negative.html#odl.util.ufuncs.TensorSpaceUfuncs.negative" title="odl.util.ufuncs.TensorSpaceUfuncs.negative"><code class="xref py py-obj docutils literal notranslate"><span class="pre">negative</span></code></a>([out])</p></td>
 <td><p>Numerical negative, element-wise.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="odl.util.ufuncs.TensorSpaceUfuncs.not_equal.html#odl.util.ufuncs.TensorSpaceUfuncs.not_equal" title="odl.util.ufuncs.TensorSpaceUfuncs.not_equal"><code class="xref py py-obj docutils literal notranslate"><span class="pre">not_equal</span></code></a>(self, x2[, out])</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="odl.util.ufuncs.TensorSpaceUfuncs.not_equal.html#odl.util.ufuncs.TensorSpaceUfuncs.not_equal" title="odl.util.ufuncs.TensorSpaceUfuncs.not_equal"><code class="xref py py-obj docutils literal notranslate"><span class="pre">not_equal</span></code></a>(x2[, out])</p></td>
 <td><p>Return (x1 != x2) element-wise.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="odl.util.ufuncs.TensorSpaceUfuncs.power.html#odl.util.ufuncs.TensorSpaceUfuncs.power" title="odl.util.ufuncs.TensorSpaceUfuncs.power"><code class="xref py py-obj docutils literal notranslate"><span class="pre">power</span></code></a>(self, x2[, out])</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="odl.util.ufuncs.TensorSpaceUfuncs.power.html#odl.util.ufuncs.TensorSpaceUfuncs.power" title="odl.util.ufuncs.TensorSpaceUfuncs.power"><code class="xref py py-obj docutils literal notranslate"><span class="pre">power</span></code></a>(x2[, out])</p></td>
 <td><p>First array elements raised to powers from second array, element-wise.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="odl.util.ufuncs.TensorSpaceUfuncs.prod.html#odl.util.ufuncs.TensorSpaceUfuncs.prod" title="odl.util.ufuncs.TensorSpaceUfuncs.prod"><code class="xref py py-obj docutils literal notranslate"><span class="pre">prod</span></code></a>(self[, axis, dtype, out, keepdims])</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="odl.util.ufuncs.TensorSpaceUfuncs.prod.html#odl.util.ufuncs.TensorSpaceUfuncs.prod" title="odl.util.ufuncs.TensorSpaceUfuncs.prod"><code class="xref py py-obj docutils literal notranslate"><span class="pre">prod</span></code></a>([axis, dtype, out, keepdims])</p></td>
 <td><p>Return the product of <code class="docutils literal notranslate"><span class="pre">self</span></code>.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="odl.util.ufuncs.TensorSpaceUfuncs.rad2deg.html#odl.util.ufuncs.TensorSpaceUfuncs.rad2deg" title="odl.util.ufuncs.TensorSpaceUfuncs.rad2deg"><code class="xref py py-obj docutils literal notranslate"><span class="pre">rad2deg</span></code></a>(self[, out])</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="odl.util.ufuncs.TensorSpaceUfuncs.rad2deg.html#odl.util.ufuncs.TensorSpaceUfuncs.rad2deg" title="odl.util.ufuncs.TensorSpaceUfuncs.rad2deg"><code class="xref py py-obj docutils literal notranslate"><span class="pre">rad2deg</span></code></a>([out])</p></td>
 <td><p>Convert angles from radians to degrees.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="odl.util.ufuncs.TensorSpaceUfuncs.reciprocal.html#odl.util.ufuncs.TensorSpaceUfuncs.reciprocal" title="odl.util.ufuncs.TensorSpaceUfuncs.reciprocal"><code class="xref py py-obj docutils literal notranslate"><span class="pre">reciprocal</span></code></a>(self[, out])</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="odl.util.ufuncs.TensorSpaceUfuncs.reciprocal.html#odl.util.ufuncs.TensorSpaceUfuncs.reciprocal" title="odl.util.ufuncs.TensorSpaceUfuncs.reciprocal"><code class="xref py py-obj docutils literal notranslate"><span class="pre">reciprocal</span></code></a>([out])</p></td>
 <td><p>Return the reciprocal of the argument, element-wise.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="odl.util.ufuncs.TensorSpaceUfuncs.remainder.html#odl.util.ufuncs.TensorSpaceUfuncs.remainder" title="odl.util.ufuncs.TensorSpaceUfuncs.remainder"><code class="xref py py-obj docutils literal notranslate"><span class="pre">remainder</span></code></a>(self, x2[, out])</p></td>
-<td><p>Return element-wise remainder of division.</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="odl.util.ufuncs.TensorSpaceUfuncs.remainder.html#odl.util.ufuncs.TensorSpaceUfuncs.remainder" title="odl.util.ufuncs.TensorSpaceUfuncs.remainder"><code class="xref py py-obj docutils literal notranslate"><span class="pre">remainder</span></code></a>(x2[, out])</p></td>
+<td><p>Returns the element-wise remainder of division.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="odl.util.ufuncs.TensorSpaceUfuncs.right_shift.html#odl.util.ufuncs.TensorSpaceUfuncs.right_shift" title="odl.util.ufuncs.TensorSpaceUfuncs.right_shift"><code class="xref py py-obj docutils literal notranslate"><span class="pre">right_shift</span></code></a>(self, x2[, out])</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="odl.util.ufuncs.TensorSpaceUfuncs.right_shift.html#odl.util.ufuncs.TensorSpaceUfuncs.right_shift" title="odl.util.ufuncs.TensorSpaceUfuncs.right_shift"><code class="xref py py-obj docutils literal notranslate"><span class="pre">right_shift</span></code></a>(x2[, out])</p></td>
 <td><p>Shift the bits of an integer to the right.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="odl.util.ufuncs.TensorSpaceUfuncs.rint.html#odl.util.ufuncs.TensorSpaceUfuncs.rint" title="odl.util.ufuncs.TensorSpaceUfuncs.rint"><code class="xref py py-obj docutils literal notranslate"><span class="pre">rint</span></code></a>(self[, out])</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="odl.util.ufuncs.TensorSpaceUfuncs.rint.html#odl.util.ufuncs.TensorSpaceUfuncs.rint" title="odl.util.ufuncs.TensorSpaceUfuncs.rint"><code class="xref py py-obj docutils literal notranslate"><span class="pre">rint</span></code></a>([out])</p></td>
 <td><p>Round elements of the array to the nearest integer.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="odl.util.ufuncs.TensorSpaceUfuncs.sign.html#odl.util.ufuncs.TensorSpaceUfuncs.sign" title="odl.util.ufuncs.TensorSpaceUfuncs.sign"><code class="xref py py-obj docutils literal notranslate"><span class="pre">sign</span></code></a>(self[, out])</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="odl.util.ufuncs.TensorSpaceUfuncs.sign.html#odl.util.ufuncs.TensorSpaceUfuncs.sign" title="odl.util.ufuncs.TensorSpaceUfuncs.sign"><code class="xref py py-obj docutils literal notranslate"><span class="pre">sign</span></code></a>([out])</p></td>
 <td><p>Returns an element-wise indication of the sign of a number.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="odl.util.ufuncs.TensorSpaceUfuncs.signbit.html#odl.util.ufuncs.TensorSpaceUfuncs.signbit" title="odl.util.ufuncs.TensorSpaceUfuncs.signbit"><code class="xref py py-obj docutils literal notranslate"><span class="pre">signbit</span></code></a>(self[, out])</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="odl.util.ufuncs.TensorSpaceUfuncs.signbit.html#odl.util.ufuncs.TensorSpaceUfuncs.signbit" title="odl.util.ufuncs.TensorSpaceUfuncs.signbit"><code class="xref py py-obj docutils literal notranslate"><span class="pre">signbit</span></code></a>([out])</p></td>
 <td><p>Returns element-wise True where signbit is set (less than zero).</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="odl.util.ufuncs.TensorSpaceUfuncs.sin.html#odl.util.ufuncs.TensorSpaceUfuncs.sin" title="odl.util.ufuncs.TensorSpaceUfuncs.sin"><code class="xref py py-obj docutils literal notranslate"><span class="pre">sin</span></code></a>(self[, out])</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="odl.util.ufuncs.TensorSpaceUfuncs.sin.html#odl.util.ufuncs.TensorSpaceUfuncs.sin" title="odl.util.ufuncs.TensorSpaceUfuncs.sin"><code class="xref py py-obj docutils literal notranslate"><span class="pre">sin</span></code></a>([out])</p></td>
 <td><p>Trigonometric sine, element-wise.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="odl.util.ufuncs.TensorSpaceUfuncs.sinh.html#odl.util.ufuncs.TensorSpaceUfuncs.sinh" title="odl.util.ufuncs.TensorSpaceUfuncs.sinh"><code class="xref py py-obj docutils literal notranslate"><span class="pre">sinh</span></code></a>(self[, out])</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="odl.util.ufuncs.TensorSpaceUfuncs.sinh.html#odl.util.ufuncs.TensorSpaceUfuncs.sinh" title="odl.util.ufuncs.TensorSpaceUfuncs.sinh"><code class="xref py py-obj docutils literal notranslate"><span class="pre">sinh</span></code></a>([out])</p></td>
 <td><p>Hyperbolic sine, element-wise.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="odl.util.ufuncs.TensorSpaceUfuncs.sqrt.html#odl.util.ufuncs.TensorSpaceUfuncs.sqrt" title="odl.util.ufuncs.TensorSpaceUfuncs.sqrt"><code class="xref py py-obj docutils literal notranslate"><span class="pre">sqrt</span></code></a>(self[, out])</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="odl.util.ufuncs.TensorSpaceUfuncs.sqrt.html#odl.util.ufuncs.TensorSpaceUfuncs.sqrt" title="odl.util.ufuncs.TensorSpaceUfuncs.sqrt"><code class="xref py py-obj docutils literal notranslate"><span class="pre">sqrt</span></code></a>([out])</p></td>
 <td><p>Return the non-negative square-root of an array, element-wise.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="odl.util.ufuncs.TensorSpaceUfuncs.square.html#odl.util.ufuncs.TensorSpaceUfuncs.square" title="odl.util.ufuncs.TensorSpaceUfuncs.square"><code class="xref py py-obj docutils literal notranslate"><span class="pre">square</span></code></a>(self[, out])</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="odl.util.ufuncs.TensorSpaceUfuncs.square.html#odl.util.ufuncs.TensorSpaceUfuncs.square" title="odl.util.ufuncs.TensorSpaceUfuncs.square"><code class="xref py py-obj docutils literal notranslate"><span class="pre">square</span></code></a>([out])</p></td>
 <td><p>Return the element-wise square of the input.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="odl.util.ufuncs.TensorSpaceUfuncs.subtract.html#odl.util.ufuncs.TensorSpaceUfuncs.subtract" title="odl.util.ufuncs.TensorSpaceUfuncs.subtract"><code class="xref py py-obj docutils literal notranslate"><span class="pre">subtract</span></code></a>(self, x2[, out])</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="odl.util.ufuncs.TensorSpaceUfuncs.subtract.html#odl.util.ufuncs.TensorSpaceUfuncs.subtract" title="odl.util.ufuncs.TensorSpaceUfuncs.subtract"><code class="xref py py-obj docutils literal notranslate"><span class="pre">subtract</span></code></a>(x2[, out])</p></td>
 <td><p>Subtract arguments, element-wise.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="odl.util.ufuncs.TensorSpaceUfuncs.sum.html#odl.util.ufuncs.TensorSpaceUfuncs.sum" title="odl.util.ufuncs.TensorSpaceUfuncs.sum"><code class="xref py py-obj docutils literal notranslate"><span class="pre">sum</span></code></a>(self[, axis, dtype, out, keepdims])</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="odl.util.ufuncs.TensorSpaceUfuncs.sum.html#odl.util.ufuncs.TensorSpaceUfuncs.sum" title="odl.util.ufuncs.TensorSpaceUfuncs.sum"><code class="xref py py-obj docutils literal notranslate"><span class="pre">sum</span></code></a>([axis, dtype, out, keepdims])</p></td>
 <td><p>Return the sum of <code class="docutils literal notranslate"><span class="pre">self</span></code>.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="odl.util.ufuncs.TensorSpaceUfuncs.tan.html#odl.util.ufuncs.TensorSpaceUfuncs.tan" title="odl.util.ufuncs.TensorSpaceUfuncs.tan"><code class="xref py py-obj docutils literal notranslate"><span class="pre">tan</span></code></a>(self[, out])</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="odl.util.ufuncs.TensorSpaceUfuncs.tan.html#odl.util.ufuncs.TensorSpaceUfuncs.tan" title="odl.util.ufuncs.TensorSpaceUfuncs.tan"><code class="xref py py-obj docutils literal notranslate"><span class="pre">tan</span></code></a>([out])</p></td>
 <td><p>Compute tangent element-wise.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="odl.util.ufuncs.TensorSpaceUfuncs.tanh.html#odl.util.ufuncs.TensorSpaceUfuncs.tanh" title="odl.util.ufuncs.TensorSpaceUfuncs.tanh"><code class="xref py py-obj docutils literal notranslate"><span class="pre">tanh</span></code></a>(self[, out])</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="odl.util.ufuncs.TensorSpaceUfuncs.tanh.html#odl.util.ufuncs.TensorSpaceUfuncs.tanh" title="odl.util.ufuncs.TensorSpaceUfuncs.tanh"><code class="xref py py-obj docutils literal notranslate"><span class="pre">tanh</span></code></a>([out])</p></td>
 <td><p>Compute hyperbolic tangent element-wise.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="odl.util.ufuncs.TensorSpaceUfuncs.true_divide.html#odl.util.ufuncs.TensorSpaceUfuncs.true_divide" title="odl.util.ufuncs.TensorSpaceUfuncs.true_divide"><code class="xref py py-obj docutils literal notranslate"><span class="pre">true_divide</span></code></a>(self, x2[, out])</p></td>
-<td><p>Returns a true division of the inputs, element-wise.</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="odl.util.ufuncs.TensorSpaceUfuncs.true_divide.html#odl.util.ufuncs.TensorSpaceUfuncs.true_divide" title="odl.util.ufuncs.TensorSpaceUfuncs.true_divide"><code class="xref py py-obj docutils literal notranslate"><span class="pre">true_divide</span></code></a>(x2[, out])</p></td>
+<td><p>Divide arguments element-wise.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="odl.util.ufuncs.TensorSpaceUfuncs.trunc.html#odl.util.ufuncs.TensorSpaceUfuncs.trunc" title="odl.util.ufuncs.TensorSpaceUfuncs.trunc"><code class="xref py py-obj docutils literal notranslate"><span class="pre">trunc</span></code></a>(self[, out])</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="odl.util.ufuncs.TensorSpaceUfuncs.trunc.html#odl.util.ufuncs.TensorSpaceUfuncs.trunc" title="odl.util.ufuncs.TensorSpaceUfuncs.trunc"><code class="xref py py-obj docutils literal notranslate"><span class="pre">trunc</span></code></a>([out])</p></td>
 <td><p>Return the truncated value of the input, element-wise.</p></td>
 </tr>
 </tbody>
 </table>
 <dl class="py method">
-<dt id="odl.util.ufuncs.TensorSpaceUfuncs.__init__">
-<code class="sig-name descname"><span class="pre">__init__</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">elem</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/odl/util/ufuncs.html#TensorSpaceUfuncs.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#odl.util.ufuncs.TensorSpaceUfuncs.__init__" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="odl.util.ufuncs.TensorSpaceUfuncs.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">elem</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/odl/util/ufuncs.html#TensorSpaceUfuncs.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#odl.util.ufuncs.TensorSpaceUfuncs.__init__" title="Link to this definition">¶</a></dt>
 <dd><p>Create ufunc wrapper for elem.</p>
 </dd></dl>
 
 </dd></dl>
 
-</div>
+</section>
 
 
            </div>
-           
           </div>
-          <footer>
-    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
-        <a href="odl.util.ufuncs.TensorSpaceUfuncs.absolute.html" class="btn btn-neutral float-right" title="TensorSpaceUfuncs.absolute" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
         <a href="odl.util.ufuncs.ProductSpaceUfuncs.trunc.html" class="btn btn-neutral float-left" title="ProductSpaceUfuncs.trunc" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="odl.util.ufuncs.TensorSpaceUfuncs.absolute.html" class="btn btn-neutral float-right" title="TensorSpaceUfuncs.absolute" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>
 
   <div role="contentinfo">
-    <p>
-        &#169; Copyright 2014-2020 The ODL Contributors.
-
-    </p>
+    <p>&#169; Copyright 2014-2020 The ODL Contributors.</p>
   </div>
-    
-    
-    
-    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
-    
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
     <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
-    
-    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
 
 </footer>
         </div>
       </div>
-
     </section>
-
   </div>
-  
-
-  <script type="text/javascript">
+  <script>
       jQuery(function () {
           SphinxRtdTheme.Navigation.enable(true);
       });
-  </script>
-
-  
-  
-    
-   
+  </script> 
 
 </body>
 </html>

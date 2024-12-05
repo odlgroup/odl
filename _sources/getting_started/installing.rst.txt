@@ -21,7 +21,7 @@ or conda:
 
 .. code-block:: bash
 
-    $ conda install -c odlgroup odl matplotlib pytest scikit-image spyder
+    $ conda install conda-forge::odl matplotlib pytest scikit-image spyder
 
 After installation, the installation can be verified by running the tests:
 
@@ -65,9 +65,11 @@ Which Python version to use?
 ============================
 Any modern Python distribution supporting `NumPy`_ and `SciPy`_ should work for the core library, but some extensions require CPython (the standard Python distribution).
 
-ODL fully supports both Python 2 and Python 3.
+ODL fully supports most recent Python versions.
 If you choose to use your system Python interpreter (the "pip install as user" variant), it may be a good idea to stick with the default one, i.e. the one invoked by the ``python`` command on the command line.
-Otherwise, we recommend using Python 3, since Python 2 support will be discontinued in 2020.
+Otherwise, we recommend using Python 3.10.
+
+Python 2 and early versions of Python 3 are not supported anymore, but you may be able to use them with old releases of odl.
 
 
 .. _installing_odl__development_environment:

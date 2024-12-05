@@ -1,0 +1,6 @@
+COOMatrix.col
+=============================
+
+.. currentmodule:: odl.util.sparse
+
+.. autoproperty:: COOMatrix.col

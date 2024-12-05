@@ -1,101 +1,58 @@
-
-
 <!DOCTYPE html>
-<html class="writer-html5" lang="en" >
+<html class="writer-html5" lang="english" data-content_root="../">
 <head>
-  <meta charset="utf-8" />
-  
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  
-  <title>Resizing Operators &mdash; odl 1.0.0.dev0 documentation</title>
-  
-
-  
-  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
-  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
-  <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
-
-  
-  
-
-  
-  
-
-  
+  <title>Resizing Operators &mdash; odl 0.8.1 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b76e3c8a" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=19f00094" />
+      <link rel="stylesheet" type="text/css" href="../_static/custom.css?v=d6003e95" />
 
   
   <!--[if lt IE 9]>
     <script src="../_static/js/html5shiv.min.js"></script>
   <![endif]-->
   
-    
-      <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
-        <script src="../_static/jquery.js"></script>
-        <script src="../_static/underscore.js"></script>
-        <script src="../_static/doctools.js"></script>
-    
-    <script type="text/javascript" src="../_static/js/theme.js"></script>
-
-    
+        <script src="../_static/documentation_options.js?v=51bb0171"></script>
+        <script src="../_static/doctools.js?v=9a2dae69"></script>
+        <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
     <link rel="next" title="On the different notions of derivative" href="derivatives_guide.html" />
     <link rel="prev" title="Discretizations" href="discretization.html" /> 
 </head>
 
-<body class="wy-body-for-nav">
-
-   
+<body class="wy-body-for-nav"> 
   <div class="wy-grid-for-nav">
-    
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
         <div class="wy-side-nav-search" >
-          
 
           
-            <a href="../index.html" class="icon icon-home"> odl
           
-
-          
+          <a href="../index.html" class="icon icon-home">
+            odl
           </a>
-
-          
-            
-            
               <div class="version">
-                1.0.0.dev0
+                0.8.1
               </div>
-            
-          
-
-          
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
-    <input type="text" name="q" placeholder="Search docs" />
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
     <input type="hidden" name="check_keywords" value="yes" />
     <input type="hidden" name="area" value="default" />
   </form>
 </div>
-
-          
-        </div>
-
-        
-        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
-          
-            
-            
-              
-            
-            
-              <p class="caption"><span class="caption-text">Getting Started</span></p>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Getting Started</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../getting_started/getting_started.html">Getting Started</a></li>
 </ul>
-<p class="caption"><span class="caption-text">Working with ODL</span></p>
+<p class="caption" role="heading"><span class="caption-text">Working with ODL</span></p>
 <ul class="current">
-<li class="toctree-l1"><a class="reference internal" href="../guide/guide.html">User’s guide – selected topics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../guide/guide.html">User's guide -- selected topics</a></li>
 <li class="toctree-l1 current"><a class="reference internal" href="math.html">Mathematical Background</a><ul class="current">
 <li class="toctree-l2"><a class="reference internal" href="linear_spaces.html">Linear Spaces</a></li>
 <li class="toctree-l2"><a class="reference internal" href="discretization.html">Discretizations</a></li>
@@ -121,11 +78,11 @@
 </ul>
 </li>
 </ul>
-<p class="caption"><span class="caption-text">Developer zone</span></p>
+<p class="caption" role="heading"><span class="caption-text">Developer zone</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../dev/dev.html">Contributing to ODL</a></li>
 </ul>
-<p class="caption"><span class="caption-text">Useful facts</span></p>
+<p class="caption" role="heading"><span class="caption-text">Useful facts</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../guide/faq.html">Frequently asked questions</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../guide/glossary.html">Glossary</a></li>
@@ -134,95 +91,53 @@
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../refs.html">References</a></li>
 </ul>
-<p class="caption"><span class="caption-text">API Reference</span></p>
+<p class="caption" role="heading"><span class="caption-text">API Reference</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../odl.html">odl</a></li>
 </ul>
 
-            
-          
         </div>
-        
       </div>
     </nav>
 
-    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
-
-      
-      <nav class="wy-nav-top" aria-label="top navigation">
-        
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
           <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
           <a href="../index.html">odl</a>
-        
       </nav>
 
-
       <div class="wy-nav-content">
-        
         <div class="rst-content">
-        
-          
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-<div role="navigation" aria-label="breadcrumbs navigation">
-
+          <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
-    
-      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
-        
-          <li><a href="math.html">Mathematical Background</a> &raquo;</li>
-        
-      <li>Resizing Operators</li>
-    
-    
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="math.html">Mathematical Background</a></li>
+      <li class="breadcrumb-item active">Resizing Operators</li>
       <li class="wy-breadcrumbs-aside">
-        
-          
             <a href="../_sources/math/resizing_ops.rst.txt" rel="nofollow"> View page source</a>
-          
-        
       </li>
-    
   </ul>
-
-  
   <hr/>
 </div>
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
-            
-  <div class="section" id="resizing-operators">
-<span id="resizing-ops"></span><h1>Resizing Operators<a class="headerlink" href="#resizing-operators" title="Permalink to this headline">¶</a></h1>
-<div class="section" id="introduction">
-<h2>Introduction<a class="headerlink" href="#introduction" title="Permalink to this headline">¶</a></h2>
+             
+  <section id="resizing-operators">
+<span id="resizing-ops"></span><h1>Resizing Operators<a class="headerlink" href="#resizing-operators" title="Link to this heading">¶</a></h1>
+<section id="introduction">
+<h2>Introduction<a class="headerlink" href="#introduction" title="Link to this heading">¶</a></h2>
 <p>In ODL, resizing of a discretized function is understood as the operation of shrinking or enlarging its domain in such a way that the size of the partition cells do not change.
-This “constant cell size” restriction is intentional since it ensures that the underlying operation can be implemented as array resizing without resampling, thus keeping those two functionalities separate (see <a class="reference internal" href="../generated/odl.discr.discr_ops.Resampling.html#odl.discr.discr_ops.Resampling" title="odl.discr.discr_ops.Resampling"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Resampling</span></code></a>).</p>
-</div>
-<div class="section" id="basic-setting">
-<h2>Basic setting<a class="headerlink" href="#basic-setting" title="Permalink to this headline">¶</a></h2>
+This &quot;constant cell size&quot; restriction is intentional since it ensures that the underlying operation can be implemented as array resizing without resampling, thus keeping those two functionalities separate (see <a class="reference internal" href="../generated/odl.discr.discr_ops.Resampling.html#odl.discr.discr_ops.Resampling" title="odl.discr.discr_ops.Resampling"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Resampling</span></code></a>).</p>
+</section>
+<section id="basic-setting">
+<h2>Basic setting<a class="headerlink" href="#basic-setting" title="Link to this heading">¶</a></h2>
 <p>Let now <img class="math" src="../_images/math/b1fcdfedee20badc3539b9e3e967bf7be9a700ea.png" alt="\mathbb{R}^n"/> with <img class="math" src="../_images/math/311e092a13d33affc1e88daf492adabcbf4716d4.png" alt="n \in \mathbb{N}"/> be the space of one-dimensional real vectors encoding values of a function defined on an interval <img class="math" src="../_images/math/c0de7dcaed0feeacf366a9c386ebcd5dd9efe671.png" alt="[a, b] \subset \mathbb{R}"/> (see <a class="reference internal" href="discretization.html#discretizations"><span class="std std-ref">Discretizations</span></a> for details).
 Since values are not manipulated, the generalization to complex-valued functions is straightforward.</p>
-</div>
-<div class="section" id="restriction-operator">
-<h2>Restriction operator<a class="headerlink" href="#restriction-operator" title="Permalink to this headline">¶</a></h2>
+</section>
+<section id="restriction-operator">
+<h2>Restriction operator<a class="headerlink" href="#restriction-operator" title="Link to this heading">¶</a></h2>
 <p>We consider the space <img class="math" src="../_images/math/4fb872b117eed2942d179abd4649355e811467d4.png" alt="\mathbb{R}^m"/> for an <img class="math" src="../_images/math/a3048281ff27e589a9d58c2cd3b12a2b92c22554.png" alt="m &lt; n \in \mathbb{N}"/> and define the restriction operator</p>
 <div class="math" id="equation-def-restrict-op">
-<p><span class="eqno">(1)<a class="headerlink" href="#equation-def-restrict-op" title="Permalink to this equation">¶</a></span><img src="../_images/math/307997c9782725023e53fda251e3e713efb84de6.png" alt="R : \mathbb{R}^n \to \mathbb{R}^m, \quad R(x) := (x_p, \dots, x_{p+m-1})"/></p>
+<p><span class="eqno">(1)<a class="headerlink" href="#equation-def-restrict-op" title="Link to this equation">¶</a></span><img src="../_images/math/307997c9782725023e53fda251e3e713efb84de6.png" alt="R : \mathbb{R}^n \to \mathbb{R}^m, \quad R(x) := (x_p, \dots, x_{p+m-1})"/></p>
 </div><p>with a given index <img class="math" src="../_images/math/c4f803f94f246addd64c25794e8354a265612920.png" alt="0 \leq p \leq n - m - 1"/>.
 Its adjoint with respect to the standard inner product is easy to determine:</p>
 <div class="math">
@@ -233,7 +148,7 @@ Its adjoint with respect to the standard inner product is easy to determine:</p>
 &amp;= \sum_{i=0}^{n-1} x_i\, R^*(y)_i"/></p>
 </div><p>with the zero-padding operator</p>
 <div class="math" id="equation-zero-pad-as-restr-adj">
-<p><span class="eqno">(2)<a class="headerlink" href="#equation-zero-pad-as-restr-adj" title="Permalink to this equation">¶</a></span><img src="../_images/math/51ac97565a489039867c717194c20b237f55bf16.png" alt="R^*(y)_i :=
+<p><span class="eqno">(2)<a class="headerlink" href="#equation-zero-pad-as-restr-adj" title="Link to this equation">¶</a></span><img src="../_images/math/51ac97565a489039867c717194c20b237f55bf16.png" alt="R^*(y)_i :=
 \begin{cases}
 y_{i-p} &amp; \text{if } p \leq i \leq p + m - 1, \\
 0       &amp; \text{else.}
@@ -242,31 +157,31 @@ y_{i-p} &amp; \text{if } p \leq i \leq p + m - 1, \\
 It is also clear that the operator <img class="math" src="../_images/math/1ebe654cc7b8f2a0d8100aa5825cf2b9021adbbc.png" alt="R"/> is right-invertible by <img class="math" src="../_images/math/2772df4dabb3cda01e5efe29718258746ea325a4.png" alt="R^*"/>, i.e. <img class="math" src="../_images/math/5a71cf48320e0b8a436546fbcffa1c477451e46c.png" alt="R R^* = \mathrm{Id}_{\mathbb{R}^m}"/>.
 In fact, any operator of the form <img class="math" src="../_images/math/f5300628c5e780dfdf5b99ed8fbd6f4cd0648ff5.png" alt="R^* + P"/>, where <img class="math" src="../_images/math/c2aa3dff9bffb099e9dff196fd36aed56ec16baf.png" alt="P"/> is linear and <img class="math" src="../_images/math/78816146150f68fdfb223100233f476af52c4ac2.png" alt="P(x)_i = 0"/> for <img class="math" src="../_images/math/02f1b817523b6823f0bdcf003dec95ddbbd34c99.png" alt="i \not \in \{p, \dots, p+m-1\}"/> acts as a right inverse for <img class="math" src="../_images/math/1ebe654cc7b8f2a0d8100aa5825cf2b9021adbbc.png" alt="R"/>.
 On the other hand, <img class="math" src="../_images/math/1ebe654cc7b8f2a0d8100aa5825cf2b9021adbbc.png" alt="R"/> has no left inverse since it has a non-trivial kernel (null space) <img class="math" src="../_images/math/00bd68375a501167618bd41bb5f4c9d9cd9b011d.png" alt="\mathrm{ker} R = \{x \in \mathbb{R}^n\,|\,x_i = 0 \text{ for } i = p, \dots, p+m-1\}"/>.</p>
-</div>
-<div class="section" id="extension-operators">
-<h2>Extension operators<a class="headerlink" href="#extension-operators" title="Permalink to this headline">¶</a></h2>
+</section>
+<section id="extension-operators">
+<h2>Extension operators<a class="headerlink" href="#extension-operators" title="Link to this heading">¶</a></h2>
 <p>Now we study the opposite case of resizing, namely extending a vector.
 We thus choose <img class="math" src="../_images/math/cac4c19cf052e98da70cc056dd961b466c31c3f0.png" alt="m &gt; n"/> and consider different cases of enlarging a given vector <img class="math" src="../_images/math/e2bde9ba17707b966630d614fafa6f53820f2885.png" alt="x \in \mathbb{R}^n"/> to a vector in <img class="math" src="../_images/math/4fb872b117eed2942d179abd4649355e811467d4.png" alt="\mathbb{R}^m"/>.
-The start index is again denoted by <img class="math" src="../_images/math/141bbefb74014fc5e43499901bf78607ae335583.png" alt="p"/> and needs to fulfill <img class="math" src="../_images/math/ba9f2afe444bdcce3266cfc7b6fe85d789f8e01a.png" alt="0 \leq p \leq m - n - 1"/>, such that a vector of length <img class="math" src="../_images/math/5a939c5280da7202ca4531f175a7780ad5e1f80a.png" alt="n"/> “fits into” a vector of length <img class="math" src="../_images/math/e9bc7da808d33a16a8347f27a519bd067186aa66.png" alt="m"/> when starting at index <img class="math" src="../_images/math/141bbefb74014fc5e43499901bf78607ae335583.png" alt="p"/>.</p>
-<p>It should be noted that all extension operators mentioned here are of the above form <img class="math" src="../_images/math/f5300628c5e780dfdf5b99ed8fbd6f4cd0648ff5.png" alt="R^* + P"/> with <img class="math" src="../_images/math/c2aa3dff9bffb099e9dff196fd36aed56ec16baf.png" alt="P"/> acting on the “outer” indices only.
+The start index is again denoted by <img class="math" src="../_images/math/141bbefb74014fc5e43499901bf78607ae335583.png" alt="p"/> and needs to fulfill <img class="math" src="../_images/math/ba9f2afe444bdcce3266cfc7b6fe85d789f8e01a.png" alt="0 \leq p \leq m - n - 1"/>, such that a vector of length <img class="math" src="../_images/math/5a939c5280da7202ca4531f175a7780ad5e1f80a.png" alt="n"/> &quot;fits into&quot; a vector of length <img class="math" src="../_images/math/e9bc7da808d33a16a8347f27a519bd067186aa66.png" alt="m"/> when starting at index <img class="math" src="../_images/math/141bbefb74014fc5e43499901bf78607ae335583.png" alt="p"/>.</p>
+<p>It should be noted that all extension operators mentioned here are of the above form <img class="math" src="../_images/math/f5300628c5e780dfdf5b99ed8fbd6f4cd0648ff5.png" alt="R^* + P"/> with <img class="math" src="../_images/math/c2aa3dff9bffb099e9dff196fd36aed56ec16baf.png" alt="P"/> acting on the &quot;outer&quot; indices only.
 Hence they all act as a right inverses for the restriction operator.
 This property can also be read as the fact that all extension operators are left-inverted by the restriction operator <img class="math" src="../_images/math/1ebe654cc7b8f2a0d8100aa5825cf2b9021adbbc.png" alt="R"/>.</p>
-<p>Moreover, the “mixed” case, i.e. the combination of restriction and extension which would occur e.g. for a constant index shift <img class="math" src="../_images/math/1d491aeeccb3c4e6fede96fb77d77c07939be827.png" alt="x \mapsto (0, \dots, 0, x_0, \dots, x_{n-p-1})"/>, is not considered here.
-It can be represented by a combination of the two “pure” operations.</p>
-<div class="section" id="zero-padding">
-<h3>Zero padding<a class="headerlink" href="#zero-padding" title="Permalink to this headline">¶</a></h3>
+<p>Moreover, the &quot;mixed&quot; case, i.e. the combination of restriction and extension which would occur e.g. for a constant index shift <img class="math" src="../_images/math/1d491aeeccb3c4e6fede96fb77d77c07939be827.png" alt="x \mapsto (0, \dots, 0, x_0, \dots, x_{n-p-1})"/>, is not considered here.
+It can be represented by a combination of the two &quot;pure&quot; operations.</p>
+<section id="zero-padding">
+<h3>Zero padding<a class="headerlink" href="#zero-padding" title="Link to this heading">¶</a></h3>
 <p>In this most basic padding variant, one fills the missing values in the target vector with zeros, yielding the operator</p>
 <div class="math" id="equation-def-zero-pad-op">
-<p><span class="eqno">(3)<a class="headerlink" href="#equation-def-zero-pad-op" title="Permalink to this equation">¶</a></span><img src="../_images/math/5b0f975076b600862bf47f242689bc00817cfc21.png" alt="E_{\mathrm{z}} : \mathbb{R}^n \to \mathbb{R}^m, \quad E_{\mathrm{z}}(x)_j :=
+<p><span class="eqno">(3)<a class="headerlink" href="#equation-def-zero-pad-op" title="Link to this equation">¶</a></span><img src="../_images/math/5b0f975076b600862bf47f242689bc00817cfc21.png" alt="E_{\mathrm{z}} : \mathbb{R}^n \to \mathbb{R}^m, \quad E_{\mathrm{z}}(x)_j :=
 \begin{cases}
 x_{j-p}, &amp; \text{if } p \leq j \leq p + n - 1, \\
 0      , &amp; \text{else}.
 \end{cases}"/></p>
 </div><p>Note that this is the adjoint of the restriction operator <img class="math" src="../_images/math/1ebe654cc7b8f2a0d8100aa5825cf2b9021adbbc.png" alt="R"/> defined in <a class="reference internal" href="#equation-def-restrict-op">(1)</a>.
 Hence, its adjoint is given by the restriction, <img class="math" src="../_images/math/960675eb34bf2d7575e30d277177c194b9e2d80a.png" alt="E_{\mathrm{z}}^* = R"/>.</p>
-</div>
-<div class="section" id="constant-padding">
-<h3>Constant padding<a class="headerlink" href="#constant-padding" title="Permalink to this headline">¶</a></h3>
+</section>
+<section id="constant-padding">
+<h3>Constant padding<a class="headerlink" href="#constant-padding" title="Link to this heading">¶</a></h3>
 <p>In constant padding with constant <img class="math" src="../_images/math/d520a12f1579170834c32ad5f656de081bbb36fe.png" alt="c"/>, the extra zeros in <a class="reference internal" href="#equation-def-zero-pad-op">(3)</a> are replaced with <img class="math" src="../_images/math/d520a12f1579170834c32ad5f656de081bbb36fe.png" alt="c"/>.
 Hence, the operator performing constant padding can be written as <img class="math" src="../_images/math/4afff430745c64f2a1fdd5a19984bb4f892225bc.png" alt="E_{\mathrm{c}} = E_{\mathrm{z}} + P_{\mathrm{c}}"/>, where the second summand is given by</p>
 <div class="math">
@@ -276,14 +191,14 @@ Hence, the operator performing constant padding can be written as <img class="ma
 c      , &amp; \text{else}.
 \end{cases}"/></p>
 </div><p>Note that this operator is not linear, and its derivative is the zero operator, hence the derivative of the constant padding operator is <img class="math" src="../_images/math/db8e49439348fa5a9c13c4d3c91f8572dcecbda6.png" alt="E_{\mathrm{c}}' = E_{\mathrm{z}}"/>.</p>
-</div>
-<div class="section" id="periodic-padding">
-<h3>Periodic padding<a class="headerlink" href="#periodic-padding" title="Permalink to this headline">¶</a></h3>
+</section>
+<section id="periodic-padding">
+<h3>Periodic padding<a class="headerlink" href="#periodic-padding" title="Link to this heading">¶</a></h3>
 <p>This padding mode continues the original vector <img class="math" src="../_images/math/888f7c323ac0341871e867220ae2d76467d74d6e.png" alt="x"/> periodically in both directions.
-For reasons of practicability, at most one whole copy is allowed on both sides, which means that the numbers <img class="math" src="../_images/math/5a939c5280da7202ca4531f175a7780ad5e1f80a.png" alt="n"/>, <img class="math" src="../_images/math/e9bc7da808d33a16a8347f27a519bd067186aa66.png" alt="m"/> and <img class="math" src="../_images/math/141bbefb74014fc5e43499901bf78607ae335583.png" alt="p"/> need to fulfill <img class="math" src="../_images/math/f301b6ac4b41239e5702bf755d1a52efaa129872.png" alt="p \leq n"/> (“left” padding amount) and <img class="math" src="../_images/math/3b4d1ef39564626787813f1bc1b7fb190e905840.png" alt="m - (p + n) \leq n"/> (“right” padding amount).
+For reasons of practicability, at most one whole copy is allowed on both sides, which means that the numbers <img class="math" src="../_images/math/5a939c5280da7202ca4531f175a7780ad5e1f80a.png" alt="n"/>, <img class="math" src="../_images/math/e9bc7da808d33a16a8347f27a519bd067186aa66.png" alt="m"/> and <img class="math" src="../_images/math/141bbefb74014fc5e43499901bf78607ae335583.png" alt="p"/> need to fulfill <img class="math" src="../_images/math/f301b6ac4b41239e5702bf755d1a52efaa129872.png" alt="p \leq n"/> (&quot;left&quot; padding amount) and <img class="math" src="../_images/math/3b4d1ef39564626787813f1bc1b7fb190e905840.png" alt="m - (p + n) \leq n"/> (&quot;right&quot; padding amount).
 The periodic padding operator is then defined as</p>
 <div class="math" id="equation-def-per-pad-op">
-<p><span class="eqno">(4)<a class="headerlink" href="#equation-def-per-pad-op" title="Permalink to this equation">¶</a></span><img src="../_images/math/dea5f29c39bf0ddf4ff9f6770b2bea0d2c34672c.png" alt="E_{\mathrm{p}}(x)_j :=
+<p><span class="eqno">(4)<a class="headerlink" href="#equation-def-per-pad-op" title="Link to this equation">¶</a></span><img src="../_images/math/dea5f29c39bf0ddf4ff9f6770b2bea0d2c34672c.png" alt="E_{\mathrm{p}}(x)_j :=
 \begin{cases}
 x_{j-p + n}, &amp; \text{if } 0 \leq j \leq p - 1,     \\
 x_{j-p},     &amp; \text{if } p \leq j \leq p + n - 1, \\
@@ -321,16 +236,16 @@ y_{i+p+n}, &amp; \text{if } 0 \leq i \leq m - n - p - 1, \\
 </div><p>In practice, this means that that besides copying the values from the indices <img class="math" src="../_images/math/2f3cd23fa5cdb403d072901007ac6f643ce03bbc.png" alt="p, \dots, p+n-1"/> of a vector <img class="math" src="../_images/math/4ac8a3eb6f71e2e117b04a77aeccf515964147ae.png" alt="y \in \mathbb{R}^m"/> to a new vector <img class="math" src="../_images/math/e2bde9ba17707b966630d614fafa6f53820f2885.png" alt="x \in \mathbb{R}^n"/>, the values corresponding to the other indices are added to the vector <img class="math" src="../_images/math/888f7c323ac0341871e867220ae2d76467d74d6e.png" alt="x"/> as follows.
 The <em>first</em> <img class="math" src="../_images/math/bd0dde8d156e8337ccdba7bf24f55d0d89b83daf.png" alt="m - n - p - 1"/> entries of <img class="math" src="../_images/math/1b5e577d6216dca3af7d87aa122a0b9b360d6cb3.png" alt="y"/> (negative means 0) are added to the <em>last</em> <img class="math" src="../_images/math/bd0dde8d156e8337ccdba7bf24f55d0d89b83daf.png" alt="m - n - p - 1"/> entries of <img class="math" src="../_images/math/888f7c323ac0341871e867220ae2d76467d74d6e.png" alt="x"/>, in the same ascending order.
 The <em>last</em> <img class="math" src="../_images/math/141bbefb74014fc5e43499901bf78607ae335583.png" alt="p"/> entries of <img class="math" src="../_images/math/1b5e577d6216dca3af7d87aa122a0b9b360d6cb3.png" alt="y"/> are added to the <em>first</em> <img class="math" src="../_images/math/141bbefb74014fc5e43499901bf78607ae335583.png" alt="p"/> entries of <img class="math" src="../_images/math/888f7c323ac0341871e867220ae2d76467d74d6e.png" alt="x"/>, again keeping the order.
-This procedure can be interpreted as “folding back” the periodized structure of <img class="math" src="../_images/math/1b5e577d6216dca3af7d87aa122a0b9b360d6cb3.png" alt="y"/> into a single period <img class="math" src="../_images/math/888f7c323ac0341871e867220ae2d76467d74d6e.png" alt="x"/> by adding the values from the two side periods.</p>
-</div>
-<div class="section" id="symmetric-padding">
-<h3>Symmetric padding<a class="headerlink" href="#symmetric-padding" title="Permalink to this headline">¶</a></h3>
+This procedure can be interpreted as &quot;folding back&quot; the periodized structure of <img class="math" src="../_images/math/1b5e577d6216dca3af7d87aa122a0b9b360d6cb3.png" alt="y"/> into a single period <img class="math" src="../_images/math/888f7c323ac0341871e867220ae2d76467d74d6e.png" alt="x"/> by adding the values from the two side periods.</p>
+</section>
+<section id="symmetric-padding">
+<h3>Symmetric padding<a class="headerlink" href="#symmetric-padding" title="Link to this heading">¶</a></h3>
 <p>In symmetric padding mode, a given vector is extended by mirroring at the outmost nodes to the desired extent.
 By convention, the outmost values are not repeated, and as in periodic mode, the input vector is re-used at most once on both sides.
-Since the outmost values are not doubled, the numbers <img class="math" src="../_images/math/5a939c5280da7202ca4531f175a7780ad5e1f80a.png" alt="n"/>, <img class="math" src="../_images/math/e9bc7da808d33a16a8347f27a519bd067186aa66.png" alt="m"/> and <img class="math" src="../_images/math/141bbefb74014fc5e43499901bf78607ae335583.png" alt="p"/> need to fulfill the relations <img class="math" src="../_images/math/95d0c28a8988b3e0b02ff9c10d466a15cc7466b3.png" alt="p \leq n - 1"/> (“left” padding amount) and <img class="math" src="../_images/math/a66dd4923714af89b5eedfff6ef30b96eaf4885c.png" alt="m - (p + n) \leq n - 1"/> (“right” padding amount).
+Since the outmost values are not doubled, the numbers <img class="math" src="../_images/math/5a939c5280da7202ca4531f175a7780ad5e1f80a.png" alt="n"/>, <img class="math" src="../_images/math/e9bc7da808d33a16a8347f27a519bd067186aa66.png" alt="m"/> and <img class="math" src="../_images/math/141bbefb74014fc5e43499901bf78607ae335583.png" alt="p"/> need to fulfill the relations <img class="math" src="../_images/math/95d0c28a8988b3e0b02ff9c10d466a15cc7466b3.png" alt="p \leq n - 1"/> (&quot;left&quot; padding amount) and <img class="math" src="../_images/math/a66dd4923714af89b5eedfff6ef30b96eaf4885c.png" alt="m - (p + n) \leq n - 1"/> (&quot;right&quot; padding amount).
 Now the symmetric padding operator is defined as</p>
 <div class="math" id="equation-def-sym-pad-op">
-<p><span class="eqno">(5)<a class="headerlink" href="#equation-def-sym-pad-op" title="Permalink to this equation">¶</a></span><img src="../_images/math/51a13625c57ee90b54fa234c5eb790390c141caf.png" alt="E_{\mathrm{s}}(x)_j :=
+<p><span class="eqno">(5)<a class="headerlink" href="#equation-def-sym-pad-op" title="Link to this equation">¶</a></span><img src="../_images/math/51a13625c57ee90b54fa234c5eb790390c141caf.png" alt="E_{\mathrm{s}}(x)_j :=
 \begin{cases}
 x_{p-j},      &amp; \text{if } 0 \leq j \leq p - 1,      \\
 x_{j-p},      &amp; \text{if } p \leq j \leq p + n - 1,  \\
@@ -365,16 +280,16 @@ y_{2n-2+p-i}, &amp; \text{if } 2n - 1 + p - m \leq i \leq n - 2, \\
 0,            &amp; \text{else}.
 \end{cases}"/></p>
 </div><p>Note that the index condition <img class="math" src="../_images/math/a66dd4923714af89b5eedfff6ef30b96eaf4885c.png" alt="m - (p + n) \leq n - 1"/> is equivalent to <img class="math" src="../_images/math/640a1a2f73e566a7adec7b81c405bfebf8deff1a.png" alt="2n - 1 + p - m \geq 0"/>, hence the index range in the definition of <img class="math" src="../_images/math/df8148e2678647b652bedce1f1fe01ae1172963a.png" alt="P_{\mathrm{s},2}^*"/> is well-defined.</p>
-<p>Practically, the evaluation of <img class="math" src="../_images/math/512375d1c24d880cd48f487daacd12d7bc4afca3.png" alt="E_{\mathrm{s}}^*"/> consists in copying the “main” part of <img class="math" src="../_images/math/4ac8a3eb6f71e2e117b04a77aeccf515964147ae.png" alt="y \in \mathbb{R}^m"/> corresponding to the indices <img class="math" src="../_images/math/00d00902178881a35a0f0f0d638a09fe3263f4b3.png" alt="p, \dots, p + n - 1"/> to <img class="math" src="../_images/math/e2bde9ba17707b966630d614fafa6f53820f2885.png" alt="x \in \mathbb{R}^n"/> and updating the vector additively as follows.
+<p>Practically, the evaluation of <img class="math" src="../_images/math/512375d1c24d880cd48f487daacd12d7bc4afca3.png" alt="E_{\mathrm{s}}^*"/> consists in copying the &quot;main&quot; part of <img class="math" src="../_images/math/4ac8a3eb6f71e2e117b04a77aeccf515964147ae.png" alt="y \in \mathbb{R}^m"/> corresponding to the indices <img class="math" src="../_images/math/00d00902178881a35a0f0f0d638a09fe3263f4b3.png" alt="p, \dots, p + n - 1"/> to <img class="math" src="../_images/math/e2bde9ba17707b966630d614fafa6f53820f2885.png" alt="x \in \mathbb{R}^n"/> and updating the vector additively as follows.
 The values at indices 1 to <img class="math" src="../_images/math/141bbefb74014fc5e43499901bf78607ae335583.png" alt="p"/> are updated with the values of <img class="math" src="../_images/math/1b5e577d6216dca3af7d87aa122a0b9b360d6cb3.png" alt="y"/> mirrored at the index position <img class="math" src="../_images/math/141bbefb74014fc5e43499901bf78607ae335583.png" alt="p"/>, i.e. in reversed order.
 The values at the indices <img class="math" src="../_images/math/4122db03435c8fa931f03fcb00aee3a4c82bb344.png" alt="2n - 1 + p - m"/> to <img class="math" src="../_images/math/394c363cc83628e44f6db7bd4928eaa568b8e347.png" alt="n - 2"/> are updated with the values of <img class="math" src="../_images/math/1b5e577d6216dca3af7d87aa122a0b9b360d6cb3.png" alt="y"/> mirrored at the position <img class="math" src="../_images/math/56603fa0feb29a231dbf21f0c6bed869a437f5c5.png" alt="2n + 2 - p"/>, again in reversed order.
-This procedure can be interpreted as “mirroring back” the outer two parts of the vector <img class="math" src="../_images/math/1b5e577d6216dca3af7d87aa122a0b9b360d6cb3.png" alt="y"/> at the indices <img class="math" src="../_images/math/141bbefb74014fc5e43499901bf78607ae335583.png" alt="p"/> and <img class="math" src="../_images/math/56603fa0feb29a231dbf21f0c6bed869a437f5c5.png" alt="2n + 2 - p"/>, adding those parts to the “main” vector.</p>
-</div>
-<div class="section" id="order-0-padding">
-<h3>Order 0 padding<a class="headerlink" href="#order-0-padding" title="Permalink to this headline">¶</a></h3>
+This procedure can be interpreted as &quot;mirroring back&quot; the outer two parts of the vector <img class="math" src="../_images/math/1b5e577d6216dca3af7d87aa122a0b9b360d6cb3.png" alt="y"/> at the indices <img class="math" src="../_images/math/141bbefb74014fc5e43499901bf78607ae335583.png" alt="p"/> and <img class="math" src="../_images/math/56603fa0feb29a231dbf21f0c6bed869a437f5c5.png" alt="2n + 2 - p"/>, adding those parts to the &quot;main&quot; vector.</p>
+</section>
+<section id="order-0-padding">
+<h3>Order 0 padding<a class="headerlink" href="#order-0-padding" title="Link to this heading">¶</a></h3>
 <p>Padding with order 0 consistency means continuing the vector constantly beyond its boundaries, i.e.</p>
 <div class="math" id="equation-def-order0-pad-op">
-<p><span class="eqno">(6)<a class="headerlink" href="#equation-def-order0-pad-op" title="Permalink to this equation">¶</a></span><img src="../_images/math/8cae3825e5e3da4f67c22ff00d6a3af7da859bc1.png" alt="E_{\mathrm{o0}}(x)_j :=
+<p><span class="eqno">(6)<a class="headerlink" href="#equation-def-order0-pad-op" title="Link to this equation">¶</a></span><img src="../_images/math/8cae3825e5e3da4f67c22ff00d6a3af7da859bc1.png" alt="E_{\mathrm{o0}}(x)_j :=
 \begin{cases}
 x_0,     &amp; \text{if } 0 \leq j \leq p - 1,      \\
 x_{j-p}, &amp; \text{if } p \leq j \leq p + n - 1,  \\
@@ -394,7 +309,7 @@ x_{n-1}, &amp; \text{if } p + n \leq j \leq m - 1.
 &amp;= \sum_{j=0}^{p-1} x_0\, y_j + \sum_{j=p+n}^{m-1} x_{n-1}\, y_j \\
 &amp;= x_0 \sum_{j=0}^{p-1} y_j + x_{n-1} \sum_{j=p+n}^{m-1} y_j \\
 &amp;= x_0 M_{\mathrm{l},0}(y) + x_{n-1} M_{\mathrm{r},0}(y)"/></p>
-</div><p>with the zero’th order moments</p>
+</div><p>with the zero'th order moments</p>
 <div class="math">
 <p><img src="../_images/math/6bf4807385407a45dd8fe0f9c2c8655d519ad613.png" alt="M_{\mathrm{l},0}(y) := \sum_{j=0}^{p-1} y_j, \quad M_{\mathrm{r},0}(y) := \sum_{j=p+n}^{m-1} y_j."/></p>
 </div><p>Hence, we get</p>
@@ -407,12 +322,12 @@ M_{\mathrm{r},0}(y), &amp; \text{if } i = n - 1, \\
 \end{cases}"/></p>
 </div><p>with the convention that the sum of the two values is taken in the case that $n = 1$, i.e. both first cases are the same.
 Hence, after constructing the restriction <img class="math" src="../_images/math/e2bde9ba17707b966630d614fafa6f53820f2885.png" alt="x \in \mathbb{R}^n"/> of a vector <img class="math" src="../_images/math/4ac8a3eb6f71e2e117b04a77aeccf515964147ae.png" alt="y \in \mathbb{R}^m"/> to the main part <img class="math" src="../_images/math/00d00902178881a35a0f0f0d638a09fe3263f4b3.png" alt="p, \dots, p + n - 1"/>, the sum of the entries to the left are added to <img class="math" src="../_images/math/ed7fb0260e58d3ca5851e823ff991dae4cde5671.png" alt="x_0"/>, and the sum of the entries to the right are added to <img class="math" src="../_images/math/4cfe0c360d5af064a8a5f038edb383a36db206c9.png" alt="x_{n-1}"/>.</p>
-</div>
-<div class="section" id="order-1-padding">
-<h3>Order 1 padding<a class="headerlink" href="#order-1-padding" title="Permalink to this headline">¶</a></h3>
+</section>
+<section id="order-1-padding">
+<h3>Order 1 padding<a class="headerlink" href="#order-1-padding" title="Link to this heading">¶</a></h3>
 <p>In this padding mode, a given vector is continued with constant slope instead of constant value, i.e.</p>
 <div class="math" id="equation-def-order1-pad-op">
-<p><span class="eqno">(7)<a class="headerlink" href="#equation-def-order1-pad-op" title="Permalink to this equation">¶</a></span><img src="../_images/math/5eae5ccb53890345d5b093eaa335a54b09349d7c.png" alt="E_{\mathrm{o1}}(x)_j :=
+<p><span class="eqno">(7)<a class="headerlink" href="#equation-def-order1-pad-op" title="Link to this equation">¶</a></span><img src="../_images/math/5eae5ccb53890345d5b093eaa335a54b09349d7c.png" alt="E_{\mathrm{o1}}(x)_j :=
 \begin{cases}
  x_0 + (j - p)(x_1 - x_0),                     &amp; \text{if } 0 \leq j \leq p - 1,      \\
  x_{j-p},                                      &amp; \text{if } p \leq j \leq p + n - 1,  \\
@@ -448,72 +363,55 @@ M_{\mathrm{r},1}(y),  &amp; \text{if } i = n - 1, \\
 0,                  &amp; \text{else},
 \end{cases}"/></p>
 </div><p>with the convention of summing values for overlapping cases, i.e. if <img class="math" src="../_images/math/7287d1bad925cccf92e21601d52c395b52ff74df.png" alt="i \in \{1, 2\}"/>.
-In practice, the adjoint for the order 1 padding case is applied by computing the zero’th and first order moments of <img class="math" src="../_images/math/1b5e577d6216dca3af7d87aa122a0b9b360d6cb3.png" alt="y"/> and adding them to the two outmost entries of <img class="math" src="../_images/math/888f7c323ac0341871e867220ae2d76467d74d6e.png" alt="x"/> according to the above rule.</p>
-</div>
-</div>
-<div class="section" id="generalization-to-arbitrary-dimension">
-<h2>Generalization to arbitrary dimension<a class="headerlink" href="#generalization-to-arbitrary-dimension" title="Permalink to this headline">¶</a></h2>
+In practice, the adjoint for the order 1 padding case is applied by computing the zero'th and first order moments of <img class="math" src="../_images/math/1b5e577d6216dca3af7d87aa122a0b9b360d6cb3.png" alt="y"/> and adding them to the two outmost entries of <img class="math" src="../_images/math/888f7c323ac0341871e867220ae2d76467d74d6e.png" alt="x"/> according to the above rule.</p>
+</section>
+</section>
+<section id="generalization-to-arbitrary-dimension">
+<h2>Generalization to arbitrary dimension<a class="headerlink" href="#generalization-to-arbitrary-dimension" title="Link to this heading">¶</a></h2>
 <p>Fortunately, all operations are completely separable with respect to (coordinate) axes, i.e. resizing in higher-dimensional spaces can be written as a series of one-dimensional resizing operations.
 One particular issue should be mentioned with the extension operators and their adjoints, though.
 When extending a small, e.g., two-dimensional array to a larger size, there is an ambiguity in how the corner blocks should be handled.
 One possibility would be use the small array size for the extension in both axes, which would leave the corner blocks untouched (initialized to 0 usually):</p>
 <a class="reference internal image-reference" href="../_images/resize_small.svg"><img alt="../_images/resize_small.svg" src="../_images/resize_small.svg" width="100%" /></a>
 <p>However, this is not the behavior one would often want in practice.
-Instead, it is much more reasonable to also fill the corners in the same way the “inner” parts have been extended:</p>
+Instead, it is much more reasonable to also fill the corners in the same way the &quot;inner&quot; parts have been extended:</p>
 <a class="reference internal image-reference" href="../_images/resize_large.svg"><img alt="../_images/resize_large.svg" src="../_images/resize_large.svg" width="100%" /></a>
 <p>This latter behavior is implemented in the resizing operators in ODL.</p>
-<p>The adjoint operators of these “corner-filling” resizing operator are given by reversing the unfolding pattern, i.e. by “folding in” the large array axis by axis according to the adjoint formula for the given padding mode.
+<p>The adjoint operators of these &quot;corner-filling&quot; resizing operator are given by reversing the unfolding pattern, i.e. by &quot;folding in&quot; the large array axis by axis according to the adjoint formula for the given padding mode.
 This way, the corners also contribute to the final result, which leads to the correct adjoint of the 2D resizing operator.
 Of course, the same principle can easily be generalized to arbitrary dimension.</p>
-</div>
-</div>
+</section>
+</section>
 
 
            </div>
-           
           </div>
-          <footer>
-    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
-        <a href="derivatives_guide.html" class="btn btn-neutral float-right" title="On the different notions of derivative" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
         <a href="discretization.html" class="btn btn-neutral float-left" title="Discretizations" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="derivatives_guide.html" class="btn btn-neutral float-right" title="On the different notions of derivative" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>
 
   <div role="contentinfo">
-    <p>
-        &#169; Copyright 2014-2020 The ODL Contributors.
-
-    </p>
+    <p>&#169; Copyright 2014-2020 The ODL Contributors.</p>
   </div>
-    
-    
-    
-    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
-    
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
     <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
-    
-    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
 
 </footer>
         </div>
       </div>
-
     </section>
-
   </div>
-  
-
-  <script type="text/javascript">
+  <script>
       jQuery(function () {
           SphinxRtdTheme.Navigation.enable(true);
       });
-  </script>
-
-  
-  
-    
-   
+  </script> 
 
 </body>
 </html>

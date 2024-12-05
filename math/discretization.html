@@ -1,101 +1,58 @@
-
-
 <!DOCTYPE html>
-<html class="writer-html5" lang="en" >
+<html class="writer-html5" lang="english" data-content_root="../">
 <head>
-  <meta charset="utf-8" />
-  
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  
-  <title>Discretizations &mdash; odl 1.0.0.dev0 documentation</title>
-  
-
-  
-  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
-  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
-  <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
-
-  
-  
-
-  
-  
-
-  
+  <title>Discretizations &mdash; odl 0.8.1 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b76e3c8a" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=19f00094" />
+      <link rel="stylesheet" type="text/css" href="../_static/custom.css?v=d6003e95" />
 
   
   <!--[if lt IE 9]>
     <script src="../_static/js/html5shiv.min.js"></script>
   <![endif]-->
   
-    
-      <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
-        <script src="../_static/jquery.js"></script>
-        <script src="../_static/underscore.js"></script>
-        <script src="../_static/doctools.js"></script>
-    
-    <script type="text/javascript" src="../_static/js/theme.js"></script>
-
-    
+        <script src="../_static/documentation_options.js?v=51bb0171"></script>
+        <script src="../_static/doctools.js?v=9a2dae69"></script>
+        <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
     <link rel="next" title="Resizing Operators" href="resizing_ops.html" />
     <link rel="prev" title="Linear Spaces" href="linear_spaces.html" /> 
 </head>
 
-<body class="wy-body-for-nav">
-
-   
+<body class="wy-body-for-nav"> 
   <div class="wy-grid-for-nav">
-    
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
         <div class="wy-side-nav-search" >
-          
 
           
-            <a href="../index.html" class="icon icon-home"> odl
           
-
-          
+          <a href="../index.html" class="icon icon-home">
+            odl
           </a>
-
-          
-            
-            
               <div class="version">
-                1.0.0.dev0
+                0.8.1
               </div>
-            
-          
-
-          
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
-    <input type="text" name="q" placeholder="Search docs" />
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
     <input type="hidden" name="check_keywords" value="yes" />
     <input type="hidden" name="area" value="default" />
   </form>
 </div>
-
-          
-        </div>
-
-        
-        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
-          
-            
-            
-              
-            
-            
-              <p class="caption"><span class="caption-text">Getting Started</span></p>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Getting Started</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../getting_started/getting_started.html">Getting Started</a></li>
 </ul>
-<p class="caption"><span class="caption-text">Working with ODL</span></p>
+<p class="caption" role="heading"><span class="caption-text">Working with ODL</span></p>
 <ul class="current">
-<li class="toctree-l1"><a class="reference internal" href="../guide/guide.html">User’s guide – selected topics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../guide/guide.html">User's guide -- selected topics</a></li>
 <li class="toctree-l1 current"><a class="reference internal" href="math.html">Mathematical Background</a><ul class="current">
 <li class="toctree-l2"><a class="reference internal" href="linear_spaces.html">Linear Spaces</a></li>
 <li class="toctree-l2 current"><a class="current reference internal" href="#">Discretizations</a><ul>
@@ -111,11 +68,11 @@
 </ul>
 </li>
 </ul>
-<p class="caption"><span class="caption-text">Developer zone</span></p>
+<p class="caption" role="heading"><span class="caption-text">Developer zone</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../dev/dev.html">Contributing to ODL</a></li>
 </ul>
-<p class="caption"><span class="caption-text">Useful facts</span></p>
+<p class="caption" role="heading"><span class="caption-text">Useful facts</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../guide/faq.html">Frequently asked questions</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../guide/glossary.html">Glossary</a></li>
@@ -124,82 +81,40 @@
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../refs.html">References</a></li>
 </ul>
-<p class="caption"><span class="caption-text">API Reference</span></p>
+<p class="caption" role="heading"><span class="caption-text">API Reference</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../odl.html">odl</a></li>
 </ul>
 
-            
-          
         </div>
-        
       </div>
     </nav>
 
-    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
-
-      
-      <nav class="wy-nav-top" aria-label="top navigation">
-        
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
           <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
           <a href="../index.html">odl</a>
-        
       </nav>
 
-
       <div class="wy-nav-content">
-        
         <div class="rst-content">
-        
-          
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-<div role="navigation" aria-label="breadcrumbs navigation">
-
+          <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
-    
-      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
-        
-          <li><a href="math.html">Mathematical Background</a> &raquo;</li>
-        
-      <li>Discretizations</li>
-    
-    
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="math.html">Mathematical Background</a></li>
+      <li class="breadcrumb-item active">Discretizations</li>
       <li class="wy-breadcrumbs-aside">
-        
-          
             <a href="../_sources/math/discretization.rst.txt" rel="nofollow"> View page source</a>
-          
-        
       </li>
-    
   </ul>
-
-  
   <hr/>
 </div>
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
-            
-  <div class="section" id="discretizations">
-<span id="id1"></span><h1>Discretizations<a class="headerlink" href="#discretizations" title="Permalink to this headline">¶</a></h1>
-<div class="section" id="mathematical-background">
-<h2>Mathematical background<a class="headerlink" href="#mathematical-background" title="Permalink to this headline">¶</a></h2>
+             
+  <section id="discretizations">
+<span id="id1"></span><h1>Discretizations<a class="headerlink" href="#discretizations" title="Link to this heading">¶</a></h1>
+<section id="mathematical-background">
+<h2>Mathematical background<a class="headerlink" href="#mathematical-background" title="Link to this heading">¶</a></h2>
 <p>In mathematics, the term <a class="reference internal" href="../guide/glossary.html#term-discretization"><span class="xref std std-term">discretization</span></a> stands for the transition from abstract, continuous,
 often infinite-dimensional objects to concrete, discrete, finite-dimensional counterparts. We define
 discretizations as tuples encompassing all necessary aspects involved in this transition. Let
@@ -218,9 +133,9 @@ tuple</p>
 </div><p>The following abstract diagram visualizes a discretization:</p>
 <a class="reference internal image-reference" href="../_images/discr.png"><img alt="../_images/discr.png" src="../_images/discr.png" style="width: 130.0px; height: 195.60000000000002px;" /></a>
 <p>TODO: write up in more detail</p>
-</div>
-<div class="section" id="example">
-<h2>Example<a class="headerlink" href="#example" title="Permalink to this headline">¶</a></h2>
+</section>
+<section id="example">
+<h2>Example<a class="headerlink" href="#example" title="Link to this heading">¶</a></h2>
 <p>Let <img class="math" src="../_images/math/14bf5d6c49212ecfa4c3ad1b0a4f256ce2388486.png" alt="\mathcal{X} = C([0, 1])"/> be the space of real-valued
 continuous functions on the interval <img class="math" src="../_images/math/8027137b3073a7f5ca4e45ba2d030dcff154eca4.png" alt="[0, 1]"/>, and let <img class="math" src="../_images/math/fc66d2756bfc068e0ed1b8fd2d9f45aa9c7cb692.png" alt="x_1 &lt; \dots &lt; x_n"/>
 be ordered sampling points in <img class="math" src="../_images/math/8027137b3073a7f5ca4e45ba2d030dcff154eca4.png" alt="[0, 1]"/>.</p>
@@ -252,61 +167,44 @@ of those values at a point <img class="math" src="../_images/math/430e3f359414ea
 <p>Hence, this operator maps the finite array <img class="math" src="../_images/math/e1adf4d880054874e83bfa570dcd1a01a35f817c.png" alt="\bar f \in \mathbb{R}^n"/>
 to the abstract interpolating function <img class="math" src="../_images/math/dae4b66332dec3d0094554598b31e612d89ab137.png" alt="I(\bar f; \cdot)"/>.</p>
 <p>This interpolation scheme is implemented in the <code class="xref any docutils literal notranslate"><span class="pre">LinearInterpolation</span></code> operator.</p>
-</div>
-<div class="section" id="useful-wikipedia-articles">
-<h2>Useful Wikipedia articles<a class="headerlink" href="#useful-wikipedia-articles" title="Permalink to this headline">¶</a></h2>
+</section>
+<section id="useful-wikipedia-articles">
+<h2>Useful Wikipedia articles<a class="headerlink" href="#useful-wikipedia-articles" title="Link to this heading">¶</a></h2>
 <ul class="simple">
 <li><p><a class="reference external" href="https://en.wikipedia.org/wiki/Discretization">Discretization</a></p></li>
 </ul>
-</div>
-</div>
+</section>
+</section>
 
 
            </div>
-           
           </div>
-          <footer>
-    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
-        <a href="resizing_ops.html" class="btn btn-neutral float-right" title="Resizing Operators" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
         <a href="linear_spaces.html" class="btn btn-neutral float-left" title="Linear Spaces" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="resizing_ops.html" class="btn btn-neutral float-right" title="Resizing Operators" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>
 
   <div role="contentinfo">
-    <p>
-        &#169; Copyright 2014-2020 The ODL Contributors.
-
-    </p>
+    <p>&#169; Copyright 2014-2020 The ODL Contributors.</p>
   </div>
-    
-    
-    
-    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
-    
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
     <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
-    
-    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
 
 </footer>
         </div>
       </div>
-
     </section>
-
   </div>
-  
-
-  <script type="text/javascript">
+  <script>
       jQuery(function () {
           SphinxRtdTheme.Navigation.enable(true);
       });
-  </script>
-
-  
-  
-    
-   
+  </script> 
 
 </body>
 </html>
