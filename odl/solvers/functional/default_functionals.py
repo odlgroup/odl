@@ -2489,8 +2489,7 @@ class MoreauEnvelope(Functional):
 
     References
     ----------
-    .. _Proximal Algorithms: \
-https://web.stanford.edu/~boyd/papers/pdf/prox_algs.pdf
+    .. _Proximal Algorithms: <https://web.stanford.edu/~boyd/papers/pdf/prox_algs.pdf>
     """
 
     def __init__(self, functional, sigma=1.0):
