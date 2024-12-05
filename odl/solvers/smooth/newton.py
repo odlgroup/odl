@@ -247,10 +247,10 @@ def bfgs_method(f, x, line_search=1.0, maxiter=1000, tol=1e-15, num_store=None,
                 hessinv_estimate=None, callback=None):
     r"""Quasi-Newton BFGS method to minimize a differentiable function.
 
-    Can use either the regular BFGS method, or the limited memory BFGS method.
-
     Notes
     -----
+    Can use either the regular BFGS method, or the limited memory BFGS method.
+
     This is a general and optimized implementation of a quasi-Newton
     method with BFGS update for solving a general unconstrained
     optimization problem

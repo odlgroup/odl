@@ -422,10 +422,12 @@ class FanBeamGeometry(DivergentBeamGeometry):
                        source_shift(phi)
 
         where ``src_to_det_init`` is the initial unit vector pointing
-        from source to detector and
+        from source to detector and ::
+
             source_shift(phi) = rot_matrix(phi) *
                                 (shift[0] * (-src_to_det_init) +
                                 shift[1] * tangent)
+
         where ``tangent`` is a vector tangent to the trajectory
 
         where ``src_to_det_init`` is the initial unit vector pointing
@@ -522,10 +524,12 @@ class FanBeamGeometry(DivergentBeamGeometry):
                            detector_shift(phi)
 
         where ``src_to_det_init`` is the initial unit vector pointing
-        from source to detector and
+        from source to detector and ::
+
             detector_shift(phi) = rot_matrix(phi) *
                                   (shift[0] * src_to_det_init +
                                   shift[1] * tangent)
+
         where ``tangent`` is a vector tangent to the trajectory
 
         Parameters
@@ -1244,7 +1248,8 @@ class ConeBeamGeometry(DivergentBeamGeometry, AxisOrientedGeometry):
                            detector_shift(phi)
 
         where ``src_to_det_init`` is the initial unit vector pointing
-        from source to detector and
+        from source to detector and ::
+
             detector_shift(phi) = rot_matrix(phi) *
                                   (shift1 * src_to_det_init +
                                   shift2 * cross(-src_to_det_init, axis))
@@ -1360,7 +1365,8 @@ class ConeBeamGeometry(DivergentBeamGeometry, AxisOrientedGeometry):
                        source_shift(phi)
 
         where ``src_to_det_init`` is the initial unit vector pointing
-        from source to detector and
+        from source to detector and ::
+
             source_shift(phi) = rot_matrix(phi) *
                                 (shift1 * (-src_to_det_init) +
                                 shift2 * cross(src_to_det_init, axis))

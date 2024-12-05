@@ -2246,6 +2246,7 @@ class IndicatorSimplex(Functional):
         sum_rtol : float, optional
             Relative tolerance for sum comparison.
             Default:
+
                 - ``space.dtype == 'float64'``: ``1e-10 * space.size``
                 - Otherwise: ``1e-6 * space.size``
 
