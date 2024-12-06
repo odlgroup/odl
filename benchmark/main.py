@@ -2,14 +2,12 @@
 import argparse
 from pathlib import Path
 from datetime import datetime
-import time
 import sys
+from typing import Dict 
 
+from tqdm import tqdm
 import json
 import pandas as pd
-
-N_CALLS = 1
-MAX_ITERATIONS = 100
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
@@ -27,7 +25,7 @@ if __name__ == '__main__':
 
     ### unpack variables
     benchmark_dict = {}
-    for key in ['backend', 'script_name', 'parameters']:
+    for key in ['backend', 'script_name', 'parameters', 'n_calls']:
         try:
             benchmark_dict[key] = metadata_dict[key]
         except ValueError:
@@ -36,18 +34,18 @@ if __name__ == '__main__':
     ### load backend module
     if benchmark_dict['backend'] == 'odl':
         import scripts.odl_scripts as sc
-        DEVICE = 'cpu'
 
     elif benchmark_dict['backend'] == 'torch':
         import scripts.torch_scripts as sc
-        try:
-            DEVICE = metadata_dict['parameters']['device_name']
-        except ValueError:
-            DEVICE = 'cpu'
 
     else:
         raise NotImplementedError(f'''Backend {benchmark_dict["backend"]} not supported, only
                                   "odl" and "torch"''')
+    
+    try:
+        DEVICE = metadata_dict['parameters']['device_name']
+    except ValueError:
+        DEVICE = 'cpu'
 
     try:
         function = getattr(sc, benchmark_dict['script_name'])
@@ -57,35 +55,25 @@ if __name__ == '__main__':
 
 
     report_dict = {
-        "dimension" : [],
-        "n_points"  : [],
-        "time"      : [],
-        "error"     : []
     }
 
-    for dimension in benchmark_dict["parameters"]['dimensions']:
-        for n_points in benchmark_dict["parameters"]['n_points']:
-            print(
-                f"""Benchmarking {benchmark_dict['script_name']}
-                  for dimension {dimension} and {n_points} points"""
-                )            
-            for call in range(N_CALLS):
-                start = time.time()
-                error = function(
-                    benchmark_dict["parameters"],
-                    dimension, n_points, 
-                    MAX_ITERATIONS
-                )
-                end = time.time()
-                report_dict['dimension'].append(dimension)
-                report_dict['n_points'].append(n_points)
-                report_dict['time'].append(end - start) 
-                report_dict['error'].append(error)
+    for key, value in benchmark_dict["parameters"].items():
+        print(key, value)
+        
+    for call in tqdm(range(benchmark_dict['n_calls'])):        
+        return_dict:Dict = function(
+            benchmark_dict["parameters"]
+        )
+        for k,v in return_dict.items():
+            if k in report_dict:
+                report_dict[k].append(v)
+            else:
+                report_dict[k] = [v]
 
     report_df = pd.DataFrame.from_dict(report_dict)
-    report_df['device']  = DEVICE
+    for key, value in benchmark_dict["parameters"].items():
+        report_df[key] = value
     report_df['backend'] = benchmark_dict['backend']
-    report_df['max_iterations'] = MAX_ITERATIONS
     report_df['timestamp'] = pd.Timestamp(datetime.now(), tz=None)
     result_file_path = f'results/{metadata_name}.csv'
     if Path(result_file_path).is_file():
