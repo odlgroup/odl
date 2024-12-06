@@ -16,7 +16,7 @@ __all__ = ('mlem', 'osmlem', 'poisson_log_likelihood')
 
 def mlem(op, x, data, niter, callback=None, **kwargs):
 
-    """Maximum Likelihood Expectation Maximation algorithm.
+    r"""Maximum Likelihood Expectation Maximation algorithm.
 
     Attempts to solve::
 

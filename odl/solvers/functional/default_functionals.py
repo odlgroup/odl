@@ -438,10 +438,10 @@ class IndicatorLpUnitBall(Functional):
     This functional is defined as
 
         .. math::
-            f(x) = \left\{ \begin{array}{ll}
-            0 & \text{if } ||x||_{L_p} \leq 1, \
-            \infty & \text{else,}
-            \end{array} \right.
+            f(x) = \begin{cases}
+                0       & \text{if } ||x||_{L_p} \leq 1,
+             \\ +\infty & \text{else}
+            \end{cases}
 
     where :math:`||x||_{L_p}` is the :math:`L_p`-norm, which for finite values
     of :math:`p` is defined as
@@ -2227,8 +2227,8 @@ class IndicatorSimplex(Functional):
         F(x)
         =
         \begin{cases}
-            0 & \text{if } x_i \geq 0 \forall i \text{ and } \sum_i x_i = r \
-            +\infty & \text{else.}
+             0   & \text{if } x_i \geq 0 \forall i \text{ and } \sum_i x_i = r
+         \\ +\infty & \text{else.}
         \end{cases}
 
     where :math:`r` is the diameter.
@@ -2246,6 +2246,7 @@ class IndicatorSimplex(Functional):
         sum_rtol : float, optional
             Relative tolerance for sum comparison.
             Default:
+
                 - ``space.dtype == 'float64'``: ``1e-10 * space.size``
                 - Otherwise: ``1e-6 * space.size``
 
@@ -2348,8 +2349,8 @@ class IndicatorSumConstraint(Functional):
         F(x)
         =
         \begin{cases}
-            0 & \text{if } \sum_i x_i = 1 \
-            +\infty & \text{else.}
+            0 & \text{if } \sum_i x_i = 1
+         \\ +\infty & \text{else.}
         \end{cases}
     """
 
@@ -2489,8 +2490,7 @@ class MoreauEnvelope(Functional):
 
     References
     ----------
-    .. _Proximal Algorithms: \
-https://web.stanford.edu/~boyd/papers/pdf/prox_algs.pdf
+    .. _Proximal Algorithms: <https://web.stanford.edu/~boyd/papers/pdf/prox_algs.pdf>
     """
 
     def __init__(self, functional, sigma=1.0):

@@ -1057,27 +1057,25 @@ def save_animation(filename,
     writer : str
         Back-end for generating the movie file. Available writers can be
         checked with the command ``matplotlib.animation.writers.list()``.
-        See the `matplotlib animation writers doc`_ for details.
-        For the default ``None``, the first writer from the list of available
-        ones is chosen.
+        See the `matplotlib animation writers doc
+        <https://matplotlib.org/api/animation_api.html#writer-classes>`_ for
+        details. For the default ``None``, the first writer from the list of
+        available ones is chosen.
     writer_kwargs : dict
         Keyword arguments passed to the writer class constructor.
-        See the `matplotlib animation writers doc`_ for details.
+        See the matplotlib animation writers doc for details.
     dpi : float, optional
         Resolution of the saved frames in DPI. For ``None``, the figure
         resolution ``fig.dpi`` is used, which is the default resolution if
         ``fig is None``.
     saving_kwargs : dict
         Keyword arguments passed to the ``saving`` method of the writer
-        instance. See the `matplotlib animation writers doc`_ for details.
+        instance. See the matplotlib animation writers doc for details.
     fig : matplotlib.figure.Figure, optional
         Matplotlib figure used for plotting. For the default ``None``, a new
         figure is created.
     step : positive int, optional
         Number of iterations between frames.
-
-    .. _matplotlib animation writers doc:
-       https://matplotlib.org/api/animation_api.html#writer-classes
     """
     import matplotlib.animation
     import matplotlib.pyplot as plt

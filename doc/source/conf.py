@@ -51,9 +51,9 @@ else:
 
 # Add external links to GitHub
 extlinks = {
-    'pull': ('https://github.com/odlgroup/odl/pull/%s', 'PR '),
-    'issue': ('https://github.com/odlgroup/odl/issues/%s', 'issue '),
-    'commit': ('https://github.com/odlgroup/odl/commit/%s', 'commit ')
+    'pull': ('https://github.com/odlgroup/odl/pull/%s', 'PR %s'),
+    'issue': ('https://github.com/odlgroup/odl/issues/%s', 'issue %s'),
+    'commit': ('https://github.com/odlgroup/odl/commit/%s', 'commit %s')
 }
 
 
@@ -90,7 +90,7 @@ def setup(app):
     app.connect("autodoc-skip-member", skip)
     # TODO(kohr-h): Remove when upstream issue in sphinx-rtd-theme is solved
     # https://github.com/readthedocs/sphinx_rtd_theme/issues/746
-    app.add_stylesheet('custom.css')
+    app.add_css_file('custom.css')
 
 
 # Autosummary
@@ -135,7 +135,7 @@ release = version
 #
 # This is also used if you do content translation via gettext catalogs.
 # Usually you set "language" from the command line for these cases.
-language = None
+language = 'english'
 
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.

@@ -251,7 +251,10 @@ def nearest_interpolator(f, coord_vecs):
     Given points ``x[1] < x[2] < ... < x[N]``, and function values
     ``f[1], ..., f[N]``, nearest neighbor interpolation at ``x`` is defined
     as ::
-        I(x) = f[j]  with j such that |x - x[j]| is minimal.
+
+        I(x) = f[j]
+
+    with ``j`` such that ``|x - x[j]|`` is minimal.
     The ambiguity at the midpoints is resolved by preferring the right
     neighbor. In higher dimensions, this principle is applied per axis.
     The returned interpolator is the piecewise constant function ``x -> I(x)``.

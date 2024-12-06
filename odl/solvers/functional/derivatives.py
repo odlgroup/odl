@@ -152,7 +152,7 @@ class NumericalGradient(Operator):
     """
 
     def __init__(self, functional, method='forward', step=None):
-        """Initialize a new instance.
+        r"""Initialize a new instance.
 
         Parameters
         ----------
