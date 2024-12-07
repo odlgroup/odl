@@ -675,7 +675,8 @@ class DiscreteFourierTransformInverse(DiscreteFourierTransformBase):
             halfcomplex=self.halfcomplex, planning_effort=effort,
             fftw_plan=self._fftw_plan, normalise_idft=True)
 
-        # Need to normalize for 'forward', no way to force pyfftw
+        # Need to normalize for 'forward', pyfftw before version 0.13
+        # does not offer a way to do this.
         if self.sign == '-':
             out /= np.prod(np.take(self.domain.shape, self.axes))
 

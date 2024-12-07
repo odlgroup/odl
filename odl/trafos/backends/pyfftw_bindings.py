@@ -203,7 +203,10 @@ def pyfftw_call(array_in, array_out, direction='forward', axes=None,
     else:
         fftw_plan = fftw_plan_in
 
-    fftw_plan(array_in, array_out, normalise_idft=normalise_idft)
+    if not normalise_idft and direction=='forward':
+        fftw_plan(array_in, array_out, normalise_idft=True)
+    else:
+        fftw_plan(array_in, array_out, normalise_idft=normalise_idft)
 
     if wexport:
         try:
