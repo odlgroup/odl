@@ -20,9 +20,10 @@ from odl.space.weighting import ConstWeighting
 from odl.tomo.backends import (
     ASTRA_AVAILABLE, ASTRA_CUDA_AVAILABLE, SKIMAGE_AVAILABLE)
 from odl.tomo.backends.astra_cpu import AstraCpuImpl
-from odl.tomo.backends.astra_cuda import AstraCudaImpl
+
 from odl.tomo.backends.skimage_radon import SkImageImpl
 from odl.tomo.backends.astra_cuda_link import AstraCudaLinkImpl
+from odl.tomo.backends.astra_cuda_dlpack import AstraCudaImpl
 from odl.tomo.geometry import Geometry
 from odl.util import is_string
 
@@ -129,6 +130,7 @@ class RayTransform(Operator):
                 geometry.partition.shape,
                 weighting=weighting, #type:ignore
                 dtype=dtype,
+                torch_device = vol_space.tspace._torch_device
             )
 
             if geometry.motion_partition.ndim == 0:
@@ -160,7 +162,7 @@ class RayTransform(Operator):
             proj_space = DiscretizedSpace(
                 geometry.partition,
                 proj_tspace,
-                axis_labels=axis_labels
+                axis_labels=axis_labels,
             )
 
         else:

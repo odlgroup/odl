@@ -11,14 +11,14 @@
 from __future__ import absolute_import
 
 from .astra_cpu import *
-from .astra_cuda import *
+from .astra_cuda_dlpack import *
 from .astra_setup import *
 from .skimage_radon import *
 from .util import *
 
 __all__ = ()
 __all__ += astra_cpu.__all__
-__all__ += astra_cuda.__all__
+__all__ += astra_cuda_dlpack.__all__
 __all__ += astra_setup.__all__
 __all__ += util.__all__
 __all__ += skimage_radon.__all__
