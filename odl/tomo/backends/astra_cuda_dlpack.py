@@ -150,11 +150,12 @@ class AstraCudaImpl:
         self.proj_ndim = len(proj_shape)
 
         # Create ASTRA data structures
-        self.vol_geom  = astra_volume_geometry(self.vol_space)
-        self.proj_geom = astra_projection_geometry(self.geometry)
+        self.vol_geom  = astra_volume_geometry(self.vol_space, 'cuda')
+        
+        self.proj_geom = astra_projection_geometry(self.geometry, 'cuda')
         proj_type = 'cuda3d'
         self.projector_id = astra_projector(
-            proj_type, self.vol_geom, self.proj_geom
+            proj_type, self.vol_geom, self.proj_geom, 3
         )        
 
     @_add_default_complex_impl
@@ -191,7 +192,7 @@ class AstraCudaImpl:
                 proj_data = torch.zeros(
                     astra.geom_size(self.proj_geom), 
                     dtype=torch.float32, 
-                    device=self.proj_space.tspace._torch_device
+                    device=self.proj_space.tspace._torch_device #type:ignore
                     )
             elif self.proj_space.impl == 'numpy':
                 proj_data = np.zeros(
@@ -200,13 +201,13 @@ class AstraCudaImpl:
                     )
 
             if self.proj_ndim == 2:
-                volume_data = vol_data.data.unsqueeze(0)
+                volume_data = vol_data.data[None]
             else:
                 volume_data = vol_data.data
 
             if self.proj_space.impl == 'pytorch':
                 device_index = index_of_cuda_device(
-                                  self.proj_space.tspace._torch_device)
+                                  self.proj_space.tspace._torch_device) #type:ignore
                 if device_index is not None:
                     astra.set_gpu_index(device_index)
 
@@ -267,9 +268,10 @@ class AstraCudaImpl:
             ### Transpose projection tensor
             
             if self.proj_ndim == 2:
-                projection_data = proj_data.data.unsqueeze(0)
-                out.data.unsqueeze_(0)
+                projection_data = proj_data.data[None]
+                out_data = out.data[None]
             else:
+                out_data = out.data
                 projection_data = proj_data.data.transpose(*self.transpose_tuple)
                 if proj_data.impl == 'pytorch':
                     projection_data = projection_data.contiguous()
@@ -277,23 +279,25 @@ class AstraCudaImpl:
                     projection_data = np.ascontiguousarray(projection_data)
             
             if proj_data.impl == 'pytorch':
-                device_index = index_of_cuda_device(self.vol_space.tspace._torch_device)
+                device_index = index_of_cuda_device(self.vol_space.tspace._torch_device) #type:ignore
                 if device_index is not None:
                     astra.set_gpu_index(device_index)
 
             ### Call the backprojection
             astra.experimental.direct_BP3D( #type:ignore
                 self.projector_id,
-                out.data,
+                out_data,
                 projection_data                
             )
-            out *= astra_cuda_bp_scaling_factor(
+            out_data *= astra_cuda_bp_scaling_factor(
                 self.proj_space, self.vol_space, self.geometry
             )
 
             # Fix scaling to weight by pixel/voxel size
-
-            return out
+            if self.proj_ndim == 2:
+                return self.vol_space.element(out_data[0])
+            else:
+                return self.vol_space.element(out_data)
 
     def __del__(self):
         """Delete ASTRA objects."""

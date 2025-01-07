@@ -50,8 +50,8 @@ if ASTRA_AVAILABLE:
         ASTRA_VERSION = astra.__version__
     except AttributeError:
         # Below version 1.8
-        _maj = astra.astra.version() // 100
-        _min = astra.astra.version() % 100
+        _maj = astra.astra.version() // 100 #type:ignore
+        _min = astra.astra.version() % 100  #type:ignore
         ASTRA_VERSION = '.'.join([str(_maj), str(_min)])
         if (_maj, _min) < (1, 7):
             warnings.warn(
@@ -166,7 +166,7 @@ def astra_versions_supporting(feature):
         raise ValueError('unknown feature {!r}'.format(feature))
 
 
-def astra_volume_geometry(vol_space):
+def astra_volume_geometry(vol_space, impl):
     """Create an ASTRA volume geometry from the discretized domain.
 
     From the ASTRA documentation:
@@ -231,16 +231,31 @@ def astra_volume_geometry(vol_space):
         # NOTE: this setting is flipped with respect to x and y. We do this
         # as part of a global rotation of the geometry by -90 degrees, which
         # avoids rotating the data.
-        # We arbitrarily set the voxel size for the new dimension based on 
-        # the dimension 1 of the original 2D volume. We do so to have isotropic 
-        # voxels for faster computations 
-        vox_size = (vol_max[1]-vol_min[1]) / vol_shp[1]
-        vol_geom = astra.create_vol_geom(vol_shp[0], vol_shp[1], 1,
+        if impl == 'cpu':
+            # NOTE: this setting is flipped with respect to x and y. We do this
+            # as part of a global rotation of the geometry by -90 degrees, which
+            # avoids rotating the data.
+            # NOTE: We need to flip the sign of the (ODL) x component since
+            # ASTRA seems to move it in the other direction. Not quite clear
+            # why.
+            vol_geom = astra.create_vol_geom(vol_shp[0], vol_shp[1],
+                                            vol_min[1], vol_max[1],
+                                            -vol_max[0], -vol_min[0])
+        elif impl == 'cuda':
+            # We arbitrarily set the voxel size for the new dimension based on 
+            # the dimension 1 of the original 2D volume. We do so to have isotropic 
+            # voxels for faster computations 
+            vox_size = (vol_max[1]-vol_min[1]) / vol_shp[1]
+            vol_geom = astra.create_vol_geom(vol_shp[0], vol_shp[1], 1,
                                          vol_min[1], vol_max[1],
                                          vol_min[0], vol_max[0], 
                                          -vox_size/2, vox_size/2
                                          )
-        print(vol_geom)
+        else:
+            raise ValueError(f'impl argument can only be "cpu" or "cuda, got {impl}')
+
+        
+
     elif vol_space.ndim == 3:
         # Not supported in all versions of ASTRA
         if (
@@ -342,6 +357,35 @@ def astra_conebeam_3d_geom_to_vec(geometry):
 
     return vectors
 
+def astra_fanflat_2d_geom_to_conebeam_vec(geometry):
+    """ Create vectors for ASTRA projection geometry.
+    This is required for the CUDA implementation of fanflat geometry.
+    """
+    angles = geometry.angles
+    mid_pt = geometry.det_params.mid_pt
+
+    vectors = np.zeros((angles.shape[-1], 12))
+
+    # Source position
+    vectors[:, 1:3] = geometry.src_position(angles)
+
+    # Center of detector in 3D space
+    mid_pt = geometry.det_params.mid_pt
+    vectors[:, 4:6] = geometry.det_point_position(angles, float(mid_pt))
+
+    # Vectors from detector pixel (0, 0) to (1, 0) and (0, 0) to (0, 1)
+    det_axes = geometry.det_axis(angles)
+    px_size  = geometry.det_partition.cell_sides[0]
+    vectors[:, 7:9]  = det_axes * px_size
+    vectors[:, 9]    = px_size
+
+    # ASTRA has (z, y, x) axis convention, in contrast to (x, y, z) in ODL,
+    # so we need to adapt to this by changing the order.
+    newind = []
+    for i in range(4):
+        newind += [2 + 3 * i, 1 + 3 * i, 0 + 3 * i]
+    vectors = vectors[:, newind]
+    return vectors
 
 def astra_conebeam_2d_geom_to_vec(geometry):
     """Create vectors for ASTRA projection geometries from ODL geometry.
@@ -469,8 +513,35 @@ def astra_parallel_3d_geom_to_vec(geometry):
     vectors = vectors[:, new_ind]
     return vectors
 
+def astra_parallel_2d_geom_to_parallel3d_vec(geometry):
+    angles = geometry.angles
+    mid_pt = geometry.det_params.mid_pt
 
-def astra_projection_geometry(geometry):
+    vectors = np.zeros((angles.shape[-1], 12))
+
+    # Ray direction = -(detector-to-source normal vector)
+    vectors[:, 1:3] = -geometry.det_to_src(angles, mid_pt)
+
+    # Center of the detector in 3D space
+    vectors[:, 4:6] = geometry.det_point_position(angles, mid_pt)
+
+    # Vectors from detector pixel (0, 0) to (1, 0) and (0, 0) to (0, 1)
+    det_axes = geometry.det_axis(angles)
+    px_size = geometry.det_partition.cell_sides[0]
+    vectors[:, 7:9] = det_axes * px_size
+    vectors[:, 9] = px_size
+
+    # ASTRA has (z, y, x) axis convention, in contrast to (x, y, z) in ODL,
+    # so we need to adapt to this by changing the order.
+    new_ind = []
+    for i in range(4):
+        new_ind += [2 + 3 * i, 1 + 3 * i, 0 + 3 * i]
+    vectors = vectors[:, new_ind]
+    return vectors
+
+def astra_projection_geometry(
+        geometry,
+        impl):
     """Create an ASTRA projection geometry from an ODL geometry object.
 
     As of ASTRA version 1.7, the length values are not required any more to be
@@ -489,7 +560,6 @@ def astra_projection_geometry(geometry):
     if not isinstance(geometry, Geometry):
         raise TypeError('`geometry` {!r} is not a `Geometry` instance'
                         ''.format(geometry))
-
     if 'astra' in geometry.implementation_cache:
         # Shortcut, reuse already computed value.
         return geometry.implementation_cache['astra']
@@ -501,21 +571,37 @@ def astra_projection_geometry(geometry):
             isinstance(geometry.detector, (Flat1dDetector, Flat2dDetector)) and
             geometry.ndim == 2):
         # TODO: change to parallel_vec when available
-        det_width = geometry.det_partition.cell_sides[0]
         det_count = geometry.detector.size
-        # Instead of rotating the data by 90 degrees counter-clockwise,
-        # we subtract pi/2 from the geometry angles, thereby rotating the
-        # geometry by 90 degrees clockwise
-        angles = geometry.angles - np.pi / 2
-        proj_geom = astra.create_proj_geom('parallel3d', det_width, det_width, 1, det_count,
-                                           angles)
+        
+        if impl == 'cpu':
+            # Instead of rotating the data by 90 degrees counter-clockwise,
+            # we subtract pi/2 from the geometry angles, thereby rotating the
+            # geometry by 90 degrees clockwise
+            angles = geometry.angles - np.pi / 2
+            det_width = geometry.det_partition.cell_sides[0]
+            proj_geom = astra.create_proj_geom('parallel', det_width, det_count, angles)
+        elif impl == 'cuda':
+            vec = astra_parallel_2d_geom_to_parallel3d_vec(geometry)
+            proj_geom = astra.create_proj_geom('parallel3d_vec', 1, det_count, vec)
+        else:
+            raise ValueError(f'impl argument can only be "cpu" or "cuda, got {impl}')
 
     elif (isinstance(geometry, DivergentBeamGeometry) and
           isinstance(geometry.detector, (Flat1dDetector, Flat2dDetector)) and
           geometry.ndim == 2):
         det_count = geometry.detector.size
-        vec = astra_conebeam_2d_geom_to_vec(geometry)
-        proj_geom = astra.create_proj_geom('fanflat_vec', det_count, vec)
+        det_width = geometry.det_partition.cell_sides[0]
+        if impl == 'cpu':
+            vec = astra_conebeam_2d_geom_to_vec(geometry)
+            proj_geom = astra.create_proj_geom('fanflat_vec', det_count, vec)
+        elif impl == 'cuda':
+            det_row_count = 1
+            det_col_count = geometry.det_partition.shape[0]
+            vec = astra_fanflat_2d_geom_to_conebeam_vec(geometry)
+            proj_geom = astra.create_proj_geom('cone_vec', det_row_count,
+                                            det_col_count, vec)
+        else:
+            raise ValueError(f'impl argument can only be "cpu" or "cuda, got {impl}')  
 
     elif (isinstance(geometry, ParallelBeamGeometry) and
           isinstance(geometry.detector, (Flat1dDetector, Flat2dDetector)) and
@@ -619,7 +705,7 @@ def astra_data(astra_geom, datatype, data=None, ndim=2, allow_copy=False):
         return create(astra_dtype_str, astra_geom)
 
 
-def astra_projector(astra_proj_type, astra_vol_geom, astra_proj_geom):
+def astra_projector(astra_proj_type, astra_vol_geom, astra_proj_geom, ndim):
     """Create an ASTRA projector configuration dictionary.
 
     Parameters
@@ -703,10 +789,10 @@ def astra_projector(astra_proj_type, astra_vol_geom, astra_proj_geom):
     ):
         proj_cfg['options']['DensityWeighting'] = True
 
-    # if ndim == 2:
-    #     return astra.projector.create(proj_cfg)
-    # else:
-    return astra.projector3d.create(proj_cfg)
+    if ndim == 2:
+        return astra.projector.create(proj_cfg)
+    else:
+        return astra.projector3d.create(proj_cfg)
 
 
 def astra_algorithm(direction, ndim, vol_id, sino_id, proj_id, impl):

@@ -137,8 +137,8 @@ def astra_cpu_forward_projector(vol_data, geometry, proj_space, out=None,
     ndim = vol_data.ndim
 
     # Create astra geometries
-    vol_geom = astra_volume_geometry(vol_data.space)
-    proj_geom = astra_projection_geometry(geometry)
+    vol_geom = astra_volume_geometry(vol_data.space, 'cpu')
+    proj_geom = astra_projection_geometry(geometry, 'cpu')
 
     # Create projector
     if astra_proj_type is None:
@@ -238,8 +238,8 @@ def astra_cpu_back_projector(proj_data, geometry, vol_space, out=None,
     ndim = proj_data.ndim
 
     # Create astra geometries
-    vol_geom = astra_volume_geometry(vol_space)
-    proj_geom = astra_projection_geometry(geometry)
+    vol_geom = astra_volume_geometry(vol_space, 'cpu')
+    proj_geom = astra_projection_geometry(geometry, 'cpu')
 
     # Create ASTRA data structure
     sino_id = astra_data(
