@@ -231,12 +231,16 @@ def astra_volume_geometry(vol_space):
         # NOTE: this setting is flipped with respect to x and y. We do this
         # as part of a global rotation of the geometry by -90 degrees, which
         # avoids rotating the data.
-        # NOTE: We need to flip the sign of the (ODL) x component since
-        # ASTRA seems to move it in the other direction. Not quite clear
-        # why.
-        vol_geom = astra.create_vol_geom(vol_shp[0], vol_shp[1],
+        # We arbitrarily set the voxel size for the new dimension based on 
+        # the dimension 1 of the original 2D volume. We do so to have isotropic 
+        # voxels for faster computations 
+        vox_size = (vol_max[1]-vol_min[1]) / vol_shp[1]
+        vol_geom = astra.create_vol_geom(vol_shp[0], vol_shp[1], 1,
                                          vol_min[1], vol_max[1],
-                                         -vol_max[0], -vol_min[0])
+                                         vol_min[0], vol_max[0], 
+                                         -vox_size/2, vox_size/2
+                                         )
+        print(vol_geom)
     elif vol_space.ndim == 3:
         # Not supported in all versions of ASTRA
         if (
@@ -503,7 +507,7 @@ def astra_projection_geometry(geometry):
         # we subtract pi/2 from the geometry angles, thereby rotating the
         # geometry by 90 degrees clockwise
         angles = geometry.angles - np.pi / 2
-        proj_geom = astra.create_proj_geom('parallel', det_width, det_count,
+        proj_geom = astra.create_proj_geom('parallel3d', det_width, det_width, 1, det_count,
                                            angles)
 
     elif (isinstance(geometry, DivergentBeamGeometry) and
@@ -615,7 +619,7 @@ def astra_data(astra_geom, datatype, data=None, ndim=2, allow_copy=False):
         return create(astra_dtype_str, astra_geom)
 
 
-def astra_projector(astra_proj_type, astra_vol_geom, astra_proj_geom, ndim):
+def astra_projector(astra_proj_type, astra_vol_geom, astra_proj_geom):
     """Create an ASTRA projector configuration dictionary.
 
     Parameters
@@ -639,8 +643,6 @@ def astra_projector(astra_proj_type, astra_vol_geom, astra_proj_geom, ndim):
     if 'type' not in astra_proj_geom:
         raise ValueError('invalid projection geometry dict {}'
                          ''.format(astra_proj_geom))
-
-    ndim = int(ndim)
 
     astra_geom = astra_proj_geom['type']
     if (
@@ -701,10 +703,10 @@ def astra_projector(astra_proj_type, astra_vol_geom, astra_proj_geom, ndim):
     ):
         proj_cfg['options']['DensityWeighting'] = True
 
-    if ndim == 2:
-        return astra.projector.create(proj_cfg)
-    else:
-        return astra.projector3d.create(proj_cfg)
+    # if ndim == 2:
+    #     return astra.projector.create(proj_cfg)
+    # else:
+    return astra.projector3d.create(proj_cfg)
 
 
 def astra_algorithm(direction, ndim, vol_id, sino_id, proj_id, impl):

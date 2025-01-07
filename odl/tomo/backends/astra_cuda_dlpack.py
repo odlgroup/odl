@@ -30,7 +30,6 @@ from odl.discr.discr_space import DiscretizedSpaceElement
 
 try:
     import astra
-
     ASTRA_CUDA_AVAILABLE = astra.astra.use_cuda()
 except ImportError:
     ASTRA_CUDA_AVAILABLE = False
@@ -38,7 +37,6 @@ except ImportError:
 __all__ = (
     'ASTRA_CUDA_AVAILABLE',
 )
-
 
 class AstraCudaImpl:
     """`RayTransform` implementation for CUDA algorithms in ASTRA."""
@@ -113,12 +111,14 @@ class AstraCudaImpl:
         # ASTRA projectors are not thread-safe, thus we need to lock manually
         self._mutex = Lock()
         assert vol_space.impl == proj_space.impl, f'Volume space ({vol_space.impl}) != Projection space ({proj_space.impl})'
-        if vol_space.impl == 'numpy':
-            self.transpose_tuple = (1,0,2)
-        elif vol_space.impl == 'pytorch':
-            self.transpose_tuple = (1,0)
-        else:
-            raise NotImplementedError('Not implemented for another backend')
+        
+        if self.geometry.ndim == 3:
+            if vol_space.impl == 'numpy':
+                self.transpose_tuple = (1,0,2)
+            elif vol_space.impl == 'pytorch':
+                self.transpose_tuple = (1,0)
+            else:
+                raise NotImplementedError('Not implemented for another backend')
 
     @property
     def vol_space(self):
@@ -138,24 +138,14 @@ class AstraCudaImpl:
             motion_shape = (np.prod(self.geometry.motion_partition.shape),)
 
         proj_shape = motion_shape + self.geometry.det_partition.shape
-        proj_ndim = len(proj_shape)
-
-        # if proj_ndim == 2:
-        #     astra_proj_shape = proj_shape
-        #     astra_vol_shape = self.vol_space.shape
-        # elif proj_ndim == 3:
-        #     # The `u` and `v` axes of the projection data are swapped,
-        #     # see explanation in `astra_*_3d_geom_to_vec`.
-        #     astra_proj_shape = (proj_shape[1], proj_shape[0], proj_shape[2])
-        #     astra_vol_shape = self.vol_space.shape
+        self.proj_ndim = len(proj_shape)
 
         # Create ASTRA data structures
         self.vol_geom  = astra_volume_geometry(self.vol_space)
         self.proj_geom = astra_projection_geometry(self.geometry)
-
-        proj_type = 'cuda' if proj_ndim == 2 else 'cuda3d'
+        proj_type = 'cuda3d'
         self.projector_id = astra_projector(
-            proj_type, self.vol_geom, self.proj_geom, proj_ndim
+            proj_type, self.vol_geom, self.proj_geom
         )        
 
     @_add_default_complex_impl
@@ -197,18 +187,21 @@ class AstraCudaImpl:
                 dtype=torch.float32, 
                 device = proj_device
                 )
+            if self.proj_ndim == 2:
+                volume_data = vol_data.data.unsqueeze(0)
+            else:
+                volume_data = vol_data.data
+
             assert proj_data.device == vol_data.space.tspace._torch_device, f'{proj_data.device} {vol_data.space.tspace._torch_device}'
-            ### TODO: What happens if there is more than 1 GPU? 
             astra.set_gpu_index(proj_device.index)
             astra.experimental.direct_FP3D( #type:ignore
                 self.projector_id,
-                vol_data.data,
+                volume_data,
                 proj_data
             )
             # Copy result to host
             if self.geometry.ndim == 2:
-                raise NotImplementedError
-                out[:] = self.proj_array
+                out[:] = proj_data.squeeze(0)
             elif self.geometry.ndim == 3:
                 # out[:] = np.swapaxes(self.proj_array, 0, 1).reshape(
                 #     self.proj_space.shape)
@@ -255,21 +248,16 @@ class AstraCudaImpl:
             else:
                 out = self.vol_space.element()
 
-            # Copy data to GPU memory
-            # if self.geometry.ndim == 2:
-            #     raise NotImplementedError
-            #     astra.data2d.store(self.sino_id, proj_data.asarray())
-            # elif self.geometry.ndim == 3:
-            #     shape = (-1,) + self.geometry.det_partition.shape
-            #     reshaped_proj_data = proj_data.asarray().reshape(shape)
-            #     swapped_proj_data = np.ascontiguousarray(
-            #         np.swapaxes(reshaped_proj_data, 0, 1)
-            #     )
-            #     astra.data3d.store(self.sino_id, swapped_proj_data)
-
             ### Transpose projection tensor
-            projection_data = proj_data.data.transpose(*self.transpose_tuple).contiguous()
-            astra.set_gpu_index(self.vol_space.tspace._torch_device.index)
+            
+            if self.proj_ndim == 2:
+                projection_data = proj_data.data.unsqueeze(0)
+                out.data.unsqueeze_(0)
+            else:
+                projection_data = proj_data.data.transpose(*self.transpose_tuple).contiguous()
+            
+            astra.set_gpu_index(self.vol_space.tspace._torch_device.index) #type:ignore
+
             ### Call the backprojection
             astra.experimental.direct_BP3D( #type:ignore
                 self.projector_id,
