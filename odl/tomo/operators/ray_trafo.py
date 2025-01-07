@@ -126,11 +126,15 @@ class RayTransform(Operator):
             else:
                 raise NotImplementedError('unknown weighting of domain')
 
+            device_args = {}
+            if vol_space.tspace.impl == 'pytorch':
+                device_args['torch_device'] = vol_space.tspace._torch_device
+
             proj_tspace = vol_space.tspace_type(
                 geometry.partition.shape,
                 weighting=weighting, #type:ignore
                 dtype=dtype,
-                torch_device = vol_space.tspace._torch_device
+                **device_args
             )
 
             if geometry.motion_partition.ndim == 0:
