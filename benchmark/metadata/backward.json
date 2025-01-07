@@ -1,0 +1,13 @@
+{
+    "backend":"odl",
+    "script_name":"backward",
+    "n_calls":10,
+    "parameters":{
+        "n_points"        : 1024,
+        "dimension"       : 3,
+        "n_angles"        : 360,
+        "reco_space_impl" : "pytorch",
+        "device_name"     : "cuda:0",
+        "ray_trafo_impl"  : "astra_cuda_link"
+    }
+}
