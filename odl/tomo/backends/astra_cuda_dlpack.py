@@ -38,6 +38,15 @@ __all__ = (
     'ASTRA_CUDA_AVAILABLE',
 )
 
+def index_of_cuda_device(device: torch.device):
+    try:
+        torch.cuda.get_device_name(device)
+        # is a gpu
+        return device.index
+    finally:
+        # is other kind of device
+        return None
+
 class AstraCudaImpl:
     """`RayTransform` implementation for CUDA algorithms in ASTRA."""
 
@@ -193,7 +202,11 @@ class AstraCudaImpl:
                 volume_data = vol_data.data
 
             assert proj_data.device == vol_data.space.tspace._torch_device, f'{proj_data.device} {vol_data.space.tspace._torch_device}'
-            astra.set_gpu_index(proj_device.index)
+
+            device_index = index_of_cuda_device(proj_device)
+            if device_index is not None:
+                astra.set_gpu_index(device_index)
+
             astra.experimental.direct_FP3D( #type:ignore
                 self.projector_id,
                 volume_data,
@@ -256,7 +269,9 @@ class AstraCudaImpl:
             else:
                 projection_data = proj_data.data.transpose(*self.transpose_tuple).contiguous()
             
-            astra.set_gpu_index(self.vol_space.tspace._torch_device.index) #type:ignore
+            device_index = index_of_cuda_device(self.vol_space.tspace._torch_device)
+            if device_index is not None:
+                astra.set_gpu_index(device_index)
 
             ### Call the backprojection
             astra.experimental.direct_BP3D( #type:ignore
