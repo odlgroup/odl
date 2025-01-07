@@ -43,7 +43,7 @@ def index_of_cuda_device(device: torch.device):
         torch.cuda.get_device_name(device)
         # is a gpu
         return device.index
-    finally:
+    except ValueError:
         # is other kind of device
         return None
 
