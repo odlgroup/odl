@@ -187,25 +187,28 @@ class AstraCudaImpl:
             else:
                 out = self.proj_space.element()
             
-            ## Temporary assertions, later it can be relaxed
-            assert self.proj_space.impl == 'pytorch'
-            assert self.vol_space.impl == 'pytorch'
-            proj_device :torch.device = self.proj_space.tspace._torch_device #type:ignore
-            proj_data = torch.zeros(
-                astra.geom_size(self.proj_geom), 
-                dtype=torch.float32, 
-                device = proj_device
-                )
+            if self.proj_space.impl == 'pytorch':
+                proj_data = torch.zeros(
+                    astra.geom_size(self.proj_geom), 
+                    dtype=torch.float32, 
+                    device=self.proj_space.tspace._torch_device
+                    )
+            elif self.proj_space.impl == 'numpy':
+                proj_data = np.zeros(
+                    astra.geom_size(self.proj_geom), 
+                    dtype=np.float32, 
+                    )
+
             if self.proj_ndim == 2:
                 volume_data = vol_data.data.unsqueeze(0)
             else:
                 volume_data = vol_data.data
 
-            assert proj_data.device == vol_data.space.tspace._torch_device, f'{proj_data.device} {vol_data.space.tspace._torch_device}'
-
-            device_index = index_of_cuda_device(proj_device)
-            if device_index is not None:
-                astra.set_gpu_index(device_index)
+            if self.proj_space.impl == 'pytorch':
+                device_index = index_of_cuda_device(
+                                  self.proj_space.tspace._torch_device)
+                if device_index is not None:
+                    astra.set_gpu_index(device_index)
 
             astra.experimental.direct_FP3D( #type:ignore
                 self.projector_id,
@@ -267,11 +270,16 @@ class AstraCudaImpl:
                 projection_data = proj_data.data.unsqueeze(0)
                 out.data.unsqueeze_(0)
             else:
-                projection_data = proj_data.data.transpose(*self.transpose_tuple).contiguous()
+                projection_data = proj_data.data.transpose(*self.transpose_tuple)
+                if proj_data.impl == 'pytorch':
+                    projection_data = projection_data.contiguous()
+                elif proj_data.impl == 'numpy':
+                    projection_data = np.ascontiguousarray(projection_data)
             
-            device_index = index_of_cuda_device(self.vol_space.tspace._torch_device)
-            if device_index is not None:
-                astra.set_gpu_index(device_index)
+            if proj_data.impl == 'pytorch':
+                device_index = index_of_cuda_device(self.vol_space.tspace._torch_device)
+                if device_index is not None:
+                    astra.set_gpu_index(device_index)
 
             ### Call the backprojection
             astra.experimental.direct_BP3D( #type:ignore
