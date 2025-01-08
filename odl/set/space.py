@@ -10,12 +10,37 @@
 
 from __future__ import print_function, division, absolute_import
 from builtins import object
+from enum import Enum
+from dataclasses import dataclass
 import numpy as np
 
 from odl.set.sets import Field, Set, UniversalSet
 
 
 __all__ = ('LinearSpace', 'UniversalSpace')
+
+
+class NumOperationParadigmSupport(Enum):
+    NOT_SUPPORTED = 0
+    SUPPORTED = 1
+    PREFERRED = 2
+
+    @property
+    def is_supported(self):
+        return self.value > 0
+
+    @property
+    def is_preferred(self):
+        return self.value > 1
+
+    def __bool__(self):
+        return self.is_supported
+
+
+@dataclass
+class SupportedNumOperationParadigms:
+    in_place: NumOperationParadigmSupport
+    out_of_place: NumOperationParadigmSupport
 
 
 class LinearSpace(Set):
@@ -80,6 +105,20 @@ class LinearSpace(Set):
             yield ('One', self.one())
         except NotImplementedError:
             pass
+
+    @property
+    def supported_num_operation_paradigms(self) -> NumOperationParadigmSupport:
+        """Specify whether the low-level numerical operations in this space
+        support in-place style, whether they support out-of-place style, and
+        if one of them is preferred.
+        Generally speaking, for fixed-dimensional spaces whose implementation
+        is a monolithic array, in-place style is preferrable because it avoids
+        allocating new memory.
+        By contrast, in spaces that support e.g. adaptive mesh resolution, the
+        in-place style may have little advantage because allocation can only
+        be decided based on the inputs, and for automatic differentiation it
+        may even be necessary to use purely-functional out-of-place style."""
+        raise NotImplementedError('abstract method')
 
     def _lincomb(self, a, x1, b, x2, out):
         """Implement ``out[:] = a * x1 + b * x2``.
@@ -193,33 +232,70 @@ class LinearSpace(Set):
 
             ``x = x * (2 + 3.14)``.
         """
-        if out is None:
-            out = self.element()
-        elif out not in self:
-            raise LinearSpaceTypeError('`out` {!r} is not an element of {!r}'
-                                       ''.format(out, self))
-        if self.field is not None and a not in self.field:
-            raise LinearSpaceTypeError('`a` {!r} not an element of the field '
-                                       '{!r} of {!r}'
-                                       ''.format(a, self.field, self))
-        if x1 not in self:
-            raise LinearSpaceTypeError('`x1` {!r} is not an element of {!r}'
-                                       ''.format(x1, self))
+        paradigms = self.supported_num_operation_paradigms
 
-        if b is None:  # Single element
-            if x2 is not None:
+        def assert_x2_has_b():
+            if b is None and x2 is not None:
                 raise ValueError('`x2` provided but not `b`')
-            self._lincomb(a, x1, 0, x1, out)
-            return out
 
-        else:  # Two elements
+        def assert_x1_in_self():
+            if x1 not in self:
+                raise LinearSpaceTypeError('`x1` {!r} is not an element of '
+                                           '{!r}'.format(x1, self))
+
+        def assert_x2_in_self():
+            if x2 not in self:
+                raise LinearSpaceTypeError('`x2` {!r} is not an element of '
+                                           '{!r}'.format(x2, self))
+
+        def assert_a_in_field():
+            if self.field is not None and a not in self.field:
+                raise LinearSpaceTypeError('`a` {!r} not an element of the field '
+                                           '{!r} of {!r}'
+                                           ''.format(a, self.field, self))
+
+        def assert_b_in_field():
             if self.field is not None and b not in self.field:
                 raise LinearSpaceTypeError('`b` {!r} not an element of the '
                                            'field {!r} of {!r}'
                                            ''.format(b, self.field, self))
-            if x2 not in self:
-                raise LinearSpaceTypeError('`x2` {!r} is not an element of '
-                                           '{!r}'.format(x2, self))
+
+        if out is None:
+            if (paradigms.in_place.is_preferred
+                 or not paradigms.out_of_place.is_supported):
+                out = self.element()
+            else:
+                assert_a_in_field()
+                assert_x1_in_self()
+                if b is None:  # Single element
+                    assert_x2_has_b()
+                    result = self._lincomb(a, x1, 0, x1, out=None)
+                    assert(result is not None)
+                    return result
+                else:  # Two elements
+                    assert_b_in_field()
+                    assert_x2_in_self()
+                    result = self._lincomb(a, x1, b, x2, out=None)
+                    assert(result is not None)
+                    return result
+        elif out not in self:
+            raise LinearSpaceTypeError('`out` {!r} is not an element of {!r}'
+                                       ''.format(out, self))
+
+        if (not paradigms.in_place.is_supported):
+            out.assign(self.lincomb(a, x1, b, x2, out=None), avoid_deep_copy=True)
+            return out
+
+        assert_a_in_field()
+        assert_x1_in_self()
+
+        if b is None:  # Single element
+            assert_x2_has_b()
+            self._lincomb(a, x1, 0, x1, out)
+
+        else:  # Two elements
+            assert_b_in_field()
+            assert_x2_in_self()
 
             self._lincomb(a, x1, b, x2, out)
 
@@ -289,6 +365,45 @@ class LinearSpace(Set):
         else:
             return self.field.element(self._inner(x1, x2))
 
+    def _binary_num_operation(self, low_level_method, x1, x2, out=None):
+        """Apply the numerical operation implemented by `low_level_method` to
+        `x1` and `x2`.
+        This is done either in in-place fashion or out-of-place, depending on
+        which style is preferred for this space."""
+
+        paradigms = self.supported_num_operation_paradigms
+
+        if x1 not in self:
+            raise LinearSpaceTypeError('`x1` {!r} is not an element of '
+                                       '{!r}'.format(x1, self))
+        if x2 not in self:
+            raise LinearSpaceTypeError('`x2` {!r} is not an element of '
+                                       '{!r}'.format(x2, self))
+
+        if out is not None and out not in self:
+            raise LinearSpaceTypeError('`out` {!r} is not an element of '
+                                       '{!r}'.format(out, self))
+
+        if (paradigms.in_place.is_preferred
+             or not paradigms.out_of_place.is_supported
+             or out is not None and paradigms.in_place.is_supported):
+
+            if out is None:
+                out = self.element()
+
+            low_level_method(x1, x2, out=out)
+
+            return out
+
+        else:
+            assert(paradigms.out_of_place.is_supported)
+            result = self.element(low_level_method(x1, x2, out=None))
+            if out is not None:
+                out.assign(result, avoid_deep_copy=True)
+                return out
+            else:
+                return result
+
     def multiply(self, x1, x2, out=None):
         """Return the pointwise product of ``x1`` and ``x2``.
 
@@ -305,20 +420,7 @@ class LinearSpace(Set):
             Product of the elements. If ``out`` was provided, the
             returned object is a reference to it.
         """
-        if out is None:
-            out = self.element()
-
-        if out not in self:
-            raise LinearSpaceTypeError('`out` {!r} is not an element of '
-                                       '{!r}'.format(out, self))
-        if x1 not in self:
-            raise LinearSpaceTypeError('`x1` {!r} is not an element of '
-                                       '{!r}'.format(x1, self))
-        if x2 not in self:
-            raise LinearSpaceTypeError('`x2` {!r} is not an element of '
-                                       '{!r}'.format(x2, self))
-        self._multiply(x1, x2, out)
-        return out
+        return self._binary_num_operation(self._multiply, x1, x2, out)
 
     def divide(self, x1, x2, out=None):
         """Return the pointwise quotient of ``x1`` and ``x2``
@@ -338,20 +440,7 @@ class LinearSpace(Set):
             Quotient of the elements. If ``out`` was provided, the
             returned object is a reference to it.
         """
-        if out is None:
-            out = self.element()
-
-        if out not in self:
-            raise LinearSpaceTypeError('`out` {!r} is not an element of '
-                                       '{!r}'.format(out, self))
-        if x1 not in self:
-            raise LinearSpaceTypeError('`x1` {!r} is not an element of '
-                                       '{!r}'.format(x1, self))
-        if x2 not in self:
-            raise LinearSpaceTypeError('`x2` {!r} is not an element of '
-                                       '{!r}'.format(x2, self))
-        self._divide(x1, x2, out)
-        return out
+        return self._binary_num_operation(self._divide, x1, x2, out)
 
     @property
     def element_type(self):
@@ -444,9 +533,32 @@ class LinearSpaceElement(object):
         return self.__space
 
     # Convenience functions
-    def assign(self, other):
-        """Assign the values of ``other`` to ``self``."""
-        return self.space.lincomb(1, other, out=self)
+    def assign(self, other, avoid_deep_copy: bool = False):
+        """Assign the values of ``other`` to ``self``, like `self[:] = other`.
+
+        If ``avoid_deep_copy`` is True, an attempt is made to reuse the
+        storage of ``other`` for ``self``.
+        This is in general unsafe (later modifications to ``self`` would
+        impact also ``other``, vice versa), but faster and useful particularly
+        when ``other`` is ephemeral (rvalue, in C++ terminology).
+
+        Spaces with immutable elements (i.e., `in_place=NOT_SUPPORTED` in
+        `supported_num_operation_paradigms`) may opt for performing only a
+        shallow copy even if ``avoid_deep_copy`` is False.
+        On the other hand, if some type conversion is necessary on ``other``
+        then this will usually prompt a copy even if ``avoid_deep_copy``
+        is True."""
+        if other in self.space:
+            self._assign(other, avoid_deep_copy=avoid_deep_copy)
+        else:
+            self._assign(self.space.element(other),
+                         avoid_deep_copy=avoid_deep_copy)
+
+    def _assign(self, other, avoid_deep_copy):
+        """Low-level implementation of `self = other`. Assign the values of
+        ``other``, which is assumed to be in the same space, to ``self``."""
+        raise NotImplementedError(
+                f"Abstract method, not implemented for {type(self)}")
 
     def copy(self):
         """Create an identical (deep) copy of self."""
@@ -522,8 +634,7 @@ class LinearSpaceElement(object):
         elif self.space.field is None:
             return NotImplemented
         elif other in self.space:
-            tmp = self.space.element()
-            return self.space.lincomb(1, self, 1, other, out=tmp)
+            return self.space.lincomb(1, self, 1, other)
         elif isinstance(other, LinearSpaceElement):
             return NotImplemented
         elif other in self.space.field:
@@ -586,8 +697,7 @@ class LinearSpaceElement(object):
         elif self.space.field is None:
             return NotImplemented
         elif other in self.space:
-            tmp = self.space.element()
-            return self.space.lincomb(1, self, -1, other, out=tmp)
+            return self.space.lincomb(1, self, -1, other)
         elif isinstance(other, LinearSpaceElement):
             return NotImplemented
         elif other in self.space.field:
@@ -664,11 +774,9 @@ class LinearSpaceElement(object):
         elif self.space.field is None:
             return NotImplemented
         elif other in self.space.field:
-            tmp = self.space.element()
-            return self.space.lincomb(other, self, out=tmp)
+            return self.space.lincomb(other, self)
         elif other in self.space:
-            tmp = self.space.element()
-            return self.space.multiply(other, self, out=tmp)
+            return self.space.multiply(other, self)
         elif isinstance(other, LinearSpaceElement):
             return NotImplemented
         else:
@@ -718,11 +826,9 @@ class LinearSpaceElement(object):
         elif self.space.field is None:
             return NotImplemented
         elif other in self.space.field:
-            tmp = self.space.element()
-            return self.space.lincomb(1.0 / other, self, out=tmp)
+            return self.space.lincomb(1.0 / other, self)
         elif other in self.space:
-            tmp = self.space.element()
-            return self.space.divide(self, other, out=tmp)
+            return self.space.divide(self, other)
         elif isinstance(other, LinearSpaceElement):
             return NotImplemented
         else:
