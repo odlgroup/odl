@@ -357,7 +357,7 @@ def astra_conebeam_3d_geom_to_vec(geometry):
 
     return vectors
 
-def astra_fanflat_2d_geom_to_conebeam_vec(geometry):
+def astra_fanflat_2d_geom_to_conebeam_vec(geometry, vox_size=None):
     """ Create vectors for ASTRA projection geometry.
     This is required for the CUDA implementation of fanflat geometry.
     """
@@ -371,13 +371,21 @@ def astra_fanflat_2d_geom_to_conebeam_vec(geometry):
 
     # Center of detector in 3D space
     mid_pt = geometry.det_params.mid_pt
-    vectors[:, 4:6] = geometry.det_point_position(angles, float(mid_pt))
+    vectors[:, 4:6] = geometry.det_point_position(angles, mid_pt.item())
 
     # Vectors from detector pixel (0, 0) to (1, 0) and (0, 0) to (0, 1)
     det_axes = geometry.det_axis(angles)
     px_size  = geometry.det_partition.cell_sides[0]
     vectors[:, 7:9]  = det_axes * px_size
-    vectors[:, 9]    = px_size
+    if vox_size is not None:
+        # Make the thickness of the detector equal to the thickness of
+        # the 1-layer slice in 3D that's used to represents the 2D ODl
+        # domain in the Astra 3D computation.
+        # This is not necessarily equal to the pixel size of the detector,
+        # in which case the normalization constants would be wrong.
+        vectors[:, 9] = vox_size
+    else:
+        vectors[:, 9] = px_size
 
     # ASTRA has (z, y, x) axis convention, in contrast to (x, y, z) in ODL,
     # so we need to adapt to this by changing the order.
@@ -435,7 +443,7 @@ def astra_conebeam_2d_geom_to_vec(geometry):
     mid_pt = geometry.det_params.mid_pt
     # Need to cast `mid_pt` to float since otherwise the empty axis is
     # not removed
-    centers = geometry.det_point_position(angles, float(mid_pt))
+    centers = geometry.det_point_position(angles, mid_pt.item())
     vectors[:, 2:4] = rot_minus_90.dot(centers.T).T
 
     # Vector from detector pixel 0 to 1
