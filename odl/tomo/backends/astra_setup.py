@@ -513,7 +513,7 @@ def astra_parallel_3d_geom_to_vec(geometry):
     vectors = vectors[:, new_ind]
     return vectors
 
-def astra_parallel_2d_geom_to_parallel3d_vec(geometry):
+def astra_parallel_2d_geom_to_parallel3d_vec(geometry, vox_size=None):
     angles = geometry.angles
     mid_pt = geometry.det_params.mid_pt
 
@@ -529,7 +529,15 @@ def astra_parallel_2d_geom_to_parallel3d_vec(geometry):
     det_axes = geometry.det_axis(angles)
     px_size = geometry.det_partition.cell_sides[0]
     vectors[:, 7:9] = det_axes * px_size
-    vectors[:, 9] = px_size
+    if vox_size is not None:
+        # Make the thickness of the detector equal to the thickness of
+        # the 1-layer slice in 3D that's used to represents the 2D ODl
+        # domain in the Astra 3D computation.
+        # This is not necessarily equal to the pixel size of the detector,
+        # in which case the normalization constants would be wrong.
+        vectors[:, 9] = vox_size
+    else:
+        vectors[:, 9] = px_size
 
     # ASTRA has (z, y, x) axis convention, in contrast to (x, y, z) in ODL,
     # so we need to adapt to this by changing the order.
@@ -541,7 +549,8 @@ def astra_parallel_2d_geom_to_parallel3d_vec(geometry):
 
 def astra_projection_geometry(
         geometry,
-        impl):
+        impl,
+        vox_size=None):
     """Create an ASTRA projection geometry from an ODL geometry object.
 
     As of ASTRA version 1.7, the length values are not required any more to be
@@ -581,7 +590,7 @@ def astra_projection_geometry(
             det_width = geometry.det_partition.cell_sides[0]
             proj_geom = astra.create_proj_geom('parallel', det_width, det_count, angles)
         elif impl == 'cuda':
-            vec = astra_parallel_2d_geom_to_parallel3d_vec(geometry)
+            vec = astra_parallel_2d_geom_to_parallel3d_vec(geometry, vox_size=vox_size)
             proj_geom = astra.create_proj_geom('parallel3d_vec', 1, det_count, vec)
         else:
             raise ValueError(f'impl argument can only be "cpu" or "cuda, got {impl}')

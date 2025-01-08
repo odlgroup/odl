@@ -150,9 +150,14 @@ class AstraCudaImpl:
         self.proj_ndim = len(proj_shape)
 
         # Create ASTRA data structures
+        vol_shp = self.vol_space.partition.shape
+        vol_min = self.vol_space.partition.min_pt
+        vol_max = self.vol_space.partition.max_pt
+        vox_size = (vol_max[1]-vol_min[1]) / vol_shp[1]
+        
         self.vol_geom  = astra_volume_geometry(self.vol_space, 'cuda')
         
-        self.proj_geom = astra_projection_geometry(self.geometry, 'cuda')
+        self.proj_geom = astra_projection_geometry(self.geometry, 'cuda', vox_size=vox_size)
         proj_type = 'cuda3d'
         self.projector_id = astra_projector(
             proj_type, self.vol_geom, self.proj_geom, 3
