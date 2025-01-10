@@ -359,9 +359,9 @@ def test_anisotropic_voxels(geometry):
 
     # If no implementation is available, skip
     if ndim == 2 and not odl.tomo.ASTRA_AVAILABLE:
-        pytest.skip(msg='ASTRA not available, skipping 2d test')
+        pytest.skip(reason='ASTRA not available, skipping 2d test')
     elif ndim == 3 and not odl.tomo.ASTRA_CUDA_AVAILABLE:
-        pytest.skip(msg='ASTRA_CUDA not available, skipping 3d test')
+        pytest.skip(reason='ASTRA_CUDA not available, skipping 3d test')
 
     ray_trafo = odl.tomo.RayTransform(space, geometry)
     vol_one = ray_trafo.domain.one()
@@ -486,7 +486,7 @@ def test_detector_shifts_2d():
     """
 
     if not odl.tomo.ASTRA_AVAILABLE:
-        pytest.skip(msg='ASTRA not available, skipping 2d test')
+        pytest.skip(reason='ASTRA not available, skipping 2d test')
 
     d = 10
     space = odl.uniform_discr([-1] * 2, [1] * 2, [d] * 2)
@@ -543,7 +543,7 @@ def test_source_shifts_2d():
     """
 
     if not odl.tomo.ASTRA_AVAILABLE:
-        pytest.skip(msg='ASTRA required but not available')
+        pytest.skip(reason='ASTRA required but not available')
 
     d = 10
     space = odl.uniform_discr([-1] * 2, [1] * 2, [d] * 2)
@@ -622,7 +622,7 @@ def test_detector_shifts_3d():
     numerically close (the error depends on domain discretization).
     """
     if not odl.tomo.ASTRA_CUDA_AVAILABLE:
-        pytest.skip(msg='ASTRA CUDA required but not available')
+        pytest.skip(reason='ASTRA CUDA required but not available')
 
     d = 100
     space = odl.uniform_discr([-1] * 3, [1] * 3, [d] * 3)
@@ -677,7 +677,7 @@ def test_source_shifts_3d():
     detector shifts
     """
     if not odl.tomo.ASTRA_CUDA_AVAILABLE:
-        pytest.skip(msg='ASTRA_CUDA not available, skipping 3d test')
+        pytest.skip(reason='ASTRA_CUDA not available, skipping 3d test')
 
     d = 10
     space = odl.uniform_discr([-1] * 3, [1] * 3, [d] * 3)
