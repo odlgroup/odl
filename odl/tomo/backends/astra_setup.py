@@ -722,7 +722,10 @@ def astra_data(astra_geom, datatype, data=None, ndim=2, allow_copy=False):
         return create(astra_dtype_str, astra_geom)
 
 
-def astra_projector(astra_proj_type, astra_vol_geom, astra_proj_geom, ndim):
+def astra_projector(
+        astra_proj_type, astra_vol_geom, astra_proj_geom, ndim, 
+        fan2d_override = None
+        ):
     """Create an ASTRA projector configuration dictionary.
 
     Parameters
@@ -797,6 +800,8 @@ def astra_projector(astra_proj_type, astra_vol_geom, astra_proj_geom, ndim):
     proj_cfg['VolumeGeometry'] = astra_vol_geom
     proj_cfg['ProjectionGeometry'] = astra_proj_geom
     proj_cfg['options'] = {}
+    if fan2d_override:
+        proj_cfg['options']['ProjectionKernel'] = 'fan2d_weighting'
 
     # Add the approximate 1/r^2 weighting exposed in intermediate versions of
     # ASTRA
