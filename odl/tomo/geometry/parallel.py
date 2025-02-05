@@ -14,18 +14,22 @@ import numpy as np
 
 from odl.discr import uniform_partition
 from odl.tomo.geometry.detector import Flat1dDetector, Flat2dDetector
-from odl.tomo.geometry.geometry import AxisOrientedGeometry, Geometry
+from odl.tomo.geometry.geometry import (
+    AxisOrientedGeometry, Geometry, VecGeometry)
 from odl.tomo.util import euler_matrix, is_inside_bounds, transform_system
 from odl.util import array_str, indent, signature_string
 
-__all__ = ('ParallelBeamGeometry',
-           'Parallel2dGeometry',
-           'Parallel3dEulerGeometry', 'Parallel3dAxisGeometry',
-           'parallel_beam_geometry')
+__all__ = (
+    'ParallelBeamGeometry',
+    'Parallel2dGeometry',
+    'Parallel3dEulerGeometry',
+    'Parallel3dAxisGeometry',
+    'ParallelVecGeometry',
+    'parallel_beam_geometry',
+)
 
 
 class ParallelBeamGeometry(Geometry):
-
     """Abstract parallel beam geometry in 2 or 3 dimensions.
 
     Parallel geometries are characterized by a virtual source at
@@ -326,7 +330,6 @@ class ParallelBeamGeometry(Geometry):
 
 
 class Parallel2dGeometry(ParallelBeamGeometry):
-
     """Parallel beam geometry in 2d.
 
     The motion parameter is the counter-clockwise rotation angle around
@@ -630,8 +633,10 @@ class Parallel2dGeometry(ParallelBeamGeometry):
         """
         squeeze_out = (np.shape(angle) == ())
         angle = np.array(angle, dtype=float, copy=False, ndmin=1)
-        if (self.check_bounds and
-                not is_inside_bounds(angle, self.motion_params)):
+        if (
+            self.check_bounds
+            and not is_inside_bounds(angle, self.motion_params)
+        ):
             raise ValueError('`angle` {} not in the valid range {}'
                              ''.format(angle, self.motion_params))
 
@@ -664,7 +669,7 @@ class Parallel2dGeometry(ParallelBeamGeometry):
         return '{}(\n{}\n)'.format(self.__class__.__name__, indent(sig_str))
 
     def __getitem__(self, indices):
-        """Return self[slc]
+        """Return self[slc].
 
         This is defined by::
 
@@ -700,7 +705,6 @@ class Parallel2dGeometry(ParallelBeamGeometry):
 
 
 class Parallel3dEulerGeometry(ParallelBeamGeometry):
-
     """Parallel beam geometry in 3d.
 
     The motion parameters are two or three Euler angles, and the detector
@@ -1039,8 +1043,10 @@ class Parallel3dEulerGeometry(ParallelBeamGeometry):
         angles_in = angles
         angles = tuple(np.array(angle, dtype=float, copy=False, ndmin=1)
                        for angle in angles)
-        if (self.check_bounds and
-                not is_inside_bounds(angles, self.motion_params)):
+        if (
+            self.check_bounds
+            and not is_inside_bounds(angles, self.motion_params)
+        ):
             raise ValueError('`angles` {} not in the valid range '
                              '{}'.format(angles_in, self.motion_params))
 
@@ -1074,7 +1080,6 @@ class Parallel3dEulerGeometry(ParallelBeamGeometry):
 
 
 class Parallel3dAxisGeometry(ParallelBeamGeometry, AxisOrientedGeometry):
-
     """Parallel beam geometry in 3d with single rotation axis.
 
     The motion parameter is the rotation angle around the specified
@@ -1468,6 +1473,225 @@ class Parallel3dAxisGeometry(ParallelBeamGeometry, AxisOrientedGeometry):
     rotation_matrix = AxisOrientedGeometry.rotation_matrix
 
 
+class ParallelVecGeometry(VecGeometry):
+    """Parallel beam 2D or 3D geometry defined by a collection of vectors.
+
+    This geometry gives maximal flexibility for representing locations
+    and orientations of rays and detector for parallel beam acquisition
+    schemes. It is defined by a set of vectors per projection, namely
+
+        - ray direction (``ray``),
+        - detector center (``d``),
+        - in 2D: vector (``u``) from the detector point with index ``0``
+          to the point with index ``1``
+        - in 3D:
+
+          * vector (``u``) from detector point ``(0, 0)`` to ``(1, 0)`` and
+          * vector (``v``) from detector point ``(0, 0)`` to ``(0, 1)``.
+
+    The vectors are given as a matrix with ``n_projs`` rows, where
+    ``n_projs`` is the number of projections. In 2D, 3 vectors have to
+    be specified, which makes for ``3 * 2 = 6`` columns::
+
+        vec2d = (rayX, rayY, dX, dY, uX, uY)
+
+    3D geometries require 4 vectors, resulting in ``4 * 3 = 12`` matrix
+    columns::
+
+        vec3d = (rayX, rayY, rayZ, dX, dY, dZ, uX, uY, uZ, vX, vY, vZ)
+
+    This representation corresponds exactly to the ASTRA "vec" geometries,
+    see the `ASTRA documentation
+    <http://www.astra-toolbox.com/docs/index.html>`_.
+
+    The geometry defined by these vectors is discrete in the motion
+    parameters ("angles") since they are merely indices for the individual
+    projections. For intermediate values, linear interpolation is used,
+    which corresponds to the assumption that the system moves on piecewise
+    linear paths.
+    """
+
+    # `rotation_matrix` not implemented; reason: missing
+
+    @property
+    def _slice_ray(self):
+        """Slice for the ray direction part of `vectors`."""
+        if self.ndim == 2:
+            return slice(0, 2)
+        elif self.ndim == 3:
+            return slice(0, 3)
+        else:
+            raise RuntimeError('bad `ndim`')
+
+    def det_to_src(self, index, dparam):
+        """Direction from a detector location to the source.
+
+        The direction vector is computed as follows::
+
+            dir = rotation_matrix(angle).dot(detector.surface_normal(dparam))
+
+        Note that for flat detectors, ``surface_normal`` does not depend
+        on the parameter ``dparam``, hence this function is constant in
+        that variable.
+
+        Parameters
+        ----------
+        index : `array-like` or sequence
+            Index or indices of the projection. Non-integer indices
+            result in interpolated vectors.
+        dparam : `array-like` or sequence
+            Detector parameter(s) at which to evaluate. If
+            ``det_params.ndim == 2``, a sequence of that length must be
+            provided.
+
+        Returns
+        -------
+        det_to_src : `numpy.ndarray`
+            Vector(s) pointing from a detector point to the source (at
+            infinity).
+            The shape of the returned array is obtained from the
+            (broadcast) shapes of ``index`` and ``dparam``, and
+            broadcasting is supported within both parameters and between
+            them. The precise definition of the shape is
+            ``broadcast(index, bcast_dparam).shape + (ndim,)``,
+            where ``bcast_dparam`` is
+
+            - ``dparam`` if `det_params` is 1D,
+            - ``broadcast(*dparam)`` otherwise.
+
+        Examples
+        --------
+        The method works with single parameter values, in which case
+        a single vector is returned:
+
+        >>> # r = ray direction
+        >>> #           rx ry
+        >>> vecs_2d = [[0, -1, 0, 1, 1, 0],
+        ...            [1, 0, -1, 0, 0, 1]]
+        >>> det_shape_2d = 10
+        >>> geom = odl.tomo.ParallelVecGeometry(det_shape_2d, vecs_2d)
+        >>> geom.det_to_src(0, 0)
+        array([-0.,  1.])
+        >>> geom.det_to_src(1, 0)
+        array([-1., -0.])
+        >>> geom.det_to_src(1, 1)  # dparam has no effect
+        array([-1., -0.])
+        >>> dir = geom.det_to_src(0.5, 0)  # interpolate
+        >>> np.allclose(dir, [-1, 1] / np.linalg.norm([-1, 1]))
+        True
+
+        Both variables support vectorized calls, i.e., stacks of
+        parameters can be provided. The order of axes in the output (left
+        of the ``ndim`` axis for the vector dimension) corresponds to the
+        order of arguments:
+        TODO: adapt this
+
+        >>> dirs = geom.det_to_src(0, [-1, 0, 0.5, 1])
+        >>> dirs
+        array([[ 0., -1.],
+               [ 0., -1.],
+               [ 0., -1.],
+               [ 0., -1.]])
+        >>> dirs.shape  # (num_dparams, ndim)
+        (4, 2)
+        >>> dirs = geom.det_to_src([0, np.pi / 2, np.pi], 0)
+        >>> np.allclose(dirs, [[0, -1],
+        ...                    [1, 0],
+        ...                    [0, 1]])
+        True
+        >>> dirs.shape  # (num_angles, ndim)
+        (3, 2)
+        >>> # Providing 3 pairs of parameters, resulting in 3 vectors
+        >>> dirs = geom.det_to_src([0, np.pi / 2, np.pi], [-1, 0, 1])
+        >>> dirs[0]  # Corresponds to angle = 0, dparam = -1
+        array([ 0., -1.])
+        >>> dirs.shape
+        (3, 2)
+        >>> # Pairs of parameters arranged in arrays of same size
+        >>> geom.det_to_src(np.zeros((4, 5)), np.zeros((4, 5))).shape
+        (4, 5, 2)
+        >>> # "Outer product" type evaluation using broadcasting
+        >>> geom.det_to_src(np.zeros((4, 1)), np.zeros((1, 5))).shape
+        (4, 5, 2)
+        """
+        squeeze_index = (np.shape(index) == ())
+
+        if self.check_bounds:
+            if not is_inside_bounds(index, self.motion_params):
+                raise ValueError(
+                    '`index` {} not in the valid range {}'
+                    ''.format(index, self.motion_params)
+                )
+
+            if not is_inside_bounds(dparam, self.det_params):
+                raise ValueError(
+                    '`dparam` {} not in the valid range {}'
+                    ''.format(dparam, self.det_params)
+                )
+
+        index_int = np.round(index).astype(int)
+        vectors = self.vectors[index_int]
+        ray_dirs = vectors[self._slice_ray]
+        det_centers = vectors[self._slice_det_center]
+
+        index_in = index
+        index = np.array(index, dtype=float, copy=False, ndmin=1)
+
+        dparam_in = dparam
+        if self.det_params.ndim == 1:
+            squeeze_dparam = (np.shape(dparam) == ())
+            dparam = np.array(dparam, dtype=float, copy=False, ndmin=1)
+        else:
+            squeeze_dparam = (np.broadcast(*dparam).shape == ())
+            dparam = tuple(np.array(p, dtype=float, copy=False, ndmin=1)
+                           for p in dparam)
+
+
+        at_max_flat = (index == self.motion_params.max_pt).ravel()
+
+        if self.det_params.ndim == 1:
+            bcast_shape = np.broadcast(index, dparam).shape
+        else:
+            bcast_shape = np.broadcast(index, *dparam).shape
+
+        # TODO: shapes are not quite right here. Scalar works, but
+        # vectorized goes wrong
+        ray_dir = np.empty(bcast_shape + (self.ndim,), dtype=float)
+        print('result shape:', ray_dir.shape)
+
+        # Values at rightmost boundary, cannot interpolate due to IndexError
+        if np.any(at_max_flat):
+            print('at max bool arr:', at_max_flat)
+            vec_at_max = self.vectors[-1]
+            ray_dir[at_max_flat, ...] = vec_at_max[self._slice_ray]
+
+        # Inner part, use linear interpolation
+        if np.any(~at_max_flat):
+            print('inner bool arr:', ~at_max_flat)
+            index_int_part = index[~at_max_flat, ...].astype(int)
+            index_int_part_flat = index_int_part.ravel()
+            # Keep shape for broadcasting
+            index_frac_part = index[~at_max_flat, ...] - index_int_part
+            # Get ray direction vectors left and right of the given points
+            vecs_left = np.take(self.vectors, index_int_part_flat, axis=0)
+            ray_left = vecs_left[..., self._slice_ray]
+            vecs_right = np.take(self.vectors, index_int_part_flat + 1, axis=0)
+            ray_right = vecs_right[..., self._slice_ray]
+            print('ray_left shape:', ray_left.shape)
+            print('ray_right shape:', ray_right.shape)
+            print('index_frac_part shape:', index_frac_part.shape)
+            ray_dir[~at_max_flat, ...] = (
+                ray_left + index_frac_part * (ray_right - ray_left)
+            )
+
+        ray_dir *= -1 / np.linalg.norm(ray_dir, axis=-1, keepdims=True)
+
+        if squeeze_index and squeeze_dparam:
+            ray_dir = ray_dir.squeeze()
+
+        return ray_dir
+
+
 def parallel_beam_geometry(space, num_angles=None, det_shape=None):
     r"""Create default parallel beam geometry from ``space``.
 
@@ -1572,6 +1796,11 @@ def parallel_beam_geometry(space, num_angles=None, det_shape=None):
         det_max_pt = [rho, max_h]
         if det_shape is None:
             det_shape = [num_px_horiz, num_px_vert]
+    else:
+        raise ValueError(
+            "`space` must be 2- or 3-dimensional, got space.ndim={}"
+            "".format(space.ndim)
+        )
 
     if num_angles is None:
         num_angles = int(np.ceil(omega * rho))
