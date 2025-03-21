@@ -801,7 +801,7 @@ def astra_projector(
     proj_cfg['ProjectionGeometry'] = astra_proj_geom
     proj_cfg['options'] = {}
     if fan2d_override:
-        proj_cfg['options']['ProjectionKernel'] = 'fan2d_weighting'
+        proj_cfg['ProjectionKernel'] = '2d_weighting'
 
     # Add the approximate 1/r^2 weighting exposed in intermediate versions of
     # ASTRA
