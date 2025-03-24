@@ -1550,7 +1550,7 @@ def _inner_default(x1, x2):
     """Default Euclidean inner product implementation."""
 
     if is_real_dtype(x1.dtype):
-        return torch.dot(x1.data, x2.data)
+        return torch.tensordot(x1.data, x2.data, dims = len(x1.data.shape))
     else:
         # x2 as first argument because we want linearity in x1
         return torch.vdot(x2.data, x1.data)
