@@ -14,20 +14,24 @@ import numpy as np
 
 from odl.discr import uniform_partition
 from odl.tomo.geometry.detector import (
-    CircularDetector, CylindricalDetector, Flat1dDetector, Flat2dDetector,
-    SphericalDetector)
+    Flat1dDetector, Flat2dDetector,
+    CircularDetector, CylindricalDetector, SphericalDetector)
 from odl.tomo.geometry.geometry import (
-    AxisOrientedGeometry, DivergentBeamGeometry)
+    AxisOrientedGeometry, DivergentBeamGeometry, VecGeometry)
 from odl.tomo.util.utility import (
     euler_matrix, is_inside_bounds, transform_system)
 from odl.util import array_str, indent, signature_string
 
-__all__ = ('FanBeamGeometry', 'ConeBeamGeometry',
-           'cone_beam_geometry', 'helical_geometry')
+__all__ = (
+    'FanBeamGeometry',
+    'ConeBeamGeometry',
+    'ConeVecGeometry',
+    'cone_beam_geometry',
+    'helical_geometry',
+)
 
 
 class FanBeamGeometry(DivergentBeamGeometry):
-
     """Fan beam (2d cone beam) geometry.
 
     The source moves on a circle with radius ``src_radius``, and the
@@ -36,7 +40,7 @@ class FanBeamGeometry(DivergentBeamGeometry):
     radii can be chosen as 0, which corresponds to a stationary source
     or detector, respectively.
 
-    The motion parameter is the 1d rotation angle parameterizing source
+    The motion parameter is the 1d rotation angle that parametrizes source
     and detector positions simultaneously.
 
     In the standard configuration, the detector is perpendicular to the
@@ -712,7 +716,6 @@ class FanBeamGeometry(DivergentBeamGeometry):
 
 
 class ConeBeamGeometry(DivergentBeamGeometry, AxisOrientedGeometry):
-
     """Cone beam geometry with circular/helical source curve.
 
     The source moves along a spiral oriented along a fixed ``axis``, with
@@ -1211,7 +1214,7 @@ class ConeBeamGeometry(DivergentBeamGeometry, AxisOrientedGeometry):
 
         Parameters
         ----------
-        angles : float or `array-like`
+        angle : float or `array-like`
             Angle(s) in radians describing the counter-clockwise rotation
             of the detector around `axis`.
 
@@ -1708,7 +1711,7 @@ def cone_beam_geometry(space, src_radius, det_radius, num_angles=None,
     # used here is (w/2)/(rs+rd) = rho/rs since both are equal to tan(alpha),
     # where alpha is the half fan angle.
     rs = float(src_radius)
-    if (rs <= rho):
+    if rs <= rho:
         raise ValueError('source too close to the object, resulting in '
                          'infinite detector for full coverage')
     rd = float(det_radius)
@@ -1750,6 +1753,10 @@ def cone_beam_geometry(space, src_radius, det_radius, num_angles=None,
         det_max_pt = [w / 2, h / 2]
         if det_shape is None:
             det_shape = [num_px_horiz, num_px_vert]
+    else:
+        raise ValueError(
+            '`space.ndim` must be 2 or 3, got {}'.format(space.ndim)
+        )
 
     fan_angle = 2 * np.arctan(rho / rs)
     if short_scan:
@@ -1878,7 +1885,7 @@ def helical_geometry(space, src_radius, det_radius, num_turns,
     # used here is (w/2)/(rs+rd) = rho/rs since both are equal to tan(alpha),
     # where alpha is the half fan angle.
     rs = float(src_radius)
-    if (rs <= rho):
+    if rs <= rho:
         raise ValueError('source too close to the object, resulting in '
                          'infinite detector for full coverage')
     rd = float(det_radius)
@@ -1923,6 +1930,172 @@ def helical_geometry(space, src_radius, det_radius, num_turns,
                             src_radius, det_radius,
                             offset_along_axis=offset_along_axis,
                             pitch=pitch)
+
+
+class ConeVecGeometry(VecGeometry):
+    """Cone beam 2D or 3D geometry defined by a collection of vectors.
+
+    This geometry gives maximal flexibility for representing locations
+    and orientations of source and detector for cone beam acquisition
+    schemes. It is defined by a set of vectors per projection, namely
+
+        - source position (``src``),
+        - detector center (``d``),
+        - in 2D: vector (``u``) from the detector point with index ``0``
+          to the point with index ``1``
+        - in 3D:
+
+          * vector (``u``) from detector point ``(0, 0)`` to ``(1, 0)`` and
+          * vector (``v``) from detector point ``(0, 0)`` to ``(0, 1)``.
+
+    The vectors are given as a matrix with ``n_projs`` rows, where
+    ``n_projs`` is the number of projections. In 2D, 3 vectors have to
+    be specified, which makes for ``3 * 2 = 6`` columns::
+
+        vec2d = (srcX, srcY, dX, dY, uX, uY)
+
+    3D geometries require 4 vectors, resulting in ``4 * 3 = 12`` matrix
+    columns::
+
+        vec3d = (srcX, srcY, srcZ, dX, dY, dZ, uX, uY, uZ, vX, vY, vZ)
+
+    This representation corresponds exactly to the ASTRA "vec" geometries,
+    see the `ASTRA documentation
+    <http://www.astra-toolbox.com/docs/index.html>`_.
+
+    The geometry defined by these vectors is discrete in the motion
+    parameters ("angles") since they are merely indices for the individual
+    projections. For intermediate values, linear interpolation is used,
+    which corresponds to the assumption that the system moves on piecewise
+    linear paths.
+    """
+
+    # `rotation_matrix` not implemented; reason: does not apply
+
+    @property
+    def _slice_src(self):
+        """Slice for the source position part of `vectors`."""
+        if self.ndim == 2:
+            return slice(0, 2)
+        elif self.ndim == 3:
+            return slice(0, 3)
+        else:
+            raise RuntimeError('bad `ndim`')
+
+    def src_position(self, index):
+        """Source position function.
+
+        Parameters
+        ----------
+        index : `motion_params` element
+            Index of the projection. Non-integer indices result in
+            interpolation, making the source point move on a piecewise
+            linear path.
+
+        Returns
+        -------
+        pos : `numpy.ndarray` (shape (`ndim`,))
+            Source position, an `ndim`-dimensional vector.
+
+        Examples
+        --------
+        Initialize a 2D cone beam geometry with source positions ``(0, -1)``
+        and ``(1, 0)`` (first two columns in the vectors):
+
+        >>> vecs_2d = [[0, -1, 0, 1, 1, 0],
+        ...            [1, 0, -1, 0, 0, 1]]
+        >>> det_shape_2d = 10
+        >>> geom_2d = odl.tomo.ConeVecGeometry(det_shape_2d, vecs_2d)
+        >>> geom_2d.src_position(0)
+        array([ 0., -1.])
+        >>> geom_2d.src_position(1)
+        array([ 1.,  0.])
+        >>> geom_2d.src_position(0.5)  # mean value
+        array([ 0.5, -0.5])
+
+        In 3D, the first three columns determine the source position,
+        here ``(0, -1, 0)`` and ``(1, 0, 0)``:
+
+        >>> vecs_3d = [[0, -1, 0, 0, 1, 0, 1, 0, 0, 0, 0, 1],
+        ...            [1, 0, 0, -1, 0, 0, 0, 1, 0, 0, 0, 1]]
+        >>> det_shape_3d = (10, 20)
+        >>> geom_3d = odl.tomo.ConeVecGeometry(det_shape_3d, vecs_3d)
+        >>> geom_3d.src_position(0)
+        array([ 0., -1.,  0.])
+        >>> geom_3d.src_position(1)
+        array([ 1.,  0.,  0.])
+        >>> geom_3d.src_position(0.5)  # mean value
+        array([ 0.5, -0.5,  0. ])
+        """
+        # TODO: Use NN interpolation instead of linear
+        # TODO: vectorize
+        if (self.check_bounds and
+                not is_inside_bounds(index, self.motion_params)):
+            raise ValueError('`index` {} not in the valid range {}'
+                             ''.format(index, self.motion_params))
+
+        index = np.array(index, dtype=float, copy=False, ndmin=1)
+        int_part = index.astype(int)
+        frac_part = index - int_part
+
+        pos_vecs = np.empty((len(index), self.ndim))
+        at_right_bdry = (int_part == self.motion_params.max_pt)
+        pos_vecs[at_right_bdry, :] = self.vectors[int_part[at_right_bdry],
+                                                  self._slice_src]
+
+        not_at_right_bdry = ~at_right_bdry
+        if np.any(not_at_right_bdry):
+            pt_left = self.vectors[int_part[not_at_right_bdry],
+                                   self._slice_src]
+            pt_right = self.vectors[int_part[not_at_right_bdry] + 1,
+                                    self._slice_src]
+            pos_vecs[not_at_right_bdry, :] = (
+                pt_left +
+                frac_part[not_at_right_bdry, None] * (pt_right - pt_left))
+        return pos_vecs.squeeze()
+
+    def det_to_src(self, mparam, dparam, normalized=True):
+        """Vector pointing from a detector location to the source.
+
+        A function of the motion and detector parameters.
+
+        The default implementation uses the `det_point_position` and
+        `src_position` functions. Implementations can override this, for
+        example if no source position is given.
+
+        Parameters
+        ----------
+        mparam : `motion_params` element
+            Motion parameter at which to evaluate.
+        dparam : `det_params` element
+            Detector parameter at which to evaluate.
+        normalized : bool, optional
+            If ``True``, return a normalized (unit) vector.
+
+        Returns
+        -------
+        vec : `numpy.ndarray`, shape (`ndim`,)
+            (Unit) vector pointing from the detector to the source.
+        """
+        # TODO: vectorize
+        if self.check_bounds:
+            if not is_inside_bounds(mparam, self.motion_params):
+                raise ValueError('`mparam` {} not in the valid range {}'
+                                 ''.format(mparam, self.motion_params))
+            if not is_inside_bounds(dparam, self.det_params):
+                raise ValueError('`dparam` {} not in the valid range {}'
+                                 ''.format(dparam, self.det_params))
+
+        vec = (
+            self.src_position(mparam)
+            - self.det_point_position(mparam, dparam)
+        )
+
+        if normalized:
+            # axis = -1 allows this to be vectorized
+            vec /= np.linalg.norm(vec, axis=-1)
+
+        return vec
 
 
 if __name__ == '__main__':

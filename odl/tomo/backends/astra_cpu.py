@@ -20,7 +20,8 @@ from odl.tomo.backends.astra_setup import (
     astra_volume_geometry)
 from odl.tomo.backends.util import _add_default_complex_impl
 from odl.tomo.geometry import (
-    DivergentBeamGeometry, Geometry, ParallelBeamGeometry)
+    ConeVecGeometry, DivergentBeamGeometry, Geometry, ParallelBeamGeometry,
+    ParallelVecGeometry)
 from odl.util import writable_array
 
 try:
@@ -52,15 +53,23 @@ def default_astra_proj_type(geom):
 
         - `ParallelBeamGeometry`: ``'linear'``
         - `DivergentBeamGeometry`: ``'line_fanflat'``
+        - `ParallelVecGeometry`: ``'linear'``
+        - `ConeVecGeometry`: ``'line_fanflat'``
 
         In 3D:
 
         - `ParallelBeamGeometry`: ``'linear3d'``
         - `DivergentBeamGeometry`: ``'linearcone'``
+        - `ParallelVecGeometry`: ``'linear3d'``
+        - `ConeVecGeometry`: ``'linearcone'``
     """
     if isinstance(geom, ParallelBeamGeometry):
         return 'linear' if geom.ndim == 2 else 'linear3d'
     elif isinstance(geom, DivergentBeamGeometry):
+        return 'line_fanflat' if geom.ndim == 2 else 'linearcone'
+    elif isinstance(geom, ParallelVecGeometry):
+        return 'linear' if geom.ndim == 2 else 'linear3d'
+    elif isinstance(geom, ConeVecGeometry):
         return 'line_fanflat' if geom.ndim == 2 else 'linearcone'
     else:
         raise TypeError(
