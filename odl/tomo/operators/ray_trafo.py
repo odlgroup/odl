@@ -20,10 +20,8 @@ from odl.space.weighting import ConstWeighting
 from odl.tomo.backends import (
     ASTRA_AVAILABLE, ASTRA_CUDA_AVAILABLE, SKIMAGE_AVAILABLE)
 from odl.tomo.backends.astra_cpu import AstraCpuImpl
-
 from odl.tomo.backends.skimage_radon import SkImageImpl
-from odl.tomo.backends.astra_cuda_link import AstraCudaLinkImpl
-from odl.tomo.backends.astra_cuda_dlpack import AstraCudaImpl
+from odl.tomo.backends.astra_cuda import AstraCudaImpl
 from odl.tomo.geometry import Geometry
 from odl.util import is_string
 
@@ -36,7 +34,6 @@ if ASTRA_AVAILABLE:
     RAY_TRAFO_IMPLS['astra_cpu'] = AstraCpuImpl
 if ASTRA_CUDA_AVAILABLE:
     RAY_TRAFO_IMPLS['astra_cuda'] = AstraCudaImpl
-    RAY_TRAFO_IMPLS['astra_cuda_link'] = AstraCudaLinkImpl
 
 __all__ = ('RayTransform',)
 
@@ -128,7 +125,7 @@ class RayTransform(Operator):
 
             device_args = {}
             if vol_space.tspace.impl == 'pytorch':
-                device_args['torch_device'] = vol_space.tspace._torch_device
+                device_args['torch_device'] = vol_space.tspace._torch_device #type:ignore
 
             proj_tspace = vol_space.tspace_type(
                 geometry.partition.shape,
