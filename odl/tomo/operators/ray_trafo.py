@@ -60,7 +60,6 @@ class RayTransform(Operator):
 
             - ``'astra_cuda'``: ASTRA toolbox, using CUDA, 2D or 3D
             - ``'astra_cpu'``: ASTRA toolbox using CPU, only 2D
-            - ``'astra_cuda_link'``: ASTRA toolbox, using CUDA and Link API 
             - ``'skimage'``: scikit-image, only 2D parallel with square
               reconstruction space.
 
