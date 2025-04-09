@@ -39,6 +39,15 @@ __all__ = (
     'ASTRA_CUDA_AVAILABLE',
 )
 
+def ensure_contiguous(data, impl):
+    if impl == 'pytorch':
+        return data.contiguous()
+    elif impl == 'numpy':
+        return np.ascontiguousarray(data)
+    else:
+        raise NotImplementedError
+    
+
 def index_of_cuda_device(device: torch.device):
     try:
         torch.cuda.get_device_name(device)
@@ -130,7 +139,10 @@ class AstraCudaImpl:
             else:
                 raise NotImplementedError('Not implemented for another backend')
             
-        self.astra_cuda_bp_scaling_factor  = astra_cuda_bp_scaling_factor(
+        self.fp_scaling_factor = astra_cuda_fp_scaling_factor(
+            self.geometry
+        )
+        self.bp_scaling_factor = astra_cuda_bp_scaling_factor(
                 self.proj_space, self.vol_space, self.geometry
             )
 
@@ -190,25 +202,30 @@ class AstraCudaImpl:
 
             if out is not None:
                 assert out in self.proj_space
+                if self.vol_space.impl == 'pytorch':
+                    warnings.warn("You requested an out-of-place transform with PyTorch. This will require cloning the data and will allocate extra memory", RuntimeWarning)
+                proj_data = out.data[None] if self.proj_ndim==2 else out.data
             else:
-                out = self.proj_space.element()
-            
-            if self.proj_space.impl == 'pytorch':
-                proj_data = torch.zeros(
-                    astra.geom_size(self.proj_geom), 
-                    dtype=torch.float32, 
-                    device=self.proj_space.tspace._torch_device #type:ignore
-                    )
-            elif self.proj_space.impl == 'numpy':
-                proj_data = np.zeros(
-                    astra.geom_size(self.proj_geom), 
-                    dtype=np.float32, 
-                    )
-
+                if self.proj_space.impl == 'pytorch':
+                    proj_data = torch.zeros(
+                        astra.geom_size(self.proj_geom), 
+                        dtype=torch.float32, 
+                        device=self.proj_space.tspace._torch_device #type:ignore
+                        )
+                elif self.proj_space.impl == 'numpy':
+                    proj_data = np.zeros(
+                        astra.geom_size(self.proj_geom), 
+                        dtype=np.float32, 
+                        )
+                    
             if self.proj_ndim == 2:
                 volume_data = vol_data.data[None]
-            else:
+            elif self.proj_ndim == 3:
                 volume_data = vol_data.data
+            else:
+                raise NotImplementedError
+
+            volume_data = ensure_contiguous(volume_data, vol_data.impl)  
 
             if self.proj_space.impl == 'pytorch':
                 device_index = index_of_cuda_device(
@@ -221,23 +238,15 @@ class AstraCudaImpl:
                 volume_data,
                 proj_data
             )
-            # Copy result to host
-            if self.geometry.ndim == 2:
-                out[:] = proj_data.squeeze(0)
-            elif self.geometry.ndim == 3:
-                # out[:] = np.swapaxes(self.proj_array, 0, 1).reshape(
-                #     self.proj_space.shape)
-                out[:] = proj_data.transpose(*self.transpose_tuple)
             
-            # Fix scaling to weight by pixel size
-            if (
-                isinstance(self.geometry, Parallel2dGeometry)
-                and parse_version(ASTRA_VERSION) < parse_version('1.9.9.dev')
-            ):
-                # parallel2d scales with pixel stride
-                out *= 1 / float(self.geometry.det_partition.cell_volume)
-
-            return out
+            proj_data *= self.fp_scaling_factor
+            proj_data = proj_data[0] if self.geometry.ndim == 2 else proj_data.transpose(*self.transpose_tuple)
+            
+            if out is not None:
+                out[:] = proj_data if self.proj_space.impl == 'numpy' else proj_data.clone()
+                return out
+            else:
+                return proj_data
 
     @_add_default_complex_impl
     def call_backward(self, x, out=None, **kwargs):
@@ -266,22 +275,35 @@ class AstraCudaImpl:
             assert proj_data in self.proj_space.real_space
 
             if out is not None:
+                if self.vol_space.impl == 'pytorch':
+                    warnings.warn("You requested an out-of-place transform with PyTorch. This will require cloning the data and will allocate extra memory", RuntimeWarning)
                 assert out in self.vol_space
+                volume_data = out.data[None] if self.geometry.ndim==2 else out.data
             else:
-                out = self.vol_space.element()
+                if self.vol_space.impl == 'pytorch':
+                    volume_data = torch.zeros(
+                        astra.geom_size(self.vol_geom), 
+                        dtype=torch.float32, 
+                        device=self.vol_space.tspace._torch_device #type:ignore
+                        )
+                elif self.vol_space.impl == 'numpy':
+                    volume_data = np.zeros(
+                        astra.geom_size(self.vol_geom), 
+                        dtype=np.float32, 
+                        )
+                else:
+                    raise NotImplementedError
 
-            ### Transpose projection tensor
-            
+            ### Transpose projection tensor            
             if self.proj_ndim == 2:
                 projection_data = proj_data.data[None]
-                out_data = out.data[None]
-            else:
-                out_data = out.data
+            elif self.proj_ndim == 3:                
                 projection_data = proj_data.data.transpose(*self.transpose_tuple)
-                if proj_data.impl == 'pytorch':
-                    projection_data = projection_data.contiguous()
-                elif proj_data.impl == 'numpy':
-                    projection_data = np.ascontiguousarray(projection_data)
+            else:
+                raise NotImplementedError
+                
+            # Ensure data is contiguous otherwise astra will throw an error
+            projection_data = ensure_contiguous(projection_data, proj_data.impl)    
             
             if proj_data.impl == 'pytorch':
                 device_index = index_of_cuda_device(self.vol_space.tspace._torch_device) #type:ignore
@@ -291,16 +313,17 @@ class AstraCudaImpl:
             ### Call the backprojection
             astra.experimental.direct_BP3D( #type:ignore
                 self.projector_id,
-                out_data,
+                volume_data,
                 projection_data                
             )
-            out_data *= self.astra_cuda_bp_scaling_factor
+            volume_data *= self.bp_scaling_factor
+            volume_data = volume_data[0] if self.geometry.ndim == 2 else volume_data
 
-            # Fix scaling to weight by pixel/voxel size
-            if self.proj_ndim == 2:
-                return self.vol_space.element(out_data[0])
+            if out is not None:
+                out[:] = volume_data if self.vol_space.impl == 'numpy' else volume_data.clone()
+                return out
             else:
-                return self.vol_space.element(out_data)
+                return volume_data
 
     def __del__(self):
         """Delete ASTRA objects."""
@@ -313,6 +336,26 @@ class AstraCudaImpl:
             aproj.delete(self.projector_id)
             self.projector_id = None
 
+
+def astra_cuda_fp_scaling_factor(geometry):
+    """Volume scaling accounting for differing adjoint definitions.
+
+    ASTRA defines the adjoint operator in terms of a fully discrete
+    setting (transposed "projection matrix") without any relation to
+    physical dimensions, which makes a re-scaling necessary to
+    translate it to spaces with physical dimensions.
+
+    Behavior of ASTRA changes slightly between versions, so we keep
+    track of it and adapt the scaling accordingly.
+    """
+    if (
+        isinstance(geometry, Parallel2dGeometry)
+        and parse_version(ASTRA_VERSION) < parse_version('1.9.9.dev')
+    ):
+        # parallel2d scales with pixel stride
+        return 1 / float(geometry.det_partition.cell_volume)
+    else:
+        return 1
 
 def astra_cuda_bp_scaling_factor(proj_space, vol_space, geometry):
     """Volume scaling accounting for differing adjoint definitions.
