@@ -125,6 +125,10 @@ ASTRA_FEATURES = {
     'par2d_distance_driven_proj': '>1.8.3',
 }
 
+ODL_TO_ASTRA_INDEX_PERMUTATIONS = [
+    2,1,0, 5,4,3, 8,7,6, 11,10,9
+]
+
 
 def astra_supports(feature):
     """Return bool indicating whether current ASTRA supports ``feature``.
@@ -245,11 +249,10 @@ def astra_volume_geometry(vol_space, impl):
             # We arbitrarily set the voxel size for the new dimension based on 
             # the dimension 1 of the original 2D volume. We do so to have isotropic 
             # voxels for faster computations 
-            vox_size = (vol_max[1]-vol_min[1]) / vol_shp[1]
             vol_geom = astra.create_vol_geom(vol_shp[0], vol_shp[1], 1,
                                          vol_min[1], vol_max[1],
                                          vol_min[0], vol_max[0], 
-                                         -vox_size/2, vox_size/2
+                                         -1,1
                                          )
         else:
             raise ValueError(f'impl argument can only be "cpu" or "cuda, got {impl}')
@@ -350,49 +353,33 @@ def astra_conebeam_3d_geom_to_vec(geometry):
 
     # ASTRA has (z, y, x) axis convention, in contrast to (x, y, z) in ODL,
     # so we need to adapt to this by changing the order.
-    newind = []
-    for i in range(4):
-        newind += [2 + 3 * i, 1 + 3 * i, 0 + 3 * i]
-    vectors = vectors[:, newind]
+    vectors = vectors[:, ODL_TO_ASTRA_INDEX_PERMUTATIONS]
 
     return vectors
 
-def astra_fanflat_2d_geom_to_conebeam_vec(geometry, vox_size=None):
+def astra_fanflat_2d_geom_to_conebeam_vec(geometry):
     """ Create vectors for ASTRA projection geometry.
     This is required for the CUDA implementation of fanflat geometry.
     """
+    ##########################################################################
     angles = geometry.angles
     mid_pt = geometry.det_params.mid_pt
-
     vectors = np.zeros((angles.shape[-1], 12))
 
-    # Source position
+    # Source positions
     vectors[:, 1:3] = geometry.src_position(angles)
-
-    # Center of detector in 3D space
-    mid_pt = geometry.det_params.mid_pt
-    vectors[:, 4:6] = geometry.det_point_position(angles, mid_pt.item())
-
-    # Vectors from detector pixel (0, 0) to (1, 0) and (0, 0) to (0, 1)
-    det_axes = geometry.det_axis(angles)
+    # Detector positions
+    detector_positions = geometry.det_point_position(angles, mid_pt.item())
+    vectors[:, 4:6] = detector_positions
     px_size  = geometry.det_partition.cell_sides[0]
-    vectors[:, 7:9]  = det_axes * px_size
-    if vox_size is not None:
-        # Make the thickness of the detector equal to the thickness of
-        # the 1-layer slice in 3D that's used to represents the 2D ODl
-        # domain in the Astra 3D computation.
-        # This is not necessarily equal to the pixel size of the detector,
-        # in which case the normalization constants would be wrong.
-        vectors[:, 9] = vox_size
-    else:
-        vectors[:, 9] = px_size
+    det_axes = geometry.det_axis(angles)
+    vectors[:, 7:9] = det_axes * px_size 
+    vectors[:, 9] = px_size
 
     # ASTRA has (z, y, x) axis convention, in contrast to (x, y, z) in ODL,
     # so we need to adapt to this by changing the order.
-    newind = []
-    for i in range(4):
-        newind += [2 + 3 * i, 1 + 3 * i, 0 + 3 * i]
-    vectors = vectors[:, newind]
+    vectors = vectors[:, ODL_TO_ASTRA_INDEX_PERMUTATIONS]
+
     return vectors
 
 def astra_conebeam_2d_geom_to_vec(geometry):
@@ -515,10 +502,8 @@ def astra_parallel_3d_geom_to_vec(geometry):
 
     # ASTRA has (z, y, x) axis convention, in contrast to (x, y, z) in ODL,
     # so we need to adapt to this by changing the order.
-    new_ind = []
-    for i in range(4):
-        new_ind += [2 + 3 * i, 1 + 3 * i, 0 + 3 * i]
-    vectors = vectors[:, new_ind]
+    vectors = vectors[:, ODL_TO_ASTRA_INDEX_PERMUTATIONS]
+
     return vectors
 
 def astra_parallel_2d_geom_to_parallel3d_vec(geometry):
@@ -537,22 +522,12 @@ def astra_parallel_2d_geom_to_parallel3d_vec(geometry):
     det_axes = geometry.det_axis(angles)
     px_size = geometry.det_partition.cell_sides[0]
     vectors[:, 7:9] = det_axes * px_size
-    # if vox_size is not None:
-    #     # Make the thickness of the detector equal to the thickness of
-    #     # the 1-layer slice in 3D that's used to represents the 2D ODl
-    #     # domain in the Astra 3D computation.
-    #     # This is not necessarily equal to the pixel size of the detector,
-    #     # in which case the normalization constants would be wrong.
-    #     vectors[:, 9] = vox_size
-    # else:
-    #     vectors[:, 9] = px_size
     vectors[:, 9] = px_size
+
     # ASTRA has (z, y, x) axis convention, in contrast to (x, y, z) in ODL,
     # so we need to adapt to this by changing the order.
-    new_ind = []
-    for i in range(4):
-        new_ind += [2 + 3 * i, 1 + 3 * i, 0 + 3 * i]
-    vectors = vectors[:, new_ind]
+    vectors = vectors[:, ODL_TO_ASTRA_INDEX_PERMUTATIONS]
+
     return vectors
 
 def astra_projection_geometry(
@@ -578,7 +553,7 @@ def astra_projection_geometry(
                         ''.format(geometry))
     if 'astra' in geometry.implementation_cache:
         # Shortcut, reuse already computed value.
-        return geometry.implementation_cache['astra']
+        return geometry.implementation_cache[f'astra_{impl}']
 
     if not geometry.det_partition.is_uniform:
         raise ValueError('non-uniform detector sampling is not supported')
@@ -644,7 +619,7 @@ def astra_projection_geometry(
 
     if 'astra' not in geometry.implementation_cache:
         # Save computed value for later
-        geometry.implementation_cache['astra'] = proj_geom
+        geometry.implementation_cache[f'astra_{impl}'] = proj_geom
 
     return proj_geom
 

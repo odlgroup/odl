@@ -278,7 +278,10 @@ class AstraCudaImpl:
 
             if out is not None:
                 if self.vol_space.impl == 'pytorch':
-                    warnings.warn("You requested an out-of-place transform with PyTorch. This will require cloning the data and will allocate extra memory", RuntimeWarning)
+                    warnings.warn(
+                        "You requested an out-of-place transform with PyTorch. \
+                        This will require cloning the data and will allocate extra memory", 
+                        RuntimeWarning)
                 assert out in self.vol_space
                 volume_data = out.data[None] if self.geometry.ndim==2 else out.data
             else:
