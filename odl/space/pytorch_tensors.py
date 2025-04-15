@@ -36,6 +36,7 @@ __all__ = ('PytorchTensorSpace',)
 THRESHOLD_SMALL = 100
 THRESHOLD_MEDIUM = 50000
 
+TORCH_GPU_AVAILABLE = torch.cuda.is_available()
 
 class PytorchTensorSpace(TensorSpace):
 
