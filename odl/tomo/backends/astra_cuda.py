@@ -30,7 +30,9 @@ from odl.discr.discr_space import DiscretizedSpaceElement
 
 try:
     import astra
-    import astra.experimental # This is important, although not use explicitely. If not imported, astra.experimental is not "visible"
+    # This is important, although not use explicitely. 
+    # If not imported, astra.experimental is not "visible"
+    import astra.experimental     
     ASTRA_CUDA_AVAILABLE = astra.astra.use_cuda()
 except ImportError:
     ASTRA_CUDA_AVAILABLE = False
@@ -170,9 +172,9 @@ class AstraCudaImpl:
         self.vol_geom  = astra_volume_geometry(self.vol_space, 'cuda')
         
         self.proj_geom = astra_projection_geometry(self.geometry, 'cuda')
-        proj_type = 'cuda3d'
+
         self.projector_id = astra_projector(
-            proj_type, self.vol_geom, self.proj_geom, 3, bool(self.geometry.ndim == 2)
+            'cuda3d', self.vol_geom, self.proj_geom, 3, bool(self.geometry.ndim == 2)
         )        
 
     @_add_default_complex_impl
@@ -241,7 +243,7 @@ class AstraCudaImpl:
             
             proj_data *= self.fp_scaling_factor
             proj_data = proj_data[0] if self.geometry.ndim == 2 else proj_data.transpose(*self.transpose_tuple)
-            
+
             if out is not None:
                 out[:] = proj_data if self.proj_space.impl == 'numpy' else proj_data.clone()
                 return out
@@ -354,6 +356,7 @@ def astra_cuda_fp_scaling_factor(geometry):
     ):
         # parallel2d scales with pixel stride
         return 1 / float(geometry.det_partition.cell_volume)
+    
     else:
         return 1
 
