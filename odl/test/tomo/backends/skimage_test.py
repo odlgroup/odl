@@ -22,7 +22,7 @@ def test_skimage_radon_projector_parallel2d():
     """Parallel 2D forward and backward projectors with skimage."""
 
     # Create reco space and a phantom
-    reco_space = odl.uniform_discr([-5, -5], [5, 5], (5, 5))
+    reco_space = odl.uniform_discr([-5, -5], [5, 5], (5, 5), dtype='float32')
     phantom = odl.phantom.cuboid(reco_space, min_pt=[0, 0], max_pt=[5, 5])
 
     # Create parallel geometry
