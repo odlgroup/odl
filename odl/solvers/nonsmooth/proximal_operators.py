@@ -1924,7 +1924,7 @@ def proximal_convex_conj_kl_cross_entropy(space, lam=1, g=None):
                 lambw = scipy.special.lambertw(
                     (self.sigma / lam) * g * np.exp(x / lam))
 
-            if not np.issubsctype(self.domain.dtype, np.complexfloating):
+            if not np.issubdtype(self.domain.dtype, np.complexfloating):
                 lambw = lambw.real
 
             lambw = x.space.element(lambw)

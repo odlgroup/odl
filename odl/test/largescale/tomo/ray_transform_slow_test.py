@@ -236,7 +236,7 @@ def test_reconstruction(projector):
 
     # Make sure the result is somewhat close to the actual result
     maxerr = vol.norm() * 0.5
-    if np.issubsctype(projector.domain.dtype, np.complexfloating):
+    if np.issubdtype(projector.domain.dtype, np.complexfloating):
         # Error has double the amount of components practically
         maxerr *= np.sqrt(2)
     assert recon.dist(vol) < maxerr

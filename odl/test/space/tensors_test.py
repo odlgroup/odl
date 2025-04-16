@@ -1365,8 +1365,8 @@ def test_ufuncs(tspace, odl_ufunc):
     nin = npy_ufunc.nin
     nout = npy_ufunc.nout
 
-    if (np.issubsctype(tspace.dtype, np.floating) or
-            np.issubsctype(tspace.dtype, np.complexfloating) and
+    if (np.issubdtype(tspace.dtype, np.floating) or
+            np.issubdtype(tspace.dtype, np.complexfloating) and
             name in ['bitwise_and',
                      'bitwise_or',
                      'bitwise_xor',
@@ -1376,7 +1376,7 @@ def test_ufuncs(tspace, odl_ufunc):
         # Skip integer only methods for floating point data types
         return
 
-    if (np.issubsctype(tspace.dtype, np.complexfloating) and
+    if (np.issubdtype(tspace.dtype, np.complexfloating) and
             name in ['remainder',
                      'floor_divide',
                      'trunc',

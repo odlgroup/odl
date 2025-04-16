@@ -728,7 +728,7 @@ def test_ufuncs(odl_tspace_impl, odl_ufunc):
     npy_ufunc = getattr(np, name)
     nin = npy_ufunc.nin
     nout = npy_ufunc.nout
-    if (np.issubsctype(space.dtype, np.floating) and
+    if (np.issubdtype(space.dtype, np.floating) and
             name in ['bitwise_and',
                      'bitwise_or',
                      'bitwise_xor',

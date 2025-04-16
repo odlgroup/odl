@@ -330,7 +330,7 @@ def test_dist():
         assert set_.dist(exterior) == min(abs(set_.min_pt - exterior),
                                           abs(exterior - set_.max_pt))
 
-    assert set_.dist(np.NaN) == np.inf
+    assert set_.dist(np.nan) == np.inf
 
 
 # Set arithmetic

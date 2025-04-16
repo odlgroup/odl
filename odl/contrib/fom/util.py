@@ -61,7 +61,7 @@ def filter_image_sep2d(image, fh, fv, impl='numpy', padding=None):
                          'ndim={}'.format(image.ndim))
     if image.size == 0:
         raise ValueError('`image` cannot have size 0')
-    if not np.issubsctype(image.dtype, np.floating):
+    if not np.issubdtype(image.dtype, np.floating):
         image = image.astype(float)
 
     fh = np.asarray(fh).astype(image.dtype)
