@@ -212,6 +212,13 @@ def test_resizing_op_inverse(padding, odl_tspace_impl):
               if is_numeric_dtype(dt)]
 
     for dtype in dtypes:
+
+        if pad_mode == 'order1' and (
+                np.issubdtype(dtype, np.unsignedinteger)
+                or np.issubdtype(dtype, np.timedelta64()) ):
+            # Linear continuation can create negative values, exempt from test.
+            continue
+
         space = odl.uniform_discr([0, -1], [1, 1], (4, 5), dtype=dtype,
                                   impl=impl)
         res_space = odl.uniform_discr([0, -1.4], [1.5, 1.4], (6, 7),
