@@ -18,6 +18,8 @@ from __future__ import print_function, division, absolute_import
 from builtins import object
 import numpy as np
 
+from odl.util.npy_compat import AVOID_UNNECESSARY_COPY
+
 from odl.discr.grid import RectGrid, uniform_grid_fromintv
 from odl.set import IntervalProd
 from odl.util import (
@@ -1403,7 +1405,7 @@ def nonuniform_partition(*coord_vecs, **kwargs):
                              '`nodes_on_bdry=True`'.format(i))
 
         # Handle length 1 inputs
-        coords = np.array(coords, copy=False, ndmin=1)
+        coords = np.array(coords, copy=AVOID_UNNECESSARY_COPY, ndmin=1)
 
         # Compute boundary position if not given by user
         if xmin is None:

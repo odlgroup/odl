@@ -45,7 +45,7 @@ class SimpleRn(TensorSpace):
                                                        self.dim,))
         else:
             return self.element(np.array(
-                *args, **kwargs).astype(np.float64, copy=False))
+                *args, **kwargs).astype(np.float64, copy=AVOID_UNNECESSARY_COPY))
         return self.element(np.empty(self.dim, dtype=np.float64))
 
 

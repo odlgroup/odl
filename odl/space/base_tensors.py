@@ -14,6 +14,8 @@ from numbers import Integral
 
 import numpy as np
 
+from odl.util.npy_compat import AVOID_UNNECESSARY_COPY
+
 from odl.set.sets import ComplexNumbers, RealNumbers
 from odl.set.space import LinearSpace, LinearSpaceElement
 from odl.util import (
@@ -663,7 +665,7 @@ class Tensor(LinearSpaceElement):
         if dtype is None:
             return self.asarray()
         else:
-            return self.asarray().astype(dtype, copy=False)
+            return self.asarray().astype(dtype, copy=AVOID_UNNECESSARY_COPY)
 
     def __array_wrap__(self, array):
         """Return a new tensor wrapping the ``array``.

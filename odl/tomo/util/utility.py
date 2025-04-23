@@ -9,6 +9,9 @@
 from __future__ import print_function, division, absolute_import
 import numpy as np
 
+from odl.util.npy_compat import AVOID_UNNECESSARY_COPY
+
+
 __all__ = ('euler_matrix', 'axis_rotation', 'axis_rotation_matrix',
            'rotation_matrix_from_to', 'transform_system',
            'perpendicular_vector', 'is_inside_bounds')
@@ -51,19 +54,19 @@ def euler_matrix(phi, theta=None, psi=None):
     if theta is None and psi is None:
         squeeze_out = (np.shape(phi) == ())
         ndim = 2
-        phi = np.array(phi, dtype=float, copy=False, ndmin=1)
+        phi = np.array(phi, dtype=float, copy=AVOID_UNNECESSARY_COPY, ndmin=1)
         theta = psi = 0.0
     else:
         # `None` broadcasts like a scalar
         squeeze_out = (np.broadcast(phi, theta, psi).shape == ())
         ndim = 3
-        phi = np.array(phi, dtype=float, copy=False, ndmin=1)
+        phi = np.array(phi, dtype=float, copy=AVOID_UNNECESSARY_COPY, ndmin=1)
         if theta is None:
             theta = 0.0
         if psi is None:
             psi = 0.0
-        theta = np.array(theta, dtype=float, copy=False, ndmin=1)
-        psi = np.array(psi, dtype=float, copy=False, ndmin=1)
+        theta = np.array(theta, dtype=float, copy=AVOID_UNNECESSARY_COPY, ndmin=1)
+        psi = np.array(psi, dtype=float, copy=AVOID_UNNECESSARY_COPY, ndmin=1)
         ndim = 3
 
     cph = np.cos(phi)
@@ -219,7 +222,7 @@ def axis_rotation_matrix(axis, angle):
         raise ValueError('`axis` shape must be (3,), got {}'
                          ''.format(axis.shape))
 
-    angle = np.array(angle, dtype=float, copy=False, ndmin=1)
+    angle = np.array(angle, dtype=float, copy=AVOID_UNNECESSARY_COPY, ndmin=1)
 
     cross_mat = np.array([[0, -axis[2], axis[1]],
                           [axis[2], 0, -axis[0]],
@@ -600,7 +603,7 @@ def perpendicular_vector(vec):
             [-1.,  0.,  0.]]])
     """
     squeeze_out = (np.ndim(vec) == 1)
-    vec = np.array(vec, dtype=float, copy=False, ndmin=2)
+    vec = np.array(vec, dtype=float, copy=AVOID_UNNECESSARY_COPY, ndmin=2)
 
     if np.any(np.all(vec == 0, axis=-1)):
         raise ValueError('zero vector')

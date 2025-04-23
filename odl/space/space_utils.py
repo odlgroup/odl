@@ -11,6 +11,8 @@
 from __future__ import print_function, division, absolute_import
 import numpy as np
 
+from odl.util.npy_compat import AVOID_UNNECESSARY_COPY
+
 from odl.set import RealNumbers, ComplexNumbers
 from odl.space.entry_points import tensor_space_impl
 
@@ -74,7 +76,7 @@ def vector(array, dtype=None, order=None, impl='numpy'):
     )
     """
     # Sanitize input
-    arr = np.array(array, copy=False, order=order, ndmin=1)
+    arr = np.array(array, copy=AVOID_UNNECESSARY_COPY, order=order, ndmin=1)
     if arr.dtype is object:
         raise ValueError('invalid input data resulting in `dtype==object`')
 

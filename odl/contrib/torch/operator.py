@@ -240,13 +240,13 @@ class OperatorFunction(torch.autograd.Function):
 
             # Stack results, reshape to the expected output shape and enforce
             # correct dtype
-            result_arr = np.stack(results).astype(op_out_dtype, copy=False)
+            result_arr = np.stack(results).astype(op_out_dtype, copy=AVOID_UNNECESSARY_COPY)
             result_arr = result_arr.reshape(extra_shape + op_out_shape)
         else:
             # Single input: evaluate directly
             result_arr = np.asarray(
                 operator(input_arr)
-            ).astype(op_out_dtype, copy=False)
+            ).astype(op_out_dtype, copy=AVOID_UNNECESSARY_COPY)
 
         # Convert back to tensor
         tensor = torch.from_numpy(result_arr).to(input.device)
@@ -370,18 +370,18 @@ class OperatorFunction(torch.autograd.Function):
 
             # Stack results, reshape to the expected output shape and enforce
             # correct dtype
-            result_arr = np.stack(results).astype(op_in_dtype, copy=False)
+            result_arr = np.stack(results).astype(op_in_dtype, copy=AVOID_UNNECESSARY_COPY)
             result_arr = result_arr.reshape(extra_shape + op_in_shape)
         else:
             # Single gradient: evaluate directly
             if operator.is_linear:
                 result_arr = np.asarray(
                     operator.adjoint(grad_output_arr)
-                ).astype(op_in_dtype, copy=False)
+                ).astype(op_in_dtype, copy=AVOID_UNNECESSARY_COPY)
             else:
                 result_arr = np.asarray(
                     operator.derivative(input_arr).adjoint(grad_output_arr)
-                ).astype(op_in_dtype, copy=False)
+                ).astype(op_in_dtype, copy=AVOID_UNNECESSARY_COPY)
 
         # Apply scaling, convert to tensor and return
         if scaling != 1.0:

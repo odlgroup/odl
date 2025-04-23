@@ -11,6 +11,8 @@
 from __future__ import print_function, division, absolute_import
 import numpy as np
 
+from odl.util.npy_compat import AVOID_UNNECESSARY_COPY
+
 from odl.set import LinearSpace, RealNumbers, Field
 from odl.space import ProductSpace, tensor_space
 from odl.operator import Operator, MultiplyOperator

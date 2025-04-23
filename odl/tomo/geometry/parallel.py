@@ -12,6 +12,8 @@ from __future__ import absolute_import, division, print_function
 
 import numpy as np
 
+from odl.util.npy_compat import AVOID_UNNECESSARY_COPY
+
 from odl.discr import uniform_partition
 from odl.tomo.geometry.detector import Flat1dDetector, Flat2dDetector
 from odl.tomo.geometry.geometry import AxisOrientedGeometry, Geometry
@@ -168,12 +170,12 @@ class ParallelBeamGeometry(Geometry):
         """
         if self.motion_params.ndim == 1:
             squeeze_out = (np.shape(angle) == ())
-            angle = np.array(angle, dtype=float, copy=False, ndmin=1)
+            angle = np.array(angle, dtype=float, copy=AVOID_UNNECESSARY_COPY, ndmin=1)
             rot_matrix = self.rotation_matrix(angle)
             extra_dims = angle.ndim
         elif self.motion_params.ndim in (2, 3):
             squeeze_out = (np.broadcast(*angle).shape == ())
-            angle = tuple(np.array(a, dtype=float, copy=False, ndmin=1)
+            angle = tuple(np.array(a, dtype=float, copy=AVOID_UNNECESSARY_COPY, ndmin=1)
                           for a in angle)
             rot_matrix = self.rotation_matrix(angle)
             extra_dims = len(np.broadcast(*angle).shape)
@@ -288,20 +290,20 @@ class ParallelBeamGeometry(Geometry):
         # to be able to reliably manipulate the final axes of the result
         if self.motion_params.ndim == 1:
             squeeze_angle = (np.shape(angle) == ())
-            angle = np.array(angle, dtype=float, copy=False, ndmin=1)
+            angle = np.array(angle, dtype=float, copy=AVOID_UNNECESSARY_COPY, ndmin=1)
             matrix = self.rotation_matrix(angle)  # shape (m, ndim, ndim)
         else:
             squeeze_angle = (np.broadcast(*angle).shape == ())
-            angle = tuple(np.array(a, dtype=float, copy=False, ndmin=1)
+            angle = tuple(np.array(a, dtype=float, copy=AVOID_UNNECESSARY_COPY, ndmin=1)
                           for a in angle)
             matrix = self.rotation_matrix(angle)  # shape (m, ndim, ndim)
 
         if self.det_params.ndim == 1:
             squeeze_dparam = (np.shape(dparam) == ())
-            dparam = np.array(dparam, dtype=float, copy=False, ndmin=1)
+            dparam = np.array(dparam, dtype=float, copy=AVOID_UNNECESSARY_COPY, ndmin=1)
         else:
             squeeze_dparam = (np.broadcast(*dparam).shape == ())
-            dparam = tuple(np.array(p, dtype=float, copy=False, ndmin=1)
+            dparam = tuple(np.array(p, dtype=float, copy=AVOID_UNNECESSARY_COPY, ndmin=1)
                            for p in dparam)
 
         normal = self.detector.surface_normal(dparam)  # shape (d, ndim)
@@ -629,7 +631,7 @@ class Parallel2dGeometry(ParallelBeamGeometry):
             shape ``(2, 2)``, otherwise ``angle.ndim + (2, 2)``.
         """
         squeeze_out = (np.shape(angle) == ())
-        angle = np.array(angle, dtype=float, copy=False, ndmin=1)
+        angle = np.array(angle, dtype=float, copy=AVOID_UNNECESSARY_COPY, ndmin=1)
         if (self.check_bounds and
                 not is_inside_bounds(angle, self.motion_params)):
             raise ValueError('`angle` {} not in the valid range {}'
@@ -1037,7 +1039,7 @@ class Parallel3dEulerGeometry(ParallelBeamGeometry):
         """
         squeeze_out = (np.broadcast(*angles).shape == ())
         angles_in = angles
-        angles = tuple(np.array(angle, dtype=float, copy=False, ndmin=1)
+        angles = tuple(np.array(angle, dtype=float, copy=AVOID_UNNECESSARY_COPY, ndmin=1)
                        for angle in angles)
         if (self.check_bounds and
                 not is_inside_bounds(angles, self.motion_params)):

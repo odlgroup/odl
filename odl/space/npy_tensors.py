@@ -17,6 +17,8 @@ from functools import partial
 
 import numpy as np
 
+from odl.util.npy_compat import AVOID_UNNECESSARY_COPY
+
 from odl.set.sets import ComplexNumbers, RealNumbers
 from odl.set.space import LinearSpaceTypeError
 from odl.space.base_tensors import Tensor, TensorSpace
@@ -426,7 +428,7 @@ class NumpyTensorSpace(TensorSpace):
 
             # Try to not copy but require dtype and order if given
             # (`order=None` is ok as np.array argument)
-            arr = np.array(inp, copy=False, dtype=self.dtype, ndmin=self.ndim,
+            arr = np.array(inp, copy=AVOID_UNNECESSARY_COPY, dtype=self.dtype, ndmin=self.ndim,
                            order=order)
             # Make sure the result is writeable, if not make copy.
             # This happens for e.g. results of `np.broadcast_to()`.

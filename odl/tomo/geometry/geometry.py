@@ -12,6 +12,8 @@ from __future__ import print_function, division, absolute_import
 from builtins import object
 import numpy as np
 
+from odl.util.npy_compat import AVOID_UNNECESSARY_COPY
+
 from odl.discr import RectPartition
 from odl.tomo.geometry.detector import Detector
 from odl.tomo.util import axis_rotation_matrix, is_inside_bounds
@@ -357,20 +359,20 @@ class Geometry(object):
         # to be able to reliably manipulate the final axes of the result
         if self.motion_params.ndim == 1:
             squeeze_mparam = (np.shape(mparam) == ())
-            mparam = np.array(mparam, dtype=float, copy=False, ndmin=1)
+            mparam = np.array(mparam, dtype=float, copy=AVOID_UNNECESSARY_COPY, ndmin=1)
             matrix = self.rotation_matrix(mparam)  # shape (m, ndim, ndim)
         else:
             squeeze_mparam = (np.broadcast(*mparam).shape == ())
-            mparam = tuple(np.array(a, dtype=float, copy=False, ndmin=1)
+            mparam = tuple(np.array(a, dtype=float, copy=AVOID_UNNECESSARY_COPY, ndmin=1)
                            for a in mparam)
             matrix = self.rotation_matrix(mparam)  # shape (m, ndim, ndim)
 
         if self.det_params.ndim == 1:
             squeeze_dparam = (np.shape(dparam) == ())
-            dparam = np.array(dparam, dtype=float, copy=False, ndmin=1)
+            dparam = np.array(dparam, dtype=float, copy=AVOID_UNNECESSARY_COPY, ndmin=1)
         else:
             squeeze_dparam = (np.broadcast(*dparam).shape == ())
-            dparam = tuple(np.array(p, dtype=float, copy=False, ndmin=1)
+            dparam = tuple(np.array(p, dtype=float, copy=AVOID_UNNECESSARY_COPY, ndmin=1)
                            for p in dparam)
 
         surf = self.detector.surface(dparam)  # shape (d, ndim)
@@ -529,18 +531,18 @@ class DivergentBeamGeometry(Geometry):
         # to be able to reliably manipulate the final axes of the result
         if self.motion_params.ndim == 1:
             squeeze_angle = (np.shape(angle) == ())
-            angle = np.array(angle, dtype=float, copy=False, ndmin=1)
+            angle = np.array(angle, dtype=float, copy=AVOID_UNNECESSARY_COPY, ndmin=1)
         else:
             squeeze_angle = (np.broadcast(*angle).shape == ())
-            angle = tuple(np.array(a, dtype=float, copy=False, ndmin=1)
+            angle = tuple(np.array(a, dtype=float, copy=AVOID_UNNECESSARY_COPY, ndmin=1)
                           for a in angle)
 
         if self.det_params.ndim == 1:
             squeeze_dparam = (np.shape(dparam) == ())
-            dparam = np.array(dparam, dtype=float, copy=False, ndmin=1)
+            dparam = np.array(dparam, dtype=float, copy=AVOID_UNNECESSARY_COPY, ndmin=1)
         else:
             squeeze_dparam = (np.broadcast(*dparam).shape == ())
-            dparam = tuple(np.array(p, dtype=float, copy=False, ndmin=1)
+            dparam = tuple(np.array(p, dtype=float, copy=AVOID_UNNECESSARY_COPY, ndmin=1)
                            for p in dparam)
 
         det_to_src = (self.src_position(angle) -
@@ -606,7 +608,7 @@ class AxisOrientedGeometry(object):
             shape ``(3, 3)``, otherwise ``angle.shape + (3, 3)``.
         """
         squeeze_out = (np.shape(angle) == ())
-        angle = np.array(angle, dtype=float, copy=False, ndmin=1)
+        angle = np.array(angle, dtype=float, copy=AVOID_UNNECESSARY_COPY, ndmin=1)
         if (self.check_bounds and
                 not is_inside_bounds(angle, self.motion_params)):
             raise ValueError('`angle` {} not in the valid range {}'
