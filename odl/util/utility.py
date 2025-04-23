@@ -53,7 +53,7 @@ __all__ = (
 
 REPR_PRECISION = 4  # For printing scalars and array entries
 TYPE_MAP_R2C = {np.dtype(dtype): np.result_type(dtype, 1j)
-                for dtype in np.sctypes['float']}
+                for dtype in np.core.sctypes['float']}
 
 TYPE_MAP_C2R = {cdt: np.empty(0, dtype=cdt).real.dtype
                 for rdt, cdt in TYPE_MAP_R2C.items()}

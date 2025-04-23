@@ -132,13 +132,13 @@ def pytest_ignore_collect(path, config):
 odl_tspace_impl = simple_fixture(name='tspace_impl',
                                  params=tensor_space_impl_names())
 
-floating_dtypes = np.sctypes['float'] + np.sctypes['complex']
+floating_dtypes = np.core.sctypes['float'] + np.core.sctypes['complex']
 floating_dtype_params = [np.dtype(dt) for dt in floating_dtypes]
 odl_floating_dtype = simple_fixture(name='dtype',
                                     params=floating_dtype_params,
                                     fmt=' {name} = np.{value.name} ')
 
-scalar_dtypes = floating_dtype_params + np.sctypes['int'] + np.sctypes['uint']
+scalar_dtypes = floating_dtype_params + np.core.sctypes['int'] + np.core.sctypes['uint']
 scalar_dtype_params = [np.dtype(dt) for dt in floating_dtypes]
 odl_scalar_dtype = simple_fixture(name='dtype',
                                   params=scalar_dtype_params,

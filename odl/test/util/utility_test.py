@@ -15,9 +15,9 @@ from odl.util.utility import (
     is_complex_floating_dtype)
 
 
-real_float_dtypes = np.sctypes['float']
-complex_float_dtypes = np.sctypes['complex']
-nonfloat_numeric_dtypes = np.sctypes['uint'] + np.sctypes['int']
+real_float_dtypes = np.core.sctypes['float']
+complex_float_dtypes = np.core.sctypes['complex']
+nonfloat_numeric_dtypes = np.core.sctypes['uint'] + np.core.sctypes['int']
 numeric_dtypes = (real_float_dtypes + complex_float_dtypes +
                   nonfloat_numeric_dtypes)
 real_dtypes = real_float_dtypes + nonfloat_numeric_dtypes

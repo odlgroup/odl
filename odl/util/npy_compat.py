@@ -1,4 +1,4 @@
-# Copyright 2014-2019 The ODL contributors
+# Copyright 2014-2025 The ODL contributors
 #
 # This file is part of ODL.
 #
@@ -6,12 +6,8 @@
 # v. 2.0. If a copy of the MPL was not distributed with this file, You can
 # obtain one at https://mozilla.org/MPL/2.0/.
 
-"""Numpy functions not available in the minimal required version.
-
-Current minimum Numpy version: 1.13.3
+"""Numpy functionality that is not uniform across the supported versions.
 """
-
-from __future__ import absolute_import, division, print_function
 
 __all__ = ()
 
