@@ -12,6 +12,8 @@ from __future__ import absolute_import, division, print_function
 
 import numpy as np
 
+from odl.util.npy_compat import AVOID_UNNECESSARY_COPY
+
 from odl.discr import DiscretizedSpace, uniform_discr
 from odl.operator import Operator
 from odl.set import ComplexNumbers, RealNumbers
@@ -1323,7 +1325,9 @@ class FourierTransform(FourierTransformBase):
             out = np.fft.rfftn(preproc, axes=self.axes)
         else:
             if self.sign == '-':
-                out = np.fft.fftn(preproc, axes=self.axes)
+                out = ( np.fft.fftn(preproc, axes=self.axes)
+                       .astype(complex_dtype(preproc.dtype), copy=AVOID_UNNECESSARY_COPY)
+                       )
             else:
                 out = np.fft.ifftn(preproc, axes=self.axes)
                 # Numpy's FFT normalizes by 1 / prod(shape[axes]), we
