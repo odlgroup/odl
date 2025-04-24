@@ -132,6 +132,12 @@ def pytest_ignore_collect(path, config):
 odl_tspace_impl = simple_fixture(name='tspace_impl',
                                  params=tensor_space_impl_names())
 
+real_floating_dtypes = np.core.sctypes['float']
+real_floating_dtype_params = [np.dtype(dt) for dt in real_floating_dtypes]
+odl_real_floating_dtype = simple_fixture(name='dtype',
+                                    params=real_floating_dtype_params,
+                                    fmt=' {name} = np.{value.name} ')
+
 floating_dtypes = np.core.sctypes['float'] + np.core.sctypes['complex']
 floating_dtype_params = [np.dtype(dt) for dt in floating_dtypes]
 odl_floating_dtype = simple_fixture(name='dtype',
