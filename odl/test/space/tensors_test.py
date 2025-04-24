@@ -1253,10 +1253,25 @@ def test_const_weighting_norm(tspace, exponent):
         factor = constant
     else:
         factor = constant ** (1 / exponent)
+
     true_norm = factor * np.linalg.norm(xarr.ravel(), ord=exponent)
 
     w_const = NumpyTensorSpaceConstWeighting(constant, exponent=exponent)
-    assert w_const.norm(x) == pytest.approx(true_norm)
+
+    real_dtype = tspace.dtype.type(0).real.dtype
+
+    if real_dtype == np.float16:
+        tolerance = 1e-3
+    elif real_dtype == np.float32:
+        tolerance = 1e-7
+    elif real_dtype == np.float64:
+        tolerance = 1e-15
+    elif real_dtype == np.float128:
+        tolerance = 1e-19
+    else:
+        raise TypeError(f"No known tolerance for dtype {tspace.dtype}")
+    
+    assert w_const.norm(x) == pytest.approx(true_norm, rel=tolerance)
 
 
 def test_const_weighting_dist(tspace, exponent):
