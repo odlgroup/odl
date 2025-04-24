@@ -854,10 +854,22 @@ def test_transpose(odl_tspace_impl):
 def test_multiply_by_scalar(tspace):
     """Verify that mult. with NumPy scalars preserves the element type."""
     x = tspace.zero()
+
+    # Simple scalar multiplication, as often performed in user code.
+    # This invokes the __mul__ and __rmul__ methods of the ODL space classes.
+    # Strictly speaking this operation loses precision if `tspace.dtype` has
+    # fewer than 64 bits (Python decimal literals are double precision), but
+    # it would be too cumbersome to force a change in the space's dtype.
     assert x * 1.0 in tspace
-    assert x * np.float32(1.0) in tspace
     assert 1.0 * x in tspace
-    assert np.float32(1.0) * x in tspace
+    
+    # Multiplying with NumPy scalars is (since NumPy-2) more restrictive:
+    # multiplying a scalar on the left that has a higher precision than can
+    # be represented in the space would upcast `x` to another space that has
+    # the required precision.
+    if np.can_cast(np.float32, tspace.dtype):
+        assert x * np.float32(1.0) in tspace
+        assert np.float32(1.0) * x in tspace
 
 
 def test_member_copy(odl_tspace_impl):
