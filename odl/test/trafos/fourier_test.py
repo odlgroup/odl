@@ -539,25 +539,45 @@ def test_fourier_trafo_scaling():
         assert (func_dft - func_true_ft).norm() < 1e-6
 
 
-def test_fourier_trafo_sign(impl):
+def test_fourier_trafo_sign(impl, odl_real_floating_dtype):
     # Test if the FT sign behaves as expected, i.e. that the FT with sign
     # '+' and '-' have same real parts and opposite imaginary parts.
+
+    discrspace_dtype = complex_dtype(odl_real_floating_dtype)
 
     def char_interval(x):
         return (x >= 0) & (x <= 1)
 
-    discr = odl.uniform_discr(-2, 2, 40, impl='numpy', dtype='complex64')
+    discr = odl.uniform_discr(-2, 2, 40, impl='numpy', dtype=discrspace_dtype)
     ft_minus = FourierTransform(discr, sign='-', impl=impl)
     ft_plus = FourierTransform(discr, sign='+', impl=impl)
 
     func_ft_minus = ft_minus(char_interval)
     func_ft_plus = ft_plus(char_interval)
-    assert np.allclose(func_ft_minus.real, func_ft_plus.real)
-    assert np.allclose(func_ft_minus.imag, -func_ft_plus.imag)
-    assert np.allclose(ft_minus.inverse.inverse(char_interval),
-                       ft_minus(char_interval))
-    assert np.allclose(ft_plus.inverse.inverse(char_interval),
-                       ft_plus(char_interval))
+
+    if odl_real_floating_dtype == np.float16:
+        tolerance = np.linalg.norm(func_ft_minus) * 1e-3
+    elif odl_real_floating_dtype == np.float32:
+        tolerance = np.linalg.norm(func_ft_minus) * 1e-7
+    elif odl_real_floating_dtype == np.float64:
+        tolerance = np.linalg.norm(func_ft_minus) * 1e-15
+    elif odl_real_floating_dtype == np.float128:
+        if np.__version__<'2':
+            # NumPy-1 does not use quadruple precision for the FFT, but double precision
+            # and converts the result, so we do not achieve closer tolerance there.
+            tolerance = np.linalg.norm(func_ft_minus) * 1e-15
+        else:
+            tolerance = np.linalg.norm(func_ft_minus) * 1e-19
+    else:
+        raise TypeError(f"No known tolerance for dtype {odl_real_floating_dtype}")
+
+    def assert_close(x,y):
+        assert(np.linalg.norm(x-y) < tolerance)
+
+    assert_close(func_ft_minus.real, func_ft_plus.real)
+    assert_close(func_ft_minus.imag, -func_ft_plus.imag)
+    assert_close(ft_minus.inverse.inverse(char_interval), ft_minus(char_interval))
+    assert_close(ft_plus.inverse.inverse(char_interval), ft_plus(char_interval))
 
     discr = odl.uniform_discr(-2, 2, 40, impl='numpy', dtype='float32')
     with pytest.raises(ValueError):
