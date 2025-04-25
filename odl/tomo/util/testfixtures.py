@@ -97,7 +97,7 @@ def parse_angular_partition(
         raise ValueError('angle not valid')
     return apart
 
-def parse_geometry(
+def parse_ray_transform(
         geometry_name :str,
         dimension :int,
         angular_partition,
@@ -173,7 +173,7 @@ def projector(request):
         [m] * (dimension-1)
         )
 
-    return parse_geometry(
+    return parse_ray_transform(
         geometry_name,
         dimension,
         angular_partition,
@@ -257,4 +257,21 @@ def consistent_geometry(request):
 geometry_type = simple_fixture(
     'geometry_type',
     ['par2d', 'par3d', 'cone2d', 'cone3d']
+)
+
+shifts_2d = simple_fixture(
+    'shifts_2d',
+    [
+        'astra_cuda numpy',
+        'astra_cuda pytorch',
+        'astra_cpu numpy'
+    ]
+)
+
+shifts_3d = simple_fixture(
+    'shifts_3d',
+    [
+        'astra_cuda numpy',
+        'astra_cuda pytorch',
+    ]
 )

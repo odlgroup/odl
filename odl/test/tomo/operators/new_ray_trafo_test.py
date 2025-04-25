@@ -22,9 +22,9 @@ from odl.tomo.util.testutils import (
     skip_if_no_astra, skip_if_no_astra_cuda, skip_if_no_skimage)
 from odl.util.testutils import all_almost_equal, simple_fixture
 from odl.tomo.util.testfixtures import (projector, in_place, geometry, 
-        parse_geometry, parse_angular_partition, 
         geometry_type, ray_trafo_impl, 
         consistent_geometry,
+        shifts_2d, shifts_3d,
         PARALLEL_2D_PROJECTORS_CPU,
         PARALLEL_2D_PROJECTORS, PARALLEL_3D_PROJECTORS,
         CONE_2D_PROJECTORS, CONE_3D_PROJECTORS,
@@ -34,26 +34,20 @@ from odl.tomo.util.testfixtures import (projector, in_place, geometry,
 
 projectors = []
 projectors.extend(
+    (pytest.param(proj_cfg, marks=skip_if_no_astra)
+     for proj_cfg in PARALLEL_2D_PROJECTORS_CPU)
+)
+projectors.extend(
     (pytest.param(proj_cfg, marks=skip_if_no_astra_cuda)
      for proj_cfg in  
-        CONE_2D_PROJECTORS
-        )
+        PARALLEL_2D_PROJECTORS + PARALLEL_3D_PROJECTORS + \
+        CONE_2D_PROJECTORS + CONE_3D_PROJECTORS + \
+        HELICAL_PROJECTORS)
 )
-# projectors.extend(
-#     (pytest.param(proj_cfg, marks=skip_if_no_astra)
-#      for proj_cfg in PARALLEL_2D_PROJECTORS_CPU)
-# )
-# projectors.extend(
-#     (pytest.param(proj_cfg, marks=skip_if_no_astra_cuda)
-#      for proj_cfg in  
-#         PARALLEL_2D_PROJECTORS + PARALLEL_3D_PROJECTORS + \
-#         CONE_2D_PROJECTORS + CONE_3D_PROJECTORS + \
-#         HELICAL_PROJECTORS)
-# )
-# projectors.extend(
-#     (pytest.param(proj_cfg, marks=skip_if_no_skimage)
-#      for proj_cfg in SKIMAGE_PROJECTORS)
-# )
+projectors.extend(
+    (pytest.param(proj_cfg, marks=skip_if_no_skimage)
+     for proj_cfg in SKIMAGE_PROJECTORS)
+)
 
 projector_ids = [
     " geometry='{}' - dimension='{}' - ray_trafo_impl='{}' - reco_space_impl='{}' - angles='{}' - device='{}'".format(*p.values[0].split())
@@ -344,7 +338,7 @@ def test_shifted_volume(geometry_type):
     assert np.max(proj[3, 15:]) > 5
 
 
-def test_detector_shifts_2d_cuda():
+def test_detector_shifts_2d(shifts_2d):
     """Check that detector shifts are handled correctly.
 
     We forward project a cubic phantom and check that ray transform
@@ -355,10 +349,13 @@ def test_detector_shifts_2d_cuda():
     if not odl.tomo.ASTRA_AVAILABLE:
         pytest.skip(msg='ASTRA not available, skipping 2d test') #type:ignore
 
-    ray_trafo_kwd = 'astra_cuda'
-    space_kwd = 'numpy'
+    ray_trafo_impl, rec_space_impl = shifts_2d.split()
+    
+    if ray_trafo_impl == 'astra_cuda' and ASTRA_VERSION == '2.3.0':
+        pytest.skip("There is a known numerical discrepancy for the ASTRA version 2.3.0 on the astra_cuda backend")
+    
     d = 10
-    space = odl.uniform_discr([-1] * 2, [1] * 2, [d] * 2, dtype = 'float32', impl=space_kwd)
+    space = odl.uniform_discr([-1] * 2, [1] * 2, [d] * 2, dtype = 'float32', impl=rec_space_impl)
     phantom = odl.phantom.cuboid(space, [-1 / 3] * 2, [1 / 3] * 2)
 
     full_angle = 2 * np.pi
@@ -386,47 +383,27 @@ def test_detector_shifts_2d_cuda():
                             + shift * geom_shift.det_axis(angles))
 
     # check ray transform
-    op_cpu = odl.tomo.RayTransform(space, geom, impl='astra_cpu')
-    op_shift_cpu = odl.tomo.RayTransform(space, geom_shift, impl='astra_cpu')
-    y_cpu = op_cpu(phantom).asarray()
-    y_shift_cpu = op_shift_cpu(phantom).asarray()
-
+    op = odl.tomo.RayTransform(space, geom, impl=ray_trafo_impl)
+    op_shift = odl.tomo.RayTransform(space, geom_shift, impl=ray_trafo_impl)
+    y = op(phantom).asarray()
+    y_shift_cpu = op_shift(phantom).asarray()
+        
     # projection on the shifted detector is shifted regular projection
-    if isinstance(y_cpu, np.ndarray):
-        data_error = np.max(np.abs(y_cpu[:, :-k] - y_shift_cpu[:, k:]))
-    elif isinstance(y_cpu, torch.Tensor):
-        data_error = float(torch.max(torch.abs(y_cpu[:, :-k] - y_shift_cpu[:, k:])))
+    if isinstance(y, np.ndarray):
+        data_error = np.max(np.abs(y[:, :-k] - y_shift_cpu[:, k:]))
+    elif isinstance(y, torch.Tensor):
+        data_error = float(torch.max(torch.abs(y[:, :-k] - y_shift_cpu[:, k:])))
 
     assert data_error < space.cell_volume
 
     # check back-projection
-    im = op_cpu.adjoint(y_cpu).asarray()
-    im_shift = op_shift_cpu.adjoint(y_shift_cpu).asarray()
+    im = op.adjoint(y).asarray()
+    im_shift = op_shift.adjoint(y_shift_cpu).asarray()
     error = np.abs(im_shift - im)
     rel_error = np.max(error[im > 0] / im[im > 0])
     assert rel_error < space.cell_volume
 
-    op_cuda = odl.tomo.RayTransform(space, geom, impl='astra_cuda')
-    op_shift_cuda = odl.tomo.RayTransform(space, geom_shift, impl='astra_cuda')
-    y_cuda = op_cuda(phantom).asarray()
-    y_shift_cuda = op_shift_cuda(phantom).asarray()
-
-    # projection on the shifted detector is shifted regular projection
-    if isinstance(y_cuda, np.ndarray):
-        data_error = np.max(np.abs(y_cuda[:, :-k] - y_shift_cuda[:, k:]))
-    elif isinstance(y_cuda, torch.Tensor):
-        data_error = float(torch.max(torch.abs(y_cuda[:, :-k] - y_shift_cuda[:, k:])))
-
-    assert data_error < space.cell_volume
-
-    # check back-projection
-    im = op_cuda.adjoint(y_cuda).asarray()
-    im_shift = op_shift_cuda.adjoint(y_shift_cuda).asarray()
-    error = np.abs(im_shift - im)
-    rel_error = np.max(error[im > 0] / im[im > 0])
-    assert rel_error < space.cell_volume
-
-def test_source_shifts_2d_cpu():
+def test_source_shifts_2d(shifts_2d):
     """Check that source shifts are handled correctly.
 
     We forward project a Shepp-Logan phantom and check that reconstruction
@@ -439,9 +416,8 @@ def test_source_shifts_2d_cpu():
         pytest.skip(msg='ASTRA required but not available') #type:ignore
 
     d = 10
-    ray_trafo_kwd = 'astra_cpu'
-    space_kwd = 'numpy'
-    space = odl.uniform_discr([-1] * 2, [1] * 2, [d] * 2, dtype = 'float32', impl = space_kwd)
+    ray_trafo_impl, rec_space_impl = shifts_2d.split()
+    space = odl.uniform_discr([-1] * 2, [1] * 2, [d] * 2, dtype = 'float32', impl = rec_space_impl)
     phantom = odl.phantom.cuboid(space, [-1 / 3] * 2, [1 / 3] * 2)
 
     full_angle = 2 * np.pi
@@ -491,9 +467,9 @@ def test_source_shifts_2d_cpu():
                                      det_axis_init=det_init)
 
     # check ray transform
-    op_ffs = odl.tomo.RayTransform(space, geom_ffs, impl = ray_trafo_kwd)
-    op1 = odl.tomo.RayTransform(space, geom1, impl = ray_trafo_kwd)
-    op2 = odl.tomo.RayTransform(space, geom2, impl = ray_trafo_kwd)
+    op_ffs = odl.tomo.RayTransform(space, geom_ffs, impl = ray_trafo_impl)
+    op1 = odl.tomo.RayTransform(space, geom1, impl = ray_trafo_impl)
+    op2 = odl.tomo.RayTransform(space, geom2, impl = ray_trafo_impl)
     y_ffs = op_ffs(phantom)
     y1 = op1(phantom).asarray()
     y2 = op2(phantom).asarray()
@@ -513,95 +489,7 @@ def test_source_shifts_2d_cpu():
         rel_error = torch.abs((im - im_combined)[im > 0] / im[im > 0])
         assert torch.max(rel_error) < 1e-6
 
-def test_source_shifts_2d_cuda():
-    """Check that source shifts are handled correctly.
-
-    We forward project a Shepp-Logan phantom and check that reconstruction
-    with flying focal spot is equal to a sum of reconstructions with two
-    geometries which mimic ffs by using initial angular offsets and
-    detector shifts
-    """
-
-    if not odl.tomo.ASTRA_AVAILABLE:
-        pytest.skip(msg='ASTRA required but not available') #type:ignore
-
-    d = 10
-    ray_trafo_kwd = 'astra_cuda'
-    space_kwd = 'numpy'
-    space = odl.uniform_discr([-1] * 2, [1] * 2, [d] * 2, dtype = 'float32', impl = space_kwd)
-    phantom = odl.phantom.cuboid(space, [-1 / 3] * 2, [1 / 3] * 2)
-
-    full_angle = 2 * np.pi
-    n_angles = 2 * 10
-    src_rad = 2
-    det_rad = 2
-    apart = odl.uniform_partition(0, full_angle, n_angles)
-    dpart = odl.uniform_partition(-4, 4, 8 * d)
-    # Source positions with flying focal spot should correspond to
-    # source positions of 2 geometries with different starting positions
-    shift1 = np.array([0.0, -0.3])
-    shift2 = np.array([0.0, 0.3])
-    init = np.array([1, 0], dtype=np.float32)
-    det_init = np.array([0, -1], dtype=np.float32)
-
-    ffs = partial(odl.tomo.flying_focal_spot,
-                  apart=apart,
-                  shifts=[shift1, shift2])
-    geom_ffs = odl.tomo.FanBeamGeometry(apart, dpart,
-                                        src_rad, det_rad,
-                                        src_to_det_init=init,
-                                        det_axis_init=det_init,
-                                        src_shift_func=ffs,
-                                        det_shift_func=ffs)
-    # angles must be shifted to match discretization of apart
-    ang1 = -full_angle / (n_angles * 2)
-    apart1 = odl.uniform_partition(ang1, full_angle + ang1, n_angles // 2)
-    ang2 = full_angle / (n_angles * 2)
-    apart2 = odl.uniform_partition(ang2, full_angle + ang2, n_angles // 2)
-
-    init1 = init + np.array([0, shift1[1]]) / (src_rad + shift1[0])
-    init2 = init + np.array([0, shift2[1]]) / (src_rad + shift2[0])
-    # radius also changes when a shift is applied
-    src_rad1 = np.linalg.norm(np.array([src_rad, 0]) + shift1)
-    src_rad2 = np.linalg.norm(np.array([src_rad, 0]) + shift2)
-    det_rad1 = np.linalg.norm(
-        np.array([det_rad, shift1[1] / src_rad * det_rad]))
-    det_rad2 = np.linalg.norm(
-        np.array([det_rad, shift2[1] / src_rad * det_rad]))
-    geom1 = odl.tomo.FanBeamGeometry(apart1, dpart,
-                                     src_rad1, det_rad1,
-                                     src_to_det_init=init1,
-                                     det_axis_init=det_init)
-    geom2 = odl.tomo.FanBeamGeometry(apart2, dpart,
-                                     src_rad2, det_rad2,
-                                     src_to_det_init=init2,
-                                     det_axis_init=det_init)
-
-    # check ray transform
-    op_ffs = odl.tomo.RayTransform(space, geom_ffs, impl = ray_trafo_kwd)
-    op1 = odl.tomo.RayTransform(space, geom1, impl = ray_trafo_kwd)
-    op2 = odl.tomo.RayTransform(space, geom2, impl = ray_trafo_kwd)
-    y_ffs = op_ffs(phantom)
-    y1 = op1(phantom).asarray()
-    y2 = op2(phantom).asarray()
-    assert all_almost_equal(y_ffs[::2], y1)
-    assert all_almost_equal(y_ffs[1::2], y2)
-
-    # check back-projection
-    im = op_ffs.adjoint(y_ffs).asarray()
-    im1 = op1.adjoint(y1).asarray()
-    im2 = op2.adjoint(y2).asarray()
-    im_combined = (im1 + im2) / 2
-
-    if isinstance(im_combined, np.ndarray):
-        rel_error = np.abs((im - im_combined)[im > 0] / im[im > 0])
-        assert np.max(rel_error) < 1e-6
-    elif isinstance(im_combined, torch.Tensor):
-        rel_error = torch.abs((im - im_combined)[im > 0] / im[im > 0])
-        assert torch.max(rel_error) < 1e-6
-
-
-def test_detector_shifts_3d():
+def test_detector_shifts_3d(shifts_3d):
     """Check that detector shifts are handled correctly.
 
     We forward project a cubic phantom and check that ray transform
@@ -611,10 +499,9 @@ def test_detector_shifts_3d():
     if not odl.tomo.ASTRA_CUDA_AVAILABLE:
         pytest.skip(msg='ASTRA CUDA required but not available') #type:ignore
 
-    ray_trafo_kwd = 'astra_cuda'
-    space_kwd = 'pytorch'
+    ray_trafo_impl, rec_space_impl = shifts_3d.split()
     d = 100
-    space = odl.uniform_discr([-1] * 3, [1] * 3, [d] * 3, dtype = 'float32' , impl = space_kwd)
+    space = odl.uniform_discr([-1] * 3, [1] * 3, [d] * 3, dtype = 'float32' , impl = rec_space_impl)
     phantom = odl.phantom.cuboid(space, [-1 / 3] * 3, [1 / 3] * 3)
 
     full_angle = 2 * np.pi
@@ -643,8 +530,8 @@ def test_detector_shifts_3d():
                             - geom_shift.det_axes(angles)[:, 1] * shift[2])
 
     # check forward pass
-    op = odl.tomo.RayTransform(space, geom , impl = ray_trafo_kwd)
-    op_shift = odl.tomo.RayTransform(space, geom_shift, impl = ray_trafo_kwd)
+    op = odl.tomo.RayTransform(space, geom , impl = ray_trafo_impl)
+    op_shift = odl.tomo.RayTransform(space, geom_shift, impl = ray_trafo_impl)
     y = op(phantom).asarray()
     y_shift = op_shift(phantom).asarray()
 
@@ -668,7 +555,7 @@ def test_detector_shifts_3d():
         assert error < 1e-3
 
 
-def test_source_shifts_3d():
+def test_source_shifts_3d(shifts_3d):
     """Check that source shifts are handled correctly.
 
     We forward project a Shepp-Logan phantom and check that reconstruction
@@ -679,10 +566,9 @@ def test_source_shifts_3d():
     if not odl.tomo.ASTRA_CUDA_AVAILABLE:
         pytest.skip(msg='ASTRA_CUDA not available, skipping 3d test') #type:ignore
 
-    ray_trafo_kwd = 'astra_cuda'
-    space_kwd = 'pytorch'
+    ray_trafo_impl, rec_space_impl = shifts_3d.split()
     d = 10
-    space = odl.uniform_discr([-1] * 3, [1] * 3, [d] * 3, dtype = 'float32', impl = space_kwd )
+    space = odl.uniform_discr([-1] * 3, [1] * 3, [d] * 3, dtype = 'float32', impl = rec_space_impl )
     phantom = odl.phantom.cuboid(space, [-1 / 3] * 3, [1 / 3] * 3)
 
     full_angle = 2 * np.pi
@@ -749,9 +635,9 @@ def test_source_shifts_3d():
     assert all_almost_equal(geom_ffs.det_axes(geom_ffs.angles)[1::2],
                             geom2.det_axes(geom2.angles))
 
-    op_ffs = odl.tomo.RayTransform(space, geom_ffs, impl = ray_trafo_kwd)
-    op1 = odl.tomo.RayTransform(space, geom1, impl = ray_trafo_kwd)
-    op2 = odl.tomo.RayTransform(space, geom2, impl = ray_trafo_kwd)
+    op_ffs = odl.tomo.RayTransform(space, geom_ffs, impl = ray_trafo_impl)
+    op1 = odl.tomo.RayTransform(space, geom1, impl = ray_trafo_impl)
+    op2 = odl.tomo.RayTransform(space, geom2, impl = ray_trafo_impl)
     y_ffs = op_ffs(phantom)
     y1 = op1(phantom)
     y2 = op2(phantom)
@@ -770,21 +656,6 @@ def test_source_shifts_3d():
         im_combined = im_combined / torch.sum(im_combined) * torch.sum(im)
         rel_error = torch.abs((im - im_combined)[im > 0] / im[im > 0])
         assert torch.max((rel_error)) < 1e-6 
-
-def test_backend_consistency(consistent_geometry):
-    dimension = consistent_geometry.ndim
-
-    reconstruction_space = odl.uniform_discr(
-            [-20] * dimension, 
-            [ 20] * dimension, 
-            [100] * dimension,
-            dtype='float32', impl='numpy'
-        )
-    phantom = odl.phantom.shepp_logan(reconstruction_space, modified=True) 
-    ray_trafo_cpu = odl.tomo.RayTransform(reconstruction_space, consistent_geometry, impl='astra_cpu')
-    y_cpu = ray_trafo_cpu(phantom).asarray()
-    ray_trafo_gpu = odl.tomo.RayTransform(reconstruction_space, consistent_geometry, impl='astra_cuda')
-    y_gpu = ray_trafo_gpu(phantom).asarray()    
     
 if __name__ == '__main__':
     odl.util.test_file(__file__)
