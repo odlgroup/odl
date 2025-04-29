@@ -14,6 +14,8 @@ from builtins import object
 
 import numpy as np
 
+from odl.util.npy_compat import AVOID_UNNECESSARY_COPY
+
 from odl.discr import RectPartition
 from odl.tomo.util import is_inside_bounds, perpendicular_vector
 from odl.tomo.util.utility import rotation_matrix_from_to
@@ -343,7 +345,7 @@ class Flat1dDetector(Detector):
         (4, 5, 2)
         """
         squeeze_out = (np.shape(param) == ())
-        param = np.array(param, dtype=float, copy=False, ndmin=1)
+        param = np.array(param, dtype=float, copy=AVOID_UNNECESSARY_COPY, ndmin=1)
         if self.check_bounds and not is_inside_bounds(param, self.params):
             raise ValueError('`param` {} not in the valid range '
                              '{}'.format(param, self.params))
@@ -395,7 +397,7 @@ class Flat1dDetector(Detector):
         (4, 5, 2)
         """
         squeeze_out = (np.shape(param) == ())
-        param = np.array(param, dtype=float, copy=False, ndmin=1)
+        param = np.array(param, dtype=float, copy=AVOID_UNNECESSARY_COPY, ndmin=1)
         if self.check_bounds and not is_inside_bounds(param, self.params):
             raise ValueError('`param` {} not in the valid range '
                              '{}'.format(param, self.params))
@@ -524,7 +526,7 @@ class Flat2dDetector(Detector):
         """
         squeeze_out = (np.broadcast(*param).shape == ())
         param_in = param
-        param = tuple(np.array(p, dtype=float, copy=False, ndmin=1)
+        param = tuple(np.array(p, dtype=float, copy=AVOID_UNNECESSARY_COPY, ndmin=1)
                       for p in param)
         if self.check_bounds and not is_inside_bounds(param, self.params):
             raise ValueError('`param` {} not in the valid range '
@@ -603,7 +605,7 @@ class Flat2dDetector(Detector):
         """
         squeeze_out = (np.broadcast(*param).shape == ())
         param_in = param
-        param = tuple(np.array(p, dtype=float, copy=False, ndmin=1)
+        param = tuple(np.array(p, dtype=float, copy=AVOID_UNNECESSARY_COPY, ndmin=1)
                       for p in param)
         if self.check_bounds and not is_inside_bounds(param, self.params):
             raise ValueError('`param` {} not in the valid range '
@@ -752,7 +754,7 @@ class CircularDetector(Detector):
         (4, 5, 2)
         """
         squeeze_out = (np.shape(param) == ())
-        param = np.array(param, dtype=float, copy=False, ndmin=1)
+        param = np.array(param, dtype=float, copy=AVOID_UNNECESSARY_COPY, ndmin=1)
         if self.check_bounds and not is_inside_bounds(param, self.params):
             raise ValueError('`param` {} not in the valid range '
                              '{}'.format(param, self.params))
@@ -815,7 +817,7 @@ class CircularDetector(Detector):
         (4, 5, 2)
         """
         squeeze_out = (np.shape(param) == ())
-        param = np.array(param, dtype=float, copy=False, ndmin=1)
+        param = np.array(param, dtype=float, copy=AVOID_UNNECESSARY_COPY, ndmin=1)
         if self.check_bounds and not is_inside_bounds(param, self.params):
             raise ValueError('`param` {} not in the valid range '
                              '{}'.format(param, self.params))
@@ -873,7 +875,7 @@ class CircularDetector(Detector):
         (4, 5)
         """
         scalar_out = (np.shape(param) == ())
-        param = np.array(param, dtype=float, copy=False, ndmin=1)
+        param = np.array(param, dtype=float, copy=AVOID_UNNECESSARY_COPY, ndmin=1)
         if self.check_bounds and not is_inside_bounds(param, self.params):
             raise ValueError('`param` {} not in the valid range '
                              '{}'.format(param, self.params))
@@ -1042,7 +1044,7 @@ class CylindricalDetector(Detector):
         """
         squeeze_out = (np.broadcast(*param).shape == ())
         param_in = param
-        param = tuple(np.array(p, dtype=float, copy=False, ndmin=1)
+        param = tuple(np.array(p, dtype=float, copy=AVOID_UNNECESSARY_COPY, ndmin=1)
                       for p in param)
         if self.check_bounds and not is_inside_bounds(param, self.params):
             raise ValueError('`param` {} not in the valid range '
@@ -1118,7 +1120,7 @@ class CylindricalDetector(Detector):
         """
         squeeze_out = (np.broadcast(*param).shape == ())
         param_in = param
-        param = tuple(np.array(p, dtype=float, copy=False, ndmin=1)
+        param = tuple(np.array(p, dtype=float, copy=AVOID_UNNECESSARY_COPY, ndmin=1)
                       for p in param)
         if self.check_bounds and not is_inside_bounds(param, self.params):
             raise ValueError('`param` {} not in the valid range '
@@ -1303,7 +1305,7 @@ class SphericalDetector(Detector):
         """
         squeeze_out = (np.broadcast(*param).shape == ())
         param_in = param
-        param = tuple(np.array(p, dtype=float, copy=False, ndmin=1)
+        param = tuple(np.array(p, dtype=float, copy=AVOID_UNNECESSARY_COPY, ndmin=1)
                       for p in param)
         if self.check_bounds and not is_inside_bounds(param, self.params):
             raise ValueError('`param` {} not in the valid range '
@@ -1381,7 +1383,7 @@ class SphericalDetector(Detector):
         """
         squeeze_out = (np.broadcast(*param).shape == ())
         param_in = param
-        param = tuple(np.array(p, dtype=float, copy=False, ndmin=1)
+        param = tuple(np.array(p, dtype=float, copy=AVOID_UNNECESSARY_COPY, ndmin=1)
                       for p in param)
         if self.check_bounds and not is_inside_bounds(param, self.params):
             raise ValueError('`param` {} not in the valid range '

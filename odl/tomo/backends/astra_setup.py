@@ -29,6 +29,8 @@ import warnings
 
 import numpy as np
 
+from odl.util.npy_compat import AVOID_UNNECESSARY_COPY
+
 from odl.discr import DiscretizedSpace, DiscretizedSpaceElement
 from odl.tomo.geometry import (
     DivergentBeamGeometry, Flat1dDetector, Flat2dDetector, Geometry,
@@ -543,7 +545,7 @@ def astra_projection_geometry(geometry):
     return proj_geom
 
 
-def astra_data(astra_geom, datatype, data=None, ndim=2, allow_copy=False):
+def astra_data(astra_geom, datatype, data=None, ndim=2, allow_copy=AVOID_UNNECESSARY_COPY):
     """Create an ASTRA data object.
 
     Parameters

@@ -10,6 +10,7 @@
 
 from __future__ import print_function, division, absolute_import
 import numpy as np
+from odl.util.npy_compat import AVOID_UNNECESSARY_COPY
 from odl.discr.discr_utils import nearest_interpolator
 
 __all__ = ('flying_focal_spot',)
@@ -36,7 +37,7 @@ def flying_focal_spot(angle, apart, shifts):
     """
     assert apart.ndim == 1
 
-    angle = np.array(angle, dtype=float, copy=False, ndmin=1)
+    angle = np.array(angle, dtype=float, copy=AVOID_UNNECESSARY_COPY, ndmin=1)
     assert angle.ndim == 1
 
     shifts = np.array(shifts, dtype=float, ndmin=2)

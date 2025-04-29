@@ -12,6 +12,8 @@ from __future__ import absolute_import, division, print_function
 
 import numpy as np
 
+from odl.util.npy_compat import AVOID_UNNECESSARY_COPY
+
 from odl.discr import uniform_partition
 from odl.tomo.geometry.detector import (
     CircularDetector, CylindricalDetector, Flat1dDetector, Flat2dDetector,
@@ -492,7 +494,7 @@ class FanBeamGeometry(DivergentBeamGeometry):
                [ 0.1, -1. ]])
         """
         squeeze_out = (np.shape(angle) == ())
-        angle = np.array(angle, dtype=float, copy=False, ndmin=1)
+        angle = np.array(angle, dtype=float, copy=AVOID_UNNECESSARY_COPY, ndmin=1)
         src_shifts = self.src_shift_func(angle)
 
         # Initial vector from the rotation center to the source. It can be
@@ -588,7 +590,7 @@ class FanBeamGeometry(DivergentBeamGeometry):
                [ 0.1, -1. ]])
         """
         squeeze_out = (np.shape(angle) == ())
-        angle = np.array(angle, dtype=float, copy=False, ndmin=1)
+        angle = np.array(angle, dtype=float, copy=AVOID_UNNECESSARY_COPY, ndmin=1)
         det_shifts = np.array(self.det_shift_func(angle), dtype=float, ndmin=2)
 
         # Initial vector from the rotation center to the detector. It can be
@@ -635,7 +637,7 @@ class FanBeamGeometry(DivergentBeamGeometry):
             shape ``(2, 2)``, otherwise ``angle.shape + (2, 2)``.
         """
         squeeze_out = (np.shape(angle) == ())
-        angle = np.array(angle, dtype=float, copy=False, ndmin=1)
+        angle = np.array(angle, dtype=float, copy=AVOID_UNNECESSARY_COPY, ndmin=1)
         if (self.check_bounds
                 and not is_inside_bounds(angle, self.motion_params)):
             raise ValueError('`angle` {} not in the valid range {}'
@@ -1315,7 +1317,7 @@ class ConeBeamGeometry(DivergentBeamGeometry, AxisOrientedGeometry):
                [ 0.1, -1. , -0.1]])
         """
         squeeze_out = (np.shape(angle) == ())
-        angle = np.array(angle, dtype=float, copy=False, ndmin=1)
+        angle = np.array(angle, dtype=float, copy=AVOID_UNNECESSARY_COPY, ndmin=1)
         rot_matrix = self.rotation_matrix(angle)
         extra_dims = angle.ndim
         det_shifts = np.array(self.det_shift_func(angle), dtype=float, ndmin=2)
@@ -1433,7 +1435,7 @@ class ConeBeamGeometry(DivergentBeamGeometry, AxisOrientedGeometry):
                [-0. , -1. ,  0.1]])
         """
         squeeze_out = (np.shape(angle) == ())
-        angle = np.array(angle, dtype=float, copy=False, ndmin=1)
+        angle = np.array(angle, dtype=float, copy=AVOID_UNNECESSARY_COPY, ndmin=1)
         rot_matrix = self.rotation_matrix(angle)
         extra_dims = angle.ndim
         src_shifts = self.src_shift_func(angle)

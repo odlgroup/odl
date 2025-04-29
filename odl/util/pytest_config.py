@@ -20,6 +20,7 @@ import odl
 from odl.space.entry_points import tensor_space_impl_names
 from odl.trafos.backends import PYFFTW_AVAILABLE, PYWT_AVAILABLE
 from odl.util.testutils import simple_fixture
+from odl.util.utility import SCTYPES
 
 try:
     import pytest
@@ -132,13 +133,19 @@ def pytest_ignore_collect(path, config):
 odl_tspace_impl = simple_fixture(name='tspace_impl',
                                  params=tensor_space_impl_names())
 
-floating_dtypes = np.sctypes['float'] + np.sctypes['complex']
+real_floating_dtypes = SCTYPES['float']
+real_floating_dtype_params = [np.dtype(dt) for dt in real_floating_dtypes]
+odl_real_floating_dtype = simple_fixture(name='dtype',
+                                    params=real_floating_dtype_params,
+                                    fmt=' {name} = np.{value.name} ')
+
+floating_dtypes = SCTYPES['float'] + SCTYPES['complex']
 floating_dtype_params = [np.dtype(dt) for dt in floating_dtypes]
 odl_floating_dtype = simple_fixture(name='dtype',
                                     params=floating_dtype_params,
                                     fmt=' {name} = np.{value.name} ')
 
-scalar_dtypes = floating_dtype_params + np.sctypes['int'] + np.sctypes['uint']
+scalar_dtypes = floating_dtype_params + SCTYPES['int'] + SCTYPES['uint']
 scalar_dtype_params = [np.dtype(dt) for dt in floating_dtypes]
 odl_scalar_dtype = simple_fixture(name='dtype',
                                   params=scalar_dtype_params,

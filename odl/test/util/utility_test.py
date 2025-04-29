@@ -12,12 +12,12 @@ import numpy as np
 
 from odl.util.utility import (
     is_numeric_dtype, is_real_dtype, is_real_floating_dtype,
-    is_complex_floating_dtype)
+    is_complex_floating_dtype, SCTYPES)
 
 
-real_float_dtypes = np.sctypes['float']
-complex_float_dtypes = np.sctypes['complex']
-nonfloat_numeric_dtypes = np.sctypes['uint'] + np.sctypes['int']
+real_float_dtypes = SCTYPES['float']
+complex_float_dtypes = SCTYPES['complex']
+nonfloat_numeric_dtypes = SCTYPES['uint'] + SCTYPES['int']
 numeric_dtypes = (real_float_dtypes + complex_float_dtypes +
                   nonfloat_numeric_dtypes)
 real_dtypes = real_float_dtypes + nonfloat_numeric_dtypes

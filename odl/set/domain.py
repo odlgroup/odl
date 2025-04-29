@@ -11,6 +11,8 @@
 from __future__ import print_function, division, absolute_import
 import numpy as np
 
+from odl.util.npy_compat import AVOID_UNNECESSARY_COPY
+
 from odl.set.sets import Set
 from odl.util import (
     array_str, is_valid_input_array, is_valid_input_meshgrid, safe_int_conv)
@@ -253,7 +255,7 @@ class IntervalProd(Set):
         """
         try:
             # Duck-typed check of type
-            point = np.array(point, dtype=float, copy=False, ndmin=1)
+            point = np.array(point, dtype=float, copy=AVOID_UNNECESSARY_COPY, ndmin=1)
         except (ValueError, TypeError):
             return False
 
@@ -279,7 +281,7 @@ class IntervalProd(Set):
         """
         try:
             # Duck-typed check of type
-            point = np.array(other, dtype=float, copy=False, ndmin=1)
+            point = np.array(other, dtype=float, copy=AVOID_UNNECESSARY_COPY, ndmin=1)
         except (ValueError, TypeError):
             return False
 

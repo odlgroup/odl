@@ -17,6 +17,8 @@ from functools import partial
 
 import numpy as np
 
+from odl.util.npy_compat import AVOID_UNNECESSARY_COPY
+
 from odl.set.sets import ComplexNumbers, RealNumbers
 from odl.set.space import LinearSpaceTypeError
 from odl.space.base_tensors import Tensor, TensorSpace
@@ -426,7 +428,7 @@ class NumpyTensorSpace(TensorSpace):
 
             # Try to not copy but require dtype and order if given
             # (`order=None` is ok as np.array argument)
-            arr = np.array(inp, copy=False, dtype=self.dtype, ndmin=self.ndim,
+            arr = np.array(inp, copy=AVOID_UNNECESSARY_COPY, dtype=self.dtype, ndmin=self.ndim,
                            order=order)
             # Make sure the result is writeable, if not make copy.
             # This happens for e.g. results of `np.broadcast_to()`.
@@ -472,18 +474,17 @@ class NumpyTensorSpace(TensorSpace):
 
         Notes
         -----
-        This is all dtypes available in Numpy. See ``numpy.sctypes``
+        This is all dtypes available in Numpy. See ``numpy.sctypeDict``
         for more information.
 
         The available dtypes may depend on the specific system used.
         """
         all_dtypes = []
-        for lst in np.sctypes.values():
-            for dtype in lst:
-                if dtype not in (object, np.void):
-                    all_dtypes.append(np.dtype(dtype))
-        # Need to add these manually since np.sctypes['others'] will only
-        # contain one of them (depending on Python version)
+        for dtype in np.sctypeDict.values():
+            if dtype not in (object, np.void):
+                all_dtypes.append(np.dtype(dtype))
+        # Need to add these manually since they are not contained
+        # in np.sctypeDict.
         all_dtypes.extend([np.dtype('S'), np.dtype('U')])
         return tuple(sorted(set(all_dtypes)))
 

@@ -212,6 +212,16 @@ def test_resizing_op_inverse(padding, odl_tspace_impl):
               if is_numeric_dtype(dt)]
 
     for dtype in dtypes:
+
+        if pad_mode == 'order1' and (
+                np.issubdtype(dtype, np.unsignedinteger)
+                or np.issubdtype(dtype, np.timedelta64()) ):
+            # Extrapolating a trend might lead to negative values, which  
+            # will raise an error for unsigned integers. For timedeltas, 
+            # it would involve a multiplication of two times which was 
+            # allowed by numpy 1 but is not allowed in numpy 2.
+            continue
+
         space = odl.uniform_discr([0, -1], [1, 1], (4, 5), dtype=dtype,
                                   impl=impl)
         res_space = odl.uniform_discr([0, -1.4], [1.5, 1.4], (6, 7),

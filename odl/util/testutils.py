@@ -18,6 +18,8 @@ from contextlib import contextmanager
 from time import time
 
 import numpy as np
+from odl.util.npy_compat import AVOID_UNNECESSARY_COPY
+
 from future.moves.itertools import zip_longest
 
 from odl.util.utility import is_string, run_from_ipython
@@ -365,7 +367,7 @@ def noise_array(space):
         else:
             raise ValueError('bad dtype {}'.format(space.dtype))
 
-        return arr.astype(space.dtype, copy=False)
+        return arr.astype(space.dtype, copy=AVOID_UNNECESSARY_COPY)
 
 
 def noise_element(space):

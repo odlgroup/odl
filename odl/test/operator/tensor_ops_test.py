@@ -29,9 +29,9 @@ matrix_dtype = simple_fixture(
 @pytest.fixture(scope='module')
 def matrix(matrix_dtype):
     dtype = np.dtype(matrix_dtype)
-    if np.issubsctype(dtype, np.floating):
+    if np.issubdtype(dtype, np.floating):
         return np.ones((3, 4), dtype=dtype)
-    elif np.issubsctype(dtype, np.complexfloating):
+    elif np.issubdtype(dtype, np.complexfloating):
         return np.ones((3, 4), dtype=dtype) * (1 + 1j)
     else:
         assert 0

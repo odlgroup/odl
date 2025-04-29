@@ -12,6 +12,8 @@ from __future__ import absolute_import, division, print_function
 
 import numpy as np
 
+from odl.util.npy_compat import AVOID_UNNECESSARY_COPY
+
 from odl.discr import (
     DiscretizedSpace, uniform_discr_frompartition, uniform_grid,
     uniform_partition_fromgrid)
@@ -342,7 +344,7 @@ def dft_preprocess_data(arr, shift=True, axes=None, sign='-', out=None):
             factor = np.arange(length, dtype=out.dtype)
             factor *= -imag * np.pi * (1 - 1.0 / length)
             np.exp(factor, out=factor)
-        return factor.astype(out.dtype, copy=False)
+        return factor.astype(out.dtype, copy=AVOID_UNNECESSARY_COPY)
 
     onedim_arrs = []
     for axis, shift in zip(axes, shift_list):
@@ -540,7 +542,7 @@ def dft_postprocess_data(arr, real_grid, recip_grid, shift, axes,
         else:
             onedim_arr /= interp_kernel
 
-        onedim_arrs.append(onedim_arr.astype(out.dtype, copy=False))
+        onedim_arrs.append(onedim_arr.astype(out.dtype, copy=AVOID_UNNECESSARY_COPY))
 
     fast_1d_tensor_mult(out, onedim_arrs, axes=axes, out=out)
     return out

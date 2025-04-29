@@ -456,12 +456,15 @@ def resize_array(arr, newshp, offset=None, pad_mode='constant', pad_const=0,
         raise ValueError("`pad_mode` '{}' not understood".format(pad_mode_in))
 
     if (pad_mode == 'constant' and
-        not np.can_cast(pad_const, out.dtype) and
         any(n_new > n_orig
             for n_orig, n_new in zip(arr.shape, out.shape))):
-        raise ValueError('`pad_const` {} cannot be safely cast to the data '
-                         'type {} of the output array'
-                         ''.format(pad_const, out.dtype))
+        try:
+            pad_const_scl = np.array([pad_const], out.dtype)
+            assert(pad_const_scl == np.array([pad_const]))
+        except Exception as e:
+            raise ValueError('`pad_const` {} cannot be safely cast to the data '
+                             'type {} of the output array'
+                             ''.format(pad_const, out.dtype))
 
     # Handle direction
     direction, direction_in = str(direction).lower(), direction

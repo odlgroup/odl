@@ -16,6 +16,7 @@ from multiprocessing import Lock
 import numpy as np
 from packaging.version import parse as parse_version
 
+from odl.util.npy_compat import AVOID_UNNECESSARY_COPY
 from odl.discr import DiscretizedSpace
 from odl.tomo.backends.astra_setup import (
     ASTRA_VERSION, astra_algorithm, astra_data, astra_projection_geometry,
@@ -152,7 +153,7 @@ class AstraCudaImpl:
             datatype='volume',
             ndim=self.vol_space.ndim,
             data=self.vol_array,
-            allow_copy=False,
+            allow_copy=AVOID_UNNECESSARY_COPY,
         )
 
         proj_type = 'cuda' if proj_ndim == 2 else 'cuda3d'
@@ -165,7 +166,7 @@ class AstraCudaImpl:
             datatype='projection',
             ndim=proj_ndim,
             data=self.proj_array,
-            allow_copy=False,
+            allow_copy=AVOID_UNNECESSARY_COPY,
         )
 
         # Create algorithm
