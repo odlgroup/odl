@@ -12,7 +12,23 @@ scanner:
 
 pycodestyle:
     show-source: True
+    max-line-length: 90 # Default is 80, but a little bit more is hardly a
+                        # problem on any modern device and can aid readability
+                        # by avoiding splits in self-contained lines.
+
     ignore:  # Errors and warnings to ignore
+
+        - E126 # Limits split-line continuations to be indented only by 4 spaces.
+               # This is not required by PEP8 and is often counterproductive for
+               # readability, particularly when the following line is indented
+               # to the same level and thus does not stand out as a new statement.
+
+        - E225 # Whitespace around all infix operators. PEP8 requires only
+               # that the whitespace should be the same on both sides of the
+               # operator, but often it is more compact and readable to just
+               # not have whitespace at all, particularly when writing
+               # something like a*b + c.
+
         - E402
         - E741
         - W503
