@@ -10,9 +10,11 @@
 
 from __future__ import absolute_import, division, print_function
 
+from typing import List
+
 import numpy as np
 
-from odl.discr import uniform_partition
+from odl.discr import uniform_partition, RectPartition
 from odl.tomo.geometry.detector import (
     CircularDetector, CylindricalDetector, Flat1dDetector, Flat2dDetector,
     SphericalDetector)
@@ -716,17 +718,24 @@ class ConeBeamGeometry(DivergentBeamGeometry, AxisOrientedGeometry):
     """Cone beam geometry with circular/helical source curve.
 
     The source moves along a spiral oriented along a fixed ``axis``, with
-    radius ``src_radius`` in the azimuthal plane and a given ``pitch``.
+    radius ``src_radius`` in the azimuthal plane and a given 
+    ``translational_motion``.
     The detector reference point is opposite to the source, i.e. in
     the point at distance ``src_rad + det_rad`` on the line in the
     azimuthal plane through the source point and ``axis``.
+    Note: there is no ``pitch`` parameter provided. Instead, the 
+    ``source_positions`` array must be provided.
 
-    The motion parameter is the 1d rotation angle parameterizing source
-    and detector positions simultaneously.
+    The motion parameters are:
+       • the 1d rotation angle parameterizing source and detector 
+       angles simultaneously.
+       • the float/1d translation parametrizing both the source and detector 
+       positions.
 
-    In the standard configuration, the rotation axis is ``(0, 0, 1)``,
-    the initial source-to-detector vector is ``(0, 1, 0)``, and the
-    initial detector axes are ``[(1, 0, 0), (0, 0, 1)]``.
+    In the standard configuration, 
+        • the rotation axis is ``(0, 0, 1)``
+        • the initial source-to-detector vector is ``(0, 1, 0)``
+        • the initial detector axes are ``[(1, 0, 0), (0, 0, 1)]``
 
     For details, check `the online docs
     <https://odlgroup.github.io/odl/guide/geometry_guide.html>`_.
@@ -736,9 +745,18 @@ class ConeBeamGeometry(DivergentBeamGeometry, AxisOrientedGeometry):
                            src_to_det_init=(0, 1, 0),
                            det_axes_init=((1, 0, 0), (0, 0, 1)))
 
-    def __init__(self, apart, dpart, src_radius, det_radius,
-                 det_curvature_radius=None, pitch=0, axis=(0, 0, 1),
-                 src_shift_func=None, det_shift_func=None, **kwargs):
+    def __init__(
+            self, 
+            apart : RectPartition, 
+            dpart : RectPartition, 
+            src_radius : float, 
+            det_radius : float,
+            translational_motion : float | np.ndarray = 0.0,                  
+            det_curvature_radius : float =None, 
+            axis=(0, 0, 1),
+            src_shift_func=None, 
+            det_shift_func=None, 
+            **kwargs):
         """Initialize a new instance.
 
         Parameters
@@ -758,11 +776,16 @@ class ConeBeamGeometry(DivergentBeamGeometry, AxisOrientedGeometry):
             If ``(r, None)`` or ``(r, float('inf'))``, a cylindrical
             detector is used.
             If ``(r1, r2)``, a spherical detector is used.
-        pitch : float, optional
-            Constant distance along ``axis`` that a point on the helix
+        translational_motion : float | np.ndarray, optional
+            Motion of the source/detector along ``axis``.
+            If of ``float`` type, the ``translational motion`` is the ``pitch``, 
+            i.e the constant distance along ``axis`` that a point on the helix 
             traverses when increasing the angle parameter by ``2 * pi``.
-            The default case ``pitch=0`` results in a circular cone
+            The default case ``pitch=0.0`` results in a circular cone
             beam geometry.
+            If of ``np.ndarray``, the ``translational_motion``
+            is expected to have the same number of elements as the ``apart`` and
+            represents all the source/detector positions directly.
         axis : `array-like`, shape ``(3,)``, optional
             Vector defining the fixed rotation axis of this geometry.
         src_shift_func : callable, optional
@@ -977,7 +1000,24 @@ class ConeBeamGeometry(DivergentBeamGeometry, AxisOrientedGeometry):
 
         # Get stuff out of kwargs, otherwise upstream code complains
         # about unknown parameters (rightly so)
-        self.__pitch = float(pitch)
+        if isinstance(translational_motion, int):
+            self.__translational_motion = float(translational_motion)
+            self.__pitch = translational_motion
+        elif isinstance(translational_motion, float):
+            self.__translational_motion = translational_motion
+            self.__pitch = translational_motion
+        elif isinstance(translational_motion, np.ndarray):
+            assert len(translational_motion) == apart.size, 'If providing'\
+            'the source/detector positions directly, the size of the angular' \
+            f'partition and the translational_motion must match.' \
+            f'Got {apart.size} and {len(translational_motion)}.'
+            self.__translational_motion = translational_motion
+            self.__pitch = None
+        else:
+            raise TypeError(
+                'The translational_motion must be a int, a float or a np.ndarray'
+            )
+
         self.__offset_along_axis = float(kwargs.pop('offset_along_axis', 0))
         self.__src_radius = float(src_radius)
 
@@ -1042,7 +1082,7 @@ class ConeBeamGeometry(DivergentBeamGeometry, AxisOrientedGeometry):
 
     @classmethod
     def frommatrix(cls, apart, dpart, src_radius, det_radius, init_matrix,
-                   det_curvature_radius=None, pitch=0, **kwargs):
+                   det_curvature_radius=None, translational_motion=0, **kwargs):
         """Create an instance of `ConeBeamGeometry` using a matrix.
 
         This alternative constructor uses a matrix to rotate and
@@ -1072,11 +1112,16 @@ class ConeBeamGeometry(DivergentBeamGeometry, AxisOrientedGeometry):
             If ``(r, None)`` or ``(r, float('inf'))``, a cylindrical
             detector is used.
             If ``(r1, r2)``, a spherical detector is used.
-        pitch : float, optional
-            Constant distance along the rotation axis that a point on the
-            helix traverses when increasing the angle parameter by
-            ``2 * pi``. The default case ``pitch=0`` results in a circular
-            cone beam geometry.
+        translational_motion : float | np.ndarray, optional
+            Motion of the source/detector along ``axis``.
+            If of ``float`` type, the ``translational motion`` is the ``pitch``, 
+            i.e the constant distance along ``axis`` that a point on the helix 
+            traverses when increasing the angle parameter by ``2 * pi``.
+            The default case ``pitch=0.0`` results in a circular cone
+            beam geometry.
+            If of ``np.ndarray``, the ``translational_motion``
+            is expected to have the same number of elements as the ``apart`` and
+            represents all the source/detector positions directly.
         kwargs :
             Further keyword arguments passed to the class constructor.
 
@@ -1149,7 +1194,7 @@ class ConeBeamGeometry(DivergentBeamGeometry, AxisOrientedGeometry):
 
         return cls(apart, dpart, src_radius, det_radius,
                    det_curvature_radius=det_curvature_radius,
-                   pitch=pitch,
+                   translational_motion=translational_motion,
                    axis=axis,
                    src_to_det_init=src_to_det,
                    det_axes_init=[det_axis_0, det_axis_1],
@@ -1174,6 +1219,11 @@ class ConeBeamGeometry(DivergentBeamGeometry, AxisOrientedGeometry):
     def pitch(self):
         """Constant vertical distance traversed in a full rotation."""
         return self.__pitch
+        
+    @property
+    def translational_motion(self):
+        """Translational motion of the source/detector"""
+        return self.__translational_motion
 
     @property
     def src_to_det_init(self):
@@ -1334,21 +1384,25 @@ class ConeBeamGeometry(DivergentBeamGeometry, AxisOrientedGeometry):
         circle_component = np.einsum('...ij,...j->...i',
                                      rot_matrix, center_to_det_init)
 
-        # Increment along the rotation axis according to pitch and
-        # offset_along_axis
-        # `shift_along_axis` has shape angles.shape
-        shift_along_axis = (self.offset_along_axis
-                            + self.pitch * angle / (2 * np.pi)
-                            + det_shifts[:, 2])
-        # Create outer product of `shift_along_axis` and `axis`, resulting
-        # in shape (a, ndim)
-        pitch_component = np.multiply.outer(shift_along_axis, self.axis)
+        if self.pitch:
+            # Increment along the rotation axis according to pitch and
+            # offset_along_axis
+            # `shift_along_axis` has shape angles.shape
+            shift_along_axis = (self.offset_along_axis
+                                + self.pitch * angle / (2 * np.pi)
+                                + det_shifts[:, 2])
+
+            # Create outer product of `shift_along_axis` and `axis`, resulting
+            # in shape (a, ndim)
+            translational_component = np.multiply.outer(shift_along_axis, self.axis)
+        else:
+            translational_component = self.translational_motion
 
         # Broadcast translation along extra dimensions
         transl_slc = (None,) * extra_dims + (slice(None),)
         refpt = (self.translation[transl_slc]
                  + circle_component
-                 + pitch_component)
+                 + translational_component)
         if squeeze_out:
             refpt = refpt.squeeze()
 
@@ -1452,21 +1506,26 @@ class ConeBeamGeometry(DivergentBeamGeometry, AxisOrientedGeometry):
         circle_component = np.einsum('...ij,...j->...i',
                                      rot_matrix, center_to_src_init)
 
-        # Increment along the rotation axis according to pitch and
-        # offset_along_axis
-        # `shift_along_axis` has shape angles.shape
-        shift_along_axis = (self.offset_along_axis
-                            + self.pitch * angle / (2 * np.pi)
-                            + src_shifts[:, 2])
+        if self.pitch:
+            # Increment along the rotation axis according to pitch and
+            # offset_along_axis
+            # `shift_along_axis` has shape angles.shape
+            shift_along_axis = (self.offset_along_axis
+                                + self.pitch * angle / (2 * np.pi)
+                                + src_shifts[:, 2])
+
+        else:
+            shift_along_axis = self.translational_motion
+        
         # Create outer product of `shift_along_axis` and `axis`, resulting
         # in shape (a, ndim)
-        pitch_component = np.multiply.outer(shift_along_axis, self.axis)
-
+        translational_component = np.multiply.outer(shift_along_axis, self.axis)
+            
         # Broadcast translation along extra dimensions
         transl_slc = (None,) * extra_dims + (slice(None),)
         refpt = (self.translation[transl_slc]
                  + circle_component
-                 + pitch_component)
+                 + translational_component)
         if squeeze_out:
             refpt = refpt.squeeze()
 
@@ -1551,7 +1610,6 @@ class ConeBeamGeometry(DivergentBeamGeometry, AxisOrientedGeometry):
     # Manually override the abstract method in `Geometry` since it's found
     # first
     rotation_matrix = AxisOrientedGeometry.rotation_matrix
-
 
 def cone_beam_geometry(space, src_radius, det_radius, num_angles=None,
                        short_scan=False, det_shape=None):
@@ -1922,7 +1980,7 @@ def helical_geometry(space, src_radius, det_radius, num_turns,
     return ConeBeamGeometry(angle_partition, det_partition,
                             src_radius, det_radius,
                             offset_along_axis=offset_along_axis,
-                            pitch=pitch)
+                            translational_motion=pitch)
 
 
 if __name__ == '__main__':
