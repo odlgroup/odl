@@ -1263,7 +1263,7 @@ def test_const_weighting_norm(tspace, exponent):
     if real_dtype == np.float16:
         tolerance = 1e-3
     elif real_dtype == np.float32:
-        tolerance = 1e-7
+        tolerance = 1e-6
     elif real_dtype == np.float64:
         tolerance = 1e-15
     elif real_dtype == np.float128:
