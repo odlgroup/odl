@@ -50,10 +50,20 @@ __all__ = (
     'unique',
 )
 
+try:
+    SCTYPES = np.core.sctypes
+    assert isinstance(SCTYPES, dict)
+except AttributeError:
+    # As of 29/04/25, we are aware that the module 
+    # np.core might be removed in future versions. If that happens, the
+    # npy types will have to be queried in a different way. We advise to
+    # install the npy version listed in the odl/conda/meta.yaml
+    raise ImportError('You are using a numpy version that was not tested with ' \
+    'ODL. Please install the npy version listed in the odl/conda/meta.yaml')
 
 REPR_PRECISION = 4  # For printing scalars and array entries
 TYPE_MAP_R2C = {np.dtype(dtype): np.result_type(dtype, 1j)
-                for dtype in np.core.sctypes['float']}
+                for dtype in SCTYPES['float']}
 
 TYPE_MAP_C2R = {cdt: np.empty(0, dtype=cdt).real.dtype
                 for rdt, cdt in TYPE_MAP_R2C.items()}
