@@ -216,7 +216,10 @@ def test_resizing_op_inverse(padding, odl_tspace_impl):
         if pad_mode == 'order1' and (
                 np.issubdtype(dtype, np.unsignedinteger)
                 or np.issubdtype(dtype, np.timedelta64()) ):
-            # Linear continuation can create negative values, exempt from test.
+            # Extrapolating a trend might lead to negative values, which  
+            # will raise an error for unsigned integers. For timedeltas, 
+            # it would involve a multiplication of two times which was 
+            # allowed by numpy 1 but is not allowed in numpy 2.
             continue
 
         space = odl.uniform_discr([0, -1], [1, 1], (4, 5), dtype=dtype,
