@@ -18,6 +18,7 @@ from odl.discr.discr_utils import point_collocation, sampling_function
 from odl.discr.partition import (
     RectPartition, uniform_partition, uniform_partition_fromintv)
 from odl.set import IntervalProd, RealNumbers
+from odl.set.space import SupportedNumOperationParadigms, NumOperationParadigmSupport
 from odl.space import ProductSpace
 from odl.space.base_tensors import Tensor, TensorSpace
 from odl.space.entry_points import tensor_space_impl
@@ -100,6 +101,12 @@ class DiscretizedSpace(TensorSpace):
     def element_type(self):
         """`DiscretizedSpaceElement`"""
         return DiscretizedSpaceElement
+
+    @property
+    def supported_num_operation_paradigms(self) -> NumOperationParadigmSupport:
+        """In-place vs out-of-place is not of much concern for the discretization
+        and only depends on the underlying arrays."""
+        return self.tspace.supported_num_operation_paradigms
 
     # --- Constructor args
 
@@ -510,15 +517,21 @@ class DiscretizedSpace(TensorSpace):
 
     def _lincomb(self, a, x1, b, x2, out):
         """Raw linear combination."""
-        self.tspace._lincomb(a, x1.tensor, b, x2.tensor, out.tensor)
+        return self.element(
+            self.tspace._lincomb(a, x1.tensor, b, x2.tensor,
+                                 out.tensor if out is not None else None))
 
     def _multiply(self, x1, x2, out):
         """Raw pointwise multiplication of two elements."""
-        self.tspace._multiply(x1.tensor, x2.tensor, out.tensor)
+        return self.element(
+                self.tspace._multiply(x1.tensor, x2.tensor,
+                                      out.tensor if out is not None else None))
 
     def _divide(self, x1, x2, out):
         """Raw pointwise multiplication of two elements."""
-        self.tspace._divide(x1.tensor, x2.tensor, out.tensor)
+        return self.element(
+                self.tspace._divide(x1.tensor, x2.tensor,
+                                    out.tensor if out is not None else None))
 
     # The inherited methods by default use a weighting by a constant
     # (the grid cell size). In dimensions where the partitioned set contains
@@ -723,6 +736,11 @@ class DiscretizedSpaceElement(Tensor):
             Version of this element with given data type.
         """
         return self.space.astype(dtype).element(self.tensor.astype(dtype))
+
+    def _assign(self, other, avoid_deep_copy):
+        """Assign the values of ``other``, which is assumed to be in the
+        same discretized space, to ``self``."""
+        self.__tensor.assign(other.tensor, avoid_deep_copy=avoid_deep_copy)
 
     def __eq__(self, other):
         """Return ``self == other``.

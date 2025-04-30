@@ -20,7 +20,8 @@ import numpy as np
 from odl.util.npy_compat import AVOID_UNNECESSARY_COPY
 
 from odl.set.sets import ComplexNumbers, RealNumbers
-from odl.set.space import LinearSpaceTypeError
+from odl.set.space import (LinearSpaceTypeError,
+        SupportedNumOperationParadigms, NumOperationParadigmSupport)
 from odl.space.base_tensors import Tensor, TensorSpace
 from odl.space.weighting import (
     ArrayWeighting, ConstWeighting, CustomDist, CustomInner, CustomNorm,
@@ -287,6 +288,8 @@ class NumpyTensorSpace(TensorSpace):
             # No weighting, i.e., weighting with constant 1.0
             self.__weighting = NumpyTensorSpaceConstWeighting(1.0, exponent)
 
+        self.__use_in_place_ops = kwargs.pop('use_in_place_ops', True)
+
         # Make sure there are no leftover kwargs
         if kwargs:
             raise TypeError('got unknown keyword arguments {}'.format(kwargs))
@@ -296,6 +299,21 @@ class NumpyTensorSpace(TensorSpace):
         """Name of the implementation back-end: ``'numpy'``."""
         return 'numpy'
 
+    @property
+    def supported_num_operation_paradigms(self) -> NumOperationParadigmSupport:
+        """NumPy has full support for in-place operation, which is usually
+        advantageous to reduce memory allocations.
+        This can be deactivated, mostly for testing purposes, by setting
+        `use_in_place_ops = False` when constructing the space."""
+        if self.__use_in_place_ops:
+            return SupportedNumOperationParadigms(
+                    in_place = NumOperationParadigmSupport.PREFERRED,
+                    out_of_place = NumOperationParadigmSupport.SUPPORTED)
+        else:
+            return SupportedNumOperationParadigms(
+                    in_place = NumOperationParadigmSupport.NOT_SUPPORTED,
+                    out_of_place = NumOperationParadigmSupport.PREFERRED)
+    
     @property
     def default_order(self):
         """Default storage order for new elements in this space: ``'C'``."""
@@ -546,7 +564,12 @@ class NumpyTensorSpace(TensorSpace):
         >>> result is out
         True
         """
-        _lincomb_impl(a, x1, b, x2, out)
+        if self.__use_in_place_ops:
+            assert(out is not None)
+            _lincomb_impl(a, x1, b, x2, out)
+        else:
+            assert(out is None)
+            return self.element(a * x1.data + b * x2.data)
 
     def _dist(self, x1, x2):
         """Return the distance between ``x1`` and ``x2``.
@@ -689,7 +712,10 @@ class NumpyTensorSpace(TensorSpace):
         >>> result is out
         True
         """
-        np.multiply(x1.data, x2.data, out=out.data)
+        if out is None:
+            return np.multiply(x1.data, x2.data)
+        else:
+            np.multiply(x1.data, x2.data, out=out.data)
 
     def _divide(self, x1, x2, out):
         """Compute the entry-wise quotient ``x1 / x2``.
@@ -718,7 +744,10 @@ class NumpyTensorSpace(TensorSpace):
         >>> result is out
         True
         """
-        np.divide(x1.data, x2.data, out=out.data)
+        if out is None:
+            return np.divide(x1.data, x2.data)
+        else:
+            np.divide(x1.data, x2.data, out=out.data)
 
     def __eq__(self, other):
         """Return ``self == other``.
@@ -864,6 +893,14 @@ class NumpyTensor(Tensor):
     def data(self):
         """The `numpy.ndarray` representing the data of ``self``."""
         return self.__data
+
+    def _assign(self, other, avoid_deep_copy):
+        """Assign the values of ``other``, which is assumed to be in the
+        same space, to ``self``."""
+        if avoid_deep_copy:
+            self.__data = other.__data
+        else:
+            self.__data[:] = other.__data
 
     def asarray(self, out=None):
         """Extract the data of this array as a ``numpy.ndarray``.
