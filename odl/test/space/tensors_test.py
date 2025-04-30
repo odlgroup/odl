@@ -22,6 +22,10 @@ from odl.space.npy_tensors import (
     NumpyTensor, NumpyTensorSpace, NumpyTensorSpaceArrayWeighting,
     NumpyTensorSpaceConstWeighting, NumpyTensorSpaceCustomDist,
     NumpyTensorSpaceCustomInner, NumpyTensorSpaceCustomNorm)
+from odl.space.pytorch_tensors import (
+    PytorchTensor, PytorchTensorSpace, PytorchTensorSpaceArrayWeighting,
+    PytorchTensorSpaceConstWeighting, PytorchTensorSpaceCustomDist,
+    PytorchTensorSpaceCustomInner, PytorchTensorSpaceCustomNorm)
 from odl.util.testutils import (
     all_almost_equal, all_equal, noise_array, noise_element, noise_elements,
     simple_fixture)
@@ -70,6 +74,19 @@ def _weighting_cls(impl, kind):
             return NumpyTensorSpaceCustomNorm
         elif kind == 'dist':
             return NumpyTensorSpaceCustomDist
+        else:
+            assert False
+    elif impl == 'pytorch':
+        if kind == 'array':
+            return PytorchTensorSpaceArrayWeighting
+        elif kind == 'const':
+            return PytorchTensorSpaceConstWeighting
+        elif kind == 'inner':
+            return PytorchTensorSpaceCustomInner
+        elif kind == 'norm':
+            return PytorchTensorSpaceCustomNorm
+        elif kind == 'dist':
+            return PytorchTensorSpaceCustomDist
         else:
             assert False
     else:
