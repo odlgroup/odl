@@ -403,6 +403,9 @@ class ProductSpace(LinearSpace):
         ip_prefers = 0
         oop_supported = True
         oop_prefers = 0
+
+        # Check for all of the subspaces whether they support each paradigm,
+        # and count how many of them prefer each.
         for parad in paradigms:
             if parad.in_place == NumOperationParadigmSupport.NOT_SUPPORTED:
                 ip_supported = False
@@ -413,6 +416,8 @@ class ProductSpace(LinearSpace):
             elif parad.out_of_place == NumOperationParadigmSupport.PREFERRED:
                 oop_prefers += 1
 
+        # Support in-place updates if all subspaces support them.
+        # Prefer them if a majority of the subspaces do.
         if ip_supported:
             if ip_prefers > oop_prefers:
                 in_place_support = NumOperationParadigmSupport.PREFERRED
@@ -421,6 +426,8 @@ class ProductSpace(LinearSpace):
         else:
             in_place_support = NumOperationParadigmSupport.NOT_SUPPORTED
 
+        # Support out-of-place calculations if all subspaces support them.
+        # Prefer them if a majority of the subspaces do.
         if oop_supported:
             if oop_prefers > ip_prefers:
                 oo_place_support = NumOperationParadigmSupport.PREFERRED
