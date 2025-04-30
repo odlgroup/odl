@@ -16,6 +16,7 @@ from collections import OrderedDict
 from contextlib import contextmanager
 from itertools import product
 from abc import ABC
+from typing import Optional
 
 import numpy as np
 import torch
@@ -607,7 +608,7 @@ class ArrayOnBackendManager(ABC):
         raise NotImplementedError()
     def compatible_ones(self, shape, **kwargs):
         raise NotImplementedError()
-    def select_dtype(self, arr, dtype):
+    def select_dtype(self, arr, dtype, copy: Optional[bool]):
         raise NotImplementedError()
     def make_copy(self, arr):
         raise NotImplementedError()
@@ -631,10 +632,15 @@ class ArrayOnPytorchManager(ABC):
         return torch.zeros(shape, device = self._device, **kwargs)
     def compatible_ones(self, shape, **kwargs):
         return torch.ones(shape, device = self._device, **kwargs)
-    def select_dtype(self, arr, dtype):
+    def select_dtype(self, arr, dtype, copy):
         if dtype in _CORRESPONDING_PYTORCH_DTYPES:
             dtype = _CORRESPONDING_PYTORCH_DTYPES[dtype]
-        return arr.type(dtype)
+        # PyTorch (as of version 2.7) only supports the values False and True
+        # for the `copy` argument, the former being a non-binding request to
+        # avoid a copy if it is not necessary.
+        if copy==AVOID_UNNECESSARY_COPY:
+            copy = False
+        return arr.type(dtype, copy=copy)
     def make_copy(self, arr):
         return arr.clone().detach()
 
@@ -647,8 +653,8 @@ class ArrayOnNumPyManager(ABC):
         return np.zeros(shape, **kwargs)
     def compatible_ones(self, shape, **kwargs):
         return np.ones(shape, **kwargs)
-    def select_dtype(self, arr, dtype):
-        return arr.astype(dtype, copy=False)
+    def select_dtype(self, arr, dtype, copy):
+        return arr.astype(dtype, copy=copy)
     def make_copy(self, arr):
         return arr.copy()
 
