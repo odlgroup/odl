@@ -1,7 +1,8 @@
 """Create a convolution operator by wrapping a library."""
 
 import odl
-import scipy.signal
+import numpy as np
+import torch
 
 
 class Convolution(odl.Operator):
@@ -10,7 +11,7 @@ class Convolution(odl.Operator):
     The operator inherits from ``odl.Operator`` to be able to be used with ODL.
     """
 
-    def __init__(self, kernel):
+    def __init__(self, kernel, domain, range):
         """Initialize a convolution operator with a known kernel."""
 
         # Store the kernel
@@ -20,11 +21,16 @@ class Convolution(odl.Operator):
         # This sets properties such as domain and range and allows the other
         # operator convenience functions to work.
         super(Convolution, self).__init__(
-            domain=kernel.space, range=kernel.space, linear=True)
+            domain=domain, range=range, linear=True)
 
     def _call(self, x):
-        """Implement calling the operator by calling scipy."""
-        return scipy.signal.fftconvolve(self.kernel, x, mode='same')
+        """Implement calling the operator by calling PyTorch."""
+        return self.range.element(torch.conv2d( input=x.data.unsqueeze(0)
+                                              , weight=self.kernel.unsqueeze(0).unsqueeze(0)
+                                              , stride=(1,1)
+                                              , padding="same"
+                                              ).squeeze(0)
+                                 )
 
     @property
     def adjoint(self):
@@ -34,26 +40,26 @@ class Convolution(odl.Operator):
         with a kernel with flipped axes. In particular, if the kernel is
         symmetric the operator is self-adjoint.
         """
-        return Convolution(self.kernel[::-1, ::-1])
+        return Convolution( torch.flip(self.kernel, dims=(0,1))
+                          , domain=self.range, range=self.domain )
 
 
 # Define the space on which the problem should be solved
 # Here the square [-1, 1] x [-1, 1] discretized on a 100x100 grid
-space = odl.uniform_discr([-1, -1], [1, 1], [100, 100])
+space = odl.uniform_discr([-1, -1], [1, 1], [100, 100], impl='pytorch', dtype=np.float32)
 
 # Convolution kernel, a small centered rectangle
-kernel = odl.phantom.cuboid(space, [-0.05, -0.05], [0.05, 0.05])
+kernel = torch.ones((5,5))
 
 # Create convolution operator
-A = Convolution(kernel)
+A = Convolution(kernel, domain=space, range=space)
 
 # Create phantom (the "unknown" solution)
 phantom = odl.phantom.shepp_logan(space, modified=True)
 
 # Apply convolution to phantom to create data
-g = A(phantom)
+g = A.adjoint(phantom)
 
 # Display the results using the show method
-kernel.show('kernel')
 phantom.show('phantom')
 g.show('convolved phantom', force_show=True)

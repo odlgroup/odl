@@ -14,9 +14,7 @@ import numpy as np
 import torch
 import scipy.misc
 import odl
-
-impl = 'numpy'
-# impl = 'pytorch'
+import cProfile
 
 # Read test image: use only every second pixel, convert integer to float,
 # and rotate to get the image upright
@@ -27,16 +25,23 @@ shape = image.shape
 image /= image.max()
 
 # Discretized spaces
-space = odl.uniform_discr([0, 0], shape, shape, impl=impl)
+space = odl.uniform_discr([0, 0], shape, shape, impl='pytorch')
 
 # Original image
 orig = space.element(image.copy())
 
+orig.data.requires_grad = False
+
 # Add noise
 noisy = space.element(image) + 0.1 * odl.phantom.white_noise(orig.space)
 
+noisy.data.requires_grad = False
+
 # Gradient operator
 gradient = odl.Gradient(space)
+
+# grad_xmp = gradient(orig)
+# grad_xmp.show(title = "Grad-op applied to original")
 
 # Matrix of operators
 op = odl.BroadcastOperator(odl.IdentityOperator(space), gradient)
@@ -58,7 +63,9 @@ f = odl.solvers.IndicatorNonnegativity(op.domain)
 # --- Select solver parameters and solve using PDHG --- #
 
 # Estimated operator norm, add 10 percent to ensure ||K||_2^2 * sigma * tau < 1
-op_norm = 1.1 * odl.power_method_opnorm(op, xstart=noisy)
+op_norm = 1.1 * odl.power_method_opnorm(op, xstart=noisy, maxiter=10)
+          # 3.2833764101732785
+print(f"{op_norm=}")
 
 niter = 200  # Number of iterations
 tau = 1.0 / op_norm  # Step size for the primal variable
@@ -71,9 +78,18 @@ callback = (odl.solvers.CallbackPrintIteration() &
 # Starting point
 x = op.domain.zero()
 
+x.data.requires_grad = False
+
+print("Go solve...")
+
 # Run algorithm (and display intermediates)
-odl.solvers.pdhg(x, f, g, op, niter=niter, tau=tau, sigma=sigma,
+def do_running():
+  with torch.no_grad():
+    odl.solvers.pdhg(x, f, g, op, niter=niter, tau=tau, sigma=sigma,
                  callback=callback)
+
+do_running()
+# cProfile.run('do_running()')
 
 # Display images
 orig.show(title='Original Image')

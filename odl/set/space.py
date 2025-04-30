@@ -506,6 +506,18 @@ class LinearSpace(Set):
 
         return ProductSpace(self, other)
 
+    def is_suitable_scalar(self, s):
+        """Determine whether `s` has a type that can be scalar-multiplied with
+        elements of this space.
+        """
+        raise NotImplementedError(f'Abstract method not implemented for {type(self)}')
+
+    def as_suitable_scalar(self, s):
+        """Try to convert `s` to a type that can be scalar-multiplied with
+        elements of this space.
+        """
+        raise NotImplementedError(f'Abstract method not implemented for {type(self)}')
+
     def __str__(self):
         """Return ``str(self)``."""
         return repr(self)

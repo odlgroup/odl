@@ -11,6 +11,7 @@
 from __future__ import absolute_import, division, print_function
 
 import numpy as np
+import torch
 
 from odl.util.npy_compat import AVOID_UNNECESSARY_COPY
 
@@ -26,15 +27,32 @@ from odl.util import (
     complex_dtype, conj_exponent, dtype_repr, is_complex_floating_dtype,
     is_real_dtype, normalized_axes_tuple, normalized_scalar_param_list)
 
+from typing import Optional
+
 __all__ = ('DiscreteFourierTransform', 'DiscreteFourierTransformInverse',
            'FourierTransform', 'FourierTransformInverse')
 
 
-_SUPPORTED_FOURIER_IMPLS = ('numpy',)
-_DEFAULT_FOURIER_IMPL = 'numpy'
+_SUPPORTED_FOURIER_IMPLS = {'numpy': ('numpy',), 'pytorch': ('pytorch',)}
+_DEFAULT_FOURIER_IMPL = {'numpy': 'numpy', 'pytorch': 'pytorch'}
 if PYFFTW_AVAILABLE:
-    _SUPPORTED_FOURIER_IMPLS += ('pyfftw',)
-    _DEFAULT_FOURIER_IMPL = 'pyfftw'
+    _SUPPORTED_FOURIER_IMPLS['numpy'] += ('pyfftw',)
+    _DEFAULT_FOURIER_IMPL['numpy'] = 'pyfftw'
+
+
+def _select_fft_impl(impl_suggestion: Optional[str], domain_impl: str):
+    if impl_suggestion is None:
+        impl = _DEFAULT_FOURIER_IMPL.get(domain_impl)
+        if impl is None:
+            raise ValueError("There is no default FFT implementation for"
+                           + " tensors with {domain_impl} implementation.")
+    else:
+        impl = impl_suggestion
+    impl, impl_in = str(impl).lower(), impl
+    if impl not in _SUPPORTED_FOURIER_IMPLS.get(domain_impl):
+        raise ValueError(f"`impl` '{impl_in}' not supported for"
+                           + f" tensors with {domain_impl} implementation.")
+    return impl
 
 
 class DiscreteFourierTransformBase(Operator):
@@ -91,12 +109,7 @@ class DiscreteFourierTransformBase(Operator):
                             ''.format(range))
 
         # Implementation
-        if impl is None:
-            impl = _DEFAULT_FOURIER_IMPL
-        impl, impl_in = str(impl).lower(), impl
-        if impl not in _SUPPORTED_FOURIER_IMPLS:
-            raise ValueError("`impl` '{}' not supported".format(impl_in))
-        self.__impl = impl
+        self.__impl = _select_fft_impl(impl, domain.impl)
 
         # Axes
         if axes is None:
@@ -125,12 +138,13 @@ class DiscreteFourierTransformBase(Operator):
             domain.grid, shift=False, halfcomplex=halfcomplex, axes=axes).shape
 
         if range is None:
-            impl = domain.tspace.impl
+            domain_impl = domain.tspace.impl
 
             shape = np.atleast_1d(ran_shape)
             range = uniform_discr(
-                [0] * len(shape), shape - 1, shape, ran_dtype, impl,
-                nodes_on_bdry=True, exponent=conj_exponent(domain.exponent))
+                [0] * len(shape), shape - 1, shape, ran_dtype,
+                nodes_on_bdry=True, exponent=conj_exponent(domain.exponent),
+                impl=domain.impl)
 
         else:
             if range.shape != ran_shape:
@@ -171,10 +185,15 @@ class DiscreteFourierTransformBase(Operator):
             Call pyfftw backend directly
         """
         # TODO: Implement zero padding
-        if self.impl == 'numpy':
-            out[:] = self._call_numpy(x.asarray())
-        else:
-            out[:] = self._call_pyfftw(x.asarray(), out.asarray(), **kwargs)
+        match self.impl:
+            case 'numpy':
+                out[:] = self._call_numpy(x.asarray())
+            case 'pyfftw':
+                out[:] = self._call_pyfftw(x.asarray(), out.asarray(), **kwargs)
+            case 'pytorch':
+                out[:] = self._call_pytorch(x.data)
+            case _:
+                raise NotImplementedError(self.impl)
 
     @property
     def impl(self):
@@ -233,6 +252,21 @@ class DiscreteFourierTransformBase(Operator):
             Result of the transform
         """
         raise NotImplementedError('abstract method')
+
+    def _call_pytorch(self, x):
+        """Return ``self(x)`` for PyTorch back-end.
+
+        Parameters
+        ----------
+        x : `torch.Tensor`
+            Array representing the function to be transformed
+
+        Returns
+        -------
+        out : `torch.Tensor`
+            Result of the transform
+        """
+        raise NotImplementedError(f'abstract method, not implemented on {type(self)}.')
 
     def _call_pyfftw(self, x, out, **kwargs):
         """Implement ``self(x[, out, **kwargs])`` using pyfftw.
@@ -467,6 +501,25 @@ class DiscreteFourierTransform(DiscreteFourierTransformBase):
                 return (np.prod(np.take(self.domain.shape, self.axes)) *
                         np.fft.ifftn(x, axes=self.axes))
 
+    def _call_pytorch(self, x):
+        """Return ``self(x)`` using PyTorch.
+
+        See Also
+        --------
+        DiscreteFourierTransformBase._call_pytorch
+        """
+        assert isinstance(x, torch.Tensor)
+
+        if self.halfcomplex:
+            return torch.fft.rfftn(x, dim=self.axes)
+        else:
+            if self.sign == '-':
+                return torch.fft.fftn(x, dim=self.axes)
+            else:
+                # Need to undo IFFT scaling
+                return (np.prod(np.take(self.domain.shape, self.axes))
+                       * torch.fft.ifftn(x, dim=self.axes))
+
     def _call_pyfftw(self, x, out, **kwargs):
         """Implement ``self(x[, out, **kwargs])`` using pyfftw.
 
@@ -623,6 +676,28 @@ class DiscreteFourierTransformInverse(DiscreteFourierTransformBase):
                 return (np.fft.fftn(x, axes=self.axes) /
                         np.prod(np.take(self.domain.shape, self.axes)))
 
+    def _call_pytorch(self, x):
+        """Return ``self(x)`` using PyTorch.
+
+        Parameters
+        ----------
+        x : `torch.Tensor`
+            Input array to be transformed
+
+        Returns
+        -------
+        out : `torch.Tensor`
+            Result of the transform
+        """
+        if self.halfcomplex:
+            return torch.fft.irfftn(x, dim=self.axes)
+        else:
+            if self.sign == '+':
+                return torch.fft.ifftn(x, dim=self.axes)
+            else:
+                return (torch.fft.fftn(x, dim=self.axes)
+                       / np.prod(np.take(self.domain.shape, self.axes)))
+
     def _call_pyfftw(self, x, out, **kwargs):
         """Implement ``self(x[, out, **kwargs])`` using pyfftw.
 
@@ -739,9 +814,12 @@ class FourierTransformBase(Operator):
             is determined from ``domain`` and the other parameters. The
             exponent is chosen to be the conjugate ``p / (p - 1)``,
             which reads as 'inf' for p=1 and 1 for p='inf'.
-        impl : {'numpy', 'pyfftw'}, optional
-            Backend for the FFT implementation. The 'pyfftw' backend
-            is faster but requires the ``pyfftw`` package.
+        impl : {'numpy', 'pyfftw', 'pytorch'}, optional
+            Backend for the FFT implementation. NumPy is slow but always
+            supported. The 'pyfftw' backend is faster but requires the
+            ``pyfftw`` package.
+            'pytorch' requires ``domain`` to be based on PyTorch tensors,
+            in which case this is the fastest option particularly on GPU.
             ``None`` selects the fastest available backend.
         axes : int or sequence of ints, optional
             Dimensions along which to take the transform.
@@ -804,22 +882,13 @@ class FourierTransformBase(Operator):
         if not isinstance(domain, DiscretizedSpace):
             raise TypeError('domain {!r} is not a `DiscretizedSpace` instance'
                             ''.format(domain))
-        if domain.impl != 'numpy':
-            raise NotImplementedError(
-                'Only Numpy-based data spaces are supported, got {}'
-                ''.format(domain.tspace))
 
         # axes
         axes = kwargs.pop('axes', np.arange(domain.ndim))
         self.__axes = normalized_axes_tuple(axes, domain.ndim)
 
         # Implementation
-        if impl is None:
-            impl = _DEFAULT_FOURIER_IMPL
-        impl, impl_in = str(impl).lower(), impl
-        if impl not in _SUPPORTED_FOURIER_IMPLS:
-            raise ValueError("`impl` '{}' not supported".format(impl_in))
-        self.__impl = impl
+        self.__impl = _select_fft_impl(impl, domain.impl)
 
         # Handle half-complex yes/no and shifts
         halfcomplex = kwargs.pop('halfcomplex', True)
@@ -905,11 +974,16 @@ class FourierTransformBase(Operator):
             Call pyfftw backend directly
         """
         # TODO: Implement zero padding
-        if self.impl == 'numpy':
-            out[:] = self._call_numpy(x.asarray())
-        else:
-            # 0-overhead assignment if asarray() does not copy
-            out[:] = self._call_pyfftw(x.asarray(), out.asarray(), **kwargs)
+        match self.impl:
+            case 'numpy':
+                out[:] = self._call_numpy(x.asarray())
+            case 'pyfftw':
+                # 0-overhead assignment if asarray() does not copy
+                out[:] = self._call_pyfftw(x.asarray(), out.asarray(), **kwargs)
+            case 'pytorch':
+                out[:] = self._call_pytorch(x.asarray(), **kwargs)
+            case _:
+                raise NotImplementedError(self.impl)
 
     def _call_numpy(self, x):
         """Return ``self(x)`` for numpy back-end.
@@ -925,6 +999,21 @@ class FourierTransformBase(Operator):
             Result of the transform
         """
         raise NotImplementedError('abstract method')
+
+    def _call_pytorch(self, x):
+        """Return ``self(x)`` for PyTorch back-end.
+
+        Parameters
+        ----------
+        x : `torch.Tensor`
+            Array representing the function to be transformed
+
+        Returns
+        -------
+        out : `torch.Tensor`
+            Result of the transform
+        """
+        raise NotImplementedError(f'abstract method, not implemented on {type(self)}.')
 
     def _call_pyfftw(self, x, out, **kwargs):
         """Implement ``self(x[, out, **kwargs])`` for pyfftw back-end.
@@ -1296,7 +1385,7 @@ class FourierTransform(FourierTransformBase):
         # TODO(kohr-h): Add `interp` to operator or simplify it by not
         # performing interpolation filter
         return dft_postprocess_data(
-            out, real_grid=self.domain.grid, recip_grid=self.range.grid,
+            x, real_grid=self.domain.grid, recip_grid=self.range.grid,
             shift=self.shifts, axes=self.axes, sign=self.sign,
             interp='nearest', op='multiply', out=out)
 
@@ -1336,6 +1425,42 @@ class FourierTransform(FourierTransformBase):
 
         # Post-processing accounting for shift, scaling and interpolation
         self._postprocess(out, out=out)
+        return out
+
+    def _call_pytorch(self, x):
+        """Return ``self(x)`` for PyTorch back-end.
+
+        Parameters
+        ----------
+        x : `torch.Tensor`
+            Array representing the function to be transformed
+
+        Returns
+        -------
+        out : `torch.Tensor`
+            Result of the transform
+        """
+
+        preproc = self._preprocess(x)
+
+        # The actual call to the FFT library
+        if self.halfcomplex:
+            out = torch.fft.rfftn(preproc, dim=self.axes)
+        else:
+            if self.sign == '-':
+                out = torch.fft.fftn(preproc, dim=self.axes)
+            else:
+                out = torch.fft.ifftn(preproc, dim=self.axes)
+                # Numpy's FFT normalizes by 1 / prod(shape[axes]), we
+                # need to undo that
+                # TODO(Justus) select PyTorch normalization mode so this
+                # is unnecessary
+                out *= float(np.prod(np.take(self.domain.shape, self.axes)))
+
+        # Post-processing accounting for shift, scaling and interpolation
+        assert(isinstance(out, torch.Tensor))
+        out = self._postprocess(out, out=out)
+        assert(isinstance(out, torch.Tensor))
         return out
 
     def _call_pyfftw(self, x, out, **kwargs):
@@ -1533,7 +1658,7 @@ class FourierTransformInverse(FourierTransformBase):
         The result is stored in ``out`` if given, otherwise in
         a temporary or a new array.
         """
-        if out is None:
+        if out is None and self.impl!='pytorch':
             if self.range.field == ComplexNumbers():
                 out = self._tmp_r if self._tmp_r is not None else self._tmp_f
             elif self.range.field == RealNumbers() and not self.halfcomplex:
@@ -1575,6 +1700,46 @@ class FourierTransformInverse(FourierTransformBase):
 
         # Post-processing in IFT = pre-processing in FT (in-place)
         self._postprocess(out, out=out)
+        if self.halfcomplex:
+            assert is_real_dtype(out.dtype)
+
+        if self.range.field == RealNumbers():
+            return out.real
+        else:
+            return out
+
+    def _call_pytorch(self, x):
+        """Return ``self(x)`` for numpy back-end.
+
+        Parameters
+        ----------
+        x : `torch.Tensor`
+            Array representing the function to be transformed
+
+        Returns
+        -------
+        out : `torch.Tensor`
+            Result of the transform
+        """
+        # Pre-processing before calculating the DFT
+        preproc = self._preprocess(x)
+
+        # The actual call to the FFT library
+        # Normalization by 1 / prod(shape[axes]) is done by Numpy's FFT if
+        # one of the "i" functions is used. For sign='-' we need to do it
+        # ourselves.
+        if self.halfcomplex:
+            s = tuple(np.asarray(self.range.shape)[list(self.axes)])
+            out = torch.fft.irfftn(preproc, dim=self.axes, s=s)
+        else:
+            if self.sign == '-':
+                out = torch.fft.fftn(preproc, dim=self.axes)
+                out /= np.prod(np.take(self.domain.shape, self.axes))
+            else:
+                out = torch.fft.ifftn(preproc, dim=self.axes)
+
+        # Post-processing in IFT = pre-processing in FT (in-place)
+        out = self._postprocess(out)
         if self.halfcomplex:
             assert is_real_dtype(out.dtype)
 

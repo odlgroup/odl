@@ -251,6 +251,18 @@ class DiscretizedSpace(TensorSpace):
         """
         return self.tspace.available_dtypes()
 
+    def is_suitable_scalar(self, s):
+        """Determine whether `s` has a type that can be scalar-multiplied with
+        elements of this space.
+        """
+        return self.tspace.is_suitable_scalar(s)
+
+    def as_suitable_scalar(self, s):
+        """Try to convert `s` to a type that can be scalar-multiplied with
+        elements of this space.
+        """
+        return self.tspace.as_suitable_scalar(s)
+
     # --- Derived properties
 
     @property
@@ -778,6 +790,10 @@ class DiscretizedSpaceElement(Tensor):
         self.tensor.__ipow__(p)
         return self
 
+    def __rmul__(self, μ):
+        """Implement ``μ * self``."""
+        return self.space.element(μ * self.tensor)
+
     @property
     def real(self):
         """Real part of this element.
@@ -955,6 +971,22 @@ class DiscretizedSpaceElement(Tensor):
             if isinstance(values, type(self)):
                 values = values.tensor
             self.tensor.__setitem__(indices, values)
+
+    def __array__(self, dtype=None):
+        """Return a Numpy array from this tensor.
+        (Contrast with the `asarray` method, which may give other types of array,
+        not just NumPy.)
+
+        Parameters
+        ----------
+        dtype :
+            Specifier for the data type of the output array.
+
+        Returns
+        -------
+        array : `numpy.ndarray`
+        """
+        return self.tensor.__array__()
 
     def __array_ufunc__(self, ufunc, method, *inputs, **kwargs):
         """Interface to Numpy's ufunc machinery.
@@ -1528,7 +1560,7 @@ class DiscretizedSpaceElement(Tensor):
 
         # Squeeze grid and values according to the index expression
         part = self.space.partition[indices].squeeze()
-        values = self.asarray()[indices].squeeze()
+        values = np.array(self)[indices].squeeze()
 
         return show_discrete_data(values, part, title=title, method=method,
                                   force_show=force_show, fig=fig,
@@ -1593,8 +1625,15 @@ def uniform_discr_frompartition(partition, dtype=None, impl='numpy', **kwargs):
         else:
             weighting = partition.cell_volume
 
+    tensor_impl_args = {}
+
+    if impl=='pytorch':
+        for arg in ['torch_device']:
+            if arg in kwargs:
+                tensor_impl_args[arg] = kwargs.pop(arg)
+
     tspace = tspace_type(partition.shape, dtype, exponent=exponent,
-                         weighting=weighting)
+                         weighting=weighting, **tensor_impl_args)
     return DiscretizedSpace(partition, tspace, **kwargs)
 
 

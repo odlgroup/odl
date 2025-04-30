@@ -11,11 +11,13 @@
 from __future__ import absolute_import, division, print_function
 
 import numpy as np
+import torch
+from math import prod
 
 from odl.discr.discr_space import DiscretizedSpace
 from odl.operator.tensor_ops import PointwiseTensorFieldOperator
 from odl.space import ProductSpace
-from odl.util import indent, signature_string, writable_array
+from odl.util import indent, signature_string, writable_array, uses_pytorch, dtype_type
 
 __all__ = ('PartialDerivative', 'Gradient', 'Divergence', 'Laplacian')
 
@@ -344,20 +346,25 @@ class Gradient(PointwiseTensorFieldOperator):
 
     def _call(self, x, out=None):
         """Calculate the spatial gradient of ``x``."""
-        if out is None:
-            out = self.range.element()
-
         x_arr = x.asarray()
         ndim = self.domain.ndim
         dx = self.domain.cell_sides
 
-        for axis in range(ndim):
-            with writable_array(out[axis]) as out_arr:
-                finite_diff(x_arr, axis=axis, dx=dx[axis], method=self.method,
+        if out is None:
+            return self.range.element([
+                     finite_diff(x_arr, axis=axis, dx=dx[axis], method=self.method,
                             pad_mode=self.pad_mode,
                             pad_const=self.pad_const,
-                            out=out_arr)
-        return out
+                            )
+                     for axis in range(ndim)])
+        else:
+            for axis in range(ndim):
+                with writable_array(out[axis]) as out_arr:
+                    finite_diff(x_arr, axis=axis, dx=dx[axis], method=self.method,
+                                pad_mode=self.pad_mode,
+                                pad_const=self.pad_const,
+                                out=out_arr)
+            return out
 
     def derivative(self, point=None):
         """Return the derivative operator.
@@ -554,25 +561,38 @@ class Divergence(PointwiseTensorFieldOperator):
 
     def _call(self, x, out=None):
         """Calculate the divergence of ``x``."""
-        if out is None:
-            out = self.range.element()
 
         ndim = self.range.ndim
         dx = self.range.cell_sides
 
-        tmp = np.empty(out.shape, out.dtype, order=out.space.default_order)
-        with writable_array(out) as out_arr:
-            for axis in range(ndim):
-                finite_diff(x[axis], axis=axis, dx=dx[axis],
-                            method=self.method, pad_mode=self.pad_mode,
-                            pad_const=self.pad_const,
-                            out=tmp)
-                if axis == 0:
-                    out_arr[:] = tmp
-                else:
-                    out_arr += tmp
+        torch_impl = uses_pytorch(x[0])
 
-        return out
+        def directional_derivative(axis, dd_out=None):
+            return finite_diff( x[axis], axis=axis, dx=dx[axis]
+                              , method=self.method, pad_mode=self.pad_mode
+                              , pad_const=self.pad_const
+                              , out=dd_out )
+
+        if out is None:
+            result = directional_derivative(0)
+            for axis in range(1,len(x)):
+                result += directional_derivative(axis)
+
+            return self.range.element(result)
+
+        else:
+            assert(not torch_impl)
+
+            tmp = self.range.element().asarray()
+            with writable_array(out) as out_arr:
+                for axis in range(ndim):
+                    directional_derivative(axis, out=tmp)
+                    if axis == 0:
+                        out_arr[:] = tmp
+                    else:
+                        out_arr += tmp
+ 
+            return out
 
     def derivative(self, point=None):
         """Return the derivative operator.
@@ -785,106 +805,10 @@ class Laplacian(PointwiseTensorFieldOperator):
         return '{}:\n{}'.format(self.__class__.__name__, indent(dom_ran_str))
 
 
-def finite_diff(f, axis, dx=1.0, method='forward', out=None,
+def _finite_diff_numpy(f_arr, axis, dx=1.0, method='forward', out=None,
                 pad_mode='constant', pad_const=0):
-    """Calculate the partial derivative of ``f`` along a given ``axis``.
+    """ NumPy-specific version of `finite_diff`. """
 
-    In the interior of the domain of f, the partial derivative is computed
-    using first-order accurate forward or backward difference or
-    second-order accurate central differences.
-
-    With padding the same method and thus accuracy is used on endpoints as
-    in the interior i.e. forward and backward differences use first-order
-    accuracy on edges while central differences use second-order accuracy at
-    edges.
-
-    Without padding one-sided forward or backward differences are used at
-    the boundaries. The accuracy at the endpoints can then also be
-    triggered by the edge order.
-
-    The returned array has the same shape as the input array ``f``.
-
-    Per default forward difference with dx=1 and no padding is used.
-
-    Parameters
-    ----------
-    f : `array-like`
-         An N-dimensional array.
-    axis : int
-        The axis along which the partial derivative is evaluated.
-    dx : float, optional
-        Scalar specifying the distance between sampling points along ``axis``.
-    method : {'central', 'forward', 'backward'}, optional
-        Finite difference method which is used in the interior of the domain
-         of ``f``.
-    out : `numpy.ndarray`, optional
-         An N-dimensional array to which the output is written. Has to have
-         the same shape as the input array ``f``.
-    pad_mode : string, optional
-        The padding mode to use outside the domain.
-
-        ``'constant'``: Fill with ``pad_const``.
-
-        ``'symmetric'``: Reflect at the boundaries, not doubling the
-        outmost values.
-
-        ``'periodic'``: Fill in values from the other side, keeping
-        the order.
-
-        ``'order0'``: Extend constantly with the outmost values
-        (ensures continuity).
-
-        ``'order1'``: Extend with constant slope (ensures continuity of
-        the first derivative). This requires at least 2 values along
-        each axis where padding is applied.
-
-        ``'order2'``: Extend with second order accuracy (ensures continuity
-        of the second derivative). This requires at least 3 values along
-        each axis where padding is applied.
-
-    pad_const : float, optional
-        For ``pad_mode == 'constant'``, ``f`` assumes ``pad_const`` for
-        indices outside the domain of ``f``
-
-    Returns
-    -------
-    out : `numpy.ndarray`
-        N-dimensional array of the same shape as ``f``. If ``out`` was
-        provided, the returned object is a reference to it.
-
-    Examples
-    --------
-    >>> f = np.array([ 0., 1., 2., 3., 4., 5., 6., 7., 8., 9.])
-
-    >>> finite_diff(f, axis=0)
-    array([ 1.,  1.,  1.,  1.,  1.,  1.,  1.,  1.,  1.,  -9.])
-
-    Without arguments the above defaults to:
-
-    >>> finite_diff(f, axis=0, dx=1.0, method='forward', pad_mode='constant')
-    array([ 1.,  1.,  1.,  1.,  1.,  1.,  1.,  1.,  1.,  -9.])
-
-    Parameters can be changed one by one:
-
-    >>> finite_diff(f, axis=0, dx=0.5)
-    array([ 2.,  2.,  2.,  2.,  2.,  2.,  2.,  2.,  2.,  -18.])
-    >>> finite_diff(f, axis=0, pad_mode='order1')
-    array([ 1.,  1.,  1.,  1.,  1.,  1.,  1.,  1.,  1., 1.])
-
-    Central differences and different edge orders:
-
-    >>> finite_diff(0.5 * f ** 2, axis=0, method='central', pad_mode='order1')
-    array([ 0.5,  1. ,  2. ,  3. ,  4. ,  5. ,  6. ,  7. ,  8. ,  8.5])
-    >>> finite_diff(0.5 * f ** 2, axis=0, method='central', pad_mode='order2')
-    array([-0.,  1.,  2.,  3.,  4.,  5.,  6.,  7.,  8.,  9.])
-
-    In-place evaluation:
-
-    >>> out = f.copy()
-    >>> out is finite_diff(f, axis=0, out=out)
-    True
-    """
-    f_arr = np.asarray(f)
     ndim = f_arr.ndim
 
     if f_arr.shape[axis] < 2:
@@ -909,42 +833,44 @@ def finite_diff(f, axis, dx=1.0, method='forward', out=None,
         raise ValueError('`pad_mode` {} not understood'
                          ''.format(pad_mode))
 
-    pad_const = f.dtype.type(pad_const)
+    pad_const = np.array([pad_const], dtype = f_arr.dtype)
 
     if out is None:
         out = np.empty_like(f_arr)
     else:
-        if out.shape != f.shape:
+        if out.shape != f_arr.shape:
             raise ValueError('expected output shape {}, got {}'
                              ''.format(f.shape, out.shape))
+    orig_shape = f_arr.shape
 
-    if f_arr.shape[axis] < 2 and pad_mode == 'order1':
+    if orig_shape[axis] < 2 and pad_mode == 'order1':
         raise ValueError("size of array to small to use 'order1', needs at "
                          "least 2 elements along axis {}.".format(axis))
-    if f_arr.shape[axis] < 3 and pad_mode == 'order2':
+    if orig_shape[axis] < 3 and pad_mode == 'order2':
         raise ValueError("size of array to small to use 'order2', needs at "
                          "least 3 elements along axis {}.".format(axis))
 
-    # create slice objects: initially all are [:, :, ..., :]
-
-    # Swap axes so that the axis of interest is first. This is a O(1)
-    # operation and is done to simplify the code below.
+    # Swap axes so that the axis of interest is first. In NumPy (but not PyTorch),
+    # this is a O(1) operation and is done to simplify the code below.
     out, out_in = np.swapaxes(out, 0, axis), out
     f_arr = np.swapaxes(f_arr, 0, axis)
+
+    def fd_subtraction(a, b):
+        np.subtract(a, b, out=out[1:-1])
 
     # Interior of the domain of f
     if method == 'central':
         # 1D equivalent: out[1:-1] = (f[2:] - f[:-2])/2.0
-        np.subtract(f_arr[2:], f_arr[:-2], out=out[1:-1])
+        fd_subtraction(f_arr[2:], f_arr[:-2])
         out[1:-1] /= 2.0
 
     elif method == 'forward':
         # 1D equivalent: out[1:-1] = (f[2:] - f[1:-1])
-        np.subtract(f_arr[2:], f_arr[1:-1], out=out[1:-1])
+        fd_subtraction(f_arr[2:], f_arr[1:-1])
 
     elif method == 'backward':
         # 1D equivalent: out[1:-1] = (f[1:-1] - f[:-2])
-        np.subtract(f_arr[1:-1], f_arr[:-2], out=out[1:-1])
+        fd_subtraction(f_arr[1:-1], f_arr[:-2])
 
     # Boundaries
     if pad_mode == 'constant':
@@ -1128,6 +1054,194 @@ def finite_diff(f, axis, dx=1.0, method='forward', out=None,
     out /= dx
 
     return out_in
+
+def _finite_diff_pytorch(f_arr, axis, dx=1.0, method='forward',
+                pad_mode='constant', pad_const=0):
+    """ PyTorch-specific version of `finite_diff`. Notice that this has no output argument. """
+
+    ndim = f_arr.ndim
+
+    if f_arr.shape[axis] < 2:
+        raise ValueError('in axis {}: at least two elements required, got {}'
+                         ''.format(axis, f_arr.shape[axis]))
+
+    if axis < 0:
+        axis += ndim
+    if not (0 <= axis < ndim):
+        raise IndexError('`axis` {} outside the valid range 0 ... {}'
+                         ''.format(axis, ndim - 1))
+
+    dx, dx_in = float(dx), dx
+    if dx <= 0 or not np.isfinite(dx):
+        raise ValueError("`dx` must be positive, got {}".format(dx_in))
+
+    method, method_in = str(method).lower(), method
+    if method not in _SUPPORTED_DIFF_METHODS:
+        raise ValueError('`method` {} was not understood'.format(method_in))
+
+    if pad_mode not in _SUPPORTED_PAD_MODES:
+        raise ValueError('`pad_mode` {} not understood'
+                         ''.format(pad_mode))
+
+    orig_shape = f_arr.shape
+
+    if orig_shape[axis] < 2 and pad_mode == 'order1':
+        raise ValueError("size of array to small to use 'order1', needs at "
+                         "least 2 elements along axis {}.".format(axis))
+    if orig_shape[axis] < 3 and pad_mode == 'order2':
+        raise ValueError("size of array to small to use 'order2', needs at "
+                         "least 3 elements along axis {}.".format(axis))
+
+    # Reshape (in O(1)), so the axis of interest is the pænultimate, all previous
+    # axes are flattened into the batch dimension, and all subsequent axes flattened
+    # into the final dimension. This allows a batched 2D convolution of final size 1
+    # to perform the differentiation in only the axis of interest.
+    f_arr = f_arr.reshape([ prod(orig_shape[:axis])
+                          , 1
+                          , orig_shape[axis]
+                          , prod(orig_shape[axis+1:])
+                          ])
+
+    dtype = f_arr.dtype
+
+    # Kernel for convolution that expresses the finite-difference operator on, at least,
+    # the interior of the domain of f
+    def as_kernel(mat):
+        return torch.tensor(mat, dtype=dtype, device=f_arr.device)
+    if method == 'central':
+        fd_kernel = as_kernel([[[[-1],[0],[1]]]]) / (2*dx)
+    elif method == 'forward':
+        fd_kernel = as_kernel([[[[0],[-1],[1]]]]) / dx
+    elif method == 'backward':
+        fd_kernel = as_kernel([[[[-1],[1],[0]]]]) / dx
+
+    if pad_mode == 'constant':
+        if pad_const==0:
+            result = torch.conv2d(f_arr, fd_kernel, padding='same')
+        else:
+            padding_arr = torch.ones_like(f_arr[:,:,0:1,:]) * pad_const
+            result = torch.conv2d( torch.cat([padding_arr, f_arr, padding_arr], dim=-2)
+                               , fd_kernel, padding='valid' )
+    elif pad_mode == 'periodic':
+        result = torch.conv2d(f_arr, fd_kernel, padding='circular')
+
+    else:
+        raise NotImplementedError(f'{pad_mode=} not implemented for PyTorch')
+
+    return result.reshape(orig_shape)
+
+
+def finite_diff(f, axis, dx=1.0, method='forward', out=None,
+                pad_mode='constant', pad_const=0):
+    """Calculate the partial derivative of ``f`` along a given ``axis``.
+
+    In the interior of the domain of f, the partial derivative is computed
+    using first-order accurate forward or backward difference or
+    second-order accurate central differences.
+
+    With padding the same method and thus accuracy is used on endpoints as
+    in the interior i.e. forward and backward differences use first-order
+    accuracy on edges while central differences use second-order accuracy at
+    edges.
+
+    Without padding one-sided forward or backward differences are used at
+    the boundaries. The accuracy at the endpoints can then also be
+    triggered by the edge order.
+
+    The returned array has the same shape as the input array ``f``.
+
+    Per default forward difference with dx=1 and no padding is used.
+
+    Parameters
+    ----------
+    f : `array-like`
+         An N-dimensional array.
+    axis : int
+        The axis along which the partial derivative is evaluated.
+    dx : float, optional
+        Scalar specifying the distance between sampling points along ``axis``.
+    method : {'central', 'forward', 'backward'}, optional
+        Finite difference method which is used in the interior of the domain
+         of ``f``.
+    out : `numpy.ndarray`, optional
+         An N-dimensional array to which the output is written. Has to have
+         the same shape as the input array ``f``.
+    pad_mode : string, optional
+        The padding mode to use outside the domain.
+
+        ``'constant'``: Fill with ``pad_const``.
+
+        ``'symmetric'``: Reflect at the boundaries, not doubling the
+        outmost values.
+
+        ``'periodic'``: Fill in values from the other side, keeping
+        the order.
+
+        ``'order0'``: Extend constantly with the outmost values
+        (ensures continuity).
+
+        ``'order1'``: Extend with constant slope (ensures continuity of
+        the first derivative). This requires at least 2 values along
+        each axis where padding is applied.
+
+        ``'order2'``: Extend with second order accuracy (ensures continuity
+        of the second derivative). This requires at least 3 values along
+        each axis where padding is applied.
+
+    pad_const : float, optional
+        For ``pad_mode == 'constant'``, ``f`` assumes ``pad_const`` for
+        indices outside the domain of ``f``
+
+    Returns
+    -------
+    out : `numpy.ndarray`
+        N-dimensional array of the same shape as ``f``. If ``out`` was
+        provided, the returned object is a reference to it.
+
+    Examples
+    --------
+    >>> f = np.array([ 0., 1., 2., 3., 4., 5., 6., 7., 8., 9.])
+
+    >>> finite_diff(f, axis=0)
+    array([ 1.,  1.,  1.,  1.,  1.,  1.,  1.,  1.,  1.,  -9.])
+
+    Without arguments the above defaults to:
+
+    >>> finite_diff(f, axis=0, dx=1.0, method='forward', pad_mode='constant')
+    array([ 1.,  1.,  1.,  1.,  1.,  1.,  1.,  1.,  1.,  -9.])
+
+    Parameters can be changed one by one:
+
+    >>> finite_diff(f, axis=0, dx=0.5)
+    array([ 2.,  2.,  2.,  2.,  2.,  2.,  2.,  2.,  2.,  -18.])
+    >>> finite_diff(f, axis=0, pad_mode='order1')
+    array([ 1.,  1.,  1.,  1.,  1.,  1.,  1.,  1.,  1., 1.])
+
+    Central differences and different edge orders:
+
+    >>> finite_diff(0.5 * f ** 2, axis=0, method='central', pad_mode='order1')
+    array([ 0.5,  1. ,  2. ,  3. ,  4. ,  5. ,  6. ,  7. ,  8. ,  8.5])
+    >>> finite_diff(0.5 * f ** 2, axis=0, method='central', pad_mode='order2')
+    array([-0.,  1.,  2.,  3.,  4.,  5.,  6.,  7.,  8.,  9.])
+
+    In-place evaluation:
+
+    >>> out = f.copy()
+    >>> out is finite_diff(f, axis=0, out=out)
+    True
+    """
+    if uses_pytorch(f):
+        if out is None:
+            return _finite_diff_pytorch(f.data, axis, dx=dx, method=method,
+                pad_mode=pad_mode, pad_const=pad_const)
+        else:
+            assert(isinstance(out, torch.Tensor)), f"{type(out)=}"
+            out[:] = _finite_diff_pytorch(f.data, axis, dx=dx, method=method,
+                pad_mode=pad_mode, pad_const=pad_const)
+    else:
+        return _finite_diff_numpy(np.asarray(f), axis, dx=dx, method=method, out=out,
+                pad_mode=pad_mode, pad_const=pad_const)
+
 
 
 if __name__ == '__main__':

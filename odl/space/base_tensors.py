@@ -22,7 +22,7 @@ from odl.util import (
     array_str, dtype_str, indent, is_complex_floating_dtype, is_floating_dtype,
     is_numeric_dtype, is_real_dtype, is_real_floating_dtype, safe_int_conv,
     signature_string, writable_array)
-from odl.util.ufuncs import TensorSpaceUfuncs
+from odl.util.ufuncs import NumpyTensorSpaceUfuncs, PytorchTensorSpaceUfuncs
 from odl.util.utility import TYPE_MAP_C2R, TYPE_MAP_R2C, nullcontext
 
 __all__ = ('TensorSpace',)
@@ -510,19 +510,20 @@ class Tensor(LinearSpaceElement):
     """Abstract class for representation of `TensorSpace` elements."""
 
     def asarray(self, out=None):
-        """Extract the data of this tensor as a Numpy array.
+        """Extract the data of this tensor as an array. This could be a NumPy array
+        or a PyTorch tensor, depending on what implementation backend is used.
 
         This method should be overridden by subclasses.
 
         Parameters
         ----------
-        out : `numpy.ndarray`, optional
+        out : `array_like`, optional
             Array to write the result to.
 
         Returns
         -------
-        asarray : `numpy.ndarray`
-            Numpy array of the same data type and shape as the space.
+        asarray : `array_like`
+            Array of the same type, data type and shape as the space.
             If ``out`` was given, the returned object is a reference
             to it.
         """
@@ -652,6 +653,8 @@ class Tensor(LinearSpaceElement):
 
     def __array__(self, dtype=None):
         """Return a Numpy array from this tensor.
+        (Contrast with the `asarray` method, which may give other types of array,
+        not just NumPy.)
 
         Parameters
         ----------
@@ -663,9 +666,9 @@ class Tensor(LinearSpaceElement):
         array : `numpy.ndarray`
         """
         if dtype is None:
-            return self.asarray()
+            return np.array(self.asarray())
         else:
-            return self.asarray().astype(dtype, copy=AVOID_UNNECESSARY_COPY)
+            return np.array(self.asarray()).astype(dtype, copy=AVOID_UNNECESSARY_COPY)
 
     def __array_wrap__(self, array):
         """Return a new tensor wrapping the ``array``.
@@ -889,7 +892,13 @@ numpy.ufunc.reduceat.html
             the minimum required version. Use Numpy ufuncs directly, e.g.,
             ``np.sqrt(x)`` instead of ``x.ufuncs.sqrt()``.
         """
-        return TensorSpaceUfuncs(self)
+        if self.impl == "numpy":
+            return NumpyTensorSpaceUfuncs(self)
+        elif self.impl == "pytorch":
+            return PytorchTensorSpaceUfuncs(self)
+        else:
+            raise NotImplementedError()
+            
 
     def show(self, title=None, method='', indices=None, force_show=False,
              fig=None, **kwargs):

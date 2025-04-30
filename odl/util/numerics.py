@@ -11,6 +11,8 @@
 from __future__ import absolute_import, division, print_function
 
 import numpy as np
+import torch
+from odl.util.utility import is_castable_to, uses_pytorch, compatible_array_manager
 from odl.util.normalize import normalized_scalar_param_list, safe_int_conv
 
 __all__ = (
@@ -208,6 +210,8 @@ def fast_1d_tensor_mult(ndarr, onedim_arrs, axes=None, out=None):
     The advantage of this approach is that it is memory-friendly and
     loops over the big array only twice.
 
+    TODO update documentation WRT PyTorch
+
     Parameters
     ----------
     ndarr : `array-like`
@@ -227,10 +231,18 @@ def fast_1d_tensor_mult(ndarr, onedim_arrs, axes=None, out=None):
         Result of the modification. If ``out`` was given, the returned
         object is a reference to it.
     """
+    use_pytorch = uses_pytorch(ndarr) or uses_pytorch(out)
+    array_mgr = compatible_array_manager(ndarr)
+
     if out is None:
-        out = np.array(ndarr, copy=True)
-    else:
+        if use_pytorch:
+            out = torch.Tensor(ndarr, copy=True)
+        else:
+            out = np.array(ndarr, copy=True)
+    elif type(out)==type(ndarr):
         out[:] = ndarr  # Self-assignment is free if out is ndarr
+    else:
+        raise TypeError(f"{type(ndarr)=} should be the same as {type(out)=}")
 
     if not onedim_arrs:
         raise ValueError('no 1d arrays given')
@@ -251,14 +263,17 @@ def fast_1d_tensor_mult(ndarr, onedim_arrs, axes=None, out=None):
         raise ValueError('`axes` {} out of bounds for {} dimensions'
                          ''.format(axes_in, out.ndim))
 
+    atleast_1d = torch.atleast_1d if use_pytorch else np.atleast_1d
+
     # Make scalars 1d arrays and squeezable arrays 1d
-    alist = [np.atleast_1d(np.asarray(a).squeeze()) for a in onedim_arrs]
+    alist = [atleast_1d(array_mgr.as_compatible_array(a).squeeze()) for a in onedim_arrs]
+    # Make scalars 1d arrays and squeezable arrays 1d
     if any(a.ndim != 1 for a in alist):
         raise ValueError('only 1d arrays allowed')
 
     if len(axes) < out.ndim:
         # Make big factor array (start with 0d)
-        factor = np.array(1.0)
+        factor = array_mgr.as_compatible_array([1.0])
         for ax, arr in zip(axes, alist):
             # Meshgrid-style slice
             slc = [None] * out.ndim
@@ -272,11 +287,11 @@ def fast_1d_tensor_mult(ndarr, onedim_arrs, axes=None, out=None):
 
         # Get the axis to spare for the final multiplication, the one
         # with the largest stride.
-        last_ax = np.argmax(out.strides)
+        last_ax = out.ndim-1 if use_pytorch else np.argmax(out.strides)
         last_arr = alist[axes.index(last_ax)]
 
         # Build the semi-big array and multiply
-        factor = np.array(1.0)
+        factor = array_mgr.as_compatible_array([1.0])
         for ax, arr in zip(axes, alist):
             if ax == last_ax:
                 continue
@@ -421,16 +436,31 @@ def resize_array(arr, newshp, offset=None, pad_mode='constant', pad_const=0,
     except TypeError:
         raise TypeError('`newshp` must be a sequence, got {!r}'.format(newshp))
 
+    if isinstance(arr, np.ndarray):
+        impl = 'numpy'
+    elif isinstance(arr, torch.Tensor):
+        impl = 'pytorch'
+    else:
+        raise TypeError(f"Unknown how to resize array (?) of type {type(arr)}.")
+
     if out is not None:
-        if not isinstance(out, np.ndarray):
+        if impl=='numpy' and not isinstance(out, np.ndarray):
             raise TypeError('`out` must be a `numpy.ndarray` instance, got '
+                            '{!r}'.format(out))
+        elif impl=='pytorch' and not isinstance(out, torch.Tensor):
+            raise TypeError('`out` must be a `torch.Tensor` instance, got '
                             '{!r}'.format(out))
         if out.shape != newshp:
             raise ValueError('`out` must have shape {}, got {}'
                              ''.format(newshp, out.shape))
 
-        order = 'C' if out.flags.c_contiguous else 'F'
-        arr = np.asarray(arr, dtype=out.dtype, order=order)
+        if impl=='pytorch':
+            if arr.dtype != out.dtype:
+                arr = torch.tensor(arr, dtype=out.dtype)
+        else: # NumPy
+            order = 'C' if out.flags.c_contiguous else 'F'
+            arr = np.asarray(arr, dtype=out.dtype, order=order)
+
         if arr.ndim != out.ndim:
             raise ValueError('number of axes of `arr` and `out` do not match '
                              '({} != {})'.format(arr.ndim, out.ndim))
@@ -455,16 +485,14 @@ def resize_array(arr, newshp, offset=None, pad_mode='constant', pad_const=0,
     if pad_mode not in _SUPPORTED_RESIZE_PAD_MODES:
         raise ValueError("`pad_mode` '{}' not understood".format(pad_mode_in))
 
-    if (pad_mode == 'constant' and
-        any(n_new > n_orig
-            for n_orig, n_new in zip(arr.shape, out.shape))):
-        try:
-            pad_const_scl = np.array([pad_const], out.dtype)
-            assert(pad_const_scl == np.array([pad_const]))
-        except Exception as e:
-            raise ValueError('`pad_const` {} cannot be safely cast to the data '
-                             'type {} of the output array'
-                             ''.format(pad_const, out.dtype))
+    if pad_mode == 'constant':
+        incompatible_const_error = ValueError(
+            f'`pad_const` {pad_const} cannot be safely cast to the data '
+          + f'type {out.dtype} of the output array')
+        if (not is_castable_to(pad_const, out.dtype)
+             and any(n_new > n_orig
+                      for n_orig, n_new in zip(arr.shape, out.shape))):
+            raise incompatible_const_error
 
     # Handle direction
     direction, direction_in = str(direction).lower(), direction
@@ -476,10 +504,11 @@ def resize_array(arr, newshp, offset=None, pad_mode='constant', pad_const=0,
         raise ValueError("`pad_const` must be 0 for 'adjoint' direction, "
                          "got {}".format(pad_const))
 
+    fill_with = out.fill_ if impl=='pytorch' else out.fill
     if direction == 'forward' and pad_mode == 'constant' and pad_const != 0:
-        out.fill(pad_const)
+        fill_with(pad_const)
     else:
-        out.fill(0)
+        fill_with(0)
 
     # Perform the resizing
     if direction == 'forward':

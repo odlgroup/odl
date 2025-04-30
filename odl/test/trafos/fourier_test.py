@@ -29,6 +29,7 @@ from odl.util.testutils import simple_fixture
 impl = simple_fixture(
     'impl',
     [pytest.param('numpy'),
+     pytest.param('pytorch'),
      pytest.param('pyfftw', marks=skip_if_no_pyfftw)]
 )
 exponent = simple_fixture('exponent', [2.0, 1.0, float('inf'), 1.5])
@@ -45,8 +46,10 @@ def _params_from_dtype(dtype):
         halfcomplex = False
     return halfcomplex, complex_dtype(dtype)
 
+def _dft_domain_impl(impl):
+    return 'pytorch' if impl=='pytorch' else 'numpy'
 
-def _dft_space(shape, dtype='float64'):
+def _dft_space(shape, dtype='float64', impl='numpy'):
     try:
         ndim = len(shape)
     except TypeError:
@@ -57,6 +60,7 @@ def _dft_space(shape, dtype='float64'):
         shape,
         dtype=dtype,
         nodes_on_bdry=True,
+        impl = _dft_domain_impl(impl)
     )
 
 
@@ -71,12 +75,12 @@ def sinc(x):
 def test_dft_init(impl):
     # Just check if the code runs at all
     shape = (4, 5)
-    dom = _dft_space(shape)
-    dom_nonseq = odl.uniform_discr([0, 0], [1, 1], shape)
+    dom = _dft_space(shape, impl=impl)
+    dom_nonseq = odl.uniform_discr([0, 0], [1, 1], shape, impl=impl)
     dom_f32 = dom.astype('float32')
-    ran = _dft_space(shape, dtype='complex128')
+    ran = _dft_space(shape, dtype='complex128', impl=impl)
     ran_c64 = ran.astype('complex64')
-    ran_hc = _dft_space((3, 5), dtype='complex128')
+    ran_hc = _dft_space((3, 5), dtype='complex128', impl=impl)
 
     # Implicit range
     DiscreteFourierTransform(dom, impl=impl)
@@ -191,10 +195,10 @@ def test_idft_init(impl):
     # Just check if the code runs at all; this uses the init function of
     # DiscreteFourierTransform, so we don't need exhaustive tests here
     shape = (4, 5)
-    ran = _dft_space(shape, dtype='complex128')
-    ran_hc = _dft_space(shape, dtype='float64')
-    dom = _dft_space(shape, dtype='complex128')
-    dom_hc = _dft_space((3, 5), dtype='complex128')
+    ran = _dft_space(shape, dtype='complex128', impl=impl)
+    ran_hc = _dft_space(shape, dtype='float64', impl=impl)
+    dom = _dft_space(shape, dtype='complex128', impl=impl)
+    dom_hc = _dft_space((3, 5), dtype='complex128', impl=impl)
 
     # Implicit range
     DiscreteFourierTransformInverse(dom, impl=impl)
@@ -209,7 +213,7 @@ def test_dft_call(impl):
 
     # 2d, complex, all ones and random back & forth
     shape = (4, 5)
-    dft_dom = _dft_space(shape, dtype='complex64')
+    dft_dom = _dft_space(shape, dtype='complex64', impl=impl)
     dft = DiscreteFourierTransform(domain=dft_dom, impl=impl)
     idft = DiscreteFourierTransformInverse(range=dft_dom, impl=impl)
 
@@ -243,7 +247,7 @@ def test_dft_call(impl):
     # 2d, halfcomplex, first axis
     shape = (4, 5)
     axes = 0
-    dft_dom = _dft_space(shape, dtype='float32')
+    dft_dom = _dft_space(shape, dtype='float32', impl=impl)
     dft = DiscreteFourierTransform(domain=dft_dom, impl=impl, halfcomplex=True,
                                    axes=axes)
     idft = DiscreteFourierTransformInverse(range=dft_dom, impl=impl,
@@ -276,7 +280,7 @@ def test_dft_sign(impl):
 
     # 2d, complex, all ones and random back & forth
     shape = (4, 5)
-    dft_dom = _dft_space(shape, dtype='complex64')
+    dft_dom = _dft_space(shape, dtype='complex64', impl=impl)
     dft_minus = DiscreteFourierTransform(domain=dft_dom, impl=impl, sign='-')
     dft_plus = DiscreteFourierTransform(domain=dft_dom, impl=impl, sign='+')
 
@@ -297,7 +301,7 @@ def test_dft_sign(impl):
     # 2d, halfcomplex, first axis
     shape = (4, 5)
     axes = (0,)
-    dft_dom = _dft_space(shape, dtype='float32')
+    dft_dom = _dft_space(shape, dtype='float32', impl=impl)
     arr = dft_dom.element([[0, 0, 0, 0, 0],
                            [0, 0, 1, 1, 0],
                            [0, 0, 1, 1, 0],
@@ -321,7 +325,7 @@ def test_dft_init_plan(impl):
     # 2d, halfcomplex, first axis
     shape = (4, 5)
     axes = 0
-    dft_dom = _dft_space(shape, dtype='float32')
+    dft_dom = _dft_space(shape, dtype='float32', impl=impl)
 
     dft = DiscreteFourierTransform(dft_dom, impl=impl, axes=axes,
                                    halfcomplex=True)
@@ -395,11 +399,14 @@ def test_fourier_trafo_init_plan(impl, odl_floating_dtype):
     # Not supported, skip
     if dtype == np.dtype('float16') and impl == 'pyfftw':
         return
+    elif (dtype in [np.dtype('float128'), np.dtype('complex256')]
+          and impl == 'pytorch'):
+        return
 
     shape = 10
     halfcomplex, _ = _params_from_dtype(dtype)
 
-    space_discr = odl.uniform_discr(0, 1, shape, dtype=dtype)
+    space_discr = odl.uniform_discr(0, 1, shape, dtype=dtype, impl=_dft_domain_impl(impl))
 
     ft = FourierTransform(space_discr, impl=impl, halfcomplex=halfcomplex)
     if impl != 'pyfftw':
@@ -474,10 +481,13 @@ def test_fourier_trafo_call(impl, odl_floating_dtype):
     # Not supported, skip
     if dtype == np.dtype('float16') and impl == 'pyfftw':
         return
+    elif (dtype in [np.dtype('float16'), np.dtype('float128'), np.dtype('complex256')]
+          and impl == 'pytorch'):
+        return
 
     shape = 10
     halfcomplex, _ = _params_from_dtype(dtype)
-    space_discr = odl.uniform_discr(0, 1, shape, dtype=dtype)
+    space_discr = odl.uniform_discr(0, 1, shape, dtype=dtype, impl=_dft_domain_impl(impl))
 
     ft = FourierTransform(space_discr, impl=impl, halfcomplex=halfcomplex)
     ift = ft.inverse
@@ -548,7 +558,7 @@ def test_fourier_trafo_sign(impl, odl_real_floating_dtype):
     def char_interval(x):
         return (x >= 0) & (x <= 1)
 
-    discr = odl.uniform_discr(-2, 2, 40, impl='numpy', dtype=discrspace_dtype)
+    discr = odl.uniform_discr(-2, 2, 40, impl=_dft_domain_impl(impl), dtype=discrspace_dtype)
     ft_minus = FourierTransform(discr, sign='-', impl=impl)
     ft_plus = FourierTransform(discr, sign='+', impl=impl)
 
@@ -593,7 +603,7 @@ def test_fourier_trafo_inverse(impl, sign):
         return (x >= 0) & (x <= 1)
 
     # Complex-to-complex
-    discr = odl.uniform_discr(-2, 2, 40, impl='numpy', dtype='complex64')
+    discr = odl.uniform_discr(-2, 2, 40, impl=_dft_domain_impl(impl), dtype='complex64')
     discr_char = discr.element(char_interval)
 
     ft = FourierTransform(discr, sign=sign, impl=impl)
@@ -601,7 +611,7 @@ def test_fourier_trafo_inverse(impl, sign):
     assert all_almost_equal(ft.adjoint(ft(char_interval)), discr_char)
 
     # Half-complex
-    discr = odl.uniform_discr(-2, 2, 40, impl='numpy', dtype='float32')
+    discr = odl.uniform_discr(-2, 2, 40, impl=_dft_domain_impl(impl), dtype='float32')
     ft = FourierTransform(discr, impl=impl, halfcomplex=True)
     assert all_almost_equal(ft.inverse(ft(char_interval)), discr_char)
 
@@ -609,7 +619,7 @@ def test_fourier_trafo_inverse(impl, sign):
         return (x[0] >= 0) & (x[0] <= 1) & (x[1] >= 0) & (x[1] <= 1)
 
     # 2D with axes, C2C
-    discr = odl.uniform_discr([-2, -2], [2, 2], (20, 10), impl='numpy',
+    discr = odl.uniform_discr([-2, -2], [2, 2], (20, 10), impl=_dft_domain_impl(impl),
                               dtype='complex64')
     discr_rect = discr.element(char_rect)
 
@@ -619,7 +629,7 @@ def test_fourier_trafo_inverse(impl, sign):
         assert all_almost_equal(ft.adjoint(ft(char_rect)), discr_rect)
 
     # 2D with axes, halfcomplex
-    discr = odl.uniform_discr([-2, -2], [2, 2], (20, 10), impl='numpy',
+    discr = odl.uniform_discr([-2, -2], [2, 2], (20, 10), impl=_dft_domain_impl(impl),
                               dtype='float32')
     discr_rect = discr.element(char_rect)
 

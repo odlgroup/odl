@@ -15,8 +15,11 @@ import contextlib
 from collections import OrderedDict
 from contextlib import contextmanager
 from itertools import product
+from abc import ABC
+from typing import Optional
 
 import numpy as np
+import torch
 
 __all__ = (
     'REPR_PRECISION',
@@ -26,6 +29,7 @@ __all__ = (
     'array_str',
     'dtype_repr',
     'dtype_str',
+    'dtype_type',
     'cache_arguments',
     'is_numeric_dtype',
     'is_int_dtype',
@@ -33,12 +37,16 @@ __all__ = (
     'is_real_dtype',
     'is_real_floating_dtype',
     'is_complex_floating_dtype',
+    'is_castable_to',
+    'uses_pytorch',
     'real_dtype',
     'complex_dtype',
     'is_string',
     'nd_iterator',
     'conj_exponent',
     'nullcontext',
+    'ArrayOnBackendManager',
+    'compatible_array_manager',
     'writable_array',
     'signature_string',
     'signature_string_parts',
@@ -319,6 +327,27 @@ def dtype_str(dtype):
     else:
         return '{}'.format(dtype)
 
+def dtype_type(dtype):
+    """Obtain a Python type corresponding to the given NumPy or PyTorch
+    dtype. This can be used for constructing values of a suitable type
+    for storing in an array of either backend."""
+    if isinstance(dtype, str) or isinstance(dtype, type):
+        dtype = np.dtype(dtype)
+
+    if hasattr(dtype, 'dtype'):
+        return dtype_type(dtype.dtype)
+    elif dtype == np.dtype(int):
+        return int
+    elif dtype == np.dtype(float):
+        return float
+    elif dtype == np.dtype(complex):
+        return complex
+    elif dtype == torch.float64:
+        return float
+    else:
+        raise ValueError(f"No suitable Python type available for {dtype}.")
+
+
 
 def cache_arguments(function):
     """Decorate function to cache the result with given arguments.
@@ -341,6 +370,13 @@ def cache_arguments(function):
 @cache_arguments
 def is_numeric_dtype(dtype):
     """Return ``True`` if ``dtype`` is a numeric type."""
+    if isinstance(dtype, torch.dtype):
+        try:
+            assert(dtype in [torch.float32, torch.float64])
+            return True
+        except AssertionError:
+            assert(dtype in [torch.complex64, torch.complex128])
+            return True
     dtype = np.dtype(dtype)
     return np.issubdtype(getattr(dtype, 'base', None), np.number)
 
@@ -367,13 +403,24 @@ def is_real_dtype(dtype):
 @cache_arguments
 def is_real_floating_dtype(dtype):
     """Return ``True`` if ``dtype`` is a real floating point type."""
-    dtype = np.dtype(dtype)
+    if isinstance(dtype, torch.dtype):
+        if dtype in [torch.complex64, torch.complex128]:
+            return False
+        else:
+            assert(dtype in [torch.float32, torch.float64])
+            return True
+    dtype = np.dtype( dtype)
     return np.issubdtype(getattr(dtype, 'base', None), np.floating)
 
 
 @cache_arguments
 def is_complex_floating_dtype(dtype):
     """Return ``True`` if ``dtype`` is a complex floating point type."""
+    if isinstance(dtype, torch.dtype):
+        if(dtype in [torch.float32, torch.float64]):
+            return False
+        assert(dtype in [torch.complex64, torch.complex128])
+        return True
     dtype = np.dtype(dtype)
     return np.issubdtype(getattr(dtype, 'base', None), np.complexfloating)
 
@@ -497,6 +544,51 @@ def complex_dtype(dtype, default=None):
     else:
         return np.dtype((complex_base_dtype, dtype.shape))
 
+_CORRESPONDING_PYTORCH_DTYPES = {
+                   np.dtype('float16'): torch.float16,
+                   np.dtype('float32'): torch.float32,
+                   np.dtype('float64'): torch.float64,
+                   np.dtype('complex64'): torch.complex64,
+                   np.dtype('complex128'): torch.complex128}
+
+@cache_arguments
+def is_castable(from_dtype, to_dtype):
+    """Determine whether the type `from` is safely convertible to `to`.
+    Both should be either NumPy `dtype` or PyTorch `dtype`."""
+    if isinstance(from_dtype, np.dtype) and isinstance(to_dtype, np.dtype):
+        return np.can_cast(from_dtype, to_dtype)
+    elif (isinstance(to_dtype, torch.dtype)):
+        from_dtype = _CORRESPONDING_PYTORCH_DTYPES.get(from_dtype, from_dtype)
+        # Torch does not provide a satisfying way to determine castability,
+        # so we find it out by experiment.
+        # This is somewhat expensive, so it is important that this function is
+        # memoised (cache_arguments).
+        try:
+            gen = torch.Generator()
+            gen.manual_seed(1232451) # Avoid nondeterministic behaviour
+            test_arr = torch.rand((1000,), generator=gen, dtype=from_dtype)
+            roundtripped = test_arr.to(to_dtype).to(from_dtype)
+        except TypeError:
+            return False
+        return torch.equal(roundtripped, test_arr)
+
+def is_castable_to(obj, dtype):
+    """Determine whether there is a safe way to cast `obj` to the type
+    specified by `dtype`, which can be either a NumPy dtype or a PyTorch
+    `dtype`."""
+    if hasattr(obj, 'dtype'):
+        obj_dtype = obj.dtype
+    else:
+        obj_dtype = np.array([obj]).dtype
+    return is_castable(obj_dtype, dtype)
+
+def uses_pytorch(obj):
+    if isinstance(obj, torch.Tensor):
+        return True
+    elif getattr(obj, "impl", None)=="pytorch":
+        return True
+    else:
+        return False
 
 def is_string(obj):
     """Return ``True`` if ``obj`` behaves like a string, ``False`` else."""
@@ -507,6 +599,70 @@ def is_string(obj):
     else:
         return True
 
+class ArrayOnBackendManager(ABC):
+    def __init__(self):
+        raise NotImplementedError()
+    def as_compatible_array(self, arr, **kwargs):
+        raise NotImplementedError()
+    def compatible_zeros(self, shape, **kwargs):
+        raise NotImplementedError()
+    def compatible_ones(self, shape, **kwargs):
+        raise NotImplementedError()
+    def select_dtype(self, arr, dtype, copy: Optional[bool]):
+        raise NotImplementedError()
+    def make_copy(self, arr):
+        raise NotImplementedError()
+
+class ArrayOnPytorchManager(ABC):
+    def __init__(self, device):
+        self._device = device
+    def as_compatible_array(self, arr, **kwargs):
+        dtype = kwargs.get('dtype', None)
+        if isinstance(arr, torch.Tensor):
+            arr = arr.detach()
+            if dtype is not None and arr.dtype!=kwargs['dtype']:
+                arr = arr.type(dtype)
+            if self._device is not None and arr.device!=self._device:
+                return arr.to(self._device)
+            else:
+                return arr
+        else:
+            return torch.tensor(arr, device = self._device, **kwargs)
+    def compatible_zeros(self, shape, **kwargs):
+        return torch.zeros(shape, device = self._device, **kwargs)
+    def compatible_ones(self, shape, **kwargs):
+        return torch.ones(shape, device = self._device, **kwargs)
+    def select_dtype(self, arr, dtype, copy):
+        if dtype in _CORRESPONDING_PYTORCH_DTYPES:
+            dtype = _CORRESPONDING_PYTORCH_DTYPES[dtype]
+        # PyTorch (as of version 2.7) only supports the values False and True
+        # for the `copy` argument, the former being a non-binding request to
+        # avoid a copy if it is not necessary.
+        if copy==AVOID_UNNECESSARY_COPY:
+            copy = False
+        return arr.type(dtype, copy=copy)
+    def make_copy(self, arr):
+        return arr.clone().detach()
+
+class ArrayOnNumPyManager(ABC):
+    def __init__(self):
+        pass
+    def as_compatible_array(self, arr, **kwargs):
+        return np.array(arr, **kwargs)
+    def compatible_zeros(self, shape, **kwargs):
+        return np.zeros(shape, **kwargs)
+    def compatible_ones(self, shape, **kwargs):
+        return np.ones(shape, **kwargs)
+    def select_dtype(self, arr, dtype, copy):
+        return arr.astype(dtype, copy=copy)
+    def make_copy(self, arr):
+        return arr.copy()
+
+def compatible_array_manager(arr):
+    if uses_pytorch(arr):
+        return ArrayOnPytorchManager(arr.device)
+    else:
+        return ArrayOnNumPyManager()
 
 def nd_iterator(shape):
     """Iterator over n-d cube with shape.
@@ -628,8 +784,22 @@ def writable_array(obj, **kwargs):
     [2, 4, 6]
     """
     arr = None
+    torch_impl = uses_pytorch(obj)
     try:
-        arr = np.asarray(obj, **kwargs)
+        if torch_impl:
+            if isinstance(obj, torch.Tensor):
+                arr = obj
+            elif hasattr(obj, 'data') and isinstance(obj.data, torch.Tensor):
+                arr = obj.data
+            else:
+                if hasattr(obj, 'data'):
+                    if 'dtype' not in kwargs:
+                        kwargs['dtype'] = obj.data.dtype
+                    arr = torch.tensor(obj.data, **kwargs)
+                else:
+                    arr = torch.tensor(obj, **kwargs)
+        else:
+            arr = np.asarray(obj, **kwargs)
         yield arr
     finally:
         if arr is not None:
