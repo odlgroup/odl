@@ -6,8 +6,25 @@
 Release Notes
 #############
 
-Upcoming release
+Upcoming release (2025)
 ================
+The next release will be a major departure with regards to flexibility of the internal representation.
+Previously, ODL was firmly based on NumPy: although the design with abstract classes for mathematical spaces and their elements is a powerful means for avoiding lock-in to any particular backend, there are many features of ODL that assumed NumPy arrays as the underlying implementations.
+
+The next release will alleviate this and offer at least one alternative storage backend, namely PyTorch.
+This will be advantageous both for allowing algorithms to run completely on GPU without copying data back and forth to main memory, and also in that it integrates more tightly to the automatic differentiation offered by PyTorch.
+
+ODL 0.8.1 Release Notes (2024-12-07)
+====================================
+A small bugfix release, mostly addressing a normalisation issue caused by an interface change in PyFFTW.
+
+ODL 0.8.0 Release Notes (2024-09-06)
+====================================
+Various changes since 2019 that previously could only be found in the developer version were finally released here.
+Many of them are small additions or fixes (see `the pull requests <https://github.com/odlgroup/odl/pulls?q=is%3Apr+is%3Aclosed>`_), but there are also some architectural changes such as the removal of the ``FunctionSpace`` class in `#1459 <https://github.com/odlgroup/odl/pull/1459>`_.
+
+Furthermore, compatibility with newer versions of the basic dependencies NumPy (up to 1.26) and SciPy was restored.
+
 
 ODL 0.7.0 Release Notes (2018-09-09)
 ====================================
