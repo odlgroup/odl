@@ -95,30 +95,8 @@ def _function_signature(func):
     sig : string
         Signature of the function.
     """
-    if sys.version_info.major > 2:
-        # Python 3 already implements this functionality
-        return func.__name__ + str(inspect.signature(func))
-
-    # In Python 2 we have to do it manually, unfortunately
-    spec = inspect.getargspec(func)
-    posargs = spec.args
-    defaults = spec.defaults if spec.defaults is not None else []
-    varargs = spec.varargs
-    kwargs = spec.keywords
-    deflen = 0 if defaults is None else len(defaults)
-    nodeflen = 0 if posargs is None else len(posargs) - deflen
-
-    args = ['{}'.format(arg) for arg in posargs[:nodeflen]]
-    args.extend('{}={}'.format(arg, dval)
-                for arg, dval in zip(posargs[nodeflen:], defaults))
-    if varargs:
-        args.append('*{}'.format(varargs))
-    if kwargs:
-        args.append('**{}'.format(kwargs))
-
-    argstr = ', '.join(args)
-
-    return '{}({})'.format(func.__name__, argstr)
+    assert (sys.version_info.major > 2)
+    return func.__name__ + str(inspect.signature(func))
 
 
 def _dispatch_call_args(cls=None, bound_call=None, unbound_call=None,
