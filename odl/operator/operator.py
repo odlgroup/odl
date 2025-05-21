@@ -106,12 +106,9 @@ def _dispatch_call_args(cls=None, bound_call=None, unbound_call=None,
     The ``_call()`` method of `Operator` is allowed to have the
     following signatures:
 
-    Python 2 and 3:
         - ``_call(self, x)``
         - ``_call(self, vec, out)``
         - ``_call(self, x, out=None)``
-
-    Python 3 only:
         - ``_call(self, x, *, out=None)`` (``out`` as keyword-only
           argument)
 
@@ -122,7 +119,7 @@ def _dispatch_call_args(cls=None, bound_call=None, unbound_call=None,
     argument may have any name.
 
     Additional variable ``**kwargs`` and keyword-only arguments
-    (Python 3 only) are also allowed.
+    are also allowed.
 
     Not allowed:
         - ``_call(self)`` -- No arguments except instance:
@@ -469,12 +466,9 @@ class Operator(object):
 
         The following signatures are allowed:
 
-        Python 2 and 3:
             - ``_call(self, x)``  -->  out-of-place evaluation
             - ``_call(self, vec, out)``  -->  in-place evaluation
             - ``_call(self, x, out=None)``   --> both
-
-        Python 3 only:
             - ``_call(self, x, *, out=None)`` (``out`` as keyword-only
               argument)  --> both
 
@@ -485,7 +479,7 @@ class Operator(object):
         argument may have any name.
 
         Additional variable ``**kwargs`` and keyword-only arguments
-        (Python 3 only) are also allowed.
+        are also allowed.
 
         Notes
         -----
