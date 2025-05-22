@@ -164,12 +164,10 @@ def test_vectorize_1d_otype():
     assert simple_func(val_1) == 0
     assert simple_func(val_2) == 1
 
-    # Python 2 really swallows this stuff in comparisons...
     bogus_input = [lambda x: x, object, Exception]
-    if sys.version_info.major > 2:
-        for b in bogus_input:
-            with pytest.raises(TypeError):
-                simple_func(b)
+    for b in bogus_input:
+        with pytest.raises(TypeError):
+            simple_func(b)
 
     # In-place
     out = np.empty(5, dtype='int')
