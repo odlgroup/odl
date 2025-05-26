@@ -111,6 +111,107 @@ class TensorSpace(LinearSpace):
 
         LinearSpace.__init__(self, field)
 
+    ########## static methods ##########
+    @staticmethod
+    def available_dtypes():
+        """Return the set of data types available in this implementation.
+
+        This method should be overridden by subclasses.
+        """
+        raise NotImplementedError('abstract method')
+
+    @staticmethod
+    def default_dtype(field=None):
+        """Return the default data type for a given field.
+
+        This method should be overridden by subclasses.
+
+        Parameters
+        ----------
+        field : `Field`, optional
+            Set of numbers to be represented by a data type.
+
+        Returns
+        -------
+        dtype :
+            Numpy data type specifier.
+        """
+        raise NotImplementedError('abstract method')
+
+    ########## Attributes ##########
+    @property
+    def complex_dtype(self):
+        """The complex dtype corresponding to this space's `dtype`.
+
+        Raises
+        ------
+        NotImplementedError
+            If `dtype` is not a numeric data type.
+        """
+        if not is_numeric_dtype(self.dtype):
+            raise NotImplementedError(
+                '`complex_dtype` not defined for non-numeric `dtype`')
+        return self.__complex_dtype
+    
+    @property
+    def complex_space(self):
+        """The space corresponding to this space's `complex_dtype`.
+
+        Raises
+        ------
+        ValueError
+            If `dtype` is not a numeric data type.
+        """
+        if not is_numeric_dtype(self.dtype):
+            raise ValueError(
+                '`complex_space` not defined for non-numeric `dtype`')
+        return self.astype(self.complex_dtype)
+    
+    @property
+    def default_order(self):
+        """Default storage order for new elements in this space.
+
+        This property should be overridden by subclasses.
+        """
+        raise NotImplementedError('abstract method')
+    
+    @property
+    def dtype(self):
+        """Scalar data type of each entry in an element of this space."""
+        return self.__dtype
+    
+    @property
+    def element_type(self):
+        """Type of elements in this space: `Tensor`."""
+        return Tensor
+    
+    @property
+    def examples(self):
+        """Return example random vectors."""
+        # Always return the same numbers
+        rand_state = np.random.get_state()
+        np.random.seed(1337)
+
+        if is_numeric_dtype(self.dtype):
+            yield ('Linearly spaced samples', self.element(
+                np.linspace(0, 1, self.size).reshape(self.shape)))
+            yield ('Normally distributed noise',
+                   self.element(np.random.standard_normal(self.shape)))
+
+        if self.is_real:
+            yield ('Uniformly distributed noise',
+                   self.element(np.random.uniform(size=self.shape)))
+        elif self.is_complex:
+            yield ('Uniformly distributed noise',
+                   self.element(np.random.uniform(size=self.shape) +
+                                np.random.uniform(size=self.shape) * 1j))
+        else:
+            # TODO: return something that always works, like zeros or ones?
+            raise NotImplementedError('no examples available for non-numeric'
+                                      'data type')
+
+        np.random.set_state(rand_state)
+
     @property
     def impl(self):
         """Name of the implementation back-end of this tensor set.
@@ -118,36 +219,31 @@ class TensorSpace(LinearSpace):
         This property should be overridden by subclasses.
         """
         raise NotImplementedError('abstract method')
-
+    
     @property
-    def shape(self):
-        """Number of scalar elements per axis.
-
-        .. note::
-            If `dtype` has a shape, we add it to the **left** of the given
-            ``shape`` in the class creation. This is in contrast to NumPy,
-            which adds extra axes to the **right**. We do this since we
-            usually want to represent discretizations of vector- or
-            tensor-valued functions by this, i.e., if
-            ``dtype.shape == (3,)`` we expect ``f[0]`` to have shape
-            ``shape``.
-        """
-        return self.__shape
-
-    @property
-    def dtype(self):
-        """Scalar data type of each entry in an element of this space."""
-        return self.__dtype
-
-    @property
-    def is_real(self):
-        """True if this is a space of real tensors."""
-        return is_real_floating_dtype(self.dtype)
-
+    def itemsize(self):
+        """Size in bytes of one entry in an element of this space."""
+        return int(self.dtype.itemsize)
+    
     @property
     def is_complex(self):
         """True if this is a space of complex tensors."""
         return is_complex_floating_dtype(self.dtype)
+    
+    @property
+    def is_real(self):
+        """True if this is a space of real tensors."""
+        return is_real_floating_dtype(self.dtype)
+    
+    @property
+    def nbytes(self):
+        """Total number of bytes in memory used by an element of this space."""
+        return self.size * self.itemsize
+    
+    @property
+    def ndim(self):
+        """Number of axes (=dimensions) of this space, also called "rank"."""
+        return len(self.shape)
 
     @property
     def real_dtype(self):
@@ -162,21 +258,7 @@ class TensorSpace(LinearSpace):
             raise NotImplementedError(
                 '`real_dtype` not defined for non-numeric `dtype`')
         return self.__real_dtype
-
-    @property
-    def complex_dtype(self):
-        """The complex dtype corresponding to this space's `dtype`.
-
-        Raises
-        ------
-        NotImplementedError
-            If `dtype` is not a numeric data type.
-        """
-        if not is_numeric_dtype(self.dtype):
-            raise NotImplementedError(
-                '`complex_dtype` not defined for non-numeric `dtype`')
-        return self.__complex_dtype
-
+    
     @property
     def real_space(self):
         """The space corresponding to this space's `real_dtype`.
@@ -190,37 +272,29 @@ class TensorSpace(LinearSpace):
             raise ValueError(
                 '`real_space` not defined for non-numeric `dtype`')
         return self.astype(self.real_dtype)
-
+    
     @property
-    def complex_space(self):
-        """The space corresponding to this space's `complex_dtype`.
+    def shape(self):
+        """Number of scalar elements per axis.
 
-        Raises
-        ------
-        ValueError
-            If `dtype` is not a numeric data type.
+        .. note::
+            If `dtype` has a shape, we add it to the **left** of the given
+            ``shape`` in the class creation. This is in contrast to NumPy,
+            which adds extra axes to the **right**. We do this since we
+            usually want to represent discretizations of vector- or
+            tensor-valued functions by this, i.e., if
+            ``dtype.shape == (3,)`` we expect ``f[0]`` to have shape
+            ``shape``.
         """
-        if not is_numeric_dtype(self.dtype):
-            raise ValueError(
-                '`complex_space` not defined for non-numeric `dtype`')
-        return self.astype(self.complex_dtype)
+        return self.__shape
+    
+    @property
+    def size(self):
+        """Total number of entries in an element of this space."""
+        return (0 if self.shape == () else
+                int(np.prod(self.shape, dtype='int64')))
 
-    def _astype(self, dtype):
-        """Internal helper for `astype`.
-
-        Subclasses with differing init parameters should overload this
-        method.
-        """
-        kwargs = {}
-        if is_floating_dtype(dtype):
-            # Use weighting only for floating-point types, otherwise, e.g.,
-            # `space.astype(bool)` would fail
-            weighting = getattr(self, 'weighting', None)
-            if weighting is not None:
-                kwargs['weighting'] = weighting
-
-        return type(self)(self.shape, dtype=dtype, **kwargs)
-
+    ########## public methods ##########
     def astype(self, dtype):
         """Return a copy of this space with new ``dtype``.
 
@@ -259,40 +333,32 @@ class TensorSpace(LinearSpace):
                 return self._astype(dtype)
         else:
             return self._astype(dtype)
+    
+    def one(self):
+        """Return a tensor of all ones.
 
-    @property
-    def default_order(self):
-        """Default storage order for new elements in this space.
+        This method should be overridden by subclasses.
 
-        This property should be overridden by subclasses.
+        Returns
+        -------
+        one : `Tensor`
+            A tensor of all one.
+        """
+        raise NotImplementedError('abstract method')
+    
+    def zero(self):
+        """Return a tensor of all zeros.
+
+        This method should be overridden by subclasses.
+
+        Returns
+        -------
+        zero : `Tensor`
+            A tensor of all zeros.
         """
         raise NotImplementedError('abstract method')
 
-    @property
-    def size(self):
-        """Total number of entries in an element of this space."""
-        return (0 if self.shape == () else
-                int(np.prod(self.shape, dtype='int64')))
-
-    @property
-    def ndim(self):
-        """Number of axes (=dimensions) of this space, also called "rank"."""
-        return len(self.shape)
-
-    def __len__(self):
-        """Number of tensor entries along the first axis."""
-        return int(self.shape[0])
-
-    @property
-    def itemsize(self):
-        """Size in bytes of one entry in an element of this space."""
-        return int(self.dtype.itemsize)
-
-    @property
-    def nbytes(self):
-        """Total number of bytes in memory used by an element of this space."""
-        return self.size * self.itemsize
-
+    ######### magic methods #########
     def __contains__(self, other):
         """Return ``other in self``.
 
@@ -398,6 +464,10 @@ class TensorSpace(LinearSpace):
         """Return ``hash(self)``."""
         return hash((type(self), self.shape, self.dtype))
 
+    def __len__(self):
+        """Number of tensor entries along the first axis."""
+        return int(self.shape[0])
+    
     def __repr__(self):
         """Return ``repr(self)``."""
         posargs = [self.shape, dtype_str(self.dtype)]
@@ -407,55 +477,28 @@ class TensorSpace(LinearSpace):
     def __str__(self):
         """Return ``str(self)``."""
         return repr(self)
+        
+    ########## _underscore methods ##########
+    def _astype(self, dtype):
+        """Internal helper for `astype`.
 
-    @property
-    def examples(self):
-        """Return example random vectors."""
-        # Always return the same numbers
-        rand_state = np.random.get_state()
-        np.random.seed(1337)
-
-        if is_numeric_dtype(self.dtype):
-            yield ('Linearly spaced samples', self.element(
-                np.linspace(0, 1, self.size).reshape(self.shape)))
-            yield ('Normally distributed noise',
-                   self.element(np.random.standard_normal(self.shape)))
-
-        if self.is_real:
-            yield ('Uniformly distributed noise',
-                   self.element(np.random.uniform(size=self.shape)))
-        elif self.is_complex:
-            yield ('Uniformly distributed noise',
-                   self.element(np.random.uniform(size=self.shape) +
-                                np.random.uniform(size=self.shape) * 1j))
-        else:
-            # TODO: return something that always works, like zeros or ones?
-            raise NotImplementedError('no examples available for non-numeric'
-                                      'data type')
-
-        np.random.set_state(rand_state)
-
-    def zero(self):
-        """Return a tensor of all zeros.
-
-        This method should be overridden by subclasses.
-
-        Returns
-        -------
-        zero : `Tensor`
-            A tensor of all zeros.
+        Subclasses with differing init parameters should overload this
+        method.
         """
-        raise NotImplementedError('abstract method')
+        kwargs = {}
+        if is_floating_dtype(dtype):
+            # Use weighting only for floating-point types, otherwise, e.g.,
+            # `space.astype(bool)` would fail
+            weighting = getattr(self, 'weighting', None)
+            if weighting is not None:
+                kwargs['weighting'] = weighting
 
-    def one(self):
-        """Return a tensor of all ones.
+        return type(self)(self.shape, dtype=dtype, **kwargs)
+    
+    def _divide(self, x1, x2, out):
+        """The entry-wise quotient of two tensors, assigned to ``out``.
 
         This method should be overridden by subclasses.
-
-        Returns
-        -------
-        one : `Tensor`
-            A tensor of all one.
         """
         raise NotImplementedError('abstract method')
 
@@ -466,108 +509,23 @@ class TensorSpace(LinearSpace):
         """
         raise NotImplementedError('abstract method')
 
-    def _divide(self, x1, x2, out):
-        """The entry-wise quotient of two tensors, assigned to ``out``.
-
-        This method should be overridden by subclasses.
-        """
-        raise NotImplementedError('abstract method')
-
-    @staticmethod
-    def default_dtype(field=None):
-        """Return the default data type for a given field.
-
-        This method should be overridden by subclasses.
-
-        Parameters
-        ----------
-        field : `Field`, optional
-            Set of numbers to be represented by a data type.
-
-        Returns
-        -------
-        dtype :
-            Numpy data type specifier.
-        """
-        raise NotImplementedError('abstract method')
-
-    @staticmethod
-    def available_dtypes():
-        """Return the set of data types available in this implementation.
-
-        This method should be overridden by subclasses.
-        """
-        raise NotImplementedError('abstract method')
-
-    @property
-    def element_type(self):
-        """Type of elements in this space: `Tensor`."""
-        return Tensor
-
-
 class Tensor(LinearSpaceElement):
 
     """Abstract class for representation of `TensorSpace` elements."""
 
-    def asarray(self, out=None):
-        """Extract the data of this tensor as a Numpy array.
+    ######### static methods #########
 
-        This method should be overridden by subclasses.
+    ######### Attributes #########
+    @property
+    def itemsize(self):
+        """Size in bytes of one tensor entry."""
+        return self.space.itemsize
 
-        Parameters
-        ----------
-        out : `numpy.ndarray`, optional
-            Array to write the result to.
-
-        Returns
-        -------
-        asarray : `numpy.ndarray`
-            Numpy array of the same data type and shape as the space.
-            If ``out`` was given, the returned object is a reference
-            to it.
-        """
-        raise NotImplementedError('abstract method')
-
-    def __getitem__(self, indices):
-        """Return ``self[indices]``.
-
-        This method should be overridden by subclasses.
-
-        Parameters
-        ----------
-        indices : index expression
-            Integer, slice or sequence of these, defining the positions
-            of the data array which should be accessed.
-
-        Returns
-        -------
-        values : `TensorSpace.dtype` or `Tensor`
-            The value(s) at the given indices. Note that depending on
-            the implementation, the returned object may be a (writable)
-            view into the original array.
-        """
-        raise NotImplementedError('abstract method')
-
-    def __setitem__(self, indices, values):
-        """Implement ``self[indices] = values``.
-
-        This method should be overridden by subclasses.
-
-        Parameters
-        ----------
-        indices : index expression
-            Integer, slice or sequence of these, defining the positions
-            of the data array which should be written to.
-        values : scalar, `array-like` or `Tensor`
-            The value(s) that are to be assigned.
-
-            If ``index`` is an integer, ``value`` must be a scalar.
-
-            If ``index`` is a slice or a sequence of slices, ``value``
-            must be broadcastable to the shape of the slice.
-        """
-        raise NotImplementedError('abstract method')
-
+    @property
+    def nbytes(self):
+        """Total number of bytes in memory occupied by this tensor."""
+        return self.space.nbytes
+    
     @property
     def impl(self):
         """Name of the implementation back-end of this tensor."""
@@ -593,23 +551,41 @@ class Tensor(LinearSpaceElement):
         """Number of axes (=dimensions) of this tensor."""
         return self.space.ndim
 
-    def __len__(self):
-        """Return ``len(self)``.
+    @property
+    def ufuncs(self):
+        """Access to Numpy style universal functions.
 
-        The length is equal to the number of entries along axis 0.
+        These default ufuncs are always available, but may or may not be
+        optimized for the specific space in use.
+
+        .. note::
+            This interface is will be deprecated when Numpy 1.13 becomes
+            the minimum required version. Use Numpy ufuncs directly, e.g.,
+            ``np.sqrt(x)`` instead of ``x.ufuncs.sqrt()``.
         """
-        return len(self.space)
+        return TensorSpaceUfuncs(self)
 
-    @property
-    def itemsize(self):
-        """Size in bytes of one tensor entry."""
-        return self.space.itemsize
 
-    @property
-    def nbytes(self):
-        """Total number of bytes in memory occupied by this tensor."""
-        return self.space.nbytes
+    ######### public methods #########
+    def asarray(self, out=None):
+        """Extract the data of this tensor as a Numpy array.
 
+        This method should be overridden by subclasses.
+
+        Parameters
+        ----------
+        out : `numpy.ndarray`, optional
+            Array to write the result to.
+
+        Returns
+        -------
+        asarray : `numpy.ndarray`
+            Numpy array of the same data type and shape as the space.
+            If ``out`` was given, the returned object is a reference
+            to it.
+        """
+        raise NotImplementedError('abstract method')
+    
     def astype(self, dtype):
         """Return a copy of this element with new ``dtype``.
 
@@ -627,28 +603,109 @@ class Tensor(LinearSpaceElement):
             Version of this element with given data type.
         """
         raise NotImplementedError('abstract method')
+    
+    def show(self, title=None, method='', indices=None, force_show=False,
+             fig=None, **kwargs):
+        """Display the function graphically.
 
-    def __repr__(self):
-        """Return ``repr(self)``."""
-        maxsize_full_print = 2 * np.get_printoptions()['edgeitems']
-        self_str = array_str(self, nprint=maxsize_full_print)
-        if self.ndim == 1 and self.size <= maxsize_full_print:
-            return '{!r}.element({})'.format(self.space, self_str)
+        Parameters
+        ----------
+        title : string, optional
+            Set the title of the figure
+
+        method : string, optional
+            1d methods:
+
+                ``'plot'`` : graph plot
+
+                ``'scatter'`` : scattered 2d points (2nd axis <-> value)
+
+            2d methods:
+
+                ``'imshow'`` : image plot with coloring according to
+                value, including a colorbar.
+
+                ``'scatter'`` : cloud of scattered 3d points
+                (3rd axis <-> value)
+
+        indices : index expression, optional
+            Display a slice of the array instead of the full array. The
+            index expression is most easily created with the `numpy.s_`
+            constructor, i.e. supply ``np.s_[:, 1, :]`` to display the
+            first slice along the second axis.
+            For data with 3 or more dimensions, the 2d slice in the first
+            two axes at the "middle" along the remaining axes is shown
+            (semantically ``[:, :, shape[2:] // 2]``).
+            This option is mutually exclusive to ``coords``.
+
+        force_show : bool, optional
+            Whether the plot should be forced to be shown now or deferred until
+            later. Note that some backends always displays the plot, regardless
+            of this value.
+
+        fig : `matplotlib.figure.Figure`, optional
+            The figure to show in. Expected to be of same "style", as
+            the figure given by this function. The most common use case
+            is that ``fig`` is the return value of an earlier call to
+            this function.
+
+        kwargs : {'figsize', 'saveto', 'clim', ...}, optional
+            Extra keyword arguments passed on to the display method.
+            See the Matplotlib functions for documentation of extra
+            options.
+
+        Returns
+        -------
+        fig : `matplotlib.figure.Figure`
+            The resulting figure. It is also shown to the user.
+
+        See Also
+        --------
+        odl.util.graphics.show_discrete_data : Underlying implementation
+        """
+        from odl.discr import uniform_grid
+        from odl.util.graphics import show_discrete_data
+
+        # Default to showing x-y slice "in the middle"
+        if indices is None and self.ndim >= 3:
+            indices = tuple(
+                [slice(None)] * 2 + [n // 2 for n in self.space.shape[2:]]
+            )
+
+        if isinstance(indices, (Integral, slice)):
+            indices = (indices,)
+        elif indices is None or indices == Ellipsis:
+            indices = (slice(None),) * self.ndim
         else:
-            return '{!r}.element(\n{}\n)'.format(self.space, indent(self_str))
+            indices = tuple(indices)
 
-    def __str__(self):
-        """Return ``str(self)``."""
-        return array_str(self)
+        # Replace None by slice(None)
+        indices = tuple(slice(None) if idx is None else idx for idx in indices)
 
-    def __bool__(self):
-        """Return ``bool(self)``."""
-        if self.size > 1:
-            raise ValueError('The truth value of an array with more than one '
-                             'element is ambiguous. '
-                             'Use np.any(a) or np.all(a)')
-        else:
-            return bool(self.asarray())
+        if Ellipsis in indices:
+            # Replace Ellipsis with the correct number of [:] expressions
+            pos = indices.index(Ellipsis)
+            indices = (indices[:pos] +
+                       (np.s_[:], ) * (self.ndim - len(indices) + 1) +
+                       indices[pos + 1:])
+
+        if len(indices) < self.ndim:
+            raise ValueError('too few axes ({} < {})'.format(len(indices),
+                                                             self.ndim))
+        if len(indices) > self.ndim:
+            raise ValueError('too many axes ({} > {})'.format(len(indices),
+                                                              self.ndim))
+
+        # Squeeze grid and values according to the index expression
+        full_grid = uniform_grid([0] * self.ndim, np.array(self.shape) - 1,
+                                 self.shape)
+        grid = full_grid[indices].squeeze()
+        values = self.asarray()[indices].squeeze()
+
+        return show_discrete_data(values, grid, title=title, method=method,
+                                  force_show=force_show, fig=fig, **kwargs)
+
+    ######### magic methods #########
 
     def __array__(self, dtype=None):
         """Return a Numpy array from this tensor.
@@ -755,14 +812,14 @@ class Tensor(LinearSpaceElement):
 
         .. _interface documentation:
            https://docs.scipy.org/doc/numpy/reference/arrays.classes.html\
-#numpy.class.__array_ufunc__
+        #numpy.class.__array_ufunc__
 
         .. _general documentation on Numpy ufuncs:
            https://docs.scipy.org/doc/numpy/reference/ufuncs.html
 
         .. _reduceat documentation:
            https://docs.scipy.org/doc/numpy/reference/generated/\
-numpy.ufunc.reduceat.html
+        numpy.ufunc.reduceat.html
         """
         # --- Process `out` --- #
 
@@ -874,123 +931,77 @@ numpy.ufunc.reduceat.html
 
             # Return result (may be scalar, raw array or space element)
             return res
+        
+    def __bool__(self):
+        """Return ``bool(self)``."""
+        if self.size > 1:
+            raise ValueError('The truth value of an array with more than one '
+                             'element is ambiguous. '
+                             'Use np.any(a) or np.all(a)')
+        else:
+            return bool(self.asarray())
+        
+    def __getitem__(self, indices):
+        """Return ``self[indices]``.
 
-    # Old ufuncs interface, will be deprecated when Numpy 1.13 becomes minimum
-
-    @property
-    def ufuncs(self):
-        """Access to Numpy style universal functions.
-
-        These default ufuncs are always available, but may or may not be
-        optimized for the specific space in use.
-
-        .. note::
-            This interface is will be deprecated when Numpy 1.13 becomes
-            the minimum required version. Use Numpy ufuncs directly, e.g.,
-            ``np.sqrt(x)`` instead of ``x.ufuncs.sqrt()``.
-        """
-        return TensorSpaceUfuncs(self)
-
-    def show(self, title=None, method='', indices=None, force_show=False,
-             fig=None, **kwargs):
-        """Display the function graphically.
+        This method should be overridden by subclasses.
 
         Parameters
         ----------
-        title : string, optional
-            Set the title of the figure
-
-        method : string, optional
-            1d methods:
-
-                ``'plot'`` : graph plot
-
-                ``'scatter'`` : scattered 2d points (2nd axis <-> value)
-
-            2d methods:
-
-                ``'imshow'`` : image plot with coloring according to
-                value, including a colorbar.
-
-                ``'scatter'`` : cloud of scattered 3d points
-                (3rd axis <-> value)
-
-        indices : index expression, optional
-            Display a slice of the array instead of the full array. The
-            index expression is most easily created with the `numpy.s_`
-            constructor, i.e. supply ``np.s_[:, 1, :]`` to display the
-            first slice along the second axis.
-            For data with 3 or more dimensions, the 2d slice in the first
-            two axes at the "middle" along the remaining axes is shown
-            (semantically ``[:, :, shape[2:] // 2]``).
-            This option is mutually exclusive to ``coords``.
-
-        force_show : bool, optional
-            Whether the plot should be forced to be shown now or deferred until
-            later. Note that some backends always displays the plot, regardless
-            of this value.
-
-        fig : `matplotlib.figure.Figure`, optional
-            The figure to show in. Expected to be of same "style", as
-            the figure given by this function. The most common use case
-            is that ``fig`` is the return value of an earlier call to
-            this function.
-
-        kwargs : {'figsize', 'saveto', 'clim', ...}, optional
-            Extra keyword arguments passed on to the display method.
-            See the Matplotlib functions for documentation of extra
-            options.
+        indices : index expression
+            Integer, slice or sequence of these, defining the positions
+            of the data array which should be accessed.
 
         Returns
         -------
-        fig : `matplotlib.figure.Figure`
-            The resulting figure. It is also shown to the user.
-
-        See Also
-        --------
-        odl.util.graphics.show_discrete_data : Underlying implementation
+        values : `TensorSpace.dtype` or `Tensor`
+            The value(s) at the given indices. Note that depending on
+            the implementation, the returned object may be a (writable)
+            view into the original array.
         """
-        from odl.discr import uniform_grid
-        from odl.util.graphics import show_discrete_data
+        raise NotImplementedError('abstract method')
+   
+    def __len__(self):
+        """Return ``len(self)``.
 
-        # Default to showing x-y slice "in the middle"
-        if indices is None and self.ndim >= 3:
-            indices = tuple(
-                [slice(None)] * 2 + [n // 2 for n in self.space.shape[2:]]
-            )
-
-        if isinstance(indices, (Integral, slice)):
-            indices = (indices,)
-        elif indices is None or indices == Ellipsis:
-            indices = (slice(None),) * self.ndim
+        The length is equal to the number of entries along axis 0.
+        """
+        return len(self.space)
+    
+    def __repr__(self):
+        """Return ``repr(self)``."""
+        maxsize_full_print = 2 * np.get_printoptions()['edgeitems']
+        self_str = array_str(self, nprint=maxsize_full_print)
+        if self.ndim == 1 and self.size <= maxsize_full_print:
+            return '{!r}.element({})'.format(self.space, self_str)
         else:
-            indices = tuple(indices)
+            return '{!r}.element(\n{}\n)'.format(self.space, indent(self_str))
+        
+    def __setitem__(self, indices, values):
+        """Implement ``self[indices] = values``.
 
-        # Replace None by slice(None)
-        indices = tuple(slice(None) if idx is None else idx for idx in indices)
+        This method should be overridden by subclasses.
 
-        if Ellipsis in indices:
-            # Replace Ellipsis with the correct number of [:] expressions
-            pos = indices.index(Ellipsis)
-            indices = (indices[:pos] +
-                       (np.s_[:], ) * (self.ndim - len(indices) + 1) +
-                       indices[pos + 1:])
+        Parameters
+        ----------
+        indices : index expression
+            Integer, slice or sequence of these, defining the positions
+            of the data array which should be written to.
+        values : scalar, `array-like` or `Tensor`
+            The value(s) that are to be assigned.
 
-        if len(indices) < self.ndim:
-            raise ValueError('too few axes ({} < {})'.format(len(indices),
-                                                             self.ndim))
-        if len(indices) > self.ndim:
-            raise ValueError('too many axes ({} > {})'.format(len(indices),
-                                                              self.ndim))
+            If ``index`` is an integer, ``value`` must be a scalar.
 
-        # Squeeze grid and values according to the index expression
-        full_grid = uniform_grid([0] * self.ndim, np.array(self.shape) - 1,
-                                 self.shape)
-        grid = full_grid[indices].squeeze()
-        values = self.asarray()[indices].squeeze()
+            If ``index`` is a slice or a sequence of slices, ``value``
+            must be broadcastable to the shape of the slice.
+        """
+        raise NotImplementedError('abstract method')
 
-        return show_discrete_data(values, grid, title=title, method=method,
-                                  force_show=force_show, fig=fig, **kwargs)
+    def __str__(self):
+        """Return ``str(self)``."""
+        return array_str(self)
+        
+    ######### private methods #########
 
 
 if __name__ == '__main__':

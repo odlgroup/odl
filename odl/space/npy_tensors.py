@@ -293,11 +293,132 @@ class NumpyTensorSpace(TensorSpace):
         # Make sure there are no leftover kwargs
         if kwargs:
             raise TypeError('got unknown keyword arguments {}'.format(kwargs))
+        
+    ########## static methods ##########
+    @staticmethod
+    def available_dtypes():
+        """Return the set of data types available in this implementation.
 
+        Notes
+        -----
+        This is all dtypes available in Numpy. See ``numpy.sctypeDict``
+        for more information.
+
+        The available dtypes may depend on the specific system used.
+        """
+        all_dtypes = []
+        for dtype in np.sctypeDict.values():
+            if dtype not in (object, np.void):
+                all_dtypes.append(np.dtype(dtype))
+        # Need to add these manually since they are not contained
+        # in np.sctypeDict.
+        all_dtypes.extend([np.dtype('S'), np.dtype('U')])
+        return tuple(sorted(set(all_dtypes)))
+
+    @staticmethod
+    def default_dtype(field=None):
+        """Return the default data type of this class for a given field.
+
+        Parameters
+        ----------
+        field : `Field`, optional
+            Set of numbers to be represented by a data type.
+            Currently supported : `RealNumbers`, `ComplexNumbers`
+            The default ``None`` means `RealNumbers`
+
+        Returns
+        -------
+        dtype : `numpy.dtype`
+            Numpy data type specifier. The returned defaults are:
+
+                ``RealNumbers()`` : ``np.dtype('float64')``
+
+                ``ComplexNumbers()`` : ``np.dtype('complex128')``
+        """
+        if field is None or field == RealNumbers():
+            return np.dtype('float64')
+        elif field == ComplexNumbers():
+            return np.dtype('complex128')
+        else:
+            raise ValueError('no default data type defined for field {}'
+                             ''.format(field))
+
+    ########## Attributes ##########
+    @property
+    def byaxis(self):
+        """Return the subspace defined along one or several dimensions.
+
+        Examples
+        --------
+        Indexing with integers or slices:
+
+        >>> space = odl.rn((2, 3, 4))
+        >>> space.byaxis[0]
+        rn(2)
+        >>> space.byaxis[1:]
+        rn((3, 4))
+
+        Lists can be used to stack spaces arbitrarily:
+
+        >>> space.byaxis[[2, 1, 2]]
+        rn((4, 3, 4))
+        """
+        space = self
+
+        class NpyTensorSpacebyaxis(object):
+
+            """Helper class for indexing by axis."""
+
+            def __getitem__(self, indices):
+                """Return ``self[indices]``."""
+                try:
+                    iter(indices)
+                except TypeError:
+                    newshape = space.shape[indices]
+                else:
+                    newshape = tuple(space.shape[i] for i in indices)
+
+                if isinstance(space.weighting, ArrayWeighting):
+                    new_array = np.asarray(space.weighting.array[indices])
+                    weighting = NumpyTensorSpaceArrayWeighting(
+                        new_array, space.weighting.exponent)
+                else:
+                    weighting = space.weighting
+
+                return type(space)(newshape, space.dtype, weighting=weighting)
+
+            def __repr__(self):
+                """Return ``repr(self)``."""
+                return repr(space) + '.byaxis'
+
+        return NpyTensorSpacebyaxis()
+    
+    @property
+    def default_order(self):
+        """Default storage order for new elements in this space: ``'C'``."""
+        return 'C'
+    
+    @property
+    def element_type(self):
+        """Type of elements in this space: `NumpyTensor`."""
+        return NumpyTensor
+    
+    @property
+    def exponent(self):
+        """Exponent of the norm and the distance."""
+        return self.weighting.exponent
+    
     @property
     def impl(self):
         """Name of the implementation back-end: ``'numpy'``."""
         return 'numpy'
+    
+    @property
+    def is_weighted(self):
+        """Return ``True`` if the space is not weighted by constant 1.0."""
+        return not (
+            isinstance(self.weighting, NumpyTensorSpaceConstWeighting) and
+            self.weighting.const == 1.0)
 
     @property
     def supported_num_operation_paradigms(self) -> NumOperationParadigmSupport:
@@ -313,29 +434,13 @@ class NumpyTensorSpace(TensorSpace):
             return SupportedNumOperationParadigms(
                     in_place = NumOperationParadigmSupport.NOT_SUPPORTED,
                     out_of_place = NumOperationParadigmSupport.PREFERRED)
-    
-    @property
-    def default_order(self):
-        """Default storage order for new elements in this space: ``'C'``."""
-        return 'C'
 
     @property
     def weighting(self):
         """This space's weighting scheme."""
         return self.__weighting
 
-    @property
-    def is_weighted(self):
-        """Return ``True`` if the space is not weighted by constant 1.0."""
-        return not (
-            isinstance(self.weighting, NumpyTensorSpaceConstWeighting) and
-            self.weighting.const == 1.0)
-
-    @property
-    def exponent(self):
-        """Exponent of the norm and the distance."""
-        return self.weighting.exponent
-
+    ######### public methods #########
     def element(self, inp=None, data_ptr=None, order=None):
         """Create a new element.
 
@@ -460,19 +565,6 @@ class NumpyTensorSpace(TensorSpace):
         else:
             raise TypeError('cannot provide both `inp` and `data_ptr`')
 
-    def zero(self):
-        """Return a tensor of all zeros.
-
-        Examples
-        --------
-        >>> space = odl.rn(3)
-        >>> x = space.zero()
-        >>> x
-        rn(3).element([ 0.,  0.,  0.])
-        """
-        return self.element(np.zeros(self.shape, dtype=self.dtype,
-                                     order=self.default_order))
-
     def one(self):
         """Return a tensor of all ones.
 
@@ -485,270 +577,21 @@ class NumpyTensorSpace(TensorSpace):
         """
         return self.element(np.ones(self.shape, dtype=self.dtype,
                                     order=self.default_order))
-
-    @staticmethod
-    def available_dtypes():
-        """Return the set of data types available in this implementation.
-
-        Notes
-        -----
-        This is all dtypes available in Numpy. See ``numpy.sctypeDict``
-        for more information.
-
-        The available dtypes may depend on the specific system used.
-        """
-        all_dtypes = []
-        for dtype in np.sctypeDict.values():
-            if dtype not in (object, np.void):
-                all_dtypes.append(np.dtype(dtype))
-        # Need to add these manually since they are not contained
-        # in np.sctypeDict.
-        all_dtypes.extend([np.dtype('S'), np.dtype('U')])
-        return tuple(sorted(set(all_dtypes)))
-
-    @staticmethod
-    def default_dtype(field=None):
-        """Return the default data type of this class for a given field.
-
-        Parameters
-        ----------
-        field : `Field`, optional
-            Set of numbers to be represented by a data type.
-            Currently supported : `RealNumbers`, `ComplexNumbers`
-            The default ``None`` means `RealNumbers`
-
-        Returns
-        -------
-        dtype : `numpy.dtype`
-            Numpy data type specifier. The returned defaults are:
-
-                ``RealNumbers()`` : ``np.dtype('float64')``
-
-                ``ComplexNumbers()`` : ``np.dtype('complex128')``
-        """
-        if field is None or field == RealNumbers():
-            return np.dtype('float64')
-        elif field == ComplexNumbers():
-            return np.dtype('complex128')
-        else:
-            raise ValueError('no default data type defined for field {}'
-                             ''.format(field))
-
-    def _lincomb(self, a, x1, b, x2, out):
-        """Implement the linear combination of ``x1`` and ``x2``.
-
-        Compute ``out = a*x1 + b*x2`` using optimized
-        BLAS routines if possible.
-
-        This function is part of the subclassing API. Do not
-        call it directly.
-
-        Parameters
-        ----------
-        a, b : `TensorSpace.field` element
-            Scalars to multiply ``x1`` and ``x2`` with.
-        x1, x2 : `NumpyTensor`
-            Summands in the linear combination.
-        out : `NumpyTensor`
-            Tensor to which the result is written.
+    
+    def zero(self):
+        """Return a tensor of all zeros.
 
         Examples
         --------
         >>> space = odl.rn(3)
-        >>> x = space.element([0, 1, 1])
-        >>> y = space.element([0, 0, 1])
-        >>> out = space.element()
-        >>> result = space.lincomb(1, x, 2, y, out)
-        >>> result
-        rn(3).element([ 0.,  1.,  3.])
-        >>> result is out
-        True
+        >>> x = space.zero()
+        >>> x
+        rn(3).element([ 0.,  0.,  0.])
         """
-        if self.__use_in_place_ops:
-            assert(out is not None)
-            _lincomb_impl(a, x1, b, x2, out)
-        else:
-            assert(out is None)
-            return self.element(a * x1.data + b * x2.data)
-
-    def _dist(self, x1, x2):
-        """Return the distance between ``x1`` and ``x2``.
-
-        This function is part of the subclassing API. Do not
-        call it directly.
-
-        Parameters
-        ----------
-        x1, x2 : `NumpyTensor`
-            Elements whose mutual distance is calculated.
-
-        Returns
-        -------
-        dist : `float`
-            Distance between the elements.
-
-        Examples
-        --------
-        Different exponents result in difference metrics:
-
-        >>> space_2 = odl.rn(3, exponent=2)
-        >>> x = space_2.element([-1, -1, 2])
-        >>> y = space_2.one()
-        >>> space_2.dist(x, y)
-        3.0
-
-        >>> space_1 = odl.rn(3, exponent=1)
-        >>> x = space_1.element([-1, -1, 2])
-        >>> y = space_1.one()
-        >>> space_1.dist(x, y)
-        5.0
-
-        Weighting is supported, too:
-
-        >>> space_1_w = odl.rn(3, exponent=1, weighting=[2, 1, 1])
-        >>> x = space_1_w.element([-1, -1, 2])
-        >>> y = space_1_w.one()
-        >>> space_1_w.dist(x, y)
-        7.0
-        """
-        return self.weighting.dist(x1, x2)
-
-    def _norm(self, x):
-        """Return the norm of ``x``.
-
-        This function is part of the subclassing API. Do not
-        call it directly.
-
-        Parameters
-        ----------
-        x : `NumpyTensor`
-            Element whose norm is calculated.
-
-        Returns
-        -------
-        norm : `float`
-            Norm of the element.
-
-        Examples
-        --------
-        Different exponents result in difference norms:
-
-        >>> space_2 = odl.rn(3, exponent=2)
-        >>> x = space_2.element([3, 0, 4])
-        >>> space_2.norm(x)
-        5.0
-        >>> space_1 = odl.rn(3, exponent=1)
-        >>> x = space_1.element([3, 0, 4])
-        >>> space_1.norm(x)
-        7.0
-
-        Weighting is supported, too:
-
-        >>> space_1_w = odl.rn(3, exponent=1, weighting=[2, 1, 1])
-        >>> x = space_1_w.element([3, 0, 4])
-        >>> space_1_w.norm(x)
-        10.0
-        """
-        return self.weighting.norm(x)
-
-    def _inner(self, x1, x2):
-        """Return the inner product of ``x1`` and ``x2``.
-
-        This function is part of the subclassing API. Do not
-        call it directly.
-
-        Parameters
-        ----------
-        x1, x2 : `NumpyTensor`
-            Elements whose inner product is calculated.
-
-        Returns
-        -------
-        inner : `field` `element`
-            Inner product of the elements.
-
-        Examples
-        --------
-        >>> space = odl.rn(3)
-        >>> x = space.element([1, 0, 3])
-        >>> y = space.one()
-        >>> space.inner(x, y)
-        4.0
-
-        Weighting is supported, too:
-
-        >>> space_w = odl.rn(3, weighting=[2, 1, 1])
-        >>> x = space_w.element([1, 0, 3])
-        >>> y = space_w.one()
-        >>> space_w.inner(x, y)
-        5.0
-        """
-        return self.weighting.inner(x1, x2)
-
-    def _multiply(self, x1, x2, out):
-        """Compute the entry-wise product ``out = x1 * x2``.
-
-        This function is part of the subclassing API. Do not
-        call it directly.
-
-        Parameters
-        ----------
-        x1, x2 : `NumpyTensor`
-            Factors in the product.
-        out : `NumpyTensor`
-            Element to which the result is written.
-
-        Examples
-        --------
-        >>> space = odl.rn(3)
-        >>> x = space.element([1, 0, 3])
-        >>> y = space.element([-1, 1, -1])
-        >>> space.multiply(x, y)
-        rn(3).element([-1.,  0., -3.])
-        >>> out = space.element()
-        >>> result = space.multiply(x, y, out=out)
-        >>> result
-        rn(3).element([-1.,  0., -3.])
-        >>> result is out
-        True
-        """
-        if out is None:
-            return np.multiply(x1.data, x2.data)
-        else:
-            np.multiply(x1.data, x2.data, out=out.data)
-
-    def _divide(self, x1, x2, out):
-        """Compute the entry-wise quotient ``x1 / x2``.
-
-        This function is part of the subclassing API. Do not
-        call it directly.
-
-        Parameters
-        ----------
-        x1, x2 : `NumpyTensor`
-            Dividend and divisor in the quotient.
-        out : `NumpyTensor`
-            Element to which the result is written.
-
-        Examples
-        --------
-        >>> space = odl.rn(3)
-        >>> x = space.element([2, 0, 4])
-        >>> y = space.element([1, 1, 2])
-        >>> space.divide(x, y)
-        rn(3).element([ 2.,  0.,  2.])
-        >>> out = space.element()
-        >>> result = space.divide(x, y, out=out)
-        >>> result
-        rn(3).element([ 2.,  0.,  2.])
-        >>> result is out
-        True
-        """
-        if out is None:
-            return np.divide(x1.data, x2.data)
-        else:
-            np.divide(x1.data, x2.data, out=out.data)
-
+        return self.element(np.zeros(self.shape, dtype=self.dtype,
+                                     order=self.default_order))
+    
+    ######### magic methods #########
     def __eq__(self, other):
         """Return ``self == other``.
 
@@ -792,54 +635,221 @@ class NumpyTensorSpace(TensorSpace):
         return hash((super(NumpyTensorSpace, self).__hash__(),
                      self.weighting))
 
-    @property
-    def byaxis(self):
-        """Return the subspace defined along one or several dimensions.
+    ######### private methods #########
+    def _dist(self, x1, x2):
+        """Return the distance between ``x1`` and ``x2``.
+
+        This function is part of the subclassing API. Do not
+        call it directly.
+
+        Parameters
+        ----------
+        x1, x2 : `NumpyTensor`
+            Elements whose mutual distance is calculated.
+
+        Returns
+        -------
+        dist : `float`
+            Distance between the elements.
 
         Examples
         --------
-        Indexing with integers or slices:
+        Different exponents result in difference metrics:
 
-        >>> space = odl.rn((2, 3, 4))
-        >>> space.byaxis[0]
-        rn(2)
-        >>> space.byaxis[1:]
-        rn((3, 4))
+        >>> space_2 = odl.rn(3, exponent=2)
+        >>> x = space_2.element([-1, -1, 2])
+        >>> y = space_2.one()
+        >>> space_2.dist(x, y)
+        3.0
 
-        Lists can be used to stack spaces arbitrarily:
+        >>> space_1 = odl.rn(3, exponent=1)
+        >>> x = space_1.element([-1, -1, 2])
+        >>> y = space_1.one()
+        >>> space_1.dist(x, y)
+        5.0
 
-        >>> space.byaxis[[2, 1, 2]]
-        rn((4, 3, 4))
+        Weighting is supported, too:
+
+        >>> space_1_w = odl.rn(3, exponent=1, weighting=[2, 1, 1])
+        >>> x = space_1_w.element([-1, -1, 2])
+        >>> y = space_1_w.one()
+        >>> space_1_w.dist(x, y)
+        7.0
         """
-        space = self
+        return self.weighting.dist(x1, x2)
+    
+    def _divide(self, x1, x2, out):
+        """Compute the entry-wise quotient ``x1 / x2``.
 
-        class NpyTensorSpacebyaxis(object):
+        This function is part of the subclassing API. Do not
+        call it directly.
 
-            """Helper class for indexing by axis."""
+        Parameters
+        ----------
+        x1, x2 : `NumpyTensor`
+            Dividend and divisor in the quotient.
+        out : `NumpyTensor`
+            Element to which the result is written.
 
-            def __getitem__(self, indices):
-                """Return ``self[indices]``."""
-                try:
-                    iter(indices)
-                except TypeError:
-                    newshape = space.shape[indices]
-                else:
-                    newshape = tuple(space.shape[i] for i in indices)
+        Examples
+        --------
+        >>> space = odl.rn(3)
+        >>> x = space.element([2, 0, 4])
+        >>> y = space.element([1, 1, 2])
+        >>> space.divide(x, y)
+        rn(3).element([ 2.,  0.,  2.])
+        >>> out = space.element()
+        >>> result = space.divide(x, y, out=out)
+        >>> result
+        rn(3).element([ 2.,  0.,  2.])
+        >>> result is out
+        True
+        """
+        if out is None:
+            return np.divide(x1.data, x2.data)
+        else:
+            np.divide(x1.data, x2.data, out=out.data)
+    
+    def _inner(self, x1, x2):
+        """Return the inner product of ``x1`` and ``x2``.
 
-                if isinstance(space.weighting, ArrayWeighting):
-                    new_array = np.asarray(space.weighting.array[indices])
-                    weighting = NumpyTensorSpaceArrayWeighting(
-                        new_array, space.weighting.exponent)
-                else:
-                    weighting = space.weighting
+        This function is part of the subclassing API. Do not
+        call it directly.
 
-                return type(space)(newshape, space.dtype, weighting=weighting)
+        Parameters
+        ----------
+        x1, x2 : `NumpyTensor`
+            Elements whose inner product is calculated.
 
-            def __repr__(self):
-                """Return ``repr(self)``."""
-                return repr(space) + '.byaxis'
+        Returns
+        -------
+        inner : `field` `element`
+            Inner product of the elements.
 
-        return NpyTensorSpacebyaxis()
+        Examples
+        --------
+        >>> space = odl.rn(3)
+        >>> x = space.element([1, 0, 3])
+        >>> y = space.one()
+        >>> space.inner(x, y)
+        4.0
+
+        Weighting is supported, too:
+
+        >>> space_w = odl.rn(3, weighting=[2, 1, 1])
+        >>> x = space_w.element([1, 0, 3])
+        >>> y = space_w.one()
+        >>> space_w.inner(x, y)
+        5.0
+        """
+        return self.weighting.inner(x1, x2)
+    
+    def _lincomb(self, a, x1, b, x2, out):
+        """Implement the linear combination of ``x1`` and ``x2``.
+
+        Compute ``out = a*x1 + b*x2`` using optimized
+        BLAS routines if possible.
+
+        This function is part of the subclassing API. Do not
+        call it directly.
+
+        Parameters
+        ----------
+        a, b : `TensorSpace.field` element
+            Scalars to multiply ``x1`` and ``x2`` with.
+        x1, x2 : `NumpyTensor`
+            Summands in the linear combination.
+        out : `NumpyTensor`
+            Tensor to which the result is written.
+
+        Examples
+        --------
+        >>> space = odl.rn(3)
+        >>> x = space.element([0, 1, 1])
+        >>> y = space.element([0, 0, 1])
+        >>> out = space.element()
+        >>> result = space.lincomb(1, x, 2, y, out)
+        >>> result
+        rn(3).element([ 0.,  1.,  3.])
+        >>> result is out
+        True
+        """
+        if self.__use_in_place_ops:
+            assert(out is not None)
+            _lincomb_impl(a, x1, b, x2, out)
+        else:
+            assert(out is None)
+            return self.element(a * x1.data + b * x2.data)
+
+    def _multiply(self, x1, x2, out):
+        """Compute the entry-wise product ``out = x1 * x2``.
+
+        This function is part of the subclassing API. Do not
+        call it directly.
+
+        Parameters
+        ----------
+        x1, x2 : `NumpyTensor`
+            Factors in the product.
+        out : `NumpyTensor`
+            Element to which the result is written.
+
+        Examples
+        --------
+        >>> space = odl.rn(3)
+        >>> x = space.element([1, 0, 3])
+        >>> y = space.element([-1, 1, -1])
+        >>> space.multiply(x, y)
+        rn(3).element([-1.,  0., -3.])
+        >>> out = space.element()
+        >>> result = space.multiply(x, y, out=out)
+        >>> result
+        rn(3).element([-1.,  0., -3.])
+        >>> result is out
+        True
+        """
+        if out is None:
+            return np.multiply(x1.data, x2.data)
+        else:
+            np.multiply(x1.data, x2.data, out=out.data)
+
+    def _norm(self, x):
+        """Return the norm of ``x``.
+
+        This function is part of the subclassing API. Do not
+        call it directly.
+
+        Parameters
+        ----------
+        x : `NumpyTensor`
+            Element whose norm is calculated.
+
+        Returns
+        -------
+        norm : `float`
+            Norm of the element.
+
+        Examples
+        --------
+        Different exponents result in difference norms:
+
+        >>> space_2 = odl.rn(3, exponent=2)
+        >>> x = space_2.element([3, 0, 4])
+        >>> space_2.norm(x)
+        5.0
+        >>> space_1 = odl.rn(3, exponent=1)
+        >>> x = space_1.element([3, 0, 4])
+        >>> space_1.norm(x)
+        7.0
+
+        Weighting is supported, too:
+
+        >>> space_1_w = odl.rn(3, exponent=1, weighting=[2, 1, 1])
+        >>> x = space_1_w.element([3, 0, 4])
+        >>> space_1_w.norm(x)
+        10.0
+        """
+        return self.weighting.norm(x)
 
     def __repr__(self):
         """Return ``repr(self)``."""
@@ -874,12 +884,6 @@ class NumpyTensorSpace(TensorSpace):
 
         return '{}({})'.format(ctor_name, inner_str)
 
-    @property
-    def element_type(self):
-        """Type of elements in this space: `NumpyTensor`."""
-        return NumpyTensor
-
-
 class NumpyTensor(Tensor):
 
     """Representation of a `NumpyTensorSpace` element."""
@@ -889,19 +893,131 @@ class NumpyTensor(Tensor):
         Tensor.__init__(self, space)
         self.__data = data
 
+    ######### static methods #########
+
+    ######### Attributes #########
     @property
     def data(self):
         """The `numpy.ndarray` representing the data of ``self``."""
         return self.__data
+    
+    @property
+    def data_ptr(self):
+        """A raw pointer to the data container of ``self``.
 
-    def _assign(self, other, avoid_deep_copy):
-        """Assign the values of ``other``, which is assumed to be in the
-        same space, to ``self``."""
-        if avoid_deep_copy:
-            self.__data = other.__data
+        Examples
+        --------
+        >>> import ctypes
+        >>> space = odl.tensor_space(3, dtype='uint16')
+        >>> x = space.element([1, 2, 3])
+        >>> arr_type = ctypes.c_uint16 * 3  # C type "array of 3 uint16"
+        >>> buffer = arr_type.from_address(x.data_ptr)
+        >>> arr = np.frombuffer(buffer, dtype='uint16')
+        >>> arr
+        array([1, 2, 3], dtype=uint16)
+
+        In-place modification via pointer:
+
+        >>> arr[0] = 42
+        >>> x
+        tensor_space(3, dtype='uint16').element([42,  2,  3])
+        """
+        return self.data.ctypes.data
+    
+    @property
+    def imag(self):
+        """Imaginary part of ``self``.
+
+        Returns
+        -------
+        imag : `NumpyTensor`
+            Imaginary part this element as an element of a
+            `NumpyTensorSpace` with real data type.
+
+        Examples
+        --------
+        Get the imaginary part:
+
+        >>> space = odl.cn(3)
+        >>> x = space.element([1 + 1j, 2, 3 - 3j])
+        >>> x.imag
+        rn(3).element([ 1.,  0., -3.])
+
+        Set the imaginary part:
+
+        >>> space = odl.cn(3)
+        >>> x = space.element([1 + 1j, 2, 3 - 3j])
+        >>> zero = odl.rn(3).zero()
+        >>> x.imag = zero
+        >>> x
+        cn(3).element([ 1.+0.j,  2.+0.j,  3.+0.j])
+
+        Other array-like types and broadcasting:
+
+        >>> x.imag = 1.0
+        >>> x
+        cn(3).element([ 1.+1.j,  2.+1.j,  3.+1.j])
+        >>> x.imag = [2, 3, 4]
+        >>> x
+        cn(3).element([ 1.+2.j,  2.+3.j,  3.+4.j])
+        """
+        if self.space.is_real:
+            return self.space.zero()
+        elif self.space.is_complex:
+            real_space = self.space.astype(self.space.real_dtype)
+            return real_space.element(self.data.imag)
         else:
-            self.__data[:] = other.__data
+            raise NotImplementedError('`imag` not defined for non-numeric '
+                                      'dtype {}'.format(self.dtype))
+    
+    @property
+    def real(self):
+        """Real part of ``self``.
 
+        Returns
+        -------
+        real : `NumpyTensor`
+            Real part of this element as a member of a
+            `NumpyTensorSpace` with corresponding real data type.
+
+        Examples
+        --------
+        Get the real part:
+
+        >>> space = odl.cn(3)
+        >>> x = space.element([1 + 1j, 2, 3 - 3j])
+        >>> x.real
+        rn(3).element([ 1.,  2.,  3.])
+
+        Set the real part:
+
+        >>> space = odl.cn(3)
+        >>> x = space.element([1 + 1j, 2, 3 - 3j])
+        >>> zero = odl.rn(3).zero()
+        >>> x.real = zero
+        >>> x
+        cn(3).element([ 0.+1.j,  0.+0.j,  0.-3.j])
+
+        Other array-like types and broadcasting:
+
+        >>> x.real = 1.0
+        >>> x
+        cn(3).element([ 1.+1.j,  1.+0.j,  1.-3.j])
+        >>> x.real = [2, 3, 4]
+        >>> x
+        cn(3).element([ 2.+1.j,  3.+0.j,  4.-3.j])
+        """
+        if self.space.is_real:
+            return self
+        elif self.space.is_complex:
+            real_space = self.space.astype(self.space.real_dtype)
+            return real_space.element(self.data.real)
+        else:
+            raise NotImplementedError('`real` not defined for non-numeric '
+                                      'dtype {}'.format(self.dtype))
+
+
+    ######### Public methods #########
     def asarray(self, out=None):
         """Extract the data of this array as a ``numpy.ndarray``.
 
@@ -963,398 +1079,7 @@ class NumpyTensor(Tensor):
             Version of this element with given data type.
         """
         return self.space.astype(dtype).element(self.data.astype(dtype))
-
-    @property
-    def data_ptr(self):
-        """A raw pointer to the data container of ``self``.
-
-        Examples
-        --------
-        >>> import ctypes
-        >>> space = odl.tensor_space(3, dtype='uint16')
-        >>> x = space.element([1, 2, 3])
-        >>> arr_type = ctypes.c_uint16 * 3  # C type "array of 3 uint16"
-        >>> buffer = arr_type.from_address(x.data_ptr)
-        >>> arr = np.frombuffer(buffer, dtype='uint16')
-        >>> arr
-        array([1, 2, 3], dtype=uint16)
-
-        In-place modification via pointer:
-
-        >>> arr[0] = 42
-        >>> x
-        tensor_space(3, dtype='uint16').element([42,  2,  3])
-        """
-        return self.data.ctypes.data
-
-    def __eq__(self, other):
-        """Return ``self == other``.
-
-        Returns
-        -------
-        equals : bool
-            True if all entries of ``other`` are equal to this
-            the entries of ``self``, False otherwise.
-
-        Examples
-        --------
-        >>> space = odl.rn(3)
-        >>> x = space.element([1, 2, 3])
-        >>> y = space.element([1, 2, 3])
-        >>> x == y
-        True
-
-        >>> y = space.element([-1, 2, 3])
-        >>> x == y
-        False
-        >>> x == object
-        False
-
-        Space membership matters:
-
-        >>> space2 = odl.tensor_space(3, dtype='int64')
-        >>> y = space2.element([1, 2, 3])
-        >>> x == y or y == x
-        False
-        """
-        if other is self:
-            return True
-        elif other not in self.space:
-            return False
-        else:
-            return np.array_equal(self.data, other.data)
-
-    def copy(self):
-        """Return an identical (deep) copy of this tensor.
-
-        Parameters
-        ----------
-        None
-
-        Returns
-        -------
-        copy : `NumpyTensor`
-            The deep copy
-
-        Examples
-        --------
-        >>> space = odl.rn(3)
-        >>> x = space.element([1, 2, 3])
-        >>> y = x.copy()
-        >>> y == x
-        True
-        >>> y is x
-        False
-        """
-        return self.space.element(self.data.copy())
-
-    def __copy__(self):
-        """Return ``copy(self)``.
-
-        This implements the (shallow) copy interface of the ``copy``
-        module of the Python standard library.
-
-        See Also
-        --------
-        copy
-
-        Examples
-        --------
-        >>> from copy import copy
-        >>> space = odl.rn(3)
-        >>> x = space.element([1, 2, 3])
-        >>> y = copy(x)
-        >>> y == x
-        True
-        >>> y is x
-        False
-        """
-        return self.copy()
-
-    def __getitem__(self, indices):
-        """Return ``self[indices]``.
-
-        Parameters
-        ----------
-        indices : index expression
-            Integer, slice or sequence of these, defining the positions
-            of the data array which should be accessed.
-
-        Returns
-        -------
-        values : `NumpyTensorSpace.dtype` or `NumpyTensor`
-            The value(s) at the given indices. Note that the returned
-            object is a writable view into the original tensor, except
-            for the case when ``indices`` is a list.
-
-        Examples
-        --------
-        For one-dimensional spaces, indexing is as in linear arrays:
-
-        >>> space = odl.rn(3)
-        >>> x = space.element([1, 2, 3])
-        >>> x[0]
-        1.0
-        >>> x[1:]
-        rn(2).element([ 2.,  3.])
-
-        In higher dimensions, the i-th index expression accesses the
-        i-th axis:
-
-        >>> space = odl.rn((2, 3))
-        >>> x = space.element([[1, 2, 3],
-        ...                    [4, 5, 6]])
-        >>> x[0, 1]
-        2.0
-        >>> x[:, 1:]
-        rn((2, 2)).element(
-            [[ 2.,  3.],
-             [ 5.,  6.]]
-        )
-
-        Slices can be assigned to, except if lists are used for indexing:
-
-        >>> y = x[:, ::2]  # view into x
-        >>> y[:] = -9
-        >>> x
-        rn((2, 3)).element(
-            [[-9.,  2., -9.],
-             [-9.,  5., -9.]]
-        )
-        >>> y = x[[0, 1], [1, 2]]  # not a view, won't modify x
-        >>> y
-        rn(2).element([ 2., -9.])
-        >>> y[:] = 0
-        >>> x
-        rn((2, 3)).element(
-            [[-9.,  2., -9.],
-             [-9.,  5., -9.]]
-        )
-        """
-        # Lazy implementation: index the array and deal with it
-        if isinstance(indices, NumpyTensor):
-            indices = indices.data
-        arr = self.data[indices]
-
-        if np.isscalar(arr):
-            if self.space.field is not None:
-                return self.space.field.element(arr)
-            else:
-                return arr
-        else:
-            if is_numeric_dtype(self.dtype):
-                weighting = self.space.weighting
-            else:
-                weighting = None
-            space = type(self.space)(
-                arr.shape, dtype=self.dtype, exponent=self.space.exponent,
-                weighting=weighting)
-            return space.element(arr)
-
-    def __setitem__(self, indices, values):
-        """Implement ``self[indices] = values``.
-
-        Parameters
-        ----------
-        indices : index expression
-            Integer, slice or sequence of these, defining the positions
-            of the data array which should be written to.
-        values : scalar, array-like or `NumpyTensor`
-            The value(s) that are to be assigned.
-
-            If ``index`` is an integer, ``value`` must be a scalar.
-
-            If ``index`` is a slice or a sequence of slices, ``value``
-            must be broadcastable to the shape of the slice.
-
-        Examples
-        --------
-        For 1d spaces, entries can be set with scalars or sequences of
-        correct shape:
-
-        >>> space = odl.rn(3)
-        >>> x = space.element([1, 2, 3])
-        >>> x[0] = -1
-        >>> x[1:] = (0, 1)
-        >>> x
-        rn(3).element([-1.,  0.,  1.])
-
-        It is also possible to use tensors of other spaces for
-        casting and assignment:
-
-        >>> space = odl.rn((2, 3))
-        >>> x = space.element([[1, 2, 3],
-        ...                    [4, 5, 6]])
-        >>> x[0, 1] = -1
-        >>> x
-        rn((2, 3)).element(
-            [[ 1., -1.,  3.],
-             [ 4.,  5.,  6.]]
-        )
-        >>> short_space = odl.tensor_space((2, 2), dtype='short')
-        >>> y = short_space.element([[-1, 2],
-        ...                          [0, 0]])
-        >>> x[:, :2] = y
-        >>> x
-        rn((2, 3)).element(
-            [[-1.,  2.,  3.],
-             [ 0.,  0.,  6.]]
-        )
-
-        The Numpy assignment and broadcasting rules apply:
-
-        >>> x[:] = np.array([[0, 0, 0],
-        ...                  [1, 1, 1]])
-        >>> x
-        rn((2, 3)).element(
-            [[ 0.,  0.,  0.],
-             [ 1.,  1.,  1.]]
-        )
-        >>> x[:, 1:] = [7, 8]
-        >>> x
-        rn((2, 3)).element(
-            [[ 0.,  7.,  8.],
-             [ 1.,  7.,  8.]]
-        )
-        >>> x[:, ::2] = -2.
-        >>> x
-        rn((2, 3)).element(
-            [[-2.,  7., -2.],
-             [-2.,  7., -2.]]
-        )
-        """
-        if isinstance(indices, type(self)):
-            indices = indices.data
-        if isinstance(values, type(self)):
-            values = values.data
-
-        self.data[indices] = values
-
-    @property
-    def real(self):
-        """Real part of ``self``.
-
-        Returns
-        -------
-        real : `NumpyTensor`
-            Real part of this element as a member of a
-            `NumpyTensorSpace` with corresponding real data type.
-
-        Examples
-        --------
-        Get the real part:
-
-        >>> space = odl.cn(3)
-        >>> x = space.element([1 + 1j, 2, 3 - 3j])
-        >>> x.real
-        rn(3).element([ 1.,  2.,  3.])
-
-        Set the real part:
-
-        >>> space = odl.cn(3)
-        >>> x = space.element([1 + 1j, 2, 3 - 3j])
-        >>> zero = odl.rn(3).zero()
-        >>> x.real = zero
-        >>> x
-        cn(3).element([ 0.+1.j,  0.+0.j,  0.-3.j])
-
-        Other array-like types and broadcasting:
-
-        >>> x.real = 1.0
-        >>> x
-        cn(3).element([ 1.+1.j,  1.+0.j,  1.-3.j])
-        >>> x.real = [2, 3, 4]
-        >>> x
-        cn(3).element([ 2.+1.j,  3.+0.j,  4.-3.j])
-        """
-        if self.space.is_real:
-            return self
-        elif self.space.is_complex:
-            real_space = self.space.astype(self.space.real_dtype)
-            return real_space.element(self.data.real)
-        else:
-            raise NotImplementedError('`real` not defined for non-numeric '
-                                      'dtype {}'.format(self.dtype))
-
-    @real.setter
-    def real(self, newreal):
-        """Setter for the real part.
-
-        This method is invoked by ``x.real = other``.
-
-        Parameters
-        ----------
-        newreal : array-like or scalar
-            Values to be assigned to the real part of this element.
-        """
-        self.real.data[:] = newreal
-
-    @property
-    def imag(self):
-        """Imaginary part of ``self``.
-
-        Returns
-        -------
-        imag : `NumpyTensor`
-            Imaginary part this element as an element of a
-            `NumpyTensorSpace` with real data type.
-
-        Examples
-        --------
-        Get the imaginary part:
-
-        >>> space = odl.cn(3)
-        >>> x = space.element([1 + 1j, 2, 3 - 3j])
-        >>> x.imag
-        rn(3).element([ 1.,  0., -3.])
-
-        Set the imaginary part:
-
-        >>> space = odl.cn(3)
-        >>> x = space.element([1 + 1j, 2, 3 - 3j])
-        >>> zero = odl.rn(3).zero()
-        >>> x.imag = zero
-        >>> x
-        cn(3).element([ 1.+0.j,  2.+0.j,  3.+0.j])
-
-        Other array-like types and broadcasting:
-
-        >>> x.imag = 1.0
-        >>> x
-        cn(3).element([ 1.+1.j,  2.+1.j,  3.+1.j])
-        >>> x.imag = [2, 3, 4]
-        >>> x
-        cn(3).element([ 1.+2.j,  2.+3.j,  3.+4.j])
-        """
-        if self.space.is_real:
-            return self.space.zero()
-        elif self.space.is_complex:
-            real_space = self.space.astype(self.space.real_dtype)
-            return real_space.element(self.data.imag)
-        else:
-            raise NotImplementedError('`imag` not defined for non-numeric '
-                                      'dtype {}'.format(self.dtype))
-
-    @imag.setter
-    def imag(self, newimag):
-        """Setter for the imaginary part.
-
-        This method is invoked by ``x.imag = other``.
-
-        Parameters
-        ----------
-        newimag : array-like or scalar
-            Values to be assigned to the imaginary part of this element.
-
-        Raises
-        ------
-        ValueError
-            If the space is real, i.e., no imagninary part can be set.
-        """
-        if self.space.is_real:
-            raise ValueError('cannot set imaginary part in real spaces')
-        self.imag.data[:] = newimag
-
+    
     def conj(self, out=None):
         """Return the complex conjugate of ``self``.
 
@@ -1410,32 +1135,63 @@ class NumpyTensor(Tensor):
                                            ''.format(out, self.space))
             self.data.conj(out.data)
             return out
+    
+    def copy(self):
+        """Return an identical (deep) copy of this tensor.
 
-    def __ipow__(self, other):
-        """Return ``self **= other``."""
-        try:
-            if other == int(other):
-                return super(NumpyTensor, self).__ipow__(other)
-        except TypeError:
-            pass
+        Parameters
+        ----------
+        None
 
-        np.power(self.data, other, out=self.data)
-        return self
+        Returns
+        -------
+        copy : `NumpyTensor`
+            The deep copy
 
-    def __int__(self):
-        """Return ``int(self)``."""
-        return int(self.data)
+        Examples
+        --------
+        >>> space = odl.rn(3)
+        >>> x = space.element([1, 2, 3])
+        >>> y = x.copy()
+        >>> y == x
+        True
+        >>> y is x
+        False
+        """
+        return self.space.element(self.data.copy())
+    
+    @imag.setter
+    def imag(self, newimag):
+        """Setter for the imaginary part.
 
-    def __float__(self):
-        """Return ``float(self)``."""
-        return float(self.data)
+        This method is invoked by ``x.imag = other``.
 
-    def __complex__(self):
-        """Return ``complex(self)``."""
-        if self.size != 1:
-            raise TypeError('only size-1 tensors can be converted to '
-                            'Python scalars')
-        return complex(self.data.ravel()[0])
+        Parameters
+        ----------
+        newimag : array-like or scalar
+            Values to be assigned to the imaginary part of this element.
+
+        Raises
+        ------
+        ValueError
+            If the space is real, i.e., no imagninary part can be set.
+        """
+        if self.space.is_real:
+            raise ValueError('cannot set imaginary part in real spaces')
+        self.imag.data[:] = newimag
+
+    @real.setter
+    def real(self, newreal):
+        """Setter for the real part.
+
+        This method is invoked by ``x.real = other``.
+
+        Parameters
+        ----------
+        newreal : array-like or scalar
+            Values to be assigned to the real part of this element.
+        """
+        self.real.data[:] = newreal
 
     def __array_ufunc__(self, ufunc, method, *inputs, **kwargs):
         """Interface to Numpy's ufunc machinery.
@@ -1781,6 +1537,259 @@ numpy.ufunc.reduceat.html
                 out = out_space.element(res)
 
             return out
+        
+    def __complex__(self):
+        """Return ``complex(self)``."""
+        if self.size != 1:
+            raise TypeError('only size-1 tensors can be converted to '
+                            'Python scalars')
+        return complex(self.data.ravel()[0])
+    
+    def __copy__(self):
+        """Return ``copy(self)``.
+
+        This implements the (shallow) copy interface of the ``copy``
+        module of the Python standard library.
+
+        See Also
+        --------
+        copy
+
+        Examples
+        --------
+        >>> from copy import copy
+        >>> space = odl.rn(3)
+        >>> x = space.element([1, 2, 3])
+        >>> y = copy(x)
+        >>> y == x
+        True
+        >>> y is x
+        False
+        """
+        return self.copy()
+    
+    def __eq__(self, other):
+        """Return ``self == other``.
+
+        Returns
+        -------
+        equals : bool
+            True if all entries of ``other`` are equal to this
+            the entries of ``self``, False otherwise.
+
+        Examples
+        --------
+        >>> space = odl.rn(3)
+        >>> x = space.element([1, 2, 3])
+        >>> y = space.element([1, 2, 3])
+        >>> x == y
+        True
+
+        >>> y = space.element([-1, 2, 3])
+        >>> x == y
+        False
+        >>> x == object
+        False
+
+        Space membership matters:
+
+        >>> space2 = odl.tensor_space(3, dtype='int64')
+        >>> y = space2.element([1, 2, 3])
+        >>> x == y or y == x
+        False
+        """
+        if other is self:
+            return True
+        elif other not in self.space:
+            return False
+        else:
+            return np.array_equal(self.data, other.data)
+    
+    def __float__(self):
+        """Return ``float(self)``."""
+        return float(self.data)
+    
+    def __int__(self):
+        """Return ``int(self)``."""
+        return int(self.data)
+    
+    def __ipow__(self, other):
+        """Return ``self **= other``."""
+        try:
+            if other == int(other):
+                return super(NumpyTensor, self).__ipow__(other)
+        except TypeError:
+            pass
+
+        np.power(self.data, other, out=self.data)
+        return self
+
+    def __getitem__(self, indices):
+        """Return ``self[indices]``.
+
+        Parameters
+        ----------
+        indices : index expression
+            Integer, slice or sequence of these, defining the positions
+            of the data array which should be accessed.
+
+        Returns
+        -------
+        values : `NumpyTensorSpace.dtype` or `NumpyTensor`
+            The value(s) at the given indices. Note that the returned
+            object is a writable view into the original tensor, except
+            for the case when ``indices`` is a list.
+
+        Examples
+        --------
+        For one-dimensional spaces, indexing is as in linear arrays:
+
+        >>> space = odl.rn(3)
+        >>> x = space.element([1, 2, 3])
+        >>> x[0]
+        1.0
+        >>> x[1:]
+        rn(2).element([ 2.,  3.])
+
+        In higher dimensions, the i-th index expression accesses the
+        i-th axis:
+
+        >>> space = odl.rn((2, 3))
+        >>> x = space.element([[1, 2, 3],
+        ...                    [4, 5, 6]])
+        >>> x[0, 1]
+        2.0
+        >>> x[:, 1:]
+        rn((2, 2)).element(
+            [[ 2.,  3.],
+             [ 5.,  6.]]
+        )
+
+        Slices can be assigned to, except if lists are used for indexing:
+
+        >>> y = x[:, ::2]  # view into x
+        >>> y[:] = -9
+        >>> x
+        rn((2, 3)).element(
+            [[-9.,  2., -9.],
+             [-9.,  5., -9.]]
+        )
+        >>> y = x[[0, 1], [1, 2]]  # not a view, won't modify x
+        >>> y
+        rn(2).element([ 2., -9.])
+        >>> y[:] = 0
+        >>> x
+        rn((2, 3)).element(
+            [[-9.,  2., -9.],
+             [-9.,  5., -9.]]
+        )
+        """
+        # Lazy implementation: index the array and deal with it
+        if isinstance(indices, NumpyTensor):
+            indices = indices.data
+        arr = self.data[indices]
+
+        if np.isscalar(arr):
+            if self.space.field is not None:
+                return self.space.field.element(arr)
+            else:
+                return arr
+        else:
+            if is_numeric_dtype(self.dtype):
+                weighting = self.space.weighting
+            else:
+                weighting = None
+            space = type(self.space)(
+                arr.shape, dtype=self.dtype, exponent=self.space.exponent,
+                weighting=weighting)
+            return space.element(arr)
+
+    def __setitem__(self, indices, values):
+        """Implement ``self[indices] = values``.
+
+        Parameters
+        ----------
+        indices : index expression
+            Integer, slice or sequence of these, defining the positions
+            of the data array which should be written to.
+        values : scalar, array-like or `NumpyTensor`
+            The value(s) that are to be assigned.
+
+            If ``index`` is an integer, ``value`` must be a scalar.
+
+            If ``index`` is a slice or a sequence of slices, ``value``
+            must be broadcastable to the shape of the slice.
+
+        Examples
+        --------
+        For 1d spaces, entries can be set with scalars or sequences of
+        correct shape:
+
+        >>> space = odl.rn(3)
+        >>> x = space.element([1, 2, 3])
+        >>> x[0] = -1
+        >>> x[1:] = (0, 1)
+        >>> x
+        rn(3).element([-1.,  0.,  1.])
+
+        It is also possible to use tensors of other spaces for
+        casting and assignment:
+
+        >>> space = odl.rn((2, 3))
+        >>> x = space.element([[1, 2, 3],
+        ...                    [4, 5, 6]])
+        >>> x[0, 1] = -1
+        >>> x
+        rn((2, 3)).element(
+            [[ 1., -1.,  3.],
+             [ 4.,  5.,  6.]]
+        )
+        >>> short_space = odl.tensor_space((2, 2), dtype='short')
+        >>> y = short_space.element([[-1, 2],
+        ...                          [0, 0]])
+        >>> x[:, :2] = y
+        >>> x
+        rn((2, 3)).element(
+            [[-1.,  2.,  3.],
+             [ 0.,  0.,  6.]]
+        )
+
+        The Numpy assignment and broadcasting rules apply:
+
+        >>> x[:] = np.array([[0, 0, 0],
+        ...                  [1, 1, 1]])
+        >>> x
+        rn((2, 3)).element(
+            [[ 0.,  0.,  0.],
+             [ 1.,  1.,  1.]]
+        )
+        >>> x[:, 1:] = [7, 8]
+        >>> x
+        rn((2, 3)).element(
+            [[ 0.,  7.,  8.],
+             [ 1.,  7.,  8.]]
+        )
+        >>> x[:, ::2] = -2.
+        >>> x
+        rn((2, 3)).element(
+            [[-2.,  7., -2.],
+             [-2.,  7., -2.]]
+        )
+        """
+        if isinstance(indices, type(self)):
+            indices = indices.data
+        if isinstance(values, type(self)):
+            values = values.data
+
+        self.data[indices] = values
+
+    def _assign(self, other, avoid_deep_copy):
+        """Assign the values of ``other``, which is assumed to be in the
+        same space, to ``self``."""
+        if avoid_deep_copy:
+            self.__data = other.__data
+        else:
+            self.__data[:] = other.__data
 
 
 def _blas_is_applicable(*args):
