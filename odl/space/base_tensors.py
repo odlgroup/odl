@@ -294,6 +294,7 @@ class TensorSpace(LinearSpace):
         return (0 if self.shape == () else
                 int(np.prod(self.shape, dtype='int64')))
 
+    ########## public methods ##########
     def astype(self, dtype):
         """Return a copy of this space with new ``dtype``.
 
