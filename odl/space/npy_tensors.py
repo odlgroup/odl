@@ -1426,13 +1426,6 @@ class NumpyTensor(Tensor):
         """Return ``int(self)``."""
         return int(self.data)
 
-    def __long__(self):
-        """Return ``long(self)``.
-
-        This method is only useful in Python 2.
-        """
-        return long(self.data)
-
     def __float__(self):
         """Return ``float(self)``."""
         return float(self.data)

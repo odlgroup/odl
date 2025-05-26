@@ -15,6 +15,7 @@ import contextlib
 from collections import OrderedDict
 from contextlib import contextmanager
 from itertools import product
+from functools import lru_cache
 
 import numpy as np
 
@@ -26,7 +27,6 @@ __all__ = (
     'array_str',
     'dtype_repr',
     'dtype_str',
-    'cache_arguments',
     'is_numeric_dtype',
     'is_int_dtype',
     'is_floating_dtype',
@@ -320,58 +320,41 @@ def dtype_str(dtype):
         return '{}'.format(dtype)
 
 
-def cache_arguments(function):
-    """Decorate function to cache the result with given arguments.
 
-    This is equivalent to `functools.lru_cache` with Python 3, and currently
-    does nothing with Python 2 but this may change at some later point.
-
-    Parameters
-    ----------
-    function : `callable`
-        Function that should be wrapped.
-    """
-    try:
-        from functools import lru_cache
-        return lru_cache()(function)
-    except ImportError:
-        return function
-
-
-@cache_arguments
+@lru_cache
 def is_numeric_dtype(dtype):
     """Return ``True`` if ``dtype`` is a numeric type."""
     dtype = np.dtype(dtype)
     return np.issubdtype(getattr(dtype, 'base', None), np.number)
 
 
-@cache_arguments
+@lru_cache
 def is_int_dtype(dtype):
     """Return ``True`` if ``dtype`` is an integer type."""
     dtype = np.dtype(dtype)
     return np.issubdtype(getattr(dtype, 'base', None), np.integer)
 
 
-@cache_arguments
+@lru_cache
 def is_floating_dtype(dtype):
     """Return ``True`` if ``dtype`` is a floating point type."""
     return is_real_floating_dtype(dtype) or is_complex_floating_dtype(dtype)
 
 
-@cache_arguments
+@lru_cache
 def is_real_dtype(dtype):
     """Return ``True`` if ``dtype`` is a real (including integer) type."""
     return is_numeric_dtype(dtype) and not is_complex_floating_dtype(dtype)
 
 
-@cache_arguments
+@lru_cache
 def is_real_floating_dtype(dtype):
     """Return ``True`` if ``dtype`` is a real floating point type."""
     dtype = np.dtype(dtype)
     return np.issubdtype(getattr(dtype, 'base', None), np.floating)
 
 
-@cache_arguments
+@lru_cache
 def is_complex_floating_dtype(dtype):
     """Return ``True`` if ``dtype`` is a complex floating point type."""
     dtype = np.dtype(dtype)

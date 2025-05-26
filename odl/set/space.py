@@ -918,12 +918,6 @@ class LinearSpaceElement(object):
         """Return ``+self``."""
         return self.copy()
 
-    def __cmp__(self, other):
-        """Comparsion not implemented."""
-        # Stops python 2 from allowing comparsion of arbitrary objects
-        raise TypeError('unorderable types: {}, {}'
-                        ''.format(self.__class__.__name__, type(other)))
-
     # Metric space method
     def __eq__(self, other):
         """Return ``self == other``.
