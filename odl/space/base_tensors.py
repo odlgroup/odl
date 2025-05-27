@@ -225,6 +225,11 @@ class TensorSpace(LinearSpace):
         return self.__dtype
     
     @property
+    def dtype_as_str(self):
+        """Scalar data type of each entry in an element of this space."""
+        return self.__dtype_as_str
+    
+    @property
     def element_type(self):
         """Type of elements in this space: `Tensor`."""
         return Tensor
