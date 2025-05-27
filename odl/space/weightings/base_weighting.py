@@ -63,7 +63,7 @@ class Weighting(object):
     @property
     def weight(self):
         """Exponent of this weighting."""
-        return self.__exponent
+        return self.__weight
 
     def __eq__(self, other):
         """Return ``self == other``.
