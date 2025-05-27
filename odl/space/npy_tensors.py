@@ -353,6 +353,13 @@ class NumpyTensorSpace(TensorSpace):
         return xp
     
     @property
+    def array_type(self):
+        """Name of the array_type of this tensor set.
+        This relates to the python array api
+        """
+        return np.ndarray
+    
+    @property
     def available_dtypes(self):
         return NUMPY_DTYPES
     

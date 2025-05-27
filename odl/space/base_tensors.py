@@ -178,6 +178,15 @@ class TensorSpace(LinearSpace):
         raise NotImplementedError("abstract method")
     
     @property
+    def array_type(self):
+        """Name of the array_type of this tensor set. This relates to the
+        python array api.
+
+        This property should be overridden by subclasses.
+        """
+        raise NotImplementedError("abstract method")
+    
+    @property
     def available_dtypes(self) -> Dict:
         """Available types of the tensor space implementation
         """
