@@ -16,15 +16,16 @@ from numbers import Integral
 
 import numpy as np
 
-from odl.util.npy_compat import AVOID_UNNECESSARY_COPY
-
 from odl.set.sets import ComplexNumbers, RealNumbers
 from odl.set.space import LinearSpace, LinearSpaceElement
 from odl.util import (
     array_str, dtype_str, indent, is_complex_floating_dtype, is_floating_dtype,
-    is_numeric_dtype, is_real_dtype, is_real_floating_dtype, safe_int_conv,
-    signature_string, writable_array)
-from odl.util.utility import TYPE_PROMOTION_COMPLEX_TO_REAL, TYPE_PROMOTION_REAL_TO_COMPLEX, nullcontext
+    is_numeric_dtype, is_real_floating_dtype, safe_int_conv,
+    signature_string)
+from odl.util.utility import(
+    FLOAT_DTYPES, COMPLEX_DTYPES,
+    TYPE_PROMOTION_COMPLEX_TO_REAL, 
+    TYPE_PROMOTION_REAL_TO_COMPLEX)
 
 __all__ = ('TensorSpace',)
 
@@ -372,24 +373,105 @@ class TensorSpace(LinearSpace):
             # Need to filter this out since Numpy iterprets it as 'float'
             raise ValueError('`None` is not a valid data type')
 
-        dtype = np.dtype(dtype)
+        try:
+            dtype_as_str = dtype
+            dtype = self.available_dtypes[dtype]
+        except KeyError:
+            raise KeyError(f"The dtype must be in {self.available_dtypes.keys()}, but {dtype} was provided")
+        
         if dtype == self.dtype:
             return self
 
-        if is_numeric_dtype(self.dtype):
+        if dtype_as_str in FLOAT_DTYPES + COMPLEX_DTYPES:
             # Caching for real and complex versions (exact dtype mappings)
             if dtype == self.__real_dtype:
                 if self.__real_space is None:
-                    self.__real_space = self._astype(dtype)
+                    self.__real_space = self._astype(dtype_as_str)
                 return self.__real_space
             elif dtype == self.__complex_dtype:
                 if self.__complex_space is None:
-                    self.__complex_space = self._astype(dtype)
+                    self.__complex_space = self._astype(dtype_as_str)
                 return self.__complex_space
             else:
-                return self._astype(dtype)
+                return self._astype(dtype_as_str)
         else:
-            return self._astype(dtype)
+            return self._astype(dtype_as_str)
+        
+    def element(self, inp=None, device=None, copy=True):
+        def wrapped_array(arr):
+            if arr.shape != self.shape:
+                raise ValueError(
+                    "shape of `inp` not equal to space shape: "
+                    "{} != {}".format(arr.shape, self.shape)
+                )
+            
+            return self.element_type(self, arr)
+
+
+        def dlpack_transfer(arr, device=None, copy=True):
+            # We check that the object implements the dlpack protocol:
+            # assert hasattr(inp, "__dlpack_device__") and hasattr(
+            #     arr, "__dlpack__"
+            # ), """The input does not support the DLpack framework. 
+            #     Please convert it to an object that supports it first. 
+            # (cf:https://data-apis.org/array-api/latest/purpose_and_scope.html)"""
+            try:
+                # from_dlpack(inp, device=device, copy=copy)
+                # As of Pytorch 2.7, the pytorch API from_dlpack does not implement the
+                # keywords that specify the device and copy arguments
+                return self.array_namespace.from_dlpack(arr)
+            except BufferError:
+                raise BufferError(
+                    "The data cannot be exported as DLPack (e.g., incompatible dtype, strides, or device). "
+                    "It may also be that the export fails for other reasons "
+                    "(e.g., not enough memory available to materialize the data)."
+                    ""
+                )
+            except ValueError:
+                raise ValueError(
+                    "The data exchange is possible via an explicit copy but copy is set to False."
+                )
+            ### This is a temporary fix, until pytorch provides the right API for dlpack with args!!
+            # The RuntimeError should be raised only when using a GPU device 
+            except RuntimeError:
+                if self.impl == 'numpy':
+                    # if isinstance(arr, torch.Tensor):
+                    #     arr = arr.detach().cpu()
+                    return np.asarray(arr, dtype=self.dtype)
+                # elif self.impl == 'pytorch':                    
+                #     return torch.asarray(arr, device=self.device, dtype=self.dtype)
+                    
+                else:
+                    raise NotImplementedError
+
+        # Case 1: no input provided
+        if inp is None:
+            return wrapped_array(
+                self.array_namespace.empty(
+                    self.shape, dtype=self.dtype, device=self.device
+                )
+            )
+        # Case 2: input is provided
+        # Case 2.1: the input is an ODL OBJECT
+        # ---> The data of the input is transferred to the space's device and data type AND wrapped into the space.
+        if hasattr(inp, "odl_tensor"):
+            return wrapped_array(dlpack_transfer(inp.data, device, copy))
+        # Case 2.2: the input is an object that implements the python array aPI (np.ndarray, torch.Tensor...)
+        # ---> The input is transferred to the space's device and data type AND wrapped into the space.
+        elif hasattr(inp, '__array__'):
+            return wrapped_array(dlpack_transfer(inp, device, copy))
+        # Case 2.3: the input is an array like object [[1,2,3],[4,5,6],...]
+        # ---> The input is transferred to the space's device and data type AND wrapped into the space.
+        # TODO: Add the iterable type instead of list and tuple and the numerics type instead of int, float, complex
+        elif isinstance(inp, (int, float, complex, list, tuple)):
+            return wrapped_array(
+                self.array_namespace.broadcast_to(
+                    self.array_namespace.asarray(inp, device=self.device),
+                    self.shape
+                    )
+                )
+        else:
+            raise ValueError  
     
     def one(self):
         """Return a tensor of all ones.
