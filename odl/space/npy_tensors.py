@@ -462,31 +462,6 @@ class NumpyTensorSpace(TensorSpace):
         return self.__weighting
 
     ######### public methods #########
-    def one(self):
-        """Return a tensor of all ones.
-
-        Examples
-        --------
-        >>> space = odl.rn(3)
-        >>> x = space.one()
-        >>> x
-        rn(3).element([ 1.,  1.,  1.])
-        """
-        return self.element(np.ones(self.shape, dtype=self.dtype,
-                                    order=self.default_order))
-    
-    def zero(self):
-        """Return a tensor of all zeros.
-
-        Examples
-        --------
-        >>> space = odl.rn(3)
-        >>> x = space.zero()
-        >>> x
-        rn(3).element([ 0.,  0.,  0.])
-        """
-        return self.element(np.zeros(self.shape, dtype=self.dtype,
-                                     order=self.default_order))
     
     ######### magic methods #########
     def __eq__(self, other):

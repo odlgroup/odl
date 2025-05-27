@@ -483,7 +483,9 @@ class TensorSpace(LinearSpace):
         one : `Tensor`
             A tensor of all one.
         """
-        raise NotImplementedError('abstract method')
+        raise self.element(
+            self.array_namespace.ones(self.shape, dtype=self.dtype, device=self.device)
+        )
     
     def zero(self):
         """Return a tensor of all zeros.
@@ -495,7 +497,9 @@ class TensorSpace(LinearSpace):
         zero : `Tensor`
             A tensor of all zeros.
         """
-        raise NotImplementedError('abstract method')
+        raise self.element(
+            self.array_namespace.zeros(self.shape, dtype=self.dtype, device=self.device)
+        )
 
     ######### magic methods #########
     def __contains__(self, other):
