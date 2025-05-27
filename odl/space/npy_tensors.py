@@ -484,7 +484,8 @@ class NumpyTensorSpace(TensorSpace):
         return self.__weighting
 
     ######### public methods #########
-    
+    def get_array_dtype_as_str(self, arr):
+        return arr.dtype.name
     ######### magic methods #########
     def __eq__(self, other):
         """Return ``self == other``.
@@ -529,7 +530,7 @@ class NumpyTensorSpace(TensorSpace):
         return hash((super(NumpyTensorSpace, self).__hash__(),
                      self.weighting))
 
-    ######### private methods #########
+    ######### private methods #########    
     def _dist(self, x1, x2):
         """Return the distance between ``x1`` and ``x2``.
 
