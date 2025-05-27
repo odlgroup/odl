@@ -240,7 +240,7 @@ class NumpyTensorSpace(TensorSpace):
         """
         super(NumpyTensorSpace, self).__init__(shape, dtype)
         # Weighting Check and parsing
-        kwargs = self.parse_weighting()
+        kwargs = self.parse_weighting(dtype, **kwargs)
         # In-place ops check
         self.__use_in_place_ops = kwargs.pop('use_in_place_ops', True)
 
@@ -248,7 +248,7 @@ class NumpyTensorSpace(TensorSpace):
         if kwargs:
             raise TypeError('got unknown keyword arguments {}'.format(kwargs))
     ########## Init methods ########## 
-    def parse_weighting(self, dtype, kwargs):
+    def parse_weighting(self, dtype, **kwargs):
         dist = kwargs.pop('dist', None)
         norm = kwargs.pop('norm', None)
         inner = kwargs.pop('inner', None)
@@ -310,6 +310,8 @@ class NumpyTensorSpace(TensorSpace):
         else:
             # No weighting, i.e., weighting with constant 1.0
             self.__weighting = NumpyTensorSpaceConstWeighting(1.0, exponent)
+
+        return kwargs
 
     ########## static methods ##########
     @staticmethod
