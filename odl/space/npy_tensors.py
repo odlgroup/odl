@@ -32,6 +32,21 @@ from odl.util import (
 
 __all__ = ('NumpyTensorSpace',)
 
+NUMPY_DTYPES = {
+        "bool": np.bool,
+        "int8": np.int8,
+        "int16": np.int16,
+        "int32": np.int32,
+        "int64": np.int64,
+        "uint8": np.uint8,
+        "uint16": np.uint16,
+        "uint32": np.uint32,
+        "uint64": np.uint64,
+        "float32": np.float32,
+        "float64": np.float64,
+        "complex64": np.complex64,
+        "complex128": np.complex128,
+    }
 
 _BLAS_DTYPES = (np.dtype('float32'), np.dtype('float64'),
                 np.dtype('complex64'), np.dtype('complex128'))
@@ -222,10 +237,6 @@ class NumpyTensorSpace(TensorSpace):
         tensor_space((2, 3), dtype=int)
         """
         super(NumpyTensorSpace, self).__init__(shape, dtype)
-        if self.dtype.char not in self.available_dtypes():
-            raise ValueError('`dtype` {!r} not supported'
-                             ''.format(dtype_str(dtype)))
-
         # Weighting Check and parsing
         kwargs = self.parse_weighting()
         # In-place ops check
@@ -300,26 +311,6 @@ class NumpyTensorSpace(TensorSpace):
 
     ########## static methods ##########
     @staticmethod
-    def available_dtypes():
-        """Return the set of data types available in this implementation.
-
-        Notes
-        -----
-        This is all dtypes available in Numpy. See ``numpy.sctypeDict``
-        for more information.
-
-        The available dtypes may depend on the specific system used.
-        """
-        all_dtypes = []
-        for dtype in np.sctypeDict.values():
-            if dtype not in (object, np.void):
-                all_dtypes.append(np.dtype(dtype))
-        # Need to add these manually since they are not contained
-        # in np.sctypeDict.
-        all_dtypes.extend([np.dtype('S'), np.dtype('U')])
-        return tuple(sorted(set(all_dtypes)))
-
-    @staticmethod
     def default_dtype(field=None):
         """Return the default data type of this class for a given field.
 
@@ -348,6 +339,10 @@ class NumpyTensorSpace(TensorSpace):
                              ''.format(field))
 
     ########## Attributes ##########
+    @property
+    def available_dtypes(self):
+        return NUMPY_DTYPES
+    
     @property
     def byaxis(self):
         """Return the subspace defined along one or several dimensions.
