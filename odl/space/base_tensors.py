@@ -10,6 +10,7 @@
 
 from __future__ import absolute_import, division, print_function
 
+from typing import Dict
 from numbers import Integral
 
 import numpy as np
@@ -84,7 +85,7 @@ class TensorSpace(LinearSpace):
         self.parse_shape(shape, dtype)
 
         field = self.parse_field(dtype)
-        
+
         LinearSpace.__init__(self, field)
 
     ################ Init Methods, Non static ################
@@ -140,14 +141,6 @@ class TensorSpace(LinearSpace):
     
     ########## static methods ##########
     @staticmethod
-    def available_dtypes():
-        """Return the set of data types available in this implementation.
-
-        This method should be overridden by subclasses.
-        """
-        raise NotImplementedError('abstract method')
-
-    @staticmethod
     def default_dtype(field=None):
         """Return the default data type for a given field.
 
@@ -166,6 +159,12 @@ class TensorSpace(LinearSpace):
         raise NotImplementedError('abstract method')
 
     ########## Attributes ##########
+    @property
+    def available_dtypes(self) -> Dict:
+        """Available types of the tensor space implementation
+        """
+        raise NotImplementedError("abstract method")
+    
     @property
     def complex_dtype(self):
         """The complex dtype corresponding to this space's `dtype`.
