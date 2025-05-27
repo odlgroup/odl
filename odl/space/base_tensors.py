@@ -23,7 +23,7 @@ from odl.util import (
     is_numeric_dtype, is_real_dtype, is_real_floating_dtype, safe_int_conv,
     signature_string, writable_array)
 from odl.util.ufuncs import TensorSpaceUfuncs
-from odl.util.utility import TYPE_MAP_C2R, TYPE_MAP_R2C, nullcontext
+from odl.util.utility import TYPE_PROMOTION_COMPLEX_TO_REAL, TYPE_PROMOTION_REAL_TO_COMPLEX, nullcontext
 
 __all__ = ('TensorSpace',)
 
@@ -98,11 +98,11 @@ class TensorSpace(LinearSpace):
             field = RealNumbers()
             self.__real_dtype = self.dtype
             self.__real_space = self
-            self.__complex_dtype = TYPE_MAP_R2C.get(self.dtype, None)
+            self.__complex_dtype = TYPE_PROMOTION_REAL_TO_COMPLEX.get(self.dtype, None)
             self.__complex_space = None  # Set in first call of astype
         elif is_complex_floating_dtype(self.dtype):
             field = ComplexNumbers()
-            self.__real_dtype = TYPE_MAP_C2R[self.dtype]
+            self.__real_dtype = TYPE_PROMOTION_COMPLEX_TO_REAL[self.dtype]
             self.__real_space = None  # Set in first call of astype
             self.__complex_dtype = self.dtype
             self.__complex_space = self
