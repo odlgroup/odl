@@ -137,6 +137,10 @@ real_floating_dtypes = FLOAT_DTYPES
 odl_real_floating_dtype = simple_fixture(name='dtype',
                                     params=real_floating_dtypes)
 
+complex_floating_dtypes = COMPLEX_DTYPES
+odl_complex_floating_dtype = simple_fixture(name='dtype',
+                                    params=complex_floating_dtypes)
+
 floating_dtypes = FLOAT_DTYPES + COMPLEX_DTYPES
 odl_floating_dtype = simple_fixture(name='dtype',
                                     params=floating_dtypes)
