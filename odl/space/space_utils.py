@@ -14,7 +14,7 @@ import numpy as np
 from odl.util.npy_compat import AVOID_UNNECESSARY_COPY
 
 from odl.space.npy_tensors import NumpyTensorSpace
-from odl.util.utility import AVAILABLE_DTYPES
+from odl.util.utility import AVAILABLE_DTYPES, COMPLEX_DTYPES, FLOAT_DTYPES
 
 TENSOR_SPACE_IMPLS = {'numpy': NumpyTensorSpace}
 
@@ -200,6 +200,7 @@ def cn(shape, dtype='complex64', impl='numpy', **kwargs):
     tensor_space : Space of tensors with arbitrary scalar data type.
     rn : Real tensor space.
     """
+    assert dtype in COMPLEX_DTYPES, f'For cn, the type must be complex, but got {dtype}'
     return tensor_space(shape, dtype=dtype, impl=impl, **kwargs)
 
 
@@ -250,6 +251,7 @@ def rn(shape, dtype='float32', impl='numpy', **kwargs):
     tensor_space : Space of tensors with arbitrary scalar data type.
     cn : Complex tensor space.
     """
+    assert dtype in FLOAT_DTYPES, f'For rn, the type must be float, but got {dtype}'
     return tensor_space(shape, dtype=dtype, impl=impl, **kwargs)
 
 
