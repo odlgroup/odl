@@ -30,6 +30,8 @@ from odl.util import (
     dtype_str, is_floating_dtype, is_numeric_dtype, is_real_dtype, nullcontext,
     signature_string, writable_array)
 
+import array_api_compat.numpy as xp
+
 __all__ = ('NumpyTensorSpace',)
 
 NUMPY_DTYPES = {
@@ -344,6 +346,11 @@ class NumpyTensorSpace(TensorSpace):
         """Name of the array_constructor of this tensor set.
         """
         return np.array
+    
+    @property
+    def array_namespace(self):
+        """Name of the array_namespace"""
+        return xp
     
     @property
     def available_dtypes(self):

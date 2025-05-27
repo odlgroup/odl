@@ -10,6 +10,7 @@
 
 from __future__ import absolute_import, division, print_function
 
+from types import ModuleType
 from typing import Dict
 from numbers import Integral
 
@@ -162,6 +163,15 @@ class TensorSpace(LinearSpace):
     @property
     def array_constructor(self):
         """Name of the function called to create an array of this tensor space.
+
+        This property should be overridden by subclasses.
+        """
+        raise NotImplementedError("abstract method")
+    
+    @property
+    def array_namespace(self) -> ModuleType:
+        """Name of the array_namespace of this tensor set. This relates to the
+        python array api.
 
         This property should be overridden by subclasses.
         """
