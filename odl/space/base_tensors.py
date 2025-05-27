@@ -160,6 +160,14 @@ class TensorSpace(LinearSpace):
 
     ########## Attributes ##########
     @property
+    def array_constructor(self):
+        """Name of the function called to create an array of this tensor space.
+
+        This property should be overridden by subclasses.
+        """
+        raise NotImplementedError("abstract method")
+    
+    @property
     def available_dtypes(self) -> Dict:
         """Available types of the tensor space implementation
         """

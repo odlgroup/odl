@@ -340,6 +340,12 @@ class NumpyTensorSpace(TensorSpace):
 
     ########## Attributes ##########
     @property
+    def array_constructor(self):
+        """Name of the array_constructor of this tensor set.
+        """
+        return np.array
+    
+    @property
     def available_dtypes(self):
         return NUMPY_DTYPES
     
