@@ -226,6 +226,16 @@ class NumpyTensorSpace(TensorSpace):
             raise ValueError('`dtype` {!r} not supported'
                              ''.format(dtype_str(dtype)))
 
+        # Weighting Check and parsing
+        kwargs = self.parse_weighting()
+        # In-place ops check
+        self.__use_in_place_ops = kwargs.pop('use_in_place_ops', True)
+
+        # Make sure there are no leftover kwargs
+        if kwargs:
+            raise TypeError('got unknown keyword arguments {}'.format(kwargs))
+    ########## Init methods ########## 
+    def parse_weighting(self, dtype, kwargs):
         dist = kwargs.pop('dist', None)
         norm = kwargs.pop('norm', None)
         inner = kwargs.pop('inner', None)
@@ -288,12 +298,6 @@ class NumpyTensorSpace(TensorSpace):
             # No weighting, i.e., weighting with constant 1.0
             self.__weighting = NumpyTensorSpaceConstWeighting(1.0, exponent)
 
-        self.__use_in_place_ops = kwargs.pop('use_in_place_ops', True)
-
-        # Make sure there are no leftover kwargs
-        if kwargs:
-            raise TypeError('got unknown keyword arguments {}'.format(kwargs))
-        
     ########## static methods ##########
     @staticmethod
     def available_dtypes():

@@ -78,39 +78,66 @@ class TensorSpace(LinearSpace):
             are added *to the left* of ``shape``.
         """
         # Handle shape and dtype, taking care also of dtypes with shape
+        # Dtype check and parsing 
+        self.parse_dtype(dtype)
+
+        self.parse_shape(shape, dtype)
+
+        field = self.parse_field(dtype)
+        
+        LinearSpace.__init__(self, field)
+
+    ################ Init Methods, Non static ################
+    def parse_dtype(self, dtype:str):
+        """
+        Process the dtype argument. This parses the (str) dtype input argument to a backend.dtype and sets two attributes
+
+        self.dtype_as_str (str)      -> Used for passing dtype information from one backend to another
+        self.__dtype (backend.dtype) -> Actual dtype of the TensorSpace implementation
+
+        Note:
+        The check below is here just in case a user initialise a space directly from this class, which is not recommended
+        """
+        if dtype not in self.available_dtypes:
+            raise ValueError(f"The dtype must be in {self.available_dtypes.keys()}, but {dtype} was provided")
+
+        self.__dtype_as_str = dtype
+        self.__dtype = self.available_dtypes[dtype]
+
+    def parse_shape(self, shape, dtype):
+        # Handle shape and dtype, taking care also of dtypes with shape
         try:
             shape, shape_in = tuple(safe_int_conv(s) for s in shape), shape
         except TypeError:
             shape, shape_in = (safe_int_conv(shape),), shape
         if any(s < 0 for s in shape):
-            raise ValueError('`shape` must have only nonnegative entries, got '
-                             '{}'.format(shape_in))
-        dtype = np.dtype(dtype)
+            raise ValueError(
+                "`shape` must have only nonnegative entries, got " "{}".format(shape_in)
+            )
 
         # We choose this order in contrast to Numpy, since we usually want
         # to represent discretizations of vector- or tensor-valued functions,
         # i.e., if dtype.shape == (3,) we expect f[0] to have shape `shape`.
-        self.__shape = dtype.shape + shape
-        self.__dtype = dtype.base
+        self.__shape = np.dtype(dtype).shape + shape
 
-        if is_real_dtype(self.dtype):
+    def parse_field(self, dtype):
+        if dtype in TYPE_PROMOTION_REAL_TO_COMPLEX:
             # real includes non-floating-point like integers
             field = RealNumbers()
-            self.__real_dtype = self.dtype
+            self.__real_dtype = dtype
             self.__real_space = self
-            self.__complex_dtype = TYPE_PROMOTION_REAL_TO_COMPLEX.get(self.dtype, None)
+            self.__complex_dtype = TYPE_PROMOTION_REAL_TO_COMPLEX[dtype]
             self.__complex_space = None  # Set in first call of astype
-        elif is_complex_floating_dtype(self.dtype):
+        elif dtype in TYPE_PROMOTION_COMPLEX_TO_REAL:
             field = ComplexNumbers()
-            self.__real_dtype = TYPE_PROMOTION_COMPLEX_TO_REAL[self.dtype]
+            self.__real_dtype = TYPE_PROMOTION_COMPLEX_TO_REAL[dtype]
             self.__real_space = None  # Set in first call of astype
-            self.__complex_dtype = self.dtype
+            self.__complex_dtype = dtype
             self.__complex_space = self
         else:
             field = None
-
-        LinearSpace.__init__(self, field)
-
+        return field
+    
     ########## static methods ##########
     @staticmethod
     def available_dtypes():
