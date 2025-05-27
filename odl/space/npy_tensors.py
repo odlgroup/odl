@@ -238,12 +238,10 @@ class NumpyTensorSpace(TensorSpace):
         >>> space
         tensor_space((2, 3), dtype=int)
         """
-        super(NumpyTensorSpace, self).__init__(shape, dtype)
+        super(NumpyTensorSpace, self).__init__(shape, dtype, **kwargs)
         # Device check and parsing
         self.parse_device(device)
 
-        # Weighting Check and parsing
-        kwargs = self.parse_weighting(dtype, **kwargs)
         # In-place ops check
         self.__use_in_place_ops = kwargs.pop('use_in_place_ops', True)
 
@@ -264,71 +262,6 @@ class NumpyTensorSpace(TensorSpace):
         assert device == 'cpu', f"For NumpyTensorSpace, only cpu is supported, but {device} was provided."
         
         self.__device = 'cpu'
-
-    def parse_weighting(self, dtype, **kwargs):
-        dist = kwargs.pop('dist', None)
-        norm = kwargs.pop('norm', None)
-        inner = kwargs.pop('inner', None)
-        weighting = kwargs.pop('weighting', None)
-        exponent = kwargs.pop('exponent', getattr(weighting, 'exponent', 2.0))
-
-        if (not is_numeric_dtype(self.dtype) and
-                any(x is not None for x in (dist, norm, inner, weighting))):
-            raise ValueError('cannot use any of `weighting`, `dist`, `norm` '
-                             'or `inner` for non-numeric `dtype` {}'
-                             ''.format(dtype))
-        if exponent != 2.0 and any(x is not None for x in (dist, norm, inner)):
-            raise ValueError('cannot use any of `dist`, `norm` or `inner` '
-                             'for exponent != 2')
-        # Check validity of option combination (0 or 1 may be provided)
-        num_extra_args = sum(a is not None
-                             for a in (dist, norm, inner, weighting))
-        if num_extra_args > 1:
-            raise ValueError('invalid combination of options `weighting`, '
-                             '`dist`, `norm` and `inner`')
-
-        # Set the weighting
-        if weighting is not None:
-            if isinstance(weighting, Weighting):
-                if weighting.impl != 'numpy':
-                    raise ValueError("`weighting.impl` must be 'numpy', "
-                                     '`got {!r}'.format(weighting.impl))
-                if weighting.exponent != exponent:
-                    raise ValueError('`weighting.exponent` conflicts with '
-                                     '`exponent`: {} != {}'
-                                     ''.format(weighting.exponent, exponent))
-                self.__weighting = weighting
-            else:
-                self.__weighting = _weighting(weighting, exponent)
-
-            # Check (afterwards) that the weighting input was sane
-            if isinstance(self.weighting, NumpyTensorSpaceArrayWeighting):
-                if self.weighting.array.dtype == object:
-                    raise ValueError('invalid `weighting` argument: {}'
-                                     ''.format(weighting))
-                elif not np.can_cast(self.weighting.array.dtype, self.dtype):
-                    raise ValueError(
-                        'cannot cast from `weighting` data type {} to '
-                        'the space `dtype` {}'
-                        ''.format(dtype_str(self.weighting.array.dtype),
-                                  dtype_str(self.dtype)))
-                if self.weighting.array.shape != self.shape:
-                    raise ValueError('array-like weights must have same '
-                                     'shape {} as this space, got {}'
-                                     ''.format(self.shape,
-                                               self.weighting.array.shape))
-
-        elif dist is not None:
-            self.__weighting = NumpyTensorSpaceCustomDist(dist)
-        elif norm is not None:
-            self.__weighting = NumpyTensorSpaceCustomNorm(norm)
-        elif inner is not None:
-            self.__weighting = NumpyTensorSpaceCustomInner(inner)
-        else:
-            # No weighting, i.e., weighting with constant 1.0
-            self.__weighting = NumpyTensorSpaceConstWeighting(1.0, exponent)
-
-        return kwargs
 
     ########## static methods ##########
     @staticmethod

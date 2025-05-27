@@ -27,9 +27,9 @@ from odl.util.utility import(
     FLOAT_DTYPES, COMPLEX_DTYPES,
     TYPE_PROMOTION_COMPLEX_TO_REAL, 
     TYPE_PROMOTION_REAL_TO_COMPLEX)
+from .weightings.base_weighting import Weighting
 
 __all__ = ('TensorSpace',)
-
 
 class TensorSpace(LinearSpace):
 
@@ -65,7 +65,7 @@ class TensorSpace(LinearSpace):
     .. _Wikipedia article on tensors: https://en.wikipedia.org/wiki/Tensor
     """
 
-    def __init__(self, shape, dtype):
+    def __init__(self, shape, dtype, **kwargs):
         """Initialize a new instance.
 
         Parameters
@@ -85,6 +85,8 @@ class TensorSpace(LinearSpace):
         self.parse_dtype(dtype)
 
         self.parse_shape(shape, dtype)
+
+        self.parse_weighting(**kwargs)
 
         field = self.parse_field(dtype)
 
@@ -140,6 +142,22 @@ class TensorSpace(LinearSpace):
         else:
             field = None
         return field
+    
+    def parse_weighting(self, **kwargs):
+        weighting = kwargs.get("weighting", None)      
+        if weighting is None:
+            self.__weighting = odl.space_weighting(self.impl, weight=1.0, exponent=2.0)
+        else:
+            if issubclass(type(weighting), Weighting):
+                if weighting.impl != self.impl:
+                    raise ValueError(
+                        "`weighting.impl` must be 'pytorch', "
+                        "`got {!r}".format(weighting.impl)
+                    )
+                self.__weighting = weighting
+            else:
+                raise TypeError(f"The weighting must be of {Weighting} type, but {type(weighting)} was provided")
+                
     
     ########## static methods ##########
     @staticmethod

@@ -14,8 +14,10 @@ from . import base_tensors, entry_points, weighting
 from .npy_tensors import *
 from .pspace import *
 from .space_utils import *
+from .weightings import *
 
 __all__ = ()
 __all__ += npy_tensors.__all__
 __all__ += pspace.__all__
 __all__ += space_utils.__all__
+__all__ += weightings.__all__
