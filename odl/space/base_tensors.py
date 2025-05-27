@@ -575,6 +575,37 @@ class Tensor(LinearSpaceElement):
 
     ######### Attributes #########
     @property
+    def array_namespace(self) -> ModuleType:
+        """Name of the array_namespace of this tensor.
+
+        This relates to the python array api
+        """
+        return self.space.array_namespace
+    
+    @property
+    def array_type(self):
+        """Name of the array_type of this tensor set.
+
+        This relates to the python array api
+        """
+        return self.space.array_type
+    
+    @property
+    def dtype(self):
+        """Data type of each entry."""
+        return self.space.dtype
+    
+    @property
+    def dtype_as_str(self):
+        """Data type as a string of each entry."""
+        return self.space.dtype_as_str
+    
+    @property
+    def impl(self):
+        """Name of the implementation back-end of this tensor."""
+        return self.space.impl
+
+    @property
     def itemsize(self):
         """Size in bytes of one tensor entry."""
         return self.space.itemsize
@@ -585,29 +616,24 @@ class Tensor(LinearSpaceElement):
         return self.space.nbytes
     
     @property
-    def impl(self):
-        """Name of the implementation back-end of this tensor."""
-        return self.space.impl
-
+    def ndim(self):
+        """Number of axes (=dimensions) of this tensor."""
+        return self.space.ndim
+    
+    @property
+    def odl_tensor(self):
+        """Number of axes (=dimensions) of this tensor."""
+        return True
+    
     @property
     def shape(self):
         """Number of elements per axis."""
         return self.space.shape
 
     @property
-    def dtype(self):
-        """Data type of each entry."""
-        return self.space.dtype
-
-    @property
     def size(self):
         """Total number of entries."""
         return self.space.size
-
-    @property
-    def ndim(self):
-        """Number of axes (=dimensions) of this tensor."""
-        return self.space.ndim
 
     @property
     def ufuncs(self):
