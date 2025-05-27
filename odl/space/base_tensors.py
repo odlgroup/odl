@@ -229,6 +229,14 @@ class TensorSpace(LinearSpace):
         raise NotImplementedError('abstract method')
     
     @property
+    def device(self):
+        """Device on which the tensorSpace is implemented.
+
+        This property should be overridden by subclasses.
+        """
+        raise NotImplementedError('abstract method')
+    
+    @property
     def dtype(self):
         """Scalar data type of each entry in an element of this space."""
         return self.__dtype
@@ -622,19 +630,19 @@ class TensorSpace(LinearSpace):
         return repr(self)
         
     ########## _underscore methods ##########
-    def _astype(self, dtype):
+    def _astype(self, dtype:str):
         """Internal helper for `astype`.
 
         Subclasses with differing init parameters should overload this
         method.
         """
         kwargs = {}
-        if is_floating_dtype(dtype):
+        if dtype in FLOAT_DTYPES + COMPLEX_DTYPES:
             # Use weighting only for floating-point types, otherwise, e.g.,
             # `space.astype(bool)` would fail
-            weighting = getattr(self, 'weighting', None)
+            weighting = getattr(self, "weighting", None)
             if weighting is not None:
-                kwargs['weighting'] = weighting
+                kwargs["weighting"] = weighting
 
         return type(self)(self.shape, dtype=dtype, **kwargs)
     
@@ -674,6 +682,11 @@ class Tensor(LinearSpaceElement):
         This relates to the python array api
         """
         return self.space.array_type
+    
+    @property
+    def device(self):
+        """Device on which the space lives."""
+        return self.space.device
     
     @property
     def dtype(self):

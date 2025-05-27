@@ -94,7 +94,7 @@ class NumpyTensorSpace(TensorSpace):
     .. _Wikipedia article on tensors: https://en.wikipedia.org/wiki/Tensor
     """
 
-    def __init__(self, shape, dtype=None, **kwargs):
+    def __init__(self, shape, dtype='float32', device = 'cpu', **kwargs):
         r"""Initialize a new instance.
 
         Parameters
@@ -102,19 +102,10 @@ class NumpyTensorSpace(TensorSpace):
         shape : positive int or sequence of positive ints
             Number of entries per axis for elements in this space. A
             single integer results in a space with rank 1, i.e., 1 axis.
-        dtype :
-            Data type of each element. Can be provided in any
-            way the `numpy.dtype` function understands, e.g.
-            as built-in type or as a string. For ``None``,
-            the `default_dtype` of this space (``float64``) is used.
-        exponent : positive float, optional
-            Exponent of the norm. For values other than 2.0, no
-            inner product is defined.
-
-            This option has no impact if either ``dist``, ``norm`` or
-            ``inner`` is given, or if ``dtype`` is non-numeric.
-
-            Default: 2.0
+        dtype (str): optional
+            Data type of each element. Defaults to 'float32'
+        device (str):
+            Device on which the data is. For Numpy, tt must be 'cpu'.
 
         Other Parameters
         ----------------
@@ -167,6 +158,15 @@ class NumpyTensorSpace(TensorSpace):
             This option cannot be combined with ``weight``,
             ``dist`` or ``norm``. It also cannot be used in case of
             non-numeric ``dtype``.
+
+        exponent : positive float, optional
+            Exponent of the norm. For values other than 2.0, no
+            inner product is defined.
+
+            This option has no impact if either ``dist``, ``norm`` or
+            ``inner`` is given, or if ``dtype`` is non-numeric.
+
+            Default: 2.0
 
         kwargs :
             Further keyword arguments are passed to the weighting
@@ -239,6 +239,9 @@ class NumpyTensorSpace(TensorSpace):
         tensor_space((2, 3), dtype=int)
         """
         super(NumpyTensorSpace, self).__init__(shape, dtype)
+        # Device check and parsing
+        self.parse_device(device)
+
         # Weighting Check and parsing
         kwargs = self.parse_weighting(dtype, **kwargs)
         # In-place ops check
@@ -248,6 +251,20 @@ class NumpyTensorSpace(TensorSpace):
         if kwargs:
             raise TypeError('got unknown keyword arguments {}'.format(kwargs))
     ########## Init methods ########## 
+
+    def parse_device(self, device:str):
+        """
+        Process the device argument 
+        This checks that the device requested is available and sets one attribute
+        self.__device (str) -> The device on which the TensorSpace lives
+        Note:
+        As ot Python Array API v2024.12, there is no Device object. So, for a NumpyTensorSpace,
+        self.__device is a string always equal to `cpu`
+        """
+        assert device == 'cpu', f"For NumpyTensorSpace, only cpu is supported, but {device} was provided."
+        
+        self.__device = 'cpu'
+
     def parse_weighting(self, dtype, **kwargs):
         dist = kwargs.pop('dist', None)
         norm = kwargs.pop('norm', None)
@@ -418,6 +435,11 @@ class NumpyTensorSpace(TensorSpace):
     def default_order(self):
         """Default storage order for new elements in this space: ``'C'``."""
         return 'C'
+    
+    @property
+    def device(self):
+        """Device identifier."""
+        return self.__device
     
     @property
     def element_type(self):
