@@ -230,29 +230,10 @@ class NumpyTensorSpace(TensorSpace):
         >>> space
         tensor_space((2, 3), dtype=int)
         """
-        # Device check and parsing
-        # self.parse_device(device)
         # In-place ops check
         self.__use_in_place_ops = kwargs.pop('use_in_place_ops', True)
 
         super(NumpyTensorSpace, self).__init__(shape, dtype, device, **kwargs)
-
-        
-
-    ########## Init methods ########## 
-
-    # def parse_device(self, device:str):
-    #     """
-    #     Process the device argument 
-    #     This checks that the device requested is available and sets one attribute
-    #     self.__device (str) -> The device on which the TensorSpace lives
-    #     Note:
-    #     As ot Python Array API v2024.12, there is no Device object. So, for a NumpyTensorSpace,
-    #     self.__device is a string always equal to `cpu`
-    #     """
-    #     assert device == 'cpu', f"For NumpyTensorSpace, only cpu is supported, but {device} was provided."
-        
-    #     self.__device = 'cpu'
 
     ########## static methods ##########
     @staticmethod
@@ -353,30 +334,15 @@ class NumpyTensorSpace(TensorSpace):
         """Default storage order for new elements in this space: ``'C'``."""
         return 'C'
     
-    # @property
-    # def device(self):
-    #     """Device identifier."""
-    #     return self.__device
-    
     @property
     def element_type(self):
         """Type of elements in this space: `NumpyTensor`."""
         return NumpyTensor
     
     @property
-    def exponent(self):
-        """Exponent of the norm and the distance."""
-        return self.weighting.exponent
-    
-    @property
     def impl(self):
         """Name of the implementation back-end: ``'numpy'``."""
         return 'numpy'
-    
-    @property
-    def is_weighted(self):
-        """Return ``True`` if the space is not weighted by constant 1.0."""
-        return self.weighting.__weight != 1.0
 
     @property
     def supported_num_operation_paradigms(self) -> NumOperationParadigmSupport:
@@ -392,11 +358,6 @@ class NumpyTensorSpace(TensorSpace):
             return SupportedNumOperationParadigms(
                     in_place = NumOperationParadigmSupport.NOT_SUPPORTED,
                     out_of_place = NumOperationParadigmSupport.PREFERRED)
-
-    @property
-    def weighting(self):
-        """This space's weighting scheme."""
-        return self.__weighting
 
     ######### public methods #########
     def get_array_dtype_as_str(self, arr):

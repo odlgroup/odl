@@ -308,6 +308,11 @@ class TensorSpace(LinearSpace):
         np.random.set_state(rand_state)
 
     @property
+    def exponent(self):
+        """Exponent of the norm and the distance."""
+        return self.weighting.exponent
+    
+    @property
     def impl(self):
         """Name of the implementation back-end of this tensor set.
 
@@ -330,6 +335,11 @@ class TensorSpace(LinearSpace):
         """True if this is a space of real tensors."""
         return is_real_floating_dtype(self.dtype)
     
+    @property
+    def is_weighted(self):
+        """Return ``True`` if the space is not weighted by constant 1.0."""
+        return self.weighting.__weight != 1.0
+        
     @property
     def nbytes(self):
         """Total number of bytes in memory used by an element of this space."""
@@ -388,6 +398,11 @@ class TensorSpace(LinearSpace):
         """Total number of entries in an element of this space."""
         return (0 if self.shape == () else
                 int(np.prod(self.shape, dtype='int64')))
+    
+    @property
+    def weighting(self):
+        """This space's weighting scheme."""
+        return self.__weighting
 
     ########## public methods ##########
     def astype(self, dtype):
