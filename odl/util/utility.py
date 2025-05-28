@@ -49,25 +49,57 @@ __all__ = (
     'npy_random_seed',
     'unique',
 )
+REPR_PRECISION = 4
 
-try:
-    SCTYPES = np.core.sctypes
-    assert isinstance(SCTYPES, dict)
-except AttributeError:
-    # As of 29/04/25, we are aware that the module 
-    # np.core might be removed in future versions. If that happens, the
-    # npy types will have to be queried in a different way. We advise to
-    # install the npy version listed in the odl/conda/meta.yaml
-    raise ImportError('You are using a numpy version that was not tested with ' \
-    'ODL. Please install the npy version listed in the odl/conda/meta.yaml')
+BOOLEAN_DTYPES = [
+    "bool"
+    ]
 
-REPR_PRECISION = 4  # For printing scalars and array entries
-TYPE_MAP_R2C = {np.dtype(dtype): np.result_type(dtype, 1j)
-                for dtype in SCTYPES['float']}
+INTEGER_DTYPES = [
+    "int8",
+    "int16",
+    "int32",
+    "int64",
+    "uint8",
+    "uint16",
+    "uint32",
+    "uint64"
+    ]
 
-TYPE_MAP_C2R = {cdt: np.empty(0, dtype=cdt).real.dtype
-                for rdt, cdt in TYPE_MAP_R2C.items()}
-TYPE_MAP_C2R.update({k: k for k in TYPE_MAP_R2C.keys()})
+FLOAT_DTYPES = [
+    "float32",
+    "float64"
+]
+
+COMPLEX_DTYPES = [
+    "complex64",
+    "complex128"
+]
+
+REAL_DTYPES = INTEGER_DTYPES + FLOAT_DTYPES
+AVAILABLE_DTYPES = BOOLEAN_DTYPES + REAL_DTYPES + COMPLEX_DTYPES 
+
+"""
+See type promotion rules https://data-apis.org/array-api/latest/API_specification/type_promotion.html#type-promotion
+"""
+##### Not sure about this one #####
+TYPE_PROMOTION_REAL_TO_COMPLEX = {
+    "int8"  : "complex64",
+    "int16" : "complex64",
+    "int32" : "complex64",
+    "int64" : "complex64",
+    "uint8" : "complex64",
+    "uint16" : "complex64",
+    "uint32"  : "complex128",
+    "uint64"  : "complex128",
+    "float32" : "complex64",
+    "float64" : "complex128"
+}
+##### Not sure about this one #####
+TYPE_PROMOTION_COMPLEX_TO_REAL = {
+    "complex64"  : "float32",
+    "complex128" : "float64"
+}
 
 
 def indent(string, indent_str='    '):
@@ -412,7 +444,7 @@ def real_dtype(dtype, default=None):
         return dtype
 
     try:
-        real_base_dtype = TYPE_MAP_C2R[dtype.base]
+        real_base_dtype = TYPE_PROMOTION_COMPLEX_TO_REAL[dtype.base]
     except KeyError:
         if default is not None:
             return default
@@ -470,7 +502,7 @@ def complex_dtype(dtype, default=None):
         return dtype
 
     try:
-        complex_base_dtype = TYPE_MAP_R2C[dtype.base]
+        complex_base_dtype = TYPE_PROMOTION_REAL_TO_COMPLEX[dtype.base]
     except KeyError:
         if default is not None:
             return default

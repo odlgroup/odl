@@ -30,8 +30,25 @@ from odl.util import (
     dtype_str, is_floating_dtype, is_numeric_dtype, is_real_dtype, nullcontext,
     signature_string, writable_array)
 
+import array_api_compat.numpy as xp
+
 __all__ = ('NumpyTensorSpace',)
 
+NUMPY_DTYPES = {
+        "bool": np.bool,
+        "int8": np.int8,
+        "int16": np.int16,
+        "int32": np.int32,
+        "int64": np.int64,
+        "uint8": np.uint8,
+        "uint16": np.uint16,
+        "uint32": np.uint32,
+        "uint64": np.uint64,
+        "float32": np.float32,
+        "float64": np.float64,
+        "complex64": np.complex64,
+        "complex128": np.complex128,
+    }
 
 _BLAS_DTYPES = (np.dtype('float32'), np.dtype('float64'),
                 np.dtype('complex64'), np.dtype('complex128'))
@@ -77,7 +94,7 @@ class NumpyTensorSpace(TensorSpace):
     .. _Wikipedia article on tensors: https://en.wikipedia.org/wiki/Tensor
     """
 
-    def __init__(self, shape, dtype=None, **kwargs):
+    def __init__(self, shape, dtype='float32', device = 'cpu', **kwargs):
         r"""Initialize a new instance.
 
         Parameters
@@ -85,19 +102,10 @@ class NumpyTensorSpace(TensorSpace):
         shape : positive int or sequence of positive ints
             Number of entries per axis for elements in this space. A
             single integer results in a space with rank 1, i.e., 1 axis.
-        dtype :
-            Data type of each element. Can be provided in any
-            way the `numpy.dtype` function understands, e.g.
-            as built-in type or as a string. For ``None``,
-            the `default_dtype` of this space (``float64``) is used.
-        exponent : positive float, optional
-            Exponent of the norm. For values other than 2.0, no
-            inner product is defined.
-
-            This option has no impact if either ``dist``, ``norm`` or
-            ``inner`` is given, or if ``dtype`` is non-numeric.
-
-            Default: 2.0
+        dtype (str): optional
+            Data type of each element. Defaults to 'float32'
+        device (str):
+            Device on which the data is. For Numpy, tt must be 'cpu'.
 
         Other Parameters
         ----------------
@@ -150,6 +158,15 @@ class NumpyTensorSpace(TensorSpace):
             This option cannot be combined with ``weight``,
             ``dist`` or ``norm``. It also cannot be used in case of
             non-numeric ``dtype``.
+
+        exponent : positive float, optional
+            Exponent of the norm. For values other than 2.0, no
+            inner product is defined.
+
+            This option has no impact if either ``dist``, ``norm`` or
+            ``inner`` is given, or if ``dtype`` is non-numeric.
+
+            Default: 2.0
 
         kwargs :
             Further keyword arguments are passed to the weighting
@@ -221,100 +238,31 @@ class NumpyTensorSpace(TensorSpace):
         >>> space
         tensor_space((2, 3), dtype=int)
         """
-        super(NumpyTensorSpace, self).__init__(shape, dtype)
-        if self.dtype.char not in self.available_dtypes():
-            raise ValueError('`dtype` {!r} not supported'
-                             ''.format(dtype_str(dtype)))
-
-        dist = kwargs.pop('dist', None)
-        norm = kwargs.pop('norm', None)
-        inner = kwargs.pop('inner', None)
-        weighting = kwargs.pop('weighting', None)
-        exponent = kwargs.pop('exponent', getattr(weighting, 'exponent', 2.0))
-
-        if (not is_numeric_dtype(self.dtype) and
-                any(x is not None for x in (dist, norm, inner, weighting))):
-            raise ValueError('cannot use any of `weighting`, `dist`, `norm` '
-                             'or `inner` for non-numeric `dtype` {}'
-                             ''.format(dtype))
-        if exponent != 2.0 and any(x is not None for x in (dist, norm, inner)):
-            raise ValueError('cannot use any of `dist`, `norm` or `inner` '
-                             'for exponent != 2')
-        # Check validity of option combination (0 or 1 may be provided)
-        num_extra_args = sum(a is not None
-                             for a in (dist, norm, inner, weighting))
-        if num_extra_args > 1:
-            raise ValueError('invalid combination of options `weighting`, '
-                             '`dist`, `norm` and `inner`')
-
-        # Set the weighting
-        if weighting is not None:
-            if isinstance(weighting, Weighting):
-                if weighting.impl != 'numpy':
-                    raise ValueError("`weighting.impl` must be 'numpy', "
-                                     '`got {!r}'.format(weighting.impl))
-                if weighting.exponent != exponent:
-                    raise ValueError('`weighting.exponent` conflicts with '
-                                     '`exponent`: {} != {}'
-                                     ''.format(weighting.exponent, exponent))
-                self.__weighting = weighting
-            else:
-                self.__weighting = _weighting(weighting, exponent)
-
-            # Check (afterwards) that the weighting input was sane
-            if isinstance(self.weighting, NumpyTensorSpaceArrayWeighting):
-                if self.weighting.array.dtype == object:
-                    raise ValueError('invalid `weighting` argument: {}'
-                                     ''.format(weighting))
-                elif not np.can_cast(self.weighting.array.dtype, self.dtype):
-                    raise ValueError(
-                        'cannot cast from `weighting` data type {} to '
-                        'the space `dtype` {}'
-                        ''.format(dtype_str(self.weighting.array.dtype),
-                                  dtype_str(self.dtype)))
-                if self.weighting.array.shape != self.shape:
-                    raise ValueError('array-like weights must have same '
-                                     'shape {} as this space, got {}'
-                                     ''.format(self.shape,
-                                               self.weighting.array.shape))
-
-        elif dist is not None:
-            self.__weighting = NumpyTensorSpaceCustomDist(dist)
-        elif norm is not None:
-            self.__weighting = NumpyTensorSpaceCustomNorm(norm)
-        elif inner is not None:
-            self.__weighting = NumpyTensorSpaceCustomInner(inner)
-        else:
-            # No weighting, i.e., weighting with constant 1.0
-            self.__weighting = NumpyTensorSpaceConstWeighting(1.0, exponent)
-
+        # Device check and parsing
+        # self.parse_device(device)
+        # In-place ops check
         self.__use_in_place_ops = kwargs.pop('use_in_place_ops', True)
 
-        # Make sure there are no leftover kwargs
-        if kwargs:
-            raise TypeError('got unknown keyword arguments {}'.format(kwargs))
+        super(NumpyTensorSpace, self).__init__(shape, dtype, device, **kwargs)
+
         
-    ########## static methods ##########
-    @staticmethod
-    def available_dtypes():
-        """Return the set of data types available in this implementation.
 
-        Notes
-        -----
-        This is all dtypes available in Numpy. See ``numpy.sctypeDict``
-        for more information.
+    ########## Init methods ########## 
 
-        The available dtypes may depend on the specific system used.
+    def parse_device(self, device:str):
         """
-        all_dtypes = []
-        for dtype in np.sctypeDict.values():
-            if dtype not in (object, np.void):
-                all_dtypes.append(np.dtype(dtype))
-        # Need to add these manually since they are not contained
-        # in np.sctypeDict.
-        all_dtypes.extend([np.dtype('S'), np.dtype('U')])
-        return tuple(sorted(set(all_dtypes)))
+        Process the device argument 
+        This checks that the device requested is available and sets one attribute
+        self.__device (str) -> The device on which the TensorSpace lives
+        Note:
+        As ot Python Array API v2024.12, there is no Device object. So, for a NumpyTensorSpace,
+        self.__device is a string always equal to `cpu`
+        """
+        assert device == 'cpu', f"For NumpyTensorSpace, only cpu is supported, but {device} was provided."
+        
+        self.__device = 'cpu'
 
+    ########## static methods ##########
     @staticmethod
     def default_dtype(field=None):
         """Return the default data type of this class for a given field.
@@ -344,6 +292,28 @@ class NumpyTensorSpace(TensorSpace):
                              ''.format(field))
 
     ########## Attributes ##########
+    @property
+    def array_constructor(self):
+        """Name of the array_constructor of this tensor set.
+        """
+        return np.array
+    
+    @property
+    def array_namespace(self):
+        """Name of the array_namespace"""
+        return xp
+    
+    @property
+    def array_type(self):
+        """Name of the array_type of this tensor set.
+        This relates to the python array api
+        """
+        return np.ndarray
+    
+    @property
+    def available_dtypes(self):
+        return NUMPY_DTYPES
+    
     @property
     def byaxis(self):
         """Return the subspace defined along one or several dimensions.
@@ -398,6 +368,11 @@ class NumpyTensorSpace(TensorSpace):
         """Default storage order for new elements in this space: ``'C'``."""
         return 'C'
     
+    # @property
+    # def device(self):
+    #     """Device identifier."""
+    #     return self.__device
+    
     @property
     def element_type(self):
         """Type of elements in this space: `NumpyTensor`."""
@@ -441,156 +416,8 @@ class NumpyTensorSpace(TensorSpace):
         return self.__weighting
 
     ######### public methods #########
-    def element(self, inp=None, data_ptr=None, order=None):
-        """Create a new element.
-
-        Parameters
-        ----------
-        inp : `array-like`, optional
-            Input used to initialize the new element.
-
-            If ``inp`` is `None`, an empty element is created with no
-            guarantee of its state (memory allocation only).
-            The new element will use ``order`` as storage order if
-            provided, otherwise `default_order`.
-
-            Otherwise, a copy is avoided whenever possible. This requires
-            correct `shape` and `dtype`, and if ``order`` is provided,
-            also contiguousness in that ordering. If any of these
-            conditions is not met, a copy is made.
-
-        data_ptr : int, optional
-            Pointer to the start memory address of a contiguous Numpy array
-            or an equivalent raw container with the same total number of
-            bytes. For this option, ``order`` must be either ``'C'`` or
-            ``'F'``.
-            The option is also mutually exclusive with ``inp``.
-        order : {None, 'C', 'F'}, optional
-            Storage order of the returned element. For ``'C'`` and ``'F'``,
-            contiguous memory in the respective ordering is enforced.
-            The default ``None`` enforces no contiguousness.
-
-        Returns
-        -------
-        element : `NumpyTensor`
-            The new element, created from ``inp`` or from scratch.
-
-        Examples
-        --------
-        Without arguments, an uninitialized element is created. With an
-        array-like input, the element can be initialized:
-
-        >>> space = odl.rn(3)
-        >>> empty = space.element()
-        >>> empty.shape
-        (3,)
-        >>> empty.space
-        rn(3)
-        >>> x = space.element([1, 2, 3])
-        >>> x
-        rn(3).element([ 1.,  2.,  3.])
-
-        If the input already is a `numpy.ndarray` of correct `dtype`, it
-        will merely be wrapped, i.e., both array and space element access
-        the same memory, such that mutations will affect both:
-
-        >>> arr = np.array([1, 2, 3], dtype=float)
-        >>> elem = odl.rn(3).element(arr)
-        >>> elem[0] = 0
-        >>> elem
-        rn(3).element([ 0.,  2.,  3.])
-        >>> arr
-        array([ 0.,  2.,  3.])
-
-        Elements can also be constructed from a data pointer, resulting
-        again in shared memory:
-
-        >>> int_space = odl.tensor_space((2, 3), dtype=int)
-        >>> arr = np.array([[1, 2, 3],
-        ...                 [4, 5, 6]], dtype=int, order='F')
-        >>> ptr = arr.ctypes.data
-        >>> y = int_space.element(data_ptr=ptr, order='F')
-        >>> y
-        tensor_space((2, 3), dtype=int).element(
-            [[1, 2, 3],
-             [4, 5, 6]]
-        )
-        >>> y[0, 1] = -1
-        >>> arr
-        array([[ 1, -1,  3],
-               [ 4,  5,  6]])
-        """
-        if order is not None and str(order).upper() not in ('C', 'F'):
-            raise ValueError("`order` {!r} not understood".format(order))
-
-        if inp is None and data_ptr is None:
-            if order is None:
-                arr = np.empty(self.shape, dtype=self.dtype,
-                               order=self.default_order)
-            else:
-                arr = np.empty(self.shape, dtype=self.dtype, order=order)
-
-            return self.element_type(self, arr)
-
-        elif inp is None and data_ptr is not None:
-            if order is None:
-                raise ValueError('`order` cannot be None for element '
-                                 'creation from pointer')
-
-            ctype_array_def = ctypes.c_byte * self.nbytes
-            as_ctype_array = ctype_array_def.from_address(data_ptr)
-            as_numpy_array = np.ctypeslib.as_array(as_ctype_array)
-            arr = as_numpy_array.view(dtype=self.dtype)
-            arr = arr.reshape(self.shape, order=order)
-            return self.element_type(self, arr)
-
-        elif inp is not None and data_ptr is None:
-            if inp in self and order is None:
-                # Short-circuit for space elements and no enforced ordering
-                return inp
-
-            # Try to not copy but require dtype and order if given
-            # (`order=None` is ok as np.array argument)
-            arr = np.array(inp, copy=AVOID_UNNECESSARY_COPY, dtype=self.dtype, ndmin=self.ndim,
-                           order=order)
-            # Make sure the result is writeable, if not make copy.
-            # This happens for e.g. results of `np.broadcast_to()`.
-            if not arr.flags.writeable:
-                arr = arr.copy()
-            if arr.shape != self.shape:
-                raise ValueError('shape of `inp` not equal to space shape: '
-                                 '{} != {}'.format(arr.shape, self.shape))
-            return self.element_type(self, arr)
-
-        else:
-            raise TypeError('cannot provide both `inp` and `data_ptr`')
-
-    def one(self):
-        """Return a tensor of all ones.
-
-        Examples
-        --------
-        >>> space = odl.rn(3)
-        >>> x = space.one()
-        >>> x
-        rn(3).element([ 1.,  1.,  1.])
-        """
-        return self.element(np.ones(self.shape, dtype=self.dtype,
-                                    order=self.default_order))
-    
-    def zero(self):
-        """Return a tensor of all zeros.
-
-        Examples
-        --------
-        >>> space = odl.rn(3)
-        >>> x = space.zero()
-        >>> x
-        rn(3).element([ 0.,  0.,  0.])
-        """
-        return self.element(np.zeros(self.shape, dtype=self.dtype,
-                                     order=self.default_order))
-    
+    def get_array_dtype_as_str(self, arr):
+        return arr.dtype.name
     ######### magic methods #########
     def __eq__(self, other):
         """Return ``self == other``.
@@ -635,7 +462,7 @@ class NumpyTensorSpace(TensorSpace):
         return hash((super(NumpyTensorSpace, self).__hash__(),
                      self.weighting))
 
-    ######### private methods #########
+    ######### private methods #########    
     def _dist(self, x1, x2):
         """Return the distance between ``x1`` and ``x2``.
 
@@ -1192,351 +1019,6 @@ class NumpyTensor(Tensor):
             Values to be assigned to the real part of this element.
         """
         self.real.data[:] = newreal
-
-    def __array_ufunc__(self, ufunc, method, *inputs, **kwargs):
-        """Interface to Numpy's ufunc machinery.
-
-        This method is called by Numpy version 1.13 and higher as a single
-        point for the ufunc dispatch logic. An object implementing
-        ``__array_ufunc__`` takes over control when a `numpy.ufunc` is
-        called on it, allowing it to use custom implementations and
-        output types.
-
-        This includes handling of in-place arithmetic like
-        ``npy_array += custom_obj``. In this case, the custom object's
-        ``__array_ufunc__`` takes precedence over the baseline
-        `numpy.ndarray` implementation. It will be called with
-        ``npy_array`` as ``out`` argument, which ensures that the
-        returned object is a Numpy array. For this to work properly,
-        ``__array_ufunc__`` has to accept Numpy arrays as ``out`` arguments.
-
-        See the `corresponding NEP`_ and the `interface documentation`_
-        for further details. See also the `general documentation on
-        Numpy ufuncs`_.
-
-        .. note::
-            This basic implementation casts inputs and
-            outputs to Numpy arrays and evaluates ``ufunc`` on those.
-            For `numpy.ndarray` based data storage, this incurs no
-            significant overhead compared to direct usage of Numpy arrays.
-
-            For other (in particular non-local) implementations, e.g.,
-            GPU arrays or distributed memory, overhead is significant due
-            to copies to CPU main memory. In those classes, the
-            ``__array_ufunc__`` mechanism should be overridden to use
-            native implementations if possible.
-
-        .. note::
-            When using operations that alter the shape (like ``reduce``),
-            or the data type (can be any of the methods),
-            the resulting array is wrapped in a space of the same
-            type as ``self.space``, propagating space properties like
-            `exponent` or `weighting` as closely as possible.
-
-        Parameters
-        ----------
-        ufunc : `numpy.ufunc`
-            Ufunc that should be called on ``self``.
-        method : str
-            Method on ``ufunc`` that should be called on ``self``.
-            Possible values:
-
-            ``'__call__'``, ``'accumulate'``, ``'at'``, ``'outer'``,
-            ``'reduce'``, ``'reduceat'``
-
-        input1, ..., inputN :
-            Positional arguments to ``ufunc.method``.
-        kwargs :
-            Keyword arguments to ``ufunc.method``.
-
-        Returns
-        -------
-        ufunc_result : `Tensor`, `numpy.ndarray` or tuple
-            Result of the ufunc evaluation. If no ``out`` keyword argument
-            was given, the result is a `Tensor` or a tuple
-            of such, depending on the number of outputs of ``ufunc``.
-            If ``out`` was provided, the returned object or tuple entries
-            refer(s) to ``out``.
-
-        Examples
-        --------
-        We apply `numpy.add` to ODL tensors:
-
-        >>> r3 = odl.rn(3)
-        >>> x = r3.element([1, 2, 3])
-        >>> y = r3.element([-1, -2, -3])
-        >>> x.__array_ufunc__(np.add, '__call__', x, y)
-        rn(3).element([ 0.,  0.,  0.])
-        >>> np.add(x, y)  # same mechanism for Numpy >= 1.13
-        rn(3).element([ 0.,  0.,  0.])
-
-        As ``out``, a Numpy array or an ODL tensor can be given (wrapped
-        in a sequence):
-
-        >>> out = r3.element()
-        >>> res = x.__array_ufunc__(np.add, '__call__', x, y, out=(out,))
-        >>> out
-        rn(3).element([ 0.,  0.,  0.])
-        >>> res is out
-        True
-        >>> out_arr = np.empty(3)
-        >>> res = x.__array_ufunc__(np.add, '__call__', x, y, out=(out_arr,))
-        >>> out_arr
-        array([ 0.,  0.,  0.])
-        >>> res is out_arr
-        True
-
-        With multiple dimensions:
-
-        >>> r23 = odl.rn((2, 3))
-        >>> x = y = r23.one()
-        >>> x.__array_ufunc__(np.add, '__call__', x, y)
-        rn((2, 3)).element(
-            [[ 2.,  2.,  2.],
-             [ 2.,  2.,  2.]]
-        )
-
-        The ``ufunc.accumulate`` method retains the original `shape` and
-        `dtype`. The latter can be changed with the ``dtype`` parameter:
-
-        >>> x = r3.element([1, 2, 3])
-        >>> x.__array_ufunc__(np.add, 'accumulate', x)
-        rn(3).element([ 1.,  3.,  6.])
-        >>> np.add.accumulate(x)  # same mechanism for Numpy >= 1.13
-        rn(3).element([ 1.,  3.,  6.])
-        >>> x.__array_ufunc__(np.add, 'accumulate', x, dtype=complex)
-        cn(3).element([ 1.+0.j,  3.+0.j,  6.+0.j])
-
-        For multi-dimensional tensors, an optional ``axis`` parameter
-        can be provided:
-
-        >>> z = r23.one()
-        >>> z.__array_ufunc__(np.add, 'accumulate', z, axis=1)
-        rn((2, 3)).element(
-            [[ 1.,  2.,  3.],
-             [ 1.,  2.,  3.]]
-        )
-
-        The ``ufunc.at`` method operates in-place. Here we add the second
-        operand ``[5, 10]`` to ``x`` at indices ``[0, 2]``:
-
-        >>> x = r3.element([1, 2, 3])
-        >>> x.__array_ufunc__(np.add, 'at', x, [0, 2], [5, 10])
-        >>> x
-        rn(3).element([  6.,   2.,  13.])
-
-        For outer-product-type operations, i.e., operations where the result
-        shape is the sum of the individual shapes, the ``ufunc.outer``
-        method can be used:
-
-        >>> x = odl.rn(2).element([0, 3])
-        >>> y = odl.rn(3).element([1, 2, 3])
-        >>> x.__array_ufunc__(np.add, 'outer', x, y)
-        rn((2, 3)).element(
-            [[ 1.,  2.,  3.],
-             [ 4.,  5.,  6.]]
-        )
-        >>> y.__array_ufunc__(np.add, 'outer', y, x)
-        rn((3, 2)).element(
-            [[ 1.,  4.],
-             [ 2.,  5.],
-             [ 3.,  6.]]
-        )
-
-        Using ``ufunc.reduce`` produces a scalar, which can be avoided with
-        ``keepdims=True``:
-
-        >>> x = r3.element([1, 2, 3])
-        >>> x.__array_ufunc__(np.add, 'reduce', x)
-        6.0
-        >>> x.__array_ufunc__(np.add, 'reduce', x, keepdims=True)
-        rn(1).element([ 6.])
-
-        In multiple dimensions, ``axis`` can be provided for reduction over
-        selected axes:
-
-        >>> z = r23.element([[1, 2, 3],
-        ...                  [4, 5, 6]])
-        >>> z.__array_ufunc__(np.add, 'reduce', z, axis=1)
-        rn(2).element([  6.,  15.])
-
-        Finally, ``add.reduceat`` is a combination of ``reduce`` and
-        ``at`` with rather flexible and complex semantics (see the
-        `reduceat documentation`_ for details):
-
-        >>> x = r3.element([1, 2, 3])
-        >>> x.__array_ufunc__(np.add, 'reduceat', x, [0, 1])
-        rn(2).element([ 1.,  5.])
-
-        References
-        ----------
-        .. _corresponding NEP:
-           https://docs.scipy.org/doc/numpy/neps/ufunc-overrides.html
-
-        .. _interface documentation:
-           https://docs.scipy.org/doc/numpy/reference/arrays.classes.html\
-#numpy.class.__array_ufunc__
-
-        .. _general documentation on Numpy ufuncs:
-           https://docs.scipy.org/doc/numpy/reference/ufuncs.html
-
-        .. _reduceat documentation:
-           https://docs.scipy.org/doc/numpy/reference/generated/\
-numpy.ufunc.reduceat.html
-        """
-        # Remark: this method differs from the parent implementation only
-        # in the propagation of additional space properties.
-
-        # --- Process `out` --- #
-
-        # Unwrap out if provided. The output parameters are all wrapped
-        # in one tuple, even if there is only one.
-        out_tuple = kwargs.pop('out', ())
-
-        # Check number of `out` args, depending on `method`
-        if method == '__call__' and len(out_tuple) not in (0, ufunc.nout):
-            raise ValueError(
-                "ufunc {}: need 0 or {} `out` arguments for "
-                "`method='__call__'`, got {}"
-                ''.format(ufunc.__name__, ufunc.nout, len(out_tuple)))
-        elif method != '__call__' and len(out_tuple) not in (0, 1):
-            raise ValueError(
-                'ufunc {}: need 0 or 1 `out` arguments for `method={!r}`, '
-                'got {}'.format(ufunc.__name__, method, len(out_tuple)))
-
-        # We allow our own tensors, the data container type and
-        # `numpy.ndarray` objects as `out` (see docs for reason for the
-        # latter)
-        valid_types = (type(self), type(self.data), np.ndarray)
-        if not all(isinstance(o, valid_types) or o is None
-                   for o in out_tuple):
-            return NotImplemented
-
-        # Assign to `out` or `out1` and `out2`, respectively
-        out = out1 = out2 = None
-        if len(out_tuple) == 1:
-            out = out_tuple[0]
-        elif len(out_tuple) == 2:
-            out1 = out_tuple[0]
-            out2 = out_tuple[1]
-
-        # --- Process `inputs` --- #
-
-        # Convert inputs that are ODL tensors to Numpy arrays so that the
-        # native Numpy ufunc is called later
-        inputs = tuple(
-            inp.asarray() if isinstance(inp, type(self)) else inp
-            for inp in inputs)
-
-        # --- Get some parameters for later --- #
-
-        # Arguments for `writable_array` and/or space constructors
-        out_dtype = kwargs.get('dtype', None)
-        if out_dtype is None:
-            array_kwargs = {}
-        else:
-            array_kwargs = {'dtype': out_dtype}
-
-        exponent = self.space.exponent
-        weighting = self.space.weighting
-
-        # --- Evaluate ufunc --- #
-
-        if method == '__call__':
-            if ufunc.nout == 1:
-                # Make context for output (trivial one returns `None`)
-                if out is None:
-                    out_ctx = nullcontext()
-                else:
-                    out_ctx = writable_array(out, **array_kwargs)
-
-                # Evaluate ufunc
-                with out_ctx as out_arr:
-                    kwargs['out'] = out_arr
-                    res = ufunc(*inputs, **kwargs)
-
-                # Wrap result if necessary (lazily)
-                if out is None:
-                    if is_floating_dtype(res.dtype):
-                        # Weighting contains exponent
-                        spc_kwargs = {'weighting': weighting}
-                    else:
-                        # No `exponent` or `weighting` applicable
-                        spc_kwargs = {}
-                    out_space = type(self.space)(self.shape, res.dtype,
-                                                 **spc_kwargs)
-                    out = out_space.element(res)
-
-                return out
-
-            elif ufunc.nout == 2:
-                # Make contexts for outputs (trivial ones return `None`)
-                if out1 is not None:
-                    out1_ctx = writable_array(out1, **array_kwargs)
-                else:
-                    out1_ctx = nullcontext()
-                if out2 is not None:
-                    out2_ctx = writable_array(out2, **array_kwargs)
-                else:
-                    out2_ctx = nullcontext()
-
-                # Evaluate ufunc
-                with out1_ctx as out1_arr, out2_ctx as out2_arr:
-                    kwargs['out'] = (out1_arr, out2_arr)
-                    res1, res2 = ufunc(*inputs, **kwargs)
-
-                # Wrap results if necessary (lazily)
-                # We don't use exponents or weightings since we don't know
-                # how to map them to the spaces
-                if out1 is None:
-                    out1_space = type(self.space)(self.shape, res1.dtype)
-                    out1 = out1_space.element(res1)
-                if out2 is None:
-                    out2_space = type(self.space)(self.shape, res2.dtype)
-                    out2 = out2_space.element(res2)
-
-                return out1, out2
-
-            else:
-                raise NotImplementedError('nout = {} not supported'
-                                          ''.format(ufunc.nout))
-
-        else:  # method != '__call__'
-            # Make context for output (trivial one returns `None`)
-            if out is None:
-                out_ctx = nullcontext()
-            else:
-                out_ctx = writable_array(out, **array_kwargs)
-
-            # Evaluate ufunc method
-            with out_ctx as out_arr:
-                if method != 'at':
-                    # No kwargs allowed for 'at'
-                    kwargs['out'] = out_arr
-                res = getattr(ufunc, method)(*inputs, **kwargs)
-
-            # Shortcut for scalar or no return value
-            if np.isscalar(res) or res is None:
-                # The first occurs for `reduce` with all axes,
-                # the second for in-place stuff (`at` currently)
-                return res
-
-            # Wrap result if necessary (lazily)
-            if out is None:
-                if is_floating_dtype(res.dtype):
-                    if res.shape != self.shape:
-                        # Don't propagate weighting if shape changes
-                        weighting = NumpyTensorSpaceConstWeighting(1.0,
-                                                                   exponent)
-                    spc_kwargs = {'weighting': weighting}
-                else:
-                    spc_kwargs = {}
-
-                out_space = type(self.space)(res.shape, res.dtype,
-                                             **spc_kwargs)
-                out = out_space.element(res)
-
-            return out
         
     def __complex__(self):
         """Return ``complex(self)``."""
