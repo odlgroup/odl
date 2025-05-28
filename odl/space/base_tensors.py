@@ -174,25 +174,6 @@ class TensorSpace(LinearSpace):
             else:
                 raise TypeError(f"The weighting must be of {Weighting} type, but {type(weighting)} was provided")
     
-    ########## static methods ##########
-    @staticmethod
-    def default_dtype(field=None):
-        """Return the default data type for a given field.
-
-        This method should be overridden by subclasses.
-
-        Parameters
-        ----------
-        field : `Field`, optional
-            Set of numbers to be represented by a data type.
-
-        Returns
-        -------
-        dtype :
-            Numpy data type specifier.
-        """
-        raise NotImplementedError('abstract method')
-
     ########## Attributes ##########
     @property
     def array_constructor(self):
@@ -502,6 +483,31 @@ class TensorSpace(LinearSpace):
                 return self._astype(dtype_as_str)
         else:
             return self._astype(dtype_as_str)
+        
+    def default_dtype(self, field=None):
+        """Return the default data type for a given field.
+
+        This method should be overridden by subclasses.
+
+        Parameters
+        ----------
+        field : `Field`, optional
+            Set of numbers to be represented by a data type.
+            Currently supported : `RealNumbers`, `ComplexNumbers`
+            The default ``None`` means `RealNumbers`
+
+        Returns
+        -------
+        dtype :
+            Backend data type specifier.
+        """
+        if field is None or field == RealNumbers():
+            return self.available_dtypes['float32']
+        elif field == ComplexNumbers():
+           return self.available_dtypes['complex64']
+        else:
+            raise ValueError('no default data type defined for field {}'
+                             ''.format(field))
         
     def element(self, inp=None, device=None, copy=True):
         def wrapped_array(arr):

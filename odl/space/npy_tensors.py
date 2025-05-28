@@ -229,35 +229,6 @@ class NumpyTensorSpace(TensorSpace):
         """
         super(NumpyTensorSpace, self).__init__(shape, dtype, device, **kwargs)
 
-    ########## static methods ##########
-    @staticmethod
-    def default_dtype(field=None):
-        """Return the default data type of this class for a given field.
-
-        Parameters
-        ----------
-        field : `Field`, optional
-            Set of numbers to be represented by a data type.
-            Currently supported : `RealNumbers`, `ComplexNumbers`
-            The default ``None`` means `RealNumbers`
-
-        Returns
-        -------
-        dtype : `numpy.dtype`
-            Numpy data type specifier. The returned defaults are:
-
-                ``RealNumbers()`` : ``np.dtype('float64')``
-
-                ``ComplexNumbers()`` : ``np.dtype('complex128')``
-        """
-        if field is None or field == RealNumbers():
-            return np.dtype('float64')
-        elif field == ComplexNumbers():
-            return np.dtype('complex128')
-        else:
-            raise ValueError('no default data type defined for field {}'
-                             ''.format(field))
-
     ########## Attributes ##########
     @property
     def array_constructor(self):
