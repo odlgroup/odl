@@ -250,14 +250,6 @@ class TensorSpace(LinearSpace):
         return self.astype(self.complex_dtype)
     
     @property
-    def default_order(self):
-        """Default storage order for new elements in this space.
-
-        This property should be overridden by subclasses.
-        """
-        raise NotImplementedError('abstract method')
-    
-    @property
     def device(self):
         """Device on which the tensorSpace is implemented.
 

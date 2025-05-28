@@ -217,10 +217,7 @@ def test_element_from_array_2d(odl_elem_order):
     assert all_equal(elem, [[1, 2],
                             [3, 4]])
 
-    if order is None:
-        assert elem.tensor.data.flags[discr.default_order + '_CONTIGUOUS']
-    else:
-        assert elem.tensor.data.flags[order + '_CONTIGUOUS']
+    assert elem.tensor.data.flags['C_CONTIGUOUS']
 
     with pytest.raises(ValueError):
         discr.element([1, 2, 3])  # wrong size & shape

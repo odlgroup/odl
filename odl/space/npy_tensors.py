@@ -330,11 +330,6 @@ class NumpyTensorSpace(TensorSpace):
         return NpyTensorSpacebyaxis()
     
     @property
-    def default_order(self):
-        """Default storage order for new elements in this space: ``'C'``."""
-        return 'C'
-    
-    @property
     def element_type(self):
         """Type of elements in this space: `NumpyTensor`."""
         return NumpyTensor
