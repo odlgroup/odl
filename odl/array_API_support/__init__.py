@@ -11,6 +11,8 @@
 from __future__ import absolute_import
 
 from .element_wise import *
+from .utils import *
 
 __all__ = ()
 __all__ += element_wise.__all__
+__all__ += utils.__all__
