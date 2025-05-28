@@ -296,49 +296,6 @@ class NumpyTensorSpace(TensorSpace):
     ######### public methods #########
     def get_array_dtype_as_str(self, arr):
         return arr.dtype.name
-    ######### magic methods #########
-    def __eq__(self, other):
-        """Return ``self == other``.
-
-        Returns
-        -------
-        equals : bool
-            True if ``other`` is an instance of ``type(self)``
-            with the same `NumpyTensorSpace.shape`, `NumpyTensorSpace.dtype`
-            and `NumpyTensorSpace.weighting`, otherwise False.
-
-        Examples
-        --------
-        >>> space = odl.rn(3)
-        >>> same_space = odl.rn(3, exponent=2)
-        >>> same_space == space
-        True
-
-        Different `shape`, `exponent` or `dtype` all result in different
-        spaces:
-
-        >>> diff_space = odl.rn((3, 4))
-        >>> diff_space == space
-        False
-        >>> diff_space = odl.rn(3, exponent=1)
-        >>> diff_space == space
-        False
-        >>> diff_space = odl.rn(3, dtype='float32')
-        >>> diff_space == space
-        False
-        >>> space == object
-        False
-        """
-        if other is self:
-            return True
-
-        return (super(NumpyTensorSpace, self).__eq__(other) and
-                self.weighting == other.weighting)
-
-    def __hash__(self):
-        """Return ``hash(self)``."""
-        return hash((super(NumpyTensorSpace, self).__hash__(),
-                     self.weighting))
 
     ######### private methods #########    
     def _dist(self, x1, x2):

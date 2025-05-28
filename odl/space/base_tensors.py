@@ -707,11 +707,15 @@ class TensorSpace(LinearSpace):
 
         return (type(other) is type(self) and
                 self.shape == other.shape and
-                self.dtype == other.dtype)
+                self.dtype == other.dtype and
+                self.impl == other.impl and
+                self.weighting == other.weighting and 
+                self.device == other.device
+                )
 
     def __hash__(self):
         """Return ``hash(self)``."""
-        return hash((type(self), self.shape, self.dtype))
+        return hash((type(self), self.shape, self.dtype, self.device, self.impl))
 
     def __len__(self):
         """Number of tensor entries along the first axis."""
