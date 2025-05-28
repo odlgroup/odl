@@ -16,8 +16,7 @@ from builtins import object
 import numpy as np
 
 from odl.set.sets import ComplexNumbers, RealNumbers
-from odl.set.space import (LinearSpaceTypeError,
-        SupportedNumOperationParadigms, NumOperationParadigmSupport)
+from odl.set.space import LinearSpaceTypeError
 from odl.space.base_tensors import Tensor, TensorSpace
 from odl.util import (
     dtype_str, is_numeric_dtype, signature_string)
@@ -230,9 +229,6 @@ class NumpyTensorSpace(TensorSpace):
         >>> space
         tensor_space((2, 3), dtype=int)
         """
-        # In-place ops check
-        self.__use_in_place_ops = kwargs.pop('use_in_place_ops', True)
-
         super(NumpyTensorSpace, self).__init__(shape, dtype, device, **kwargs)
 
     ########## static methods ##########
@@ -338,21 +334,6 @@ class NumpyTensorSpace(TensorSpace):
     def impl(self):
         """Name of the implementation back-end: ``'numpy'``."""
         return 'numpy'
-
-    @property
-    def supported_num_operation_paradigms(self) -> NumOperationParadigmSupport:
-        """NumPy has full support for in-place operation, which is usually
-        advantageous to reduce memory allocations.
-        This can be deactivated, mostly for testing purposes, by setting
-        `use_in_place_ops = False` when constructing the space."""
-        if self.__use_in_place_ops:
-            return SupportedNumOperationParadigms(
-                    in_place = NumOperationParadigmSupport.PREFERRED,
-                    out_of_place = NumOperationParadigmSupport.SUPPORTED)
-        else:
-            return SupportedNumOperationParadigms(
-                    in_place = NumOperationParadigmSupport.NOT_SUPPORTED,
-                    out_of_place = NumOperationParadigmSupport.PREFERRED)
 
     ######### public methods #########
     def get_array_dtype_as_str(self, arr):

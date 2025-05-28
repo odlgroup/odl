@@ -18,7 +18,9 @@ import numpy as np
 
 import odl
 from odl.set.sets import ComplexNumbers, RealNumbers
-from odl.set.space import LinearSpace, LinearSpaceElement
+from odl.set.space import (
+    LinearSpace, LinearSpaceElement,
+    SupportedNumOperationParadigms, NumOperationParadigmSupport)
 from odl.util import (
     array_str, dtype_str, indent, is_complex_floating_dtype,
     is_numeric_dtype, is_real_floating_dtype, safe_int_conv,
@@ -87,7 +89,13 @@ class TensorSpace(LinearSpace):
 
         self.parse_device(device)
 
-        self.parse_weighting(**kwargs)
+        self.__use_in_place_ops = kwargs.pop('use_in_place_ops', True)
+
+        weighting = kwargs.pop("weighting", None)  
+        self.parse_weighting(weighting)
+
+        if kwargs:
+            raise TypeError('got unknown keyword arguments {}'.format(kwargs))
 
         field = self.parse_field(dtype)
 
@@ -97,7 +105,6 @@ class TensorSpace(LinearSpace):
     def parse_device(self, device:str):
         odl.check_device(self.impl, device)
         self.__device = device 
-        print(self.__device)
 
     def parse_dtype(self, dtype:str):
         """
@@ -149,8 +156,7 @@ class TensorSpace(LinearSpace):
             field = None
         return field
     
-    def parse_weighting(self, **kwargs):
-        weighting = kwargs.get("weighting", None)      
+    def parse_weighting(self, weighting):    
         if weighting is None:
             self.__weighting = odl.space_weighting(self.impl, weight=1.0, exponent=2.0)
         else:
@@ -167,7 +173,6 @@ class TensorSpace(LinearSpace):
                     )
             else:
                 raise TypeError(f"The weighting must be of {Weighting} type, but {type(weighting)} was provided")
-                
     
     ########## static methods ##########
     @staticmethod
@@ -370,6 +375,21 @@ class TensorSpace(LinearSpace):
                 '`real_space` not defined for non-numeric `dtype`')
         return self.astype(self.real_dtype)
     
+    @property
+    def supported_num_operation_paradigms(self) -> NumOperationParadigmSupport:
+        """NumPy has full support for in-place operation, which is usually
+        advantageous to reduce memory allocations.
+        This can be deactivated, mostly for testing purposes, by setting
+        `use_in_place_ops = False` when constructing the space."""
+        if self.__use_in_place_ops:
+            return SupportedNumOperationParadigms(
+                    in_place = NumOperationParadigmSupport.PREFERRED,
+                    out_of_place = NumOperationParadigmSupport.SUPPORTED)
+        else:
+            return SupportedNumOperationParadigms(
+                    in_place = NumOperationParadigmSupport.NOT_SUPPORTED,
+                    out_of_place = NumOperationParadigmSupport.PREFERRED)
+        
     @property
     def shape(self):
         """Number of scalar elements per axis.
