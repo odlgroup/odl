@@ -8,6 +8,7 @@ WEIGHTING_IMPLS = {
 
 def space_weighting(
         impl : str,
+        device = 'cpu',
         **kwargs
     ):
     """
@@ -48,4 +49,4 @@ def space_weighting(
             raise TypeError(f"If provided, the weight must be a positive float or an array with positive entries or an odl Tensor with positive data, but a weight of type {type(weight)} was provided.")
     # Choosing the implementation
     weighting_impl = WEIGHTING_IMPLS[impl]
-    return weighting_impl(**kwargs)
+    return weighting_impl(device, **kwargs)
