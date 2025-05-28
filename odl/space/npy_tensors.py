@@ -15,6 +15,7 @@ from builtins import object
 
 import numpy as np
 
+from odl.array_API_support import divide, multiply, add
 from odl.set.sets import ComplexNumbers, RealNumbers
 from odl.set.space import LinearSpaceTypeError
 from odl.space.base_tensors import Tensor, TensorSpace
@@ -367,10 +368,7 @@ class NumpyTensorSpace(TensorSpace):
         >>> result is out
         True
         """
-        if out is None:
-            return np.divide(x1.data, x2.data)
-        else:
-            np.divide(x1.data, x2.data, out=out.data)
+        return divide(x1, x2, out)
     
     def _inner(self, x1, x2):
         """Return the inner product of ``x1`` and ``x2``.
@@ -436,12 +434,7 @@ class NumpyTensorSpace(TensorSpace):
         >>> result is out
         True
         """
-        if self.__use_in_place_ops:
-            assert(out is not None)
-            _lincomb_impl(a, x1, b, x2, out)
-        else:
-            assert(out is None)
-            return self.element(a * x1.data + b * x2.data)
+        return add(a*x1, b*x2, out)
 
     def _multiply(self, x1, x2, out):
         """Compute the entry-wise product ``out = x1 * x2``.
@@ -470,10 +463,7 @@ class NumpyTensorSpace(TensorSpace):
         >>> result is out
         True
         """
-        if out is None:
-            return np.multiply(x1.data, x2.data)
-        else:
-            np.multiply(x1.data, x2.data, out=out.data)
+        return multiply(x1,x2, out)
 
     def _norm(self, x):
         """Return the norm of ``x``.
