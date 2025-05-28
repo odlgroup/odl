@@ -14,49 +14,77 @@ class Weighting(object):
         ----------
         
         """        
-        # Checks
-        odl.check_device(self.impl, device)
-        # Set default attributes        
-        self.__device = device
         self.__inner = self.array_namespace.inner
         self.__array_norm  = self.array_namespace.linalg.vector_norm
         self.__dist  = self.array_namespace.linalg.vector_norm
         self.__exponent = 2.0
         self.__weight = 1.0
 
+        # Check device consistency and allocate __device attribute
+        self.parse_device(device)
         # Overload of the default attributes and methods if they are found in the kwargs
         self.parse_kwargs(kwargs)
 
+    def parse_device(self, device):
+        # Checks
+        odl.check_device(self.impl, device)
+        # Set attribute   
+        self.__device = device
+
     def parse_kwargs(self, kwargs):
         if 'exponent' in kwargs:
-            exponent = kwargs['exponent'] 
+            # Pop the kwarg
+            exponent = kwargs.pop('exponent')
+            # Check the kwarg
             if exponent <= 0:
-                raise ValueError('only positive exponents or inf supported, '
-                                'got {}'.format(self.__exponent))
+                raise ValueError(
+                    f"only positive exponents or inf supported, got {exponent}"
+                    )
+            # Assign the attribute
             self.__exponent = exponent
 
         if 'inner' in kwargs:
+            # Pop the kwarg
+            inner = kwargs.pop('inner')
+            # check the kwarg
+            assert isinstance(inner, callable)
+            # Check the consistency
             assert self.exponent == 2.0
             assert not set(['norm', 'dist', 'weight']).issubset(kwargs)
-            self.__inner = kwargs['inner']
+            # Assign the attribute       
+            self.__inner = inner
             
         elif 'norm' in kwargs:
+            # Pop the kwarg
+            array_norm = kwargs.pop('norm')
+            # check the kwarg
+            assert isinstance(array_norm, callable)
+            # Check the consistency
             assert self.exponent == 2.0
             assert not set(['inner', 'dist', 'weight']).issubset(kwargs)
-            self.__inner = not_implemented('inner', 'norm')
-            self.__array_norm  = kwargs['norm']
+            # Assign the attributes
+            self.__inner = not_implemented('inner', 'norm')            
+            self.__array_norm  = array_norm
         
         elif 'dist' in kwargs:
+            # Pop the kwarg
+            dist  = kwargs.pop('dist')
+            # check the kwarg
+            assert isinstance(dist, callable)
+            # Check the consistency
             assert self.exponent == 2.0
             assert not set(['inner', 'norm', 'weight']).issubset(kwargs)
+            # Assign the attributes
             self.__inner = not_implemented('inner', 'dist')
             self.__array_norm  = not_implemented('norm', 'dist')
-            self.__dist  = kwargs['dist']
+            self.__dist  = dist
         
         elif 'weight' in kwargs:
+            # Pop the kwarg
+            weight = kwargs.pop('weight')
+            # Check the consistency
             assert not set(['inner', 'norm', 'dist']).issubset(kwargs)
-            weight = kwargs['weight']
-
+            # check the kwarg AND assign the attribute
             if isinstance(weight, float) and (not 0 < weight):
                 raise TypeError("If the weight if a float, it must be positive")
             
@@ -70,7 +98,12 @@ class Weighting(object):
                 if self.array_namespace.all(0 < weight):
                     self.__weight = weight
                 else:
-                    raise TypeError("If the weight if an array, all its elements must be positive")
+                    raise TypeError("If the weight if an array, all its elements must be positive")          
+
+        # Make sure there are no leftover kwargs
+        if kwargs:
+            raise TypeError('got unknown keyword arguments {}'.format(kwargs))
+
     @property
     def device(self):
         """Device of this weighting."""
