@@ -1,3 +1,5 @@
+import odl       
+
 def not_implemented(
         function_name:str,
         argument:str        
@@ -5,7 +7,7 @@ def not_implemented(
     raise NotImplementedError(f'The function {function_name} when the weighting was declared with {argument}.')
 
 class Weighting(object):
-    def __init__(self, **kwargs):
+    def __init__(self, device, **kwargs):
         """Initialize a new instance.
 
         Parameters
@@ -13,6 +15,8 @@ class Weighting(object):
         
         """
         # Set default attributes
+        odl.check_device(self.impl, device)
+        self.__device = device
         self.__inner = self.array_namespace.inner
         self.__array_norm  = self.array_namespace.linalg.vector_norm
         self.__dist  = self.array_namespace.linalg.vector_norm
@@ -49,12 +53,18 @@ class Weighting(object):
                 else:
                     raise TypeError("If the weight if an array, all its elements must be positive")
             
-            exponent = kwargs['exponent']
-            if exponent <= 0:
-                raise ValueError('only positive exponents or inf supported, '
-                                'got {}'.format(self.__exponent))
-            self.__exponent = exponent
-        
+            if 'exponent' in kwargs:
+                exponent = kwargs['exponent']
+                if exponent <= 0:
+                    raise ValueError('only positive exponents or inf supported, '
+                                    'got {}'.format(self.__exponent))
+                self.__exponent = exponent
+
+    @property
+    def device(self):
+        """Device of this weighting."""
+        return self.__device
+    
     @property
     def exponent(self):
         """Exponent of this weighting."""
@@ -62,7 +72,7 @@ class Weighting(object):
     
     @property
     def weight(self):
-        """Exponent of this weighting."""
+        """Weight of this weighting."""
         return self.__weight
 
     def __eq__(self, other):
@@ -81,6 +91,7 @@ class Weighting(object):
         `equiv` method.
         """
         return (isinstance(other, Weighting) and
+                self.device == other.device,
                 self.weight == other.weight and                
                 self.exponent == other.exponent and
                 self.inner == other.inner and 
