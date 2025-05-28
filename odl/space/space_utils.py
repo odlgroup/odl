@@ -21,7 +21,7 @@ TENSOR_SPACE_IMPLS = {'numpy': NumpyTensorSpace}
 __all__ = ('vector', 'tensor_space', 'cn', 'rn')
 
 
-def vector(array, dtype=None, order=None, impl='numpy'):
+def vector(array, dtype=None, order=None, impl='numpy', device = 'cpu'):
     """Create a vector from an array-like object.
 
     Parameters
@@ -87,11 +87,11 @@ def vector(array, dtype=None, order=None, impl='numpy'):
     else:
         space_dtype = arr.dtype
 
-    space = tensor_space(arr.shape, dtype=space_dtype, impl=impl)
+    space = tensor_space(arr.shape, dtype=space_dtype, impl=impl, device=device)
     return space.element(arr)
 
 
-def tensor_space(shape, dtype='float32', impl='numpy', **kwargs):
+def tensor_space(shape, dtype='float32', impl='numpy', device = 'cpu', **kwargs):
     """Return a tensor space with arbitrary scalar data type.
 
     Parameters
@@ -149,10 +149,10 @@ def tensor_space(shape, dtype='float32', impl='numpy', **kwargs):
 
     # Use args by keyword since the constructor may take other arguments
     # by position
-    return TENSOR_SPACE_IMPLS[impl](shape=shape, dtype=dtype, **kwargs)
+    return TENSOR_SPACE_IMPLS[impl](shape=shape, dtype=dtype, device=device, **kwargs)
 
 
-def cn(shape, dtype='complex64', impl='numpy', **kwargs):
+def cn(shape, dtype='complex64', impl='numpy', device='cpu', **kwargs):
     """Return a space of complex tensors.
 
     Parameters
@@ -201,10 +201,10 @@ def cn(shape, dtype='complex64', impl='numpy', **kwargs):
     rn : Real tensor space.
     """
     assert dtype in COMPLEX_DTYPES, f'For cn, the type must be complex, but got {dtype}'
-    return tensor_space(shape, dtype=dtype, impl=impl, **kwargs)
+    return tensor_space(shape, dtype=dtype, impl=impl, device=device, **kwargs)
 
 
-def rn(shape, dtype='float32', impl='numpy', **kwargs):
+def rn(shape, dtype='float32', impl='numpy', device ='cpu', **kwargs):
     """Return a space of real tensors.
 
     Parameters
@@ -252,7 +252,7 @@ def rn(shape, dtype='float32', impl='numpy', **kwargs):
     cn : Complex tensor space.
     """
     assert dtype in FLOAT_DTYPES, f'For rn, the type must be float, but got {dtype}'
-    return tensor_space(shape, dtype=dtype, impl=impl, **kwargs)
+    return tensor_space(shape, dtype=dtype, impl=impl, device=device, **kwargs)
 
 
 

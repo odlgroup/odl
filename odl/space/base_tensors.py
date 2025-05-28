@@ -85,6 +85,8 @@ class TensorSpace(LinearSpace):
 
         self.parse_shape(shape, dtype)
 
+        self.parse_device(device)
+
         self.parse_weighting(**kwargs)
 
         field = self.parse_field(dtype)
@@ -95,7 +97,8 @@ class TensorSpace(LinearSpace):
     def parse_device(self, device:str):
         odl.check_device(self.impl, device)
         self.__device = device 
-        
+        print(self.__device)
+
     def parse_dtype(self, dtype:str):
         """
         Process the dtype argument. This parses the (str) dtype input argument to a backend.dtype and sets two attributes
