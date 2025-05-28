@@ -65,7 +65,7 @@ class TensorSpace(LinearSpace):
     .. _Wikipedia article on tensors: https://en.wikipedia.org/wiki/Tensor
     """
 
-    def __init__(self, shape, dtype, **kwargs):
+    def __init__(self, shape, dtype, device, **kwargs):
         """Initialize a new instance.
 
         Parameters
@@ -80,8 +80,7 @@ class TensorSpace(LinearSpace):
             For a data type with a ``dtype.shape``, these extra dimensions
             are added *to the left* of ``shape``.
         """
-        # Handle shape and dtype, taking care also of dtypes with shape
-        # Dtype check and parsing 
+        # Handle shape and dtype, taking care also of dtypes with shape        
         self.parse_dtype(dtype)
 
         self.parse_shape(shape, dtype)
@@ -93,6 +92,10 @@ class TensorSpace(LinearSpace):
         LinearSpace.__init__(self, field)
 
     ################ Init Methods, Non static ################
+    def parse_device(self, device:str):
+        odl.check_device(self.impl, device)
+        self.__device = device 
+        
     def parse_dtype(self, dtype:str):
         """
         Process the dtype argument. This parses the (str) dtype input argument to a backend.dtype and sets two attributes
@@ -151,10 +154,14 @@ class TensorSpace(LinearSpace):
             if issubclass(type(weighting), Weighting):
                 if weighting.impl != self.impl:
                     raise ValueError(
-                        "`weighting.impl` must be 'pytorch', "
-                        "`got {!r}".format(weighting.impl)
+                        f"`weighting.impl` and space.impl must be consistent, but got \
+                        {weighting.impl} and {self.impl}" 
                     )
-                self.__weighting = weighting
+                if weighting.device != self.device:
+                    raise ValueError(
+                        f"`weighting.device` and space.device must be consistent, but got \
+                        {weighting.device} and {self.device}" 
+                    )
             else:
                 raise TypeError(f"The weighting must be of {Weighting} type, but {type(weighting)} was provided")
                 
@@ -253,7 +260,7 @@ class TensorSpace(LinearSpace):
 
         This property should be overridden by subclasses.
         """
-        raise NotImplementedError('abstract method')
+        return self.__device
     
     @property
     def dtype(self):

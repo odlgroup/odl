@@ -238,16 +238,15 @@ class NumpyTensorSpace(TensorSpace):
         >>> space
         tensor_space((2, 3), dtype=int)
         """
-        super(NumpyTensorSpace, self).__init__(shape, dtype, **kwargs)
         # Device check and parsing
-        self.parse_device(device)
-
+        # self.parse_device(device)
         # In-place ops check
         self.__use_in_place_ops = kwargs.pop('use_in_place_ops', True)
 
-        # Make sure there are no leftover kwargs
-        if kwargs:
-            raise TypeError('got unknown keyword arguments {}'.format(kwargs))
+        super(NumpyTensorSpace, self).__init__(shape, dtype, device, **kwargs)
+
+        
+
     ########## Init methods ########## 
 
     def parse_device(self, device:str):
@@ -369,10 +368,10 @@ class NumpyTensorSpace(TensorSpace):
         """Default storage order for new elements in this space: ``'C'``."""
         return 'C'
     
-    @property
-    def device(self):
-        """Device identifier."""
-        return self.__device
+    # @property
+    # def device(self):
+    #     """Device identifier."""
+    #     return self.__device
     
     @property
     def element_type(self):
