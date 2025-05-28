@@ -13,29 +13,48 @@ class Weighting(object):
         Parameters
         ----------
         
-        """
-        # Set default attributes
+        """        
+        # Checks
         odl.check_device(self.impl, device)
+        # Set default attributes        
         self.__device = device
         self.__inner = self.array_namespace.inner
         self.__array_norm  = self.array_namespace.linalg.vector_norm
         self.__dist  = self.array_namespace.linalg.vector_norm
         self.__exponent = 2.0
         self.__weight = 1.0
-        # Parse the methods
+
+        # Overload of the default attributes and methods if they are found in the kwargs
+        self.parse_kwargs(kwargs)
+
+    def parse_kwargs(self, kwargs):
+        if 'exponent' in kwargs:
+            exponent = kwargs['exponent'] 
+            if exponent <= 0:
+                raise ValueError('only positive exponents or inf supported, '
+                                'got {}'.format(self.__exponent))
+            self.__exponent = exponent
+
         if 'inner' in kwargs:
+            assert self.exponent == 2.0
+            assert not set(['norm', 'dist', 'weight']).issubset(kwargs)
             self.__inner = kwargs['inner']
             
         elif 'norm' in kwargs:
+            assert self.exponent == 2.0
+            assert not set(['inner', 'dist', 'weight']).issubset(kwargs)
             self.__inner = not_implemented('inner', 'norm')
             self.__array_norm  = kwargs['norm']
         
         elif 'dist' in kwargs:
+            assert self.exponent == 2.0
+            assert not set(['inner', 'norm', 'weight']).issubset(kwargs)
             self.__inner = not_implemented('inner', 'dist')
             self.__array_norm  = not_implemented('norm', 'dist')
             self.__dist  = kwargs['dist']
         
         elif 'weight' in kwargs:
+            assert not set(['inner', 'norm', 'dist']).issubset(kwargs)
             weight = kwargs['weight']
 
             if isinstance(weight, float) and (not 0 < weight):
@@ -52,14 +71,6 @@ class Weighting(object):
                     self.__weight = weight
                 else:
                     raise TypeError("If the weight if an array, all its elements must be positive")
-            
-            if 'exponent' in kwargs:
-                exponent = kwargs['exponent']
-                if exponent <= 0:
-                    raise ValueError('only positive exponents or inf supported, '
-                                    'got {}'.format(self.__exponent))
-                self.__exponent = exponent
-
     @property
     def device(self):
         """Device of this weighting."""

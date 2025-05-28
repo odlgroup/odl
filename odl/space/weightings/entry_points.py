@@ -22,31 +22,8 @@ def space_weighting(
         4) weight (float | ArrayLike): Scalar or element-wise weighting of the space elements
         5) exponent (float): exponent of the norm
     """
-    ########## Parsing the input parameters ##########
-    dist   : callable = kwargs.get("dist", None)
-    norm   : callable = kwargs.get("norm", None)
-    inner  : callable = kwargs.get("inner", None)
-    weight : float | ArrayLike = kwargs.get("weight", None)
-    exponent : float = kwargs.get("exponent", 2.0)
-    ########## Performing checks ##########
     # Parsing implementation
     assert impl in WEIGHTING_IMPLS, f"impl arg must be in {WEIGHTING_IMPLS} but {impl} was provided"
-    # We do not allow the use of callables if the exponent is not equal to 2
-    if exponent != 2.0 and any(x is not None for x in (dist, norm, inner)):
-            raise ValueError(
-                f"cannot use any of `dist`, `norm` or `inner` for exponent != 2, but {exponent} was provided"
-            )
-    # Check validity of option combination (0 or 1 may be provided)
-    num_extra_args = sum(a is not None for a in (dist, norm, inner, weight))
-    if num_extra_args > 1:
-        raise ValueError(
-            "invalid combination of options `weighting`, "
-            "`dist`, `norm` and `inner`"
-        )
-    # Check the dtype of the weight
-    if weight is not None:
-        if not hasattr(weight, '__array__') and (not isinstance(weight, float)):
-            raise TypeError(f"If provided, the weight must be a positive float or an array with positive entries or an odl Tensor with positive data, but a weight of type {type(weight)} was provided.")
     # Choosing the implementation
     weighting_impl = WEIGHTING_IMPLS[impl]
     return weighting_impl(device, **kwargs)
