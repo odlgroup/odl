@@ -284,48 +284,6 @@ class NumpyTensorSpace(TensorSpace):
         return NUMPY_DTYPES
     
     @property
-    def byaxis(self):
-        """Return the subspace defined along one or several dimensions.
-
-        Examples
-        --------
-        Indexing with integers or slices:
-
-        >>> space = odl.rn((2, 3, 4))
-        >>> space.byaxis[0]
-        rn(2)
-        >>> space.byaxis[1:]
-        rn((3, 4))
-
-        Lists can be used to stack spaces arbitrarily:
-
-        >>> space.byaxis[[2, 1, 2]]
-        rn((4, 3, 4))
-        """
-        space = self
-
-        class NpyTensorSpacebyaxis(object):
-
-            """Helper class for indexing by axis."""
-
-            def __getitem__(self, indices):
-                """Return ``self[indices]``."""
-                try:
-                    iter(indices)
-                except TypeError:
-                    newshape = space.shape[indices]
-                else:
-                    newshape = tuple(space.shape[i] for i in indices)
-
-                return type(space)(newshape, space.dtype, weighting=space.weighting)
-
-            def __repr__(self):
-                """Return ``repr(self)``."""
-                return repr(space) + '.byaxis'
-
-        return NpyTensorSpacebyaxis()
-    
-    @property
     def element_type(self):
         """Type of elements in this space: `NumpyTensor`."""
         return NumpyTensor
