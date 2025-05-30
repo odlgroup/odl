@@ -1718,6 +1718,24 @@ class Tensor(LinearSpaceElement):
         """Implement ``self >= other``."""
         raise NotImplementedError
     
+    def __eq__(self, other):
+        """Implement ``self == other``."""
+        if other is self:
+            return True
+        elif other not in self.space:
+            return False
+        else:
+            return (               
+                self.shape == other.shape and               
+                self.impl == other.impl and
+                self.device == other.device and
+                self.array_namespace.equal(self, other)
+                )
+    
+    def __ne__(self, other):
+        """Return ``self != other``."""
+        return not self.__eq__(other)
+    
      ################# In-place Arithmetic Operators #################
     def __iadd__(self, other):
         """Implement ``self += other``."""

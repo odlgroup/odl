@@ -347,43 +347,6 @@ class NumpyTensor(Tensor):
         """
         return self.copy()
     
-    def __eq__(self, other):
-        """Return ``self == other``.
-
-        Returns
-        -------
-        equals : bool
-            True if all entries of ``other`` are equal to this
-            the entries of ``self``, False otherwise.
-
-        Examples
-        --------
-        >>> space = odl.rn(3)
-        >>> x = space.element([1, 2, 3])
-        >>> y = space.element([1, 2, 3])
-        >>> x == y
-        True
-
-        >>> y = space.element([-1, 2, 3])
-        >>> x == y
-        False
-        >>> x == object
-        False
-
-        Space membership matters:
-
-        >>> space2 = odl.tensor_space(3, dtype='int64')
-        >>> y = space2.element([1, 2, 3])
-        >>> x == y or y == x
-        False
-        """
-        if other is self:
-            return True
-        elif other not in self.space:
-            return False
-        else:
-            return np.array_equal(self.data, other.data)
-    
     def __float__(self):
         """Return ``float(self)``."""
         return float(self.data)
