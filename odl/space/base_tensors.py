@@ -155,7 +155,7 @@ class TensorSpace(LinearSpace):
         return field
     
     def parse_weighting(self, **kwargs):
-        weighting = kwargs.get("weighting", None)    
+        weighting = kwargs.pop("weighting", None)    
         if weighting is None:
             self.__weighting = odl.space_weighting(impl=self.impl, device=self.device, **kwargs)
         else:
@@ -176,6 +176,13 @@ class TensorSpace(LinearSpace):
                         {weighting.shape} and {self.shape}" 
                     )
                 self.__weighting = weighting
+            elif hasattr(weighting, '__array__') or isinstance(weighting, (int, float)):
+                self.__weighting = odl.space_weighting(impl=self.impl, device=self.device, weight=weighting, **kwargs)
+            else:
+                raise TypeError(
+                    f"""Wrong type of 'weighting' argument. Only floats, array-like and odl.Weightings are accepted 
+                    """
+                    )
     
     ########## Attributes ##########
     @property
