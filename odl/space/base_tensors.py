@@ -1105,6 +1105,52 @@ class Tensor(LinearSpaceElement):
         return self.space.dtype_as_str
     
     @property
+    def imag(self):
+        """Imaginary part of ``self``.
+
+        Returns
+        -------
+        imag : `NumpyTensor`
+            Imaginary part this element as an element of a
+            `NumpyTensorSpace` with real data type.
+
+        Examples
+        --------
+        Get the imaginary part:
+
+        >>> space = odl.cn(3)
+        >>> x = space.element([1 + 1j, 2, 3 - 3j])
+        >>> x.imag
+        rn(3).element([ 1.,  0., -3.])
+
+        Set the imaginary part:
+
+        >>> space = odl.cn(3)
+        >>> x = space.element([1 + 1j, 2, 3 - 3j])
+        >>> zero = odl.rn(3).zero()
+        >>> x.imag = zero
+        >>> x
+        cn(3).element([ 1.+0.j,  2.+0.j,  3.+0.j])
+
+        Other array-like types and broadcasting:
+
+        >>> x.imag = 1.0
+        >>> x
+        cn(3).element([ 1.+1.j,  2.+1.j,  3.+1.j])
+        >>> x.imag = [2, 3, 4]
+        >>> x
+        cn(3).element([ 1.+2.j,  2.+3.j,  3.+4.j])
+        """
+        if self.space.is_real:
+            return self.space.zero()
+        elif self.space.is_complex:
+            real_space = self.space.astype(self.space.real_dtype)
+            return real_space.element(self.data.imag)
+        else:
+            raise NotImplementedError('`imag` not defined for non-numeric '
+                                      'dtype {}'.format(self.dtype))
+        
+    @property
     def impl(self):
         """Name of the implementation back-end of this tensor."""
         return self.space.impl
@@ -1176,6 +1222,26 @@ class Tensor(LinearSpaceElement):
             Version of this element with given data type.
         """
         raise NotImplementedError('abstract method')
+    
+    @imag.setter
+    def imag(self, newimag):
+        """Setter for the imaginary part.
+
+        This method is invoked by ``x.imag = other``.
+
+        Parameters
+        ----------
+        newimag : array-like or scalar
+            Values to be assigned to the imaginary part of this element.
+
+        Raises
+        ------
+        ValueError
+            If the space is real, i.e., no imagninary part can be set.
+        """
+        if self.space.is_real:
+            raise ValueError('cannot set imaginary part in real spaces')
+        self.imag.data[:] = newimag
     
     def show(self, title=None, method='', indices=None, force_show=False,
              fig=None, **kwargs):
