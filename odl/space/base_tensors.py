@@ -12,7 +12,7 @@ from __future__ import absolute_import, division, print_function
 
 from types import ModuleType
 from typing import Dict
-from numbers import Integral
+from numbers import Integral, Number
 
 import numpy as np
 
@@ -107,9 +107,9 @@ class TensorSpace(LinearSpace):
         odl.check_device(self.impl, device)
         self.__device = device 
 
-    def parse_dtype(self, dtype:str):
+    def parse_dtype(self, dtype:str | int | float | complex):
         """
-        Process the dtype argument. This parses the (str) dtype input argument to a backend.dtype and sets two attributes
+        Process the dtype argument. This parses the (str or Number) dtype input argument to a backend.dtype and sets two attributes
 
         self.dtype_as_str (str)      -> Used for passing dtype information from one backend to another
         self.__dtype (backend.dtype) -> Actual dtype of the TensorSpace implementation
@@ -117,11 +117,12 @@ class TensorSpace(LinearSpace):
         Note:
         The check below is here just in case a user initialise a space directly from this class, which is not recommended
         """
-        if dtype not in self.available_dtypes:
+        ### Check if 
+        try :
+            self.__dtype_as_str = dtype
+            self.__dtype = self.available_dtypes[dtype]
+        except KeyError:
             raise ValueError(f"The dtype must be in {self.available_dtypes.keys()}, but {dtype} was provided")
-
-        self.__dtype_as_str = dtype
-        self.__dtype = self.available_dtypes[dtype]
 
     def parse_shape(self, shape, dtype):
         # Handle shape and dtype, taking care also of dtypes with shape

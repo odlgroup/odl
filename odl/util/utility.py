@@ -56,6 +56,7 @@ BOOLEAN_DTYPES = [
     ]
 
 INTEGER_DTYPES = [
+    int,
     "int8",
     "int16",
     "int32",
@@ -67,11 +68,13 @@ INTEGER_DTYPES = [
     ]
 
 FLOAT_DTYPES = [
+    float,
     "float32",
     "float64"
 ]
 
 COMPLEX_DTYPES = [
+    complex,
     "complex64",
     "complex128"
 ]
