@@ -1233,23 +1233,48 @@ class Tensor(LinearSpaceElement):
 
     ######### public methods #########
     def asarray(self, out=None):
-        """Extract the data of this tensor as a Numpy array.
+        """Extract the data of this array as a ``numpy.ndarray``.
 
-        This method should be overridden by subclasses.
+        This method is invoked when calling `numpy.asarray` on this
+        tensor.
 
         Parameters
         ----------
         out : `numpy.ndarray`, optional
-            Array to write the result to.
+            Array in which the result should be written in-place.
+            Has to be contiguous and of the correct dtype.
 
         Returns
         -------
         asarray : `numpy.ndarray`
-            Numpy array of the same data type and shape as the space.
-            If ``out`` was given, the returned object is a reference
+            Numpy array with the same data type as ``self``. If
+            ``out`` was given, the returned object is a reference
             to it.
+
+        Examples
+        --------
+        >>> space = odl.rn(3, dtype='float32')
+        >>> x = space.element([1, 2, 3])
+        >>> x.asarray()
+        array([ 1.,  2.,  3.], dtype=float32)
+        >>> np.asarray(x) is x.asarray()
+        True
+        >>> out = np.empty(3, dtype='float32')
+        >>> result = x.asarray(out=out)
+        >>> out
+        array([ 1.,  2.,  3.], dtype=float32)
+        >>> result is out
+        True
+        >>> space = odl.rn((2, 3))
+        >>> space.one().asarray()
+        array([[ 1.,  1.,  1.],
+               [ 1.,  1.,  1.]])
         """
-        raise NotImplementedError('abstract method')
+        if out is None:
+            return self.data
+        else:
+            out[:] = self.data
+            return out
     
     def astype(self, dtype):
         """Return a copy of this element with new ``dtype``.
