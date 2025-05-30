@@ -346,7 +346,7 @@ class TensorSpace(LinearSpace):
     @property
     def itemsize(self):
         """Size in bytes of one entry in an element of this space."""
-        return int(self.dtype.itemsize)
+        return  int(self.array_constructor([], dtype=self.dtype).itemsize)
     
     @property
     def is_complex(self):
