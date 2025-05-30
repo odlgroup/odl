@@ -1059,6 +1059,11 @@ class TensorSpace(LinearSpace):
 class Tensor(LinearSpaceElement):
 
     """Abstract class for representation of `TensorSpace` elements."""
+    def __init__(self, space, data):
+        """Initialize a new instance."""
+        # Tensor.__init__(self, space)
+        LinearSpaceElement.__init__(self, space)
+        self.__data = data
 
     ######### static methods #########
 
@@ -1078,6 +1083,11 @@ class Tensor(LinearSpaceElement):
         This relates to the python array api
         """
         return self.space.array_type
+    
+    @property
+    def data(self):
+        """The `numpy.ndarray` representing the data of ``self``."""
+        return self.__data
     
     @property
     def device(self):

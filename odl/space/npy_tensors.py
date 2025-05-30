@@ -269,19 +269,6 @@ class NumpyTensorSpace(TensorSpace):
 class NumpyTensor(Tensor):
 
     """Representation of a `NumpyTensorSpace` element."""
-
-    def __init__(self, space, data):
-        """Initialize a new instance."""
-        Tensor.__init__(self, space)
-        self.__data = data
-
-    ######### static methods #########
-
-    ######### Attributes #########
-    @property
-    def data(self):
-        """The `numpy.ndarray` representing the data of ``self``."""
-        return self.__data
     
     @property
     def data_ptr(self):
