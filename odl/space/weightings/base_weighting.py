@@ -163,9 +163,10 @@ class Weighting(object):
                 self.device == other.device and
                 self.array_namespace.equal(self.weight, other.weight).all() and                
                 self.exponent == other.exponent and
-                self.inner == other.inner and 
-                self.norm == other.norm and
-                self.dist == other.dist
+                self.shape == other.shape and
+                self.__inner == other.__inner and 
+                self.__array_norm == other.__array_norm and
+                self.__dist == other.__dist
                 )
     
     def __hash__(self):
