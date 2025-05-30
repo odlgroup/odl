@@ -293,25 +293,7 @@ class NumpyTensor(Tensor):
         """
         return self.data.ctypes.data
     
-    ######### Public methods #########
-    def astype(self, dtype):
-        """Return a copy of this element with new ``dtype``.
-
-        Parameters
-        ----------
-        dtype :
-            Scalar data type of the returned space. Can be provided
-            in any way the `numpy.dtype` constructor understands, e.g.
-            as built-in type or as a string. Data types with non-trivial
-            shapes are not allowed.
-
-        Returns
-        -------
-        newelem : `NumpyTensor`
-            Version of this element with given data type.
-        """
-        return self.space.astype(dtype).element(self.data.astype(dtype))
-    
+    ######### Public methods #########    
     def conj(self, out=None):
         """Return the complex conjugate of ``self``.
 

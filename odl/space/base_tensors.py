@@ -1289,10 +1289,10 @@ class Tensor(LinearSpaceElement):
 
         Returns
         -------
-        newelem : `Tensor`
+        newelem : `NumpyTensor`
             Version of this element with given data type.
         """
-        raise NotImplementedError('abstract method')
+        return self.space.astype(dtype).element(self.data.astype(dtype))
     
     @imag.setter
     def imag(self, newimag):
