@@ -151,9 +151,9 @@ class Weighting(object):
         `equiv` method.
         """
         return (isinstance(other, Weighting) and
-                self.impl == other.impl,
-                self.device == other.device,
-                self.weight == other.weight and                
+                self.impl == other.impl and
+                self.device == other.device and
+                self.array_namespace.equal(self.weight, other.weight).all() and                
                 self.exponent == other.exponent and
                 self.inner == other.inner and 
                 self.norm == other.norm and
