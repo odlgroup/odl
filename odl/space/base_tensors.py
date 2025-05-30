@@ -19,7 +19,7 @@ import numpy as np
 import odl
 from odl.set.sets import ComplexNumbers, RealNumbers
 from odl.set.space import (
-    LinearSpace, LinearSpaceElement,
+    LinearSpace, LinearSpaceElement, LinearSpaceTypeError,
     SupportedNumOperationParadigms, NumOperationParadigmSupport)
 from odl.util import (
     array_str, indent, is_complex_floating_dtype,
@@ -1293,6 +1293,62 @@ class Tensor(LinearSpaceElement):
             Version of this element with given data type.
         """
         return self.space.astype(dtype).element(self.data.astype(dtype))
+    
+    def conj(self, out=None):
+        """Return the complex conjugate of ``self``.
+
+        Parameters
+        ----------
+        out : `NumpyTensor`, optional
+            Element to which the complex conjugate is written.
+            Must be an element of ``self.space``.
+
+        Returns
+        -------
+        out : `NumpyTensor`
+            The complex conjugate element. If ``out`` was provided,
+            the returned object is a reference to it.
+
+        Examples
+        --------
+        >>> space = odl.cn(3)
+        >>> x = space.element([1 + 1j, 2, 3 - 3j])
+        >>> x.conj()
+        cn(3).element([ 1.-1.j,  2.-0.j,  3.+3.j])
+        >>> out = space.element()
+        >>> result = x.conj(out=out)
+        >>> result
+        cn(3).element([ 1.-1.j,  2.-0.j,  3.+3.j])
+        >>> result is out
+        True
+
+        In-place conjugation:
+
+        >>> result = x.conj(out=x)
+        >>> x
+        cn(3).element([ 1.-1.j,  2.-0.j,  3.+3.j])
+        >>> result is x
+        True
+        """
+        if self.space.is_real:
+            if out is None:
+                return self
+            else:
+                out[:] = self
+                return out
+
+        if not is_numeric_dtype(self.space.dtype):
+            raise NotImplementedError('`conj` not defined for non-numeric '
+                                      'dtype {}'.format(self.dtype))
+
+        if out is None:
+            return self.space.element(self.data.conj())
+        else:
+            if out not in self.space:
+                raise LinearSpaceTypeError('`out` {!r} not in space {!r}'
+                                           ''.format(out, self.space))
+            self.data.conj(out.data)
+            return out
     
     @imag.setter
     def imag(self, newimag):
