@@ -18,9 +18,10 @@ class Weighting(object):
         """        
         self.__inner = self.array_namespace.inner
         self.__array_norm  = self.array_namespace.linalg.vector_norm
-        self.__dist  = self.array_namespace.linalg.vector_norm
+        self.__dist  = None
         self.__exponent = 2.0
         self.__weight = 1.0
+        self._norm_from_inner = False
 
         # Check device consistency and allocate __device attribute
         self.parse_device(device)
@@ -55,7 +56,7 @@ class Weighting(object):
             assert not set(['norm', 'dist', 'weight']).issubset(kwargs)
             # Assign the attribute       
             self.__inner = inner
-            self.__array_norm  = self._array_norm_from_inner
+            self._norm_from_inner = True
             
         elif 'norm' in kwargs:
             # Pop the kwarg
@@ -120,14 +121,14 @@ class Weighting(object):
     @property
     def repr_part(self):
         """String usable in a space's ``__repr__`` method."""
-        posargs = [array_str(self.weight)]
-        optargs = [('exponent', self.exponent, 2.0),
+        optargs = [('weight', array_str(self.weight), array_str(1.0)),
+                   ('exponent', self.exponent, 2.0),
                    ('inner', self.__inner, self.array_namespace.inner),
                    ('norm', self.__array_norm, self.array_namespace.linalg.vector_norm),
-                   ('dist', self.__dist, self.array_namespace.linalg.vector_norm),
+                   ('dist', self.__dist, None),
                    ]
-        return signature_string(posargs, optargs, sep=',\n',
-            mod=[['!s'], [':.4', '!r', '!r', '!r']])
+        return signature_string([], optargs, sep=',\n',
+            mod=[[], ['!s', ':.4', '!r', '!r', '!r']])
     
     @property
     def weight(self):
@@ -169,14 +170,14 @@ class Weighting(object):
     
     def __repr__(self):
         """Return ``repr(self)``."""
-        posargs = [array_str(self.weight)]
-        optargs = [('exponent', self.exponent, 2.0),
+        optargs = [('weight', array_str(self.weight), array_str(1.0)),
+                   ('exponent', self.exponent, 2.0),
                    ('inner', self.__inner, self.array_namespace.inner),
                    ('norm', self.__array_norm, self.array_namespace.linalg.vector_norm),
-                   ('dist', self.__dist, self.array_namespace.linalg.vector_norm),
+                   ('dist', self.__dist, None),
                    ]
-        inner_str = signature_string(posargs, optargs, sep=',\n',
-            mod=[['!s'], [':.4', '!r', '!r', '!r']])
+        inner_str = signature_string([], optargs, sep=',\n',
+            mod=[[], ['!s', ':.4', '!r', '!r', '!r']])
         return '{}(\n{}\n)'.format(self.__class__.__name__, indent(inner_str))
 
     def __str__(self):
@@ -228,7 +229,10 @@ class Weighting(object):
         norm : float
             The norm of the element.
         """
-        return self.__array_norm(self.__weight * x.data, ord=self.exponent)
+        if self._norm_from_inner:
+            return self.array_namespace.sqrt(self.inner(x,x))
+        else:
+            return self.__array_norm(self.__weight * x.data, ord=self.exponent)
 
     def dist(self, x1, x2):
         """Calculate the distance between two elements.
@@ -246,4 +250,7 @@ class Weighting(object):
         dist : float
             The distance between the elements.
         """
-        return self.__dist(x1 - x2)
+        if self.__dist is None:
+            return self.norm(x1-x2)
+        else:
+            return self.__dist(x1,x2)
