@@ -21,6 +21,7 @@ class Weighting(object):
         self.__dist  = None
         self.__exponent = 2.0
         self.__weight = 1.0
+        self.__shape = None
         self._norm_from_inner = False
 
         # Check device consistency and allocate __device attribute
@@ -95,12 +96,14 @@ class Weighting(object):
             elif hasattr(weight, 'odl_tensor'):
                 if self.array_namespace.all(0 < weight.data):
                     self.__weight = weight.data
+                    self.__shape = self.weight.shape
                 else:
                     raise TypeError("If the weight if an ODL Tensor, all its entries must be positive")
                 
             elif hasattr(weight, '__array__'):
                 if self.array_namespace.all(0 < weight):
                     self.__weight = weight
+                    self.__shape = self.weight.shape
                 else:
                     raise TypeError("If the weight if an array, all its elements must be positive")          
 
@@ -129,6 +132,11 @@ class Weighting(object):
                    ]
         return signature_string([], optargs, sep=',\n',
             mod=[[], ['!s', ':.4', '!r', '!r', '!r']])
+    
+    @property
+    def shape(self):
+        """Shape of the weighting"""
+        return self.__shape 
     
     @property
     def weight(self):

@@ -173,6 +173,11 @@ class TensorSpace(LinearSpace):
                         f"`weighting.device` and space.device must be consistent, but got \
                         {weighting.device} and {self.device}" 
                     )
+                if weighting.shape is not None and weighting.shape != self.shape:
+                    raise ValueError(
+                        f"`weighting.shape` and space.shape must be consistent, but got \
+                        {weighting.shape} and {self.shape}" 
+                    )
                 self.__weighting = weighting
             else:
                 raise TypeError(f"The weighting must be of {Weighting} type, but {type(weighting)} was provided")
