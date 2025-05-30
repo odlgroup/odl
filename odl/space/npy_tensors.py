@@ -324,29 +324,6 @@ class NumpyTensor(Tensor):
                             'Python scalars')
         return complex(self.data.ravel()[0])
     
-    def __copy__(self):
-        """Return ``copy(self)``.
-
-        This implements the (shallow) copy interface of the ``copy``
-        module of the Python standard library.
-
-        See Also
-        --------
-        copy
-
-        Examples
-        --------
-        >>> from copy import copy
-        >>> space = odl.rn(3)
-        >>> x = space.element([1, 2, 3])
-        >>> y = copy(x)
-        >>> y == x
-        True
-        >>> y is x
-        False
-        """
-        return self.copy()
-    
     def __float__(self):
         """Return ``float(self)``."""
         return float(self.data)

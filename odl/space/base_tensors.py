@@ -1494,6 +1494,29 @@ class Tensor(LinearSpaceElement):
         else:
             return bool(self.asarray())
         
+    def __copy__(self):
+        """Return ``copy(self)``.
+
+        This implements the (shallow) copy interface of the ``copy``
+        module of the Python standard library.
+
+        See Also
+        --------
+        copy
+
+        Examples
+        --------
+        >>> from copy import copy
+        >>> space = odl.rn(3)
+        >>> x = space.element([1, 2, 3])
+        >>> y = copy(x)
+        >>> y == x
+        True
+        >>> y is x
+        False
+        """
+        return self.copy()
+        
     def __getitem__(self, indices):
         """Return ``self[indices]``.
 
@@ -1584,8 +1607,8 @@ class Tensor(LinearSpaceElement):
     [X] x1 <= x2: array.__le__() ONLY DEFINED FOR REAL-VALUED DATA TYPES
     [X] x1 >  x2: array.__gt__() ONLY DEFINED FOR REAL-VALUED DATA TYPES
     [X] x1 >= x2: array.__ge__() ONLY DEFINED FOR REAL-VALUED DATA TYPES
-    [X] x1 == x2: array.__eq__() -> implemented in LinearSpaceElement
-    [X] x1 != x2: array.__ne__() -> implemented in LinearSpaceElement
+    [+] x1 == x2: array.__eq__()
+    [+] x1 != x2: array.__ne__()
     #####################################################
     ################# In-place Arithmetic Operators #################
     [+] x1 +=  x2: array.__iadd__()
