@@ -13,11 +13,12 @@ from future.utils import native
 
 import numpy as np
 
-from odl.set.sets import ComplexNumbers, RealNumbers
 from odl.set.space import LinearSpaceTypeError
 from odl.space.base_tensors import Tensor, TensorSpace
 from odl.util import (
-    dtype_str, is_numeric_dtype, signature_string)
+    is_numeric_dtype, signature_string,
+    )
+from odl.util.utility import SCALAR_DTYPES, AVAILABLE_DTYPES
 
 import array_api_compat.numpy as xp
 
@@ -282,10 +283,10 @@ class NumpyTensorSpace(TensorSpace):
             ctor_name = 'tensor_space'
 
         if (ctor_name == 'tensor_space' or
-                not is_numeric_dtype(self.dtype) or
+                not self.dtype_as_str in SCALAR_DTYPES or
                 self.dtype != self.default_dtype(self.field)):
-            optargs = [('dtype', dtype_str(self.dtype), '')]
-            if self.dtype in (float, complex, int, bool):
+            optargs = [('dtype', self.dtype_as_str, '')]
+            if self.dtype_as_str in (AVAILABLE_DTYPES):
                 optmod = '!s'
             else:
                 optmod = ''
