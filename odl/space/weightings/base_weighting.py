@@ -97,6 +97,8 @@ class Weighting(object):
                 if self.array_namespace.all(0 < weight.data):
                     self.__weight = weight.data
                     self.__shape = self.weight.shape
+                    assert isinstance(self.impl, self.weight.impl)
+                    assert self.device == weight.device
                 else:
                     raise TypeError("If the weight if an ODL Tensor, all its entries must be positive")
                 
@@ -104,6 +106,8 @@ class Weighting(object):
                 if self.array_namespace.all(0 < weight):
                     self.__weight = weight
                     self.__shape = self.weight.shape
+                    assert isinstance(self.weight, self.array_type)
+                    assert self.device == weight.device
                 else:
                     raise TypeError("If the weight if an array, all its elements must be positive")          
 

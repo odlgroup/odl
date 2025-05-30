@@ -14,3 +14,7 @@ class NumpyWeighting(Weighting):
     @property
     def impl(self):
         return 'numpy'
+    
+    @property
+    def array_type(self):
+        return xp.ndarray
