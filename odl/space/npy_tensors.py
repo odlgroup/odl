@@ -391,17 +391,6 @@ class NumpyTensor(Tensor):
     def __int__(self):
         """Return ``int(self)``."""
         return int(self.data)
-    
-    def __ipow__(self, other):
-        """Return ``self **= other``."""
-        try:
-            if other == int(other):
-                return super(NumpyTensor, self).__ipow__(other)
-        except TypeError:
-            pass
-
-        np.power(self.data, other, out=self.data)
-        return self
 
     def __getitem__(self, indices):
         """Return ``self[indices]``.
