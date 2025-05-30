@@ -91,12 +91,8 @@ class TensorSpace(LinearSpace):
         self.parse_device(device)
 
         self.__use_in_place_ops = kwargs.pop('use_in_place_ops', True)
-
-        weighting = kwargs.pop("weighting", None)  
-        self.parse_weighting(weighting)
-
-        if kwargs:
-            raise TypeError('got unknown keyword arguments {}'.format(kwargs))
+  
+        self.parse_weighting(**kwargs)
 
         field = self.parse_field(dtype)
 
@@ -158,9 +154,10 @@ class TensorSpace(LinearSpace):
             field = None
         return field
     
-    def parse_weighting(self, weighting):    
+    def parse_weighting(self, **kwargs):
+        weighting = kwargs.get("weighting", None)    
         if weighting is None:
-            self.__weighting = odl.space_weighting(self.impl, weight=1.0, exponent=2.0)
+            self.__weighting = odl.space_weighting(impl=self.impl, device=self.device, **kwargs)
         else:
             if issubclass(type(weighting), Weighting):
                 if weighting.impl != self.impl:
@@ -178,14 +175,7 @@ class TensorSpace(LinearSpace):
                         f"`weighting.shape` and space.shape must be consistent, but got \
                         {weighting.shape} and {self.shape}" 
                     )
-                if not self.array_namespace.can_cast(type(weighting.weight), self.dtype):
-                    raise ValueError(
-                        f"The dtype of weighting must be castable to the dtype of the space\
-                        but {type(weighting.weight)} cannot be cast to {self.dtype} with {self.impl}" 
-                    )
                 self.__weighting = weighting
-            else:
-                raise TypeError(f"The weighting must be of {Weighting} type, but {type(weighting)} was provided")
     
     ########## Attributes ##########
     @property
