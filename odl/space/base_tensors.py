@@ -178,6 +178,11 @@ class TensorSpace(LinearSpace):
                         f"`weighting.shape` and space.shape must be consistent, but got \
                         {weighting.shape} and {self.shape}" 
                     )
+                if not self.array_namespace.can_cast(type(weighting.weight), self.dtype):
+                    raise ValueError(
+                        f"The dtype of weighting must be castable to the dtype of the space\
+                        but {type(weighting.weight)} cannot be cast to {self.dtype} with {self.impl}" 
+                    )
                 self.__weighting = weighting
             else:
                 raise TypeError(f"The weighting must be of {Weighting} type, but {type(weighting)} was provided")
