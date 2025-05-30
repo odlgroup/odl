@@ -263,7 +263,7 @@ class NumpyTensorSpace(TensorSpace):
         return 'numpy'
 
     ######### public methods #########
-    def get_array_dtype_as_str(self, arr):
+    def get_array_dtype_identifier(self, arr):
         return arr.dtype.name
 
     ######### private methods #########    

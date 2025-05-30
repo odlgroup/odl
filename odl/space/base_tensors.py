@@ -111,7 +111,7 @@ class TensorSpace(LinearSpace):
         """
         Process the dtype argument. This parses the (str or Number) dtype input argument to a backend.dtype and sets two attributes
 
-        self.dtype_as_str (str)      -> Used for passing dtype information from one backend to another
+        self.dtype_identifier (str)      -> Used for passing dtype information from one backend to another
         self.__dtype (backend.dtype) -> Actual dtype of the TensorSpace implementation
 
         Note:
@@ -119,7 +119,7 @@ class TensorSpace(LinearSpace):
         """
         ### Check if 
         try :
-            self.__dtype_as_str = dtype
+            self.__dtype_identifier = dtype
             self.__dtype = self.available_dtypes[dtype]
         except KeyError:
             raise ValueError(f"The dtype must be in {self.available_dtypes.keys()}, but {dtype} was provided")
@@ -294,9 +294,9 @@ class TensorSpace(LinearSpace):
         return self.__dtype
     
     @property
-    def dtype_as_str(self):
+    def dtype_identifier(self):
         """Scalar data type of each entry in an element of this space."""
-        return self.__dtype_as_str
+        return self.__dtype_identifier
     
     @property
     def element_type(self):
@@ -464,7 +464,7 @@ class TensorSpace(LinearSpace):
             raise ValueError('`None` is not a valid data type')
 
         try:
-            dtype_as_str = dtype
+            dtype_identifier = dtype
             dtype = self.available_dtypes[dtype]
         except KeyError:
             raise KeyError(f"The dtype must be in {self.available_dtypes.keys()}, but {dtype} was provided")
@@ -472,20 +472,20 @@ class TensorSpace(LinearSpace):
         if dtype == self.dtype:
             return self
 
-        if dtype_as_str in FLOAT_DTYPES + COMPLEX_DTYPES:
+        if dtype_identifier in FLOAT_DTYPES + COMPLEX_DTYPES:
             # Caching for real and complex versions (exact dtype mappings)
             if dtype == self.__real_dtype:
                 if self.__real_space is None:
-                    self.__real_space = self._astype(dtype_as_str)
+                    self.__real_space = self._astype(dtype_identifier)
                 return self.__real_space
             elif dtype == self.__complex_dtype:
                 if self.__complex_space is None:
-                    self.__complex_space = self._astype(dtype_as_str)
+                    self.__complex_space = self._astype(dtype_identifier)
                 return self.__complex_space
             else:
-                return self._astype(dtype_as_str)
+                return self._astype(dtype_identifier)
         else:
-            return self._astype(dtype_as_str)
+            return self._astype(dtype_identifier)
         
     def default_dtype(self, field=None):
         """Return the default data type for a given field.
@@ -736,7 +736,7 @@ class TensorSpace(LinearSpace):
             posargs = [self.size]
         else:
             posargs = [self.shape]
-        posargs += [self.device, self.impl, self.dtype_as_str]
+        posargs += [self.device, self.impl, self.dtype_identifier]
         if self.is_real:
             ctor_name = 'rn'
         elif self.is_complex:
@@ -745,10 +745,10 @@ class TensorSpace(LinearSpace):
             ctor_name = 'tensor_space'
 
         if (ctor_name == 'tensor_space' or
-                not self.dtype_as_str in SCALAR_DTYPES or
+                not self.dtype_identifier in SCALAR_DTYPES or
                 self.dtype != self.default_dtype(self.field)):
-            optargs = [('dtype', self.dtype_as_str, '')]
-            if self.dtype_as_str in (AVAILABLE_DTYPES):
+            optargs = [('dtype', self.dtype_identifier, '')]
+            if self.dtype_identifier in (AVAILABLE_DTYPES):
                 optmod = '!s'
             else:
                 optmod = ''
@@ -1044,7 +1044,7 @@ class TensorSpace(LinearSpace):
                 elif isinstance(x2, (int, float, complex)):
                     result_data = fn(x1.data, x2, out.data)
                     
-            return self.astype(self.get_array_dtype_as_str(result_data)).element(result_data) 
+            return self.astype(self.get_array_dtype_identifier(result_data)).element(result_data) 
 
         assert isinstance(x1, Tensor), 'Left operand is not an ODL Tensor'
         assert isinstance(x2, Tensor), 'Right operand is not an ODL Tensor'
@@ -1054,7 +1054,7 @@ class TensorSpace(LinearSpace):
         else:
             return getattr(odl, combinator)(x1, x2, out)
         
-    def get_array_dtype_as_str(self):
+    def get_array_dtype_identifier(self):
         raise NotImplementedError  
 
 class Tensor(LinearSpaceElement):
@@ -1101,9 +1101,9 @@ class Tensor(LinearSpaceElement):
         return self.space.dtype
     
     @property
-    def dtype_as_str(self):
+    def dtype_identifier(self):
         """Data type as a string of each entry."""
-        return self.space.dtype_as_str
+        return self.space.dtype_identifier
     
     @property
     def imag(self):
