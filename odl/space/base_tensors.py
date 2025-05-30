@@ -1176,6 +1176,52 @@ class Tensor(LinearSpaceElement):
         return True
     
     @property
+    def real(self):
+        """Real part of ``self``.
+
+        Returns
+        -------
+        real : `NumpyTensor`
+            Real part of this element as a member of a
+            `NumpyTensorSpace` with corresponding real data type.
+
+        Examples
+        --------
+        Get the real part:
+
+        >>> space = odl.cn(3)
+        >>> x = space.element([1 + 1j, 2, 3 - 3j])
+        >>> x.real
+        rn(3).element([ 1.,  2.,  3.])
+
+        Set the real part:
+
+        >>> space = odl.cn(3)
+        >>> x = space.element([1 + 1j, 2, 3 - 3j])
+        >>> zero = odl.rn(3).zero()
+        >>> x.real = zero
+        >>> x
+        cn(3).element([ 0.+1.j,  0.+0.j,  0.-3.j])
+
+        Other array-like types and broadcasting:
+
+        >>> x.real = 1.0
+        >>> x
+        cn(3).element([ 1.+1.j,  1.+0.j,  1.-3.j])
+        >>> x.real = [2, 3, 4]
+        >>> x
+        cn(3).element([ 2.+1.j,  3.+0.j,  4.-3.j])
+        """
+        if self.space.is_real:
+            return self
+        elif self.space.is_complex:
+            real_space = self.space.astype(self.space.real_dtype)
+            return real_space.element(self.data.real)
+        else:
+            raise NotImplementedError('`real` not defined for non-numeric '
+                                      'dtype {}'.format(self.dtype))
+    
+    @property
     def shape(self):
         """Number of elements per axis."""
         return self.space.shape
@@ -1242,6 +1288,19 @@ class Tensor(LinearSpaceElement):
         if self.space.is_real:
             raise ValueError('cannot set imaginary part in real spaces')
         self.imag.data[:] = newimag
+
+    @real.setter
+    def real(self, newreal):
+        """Setter for the real part.
+
+        This method is invoked by ``x.real = other``.
+
+        Parameters
+        ----------
+        newreal : array-like or scalar
+            Values to be assigned to the real part of this element.
+        """
+        self.real.data[:] = newreal
     
     def show(self, title=None, method='', indices=None, force_show=False,
              fig=None, **kwargs):
