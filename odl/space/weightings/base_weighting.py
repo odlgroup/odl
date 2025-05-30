@@ -1,5 +1,7 @@
 import odl       
 
+from odl.util import signature_string, array_str, indent
+
 def not_implemented(
         function_name:str,
         argument:str        
@@ -53,6 +55,7 @@ class Weighting(object):
             assert not set(['norm', 'dist', 'weight']).issubset(kwargs)
             # Assign the attribute       
             self.__inner = inner
+            self.__array_norm  = self._array_norm_from_inner
             
         elif 'norm' in kwargs:
             # Pop the kwarg
@@ -115,6 +118,18 @@ class Weighting(object):
         return self.__exponent
     
     @property
+    def repr_part(self):
+        """String usable in a space's ``__repr__`` method."""
+        posargs = [array_str(self.weight)]
+        optargs = [('exponent', self.exponent, 2.0),
+                   ('inner', self.__inner, self.array_namespace.inner),
+                   ('norm', self.__array_norm, self.array_namespace.linalg.vector_norm),
+                   ('dist', self.__dist, self.array_namespace.linalg.vector_norm),
+                   ]
+        return signature_string(posargs, optargs, sep=',\n',
+            mod=[['!s'], [':.4', '!r', '!r', '!r']])
+    
+    @property
     def weight(self):
         """Weight of this weighting."""
         return self.__weight
@@ -135,6 +150,7 @@ class Weighting(object):
         `equiv` method.
         """
         return (isinstance(other, Weighting) and
+                self.impl == other.impl,
                 self.device == other.device,
                 self.weight == other.weight and                
                 self.exponent == other.exponent and
@@ -145,8 +161,28 @@ class Weighting(object):
     
     def __hash__(self):
         """Return ``hash(self)``."""
-        return hash((type(self), self.impl, self.weight, self.exponent))
+        return hash((
+            type(self), self.impl, self.device, 
+            self.weight, self.exponent, 
+            self.inner, self.norm, self.dist
+            ))
+    
+    def __repr__(self):
+        """Return ``repr(self)``."""
+        posargs = [array_str(self.weight)]
+        optargs = [('exponent', self.exponent, 2.0),
+                   ('inner', self.__inner, self.array_namespace.inner),
+                   ('norm', self.__array_norm, self.array_namespace.linalg.vector_norm),
+                   ('dist', self.__dist, self.array_namespace.linalg.vector_norm),
+                   ]
+        inner_str = signature_string(posargs, optargs, sep=',\n',
+            mod=[['!s'], [':.4', '!r', '!r', '!r']])
+        return '{}(\n{}\n)'.format(self.__class__.__name__, indent(inner_str))
 
+    def __str__(self):
+        """Return ``str(self)``."""
+        return repr(self)
+    
     def equiv(self, other):
         """Test if ``other`` is an equivalent weighting.
 
