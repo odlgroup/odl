@@ -1768,7 +1768,7 @@ class Tensor(LinearSpaceElement):
                 self.shape == other.shape and               
                 self.impl == other.impl and
                 self.device == other.device and
-                self.array_namespace.equal(self, other)
+                self.array_namespace.equal(self, other).all()
                 )
     
     def __ne__(self, other):
