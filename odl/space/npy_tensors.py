@@ -15,10 +15,7 @@ import numpy as np
 
 from odl.set.space import LinearSpaceTypeError
 from odl.space.base_tensors import Tensor, TensorSpace
-from odl.util import (
-    is_numeric_dtype, signature_string,
-    )
-from odl.util.utility import SCALAR_DTYPES, AVAILABLE_DTYPES
+from odl.util import is_numeric_dtype
 
 import array_api_compat.numpy as xp
 
@@ -268,38 +265,6 @@ class NumpyTensorSpace(TensorSpace):
         return arr.dtype.name
 
     ######### private methods #########    
-    def __repr__(self):
-        """Return ``repr(self)``."""
-        if self.ndim == 1:
-            posargs = [self.size]
-        else:
-            posargs = [self.shape]
-
-        if self.is_real:
-            ctor_name = 'rn'
-        elif self.is_complex:
-            ctor_name = 'cn'
-        else:
-            ctor_name = 'tensor_space'
-
-        if (ctor_name == 'tensor_space' or
-                not self.dtype_as_str in SCALAR_DTYPES or
-                self.dtype != self.default_dtype(self.field)):
-            optargs = [('dtype', self.dtype_as_str, '')]
-            if self.dtype_as_str in (AVAILABLE_DTYPES):
-                optmod = '!s'
-            else:
-                optmod = ''
-        else:
-            optargs = []
-            optmod = ''
-
-        inner_str = signature_string(posargs, optargs, mod=['', optmod])
-        weight_str = self.weighting.repr_part
-        if weight_str:
-            inner_str += ', ' + weight_str
-
-        return '{}({})'.format(ctor_name, inner_str)
 
 class NumpyTensor(Tensor):
 

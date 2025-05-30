@@ -22,10 +22,11 @@ from odl.set.space import (
     LinearSpace, LinearSpaceElement,
     SupportedNumOperationParadigms, NumOperationParadigmSupport)
 from odl.util import (
-    array_str, dtype_str, indent, is_complex_floating_dtype,
+    array_str, indent, is_complex_floating_dtype,
     is_numeric_dtype, is_real_floating_dtype, safe_int_conv,
     signature_string)
 from odl.util.utility import(
+    SCALAR_DTYPES, AVAILABLE_DTYPES,
     FLOAT_DTYPES, COMPLEX_DTYPES,
     TYPE_PROMOTION_COMPLEX_TO_REAL, 
     TYPE_PROMOTION_REAL_TO_COMPLEX)
@@ -730,9 +731,36 @@ class TensorSpace(LinearSpace):
     
     def __repr__(self):
         """Return ``repr(self)``."""
-        posargs = [self.shape, dtype_str(self.dtype)]
-        return "{}({})".format(self.__class__.__name__,
-                               signature_string(posargs, []))
+        if self.ndim == 1:
+            posargs = [self.size]
+        else:
+            posargs = [self.shape]
+        posargs += [self.device, self.impl, self.dtype_as_str]
+        if self.is_real:
+            ctor_name = 'rn'
+        elif self.is_complex:
+            ctor_name = 'cn'
+        else:
+            ctor_name = 'tensor_space'
+
+        if (ctor_name == 'tensor_space' or
+                not self.dtype_as_str in SCALAR_DTYPES or
+                self.dtype != self.default_dtype(self.field)):
+            optargs = [('dtype', self.dtype_as_str, '')]
+            if self.dtype_as_str in (AVAILABLE_DTYPES):
+                optmod = '!s'
+            else:
+                optmod = ''
+        else:
+            optargs = []
+            optmod = ''
+
+        inner_str = signature_string(posargs, optargs, mod=['', optmod])
+        weight_str = self.weighting.repr_part
+        if weight_str:
+            inner_str += ', ' + weight_str
+
+        return '{}({})'.format(ctor_name, inner_str)
 
     def __str__(self):
         """Return ``str(self)``."""
