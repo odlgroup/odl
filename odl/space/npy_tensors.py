@@ -316,21 +316,6 @@ class NumpyTensor(Tensor):
         False
         """
         return self.space.element(self.data.copy())
-        
-    def __complex__(self):
-        """Return ``complex(self)``."""
-        if self.size != 1:
-            raise TypeError('only size-1 tensors can be converted to '
-                            'Python scalars')
-        return complex(self.data.ravel()[0])
-    
-    def __float__(self):
-        """Return ``float(self)``."""
-        return float(self.data)
-    
-    def __int__(self):
-        """Return ``int(self)``."""
-        return int(self.data)
 
     def __getitem__(self, indices):
         """Return ``self[indices]``.
