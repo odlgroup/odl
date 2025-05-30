@@ -171,6 +171,7 @@ class TensorSpace(LinearSpace):
                         f"`weighting.device` and space.device must be consistent, but got \
                         {weighting.device} and {self.device}" 
                     )
+                self.__weighting = weighting
             else:
                 raise TypeError(f"The weighting must be of {Weighting} type, but {type(weighting)} was provided")
     
