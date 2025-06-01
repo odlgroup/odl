@@ -88,6 +88,8 @@ See type promotion rules https://data-apis.org/array-api/latest/API_specificatio
 """
 ##### Not sure about this one #####
 TYPE_PROMOTION_REAL_TO_COMPLEX = {
+    int : "complex64",
+    float : "complex64",
     "int8"  : "complex64",
     "int16" : "complex64",
     "int32" : "complex64",
@@ -101,6 +103,7 @@ TYPE_PROMOTION_REAL_TO_COMPLEX = {
 }
 ##### Not sure about this one #####
 TYPE_PROMOTION_COMPLEX_TO_REAL = {
+    complex : "flot64",
     "complex64"  : "float32",
     "complex128" : "float64"
 }
