@@ -263,8 +263,14 @@ class NumpyTensorSpace(TensorSpace):
         return 'numpy'
 
     ######### public methods #########
-    def get_array_dtype_identifier(self, arr):
-        return arr.dtype.name
+    def get_dtype_identifier(self, **kwargs):
+        if 'array' in kwargs:
+            assert 'dtype' not in kwargs, 'array and dtype are multually exclusive parameters'
+            return kwargs['array'].dtype.name
+        if 'dtype' in kwargs:
+            assert 'array' not in kwargs, 'array and dtype are multually exclusive parameters'
+            return str(kwargs['dtype']).split('.')[-1]
+        raise ValueError("Either 'array' or 'dtype' argument must be provided.")
 
     ######### private methods #########    
 

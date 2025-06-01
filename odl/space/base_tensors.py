@@ -113,12 +113,20 @@ class TensorSpace(LinearSpace):
         Note:
         The check below is here just in case a user initialise a space directly from this class, which is not recommended
         """
-        ### Check if 
-        try :
+        ### We check if the datatype has been provided in a "sane" way, as a string or as a Python scalar type
+        if dtype in self.available_dtypes.keys():
             self.__dtype_identifier = dtype
             self.__dtype = self.available_dtypes[dtype]
-        except KeyError:
-            raise ValueError(f"The dtype must be in {self.available_dtypes.keys()}, but {dtype} was provided")
+        ### If the check has failed, i.e the dtype is not a Key of the self.available_dtypes dict, we try to parse the dtype 
+        ### as a string using the self.get_dtype_identifier(dtype=dtype) call: This is for the situation where the dtype passed is
+        ### something like 'numpy.float32'
+        elif dtype in self.available_dtypes.values():
+            self.__dtype_identifier = self.get_dtype_identifier(dtype=dtype)
+            self.__dtype = dtype
+            # If that fails, we throw an error: the dtype is not a python scalar dtype, not a string describing the dtype or the 
+            # backend call to parse the dtype has failed.
+        else:
+            raise ValueError(f"The dtype must be in {self.available_dtypes.keys()} or must be a dtype of the backend, but {dtype} was provided")
 
     def parse_shape(self, shape, dtype):
         # Handle shape and dtype, taking care also of dtypes with shape
@@ -1051,7 +1059,7 @@ class TensorSpace(LinearSpace):
                 elif isinstance(x2, (int, float, complex)):
                     result_data = fn(x1.data, x2, out.data)
                     
-            return self.astype(self.get_array_dtype_identifier(result_data)).element(result_data) 
+            return self.astype(self.get_dtype_identifier(array=result_data)).element(result_data) 
 
         assert isinstance(x1, Tensor), 'Left operand is not an ODL Tensor'
         assert isinstance(x2, Tensor), 'Right operand is not an ODL Tensor'
@@ -1061,7 +1069,7 @@ class TensorSpace(LinearSpace):
         else:
             return getattr(odl, combinator)(x1, x2, out)
         
-    def get_array_dtype_identifier(self):
+    def get_dtype_identifier(self, **kwargs):
         raise NotImplementedError  
 
 class Tensor(LinearSpaceElement):
