@@ -619,7 +619,7 @@ class TensorSpace(LinearSpace):
         one : `Tensor`
             A tensor of all one.
         """
-        raise self.element(
+        return self.element(
             self.array_namespace.ones(self.shape, dtype=self.dtype, device=self.device)
         )
     
@@ -633,7 +633,7 @@ class TensorSpace(LinearSpace):
         zero : `Tensor`
             A tensor of all zeros.
         """
-        raise self.element(
+        return self.element(
             self.array_namespace.zeros(self.shape, dtype=self.dtype, device=self.device)
         )
 
