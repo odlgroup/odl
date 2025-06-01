@@ -1048,7 +1048,7 @@ class TensorSpace(LinearSpace):
 
         """
         if self.field is None:
-            return NotImplementedError(f"The space has no field.")
+            raise NotImplementedError(f"The space has no field.")
 
         if isinstance(x1, (int, float, complex)) or isinstance(x2, (int, float, complex)):
             fn =  getattr(self.array_namespace, combinator)
