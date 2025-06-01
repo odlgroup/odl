@@ -731,7 +731,7 @@ class TensorSpace(LinearSpace):
 
     def __hash__(self):
         """Return ``hash(self)``."""
-        return hash((type(self), self.shape, self.dtype, self.device, self.impl))
+        return hash((type(self), self.shape, self.dtype, self.device, self.impl, self.weighting))
 
     def __len__(self):
         """Number of tensor entries along the first axis."""
@@ -789,7 +789,7 @@ class TensorSpace(LinearSpace):
             if weighting is not None:
                 kwargs["weighting"] = weighting
 
-        return type(self)(self.shape, dtype=dtype, **kwargs)
+        return type(self)(self.shape, dtype=dtype, device=self.device, **kwargs)
     
     def _dist(self, x1, x2):
         """Return the distance between ``x1`` and ``x2``.
