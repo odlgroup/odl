@@ -83,7 +83,7 @@ class NumpyTensorSpace(TensorSpace):
     .. _Wikipedia article on tensors: https://en.wikipedia.org/wiki/Tensor
     """
 
-    def __init__(self, shape, dtype='float32', device = 'cpu', **kwargs):
+    def __init__(self, shape, dtype='float64', device = 'cpu', **kwargs):
         r"""Initialize a new instance.
 
         Parameters
@@ -92,7 +92,7 @@ class NumpyTensorSpace(TensorSpace):
             Number of entries per axis for elements in this space. A
             single integer results in a space with rank 1, i.e., 1 axis.
         dtype (str): optional
-            Data type of each element. Defaults to 'float32'
+            Data type of each element. Defaults to 'float64'
         device (str):
             Device on which the data is. For Numpy, tt must be 'cpu'.
 

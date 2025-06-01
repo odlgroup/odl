@@ -91,7 +91,7 @@ def vector(array, dtype=None, order=None, impl='numpy', device = 'cpu'):
     return space.element(arr)
 
 
-def tensor_space(shape, dtype='float32', impl='numpy', device = 'cpu', **kwargs):
+def tensor_space(shape, dtype='float64', impl='numpy', device = 'cpu', **kwargs):
     """Return a tensor space with arbitrary scalar data type.
 
     Parameters
@@ -100,7 +100,7 @@ def tensor_space(shape, dtype='float32', impl='numpy', device = 'cpu', **kwargs)
         Number of entries per axis for elements in this space. A
         single integer results in a space with 1 axis.
     dtype (str) : optional
-        Data type of each element.
+        Data type of each element. Defaults to float64
     impl : str, optional
         Impmlementation back-end for the space. See
         `odl.space.entry_points.tensor_space_impl_names` for available
@@ -152,7 +152,7 @@ def tensor_space(shape, dtype='float32', impl='numpy', device = 'cpu', **kwargs)
     return TENSOR_SPACE_IMPLS[impl](shape=shape, dtype=dtype, device=device, **kwargs)
 
 
-def cn(shape, dtype='complex64', impl='numpy', device='cpu', **kwargs):
+def cn(shape, dtype='complex128', impl='numpy', device='cpu', **kwargs):
     """Return a space of complex tensors.
 
     Parameters
@@ -161,8 +161,8 @@ def cn(shape, dtype='complex64', impl='numpy', device='cpu', **kwargs):
         Number of entries per axis for elements in this space. A
         single integer results in a space with 1 axis.
     dtype (str) : optional
-        Data type of each element. Must be provided as a string.
-        ``default_dtype(ComplexNumbers())``.
+        Data type of each element. Must be provided as a string or Python complex type.
+        Defaults to complex128
     impl (str) : str, optional
         Impmlementation back-end for the space. See
         `odl.space.entry_points.tensor_space_impl_names` for available
@@ -204,7 +204,7 @@ def cn(shape, dtype='complex64', impl='numpy', device='cpu', **kwargs):
     return tensor_space(shape, dtype=dtype, impl=impl, device=device, **kwargs)
 
 
-def rn(shape, dtype='float32', impl='numpy', device ='cpu', **kwargs):
+def rn(shape, dtype='float64', impl='numpy', device ='cpu', **kwargs):
     """Return a space of real tensors.
 
     Parameters
@@ -213,8 +213,8 @@ def rn(shape, dtype='float32', impl='numpy', device ='cpu', **kwargs):
         Number of entries per axis for elements in this space. A
         single integer results in a space with 1 axis.
     dtype (str) : optional
-        Data type of each element. See AVAILABLE_DTYPES in 
-        `odl.util.utility.py` for available options.
+        Data type of each element. See REAL_DTYPES in 
+        `odl.util.utility.py` for available options. Defaults to float64
     impl (str) : str, optional
         Impmlementation back-end for the space. See the constant
         TENSOR_SPACE_IMPLS for available backends
