@@ -602,6 +602,12 @@ class TensorSpace(LinearSpace):
                 )
         else:
             raise ValueError  
+        
+    def divide(self, x1, x2, out=None):
+        return self._divide(x1, x2, out)
+    
+    def multiply(self, x1, x2, out=None):
+        return self._multiply(x1, x2, out)    
     
     def one(self):
         """Return a tensor of all ones.
