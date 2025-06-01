@@ -178,7 +178,7 @@ class Weighting(object):
         return hash((
             type(self), self.impl, self.device, 
             self.weight, self.exponent, 
-            self.inner, self.norm, self.dist
+            self.__inner, self.__array_norm, self.__dist
             ))
     
     def __repr__(self):
