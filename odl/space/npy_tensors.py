@@ -485,15 +485,6 @@ class NumpyTensor(Tensor):
 
         self.data[indices] = values
 
-    def _assign(self, other, avoid_deep_copy):
-        """Assign the values of ``other``, which is assumed to be in the
-        same space, to ``self``."""
-        if avoid_deep_copy:
-            self.__data = other.__data
-        else:
-            self.__data[:] = other.__data
-
-
 def _blas_is_applicable(*args):
     """Whether BLAS routines can be applied or not.
 

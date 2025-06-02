@@ -1953,6 +1953,13 @@ class Tensor(LinearSpaceElement):
         raise NotImplementedError
         
     ######### private methods #########
+    def _assign(self, other, avoid_deep_copy):
+        """Assign the values of ``other``, which is assumed to be in the
+        same space, to ``self``."""
+        if avoid_deep_copy:
+            self.__data = other.__data
+        else:
+            self.__data[:] = other.__data
 
 if __name__ == '__main__':
     from odl.util.testutils import run_doctests
