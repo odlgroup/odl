@@ -1526,18 +1526,15 @@ class Tensor(LinearSpaceElement):
         
     def __complex__(self):
         """Return ``complex(self)``."""
-        if self.size != 1:
-            raise TypeError('only size-1 tensors can be converted to '
-                            'Python scalars')
-        return complex(self.data)
+        return self.data.astype(complex)
     
     def __float__(self):
         """Return ``float(self)``."""
-        return float(self.data)
+        return self.data.astype(float)
     
     def __int__(self):
         """Return ``int(self)``."""
-        return int(self.data)
+        return self.data.astype(int)
     
     def __copy__(self):
         """Return ``copy(self)``.
