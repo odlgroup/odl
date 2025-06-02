@@ -351,7 +351,7 @@ def noise_array(space):
         return result
 
     else:
-        if space.dtype == bool:
+        if space.dtype == np.bool:
             arr = np.random.randint(0, 2, size=space.shape, dtype=bool)
         elif np.issubdtype(space.dtype, np.unsignedinteger):
             arr = np.random.randint(0, 10, space.shape)

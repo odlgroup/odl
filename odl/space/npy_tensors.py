@@ -21,6 +21,7 @@ import array_api_compat.numpy as xp
 __all__ = ('NumpyTensorSpace',)
 
 NUMPY_DTYPES = {
+        bool:np.bool,
         "bool": np.bool,
         "int8": np.int8,
         int : np.int32,

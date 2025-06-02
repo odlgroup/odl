@@ -52,6 +52,7 @@ __all__ = (
 REPR_PRECISION = 4
 
 BOOLEAN_DTYPES = [
+    bool,
     "bool"
     ]
 
