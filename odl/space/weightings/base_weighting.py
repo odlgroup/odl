@@ -91,7 +91,7 @@ class Weighting(object):
             assert not set(['inner', 'norm', 'dist']).issubset(kwargs)
             # check the kwarg AND assign the attribute
             if isinstance(weight, float) and (not 0 < weight):
-                raise TypeError("If the weight if a float, it must be positive")
+                raise ValueError("If the weight if a float, it must be positive")
             
             elif hasattr(weight, 'odl_tensor'):
                 if self.array_namespace.all(0 < weight.data):
@@ -100,7 +100,7 @@ class Weighting(object):
                     assert self.impl == weight.impl
                     assert self.device == weight.device
                 else:
-                    raise TypeError("If the weight if an ODL Tensor, all its entries must be positive")
+                    raise ValueError("If the weight if an ODL Tensor, all its entries must be positive")
                 
             elif hasattr(weight, '__array__'):
                 if self.array_namespace.all(0 < weight):
@@ -109,7 +109,10 @@ class Weighting(object):
                     assert isinstance(self.weight, self.array_type)
                     assert self.device == weight.device
                 else:
-                    raise TypeError("If the weight if an array, all its elements must be positive")          
+                    raise ValueError("If the weight if an array, all its elements must be positive")          
+
+            else:
+                raise ValueError(f"A weight can only be a positive __array__, a positive float or a positive ODL Tensor")      
 
         # Make sure there are no leftover kwargs
         if kwargs:
