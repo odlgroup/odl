@@ -1526,15 +1526,15 @@ class Tensor(LinearSpaceElement):
         
     def __complex__(self):
         """Return ``complex(self)``."""
-        return self.data.astype(complex)
+        return self.data.astype(complex).item()
     
     def __float__(self):
         """Return ``float(self)``."""
-        return self.data.astype(float)
+        return self.data.astype(float).item()
     
     def __int__(self):
         """Return ``int(self)``."""
-        return self.data.astype(int)
+        return self.data.astype(int).item()
     
     def __copy__(self):
         """Return ``copy(self)``.
