@@ -13,7 +13,7 @@ from __future__ import absolute_import, division, print_function
 from types import ModuleType
 from typing import Dict
 from numbers import Integral, Number
-
+import warnings
 import numpy as np
 
 import odl
@@ -602,6 +602,14 @@ class TensorSpace(LinearSpace):
                 )
         else:
             raise ValueError  
+        
+    def finfo(self):
+        "Machine limits for floating-point data types."
+        return self.array_namespace.finfo(self.dtype)
+    
+    def iinfo(self):
+        "Machine limits for integer data types."
+        return self.array_namespace.iinfo(self.dtype)
         
     def divide(self, x1, x2, out=None):
         return self._divide(x1, x2, out)
