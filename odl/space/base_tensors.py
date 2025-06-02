@@ -1813,26 +1813,26 @@ class Tensor(LinearSpaceElement):
     def __iadd__(self, other):
         """Implement ``self += other``."""
         return self.space._binary_num_operation(
-            self, other, 'add'
+            self, other, 'add', self
         )
     
     def __isub__(self, other):
         """Implement ``self -= other``."""
         return self.space._binary_num_operation(
-            self, other, 'subtract'
+            self, other, 'subtract', self
         )
     
     def __imul__(self, other):
         """Return ``self *= other``."""
         return self.space._binary_num_operation(
-            self, other, 'multiply'
+            self, other, 'multiply', self
         )
     
     def __itruediv__(self, other):
         """Implement ``self /= other``."""
         with warnings.catch_warnings(record=True) as w:
             result = self.space._binary_num_operation(
-                self, other, 'divide'
+                self, other, 'divide', self
             )
             for warning in w:
                 if issubclass(warning.category, RuntimeWarning):
@@ -1842,19 +1842,19 @@ class Tensor(LinearSpaceElement):
     def __ifloordiv__(self, other):
         """Implement ``self //= other``."""
         return self.space._binary_num_operation(
-            self, other, 'floor_divide'
+            self, other, 'floor_divide', self
         )
     
     def __imod__(self, other):
         """Implement ``self %= other``."""
         return self.space._binary_num_operation(
-            self, other, 'remainder'
+            self, other, 'remainder', self
         )
     
     def __ipow__(self, other):
         """Implement ``self *= other``, element wise"""
         return self.space._binary_num_operation(
-            self, other, 'pow'
+            self, other, 'pow', self
         )
     
     ################# In-place Array Operators #################
