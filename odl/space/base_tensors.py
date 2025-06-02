@@ -1717,9 +1717,14 @@ class Tensor(LinearSpaceElement):
     
     def __truediv__(self, other):
         """Implement ``self / other``."""
-        return self.space._binary_num_operation(
-            self, other, 'divide'
-        )
+        with warnings.catch_warnings(record=True) as w:
+            result = self.space._binary_num_operation(
+                self, other, 'divide'
+            )
+            for warning in w:
+                if issubclass(warning.category, RuntimeWarning):
+                    raise RuntimeError(f"Caught a RuntimeWarning: {warning.message}")
+            return result
     
     def __floordiv__(self, other):        
         """Implement ``self // other``."""
@@ -1825,9 +1830,14 @@ class Tensor(LinearSpaceElement):
     
     def __itruediv__(self, other):
         """Implement ``self /= other``."""
-        return self.space._binary_num_operation(
-            self, other, 'divide'
-        )
+        with warnings.catch_warnings(record=True) as w:
+            result = self.space._binary_num_operation(
+                self, other, 'divide'
+            )
+            for warning in w:
+                if issubclass(warning.category, RuntimeWarning):
+                    raise RuntimeError(f"Caught a RuntimeWarning: {warning.message}")
+            return result
     
     def __ifloordiv__(self, other):
         """Implement ``self //= other``."""
