@@ -3,10 +3,9 @@ import odl
 from odl.util import signature_string, array_str, indent
 
 def not_implemented(
-        function_name:str,
-        argument:str        
+        *args        
         ):
-    raise NotImplementedError(f'The function {function_name} when the weighting was declared with {argument}.')
+    raise NotImplementedError
 
 class Weighting(object):
     def __init__(self, device, **kwargs):
@@ -16,13 +15,12 @@ class Weighting(object):
         ----------
         
         """        
-        self.__inner = self.array_namespace.inner
-        self.__array_norm  = self.array_namespace.linalg.vector_norm
-        self.__dist  = None
-        self.__exponent = 2.0
-        self.__weight = 1.0
-        self.__shape = None
-        self._norm_from_inner = False
+        self._inner = self._inner_default
+        self._array_norm  = self._norm_default
+        self._dist  = self._dist_default
+        self._exponent = 2.0
+        self._weight = 1.0
+        self._shape = None
 
         # Check device consistency and allocate __device attribute
         self.parse_device(device)
@@ -33,7 +31,7 @@ class Weighting(object):
         # Checks
         odl.check_device(self.impl, device)
         # Set attribute   
-        self.__device = device
+        self._device = device
 
     def parse_kwargs(self, kwargs):
         if 'exponent' in kwargs:
@@ -45,44 +43,45 @@ class Weighting(object):
                     f"only positive exponents or inf supported, got {exponent}"
                     )
             # Assign the attribute
-            self.__exponent = exponent
+            self._exponent = exponent
+            if self.exponent != 2:
+                self._inner = not_implemented
 
         if 'inner' in kwargs:
             # Pop the kwarg
             inner = kwargs.pop('inner')
             # check the kwarg
-            assert isinstance(inner, callable)
+            assert callable(inner)
             # Check the consistency
             assert self.exponent == 2.0
             assert not set(['norm', 'dist', 'weight']).issubset(kwargs)
             # Assign the attribute       
-            self.__inner = inner
-            self._norm_from_inner = True
+            self._inner = inner
             
         elif 'norm' in kwargs:
             # Pop the kwarg
             array_norm = kwargs.pop('norm')
             # check the kwarg
-            assert isinstance(array_norm, callable)
+            assert callable(array_norm)
             # Check the consistency
             assert self.exponent == 2.0
             assert not set(['inner', 'dist', 'weight']).issubset(kwargs)
             # Assign the attributes
-            self.__inner = not_implemented('inner', 'norm')            
-            self.__array_norm  = array_norm
+            self._inner = not_implemented
+            self._array_norm  = array_norm
         
         elif 'dist' in kwargs:
             # Pop the kwarg
             dist  = kwargs.pop('dist')
             # check the kwarg
-            assert isinstance(dist, callable)
+            assert callable(dist)
             # Check the consistency
             assert self.exponent == 2.0
             assert not set(['inner', 'norm', 'weight']).issubset(kwargs)
             # Assign the attributes
-            self.__inner = not_implemented('inner', 'dist')
-            self.__array_norm  = not_implemented('norm', 'dist')
-            self.__dist  = dist
+            self._inner = not_implemented
+            self._array_norm  = not_implemented
+            self._dist  = dist
         
         elif 'weight' in kwargs:
             # Pop the kwarg
@@ -90,13 +89,16 @@ class Weighting(object):
             # Check the consistency
             assert not set(['inner', 'norm', 'dist']).issubset(kwargs)
             # check the kwarg AND assign the attribute
-            if isinstance(weight, float) and (not 0 < weight):
-                raise ValueError("If the weight if a float, it must be positive")
+            if isinstance(weight, (int, float)):
+                if 0 < weight and weight != float('inf'):
+                    self._weight = float(weight)
+                else:
+                    raise ValueError("If the weight if a float, it must be positive")
             
             elif hasattr(weight, 'odl_tensor'):
                 if self.array_namespace.all(0 < weight.data):
-                    self.__weight = weight.data
-                    self.__shape = self.weight.shape
+                    self._weight = weight.data
+                    self._shape = self.weight.shape
                     assert self.impl == weight.impl
                     assert self.device == weight.device
                 else:
@@ -104,8 +106,8 @@ class Weighting(object):
                 
             elif hasattr(weight, '__array__'):
                 if self.array_namespace.all(0 < weight):
-                    self.__weight = weight
-                    self.__shape = self.weight.shape
+                    self._weight = weight
+                    self._shape = self.weight.shape
                     assert isinstance(self.weight, self.array_type)
                     assert self.device == weight.device
                 else:
@@ -121,21 +123,21 @@ class Weighting(object):
     @property
     def device(self):
         """Device of this weighting."""
-        return self.__device
+        return self._device
     
     @property
     def exponent(self):
         """Exponent of this weighting."""
-        return self.__exponent
+        return self._exponent
     
     @property
     def repr_part(self):
         """String usable in a space's ``__repr__`` method."""
         optargs = [('weight', array_str(self.weight), array_str(1.0)),
                    ('exponent', self.exponent, 2.0),
-                   ('inner', self.__inner, self.array_namespace.inner),
-                   ('norm', self.__array_norm, self.array_namespace.linalg.vector_norm),
-                   ('dist', self.__dist, None),
+                   ('inner', self._inner, self._inner_default),
+                   ('norm', self._array_norm, self._norm_default),
+                   ('dist', self._dist, self._norm_default),
                    ]
         return signature_string([], optargs, sep=',\n',
             mod=[[], ['!s', ':.4', '!r', '!r', '!r']])
@@ -143,12 +145,12 @@ class Weighting(object):
     @property
     def shape(self):
         """Shape of the weighting"""
-        return self.__shape 
+        return self._shape 
     
     @property
     def weight(self):
         """Weight of this weighting."""
-        return self.__weight
+        return self._weight
 
     def __eq__(self, other):
         """Return ``self == other``.
@@ -168,29 +170,31 @@ class Weighting(object):
         return (isinstance(other, Weighting) and
                 self.impl == other.impl and
                 self.device == other.device and
-                self.array_namespace.equal(self.weight, other.weight).all() and                
                 self.exponent == other.exponent and
-                self.shape == other.shape and
-                self.__inner == other.__inner and 
-                self.__array_norm == other.__array_norm and
-                self.__dist == other.__dist
+                self.shape == other.shape and 
+                self.array_namespace.equal(self.weight, other.weight).all() and                
+                self._inner.__code__ == other._inner.__code__ and 
+                self._array_norm.__code__ == other._array_norm.__code__ and 
+                self._dist.__code__ == other._dist.__code__
                 )
+    def __neq__(self, other):
+        return not self.__eq__(self, other)
     
     def __hash__(self):
         """Return ``hash(self)``."""
         return hash((
             type(self), self.impl, self.device, 
-            self.weight, self.exponent, 
-            self.__inner, self.__array_norm, self.__dist
+            self.weight, self.exponent,
+            self._inner.__code__, self._array_norm.__code__, self._dist.__code__
             ))
     
     def __repr__(self):
         """Return ``repr(self)``."""
         optargs = [('weight', array_str(self.weight), array_str(1.0)),
                    ('exponent', self.exponent, 2.0),
-                   ('inner', self.__inner, self.array_namespace.inner),
-                   ('norm', self.__array_norm, self.array_namespace.linalg.vector_norm),
-                   ('dist', self.__dist, None),
+                   ('inner', self._inner, self._inner_default),
+                   ('norm', self._array_norm, self._norm_default),
+                   ('dist', self._dist, self._dist_default),
                    ]
         inner_str = signature_string([], optargs, sep=',\n',
             mod=[[], ['!s', ':.4', '!r', '!r', '!r']])
@@ -227,7 +231,14 @@ class Weighting(object):
         inner : float or complex
             The inner product of the two provided elements.
         """
-        return self.__inner((self.__weight * x1.data).ravel(), x2.data.ravel())
+        if isinstance(self.weight, (int, float)):
+            return self.weight * self._inner(x1.data, x2.data)
+        
+        elif isinstance(self.weight, self.array_type):
+            return self._inner(x1.data*self.weight, x2.data)
+        
+        else:
+            raise ValueError(f"The weight can only be an int, a float, or a {self.array_type}, but {type(self.weight)} was provided")
 
     def norm(self, x):
         """Calculate the norm of an element.
@@ -245,10 +256,7 @@ class Weighting(object):
         norm : float
             The norm of the element.
         """
-        if self._norm_from_inner:
-            return self.array_namespace.sqrt(self.inner(x,x))
-        else:
-            return self.__array_norm(self.__weight * x.data, ord=self.exponent)
+        return self._array_norm(x)
 
     def dist(self, x1, x2):
         """Calculate the distance between two elements.
@@ -266,7 +274,15 @@ class Weighting(object):
         dist : float
             The distance between the elements.
         """
-        if self.__dist is None:
-            return self.norm(x1-x2)
-        else:
-            return self.__dist(x1,x2)
+        return self._dist(x1, x2)
+    
+    def equiv(self, other):
+        return (isinstance(other, Weighting) and
+                self.impl == other.impl and
+                self.device == other.device and                
+                self.exponent == other.exponent and
+                self._inner.__code__ == other._inner.__code__ and 
+                self._array_norm.__code__ == other._array_norm.__code__ and 
+                self._dist.__code__ == other._dist.__code__ and
+                self.array_namespace.all(self.weight == other.weight)
+                )
