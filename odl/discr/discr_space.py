@@ -229,14 +229,6 @@ class DiscretizedSpace(TensorSpace):
         """
         return self.partition.points(order)
 
-    @property
-    def default_order(self):
-        """Default storage order for new elements in this space.
-
-        This is equal to the default order of `tspace`.
-        """
-        return self.tspace.default_order
-
     def default_dtype(self, field=None):
         """Default data type for new elements in this space.
 

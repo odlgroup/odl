@@ -19,6 +19,7 @@ from os import pardir, path
 import numpy as np
 
 __all__ = (
+    'array_API_support'
     'set',
     'space',
     'operator',
@@ -58,6 +59,7 @@ from .discr import *
 from .operator import *
 from .set import *
 from .space import *
+from .array_API_support import *
 
 # More "advanced" subpackages keep their namespaces separate from top-level,
 # we only import the modules themselves
@@ -68,7 +70,7 @@ from . import phantom
 from . import solvers
 from . import tomo
 from . import trafos
-from . import ufunc_ops
+# from . import ufunc_ops
 from . import util
 
 # Add `test` function to global namespace so users can run `odl.test()`
@@ -79,4 +81,5 @@ __all__ += discr.__all__
 __all__ += operator.__all__
 __all__ += set.__all__
 __all__ += space.__all__
+__all__ += array_API_support.__all__
 __all__ += ('test',)
