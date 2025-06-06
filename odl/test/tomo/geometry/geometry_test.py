@@ -1026,7 +1026,7 @@ def test_source_detector_shifts():
             i = j
 
     # shifts define ffs at partition points
-    n_shifts = np.random.randint(1, n_angles)
+    n_shifts = np.random.randint(1, n_angles+1)
     shift_dim = 3
     shifts = np.random.uniform(size=(n_shifts, shift_dim))
     ffs = odl.tomo.flying_focal_spot(part_angles, apart, shifts)

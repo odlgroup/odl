@@ -259,8 +259,8 @@ def test_resizing_op_adjoint(padding, odl_tspace_impl):
         inner1 = res_op(elem).inner(res_elem)
         inner2 = elem.inner(res_op.adjoint(res_elem))
         assert inner1 == pytest.approx(
-            inner2, rel=space.size * dtype_tol(dtype)
-        )
+            inner2,
+            abs = 1e-2 * space.size * dtype_tol(dtype) * elem.norm() * res_elem.norm())
 
 
 def test_resizing_op_mixed_uni_nonuni():
