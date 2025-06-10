@@ -513,6 +513,8 @@ class ArrayWeighting(Weighting):
         array : `array-like`
             Weighting array of inner product, norm and distance.
             Native `Tensor` instances are stored as-is without copying.
+            Do not pass an ODL-space-element here. If you want to use such
+            an element, use its contained `data` instead.
         impl : string
             Specifier for the implementation backend.
         exponent : positive float, optional
@@ -527,6 +529,8 @@ class ArrayWeighting(Weighting):
         if (all(hasattr(array, attr) for attr in array_attrs) and
                 not isinstance(array, TensorSpace)):
             self.__array = array
+        # TODO add a check that the array is compatible with the `impl`, and if not either
+        # convert it or raise an error. This should be done using Python Array API features.
         else:
             raise TypeError('`array` {!r} does not look like a valid array'
                             ''.format(array))

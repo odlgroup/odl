@@ -1056,14 +1056,11 @@ def test_array_weighting_init(odl_tspace_impl, exponent):
     impl = odl_tspace_impl
     space = odl.rn((3, 4), impl=impl)
     weight_arr = _pos_array(space)
-    weight_elem = space.element(weight_arr)
 
     weighting_cls = _weighting_cls(impl, 'array')
     weighting_arr = weighting_cls(weight_arr, exponent=exponent)
-    weighting_elem = weighting_cls(weight_elem, exponent=exponent)
 
-    assert isinstance(weighting_arr.array, _array_cls(impl))
-    assert isinstance(weighting_elem.array, _array_cls(impl))
+    assert isinstance(weighting_arr.array, _array_cls(impl)), f"{type(weighting_arr.array)=}"
 
 
 def test_array_weighting_array_is_valid(odl_tspace_impl):
@@ -1088,21 +1085,14 @@ def test_array_weighting_equals(odl_tspace_impl):
     impl = odl_tspace_impl
     space = odl.rn(5, impl=impl)
     weight_arr = _pos_array(space)
-    weight_elem = space.element(weight_arr)
 
     weighting_cls = _weighting_cls(impl, 'array')
     weighting_arr = weighting_cls(weight_arr)
     weighting_arr2 = weighting_cls(weight_arr)
-    weighting_elem = weighting_cls(weight_elem)
-    weighting_elem_copy = weighting_cls(weight_elem.copy())
-    weighting_elem2 = weighting_cls(weight_elem)
     weighting_other_arr = weighting_cls(weight_arr - 1)
     weighting_other_exp = weighting_cls(weight_arr - 1, exponent=1)
 
     assert weighting_arr == weighting_arr2
-    assert weighting_arr == weighting_elem
-    assert weighting_arr != weighting_elem_copy
-    assert weighting_elem == weighting_elem2
     assert weighting_arr != weighting_other_arr
     assert weighting_arr != weighting_other_exp
 
@@ -1112,17 +1102,14 @@ def test_array_weighting_equiv(odl_tspace_impl):
     impl = odl_tspace_impl
     space = odl.rn(5, impl=impl)
     weight_arr = _pos_array(space)
-    weight_elem = space.element(weight_arr)
     different_arr = weight_arr + 1
 
     arr_weighting_cls = _weighting_cls(impl, 'array')
     w_arr = arr_weighting_cls(weight_arr)
-    w_elem = arr_weighting_cls(weight_elem)
     w_different_arr = arr_weighting_cls(different_arr)
 
     # Equal -> True
     assert w_arr.equiv(w_arr)
-    assert w_arr.equiv(w_elem)
     # Different array -> False
     assert not w_arr.equiv(w_different_arr)
 
