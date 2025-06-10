@@ -1956,8 +1956,8 @@ def npy_weighted_inner(weights):
 
     See Also
     --------
-    NumpyTensorSpaceConstWeighting
-    NumpyTensorSpaceArrayWeighting
+    ConstWeighting
+    ArrayWeighting
     """
     return _weighting(weights, exponent=2.0).inner
 
@@ -1982,8 +1982,8 @@ def npy_weighted_norm(weights, exponent=2.0):
 
     See Also
     --------
-    NumpyTensorSpaceConstWeighting
-    NumpyTensorSpaceArrayWeighting
+    ConstWeighting
+    ArrayWeighting
     """
     return _weighting(weights, exponent=exponent).norm
 
@@ -2008,8 +2008,8 @@ def npy_weighted_dist(weights, exponent=2.0):
 
     See Also
     --------
-    NumpyTensorSpaceConstWeighting
-    NumpyTensorSpaceArrayWeighting
+    ConstWeighting
+    ArrayWeighting
     """
     return _weighting(weights, exponent=exponent).dist
 
@@ -2017,218 +2017,6 @@ def npy_weighted_dist(weights, exponent=2.0):
 
 
 
-class NumpyTensorSpaceArrayWeighting(ArrayWeighting):
-
-    """Weighting of a `NumpyTensorSpace` by an array.
-
-    This class defines a weighting by an array that has the same shape
-    as the tensor space. Since the space is not known to this class,
-    no checks of shape or data type are performed.
-    See ``Notes`` for mathematical details.
-    """
-
-    def __init__(self, array, exponent=2.0):
-        r"""Initialize a new instance.
-
-        Parameters
-        ----------
-        array : `array-like`, one-dim.
-            Weighting array of the inner product, norm and distance.
-            All its entries must be positive, however this is not
-            verified during initialization.
-        exponent : positive `float`
-            Exponent of the norm. For values other than 2.0, no inner
-            product is defined.
-
-        Notes
-        -----
-        - For exponent 2.0, a new weighted inner product with array
-          :math:`W` is defined as
-
-          .. math::
-              \langle A, B\rangle_W :=
-              \langle W \odot A, B\rangle =
-              \langle w \odot a, b\rangle =
-              b^{\mathrm{H}} (w \odot a),
-
-          where :math:`a, b, w` are the "flattened" counterparts of
-          tensors :math:`A, B, W`, respectively, :math:`b^{\mathrm{H}}`
-          stands for transposed complex conjugate and :math:`w \odot a`
-          for element-wise multiplication.
-
-        - For other exponents, only norm and dist are defined. In the
-          case of exponent :math:`\infty`, the weighted norm is
-
-          .. math::
-              \| A\|_{W, \infty} :=
-              \| W \odot A\|_{\infty} =
-              \| w \odot a\|_{\infty},
-
-          otherwise it is (using point-wise exponentiation)
-
-          .. math::
-              \| A\|_{W, p} :=
-              \| W^{1/p} \odot A\|_{p} =
-              \| w^{1/p} \odot a\|_{\infty}.
-
-        - Note that this definition does **not** fulfill the limit
-          property in :math:`p`, i.e.
-
-          .. math::
-              \| A\|_{W, p} \not\to
-              \| A\|_{W, \infty} \quad (p \to \infty)
-
-          unless all weights are equal to 1.
-
-        - The array :math:`W` may only have positive entries, otherwise
-          it does not define an inner product or norm, respectively. This
-          is not checked during initialization.
-        """
-        if isinstance(array, NumpyTensor):
-            array = array.data
-        elif not isinstance(array, np.ndarray):
-            array = np.asarray(array)
-        super(NumpyTensorSpaceArrayWeighting, self).__init__(
-            array, impl='numpy', exponent=exponent)
-
-    def __hash__(self):
-        """Return ``hash(self)``."""
-        return hash((type(self), self.array.tobytes(), self.exponent))
-
-
-class NumpyTensorSpaceConstWeighting(ConstWeighting):
-
-    """Weighting of a `NumpyTensorSpace` by a constant.
-
-    See ``Notes`` for mathematical details.
-    """
-
-    def __init__(self, const, exponent=2.0):
-        r"""Initialize a new instance.
-
-        Parameters
-        ----------
-        const : positive float
-            Weighting constant of the inner product, norm and distance.
-        exponent : positive float
-            Exponent of the norm. For values other than 2.0, the inner
-            product is not defined.
-
-        Notes
-        -----
-        - For exponent 2.0, a new weighted inner product with constant
-          :math:`c` is defined as
-
-          .. math::
-              \langle a, b\rangle_c :=
-              c \, \langle a, b\rangle_c =
-              c \, b^{\mathrm{H}} a,
-
-          where :math:`b^{\mathrm{H}}` standing for transposed complex
-          conjugate.
-
-        - For other exponents, only norm and dist are defined. In the
-          case of exponent :math:`\infty`, the weighted norm is defined
-          as
-
-          .. math::
-              \| a \|_{c, \infty} :=
-              c\, \| a \|_{\infty},
-
-          otherwise it is
-
-          .. math::
-              \| a \|_{c, p} :=
-              c^{1/p}\, \| a \|_{p}.
-
-        - Note that this definition does **not** fulfill the limit
-          property in :math:`p`, i.e.
-
-          .. math::
-              \| a\|_{c, p} \not\to
-              \| a \|_{c, \infty} \quad (p \to \infty)
-
-          unless :math:`c = 1`.
-
-        - The constant must be positive, otherwise it does not define an
-          inner product or norm, respectively.
-        """
-        super(NumpyTensorSpaceConstWeighting, self).__init__(
-            const, impl='numpy', exponent=exponent)
-
-
-class NumpyTensorSpaceCustomInner(CustomInner):
-
-    """Class for handling a user-specified inner product."""
-
-    def __init__(self, inner):
-        """Initialize a new instance.
-
-        Parameters
-        ----------
-        inner : `callable`
-            The inner product implementation. It must accept two
-            `Tensor` arguments, return an element from their space's
-            field (real or complex number) and satisfy the following
-            conditions for all vectors ``x, y, z`` and scalars ``s``:
-
-            - ``<x, y> = conj(<y, x>)``
-            - ``<s*x + y, z> = s * <x, z> + <y, z>``
-            - ``<x, x> = 0``  if and only if  ``x = 0``
-        """
-        super(NumpyTensorSpaceCustomInner, self).__init__(inner, impl='numpy')
-
-
-class NumpyTensorSpaceCustomNorm(CustomNorm):
-
-    """Class for handling a user-specified norm.
-
-    Note that this removes ``inner``.
-    """
-
-    def __init__(self, norm):
-        """Initialize a new instance.
-
-        Parameters
-        ----------
-        norm : `callable`
-            The norm implementation. It must accept a `Tensor`
-            argument, return a `float` and satisfy the following
-            conditions for all any two elements ``x, y`` and scalars
-            ``s``:
-
-            - ``||x|| >= 0``
-            - ``||x|| = 0``  if and only if  ``x = 0``
-            - ``||s * x|| = |s| * ||x||``
-            - ``||x + y|| <= ||x|| + ||y||``
-        """
-        super(NumpyTensorSpaceCustomNorm, self).__init__(norm, impl='numpy')
-
-
-class NumpyTensorSpaceCustomDist(CustomDist):
-
-    """Class for handling a user-specified distance in `TensorSpace`.
-
-    Note that this removes ``inner`` and ``norm``.
-    """
-
-    def __init__(self, dist):
-        """Initialize a new instance.
-
-        Parameters
-        ----------
-        dist : `callable`
-            The distance function defining a metric on `TensorSpace`. It
-            must accept two `Tensor` arguments, return a `float` and
-            fulfill the following mathematical conditions for any three
-            elements ``x, y, z``:
-
-            - ``dist(x, y) >= 0``
-            - ``dist(x, y) = 0``  if and only if  ``x = y``
-            - ``dist(x, y) = dist(y, x)``
-            - ``dist(x, y) <= dist(x, z) + dist(z, y)``
-        """
-        super(NumpyTensorSpaceCustomDist, self).__init__(dist, impl='numpy')
 
 
 if __name__ == '__main__':
