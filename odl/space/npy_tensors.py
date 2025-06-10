@@ -2017,20 +2017,12 @@ def npy_weighted_dist(weights, exponent=2.0):
 
 def _norm_default(x):
     """Default Euclidean norm implementation."""
-    # Lazy import to improve `import odl` time
-    import scipy.linalg
-
-    if _blas_is_applicable(x.data):
-        nrm2 = scipy.linalg.blas.get_blas_funcs('nrm2', dtype=x.dtype)
-        norm = partial(nrm2, n=native(x.size))
-    else:
-        norm = np.linalg.norm
-    return norm(x.data.ravel())
+    return np.linalg.vector_norm(x.data)
 
 
 def _pnorm_default(x, p):
     """Default p-norm implementation."""
-    return np.linalg.norm(x.data.ravel(), ord=p)
+    return np.linalg.vector_norm(x.data, ord=p)
 
 
 def _pnorm_diagweight(x, p, w):
@@ -2040,33 +2032,25 @@ def _pnorm_diagweight(x, p, w):
 
     # This is faster than first applying the weights and then summing with
     # BLAS dot or nrm2
-    xp = np.abs(x.data.ravel(order))
+    xp = np.abs(x.data)
     if p == float('inf'):
-        xp *= w.ravel(order)
+        xp *= w
         return np.max(xp)
     else:
         xp = np.power(xp, p, out=xp)
-        xp *= w.ravel(order)
+        xp *= w
         return np.sum(xp) ** (1 / p)
 
 
 def _inner_default(x1, x2):
     """Default Euclidean inner product implementation."""
-    # Ravel both in the same order
-    order = 'F' if all(a.data.flags.f_contiguous for a in (x1, x2)) else 'C'
-
-    if is_real_dtype(x1.dtype):
-        if x1.size > THRESHOLD_MEDIUM:
-            # This is as fast as BLAS dotc
-            return np.tensordot(x1, x2, [range(x1.ndim)] * 2)
-        else:
-            # Several times faster for small arrays
-            return np.dot(x1.data.ravel(order),
-                          x2.data.ravel(order))
+    if is_real_dtype(x2.dtype):
+        return np.tensordot(x1, x2, [range(x1.ndim)] * 2)
     else:
-        # x2 as first argument because we want linearity in x1
-        return np.vdot(x2.data.ravel(order),
-                       x1.data.ravel(order))
+        # This could also be done with `np.vdot`, which has complex conjugation
+        # built in. That however requires ravelling, and does not as easily
+        # generalize to the Python Array API.
+        return np.tensordot(x1, x2.conj(), [range(x1.ndim)] * 2)
 
 
 # TODO: implement intermediate weighting schemes with arrays that are
