@@ -113,13 +113,18 @@ class TensorSpace(LinearSpace):
         Note:
         The check below is here just in case a user initialise a space directly from this class, which is not recommended
         """
-        ### We check if the datatype has been provided in a "sane" way, as a string or as a Python scalar type
+        ### We check if the datatype has been provided in a "sane" way, 
+        # 1) a Python scalar type
+        if isinstance(dtype, (int, float, complex)):
+            self.__dtype_identifier = str(dtype)
+            self.__dtype = self.available_dtypes[dtype] 
+        # 2) as a string
         if dtype in self.available_dtypes.keys():
             self.__dtype_identifier = dtype
             self.__dtype = self.available_dtypes[dtype]
-        ### If the check has failed, i.e the dtype is not a Key of the self.available_dtypes dict, we try to parse the dtype 
+        ### If the check has failed, i.e the dtype is not a Key of the self.available_dtypes dict or a python scalar, we try to parse the dtype 
         ### as a string using the self.get_dtype_identifier(dtype=dtype) call: This is for the situation where the dtype passed is
-        ### something like 'numpy.float32'
+        ### in the .values() of self.available_dtypes dict (something like 'numpy.float32')
         elif dtype in self.available_dtypes.values():
             self.__dtype_identifier = self.get_dtype_identifier(dtype=dtype)
             self.__dtype = dtype
@@ -142,6 +147,7 @@ class TensorSpace(LinearSpace):
         # We choose this order in contrast to Numpy, since we usually want
         # to represent discretizations of vector- or tensor-valued functions,
         # i.e., if dtype.shape == (3,) we expect f[0] to have shape `shape`.
+        # <!> this is likely to break in Pytorch
         self.__shape = np.dtype(dtype).shape + shape
 
     def parse_field(self, dtype):
