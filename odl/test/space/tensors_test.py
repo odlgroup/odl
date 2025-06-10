@@ -19,9 +19,11 @@ import pytest
 import odl
 from odl.set.space import LinearSpaceTypeError
 from odl.space.npy_tensors import (
-    NumpyTensor, NumpyTensorSpace, NumpyTensorSpaceArrayWeighting,
-    NumpyTensorSpaceConstWeighting, NumpyTensorSpaceCustomDist,
-    NumpyTensorSpaceCustomInner, NumpyTensorSpaceCustomNorm)
+    NumpyTensor, NumpyTensorSpace)
+from odl.space.weighting import (
+    ArrayWeighting,
+    ConstWeighting, CustomDist,
+    CustomInner, CustomNorm)
 from odl.util.testutils import (
     all_almost_equal, all_equal, noise_array, noise_element, noise_elements,
     simple_fixture)
@@ -59,17 +61,25 @@ def _odl_tensor_cls(impl):
 
 def _weighting_cls(impl, kind):
     """Return the weighting class for given impl and kind."""
+    def with_impl_init_argument(cls):
+        def wrap_args(*args, **kwargs):
+            assert('impl' not in kwargs)
+            try:
+                return cls(*args, impl=impl, **kwargs)
+            except TypeError:
+                raise TypeError(f"{impl=}, {args=}, {kwargs=}")
+        return wrap_args
     if impl == 'numpy':
         if kind == 'array':
-            return NumpyTensorSpaceArrayWeighting
+            return with_impl_init_argument(ArrayWeighting)
         elif kind == 'const':
-            return NumpyTensorSpaceConstWeighting
+            return with_impl_init_argument(ConstWeighting)
         elif kind == 'inner':
-            return NumpyTensorSpaceCustomInner
+            return with_impl_init_argument(CustomInner)
         elif kind == 'norm':
-            return NumpyTensorSpaceCustomNorm
-        elif kind == 'dist':
-            return NumpyTensorSpaceCustomDist
+            return with_impl_init_argument(CustomNorm)
+        elif kind == 'dist':                                                    
+            return with_impl_init_argument(CustomDist)
         else:
             assert False
     else:
@@ -172,7 +182,7 @@ def test_init_tspace_weighting(weight, exponent, odl_tspace_impl):
     else:
         assert False
 
-    weighting = weighting_cls(weight, exponent)
+    weighting = weighting_cls(weight, exponent=exponent)
 
     assert space.weighting == weighting
 
@@ -1076,7 +1086,7 @@ def test_array_weighting_array_is_valid(odl_tspace_impl):
 
     # Invalid
     weight_arr[0] = 0
-    weighting_arr = NumpyTensorSpaceArrayWeighting(weight_arr)
+    weighting_arr = ArrayWeighting(weight_arr, impl=impl)
     assert not weighting_arr.is_valid()
 
 
@@ -1137,14 +1147,14 @@ def test_array_weighting_inner(tspace):
     [xarr, yarr], [x, y] = noise_elements(tspace, 2)
 
     weight_arr = _pos_array(tspace)
-    weighting = NumpyTensorSpaceArrayWeighting(weight_arr)
+    weighting = ArrayWeighting(weight_arr, impl=tspace.impl)
 
     true_inner = np.vdot(yarr, xarr * weight_arr)
     assert weighting.inner(x, y) == pytest.approx(true_inner)
 
     # Exponent != 2 -> no inner product, should raise
     with pytest.raises(NotImplementedError):
-        NumpyTensorSpaceArrayWeighting(weight_arr, exponent=1.0).inner(x, y)
+        ArrayWeighting(weight_arr, exponent=1.0, impl=tspace.impl).inner(x, y)
 
 
 def test_array_weighting_norm(tspace, exponent):
@@ -1153,7 +1163,7 @@ def test_array_weighting_norm(tspace, exponent):
     xarr, x = noise_elements(tspace)
 
     weight_arr = _pos_array(tspace)
-    weighting = NumpyTensorSpaceArrayWeighting(weight_arr, exponent=exponent)
+    weighting = ArrayWeighting(weight_arr, exponent=exponent, impl=tspace.impl)
 
     if exponent == float('inf'):
         true_norm = np.linalg.norm(
@@ -1173,7 +1183,7 @@ def test_array_weighting_dist(tspace, exponent):
     [xarr, yarr], [x, y] = noise_elements(tspace, n=2)
 
     weight_arr = _pos_array(tspace)
-    weighting = NumpyTensorSpaceArrayWeighting(weight_arr, exponent=exponent)
+    weighting = ArrayWeighting(weight_arr, exponent=exponent, impl=tspace.impl)
 
     if exponent == float('inf'):
         true_dist = np.linalg.norm(
@@ -1250,11 +1260,11 @@ def test_const_weighting_inner(tspace):
     constant = 1.5
     true_result_const = constant * np.vdot(yarr, xarr)
 
-    w_const = NumpyTensorSpaceConstWeighting(constant)
+    w_const = ConstWeighting(constant, impl=tspace.impl)
     assert w_const.inner(x, y) == pytest.approx(true_result_const)
 
     # Exponent != 2 -> no inner
-    w_const = NumpyTensorSpaceConstWeighting(constant, exponent=1)
+    w_const = ConstWeighting(constant, exponent=1, impl=tspace.impl)
     with pytest.raises(NotImplementedError):
         w_const.inner(x, y)
 
@@ -1271,7 +1281,7 @@ def test_const_weighting_norm(tspace, exponent):
 
     true_norm = factor * np.linalg.norm(xarr.ravel(), ord=exponent)
 
-    w_const = NumpyTensorSpaceConstWeighting(constant, exponent=exponent)
+    w_const = ConstWeighting(constant, exponent=exponent, impl=tspace.impl)
 
     real_dtype = tspace.dtype.type(0).real.dtype
 
@@ -1300,7 +1310,7 @@ def test_const_weighting_dist(tspace, exponent):
         factor = constant ** (1 / exponent)
     true_dist = factor * np.linalg.norm((xarr - yarr).ravel(), ord=exponent)
 
-    w_const = NumpyTensorSpaceConstWeighting(constant, exponent=exponent)
+    w_const = ConstWeighting(constant, exponent=exponent, impl=tspace.impl)
 
     real_dtype = tspace.dtype.type(0).real.dtype
 
@@ -1327,9 +1337,9 @@ def test_custom_inner(tspace):
     def inner(x, y):
         return np.vdot(y, x)
 
-    w = NumpyTensorSpaceCustomInner(inner)
-    w_same = NumpyTensorSpaceCustomInner(inner)
-    w_other = NumpyTensorSpaceCustomInner(np.dot)
+    w = CustomInner(inner, impl=tspace.impl)
+    w_same = CustomInner(inner, impl=tspace.impl)
+    w_other = CustomInner(np.dot, impl=tspace.impl)
 
     assert w == w
     assert w == w_same
@@ -1345,7 +1355,7 @@ def test_custom_inner(tspace):
     assert w.dist(x, y) == pytest.approx(true_dist, rel=rtol)
 
     with pytest.raises(TypeError):
-        NumpyTensorSpaceCustomInner(1)
+        CustomInner(1, impl=tspace.impl)
 
 
 def test_custom_norm(tspace):
@@ -1357,9 +1367,9 @@ def test_custom_norm(tspace):
     def other_norm(x):
         return np.linalg.norm(x, ord=1)
 
-    w = NumpyTensorSpaceCustomNorm(norm)
-    w_same = NumpyTensorSpaceCustomNorm(norm)
-    w_other = NumpyTensorSpaceCustomNorm(other_norm)
+    w = CustomNorm(norm, impl=tspace.impl)
+    w_same = CustomNorm(norm, impl=tspace.impl)
+    w_other = CustomNorm(other_norm, impl=tspace.impl)
 
     assert w == w
     assert w == w_same
@@ -1375,7 +1385,7 @@ def test_custom_norm(tspace):
     assert w.dist(x, y) == pytest.approx(true_dist)
 
     with pytest.raises(TypeError):
-        NumpyTensorSpaceCustomNorm(1)
+        CustomNorm(1, impl=tspace.impl)
 
 
 def test_custom_dist(tspace):
@@ -1388,9 +1398,9 @@ def test_custom_dist(tspace):
     def other_dist(x, y):
         return np.linalg.norm(x - y, ord=1)
 
-    w = NumpyTensorSpaceCustomDist(dist)
-    w_same = NumpyTensorSpaceCustomDist(dist)
-    w_other = NumpyTensorSpaceCustomDist(other_dist)
+    w = CustomDist(dist, impl=tspace.impl)
+    w_same = CustomDist(dist, impl=tspace.impl)
+    w_other = CustomDist(other_dist, impl=tspace.impl)
 
     assert w == w
     assert w == w_same
@@ -1406,7 +1416,7 @@ def test_custom_dist(tspace):
     assert w.dist(x, y) == pytest.approx(true_dist)
 
     with pytest.raises(TypeError):
-        NumpyTensorSpaceCustomDist(1)
+        CustomDist(1, impl=tspace.impl)
 
 
 # --- Ufuncs & Reductions --- #
