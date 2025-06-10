@@ -262,7 +262,7 @@ class NumpyTensorSpace(TensorSpace):
                 self.__weighting = _weighting(weighting, exponent)
 
             # Check (afterwards) that the weighting input was sane
-            if isinstance(self.weighting, NumpyTensorSpaceArrayWeighting):
+            if isinstance(self.weighting, ArrayWeighting):
                 if self.weighting.array.dtype == object:
                     raise ValueError('invalid `weighting` argument: {}'
                                      ''.format(weighting))
@@ -279,14 +279,14 @@ class NumpyTensorSpace(TensorSpace):
                                                self.weighting.array.shape))
 
         elif dist is not None:
-            self.__weighting = NumpyTensorSpaceCustomDist(dist)
+            self.__weighting = CustomDist(dist, impl='numpy')
         elif norm is not None:
-            self.__weighting = NumpyTensorSpaceCustomNorm(norm)
+            self.__weighting = CustomNorm(norm, impl='numpy')
         elif inner is not None:
-            self.__weighting = NumpyTensorSpaceCustomInner(inner)
+            self.__weighting = CustomInner(inner, impl='numpy')
         else:
             # No weighting, i.e., weighting with constant 1.0
-            self.__weighting = NumpyTensorSpaceConstWeighting(1.0, exponent)
+            self.__weighting = ConstWeighting(1.0, exponent=exponent, impl='numpy')
 
         self.__use_in_place_ops = kwargs.pop('use_in_place_ops', True)
 
@@ -380,8 +380,8 @@ class NumpyTensorSpace(TensorSpace):
 
                 if isinstance(space.weighting, ArrayWeighting):
                     new_array = np.asarray(space.weighting.array[indices])
-                    weighting = NumpyTensorSpaceArrayWeighting(
-                        new_array, space.weighting.exponent)
+                    weighting = ArrayWeighting(
+                        new_array, exponent=space.weighting.exponent, impl='numpy')
                 else:
                     weighting = space.weighting
 
@@ -417,7 +417,7 @@ class NumpyTensorSpace(TensorSpace):
     def is_weighted(self):
         """Return ``True`` if the space is not weighted by constant 1.0."""
         return not (
-            isinstance(self.weighting, NumpyTensorSpaceConstWeighting) and
+            isinstance(self.weighting, ConstWeighting) and
             self.weighting.const == 1.0)
 
     @property
@@ -1526,8 +1526,7 @@ numpy.ufunc.reduceat.html
                 if is_floating_dtype(res.dtype):
                     if res.shape != self.shape:
                         # Don't propagate weighting if shape changes
-                        weighting = NumpyTensorSpaceConstWeighting(1.0,
-                                                                   exponent)
+                        weighting = ConstWeighting(1.0, exponent=exponent, impl='numpy')
                     spc_kwargs = {'weighting': weighting}
                 else:
                     spc_kwargs = {}
@@ -1930,12 +1929,12 @@ def _lincomb_impl(a, x1, b, x2, out):
 def _weighting(weights, exponent):
     """Return a weighting whose type is inferred from the arguments."""
     if np.isscalar(weights):
-        weighting = NumpyTensorSpaceConstWeighting(weights, exponent)
+        weighting = ConstWeighting(weights, exponent=exponent, impl='numpy')
     elif weights is None:
-        weighting = NumpyTensorSpaceConstWeighting(1.0, exponent)
+        weighting = ConstWeighting(1.0, exponent=exponent, impl='numpy')
     else:  # last possibility: make an array
         arr = np.asarray(weights)
-        weighting = NumpyTensorSpaceArrayWeighting(arr, exponent)
+        weighting = ArrayWeighting(arr, exponent=exponent, impl='numpy')
     return weighting
 
 
