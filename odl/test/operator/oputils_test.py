@@ -149,10 +149,25 @@ def test_power_method_opnorm_symm():
 
     op = odl.MatrixOperator(mat)
     true_opnorm = 1.2
-    opnorm_est = power_method_opnorm(op, maxiter=100)
-    assert opnorm_est == pytest.approx(true_opnorm, rel=1e-2)
 
-    # Start at a different point
+    # Run with a random starting point. This should give the right
+    # result most of the time, but can fail if the random point fell
+    # very close to the lesser eigenvector. To confirm that the probability
+    # is low, we run the method three times (they will have different
+    # random starting points). Usually all three should give the right
+    # result, but one of them may occasionally fail (and give the other
+    # singular value instead). Two wrong ones out of three should
+    # be exeedingly rare though, so we treat this as a test failure.
+    n_failures = 0
+    for _ in range(3):
+        opnorm_est = power_method_opnorm(op, maxiter=100)
+        if n_failures<1:
+            if opnorm_est != pytest.approx(true_opnorm, rel=1e-2):
+                n_failures += 1
+        else:
+            assert opnorm_est == pytest.approx(true_opnorm, rel=1e-2)
+
+    # Start at a deterministic point. This should _always_ succeed.
     xstart = odl.rn(2).element([0.8, 0.5])
     opnorm_est = power_method_opnorm(op, xstart=xstart, maxiter=100)
     assert opnorm_est == pytest.approx(true_opnorm, rel=1e-2)
