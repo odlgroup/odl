@@ -12,7 +12,6 @@ from __future__ import print_function, division, absolute_import
 from builtins import object
 import numpy as np
 
-from odl.space.base_tensors import TensorSpace
 from odl.util import array_str, signature_string, indent, is_real_dtype
 
 
@@ -526,8 +525,7 @@ class ArrayWeighting(Weighting):
         # We apply array duck-typing to allow all kinds of Numpy-array-like
         # data structures without change
         array_attrs = ('shape', 'dtype', 'itemsize')
-        if (all(hasattr(array, attr) for attr in array_attrs) and
-                not isinstance(array, TensorSpace)):
+        if (all(hasattr(array, attr) for attr in array_attrs)):
             self.__array = array
         # TODO add a check that the array is compatible with the `impl`, and if not either
         # convert it or raise an error. This should be done using Python Array API features.
