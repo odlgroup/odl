@@ -262,7 +262,7 @@ class NumpyTensorSpace(TensorSpace):
                 self.__weighting = _weighting(weighting, exponent)
 
             # Check (afterwards) that the weighting input was sane
-            if isinstance(self.weighting, NumpyTensorSpaceArrayWeighting):
+            if isinstance(self.weighting, ArrayWeighting):
                 if self.weighting.array.dtype == object:
                     raise ValueError('invalid `weighting` argument: {}'
                                      ''.format(weighting))
@@ -279,14 +279,14 @@ class NumpyTensorSpace(TensorSpace):
                                                self.weighting.array.shape))
 
         elif dist is not None:
-            self.__weighting = NumpyTensorSpaceCustomDist(dist)
+            self.__weighting = CustomDist(dist, impl='numpy')
         elif norm is not None:
-            self.__weighting = NumpyTensorSpaceCustomNorm(norm)
+            self.__weighting = CustomNorm(norm, impl='numpy')
         elif inner is not None:
-            self.__weighting = NumpyTensorSpaceCustomInner(inner)
+            self.__weighting = CustomInner(inner, impl='numpy')
         else:
             # No weighting, i.e., weighting with constant 1.0
-            self.__weighting = NumpyTensorSpaceConstWeighting(1.0, exponent)
+            self.__weighting = ConstWeighting(1.0, exponent=exponent, impl='numpy')
 
         self.__use_in_place_ops = kwargs.pop('use_in_place_ops', True)
 
@@ -380,8 +380,8 @@ class NumpyTensorSpace(TensorSpace):
 
                 if isinstance(space.weighting, ArrayWeighting):
                     new_array = np.asarray(space.weighting.array[indices])
-                    weighting = NumpyTensorSpaceArrayWeighting(
-                        new_array, space.weighting.exponent)
+                    weighting = ArrayWeighting(
+                        new_array, exponent=space.weighting.exponent, impl='numpy')
                 else:
                     weighting = space.weighting
 
@@ -417,7 +417,7 @@ class NumpyTensorSpace(TensorSpace):
     def is_weighted(self):
         """Return ``True`` if the space is not weighted by constant 1.0."""
         return not (
-            isinstance(self.weighting, NumpyTensorSpaceConstWeighting) and
+            isinstance(self.weighting, ConstWeighting) and
             self.weighting.const == 1.0)
 
     @property
@@ -1526,8 +1526,7 @@ numpy.ufunc.reduceat.html
                 if is_floating_dtype(res.dtype):
                     if res.shape != self.shape:
                         # Don't propagate weighting if shape changes
-                        weighting = NumpyTensorSpaceConstWeighting(1.0,
-                                                                   exponent)
+                        weighting = ConstWeighting(1.0, exponent=exponent, impl='numpy')
                     spc_kwargs = {'weighting': weighting}
                 else:
                     spc_kwargs = {}
@@ -1930,12 +1929,12 @@ def _lincomb_impl(a, x1, b, x2, out):
 def _weighting(weights, exponent):
     """Return a weighting whose type is inferred from the arguments."""
     if np.isscalar(weights):
-        weighting = NumpyTensorSpaceConstWeighting(weights, exponent)
+        weighting = ConstWeighting(weights, exponent=exponent, impl='numpy')
     elif weights is None:
-        weighting = NumpyTensorSpaceConstWeighting(1.0, exponent)
+        weighting = ConstWeighting(1.0, exponent=exponent, impl='numpy')
     else:  # last possibility: make an array
         arr = np.asarray(weights)
-        weighting = NumpyTensorSpaceArrayWeighting(arr, exponent)
+        weighting = ArrayWeighting(arr, exponent=exponent, impl='numpy')
     return weighting
 
 
@@ -1957,8 +1956,8 @@ def npy_weighted_inner(weights):
 
     See Also
     --------
-    NumpyTensorSpaceConstWeighting
-    NumpyTensorSpaceArrayWeighting
+    ConstWeighting
+    ArrayWeighting
     """
     return _weighting(weights, exponent=2.0).inner
 
@@ -1983,8 +1982,8 @@ def npy_weighted_norm(weights, exponent=2.0):
 
     See Also
     --------
-    NumpyTensorSpaceConstWeighting
-    NumpyTensorSpaceArrayWeighting
+    ConstWeighting
+    ArrayWeighting
     """
     return _weighting(weights, exponent=exponent).norm
 
@@ -2009,393 +2008,15 @@ def npy_weighted_dist(weights, exponent=2.0):
 
     See Also
     --------
-    NumpyTensorSpaceConstWeighting
-    NumpyTensorSpaceArrayWeighting
+    ConstWeighting
+    ArrayWeighting
     """
     return _weighting(weights, exponent=exponent).dist
 
 
-def _norm_default(x):
-    """Default Euclidean norm implementation."""
-    # Lazy import to improve `import odl` time
-    import scipy.linalg
 
-    if _blas_is_applicable(x.data):
-        nrm2 = scipy.linalg.blas.get_blas_funcs('nrm2', dtype=x.dtype)
-        norm = partial(nrm2, n=native(x.size))
-    else:
-        norm = np.linalg.norm
-    return norm(x.data.ravel())
 
 
-def _pnorm_default(x, p):
-    """Default p-norm implementation."""
-    return np.linalg.norm(x.data.ravel(), ord=p)
-
-
-def _pnorm_diagweight(x, p, w):
-    """Diagonally weighted p-norm implementation."""
-    # Ravel both in the same order (w is a numpy array)
-    order = 'F' if all(a.flags.f_contiguous for a in (x.data, w)) else 'C'
-
-    # This is faster than first applying the weights and then summing with
-    # BLAS dot or nrm2
-    xp = np.abs(x.data.ravel(order))
-    if p == float('inf'):
-        xp *= w.ravel(order)
-        return np.max(xp)
-    else:
-        xp = np.power(xp, p, out=xp)
-        xp *= w.ravel(order)
-        return np.sum(xp) ** (1 / p)
-
-
-def _inner_default(x1, x2):
-    """Default Euclidean inner product implementation."""
-    # Ravel both in the same order
-    order = 'F' if all(a.data.flags.f_contiguous for a in (x1, x2)) else 'C'
-
-    if is_real_dtype(x1.dtype):
-        if x1.size > THRESHOLD_MEDIUM:
-            # This is as fast as BLAS dotc
-            return np.tensordot(x1, x2, [range(x1.ndim)] * 2)
-        else:
-            # Several times faster for small arrays
-            return np.dot(x1.data.ravel(order),
-                          x2.data.ravel(order))
-    else:
-        # x2 as first argument because we want linearity in x1
-        return np.vdot(x2.data.ravel(order),
-                       x1.data.ravel(order))
-
-
-# TODO: implement intermediate weighting schemes with arrays that are
-# broadcast, i.e. between scalar and full-blown in dimensionality?
-
-
-class NumpyTensorSpaceArrayWeighting(ArrayWeighting):
-
-    """Weighting of a `NumpyTensorSpace` by an array.
-
-    This class defines a weighting by an array that has the same shape
-    as the tensor space. Since the space is not known to this class,
-    no checks of shape or data type are performed.
-    See ``Notes`` for mathematical details.
-    """
-
-    def __init__(self, array, exponent=2.0):
-        r"""Initialize a new instance.
-
-        Parameters
-        ----------
-        array : `array-like`, one-dim.
-            Weighting array of the inner product, norm and distance.
-            All its entries must be positive, however this is not
-            verified during initialization.
-        exponent : positive `float`
-            Exponent of the norm. For values other than 2.0, no inner
-            product is defined.
-
-        Notes
-        -----
-        - For exponent 2.0, a new weighted inner product with array
-          :math:`W` is defined as
-
-          .. math::
-              \langle A, B\rangle_W :=
-              \langle W \odot A, B\rangle =
-              \langle w \odot a, b\rangle =
-              b^{\mathrm{H}} (w \odot a),
-
-          where :math:`a, b, w` are the "flattened" counterparts of
-          tensors :math:`A, B, W`, respectively, :math:`b^{\mathrm{H}}`
-          stands for transposed complex conjugate and :math:`w \odot a`
-          for element-wise multiplication.
-
-        - For other exponents, only norm and dist are defined. In the
-          case of exponent :math:`\infty`, the weighted norm is
-
-          .. math::
-              \| A\|_{W, \infty} :=
-              \| W \odot A\|_{\infty} =
-              \| w \odot a\|_{\infty},
-
-          otherwise it is (using point-wise exponentiation)
-
-          .. math::
-              \| A\|_{W, p} :=
-              \| W^{1/p} \odot A\|_{p} =
-              \| w^{1/p} \odot a\|_{\infty}.
-
-        - Note that this definition does **not** fulfill the limit
-          property in :math:`p`, i.e.
-
-          .. math::
-              \| A\|_{W, p} \not\to
-              \| A\|_{W, \infty} \quad (p \to \infty)
-
-          unless all weights are equal to 1.
-
-        - The array :math:`W` may only have positive entries, otherwise
-          it does not define an inner product or norm, respectively. This
-          is not checked during initialization.
-        """
-        if isinstance(array, NumpyTensor):
-            array = array.data
-        elif not isinstance(array, np.ndarray):
-            array = np.asarray(array)
-        super(NumpyTensorSpaceArrayWeighting, self).__init__(
-            array, impl='numpy', exponent=exponent)
-
-    def __hash__(self):
-        """Return ``hash(self)``."""
-        return hash((type(self), self.array.tobytes(), self.exponent))
-
-    def inner(self, x1, x2):
-        """Return the weighted inner product of ``x1`` and ``x2``.
-
-        Parameters
-        ----------
-        x1, x2 : `NumpyTensor`
-            Tensors whose inner product is calculated.
-
-        Returns
-        -------
-        inner : float or complex
-            The inner product of the two provided vectors.
-        """
-        if self.exponent != 2.0:
-            raise NotImplementedError('no inner product defined for '
-                                      'exponent != 2 (got {})'
-                                      ''.format(self.exponent))
-        else:
-            inner = _inner_default(x1 * self.array, x2)
-            if is_real_dtype(x1.dtype):
-                return float(inner)
-            else:
-                return complex(inner)
-
-    def norm(self, x):
-        """Return the weighted norm of ``x``.
-
-        Parameters
-        ----------
-        x : `NumpyTensor`
-            Tensor whose norm is calculated.
-
-        Returns
-        -------
-        norm : float
-            The norm of the provided tensor.
-        """
-        if self.exponent == 2.0:
-            norm_squared = self.inner(x, x).real  # TODO: optimize?!
-            if norm_squared < 0:
-                norm_squared = 0.0  # Compensate for numerical error
-            return float(np.sqrt(norm_squared))
-        else:
-            return float(_pnorm_diagweight(x, self.exponent, self.array))
-
-
-class NumpyTensorSpaceConstWeighting(ConstWeighting):
-
-    """Weighting of a `NumpyTensorSpace` by a constant.
-
-    See ``Notes`` for mathematical details.
-    """
-
-    def __init__(self, const, exponent=2.0):
-        r"""Initialize a new instance.
-
-        Parameters
-        ----------
-        const : positive float
-            Weighting constant of the inner product, norm and distance.
-        exponent : positive float
-            Exponent of the norm. For values other than 2.0, the inner
-            product is not defined.
-
-        Notes
-        -----
-        - For exponent 2.0, a new weighted inner product with constant
-          :math:`c` is defined as
-
-          .. math::
-              \langle a, b\rangle_c :=
-              c \, \langle a, b\rangle_c =
-              c \, b^{\mathrm{H}} a,
-
-          where :math:`b^{\mathrm{H}}` standing for transposed complex
-          conjugate.
-
-        - For other exponents, only norm and dist are defined. In the
-          case of exponent :math:`\infty`, the weighted norm is defined
-          as
-
-          .. math::
-              \| a \|_{c, \infty} :=
-              c\, \| a \|_{\infty},
-
-          otherwise it is
-
-          .. math::
-              \| a \|_{c, p} :=
-              c^{1/p}\, \| a \|_{p}.
-
-        - Note that this definition does **not** fulfill the limit
-          property in :math:`p`, i.e.
-
-          .. math::
-              \| a\|_{c, p} \not\to
-              \| a \|_{c, \infty} \quad (p \to \infty)
-
-          unless :math:`c = 1`.
-
-        - The constant must be positive, otherwise it does not define an
-          inner product or norm, respectively.
-        """
-        super(NumpyTensorSpaceConstWeighting, self).__init__(
-            const, impl='numpy', exponent=exponent)
-
-    def inner(self, x1, x2):
-        """Return the weighted inner product of ``x1`` and ``x2``.
-
-        Parameters
-        ----------
-        x1, x2 : `NumpyTensor`
-            Tensors whose inner product is calculated.
-
-        Returns
-        -------
-        inner : float or complex
-            The inner product of the two provided tensors.
-        """
-        if self.exponent != 2.0:
-            raise NotImplementedError('no inner product defined for '
-                                      'exponent != 2 (got {})'
-                                      ''.format(self.exponent))
-        else:
-            inner = self.const * _inner_default(x1, x2)
-            if x1.space.field is None:
-                return inner
-            else:
-                return x1.space.field.element(inner)
-
-    def norm(self, x):
-        """Return the weighted norm of ``x``.
-
-        Parameters
-        ----------
-        x1 : `NumpyTensor`
-            Tensor whose norm is calculated.
-
-        Returns
-        -------
-        norm : float
-            The norm of the tensor.
-        """
-        if self.exponent == 2.0:
-            return float(np.sqrt(self.const) * _norm_default(x))
-        elif self.exponent == float('inf'):
-            return float(self.const * _pnorm_default(x, self.exponent))
-        else:
-            return float((self.const ** (1 / self.exponent) *
-                          _pnorm_default(x, self.exponent)))
-
-    def dist(self, x1, x2):
-        """Return the weighted distance between ``x1`` and ``x2``.
-
-        Parameters
-        ----------
-        x1, x2 : `NumpyTensor`
-            Tensors whose mutual distance is calculated.
-
-        Returns
-        -------
-        dist : float
-            The distance between the tensors.
-        """
-        if self.exponent == 2.0:
-            return float(np.sqrt(self.const) * _norm_default(x1 - x2))
-        elif self.exponent == float('inf'):
-            return float(self.const * _pnorm_default(x1 - x2, self.exponent))
-        else:
-            return float((self.const ** (1 / self.exponent) *
-                          _pnorm_default(x1 - x2, self.exponent)))
-
-
-class NumpyTensorSpaceCustomInner(CustomInner):
-
-    """Class for handling a user-specified inner product."""
-
-    def __init__(self, inner):
-        """Initialize a new instance.
-
-        Parameters
-        ----------
-        inner : `callable`
-            The inner product implementation. It must accept two
-            `Tensor` arguments, return an element from their space's
-            field (real or complex number) and satisfy the following
-            conditions for all vectors ``x, y, z`` and scalars ``s``:
-
-            - ``<x, y> = conj(<y, x>)``
-            - ``<s*x + y, z> = s * <x, z> + <y, z>``
-            - ``<x, x> = 0``  if and only if  ``x = 0``
-        """
-        super(NumpyTensorSpaceCustomInner, self).__init__(inner, impl='numpy')
-
-
-class NumpyTensorSpaceCustomNorm(CustomNorm):
-
-    """Class for handling a user-specified norm.
-
-    Note that this removes ``inner``.
-    """
-
-    def __init__(self, norm):
-        """Initialize a new instance.
-
-        Parameters
-        ----------
-        norm : `callable`
-            The norm implementation. It must accept a `Tensor`
-            argument, return a `float` and satisfy the following
-            conditions for all any two elements ``x, y`` and scalars
-            ``s``:
-
-            - ``||x|| >= 0``
-            - ``||x|| = 0``  if and only if  ``x = 0``
-            - ``||s * x|| = |s| * ||x||``
-            - ``||x + y|| <= ||x|| + ||y||``
-        """
-        super(NumpyTensorSpaceCustomNorm, self).__init__(norm, impl='numpy')
-
-
-class NumpyTensorSpaceCustomDist(CustomDist):
-
-    """Class for handling a user-specified distance in `TensorSpace`.
-
-    Note that this removes ``inner`` and ``norm``.
-    """
-
-    def __init__(self, dist):
-        """Initialize a new instance.
-
-        Parameters
-        ----------
-        dist : `callable`
-            The distance function defining a metric on `TensorSpace`. It
-            must accept two `Tensor` arguments, return a `float` and
-            fulfill the following mathematical conditions for any three
-            elements ``x, y, z``:
-
-            - ``dist(x, y) >= 0``
-            - ``dist(x, y) = 0``  if and only if  ``x = y``
-            - ``dist(x, y) = dist(y, x)``
-            - ``dist(x, y) <= dist(x, z) + dist(z, y)``
-        """
-        super(NumpyTensorSpaceCustomDist, self).__init__(dist, impl='numpy')
 
 
 if __name__ == '__main__':
