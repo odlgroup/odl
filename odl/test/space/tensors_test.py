@@ -634,6 +634,23 @@ def test_norm(odl_tspace_impl):
     for device in IMPL_DEVICES[odl_tspace_impl]:
         tspace = odl.tensor_space(DEFAULT_SHAPE, impl=odl_tspace_impl, device=device)
         xarr, x = noise_elements(tspace)
+        xarr, x = noise_elements(tspace)
+
+        correct_norm = np.linalg.norm(xarr.ravel())
+
+        if tspace.real_dtype == np.float16:
+            tolerance = 1e-3
+        elif tspace.real_dtype == np.float32:
+            tolerance = 2e-7
+        elif tspace.real_dtype == np.float64:
+            tolerance = 1e-15
+        elif tspace.real_dtype == np.float128:
+            tolerance = 1e-19
+        else:
+            raise TypeError(f"No known tolerance for dtype {tspace.dtype}")
+        
+        assert tspace.norm(x) == pytest.approx(correct_norm, rel=tolerance)
+        assert x.norm() == pytest.approx(correct_norm, rel=tolerance)
 
 
         correct_norm = np.linalg.norm(xarr.ravel())
@@ -679,9 +696,29 @@ def test_pnorm(exponent):
 
 def test_dist(odl_tspace_impl):
     """Test the dist method against numpy.linalg.norm of the difference."""
+
     for device in IMPL_DEVICES[odl_tspace_impl]:
         tspace = odl.tensor_space(DEFAULT_SHAPE, impl=odl_tspace_impl, device=device)
         [xarr, yarr], [x, y] = noise_elements(tspace, n=2)
+
+        [xarr, yarr], [x, y] = noise_elements(tspace, n=2)
+
+        correct_dist = np.linalg.norm((xarr - yarr).ravel())
+
+        if tspace.real_dtype == np.float16:
+            tolerance = 5e-3
+        elif tspace.real_dtype == np.float32:
+            tolerance = 2e-7
+        elif tspace.real_dtype == np.float64:
+            tolerance = 1e-15
+        elif tspace.real_dtype == np.float128:
+            tolerance = 1e-19
+        else:
+            raise TypeError(f"No known tolerance for dtype {tspace.dtype}")
+        
+        assert tspace.dist(x, y) == pytest.approx(correct_dist, rel=tolerance)
+        assert x.dist(y) == pytest.approx(correct_dist, rel=tolerance)
+
 
 
         correct_dist = np.linalg.norm((xarr - yarr).ravel())
@@ -1281,15 +1318,14 @@ def test_const_weighting_norm(odl_tspace_impl, exponent):
 
         w_const =  odl.space_weighting(impl=odl_tspace_impl, weight=constant, exponent=exponent)
 
-        real_dtype = tspace.dtype
 
-        if real_dtype == np.float16:
+        if tspace.real_dtype == np.float16:
             tolerance = 5e-2
-        elif real_dtype == np.float32:
+        elif tspace.real_dtype == np.float32:
             tolerance = 1e-6
-        elif real_dtype == np.float64:
+        elif tspace.real_dtype == np.float64:
             tolerance = 1e-15
-        elif real_dtype == np.float128:
+        elif tspace.real_dtype == np.float128:
             tolerance = 1e-19
         else:
             raise TypeError(f"No known tolerance for dtype {tspace.dtype}")
@@ -1303,6 +1339,7 @@ def test_const_weighting_dist(odl_tspace_impl, exponent):
         tspace = odl.tensor_space(DEFAULT_SHAPE, impl=odl_tspace_impl, device=device)
         [xarr, yarr], [x, y] = noise_elements(tspace, 2)
 
+
         constant = 1.5
         if exponent == float('inf'):
             factor = constant
@@ -1310,24 +1347,21 @@ def test_const_weighting_dist(odl_tspace_impl, exponent):
             factor = constant ** (1 / exponent)
         true_dist = factor * np.linalg.norm((xarr - yarr).ravel(), ord=exponent)
 
+        w_const = w_const = odl.space_weighting(impl=odl_tspace_impl, weight=constant, exponent=exponent)
 
-        w_const = odl.space_weighting(impl=odl_tspace_impl, weight=constant, exponent=exponent)
-
-
-        real_dtype = tspace.dtype
-
-        if real_dtype == np.float16:
+        if tspace.real_dtype == np.float16:
             tolerance = 5e-2
-        elif real_dtype == np.float32:
+        elif tspace.real_dtype == np.float32:
             tolerance = 5e-7
-        elif real_dtype == np.float64:
+        elif tspace.real_dtype == np.float64:
             tolerance = 1e-15
-        elif real_dtype == np.float128:
+        elif tspace.real_dtype == np.float128:
             tolerance = 1e-19
         else:
             raise TypeError(f"No known tolerance for dtype {tspace.dtype}")
 
         assert w_const.dist(x, y) == pytest.approx(true_dist, rel=tolerance)
+
 
 
 def test_custom_inner(odl_tspace_impl):
