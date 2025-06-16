@@ -104,7 +104,7 @@ TYPE_PROMOTION_REAL_TO_COMPLEX = {
 }
 ##### Not sure about this one #####
 TYPE_PROMOTION_COMPLEX_TO_REAL = {
-    complex : "flot64",
+    complex : "float64",
     "complex64"  : "float32",
     "complex128" : "float64"
 }

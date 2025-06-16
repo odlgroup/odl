@@ -21,24 +21,25 @@ import array_api_compat.numpy as xp
 __all__ = ('NumpyTensorSpace',)
 
 NUMPY_DTYPES = {
-        bool:np.bool,
-        "bool": np.bool,
-        "int8": np.int8,
-        int : np.int32,
-        "int16": np.int16,
-        "int32": np.int32,
-        "int64": np.int64,
-        "uint8": np.uint8,
-        "uint16": np.uint16,
-        "uint32": np.uint32,
-        "uint64": np.uint64,
-        float: np.float64,
-        "float32": np.float32,
-        "float64": np.float64,
-        complex: np.complex128,        
-        "complex64": np.complex64,
-        "complex128": np.complex128,
-    }
+    key : np.dtype(key) for key in [
+        bool,
+        "bool",
+        "int8",
+        int ,
+        "int16",
+        "int32",
+        "int64",
+        "uint8",
+        "uint16",
+        "uint32",
+        "uint64",
+        float,
+        "float32",
+        "float64",
+        complex,        
+        "complex64",
+        "complex128",
+    ]}
 
 _BLAS_DTYPES = (np.dtype('float32'), np.dtype('float64'),
                 np.dtype('complex64'), np.dtype('complex128'))
@@ -270,7 +271,7 @@ class NumpyTensorSpace(TensorSpace):
             return kwargs['array'].dtype.name
         if 'dtype' in kwargs:
             assert 'array' not in kwargs, 'array and dtype are multually exclusive parameters'
-            return str(kwargs['dtype']).split('.')[-1]
+            return str(kwargs['dtype'])
         raise ValueError("Either 'array' or 'dtype' argument must be provided.")
 
     ######### private methods #########    

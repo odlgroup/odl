@@ -94,7 +94,7 @@ class TensorSpace(LinearSpace):
   
         self.parse_weighting(**kwargs)
 
-        field = self.parse_field(dtype)
+        field = self.parse_field()
 
         LinearSpace.__init__(self, field)
 
@@ -150,19 +150,24 @@ class TensorSpace(LinearSpace):
         # <!> this is likely to break in Pytorch
         self.__shape = np.dtype(dtype).shape + shape
 
-    def parse_field(self, dtype):
-        if dtype in TYPE_PROMOTION_REAL_TO_COMPLEX:
+    def parse_field(self):
+        if self.dtype_identifier in TYPE_PROMOTION_REAL_TO_COMPLEX:
             # real includes non-floating-point like integers
             field = RealNumbers()
-            self.__real_dtype = dtype
+            self.__real_dtype = self.dtype
             self.__real_space = self
-            self.__complex_dtype = TYPE_PROMOTION_REAL_TO_COMPLEX[dtype]
+            self.__complex_dtype = self.available_dtypes[
+                TYPE_PROMOTION_REAL_TO_COMPLEX[self.dtype_identifier]
+            ]
+            
             self.__complex_space = None  # Set in first call of astype
-        elif dtype in TYPE_PROMOTION_COMPLEX_TO_REAL:
+        elif self.dtype_identifier in TYPE_PROMOTION_COMPLEX_TO_REAL:
             field = ComplexNumbers()
-            self.__real_dtype = TYPE_PROMOTION_COMPLEX_TO_REAL[dtype]
+            self.__real_dtype = self.available_dtypes[
+                TYPE_PROMOTION_COMPLEX_TO_REAL[self.dtype_identifier]
+            ]
             self.__real_space = None  # Set in first call of astype
-            self.__complex_dtype = dtype
+            self.__complex_dtype = self.dtype
             self.__complex_space = self
         else:
             field = None
@@ -483,12 +488,32 @@ class TensorSpace(LinearSpace):
         if dtype is None:
             # Need to filter this out since Numpy iterprets it as 'float'
             raise ValueError('`None` is not a valid data type')
-
-        try:
+        
+        ### We check if the datatype has been provided in a "sane" way, 
+        # 1) a Python scalar type
+        if isinstance(dtype, (int, float, complex)):
+            dtype_identifier = str(dtype)
+            dtype = self.available_dtypes[dtype]
+        # 2) as a string
+        elif dtype in self.available_dtypes.keys():
             dtype_identifier = dtype
             dtype = self.available_dtypes[dtype]
-        except KeyError:
-            raise KeyError(f"The dtype must be in {self.available_dtypes.keys()}, but {dtype} was provided")
+        ### If the check has failed, i.e the dtype is not a Key of the self.available_dtypes dict or a python scalar, we try to parse the dtype 
+        ### as a string using the self.get_dtype_identifier(dtype=dtype) call: This is for the situation where the dtype passed is
+        ### in the .values() of self.available_dtypes dict (something like 'numpy.float32')
+        elif self.get_dtype_identifier(dtype=dtype) in self.available_dtypes:
+            dtype_identifier = self.get_dtype_identifier(dtype=dtype)
+            dtype = self.available_dtypes[dtype_identifier]
+            # If that fails, we throw an error: the dtype is not a python scalar dtype, not a string describing the dtype or the 
+            # backend call to parse the dtype has failed.
+        else:
+            raise ValueError(f"The dtype must be in {self.available_dtypes.keys()} or must be a dtype of the backend, but {dtype} was provided")
+
+        # try:
+        #     dtype_identifier = dtype
+        #     dtype = self.available_dtypes[dtype]
+        # except KeyError:
+        #     raise KeyError(f"The dtype must be in {self.available_dtypes.keys()}, but {dtype} was provided")
         
         if dtype == self.dtype:
             return self
