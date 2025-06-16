@@ -22,6 +22,7 @@ from odl.space.npy_tensors import (
     NumpyTensor, NumpyTensorSpace, NumpyTensorSpaceArrayWeighting,
     NumpyTensorSpaceConstWeighting, NumpyTensorSpaceCustomDist,
     NumpyTensorSpaceCustomInner, NumpyTensorSpaceCustomNorm)
+from odl.util.utility import real_dtype
 from odl.util.testutils import (
     all_almost_equal, all_equal, noise_array, noise_element, noise_elements,
     simple_fixture)
@@ -657,15 +658,13 @@ def test_norm(tspace):
 
     correct_norm = np.linalg.norm(xarr.ravel())
 
-    real_dtype = tspace.dtype.type(0).real.dtype
-
-    if real_dtype == np.float16:
+    if tspace.real_dtype == np.float16:
         tolerance = 1e-3
-    elif real_dtype == np.float32:
+    elif tspace.real_dtype == np.float32:
         tolerance = 2e-7
-    elif real_dtype == np.float64:
+    elif tspace.real_dtype == np.float64:
         tolerance = 1e-15
-    elif real_dtype == np.float128:
+    elif tspace.real_dtype == np.float128:
         tolerance = 1e-19
     else:
         raise TypeError(f"No known tolerance for dtype {tspace.dtype}")
@@ -700,15 +699,13 @@ def test_dist(tspace):
 
     correct_dist = np.linalg.norm((xarr - yarr).ravel())
 
-    real_dtype = tspace.dtype.type(0).real.dtype
-
-    if real_dtype == np.float16:
+    if tspace.real_dtype == np.float16:
         tolerance = 5e-3
-    elif real_dtype == np.float32:
+    elif tspace.real_dtype == np.float32:
         tolerance = 2e-7
-    elif real_dtype == np.float64:
+    elif tspace.real_dtype == np.float64:
         tolerance = 1e-15
-    elif real_dtype == np.float128:
+    elif tspace.real_dtype == np.float128:
         tolerance = 1e-19
     else:
         raise TypeError(f"No known tolerance for dtype {tspace.dtype}")
@@ -1286,15 +1283,13 @@ def test_const_weighting_norm(tspace, exponent):
 
     w_const = NumpyTensorSpaceConstWeighting(constant, exponent=exponent)
 
-    real_dtype = tspace.dtype.type(0).real.dtype
-
-    if real_dtype == np.float16:
+    if tspace.real_dtype == np.float16:
         tolerance = 5e-2
-    elif real_dtype == np.float32:
+    elif tspace.real_dtype == np.float32:
         tolerance = 1e-6
-    elif real_dtype == np.float64:
+    elif tspace.real_dtype == np.float64:
         tolerance = 1e-15
-    elif real_dtype == np.float128:
+    elif tspace.real_dtype == np.float128:
         tolerance = 1e-19
     else:
         raise TypeError(f"No known tolerance for dtype {tspace.dtype}")
@@ -1315,15 +1310,13 @@ def test_const_weighting_dist(tspace, exponent):
 
     w_const = NumpyTensorSpaceConstWeighting(constant, exponent=exponent)
 
-    real_dtype = tspace.dtype.type(0).real.dtype
-
-    if real_dtype == np.float16:
+    if tspace.real_dtype == np.float16:
         tolerance = 5e-2
-    elif real_dtype == np.float32:
+    elif tspace.real_dtype == np.float32:
         tolerance = 5e-7
-    elif real_dtype == np.float64:
+    elif tspace.real_dtype == np.float64:
         tolerance = 1e-15
-    elif real_dtype == np.float128:
+    elif tspace.real_dtype == np.float128:
         tolerance = 1e-19
     else:
         raise TypeError(f"No known tolerance for dtype {tspace.dtype}")
