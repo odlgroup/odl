@@ -30,7 +30,7 @@ from odl.util.utility import(
     FLOAT_DTYPES, COMPLEX_DTYPES,
     TYPE_PROMOTION_COMPLEX_TO_REAL, 
     TYPE_PROMOTION_REAL_TO_COMPLEX)
-from .weightings.base_weighting import Weighting
+from .weighting import Weighting
 
 __all__ = ('TensorSpace',)
 
@@ -189,12 +189,12 @@ class TensorSpace(LinearSpace):
                         f"`weighting.device` and space.device must be consistent, but got \
                         {weighting.device} and {self.device}" 
                     )
-                if weighting.shape is not None and weighting.shape != self.shape:
+                self.__weighting = weighting
+                if weighting.shape and weighting.shape != self.shape:
                     raise ValueError(
                         f"`weighting.shape` and space.shape must be consistent, but got \
                         {weighting.shape} and {self.shape}" 
                     )
-                self.__weighting = weighting
             elif hasattr(weighting, '__array__') or isinstance(weighting, (int, float)):
                 self.__weighting = odl.space_weighting(impl=self.impl, device=self.device, weight=weighting, **kwargs)
             else:
@@ -884,7 +884,7 @@ class TensorSpace(LinearSpace):
         >>> space_1_w.dist(x, y)
         7.0
         """
-        return self.weighting.dist(x1, x2)
+        return self.weighting.dist(x1.data, x2.data)
     
     def _divide(self, x1, x2, out):
         """Compute the entry-wise quotient ``x1 / x2``.
@@ -947,7 +947,7 @@ class TensorSpace(LinearSpace):
         >>> space_w.inner(x, y)
         5.0
         """
-        return self.weighting.inner(x1, x2)
+        return self.weighting.inner(x1.data, x2.data)
     
     def _lincomb(self, a, x1, b, x2, out):
         """Implement the linear combination of ``x1`` and ``x2``.
@@ -1046,7 +1046,7 @@ class TensorSpace(LinearSpace):
         >>> space_1_w.norm(x)
         10.0
         """
-        return self.weighting.norm(x)
+        return self.weighting.norm(x.data)
     
     def _binary_num_operation(self, x1, x2, combinator:str, out=None):
         """

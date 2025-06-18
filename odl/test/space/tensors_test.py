@@ -1181,11 +1181,11 @@ def test_array_weighting_inner(odl_tspace_impl):
         weighting = odl.space_weighting(impl = odl_tspace_impl, weight = weight_arr)
 
         true_inner = np.vdot(yarr, xarr * weight_arr)
-        assert weighting.inner(x, y) == pytest.approx(true_inner)
+        assert weighting.inner(x.data, y.data) == pytest.approx(true_inner)
 
         # Exponent != 2 -> no inner product, should raise
         with pytest.raises(NotImplementedError):
-            odl.space_weighting(impl = odl_tspace_impl, weight =weight_arr, exponent=1.0).inner(x, y)
+            odl.space_weighting(impl = odl_tspace_impl, weight =weight_arr, exponent=1.0).inner(x.data, y.data)
 
 
 def test_array_weighting_norm(odl_tspace_impl, exponent):
@@ -1208,7 +1208,7 @@ def test_array_weighting_norm(odl_tspace_impl, exponent):
                 (weight_arr ** (1 / exponent) * xarr).ravel(),
                 ord=exponent)
 
-        assert weighting.norm(x) == pytest.approx(true_norm, rel=rtol)
+        assert weighting.norm(x.data) == pytest.approx(true_norm, rel=rtol)
 
 
 def test_array_weighting_dist(odl_tspace_impl, exponent):
@@ -1231,7 +1231,7 @@ def test_array_weighting_dist(odl_tspace_impl, exponent):
                 (weight_arr ** (1 / exponent) * (xarr - yarr)).ravel(),
                 ord=exponent)
 
-        assert weighting.dist(x, y) == pytest.approx(true_dist, rel=rtol)
+        assert weighting.dist(x.data, y.data) == pytest.approx(true_dist, rel=rtol)
 
 
 def test_const_weighting_init(odl_tspace_impl, exponent):
@@ -1294,12 +1294,12 @@ def test_const_weighting_inner(odl_tspace_impl):
         true_result_const = constant * np.vdot(yarr, xarr)
 
         w_const = odl.space_weighting(impl=odl_tspace_impl, weight=constant)
-        assert w_const.inner(x, y) == pytest.approx(true_result_const)
+        assert w_const.inner(x.data, y.data) == pytest.approx(true_result_const)
 
         # Exponent != 2 -> no inner
         w_const = odl.space_weighting(impl=odl_tspace_impl, weight=constant, exponent=1)
         with pytest.raises(NotImplementedError):
-            w_const.inner(x, y)
+            w_const.inner(x.data, y.data)
 
 
 def test_const_weighting_norm(odl_tspace_impl, exponent):
@@ -1374,7 +1374,7 @@ def test_custom_inner(odl_tspace_impl):
         [xarr, yarr], [x, y] = noise_elements(tspace, 2)
 
         def inner(x, y):
-            return ns.linalg.vecdot(y, x)
+            return ns.linalg.vecdot(y.ravel(), x.ravel())
 
         def dot(x,y):
             return ns.dot(x,y)
@@ -1387,16 +1387,16 @@ def test_custom_inner(odl_tspace_impl):
         assert w == w_same
         assert w != w_other
 
-        true_inner = inner(x, y)
-        assert w.inner(x, y) == pytest.approx(true_inner)
+        true_inner = inner(xarr, yarr)
+        assert w.inner(x.data, y.data) == pytest.approx(true_inner)
 
         true_norm = np.linalg.norm(xarr.ravel())
-        assert w.norm(x) == pytest.approx(true_norm)
+        assert w.norm(x.data) == pytest.approx(true_norm)
 
         true_dist = np.linalg.norm((xarr - yarr).ravel())
-        assert w.dist(x, y) == pytest.approx(true_dist, rel=rtol)
+        assert w.dist(x.data, y.data) == pytest.approx(true_dist, rel=rtol)
 
-        with pytest.raises(TypeError):
+        with pytest.raises(ValueError):
             odl.space_weighting(impl=odl_tspace_impl, inner=inner, weight = 1)
 
 
@@ -1430,7 +1430,7 @@ def test_custom_norm(odl_tspace_impl):
         true_dist = np.linalg.norm((xarr - yarr).ravel())
         assert w.dist(x, y) == pytest.approx(true_dist)
 
-        with pytest.raises(TypeError):
+        with pytest.raises(ValueError):
             odl.space_weighting(impl=odl_tspace_impl, norm=norm, weight = 1)
 
 
@@ -1463,7 +1463,7 @@ def test_custom_dist(odl_tspace_impl):
         true_dist = ns.linalg.norm((xarr - yarr).ravel())
         assert w.dist(x, y) == pytest.approx(true_dist)
 
-        with pytest.raises(TypeError):
+        with pytest.raises(ValueError):
             odl.space_weighting(impl=odl_tspace_impl, dist=dist, weight = 1)
 
 # --- Ufuncs & Reductions --- #

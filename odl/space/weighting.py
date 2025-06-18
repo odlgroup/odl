@@ -12,8 +12,7 @@ from __future__ import print_function, division, absolute_import
 from builtins import object
 import numpy as np
 
-from odl.space.base_tensors import TensorSpace
-from odl.util import array_str, signature_string, indent
+from odl.util import array_str, signature_string, indent, is_real_dtype
 
 
 __all__ = ('MatrixWeighting', 'ArrayWeighting', 'ConstWeighting',
@@ -34,19 +33,22 @@ class Weighting(object):
     functions are being used.
     """
 
-    def __init__(self, impl, exponent=2.0):
+    def __init__(self, impl, device, exponent=2.0):
         """Initialize a new instance.
 
         Parameters
         ----------
         impl : string
             Specifier for the implementation backend
+        device :
+            device identifier, compatible with the backend associated with `impl`
         exponent : positive float, optional
             Exponent of the norm. For values other than 2.0, the inner
             product is not defined.
         """
         self.__impl = str(impl).lower()
         self.__exponent = float(exponent)
+        self.__device = device
         if self.exponent <= 0:
             raise ValueError('only positive exponents or inf supported, '
                              'got {}'.format(exponent))
@@ -55,6 +57,18 @@ class Weighting(object):
     def impl(self):
         """Implementation backend of this weighting."""
         return self.__impl
+
+    @property
+    def device(self):
+        """Backend-specific device identifier. Arrays this weighting should measure
+        must be stored on that device."""
+        return self.__device
+
+    @property
+    def shape(self):
+        """A tuple of numbers, denoting the shape that arrays need to have to be
+        used with this weighting. An empty shape means any shape of array is supported."""
+        raise NotImplementedError("Abstract method")
 
     @property
     def exponent(self):
@@ -103,7 +117,7 @@ class Weighting(object):
 
         Parameters
         ----------
-        x1, x2 : `LinearSpaceElement`
+        x1, x2 : ArrayLike
             Elements whose inner product is calculated.
 
         Returns
@@ -121,7 +135,7 @@ class Weighting(object):
 
         Parameters
         ----------
-        x1 : `LinearSpaceElement`
+        x1 : ArrayLike
             Element whose norm is calculated.
 
         Returns
@@ -139,7 +153,7 @@ class Weighting(object):
 
         Parameters
         ----------
-        x1, x2 : `LinearSpaceElement`
+        x1, x2 : ArrayLike
             Elements whose mutual distance is calculated.
 
         Returns
@@ -162,7 +176,7 @@ class MatrixWeighting(Weighting):
     checked during initialization.
     """
 
-    def __init__(self, matrix, impl, exponent=2.0, **kwargs):
+    def __init__(self, matrix, impl, device, exponent=2.0, **kwargs):
         """Initialize a new instance.
 
         Parameters
@@ -171,6 +185,8 @@ class MatrixWeighting(Weighting):
             Square weighting matrix of the inner product
         impl : string
             Specifier for the implementation backend
+        device :
+            device identifier, compatible with the backend associated with `impl`
         exponent : positive float, optional
             Exponent of the norm. For values other than 2.0, the inner
             product is not defined.
@@ -216,7 +232,7 @@ class MatrixWeighting(Weighting):
         precomp_mat_pow = kwargs.pop('precomp_mat_pow', False)
         self._cache_mat_pow = bool(kwargs.pop('cache_mat_pow', True))
         self._cache_mat_decomp = bool(kwargs.pop('cache_mat_decomp', False))
-        super(MatrixWeighting, self).__init__(impl=impl, exponent=exponent)
+        super(MatrixWeighting, self).__init__(impl=impl, device=device, exponent=exponent)
 
         # Check and set matrix
         if scipy.sparse.isspmatrix(matrix):
@@ -455,6 +471,39 @@ class MatrixWeighting(Weighting):
         return repr(self)
 
 
+def _pnorm_diagweight(x, p, w):
+    """Diagonally weighted p-norm implementation."""
+    xp = np.abs(x.data)
+    if p == float('inf'):
+        xp *= w
+        return np.max(xp)
+    else:
+        xp = np.power(xp, p, out=xp)
+        xp *= w
+        return np.sum(xp) ** (1 / p)
+
+def _norm_default(x):
+    """Default Euclidean norm implementation."""
+    return np.linalg.vector_norm(x.data)
+
+def _pnorm_default(x, p):
+    """Default p-norm implementation."""
+    return np.linalg.vector_norm(x.data, ord=p)
+
+def _inner_default(x1, x2):
+    """Default Euclidean inner product implementation."""
+    if is_real_dtype(x2.dtype):
+        return np.vecdot(x1.ravel(), x2.ravel())
+    else:
+        # This could also be done with `np.vdot`, which has complex conjugation
+        # built in. That however requires ravelling, and does not as easily
+        # generalize to the Python Array API.
+        return np.vecdot(x1.ravel(), x2.ravel().conj())
+
+
+# TODO: implement intermediate weighting schemes with arrays that are
+# broadcast, i.e. between scalar and full-blown in dimensionality?
+
 class ArrayWeighting(Weighting):
 
     """Weighting of a space by an array.
@@ -467,7 +516,7 @@ class ArrayWeighting(Weighting):
     during initialization.
     """
 
-    def __init__(self, array, impl, exponent=2.0):
+    def __init__(self, array, impl, device, exponent=2.0):
         """Initialize a new instance.
 
         Parameters
@@ -475,20 +524,25 @@ class ArrayWeighting(Weighting):
         array : `array-like`
             Weighting array of inner product, norm and distance.
             Native `Tensor` instances are stored as-is without copying.
+            Do not pass an ODL-space-element here. If you want to use such
+            an element, use its contained `data` instead.
         impl : string
             Specifier for the implementation backend.
+        device :
+            device identifier, compatible with the backend associated with `impl`
         exponent : positive float, optional
             Exponent of the norm. For values other than 2.0, the inner
             product is not defined.
         """
-        super(ArrayWeighting, self).__init__(impl=impl, exponent=exponent)
+        super(ArrayWeighting, self).__init__(impl=impl, device=device, exponent=exponent)
 
         # We apply array duck-typing to allow all kinds of Numpy-array-like
         # data structures without change
         array_attrs = ('shape', 'dtype', 'itemsize')
-        if (all(hasattr(array, attr) for attr in array_attrs) and
-                not isinstance(array, TensorSpace)):
+        if (all(hasattr(array, attr) for attr in array_attrs)):
             self.__array = array
+        # TODO add a check that the array is compatible with the `impl`, and if not either
+        # convert it or raise an error. This should be done using Python Array API features.
         else:
             raise TypeError('`array` {!r} does not look like a valid array'
                             ''.format(array))
@@ -497,6 +551,17 @@ class ArrayWeighting(Weighting):
     def array(self):
         """Weighting array of this instance."""
         return self.__array
+
+    @property
+    def weight(self):
+        """Weighting array of this instance."""
+        return self.array
+
+    @property
+    def shape(self):
+        """Arrays measured by this weighting must have the same shape as the
+        weighting array itself."""
+        return self.array.shape
 
     def is_valid(self):
         """Return True if the array is a valid weight, i.e. positive."""
@@ -519,7 +584,7 @@ class ArrayWeighting(Weighting):
             return True
 
         return (super(ArrayWeighting, self).__eq__(other) and
-                self.array is getattr(other, 'array', None))
+                np.array_equal(self.array, getattr(other, 'array', None)))
 
     def __hash__(self):
         """Return ``hash(self)``."""
@@ -571,12 +636,57 @@ class ArrayWeighting(Weighting):
         """Return ``str(self)``."""
         return repr(self)
 
+    def norm(self, x):
+        """Return the weighted norm of ``x``.
+
+        Parameters
+        ----------
+        x : ArrayLike
+            Tensor whose norm is calculated.
+
+        Returns
+        -------
+        norm : float
+            The norm of the provided tensor.
+        """
+        if self.exponent == 2.0:
+            norm_squared = self.inner(x, x).real  # TODO: optimize?!
+            if norm_squared < 0:
+                norm_squared = 0.0  # Compensate for numerical error
+            return float(np.sqrt(norm_squared))
+        else:
+            return float(_pnorm_diagweight(x, self.exponent, self.array))
+
+    def inner(self, x1, x2):
+        """Return the weighted inner product of ``x1`` and ``x2``.
+
+        Parameters
+        ----------
+        x1, x2 : ArrayLike
+            Tensors whose inner product is calculated.
+
+        Returns
+        -------
+        inner : float or complex
+            The inner product of the two provided vectors.
+        """
+        if self.exponent != 2.0:
+            raise NotImplementedError('no inner product defined for '
+                                      'exponent != 2 (got {})'
+                                      ''.format(self.exponent))
+        else:
+            inner = _inner_default(x1 * self.array, x2)
+            if is_real_dtype(x1.dtype):
+                return float(inner)
+            else:
+                return complex(inner)
+
 
 class ConstWeighting(Weighting):
 
     """Weighting of a space by a constant."""
 
-    def __init__(self, const, impl, exponent=2.0):
+    def __init__(self, const, impl, device, exponent=2.0):
         """Initialize a new instance.
 
         Parameters
@@ -585,11 +695,13 @@ class ConstWeighting(Weighting):
             Weighting constant of the inner product.
         impl : string
             Specifier for the implementation backend.
+        device :
+            device identifier, compatible with the backend associated with `impl`
         exponent : positive float, optional
             Exponent of the norm. For values other than 2.0, the inner
             product is not defined.
         """
-        super(ConstWeighting, self).__init__(impl=impl, exponent=exponent)
+        super(ConstWeighting, self).__init__(impl=impl, device=device, exponent=exponent)
         self.__const = float(const)
 
         if self.const <= 0:
@@ -602,6 +714,16 @@ class ConstWeighting(Weighting):
     def const(self):
         """Weighting constant of this inner product."""
         return self.__const
+
+    @property
+    def weight(self):
+        """Weighting constant of this instance."""
+        return self.const
+
+    @property
+    def shape(self):
+        """A constant weight can be applied to any shape."""
+        return ()
 
     def __eq__(self, other):
         """Return ``self == other``.
@@ -658,12 +780,74 @@ class ConstWeighting(Weighting):
         """Return ``str(self)``."""
         return repr(self)
 
+    def inner(self, x1, x2):
+        """Return the weighted inner product of ``x1`` and ``x2``.
+
+        Parameters
+        ----------
+        x1, x2 : ArrayLike
+            Tensors whose inner product is calculated.
+
+        Returns
+        -------
+        inner : float or complex
+            The inner product of the two provided tensors.
+        """
+        if self.exponent != 2.0:
+            raise NotImplementedError('no inner product defined for '
+                                      'exponent != 2 (got {})'
+                                      ''.format(self.exponent))
+        else:
+            return self.const * _inner_default(x1, x2)
+
+    def norm(self, x):
+        """Return the weighted norm of ``x``.
+
+        Parameters
+        ----------
+        x1 : ArrayLike
+            Tensor whose norm is calculated.
+
+        Returns
+        -------
+        norm : float
+            The norm of the tensor.
+        """
+        if self.exponent == 2.0:
+            return float(np.sqrt(self.const) * _norm_default(x))
+        elif self.exponent == float('inf'):
+            return float(self.const * _pnorm_default(x, self.exponent))
+        else:
+            return float((self.const ** (1 / self.exponent) *
+                          _pnorm_default(x, self.exponent)))
+
+    def dist(self, x1, x2):
+        """Return the weighted distance between ``x1`` and ``x2``.
+
+        Parameters
+        ----------
+        x1, x2 : `NumpyTensor`
+            Tensors whose mutual distance is calculated.
+
+        Returns
+        -------
+        dist : float
+            The distance between the tensors.
+        """
+        if self.exponent == 2.0:
+            return float(np.sqrt(self.const) * _norm_default(x1 - x2))
+        elif self.exponent == float('inf'):
+            return float(self.const * _pnorm_default(x1 - x2, self.exponent))
+        else:
+            return float((self.const ** (1 / self.exponent) *
+                          _pnorm_default(x1 - x2, self.exponent)))
+
 
 class CustomInner(Weighting):
 
     """Class for handling a user-specified inner product."""
 
-    def __init__(self, inner, impl):
+    def __init__(self, inner, impl, device, shape=()):
         """Initialize a new instance.
 
         Parameters
@@ -681,13 +865,26 @@ class CustomInner(Weighting):
 
         impl : string
             Specifier for the implementation backend.
+        device :
+            device identifier, compatible with the backend associated with `impl`
+        shape :
+            what shape array need to have to be processed by this weighting.
+            The `inner` callable can assume that the shape has already been checked.
+            If an empty shape is specified (the default), `inner` should be able to
+            handle arrays of arbitrary shape.
         """
-        super(CustomInner, self).__init__(impl=impl, exponent=2.0)
+        super(CustomInner, self).__init__(impl=impl, device=device, exponent=2.0)
+        
+        self.__shape = shape
 
         if not callable(inner):
             raise TypeError('`inner` {!r} is not callable'
                             ''.format(inner))
         self.__inner = inner
+
+    @property
+    def shape(self):
+        return self.__shape
 
     @property
     def inner(self):
@@ -731,7 +928,7 @@ class CustomNorm(Weighting):
     Note that this removes ``inner``.
     """
 
-    def __init__(self, norm, impl):
+    def __init__(self, norm, impl, device, shape=()):
         """Initialize a new instance.
 
         Parameters
@@ -748,13 +945,26 @@ class CustomNorm(Weighting):
             - ``||x + y|| <= ||x|| + ||y||``
         impl : string
             Specifier for the implementation backend
+        device :
+            device identifier, compatible with the backend associated with `impl`
+        shape :
+            what shape array need to have to be processed by this weighting.
+            The `norm` callable can assume that the shape has already been checked.
+            If an empty shape is specified (the default), `norm` should be able to
+            handle arrays of arbitrary shape.
         """
-        super(CustomNorm, self).__init__(impl=impl, exponent=1.0)
+        super(CustomNorm, self).__init__(impl=impl, device=device, exponent=1.0)
+
+        self.__shape = shape
 
         if not callable(norm):
             raise TypeError('`norm` {!r} is not callable'
                             ''.format(norm))
         self.__norm = norm
+
+    @property
+    def shape(self):
+        return self.__shape
 
     def inner(self, x1, x2):
         """Inner product is not defined for custom distance."""
@@ -803,7 +1013,7 @@ class CustomDist(Weighting):
     Note that this removes ``inner`` and ``norm``.
     """
 
-    def __init__(self, dist, impl):
+    def __init__(self, dist, impl, device, shape=()):
         """Initialize a new instance.
 
         Parameters
@@ -820,13 +1030,26 @@ class CustomDist(Weighting):
             - ``dist(x, y) <= dist(x, z) + dist(z, y)``
         impl : string
             Specifier for the implementation backend
+        device :
+            device identifier, compatible with the backend associated with `impl`
+        shape :
+            what shape array need to have to be processed by this weighting.
+            The `dist` callable can assume that the shape has already been checked.
+            If an empty shape is specified (the default), `dist` should be able to
+            handle arrays of arbitrary shape.
         """
-        super(CustomDist, self).__init__(impl=impl, exponent=1.0)
+        super(CustomDist, self).__init__(impl=impl, device=device, exponent=1.0)
+
+        self.__shape = shape
 
         if not callable(dist):
             raise TypeError('`dist` {!r} is not callable'
                             ''.format(dist))
         self.__dist = dist
+
+    @property
+    def shape(self):
+        return self.__shape
 
     @property
     def dist(self):
