@@ -149,6 +149,8 @@ scalar_dtypes = INTEGER_DTYPES + FLOAT_DTYPES + COMPLEX_DTYPES
 odl_scalar_dtype = simple_fixture(name='dtype',
                                   params=scalar_dtypes)
 
+odl_impl_device_pairs = simple_fixture(name='impl_device', params=odl.IMPL_DEVICE_PAIRS)
+
 odl_elem_order = simple_fixture(name='order', params=['C'])
 
 odl_reduction = simple_fixture('reduction', ['sum', 'prod', 'min', 'max'])
