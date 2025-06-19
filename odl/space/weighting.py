@@ -498,7 +498,7 @@ def _inner_default(x1, x2):
         # This could also be done with `np.vdot`, which has complex conjugation
         # built in. That however requires ravelling, and does not as easily
         # generalize to the Python Array API.
-        return np.vecdot(x1.ravel(), x2.ravel().conj())
+        return np.vecdot(x2.ravel(), x1.ravel())
 
 
 # TODO: implement intermediate weighting schemes with arrays that are
