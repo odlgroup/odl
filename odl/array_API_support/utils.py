@@ -1,9 +1,17 @@
-__all__ = ('check_device',)
+__all__ = (
+    'AVAILABLE_DEVICES',
+    'IMPL_DEVICE_PAIRS',
+    'check_device',)
 
 AVAILABLE_DEVICES = {
     'numpy' : ['cpu'],
     # 'pytorch' : ['cpu'] +  [f'cuda:{i}' for i in range(torch.cuda.device_count())]
 }
+
+IMPL_DEVICE_PAIRS = []
+for impl in AVAILABLE_DEVICES.keys():
+    for device in AVAILABLE_DEVICES[impl]:
+        IMPL_DEVICE_PAIRS.append((impl, device))
 
 def check_device(impl:str, device:str):
     """
