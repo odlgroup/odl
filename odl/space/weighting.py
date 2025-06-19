@@ -495,9 +495,9 @@ def _inner_default(x1, x2):
     if is_real_dtype(x2.dtype):
         return np.vecdot(x1.ravel(), x2.ravel())
     else:
-        # This could also be done with `np.vdot`, which has complex conjugation
-        # built in. That however requires ravelling, and does not as easily
-        # generalize to the Python Array API.
+        # `vecdot` has the complex conjugate on the left argument,
+        # whereas ODL convention is that the inner product should
+        # be linear in the left argument (conjugate in the right).
         return np.vecdot(x2.ravel(), x1.ravel())
 
 
