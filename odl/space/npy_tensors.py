@@ -244,6 +244,10 @@ class NumpyTensorSpace(TensorSpace):
         return np.array
     
     @property
+    def array_backend(self) -> ArrayBackend:
+        return numpy_array_backend
+    
+    @property
     def array_namespace(self):
         """Name of the array_namespace"""
         return xp
@@ -257,7 +261,7 @@ class NumpyTensorSpace(TensorSpace):
     
     @property
     def available_dtypes(self):
-        return numpy_array_backend.available_dtypes
+        return self.array_backend.available_dtypes
     
     @property
     def element_type(self):
