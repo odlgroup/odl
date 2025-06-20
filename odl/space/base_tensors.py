@@ -35,6 +35,31 @@ from .weighting import Weighting
 
 __all__ = ('TensorSpace',)
 
+def default_dtype(array_backend: ArrayBackend, field=None):
+    """Return the default data type for a given field.
+
+    Parameters
+    ----------
+    array_backend : `ArrayBackend`
+        The implementation, defining what dtypes are available.
+    field : `Field`, optional
+        Set of numbers to be represented by a data type.
+        Currently supported : `RealNumbers`, `ComplexNumbers`
+        The default ``None`` means `RealNumbers`
+
+    Returns
+    -------
+    dtype :
+        Backend data type specifier.
+    """
+    if field is None or field == RealNumbers():
+        return array_backend.available_dtypes['float32']
+    elif field == ComplexNumbers():
+       return array_backend.available_dtypes['complex64']
+    else:
+        raise ValueError('no default data type defined for field {}'
+                         ''.format(field))
+
 class TensorSpace(LinearSpace):
 
     """Base class for sets of tensors of arbitrary data type.
@@ -518,31 +543,6 @@ class TensorSpace(LinearSpace):
         else:
             return self._astype(dtype_identifier)
         
-    def default_dtype(self, field=None):
-        """Return the default data type for a given field.
-
-        This method should be overridden by subclasses.
-
-        Parameters
-        ----------
-        field : `Field`, optional
-            Set of numbers to be represented by a data type.
-            Currently supported : `RealNumbers`, `ComplexNumbers`
-            The default ``None`` means `RealNumbers`
-
-        Returns
-        -------
-        dtype :
-            Backend data type specifier.
-        """
-        if field is None or field == RealNumbers():
-            return self.array_backend.available_dtypes['float32']
-        elif field == ComplexNumbers():
-           return self.array_backend.available_dtypes['complex64']
-        else:
-            raise ValueError('no default data type defined for field {}'
-                             ''.format(field))
-        
     def element(self, inp=None, device=None, copy=True):
         def wrapped_array(arr):
             if arr.shape != self.shape:
@@ -791,7 +791,7 @@ class TensorSpace(LinearSpace):
 
         if (ctor_name == 'tensor_space' or
                 not self.dtype_identifier in SCALAR_DTYPES or
-                self.dtype != self.default_dtype(self.field)):
+                self.dtype != default_dtype(self.array_backend, self.field)):
             optargs = [('dtype', self.dtype_identifier, '')]
             if self.dtype_identifier in (AVAILABLE_DTYPES):
                 optmod = '!s'
