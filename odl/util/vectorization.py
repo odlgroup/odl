@@ -11,6 +11,8 @@
 from __future__ import print_function, division, absolute_import
 from builtins import object
 from functools import wraps
+from dataclasses import dataclass
+from types import ModuleType
 import numpy as np
 
 
@@ -290,6 +292,18 @@ class _NumpyVectorizeWrapper(object):
             return self.vfunc(*x, **kwargs)
         else:
             out[:] = self.vfunc(*x, **kwargs)
+
+
+
+registered_array_backends = {}
+
+@dataclass
+class ArrayBackend:
+    impl_identifier: str
+    array_namespace: ModuleType
+    available_dtypes: dict[str, object]
+    def __post_init__(self):
+        registered_array_backends[self.impl_identifier] = self
 
 
 if __name__ == '__main__':

@@ -15,13 +15,16 @@ import numpy as np
 
 from odl.space.base_tensors import Tensor, TensorSpace
 from odl.util import is_numeric_dtype
+from odl.util.vectorization import ArrayBackend
 
 import array_api_compat.numpy as xp
 
 __all__ = ('NumpyTensorSpace',)
 
-NUMPY_DTYPES = {
-    key : np.dtype(key) for key in [
+numpy_array_backend = ArrayBackend(
+    impl_identifier = 'numpy',
+    available_dtypes = {
+      key : np.dtype(key) for key in [
         bool,
         "bool",
         "int8",
@@ -39,7 +42,9 @@ NUMPY_DTYPES = {
         complex,        
         "complex64",
         "complex128",
-    ]}
+      ]},
+    array_namespace = xp
+ )
 
 _BLAS_DTYPES = (np.dtype('float32'), np.dtype('float64'),
                 np.dtype('complex64'), np.dtype('complex128'))
@@ -252,7 +257,7 @@ class NumpyTensorSpace(TensorSpace):
     
     @property
     def available_dtypes(self):
-        return NUMPY_DTYPES
+        return numpy_array_backend.available_dtypes
     
     @property
     def element_type(self):
