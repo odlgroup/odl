@@ -13,6 +13,7 @@ from builtins import object
 from functools import wraps
 from dataclasses import dataclass
 from types import ModuleType
+from typing import Callable
 import numpy as np
 
 
@@ -304,9 +305,18 @@ class ArrayBackend:
     array_namespace: ModuleType
     available_dtypes: dict[str, object]
     array_type: type
-    array_constructor: callable
+    array_constructor: Callable
+    identifier_of_dtype: Callable[object, str]
     def __post_init__(self):
         _registered_array_backends[self.impl] = self
+    def get_dtype_identifier(self, **kwargs):
+        if 'array' in kwargs:
+            assert 'dtype' not in kwargs, 'array and dtype are multually exclusive parameters'
+            return self.identifier_of_dtype(kwargs['array'].dtype)
+        if 'dtype' in kwargs:
+            assert 'array' not in kwargs, 'array and dtype are multually exclusive parameters'
+            return self.identifier_of_dtype(kwargs['dtype'])
+        raise ValueError("Either 'array' or 'dtype' argument must be provided.")
 
 def lookup_array_backend(impl: str) -> ArrayBackend:
     return _registered_array_backends[impl]

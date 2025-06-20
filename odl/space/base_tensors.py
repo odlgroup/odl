@@ -152,10 +152,10 @@ class TensorSpace(LinearSpace):
             self.__dtype_identifier = dtype
             self.__dtype = available_dtypes[dtype]
         ### If the check has failed, i.e the dtype is not a Key of the available_dtypes dict or a python scalar, we try to parse the dtype 
-        ### as a string using the self.get_dtype_identifier(dtype=dtype) call: This is for the situation where the dtype passed is
+        ### as a string using the get_dtype_identifier(dtype=dtype) call: This is for the situation where the dtype passed is
         ### in the .values() of available_dtypes dict (something like 'numpy.float32')
         elif dtype in available_dtypes.values():
-            self.__dtype_identifier = self.get_dtype_identifier(dtype=dtype)
+            self.__dtype_identifier = self.array_backend.get_dtype_identifier(dtype=dtype)
             self.__dtype = dtype
             # If that fails, we throw an error: the dtype is not a python scalar dtype, not a string describing the dtype or the 
             # backend call to parse the dtype has failed.
@@ -509,10 +509,10 @@ class TensorSpace(LinearSpace):
             dtype_identifier = dtype
             dtype = available_dtypes[dtype]
         ### If the check has failed, i.e the dtype is not a Key of the available_dtypes dict or a python scalar, we try to parse the dtype 
-        ### as a string using the self.get_dtype_identifier(dtype=dtype) call: This is for the situation where the dtype passed is
+        ### as a string using the get_dtype_identifier(dtype=dtype) call: This is for the situation where the dtype passed is
         ### in the .values() of available_dtypes dict (something like 'numpy.float32')
-        elif self.get_dtype_identifier(dtype=dtype) in available_dtypes:
-            dtype_identifier = self.get_dtype_identifier(dtype=dtype)
+        elif self.array_backend.get_dtype_identifier(dtype=dtype) in available_dtypes:
+            dtype_identifier = self.array_backend.get_dtype_identifier(dtype=dtype)
             dtype = available_dtypes[dtype_identifier]
             # If that fails, we throw an error: the dtype is not a python scalar dtype, not a string describing the dtype or the 
             # backend call to parse the dtype has failed.
@@ -1089,7 +1089,7 @@ class TensorSpace(LinearSpace):
                 elif isinstance(x2, (int, float, complex)):
                     result_data = fn(x1.data, x2, out.data)
                     
-            return self.astype(self.get_dtype_identifier(array=result_data)).element(result_data) 
+            return self.astype(self.array_backend.get_dtype_identifier(array=result_data)).element(result_data) 
 
         assert isinstance(x1, Tensor), 'Left operand is not an ODL Tensor'
         assert isinstance(x2, Tensor), 'Right operand is not an ODL Tensor'
@@ -1099,8 +1099,6 @@ class TensorSpace(LinearSpace):
         else:
             return getattr(odl, combinator)(x1, x2, out)
         
-    def get_dtype_identifier(self, **kwargs):
-        raise NotImplementedError  
 
 class Tensor(LinearSpaceElement):
 

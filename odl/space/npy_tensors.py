@@ -45,8 +45,8 @@ numpy_array_backend = ArrayBackend(
       ]},
     array_namespace = xp,
     array_constructor = np.array,
-    array_type = np.ndarray
-    
+    array_type = np.ndarray,
+    identifier_of_dtype = lambda dt: str(dt)
  )
 
 _BLAS_DTYPES = (np.dtype('float32'), np.dtype('float64'),
@@ -260,14 +260,6 @@ class NumpyTensorSpace(TensorSpace):
         return 'numpy'
 
     ######### public methods #########
-    def get_dtype_identifier(self, **kwargs):
-        if 'array' in kwargs:
-            assert 'dtype' not in kwargs, 'array and dtype are multually exclusive parameters'
-            return kwargs['array'].dtype.name
-        if 'dtype' in kwargs:
-            assert 'array' not in kwargs, 'array and dtype are multually exclusive parameters'
-            return str(kwargs['dtype'])
-        raise ValueError("Either 'array' or 'dtype' argument must be provided.")
 
     ######### private methods #########    
 
