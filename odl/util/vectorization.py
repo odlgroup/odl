@@ -18,7 +18,8 @@ import numpy as np
 
 __all__ = ('is_valid_input_array', 'is_valid_input_meshgrid',
            'out_shape_from_meshgrid', 'out_shape_from_array',
-           'OptionalArgDecorator', 'vectorize')
+           'OptionalArgDecorator', 'vectorize',
+           'ArrayBackend', 'lookup_array_backend')
 
 
 def is_valid_input_array(x, ndim=None):
@@ -295,15 +296,18 @@ class _NumpyVectorizeWrapper(object):
 
 
 
-registered_array_backends = {}
+_registered_array_backends = {}
 
 @dataclass
 class ArrayBackend:
-    impl_identifier: str
+    impl: str
     array_namespace: ModuleType
     available_dtypes: dict[str, object]
     def __post_init__(self):
-        registered_array_backends[self.impl_identifier] = self
+        _registered_array_backends[self.impl] = self
+
+def lookup_array_backend(impl: str) -> ArrayBackend:
+    return _registered_array_backends[impl]
 
 
 if __name__ == '__main__':

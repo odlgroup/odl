@@ -22,7 +22,7 @@ import array_api_compat.numpy as xp
 __all__ = ('NumpyTensorSpace',)
 
 numpy_array_backend = ArrayBackend(
-    impl_identifier = 'numpy',
+    impl = 'numpy',
     available_dtypes = {
       key : np.dtype(key) for key in [
         bool,
