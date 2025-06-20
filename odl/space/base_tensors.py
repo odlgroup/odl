@@ -530,11 +530,11 @@ class TensorSpace(LinearSpace):
 
         if dtype_identifier in FLOAT_DTYPES + COMPLEX_DTYPES:
             # Caching for real and complex versions (exact dtype mappings)
-            if dtype == self.__real_dtype:
+            if dtype == self.real_dtype:
                 if self.__real_space is None:
                     self.__real_space = self._astype(dtype_identifier)
                 return self.__real_space
-            elif dtype == self.__complex_dtype:
+            elif dtype == self.complex_dtype:
                 if self.__complex_space is None:
                     self.__complex_space = self._astype(dtype_identifier)
                 return self.__complex_space
