@@ -85,26 +85,26 @@ class TensorSpace(LinearSpace):
             are added *to the left* of ``shape``.
         """
         # Handle shape and dtype, taking care also of dtypes with shape        
-        self.parse_dtype(dtype)
+        self._init_dtype(dtype)
 
-        self.parse_shape(shape, dtype)
+        self._init_shape(shape, dtype)
 
-        self.parse_device(device)
+        self._init_device(device)
 
         self.__use_in_place_ops = kwargs.pop('use_in_place_ops', True)
   
-        self.parse_weighting(**kwargs)
+        self._init_weighting(**kwargs)
 
-        field = self.parse_field()
+        field = self._init_field()
 
         LinearSpace.__init__(self, field)
 
     ################ Init Methods, Non static ################
-    def parse_device(self, device:str):
+    def _init_device(self, device:str):
         odl.check_device(self.impl, device)
         self.__device = device 
 
-    def parse_dtype(self, dtype:str | int | float | complex):
+    def _init_dtype(self, dtype:str | int | float | complex):
         """
         Process the dtype argument. This parses the (str or Number) dtype input argument to a backend.dtype and sets two attributes
 
@@ -137,7 +137,7 @@ class TensorSpace(LinearSpace):
         else:
             raise ValueError(f"The dtype must be in {available_dtypes.keys()} or must be a dtype of the backend, but {dtype} was provided")
 
-    def parse_shape(self, shape, dtype):
+    def _init_shape(self, shape, dtype):
         # Handle shape and dtype, taking care also of dtypes with shape
         try:
             shape, shape_in = tuple(safe_int_conv(s) for s in shape), shape
@@ -154,7 +154,7 @@ class TensorSpace(LinearSpace):
         # <!> this is likely to break in Pytorch
         self.__shape = np.dtype(dtype).shape + shape
 
-    def parse_field(self):
+    def _init_field(self):
         if self.dtype_identifier in TYPE_PROMOTION_REAL_TO_COMPLEX:
             # real includes non-floating-point like integers
             field = RealNumbers()
@@ -177,7 +177,7 @@ class TensorSpace(LinearSpace):
             field = None
         return field
     
-    def parse_weighting(self, **kwargs):
+    def _init_weighting(self, **kwargs):
         weighting = kwargs.pop("weighting", None)    
         if weighting is None:
             self.__weighting = odl.space_weighting(impl=self.impl, device=self.device, **kwargs)
