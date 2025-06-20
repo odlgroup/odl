@@ -43,7 +43,10 @@ numpy_array_backend = ArrayBackend(
         "complex64",
         "complex128",
       ]},
-    array_namespace = xp
+    array_namespace = xp,
+    array_constructor = np.array,
+    array_type = np.ndarray
+    
  )
 
 _BLAS_DTYPES = (np.dtype('float32'), np.dtype('float64'),
@@ -238,12 +241,6 @@ class NumpyTensorSpace(TensorSpace):
 
     ########## Attributes ##########
     @property
-    def array_constructor(self):
-        """Name of the array_constructor of this tensor set.
-        """
-        return np.array
-    
-    @property
     def array_backend(self) -> ArrayBackend:
         return numpy_array_backend
     
@@ -251,17 +248,6 @@ class NumpyTensorSpace(TensorSpace):
     def array_namespace(self):
         """Name of the array_namespace"""
         return xp
-    
-    @property
-    def array_type(self):
-        """Name of the array_type of this tensor set.
-        This relates to the python array api
-        """
-        return np.ndarray
-    
-    @property
-    def available_dtypes(self):
-        return self.array_backend.available_dtypes
     
     @property
     def element_type(self):

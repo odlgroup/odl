@@ -22,6 +22,7 @@ from odl.space.npy_tensors import (
 from odl.util.testutils import (
     all_almost_equal, all_equal, noise_array, noise_element, noise_elements,
     simple_fixture)
+from odl.util.vectorization import lookup_array_backend
 from odl.util.ufuncs import UFUNCS
 
 # --- Test helpers --- #
@@ -1052,6 +1053,7 @@ def test_conj(tspace):
 def test_array_weighting_init(odl_tspace_impl, exponent):
     """Test initialization of array weightings."""
     impl = odl_tspace_impl
+    array_backend = lookup_array_backend(impl)
     space = odl.rn(DEFAULT_SHAPE, impl=impl)
     weight_arr = _pos_array(space)
     weight_elem = space.element(weight_arr)
@@ -1059,8 +1061,8 @@ def test_array_weighting_init(odl_tspace_impl, exponent):
     weighting_arr  = odl.space_weighting(impl, weight=weight_arr, exponent=exponent)
     weighting_elem = odl.space_weighting(impl, weight=weight_elem, exponent=exponent)
 
-    assert isinstance(weighting_arr.weight, space.array_type)
-    assert isinstance(weighting_elem.weight, space.array_type)
+    assert isinstance(weighting_arr.weight, array_backend.array_type)
+    assert isinstance(weighting_elem.weight, array_backend.array_type)
 
 
 def test_array_weighting_array_is_valid(odl_tspace_impl):

@@ -114,25 +114,28 @@ class TensorSpace(LinearSpace):
         Note:
         The check below is here just in case a user initialise a space directly from this class, which is not recommended
         """
+
+        available_dtypes = self.array_backend.available_dtypes
+
         ### We check if the datatype has been provided in a "sane" way, 
         # 1) a Python scalar type
         if isinstance(dtype, (int, float, complex)):
             self.__dtype_identifier = str(dtype)
-            self.__dtype = self.available_dtypes[dtype] 
+            self.__dtype = available_dtypes[dtype] 
         # 2) as a string
-        if dtype in self.available_dtypes.keys():
+        if dtype in available_dtypes.keys():
             self.__dtype_identifier = dtype
-            self.__dtype = self.available_dtypes[dtype]
-        ### If the check has failed, i.e the dtype is not a Key of the self.available_dtypes dict or a python scalar, we try to parse the dtype 
+            self.__dtype = available_dtypes[dtype]
+        ### If the check has failed, i.e the dtype is not a Key of the available_dtypes dict or a python scalar, we try to parse the dtype 
         ### as a string using the self.get_dtype_identifier(dtype=dtype) call: This is for the situation where the dtype passed is
-        ### in the .values() of self.available_dtypes dict (something like 'numpy.float32')
-        elif dtype in self.available_dtypes.values():
+        ### in the .values() of available_dtypes dict (something like 'numpy.float32')
+        elif dtype in available_dtypes.values():
             self.__dtype_identifier = self.get_dtype_identifier(dtype=dtype)
             self.__dtype = dtype
             # If that fails, we throw an error: the dtype is not a python scalar dtype, not a string describing the dtype or the 
             # backend call to parse the dtype has failed.
         else:
-            raise ValueError(f"The dtype must be in {self.available_dtypes.keys()} or must be a dtype of the backend, but {dtype} was provided")
+            raise ValueError(f"The dtype must be in {available_dtypes.keys()} or must be a dtype of the backend, but {dtype} was provided")
 
     def parse_shape(self, shape, dtype):
         # Handle shape and dtype, taking care also of dtypes with shape
@@ -157,14 +160,14 @@ class TensorSpace(LinearSpace):
             field = RealNumbers()
             self.__real_dtype = self.dtype
             self.__real_space = self
-            self.__complex_dtype = self.available_dtypes[
+            self.__complex_dtype = self.array_backend.available_dtypes[
                 TYPE_PROMOTION_REAL_TO_COMPLEX[self.dtype_identifier]
             ]
             
             self.__complex_space = None  # Set in first call of astype
         elif self.dtype_identifier in TYPE_PROMOTION_COMPLEX_TO_REAL:
             field = ComplexNumbers()
-            self.__real_dtype = self.available_dtypes[
+            self.__real_dtype = self.array_backend.available_dtypes[
                 TYPE_PROMOTION_COMPLEX_TO_REAL[self.dtype_identifier]
             ]
             self.__real_space = None  # Set in first call of astype
@@ -210,30 +213,11 @@ class TensorSpace(LinearSpace):
         return lookup_array_backend(self.impl)
 
     @property
-    def array_constructor(self):
-        """Name of the function called to create an array of this tensor space.
-
-        This property should be overridden by subclasses.
-        """
-        raise NotImplementedError("abstract method")
-    
-    @property
     def array_namespace(self) -> ModuleType:
         """Name of the array_namespace of this tensor set. This relates to the
         python array api.
-
-        This property should be overridden by subclasses.
         """
-        raise NotImplementedError("abstract method")
-    
-    @property
-    def array_type(self):
-        """Name of the array_type of this tensor set. This relates to the
-        python array api.
-
-        This property should be overridden by subclasses.
-        """
-        raise NotImplementedError("abstract method")
+        return self.array_backend.array_namespace
     
     @property
     def byaxis(self):
@@ -276,12 +260,6 @@ class TensorSpace(LinearSpace):
                 return repr(space) + '.byaxis'
 
         return TensorSpacebyaxis()
-    
-    @property
-    def available_dtypes(self) -> Dict:
-        """Available types of the tensor space implementation
-        """
-        raise NotImplementedError("abstract method")
     
     @property
     def complex_dtype(self):
@@ -377,7 +355,7 @@ class TensorSpace(LinearSpace):
     @property
     def itemsize(self):
         """Size in bytes of one entry in an element of this space."""
-        return  int(self.array_constructor([], dtype=self.dtype).itemsize)
+        return  int(self.array_backend.array_constructor([], dtype=self.dtype).itemsize)
     
     @property
     def is_complex(self):
@@ -493,22 +471,24 @@ class TensorSpace(LinearSpace):
         if dtype is None:
             # Need to filter this out since Numpy iterprets it as 'float'
             raise ValueError('`None` is not a valid data type')
+
+        available_dtypes = self.array_backend.available_dtypes
         
         ### We check if the datatype has been provided in a "sane" way, 
         # 1) a Python scalar type
         if isinstance(dtype, (int, float, complex)):
             dtype_identifier = str(dtype)
-            dtype = self.available_dtypes[dtype]
+            dtype = available_dtypes[dtype]
         # 2) as a string
-        elif dtype in self.available_dtypes.keys():
+        elif dtype in available_dtypes.keys():
             dtype_identifier = dtype
-            dtype = self.available_dtypes[dtype]
-        ### If the check has failed, i.e the dtype is not a Key of the self.available_dtypes dict or a python scalar, we try to parse the dtype 
+            dtype = available_dtypes[dtype]
+        ### If the check has failed, i.e the dtype is not a Key of the available_dtypes dict or a python scalar, we try to parse the dtype 
         ### as a string using the self.get_dtype_identifier(dtype=dtype) call: This is for the situation where the dtype passed is
-        ### in the .values() of self.available_dtypes dict (something like 'numpy.float32')
-        elif self.get_dtype_identifier(dtype=dtype) in self.available_dtypes:
+        ### in the .values() of available_dtypes dict (something like 'numpy.float32')
+        elif self.get_dtype_identifier(dtype=dtype) in available_dtypes:
             dtype_identifier = self.get_dtype_identifier(dtype=dtype)
-            dtype = self.available_dtypes[dtype_identifier]
+            dtype = available_dtypes[dtype_identifier]
             # If that fails, we throw an error: the dtype is not a python scalar dtype, not a string describing the dtype or the 
             # backend call to parse the dtype has failed.
         else:
@@ -516,9 +496,9 @@ class TensorSpace(LinearSpace):
 
         # try:
         #     dtype_identifier = dtype
-        #     dtype = self.available_dtypes[dtype]
+        #     dtype = available_dtypes[dtype]
         # except KeyError:
-        #     raise KeyError(f"The dtype must be in {self.available_dtypes.keys()}, but {dtype} was provided")
+        #     raise KeyError(f"The dtype must be in {available_dtypes.keys()}, but {dtype} was provided")
         
         if dtype == self.dtype:
             return self
@@ -556,9 +536,9 @@ class TensorSpace(LinearSpace):
             Backend data type specifier.
         """
         if field is None or field == RealNumbers():
-            return self.available_dtypes['float32']
+            return self.array_backend.available_dtypes['float32']
         elif field == ComplexNumbers():
-           return self.available_dtypes['complex64']
+           return self.array_backend.available_dtypes['complex64']
         else:
             raise ValueError('no default data type defined for field {}'
                              ''.format(field))
@@ -1145,14 +1125,6 @@ class Tensor(LinearSpaceElement):
         This relates to the python array api
         """
         return self.space.array_namespace
-    
-    @property
-    def array_type(self):
-        """Name of the array_type of this tensor set.
-
-        This relates to the python array api
-        """
-        return self.space.array_type
     
     @property
     def data(self):

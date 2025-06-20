@@ -303,6 +303,8 @@ class ArrayBackend:
     impl: str
     array_namespace: ModuleType
     available_dtypes: dict[str, object]
+    array_type: type
+    array_constructor: callable
     def __post_init__(self):
         _registered_array_backends[self.impl] = self
 
