@@ -13,6 +13,7 @@ from future.utils import native
 
 import numpy as np
 
+from odl.set.space import LinearSpaceElement
 from odl.space.base_tensors import Tensor, TensorSpace
 from odl.util import is_numeric_dtype
 from odl.util.vectorization import ArrayBackend
@@ -267,6 +268,17 @@ class NumpyTensor(Tensor):
 
     """Representation of a `NumpyTensorSpace` element."""
     
+    def __init__(self, space, data):
+        """Initialize a new instance."""
+        # Tensor.__init__(self, space)
+        LinearSpaceElement.__init__(self, space)
+        self.__data = data
+
+    @property
+    def data(self):
+        """The `numpy.ndarray` representing the data of ``self``."""
+        return self.__data
+    
     @property
     def data_ptr(self):
         """A raw pointer to the data container of ``self``.
@@ -290,6 +302,14 @@ class NumpyTensor(Tensor):
         """
         return self.data.ctypes.data
     
+    def _assign(self, other, avoid_deep_copy):
+        """Assign the values of ``other``, which is assumed to be in the
+        same space, to ``self``."""
+        if avoid_deep_copy:
+            self.__data = other.__data
+        else:
+            self.__data[:] = other.__data
+
     ######### Public methods #########        
     def copy(self):
         """Return an identical (deep) copy of this tensor.

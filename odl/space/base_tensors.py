@@ -335,7 +335,7 @@ class TensorSpace(LinearSpace):
     @property
     def element_type(self):
         """Type of elements in this space: `Tensor`."""
-        return Tensor
+        raise NotImplementedError
     
     @property
     def examples(self):
@@ -1103,12 +1103,6 @@ class TensorSpace(LinearSpace):
 class Tensor(LinearSpaceElement):
 
     """Abstract class for representation of `TensorSpace` elements."""
-    def __init__(self, space, data):
-        """Initialize a new instance."""
-        # Tensor.__init__(self, space)
-        LinearSpaceElement.__init__(self, space)
-        self.__data = data
-
     ######### static methods #########
 
     ######### Attributes #########
@@ -1126,8 +1120,8 @@ class Tensor(LinearSpaceElement):
     
     @property
     def data(self):
-        """The `numpy.ndarray` representing the data of ``self``."""
-        return self.__data
+        """The backend-specific array representing the data of ``self``."""
+        raise NotImplementedError("abstract method")
     
     @property
     def device(self):
@@ -1963,10 +1957,7 @@ class Tensor(LinearSpaceElement):
     def _assign(self, other, avoid_deep_copy):
         """Assign the values of ``other``, which is assumed to be in the
         same space, to ``self``."""
-        if avoid_deep_copy:
-            self.__data = other.__data
-        else:
-            self.__data[:] = other.__data
+        raise NotImplementedError("abstract method")
 
 if __name__ == '__main__':
     from odl.util.testutils import run_doctests
