@@ -22,7 +22,6 @@ from odl.space.weighting import (
     ArrayWeighting, ConstWeighting, CustomDist, CustomInner, CustomNorm,
     Weighting)
 from odl.util import indent, is_real_dtype, signature_string
-from odl.util.ufuncs import ProductSpaceUfuncs
 
 __all__ = ('ProductSpace',)
 
@@ -1111,113 +1110,6 @@ class ProductSpaceElement(LinearSpaceElement):
                 out[i] = np.asarray(self[i])
             return out
 
-    def __array__(self):
-        """An array representation of ``self``.
-
-        Only available if `is_power_space` is True.
-
-        The ordering is such that it commutes with indexing::
-
-            np.array(self[ind]) == np.array(self)[ind]
-
-        Raises
-        ------
-        ValueError
-            If `is_power_space` is false.
-
-        Examples
-        --------
-        >>> spc = odl.ProductSpace(odl.rn(3), 2)
-        >>> x = spc.element([[ 1.,  2.,  3.],
-        ...                  [ 4.,  5.,  6.]])
-        >>> np.asarray(x)
-        array([[ 1.,  2.,  3.],
-               [ 4.,  5.,  6.]])
-        """
-        return self.asarray()
-
-    def __array_wrap__(self, array):
-        """Return a new product space element wrapping the ``array``.
-
-        Only available if `is_power_space` is ``True``.
-
-        Parameters
-        ----------
-        array : `numpy.ndarray`
-            Array to be wrapped.
-
-        Returns
-        -------
-        wrapper : `ProductSpaceElement`
-            Product space element wrapping ``array``.
-        """
-        # HACK(kohr-h): This is to support (full) reductions like
-        # `np.sum(x)` for numpy>=1.16, where many such reductions
-        # moved from plain functions to `ufunc.reduce.*`, thus
-        # invoking the `__array__` and `__array_wrap__` machinery.
-        if array.shape == ():
-            return array.item()
-
-        return self.space.element(array)
-
-    @property
-    def ufuncs(self):
-        """`ProductSpaceUfuncs`, access to Numpy style ufuncs.
-
-        These are always available if the underlying spaces are
-        `TensorSpace`.
-
-        Examples
-        --------
-        >>> r22 = odl.ProductSpace(odl.rn(2), 2)
-        >>> x = r22.element([[1, -2], [-3, 4]])
-        >>> x.ufuncs.absolute()
-        ProductSpace(rn(2), 2).element([
-            [ 1.,  2.],
-            [ 3.,  4.]
-        ])
-
-        These functions can also be used with non-vector arguments and
-        support broadcasting, per component and even recursively:
-
-        >>> x.ufuncs.add([1, 2])
-        ProductSpace(rn(2), 2).element([
-            [ 2.,  0.],
-            [-2.,  6.]
-        ])
-        >>> x.ufuncs.subtract(1)
-        ProductSpace(rn(2), 2).element([
-            [ 0., -3.],
-            [-4.,  3.]
-        ])
-
-        There is also support for various reductions (sum, prod, min, max):
-
-        >>> x.ufuncs.sum()
-        0.0
-
-        Writing to ``out`` is also supported:
-
-        >>> y = r22.element()
-        >>> result = x.ufuncs.absolute(out=y)
-        >>> result
-        ProductSpace(rn(2), 2).element([
-            [ 1.,  2.],
-            [ 3.,  4.]
-        ])
-        >>> result is y
-        True
-
-        See Also
-        --------
-        odl.util.ufuncs.TensorSpaceUfuncs
-            Base class for ufuncs in `TensorSpace` spaces, subspaces may
-            override this for greater efficiency.
-        odl.util.ufuncs.ProductSpaceUfuncs
-            For a list of available ufuncs.
-        """
-        return ProductSpaceUfuncs(self)
-
     @property
     def real(self):
         """Real part of the element.
@@ -1669,7 +1561,7 @@ class ProductSpaceArrayWeighting(ArrayWeighting):
           during initialization.
         """
         super(ProductSpaceArrayWeighting, self).__init__(
-            array, impl='numpy', exponent=exponent)
+            array, impl=None, device=None, exponent=exponent)
 
     def inner(self, x1, x2):
         """Calculate the array-weighted inner product of two elements.
@@ -1777,7 +1669,7 @@ class ProductSpaceConstWeighting(ConstWeighting):
           inner product or norm, respectively.
         """
         super(ProductSpaceConstWeighting, self).__init__(
-            constant, impl='numpy', exponent=exponent)
+            constant, impl=None, device=None, exponent=exponent)
 
     def inner(self, x1, x2):
         """Calculate the constant-weighted inner product of two elements.
@@ -1876,7 +1768,7 @@ class ProductSpaceCustomInner(CustomInner):
             - ``<x, x> = 0``  if and only if  ``x = 0``
         """
         super(ProductSpaceCustomInner, self).__init__(
-            impl='numpy', inner=inner)
+            impl=None, inner=inner, device=None)
 
 
 class ProductSpaceCustomNorm(CustomNorm):
@@ -1902,7 +1794,7 @@ class ProductSpaceCustomNorm(CustomNorm):
             - ``||s * x|| = |s| * ||x||``
             - ``||x + y|| <= ||x|| + ||y||``
         """
-        super(ProductSpaceCustomNorm, self).__init__(norm, impl='numpy')
+        super(ProductSpaceCustomNorm, self).__init__(norm, impl=None, device=None)
 
 
 class ProductSpaceCustomDist(CustomDist):
@@ -1928,7 +1820,7 @@ class ProductSpaceCustomDist(CustomDist):
             - ``dist(x, y) = dist(y, x)``
             - ``dist(x, y) <= dist(x, z) + dist(z, y)``
         """
-        super(ProductSpaceCustomDist, self).__init__(dist, impl='numpy')
+        super(ProductSpaceCustomDist, self).__init__(dist, impl=None, device=None)
 
 
 def _strip_space(x):
