@@ -12,7 +12,9 @@ from __future__ import print_function, division, absolute_import
 import numpy as np
 
 from odl.util.npy_compat import AVOID_UNNECESSARY_COPY
+from odl.array_API_support import lookup_array_backend
 
+from odl.space.base_tensors import default_dtype
 from odl.space.npy_tensors import NumpyTensorSpace
 from odl.util.utility import AVAILABLE_DTYPES, COMPLEX_DTYPES, FLOAT_DTYPES
 
@@ -204,7 +206,7 @@ def cn(shape, dtype='complex128', impl='numpy', device='cpu', **kwargs):
     return tensor_space(shape, dtype=dtype, impl=impl, device=device, **kwargs)
 
 
-def rn(shape, dtype='float64', impl='numpy', device ='cpu', **kwargs):
+def rn(shape, dtype=None, impl='numpy', device ='cpu', **kwargs):
     """Return a space of real tensors.
 
     Parameters
@@ -251,6 +253,8 @@ def rn(shape, dtype='float64', impl='numpy', device ='cpu', **kwargs):
     tensor_space : Space of tensors with arbitrary scalar data type.
     cn : Complex tensor space.
     """
+    if dtype is None:
+        dtype = default_dtype(lookup_array_backend(str(impl).lower()))
     assert dtype in FLOAT_DTYPES, f'For rn, the type must be float, but got {dtype}'
     return tensor_space(shape, dtype=dtype, impl=impl, device=device, **kwargs)
 

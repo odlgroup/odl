@@ -21,6 +21,7 @@ from odl.set.sets import ComplexNumbers, RealNumbers
 from odl.set.space import (
     LinearSpace, LinearSpaceElement, LinearSpaceTypeError,
     SupportedNumOperationParadigms, NumOperationParadigmSupport)
+from odl.array_API_support import ArrayBackend, lookup_array_backend
 from odl.util import (
     array_str, indent, is_complex_floating_dtype,
     is_numeric_dtype, is_real_floating_dtype, safe_int_conv,
@@ -33,6 +34,31 @@ from odl.util.utility import(
 from .weighting import Weighting
 
 __all__ = ('TensorSpace',)
+
+def default_dtype(array_backend: ArrayBackend, field=None):
+    """Return the default data type for a given field.
+
+    Parameters
+    ----------
+    array_backend : `ArrayBackend`
+        The implementation, defining what dtypes are available.
+    field : `Field`, optional
+        Set of numbers to be represented by a data type.
+        Currently supported : `RealNumbers`, `ComplexNumbers`
+        The default ``None`` means `RealNumbers`
+
+    Returns
+    -------
+    dtype :
+        Backend data type specifier.
+    """
+    if field is None or field == RealNumbers():
+        return array_backend.available_dtypes['float64']
+    elif field == ComplexNumbers():
+       return array_backend.available_dtypes['complex128']
+    else:
+        raise ValueError('no default data type defined for field {}'
+                         ''.format(field))
 
 class TensorSpace(LinearSpace):
 
@@ -84,26 +110,26 @@ class TensorSpace(LinearSpace):
             are added *to the left* of ``shape``.
         """
         # Handle shape and dtype, taking care also of dtypes with shape        
-        self.parse_dtype(dtype)
+        self._init_dtype(dtype)
 
-        self.parse_shape(shape, dtype)
+        self._init_shape(shape, dtype)
 
-        self.parse_device(device)
+        self._init_device(device)
 
         self.__use_in_place_ops = kwargs.pop('use_in_place_ops', True)
   
-        self.parse_weighting(**kwargs)
+        self._init_weighting(**kwargs)
 
-        field = self.parse_field()
+        field = self._init_field()
 
         LinearSpace.__init__(self, field)
 
     ################ Init Methods, Non static ################
-    def parse_device(self, device:str):
+    def _init_device(self, device:str):
         odl.check_device(self.impl, device)
         self.__device = device 
 
-    def parse_dtype(self, dtype:str | int | float | complex):
+    def _init_dtype(self, dtype:str | int | float | complex):
         """
         Process the dtype argument. This parses the (str or Number) dtype input argument to a backend.dtype and sets two attributes
 
@@ -113,27 +139,30 @@ class TensorSpace(LinearSpace):
         Note:
         The check below is here just in case a user initialise a space directly from this class, which is not recommended
         """
+
+        available_dtypes = self.array_backend.available_dtypes
+
         ### We check if the datatype has been provided in a "sane" way, 
         # 1) a Python scalar type
         if isinstance(dtype, (int, float, complex)):
             self.__dtype_identifier = str(dtype)
-            self.__dtype = self.available_dtypes[dtype] 
+            self.__dtype = available_dtypes[dtype] 
         # 2) as a string
-        if dtype in self.available_dtypes.keys():
+        if dtype in available_dtypes.keys():
             self.__dtype_identifier = dtype
-            self.__dtype = self.available_dtypes[dtype]
-        ### If the check has failed, i.e the dtype is not a Key of the self.available_dtypes dict or a python scalar, we try to parse the dtype 
-        ### as a string using the self.get_dtype_identifier(dtype=dtype) call: This is for the situation where the dtype passed is
-        ### in the .values() of self.available_dtypes dict (something like 'numpy.float32')
-        elif dtype in self.available_dtypes.values():
-            self.__dtype_identifier = self.get_dtype_identifier(dtype=dtype)
+            self.__dtype = available_dtypes[dtype]
+        ### If the check has failed, i.e the dtype is not a Key of the available_dtypes dict or a python scalar, we try to parse the dtype 
+        ### as a string using the get_dtype_identifier(dtype=dtype) call: This is for the situation where the dtype passed is
+        ### in the .values() of available_dtypes dict (something like 'numpy.float32')
+        elif dtype in available_dtypes.values():
+            self.__dtype_identifier = self.array_backend.get_dtype_identifier(dtype=dtype)
             self.__dtype = dtype
             # If that fails, we throw an error: the dtype is not a python scalar dtype, not a string describing the dtype or the 
             # backend call to parse the dtype has failed.
         else:
-            raise ValueError(f"The dtype must be in {self.available_dtypes.keys()} or must be a dtype of the backend, but {dtype} was provided")
+            raise ValueError(f"The dtype must be in {available_dtypes.keys()} or must be a dtype of the backend, but {dtype} was provided")
 
-    def parse_shape(self, shape, dtype):
+    def _init_shape(self, shape, dtype):
         # Handle shape and dtype, taking care also of dtypes with shape
         try:
             shape, shape_in = tuple(safe_int_conv(s) for s in shape), shape
@@ -150,20 +179,20 @@ class TensorSpace(LinearSpace):
         # <!> this is likely to break in Pytorch
         self.__shape = np.dtype(dtype).shape + shape
 
-    def parse_field(self):
+    def _init_field(self):
         if self.dtype_identifier in TYPE_PROMOTION_REAL_TO_COMPLEX:
             # real includes non-floating-point like integers
             field = RealNumbers()
             self.__real_dtype = self.dtype
             self.__real_space = self
-            self.__complex_dtype = self.available_dtypes[
+            self.__complex_dtype = self.array_backend.available_dtypes[
                 TYPE_PROMOTION_REAL_TO_COMPLEX[self.dtype_identifier]
             ]
             
             self.__complex_space = None  # Set in first call of astype
         elif self.dtype_identifier in TYPE_PROMOTION_COMPLEX_TO_REAL:
             field = ComplexNumbers()
-            self.__real_dtype = self.available_dtypes[
+            self.__real_dtype = self.array_backend.available_dtypes[
                 TYPE_PROMOTION_COMPLEX_TO_REAL[self.dtype_identifier]
             ]
             self.__real_space = None  # Set in first call of astype
@@ -173,7 +202,7 @@ class TensorSpace(LinearSpace):
             field = None
         return field
     
-    def parse_weighting(self, **kwargs):
+    def _init_weighting(self, **kwargs):
         weighting = kwargs.pop("weighting", None)    
         if weighting is None:
             self.__weighting = odl.space_weighting(impl=self.impl, device=self.device, **kwargs)
@@ -205,30 +234,15 @@ class TensorSpace(LinearSpace):
     
     ########## Attributes ##########
     @property
-    def array_constructor(self):
-        """Name of the function called to create an array of this tensor space.
+    def array_backend(self) -> ArrayBackend:
+        return lookup_array_backend(self.impl)
 
-        This property should be overridden by subclasses.
-        """
-        raise NotImplementedError("abstract method")
-    
     @property
     def array_namespace(self) -> ModuleType:
         """Name of the array_namespace of this tensor set. This relates to the
         python array api.
-
-        This property should be overridden by subclasses.
         """
-        raise NotImplementedError("abstract method")
-    
-    @property
-    def array_type(self):
-        """Name of the array_type of this tensor set. This relates to the
-        python array api.
-
-        This property should be overridden by subclasses.
-        """
-        raise NotImplementedError("abstract method")
+        return self.array_backend.array_namespace
     
     @property
     def byaxis(self):
@@ -271,12 +285,6 @@ class TensorSpace(LinearSpace):
                 return repr(space) + '.byaxis'
 
         return TensorSpacebyaxis()
-    
-    @property
-    def available_dtypes(self) -> Dict:
-        """Available types of the tensor space implementation
-        """
-        raise NotImplementedError("abstract method")
     
     @property
     def complex_dtype(self):
@@ -327,7 +335,7 @@ class TensorSpace(LinearSpace):
     @property
     def element_type(self):
         """Type of elements in this space: `Tensor`."""
-        return Tensor
+        raise NotImplementedError
     
     @property
     def examples(self):
@@ -372,7 +380,7 @@ class TensorSpace(LinearSpace):
     @property
     def itemsize(self):
         """Size in bytes of one entry in an element of this space."""
-        return  int(self.array_constructor([], dtype=self.dtype).itemsize)
+        return  int(self.array_backend.array_constructor([], dtype=self.dtype).itemsize)
     
     @property
     def is_complex(self):
@@ -488,22 +496,24 @@ class TensorSpace(LinearSpace):
         if dtype is None:
             # Need to filter this out since Numpy iterprets it as 'float'
             raise ValueError('`None` is not a valid data type')
+
+        available_dtypes = self.array_backend.available_dtypes
         
         ### We check if the datatype has been provided in a "sane" way, 
         # 1) a Python scalar type
         if isinstance(dtype, (int, float, complex)):
             dtype_identifier = str(dtype)
-            dtype = self.available_dtypes[dtype]
+            dtype = available_dtypes[dtype]
         # 2) as a string
-        elif dtype in self.available_dtypes.keys():
+        elif dtype in available_dtypes.keys():
             dtype_identifier = dtype
-            dtype = self.available_dtypes[dtype]
-        ### If the check has failed, i.e the dtype is not a Key of the self.available_dtypes dict or a python scalar, we try to parse the dtype 
-        ### as a string using the self.get_dtype_identifier(dtype=dtype) call: This is for the situation where the dtype passed is
-        ### in the .values() of self.available_dtypes dict (something like 'numpy.float32')
-        elif self.get_dtype_identifier(dtype=dtype) in self.available_dtypes:
-            dtype_identifier = self.get_dtype_identifier(dtype=dtype)
-            dtype = self.available_dtypes[dtype_identifier]
+            dtype = available_dtypes[dtype]
+        ### If the check has failed, i.e the dtype is not a Key of the available_dtypes dict or a python scalar, we try to parse the dtype 
+        ### as a string using the get_dtype_identifier(dtype=dtype) call: This is for the situation where the dtype passed is
+        ### in the .values() of available_dtypes dict (something like 'numpy.float32')
+        elif self.array_backend.get_dtype_identifier(dtype=dtype) in available_dtypes:
+            dtype_identifier = self.array_backend.get_dtype_identifier(dtype=dtype)
+            dtype = available_dtypes[dtype_identifier]
             # If that fails, we throw an error: the dtype is not a python scalar dtype, not a string describing the dtype or the 
             # backend call to parse the dtype has failed.
         else:
@@ -511,20 +521,20 @@ class TensorSpace(LinearSpace):
 
         # try:
         #     dtype_identifier = dtype
-        #     dtype = self.available_dtypes[dtype]
+        #     dtype = available_dtypes[dtype]
         # except KeyError:
-        #     raise KeyError(f"The dtype must be in {self.available_dtypes.keys()}, but {dtype} was provided")
+        #     raise KeyError(f"The dtype must be in {available_dtypes.keys()}, but {dtype} was provided")
         
         if dtype == self.dtype:
             return self
 
         if dtype_identifier in FLOAT_DTYPES + COMPLEX_DTYPES:
             # Caching for real and complex versions (exact dtype mappings)
-            if dtype == self.__real_dtype:
+            if dtype == self.real_dtype:
                 if self.__real_space is None:
                     self.__real_space = self._astype(dtype_identifier)
                 return self.__real_space
-            elif dtype == self.__complex_dtype:
+            elif dtype == self.complex_dtype:
                 if self.__complex_space is None:
                     self.__complex_space = self._astype(dtype_identifier)
                 return self.__complex_space
@@ -532,31 +542,6 @@ class TensorSpace(LinearSpace):
                 return self._astype(dtype_identifier)
         else:
             return self._astype(dtype_identifier)
-        
-    def default_dtype(self, field=None):
-        """Return the default data type for a given field.
-
-        This method should be overridden by subclasses.
-
-        Parameters
-        ----------
-        field : `Field`, optional
-            Set of numbers to be represented by a data type.
-            Currently supported : `RealNumbers`, `ComplexNumbers`
-            The default ``None`` means `RealNumbers`
-
-        Returns
-        -------
-        dtype :
-            Backend data type specifier.
-        """
-        if field is None or field == RealNumbers():
-            return self.available_dtypes['float32']
-        elif field == ComplexNumbers():
-           return self.available_dtypes['complex64']
-        else:
-            raise ValueError('no default data type defined for field {}'
-                             ''.format(field))
         
     def element(self, inp=None, device=None, copy=True):
         def wrapped_array(arr):
@@ -806,7 +791,7 @@ class TensorSpace(LinearSpace):
 
         if (ctor_name == 'tensor_space' or
                 not self.dtype_identifier in SCALAR_DTYPES or
-                self.dtype != self.default_dtype(self.field)):
+                self.dtype != default_dtype(self.array_backend, self.field)):
             optargs = [('dtype', self.dtype_identifier, '')]
             if self.dtype_identifier in (AVAILABLE_DTYPES):
                 optmod = '!s'
@@ -1104,7 +1089,7 @@ class TensorSpace(LinearSpace):
                 elif isinstance(x2, (int, float, complex)):
                     result_data = fn(x1.data, x2, out.data)
                     
-            return self.astype(self.get_dtype_identifier(array=result_data)).element(result_data) 
+            return self.astype(self.array_backend.get_dtype_identifier(array=result_data)).element(result_data) 
 
         assert isinstance(x1, Tensor), 'Left operand is not an ODL Tensor'
         assert isinstance(x2, Tensor), 'Right operand is not an ODL Tensor'
@@ -1114,21 +1099,17 @@ class TensorSpace(LinearSpace):
         else:
             return getattr(odl, combinator)(x1, x2, out)
         
-    def get_dtype_identifier(self, **kwargs):
-        raise NotImplementedError  
 
 class Tensor(LinearSpaceElement):
 
     """Abstract class for representation of `TensorSpace` elements."""
-    def __init__(self, space, data):
-        """Initialize a new instance."""
-        # Tensor.__init__(self, space)
-        LinearSpaceElement.__init__(self, space)
-        self.__data = data
-
     ######### static methods #########
 
     ######### Attributes #########
+    @property
+    def array_backend(self) -> ArrayBackend:
+        return self.space.array_backend
+
     @property
     def array_namespace(self) -> ModuleType:
         """Name of the array_namespace of this tensor.
@@ -1138,17 +1119,9 @@ class Tensor(LinearSpaceElement):
         return self.space.array_namespace
     
     @property
-    def array_type(self):
-        """Name of the array_type of this tensor set.
-
-        This relates to the python array api
-        """
-        return self.space.array_type
-    
-    @property
     def data(self):
-        """The `numpy.ndarray` representing the data of ``self``."""
-        return self.__data
+        """The backend-specific array representing the data of ``self``."""
+        raise NotImplementedError("abstract method")
     
     @property
     def device(self):
@@ -1984,10 +1957,7 @@ class Tensor(LinearSpaceElement):
     def _assign(self, other, avoid_deep_copy):
         """Assign the values of ``other``, which is assumed to be in the
         same space, to ``self``."""
-        if avoid_deep_copy:
-            self.__data = other.__data
-        else:
-            self.__data[:] = other.__data
+        raise NotImplementedError("abstract method")
 
 if __name__ == '__main__':
     from odl.util.testutils import run_doctests

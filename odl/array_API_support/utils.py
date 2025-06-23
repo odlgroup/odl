@@ -1,7 +1,41 @@
+from types import ModuleType
+from dataclasses import dataclass
+from typing import Callable
+
 __all__ = (
     'AVAILABLE_DEVICES',
     'IMPL_DEVICE_PAIRS',
-    'check_device',)
+    'check_device',
+    'ArrayBackend', 'lookup_array_backend',)
+
+
+_registered_array_backends = {}
+
+@dataclass
+class ArrayBackend:
+    impl: str
+    array_namespace: ModuleType
+    available_dtypes: dict[str, object]
+    array_type: type
+    array_constructor: Callable
+    identifier_of_dtype: Callable[object, str]
+    def __post_init__(self):
+        if self.impl in _registered_array_backends:
+            raise KeyError(f"An array-backend with the identifier {self.impl} is already registered."
+                          + " Every backend needs to have a unique identifier.")
+        _registered_array_backends[self.impl] = self
+    def get_dtype_identifier(self, **kwargs):
+        if 'array' in kwargs:
+            assert 'dtype' not in kwargs, 'array and dtype are multually exclusive parameters'
+            return self.identifier_of_dtype(kwargs['array'].dtype)
+        if 'dtype' in kwargs:
+            assert 'array' not in kwargs, 'array and dtype are multually exclusive parameters'
+            return self.identifier_of_dtype(kwargs['dtype'])
+        raise ValueError("Either 'array' or 'dtype' argument must be provided.")
+
+def lookup_array_backend(impl: str) -> ArrayBackend:
+    return _registered_array_backends[impl]
+
 
 AVAILABLE_DEVICES = {
     'numpy' : ['cpu'],

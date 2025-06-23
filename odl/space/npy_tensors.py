@@ -13,15 +13,19 @@ from future.utils import native
 
 import numpy as np
 
+from odl.set.space import LinearSpaceElement
 from odl.space.base_tensors import Tensor, TensorSpace
 from odl.util import is_numeric_dtype
+from odl.array_API_support import ArrayBackend
 
 import array_api_compat.numpy as xp
 
 __all__ = ('NumpyTensorSpace',)
 
-NUMPY_DTYPES = {
-    key : np.dtype(key) for key in [
+numpy_array_backend = ArrayBackend(
+    impl = 'numpy',
+    available_dtypes = {
+      key : np.dtype(key) for key in [
         bool,
         "bool",
         "int8",
@@ -39,7 +43,12 @@ NUMPY_DTYPES = {
         complex,        
         "complex64",
         "complex128",
-    ]}
+      ]},
+    array_namespace = xp,
+    array_constructor = np.array,
+    array_type = np.ndarray,
+    identifier_of_dtype = lambda dt: str(dt)
+ )
 
 _BLAS_DTYPES = (np.dtype('float32'), np.dtype('float64'),
                 np.dtype('complex64'), np.dtype('complex128'))
@@ -233,26 +242,13 @@ class NumpyTensorSpace(TensorSpace):
 
     ########## Attributes ##########
     @property
-    def array_constructor(self):
-        """Name of the array_constructor of this tensor set.
-        """
-        return np.array
+    def array_backend(self) -> ArrayBackend:
+        return numpy_array_backend
     
     @property
     def array_namespace(self):
         """Name of the array_namespace"""
         return xp
-    
-    @property
-    def array_type(self):
-        """Name of the array_type of this tensor set.
-        This relates to the python array api
-        """
-        return np.ndarray
-    
-    @property
-    def available_dtypes(self):
-        return NUMPY_DTYPES
     
     @property
     def element_type(self):
@@ -265,20 +261,23 @@ class NumpyTensorSpace(TensorSpace):
         return 'numpy'
 
     ######### public methods #########
-    def get_dtype_identifier(self, **kwargs):
-        if 'array' in kwargs:
-            assert 'dtype' not in kwargs, 'array and dtype are multually exclusive parameters'
-            return kwargs['array'].dtype.name
-        if 'dtype' in kwargs:
-            assert 'array' not in kwargs, 'array and dtype are multually exclusive parameters'
-            return str(kwargs['dtype'])
-        raise ValueError("Either 'array' or 'dtype' argument must be provided.")
 
     ######### private methods #########    
 
 class NumpyTensor(Tensor):
 
     """Representation of a `NumpyTensorSpace` element."""
+    
+    def __init__(self, space, data):
+        """Initialize a new instance."""
+        # Tensor.__init__(self, space)
+        LinearSpaceElement.__init__(self, space)
+        self.__data = data
+
+    @property
+    def data(self):
+        """The `numpy.ndarray` representing the data of ``self``."""
+        return self.__data
     
     @property
     def data_ptr(self):
@@ -303,6 +302,14 @@ class NumpyTensor(Tensor):
         """
         return self.data.ctypes.data
     
+    def _assign(self, other, avoid_deep_copy):
+        """Assign the values of ``other``, which is assumed to be in the
+        same space, to ``self``."""
+        if avoid_deep_copy:
+            self.__data = other.__data
+        else:
+            self.__data[:] = other.__data
+
     ######### Public methods #########        
     def copy(self):
         """Return an identical (deep) copy of this tensor.

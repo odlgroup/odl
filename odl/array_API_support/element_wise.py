@@ -96,7 +96,7 @@ def _apply_element_wise(x1, operation: str, out=None, **kwargs):
     # We make sure to return an element of the right type: 
     # for instance, if two spaces have a int dtype, the result of the division 
     # of one of their element by another return should be of float dtype
-    return x1.space.astype(x1.space.get_dtype_identifier(array=result)).element(result) 
+    return x1.space.astype(x1.space.array_backend.get_dtype_identifier(array=result)).element(result) 
 
 def abs(x, out=None):
     """Calculates the absolute value for each element `x_i` of the input array
