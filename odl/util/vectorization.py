@@ -308,6 +308,9 @@ class ArrayBackend:
     array_constructor: Callable
     identifier_of_dtype: Callable[object, str]
     def __post_init__(self):
+        if self.impl in _registered_array_backends:
+            raise KeyError(f"An array-backend with the identifier {self.impl} is already registered."
+                          + " Every backend needs to have a unique identifier.")
         _registered_array_backends[self.impl] = self
     def get_dtype_identifier(self, **kwargs):
         if 'array' in kwargs:
