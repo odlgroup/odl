@@ -53,9 +53,9 @@ def default_dtype(array_backend: ArrayBackend, field=None):
         Backend data type specifier.
     """
     if field is None or field == RealNumbers():
-        return array_backend.available_dtypes['float32']
+        return array_backend.available_dtypes['float64']
     elif field == ComplexNumbers():
-       return array_backend.available_dtypes['complex64']
+       return array_backend.available_dtypes['complex128']
     else:
         raise ValueError('no default data type defined for field {}'
                          ''.format(field))
