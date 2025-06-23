@@ -21,6 +21,7 @@ import numpy as np
 import torch
 from packaging.version import parse as parse_version
 
+from odl.util.npy_compat import AVOID_UNNECESSARY_COPY
 from odl import Operator
 
 if parse_version(torch.__version__) < parse_version('0.4'):
