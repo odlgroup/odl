@@ -610,12 +610,15 @@ class TensorSpace(LinearSpace):
         # ---> The input is transferred to the space's device and data type AND wrapped into the space.
         # TODO: Add the iterable type instead of list and tuple and the numerics type instead of int, float, complex
         elif isinstance(inp, (int, float, complex, list, tuple)):
-            return wrapped_array(
-                self.array_namespace.broadcast_to(
+            arr = self.array_namespace.broadcast_to(
                     self.array_namespace.asarray(inp, device=self.device),
                     self.shape
                     )
-                )
+            # Make sure the result is writeable, if not make copy.
+            # This happens for e.g. results of `np.broadcast_to()`.
+            if not arr.flags.writeable:
+                arr = arr.copy()
+            return wrapped_array(arr)
         else:
             raise ValueError  
         
