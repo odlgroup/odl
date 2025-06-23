@@ -22,7 +22,7 @@ from odl.space.npy_tensors import (
 from odl.util.testutils import (
     all_almost_equal, all_equal, noise_array, noise_element, noise_elements,
     simple_fixture)
-from odl.util.vectorization import lookup_array_backend
+from odl.array_API_support import lookup_array_backend
 from odl.util.ufuncs import UFUNCS
 
 # --- Test helpers --- #

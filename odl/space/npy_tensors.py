@@ -16,7 +16,7 @@ import numpy as np
 from odl.set.space import LinearSpaceElement
 from odl.space.base_tensors import Tensor, TensorSpace
 from odl.util import is_numeric_dtype
-from odl.util.vectorization import ArrayBackend
+from odl.array_API_support import ArrayBackend
 
 import array_api_compat.numpy as xp
 

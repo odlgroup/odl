@@ -21,7 +21,7 @@ from odl.set.sets import ComplexNumbers, RealNumbers
 from odl.set.space import (
     LinearSpace, LinearSpaceElement, LinearSpaceTypeError,
     SupportedNumOperationParadigms, NumOperationParadigmSupport)
-from odl.util.vectorization import ArrayBackend, lookup_array_backend
+from odl.array_API_support import ArrayBackend, lookup_array_backend
 from odl.util import (
     array_str, indent, is_complex_floating_dtype,
     is_numeric_dtype, is_real_floating_dtype, safe_int_conv,
