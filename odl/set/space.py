@@ -13,7 +13,7 @@ from builtins import object
 from enum import Enum
 from dataclasses import dataclass
 import numpy as np
-import warnings
+from numbers import Number
 
 from odl.set.sets import Field, Set, UniversalSet
 
@@ -519,14 +519,11 @@ class LinearSpaceElement(object):
     
     def __truediv__(self, other):
         """Implement ``self / other``."""
-        with warnings.catch_warnings(record=True) as w:
-            result = self.space._binary_num_operation(
+        if isinstance(other, Number) and other == 0:
+            raise ZeroDivisionError
+        return self.space._binary_num_operation(
                 self, other, 'divide'
             )
-            for warning in w:
-                if issubclass(warning.category, RuntimeWarning):
-                    raise RuntimeError(f"Caught a RuntimeWarning: {str(warning.message)}")
-            return result
     
     def __floordiv__(self, other):        
         """Implement ``self // other``."""
@@ -608,14 +605,11 @@ class LinearSpaceElement(object):
     
     def __itruediv__(self, other):
         """Implement ``self /= other``."""
-        with warnings.catch_warnings(record=True) as w:
-            result = self.space._binary_num_operation(
+        if isinstance(other, Number) and other == 0:
+            raise ZeroDivisionError
+        return self.space._binary_num_operation(
                 self, other, 'divide', self
             )
-            for warning in w:
-                if issubclass(warning.category, RuntimeWarning):
-                    raise RuntimeError(f"Caught a RuntimeWarning: {str(warning.message)}")
-            return result
     
     def __ifloordiv__(self, other):
         """Implement ``self //= other``."""

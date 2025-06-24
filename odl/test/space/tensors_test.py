@@ -534,7 +534,7 @@ def test_scalar_operator(tspace, odl_arithmetic_op):
         # Left op
         if scalar == 0 and op in [operator.truediv, operator.itruediv]:
             # Check for correct zero division behaviour
-            with pytest.raises(RuntimeError):
+            with pytest.raises(ZeroDivisionError):
                 y = op(x, scalar)
         else:
             y_arr = op(x_arr, scalar)
