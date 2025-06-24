@@ -32,6 +32,7 @@ from odl.util.utility import(
     TYPE_PROMOTION_COMPLEX_TO_REAL, 
     TYPE_PROMOTION_REAL_TO_COMPLEX)
 from .weighting import Weighting
+from .pspace import ProductSpaceElement
 
 __all__ = ('TensorSpace',)
 
@@ -1093,6 +1094,11 @@ class TensorSpace(LinearSpace):
                     result_data = fn(x1.data, x2, out.data)
                     
             return self.astype(self.array_backend.get_dtype_identifier(array=result_data)).element(result_data) 
+
+        if isinstance(x2, ProductSpaceElement):
+            assert isinstance(x1, Tensor), 'Right operand is not an ODL Tensor'
+            return x2.__getattribute__(combinator)(x1)
+
 
         assert isinstance(x1, Tensor), 'Left operand is not an ODL Tensor'
         assert isinstance(x2, Tensor), 'Right operand is not an ODL Tensor'

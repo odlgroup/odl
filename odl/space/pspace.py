@@ -12,7 +12,7 @@ from __future__ import absolute_import, division, print_function
 
 from itertools import product
 from numbers import Integral
-
+import operator
 import numpy as np
 
 from odl.set import LinearSpace
@@ -1447,62 +1447,130 @@ class ProductSpaceElement(LinearSpaceElement):
                 figs.append(fig)
 
         return tuple(figs)
+    
+    def add(self, other):
+        return self + other
+    
+    def __add__(self, other):
+        if isinstance(other, ProductSpaceElement):
+            results = [part_self + part_other for (part_self, part_other) in zip(self.parts, other.parts)]
+        else:
+            results = [part + other for part in self.parts]
+        return self.space.element_type(self.space, results)
+
+    def __iadd__(self, other):
+        for p in self.parts:
+            p += other
+        return self.parts
+    
+    def div(self, other):
+        return self / other
+    
+    def __div__(self, other):
+        if isinstance(other, ProductSpaceElement):
+            results = [part_self / part_other for (part_self, part_other) in zip(self.parts, other.parts)]
+        else:
+            results = [part / other for part in self.parts]
+        return self.space.element_type(self.space, results)
+
+    def __idiv__(self, other):
+        raise TypeError
+    
+    def mul(self, other):
+        return self * other
+    
+    def __mul__(self, other):
+        if isinstance(other, ProductSpaceElement):
+            results = [part_self * part_other for (part_self, part_other) in zip(self.parts, other.parts)]
+        else:
+            results = [part * other for part in self.parts]
+        return self.space.element_type(self.space, results)
+
+    def __imul__(self, other):
+        raise TypeError
+    
+    def subtract(self, other):
+        return self - other
+    
+    def __sub__(self, other):
+        if isinstance(other, ProductSpaceElement):
+            results = [part_self - part_other for (part_self, part_other) in zip(self.parts, other.parts)]
+        else:
+            results = [part - other for part in self.parts]
+        return self.space.element_type(self.space, results)
+
+    def __isub__(self, other):
+        raise TypeError
+    
+    # def _broadcast_arithmetic_impl(self, other):
+    #     if (self.space.is_power_space and other in self.space[0]):
+    #         results = []
+    #         for xi in self:
+    #             res = getattr(xi, op)(other)
+    #             if res is NotImplemented:
+    #                 return NotImplemented
+    #             else:
+    #                 results.append(res)
+
+    #         return self.space.element(results)
+    #     else:
+    #         return getattr(LinearSpaceElement, op)(self, other)
 
 
 # --- Add arithmetic operators that broadcast --- #
 
 
-def _broadcast_arithmetic(op):
-    """Return ``op(self, other)`` with broadcasting.
+# def _broadcast_arithmetic(op):
+#     """Return ``op(self, other)`` with broadcasting.
 
-    Parameters
-    ----------
-    op : string
-        Name of the operator, e.g. ``'__add__'``.
+#     Parameters
+#     ----------
+#     op : string
+#         Name of the operator, e.g. ``'__add__'``.
 
-    Returns
-    -------
-    broadcast_arithmetic_op : function
-        Function intended to be used as a method for `ProductSpaceVector`
-        which performs broadcasting if possible.
+#     Returns
+#     -------
+#     broadcast_arithmetic_op : function
+#         Function intended to be used as a method for `ProductSpaceVector`
+#         which performs broadcasting if possible.
 
-    Notes
-    -----
-    Broadcasting is the operation of "applying an operator multiple times" in
-    some sense. For example:
+#     Notes
+#     -----
+#     Broadcasting is the operation of "applying an operator multiple times" in
+#     some sense. For example:
 
-    .. math::
-        (1, 2) + 1 = (2, 3)
+#     .. math::
+#         (1, 2) + 1 = (2, 3)
 
-    is a form of broadcasting. In this implementation, we only allow "single
-    layer" broadcasting, i.e., we do not support broadcasting over several
-    product spaces at once.
-    """
-    def _broadcast_arithmetic_impl(self, other):
-        if (self.space.is_power_space and other in self.space[0]):
-            results = []
-            for xi in self:
-                res = getattr(xi, op)(other)
-                if res is NotImplemented:
-                    return NotImplemented
-                else:
-                    results.append(res)
+#     is a form of broadcasting. In this implementation, we only allow "single
+#     layer" broadcasting, i.e., we do not support broadcasting over several
+#     product spaces at once.
+#     """
+#     def _broadcast_arithmetic_impl(self, other):
+#         if (self.space.is_power_space and other in self.space[0]):
+#             results = []
+#             for xi in self:
+#                 res = getattr(xi, op)(other)
+#                 if res is NotImplemented:
+#                     return NotImplemented
+#                 else:
+#                     results.append(res)
 
-            return self.space.element(results)
-        else:
-            return getattr(LinearSpaceElement, op)(self, other)
+#             return self.space.element(results)
+#         else:
+#             return getattr(LinearSpaceElement, op)(self, other)
 
-    # Set docstring
-    docstring = """Broadcasted {op}.""".format(op=op)
-    _broadcast_arithmetic_impl.__doc__ = docstring
+#     # Set docstring
+#     docstring = """Broadcasted {op}.""".format(op=op)
+#     _broadcast_arithmetic_impl.__doc__ = docstring
 
-    return _broadcast_arithmetic_impl
+#     return _broadcast_arithmetic_impl
 
 
-for op in ['add', 'sub', 'mul', 'div', 'truediv']:
-    for modifier in ['', 'r', 'i']:
-        name = '__{}{}__'.format(modifier, op)
-        setattr(ProductSpaceElement, name, _broadcast_arithmetic(name))
+# for op in ['add', 'sub', 'mul', 'div', 'truediv']:
+#     for modifier in ['', 'r', 'i']:
+#         name = '__{}{}__'.format(modifier, op)
+#         setattr(ProductSpaceElement, name, _broadcast_arithmetic(name))
 
 
 class ProductSpaceArrayWeighting(ArrayWeighting):
