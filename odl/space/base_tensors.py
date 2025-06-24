@@ -32,7 +32,7 @@ from odl.util.utility import(
     FLOAT_DTYPES, COMPLEX_DTYPES,
     TYPE_PROMOTION_COMPLEX_TO_REAL, 
     TYPE_PROMOTION_REAL_TO_COMPLEX)
-from .weighting import Weighting
+from .weighting import Weighting, ConstWeighting
 from .pspace import ProductSpaceElement
 
 __all__ = ('TensorSpace',)
@@ -397,7 +397,10 @@ class TensorSpace(LinearSpace):
     @property
     def is_weighted(self):
         """Return ``True`` if the space is not weighted by constant 1.0."""
-        return self.weighting.__weight != 1.0
+        return not (
+            isinstance(self.weighting, ConstWeighting) and
+            self.weighting.const == 1.0 )
+
         
     @property
     def nbytes(self):
