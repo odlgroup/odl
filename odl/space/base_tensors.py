@@ -37,13 +37,15 @@ from .pspace import ProductSpaceElement
 
 __all__ = ('TensorSpace',)
 
-def default_dtype(array_backend: ArrayBackend, field=None):
+def default_dtype(array_backend: ArrayBackend | str, field=None):
     """Return the default data type for a given field.
 
     Parameters
     ----------
-    array_backend : `ArrayBackend`
+    array_backend : `ArrayBackend` or `str`
         The implementation, defining what dtypes are available.
+        If a string is given, it is interpreted as an `impl`
+        identifier of an array backend from the global registry.
     field : `Field`, optional
         Set of numbers to be represented by a data type.
         Currently supported : `RealNumbers`, `ComplexNumbers`
@@ -54,6 +56,8 @@ def default_dtype(array_backend: ArrayBackend, field=None):
     dtype :
         Backend data type specifier.
     """
+    if not isinstance(array_backend, ArrayBackend):
+        array_backend = lookup_array_backend(array_backend)
     if field is None or field == RealNumbers():
         return array_backend.available_dtypes['float64']
     elif field == ComplexNumbers():
