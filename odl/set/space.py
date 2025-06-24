@@ -13,6 +13,7 @@ from builtins import object
 from enum import Enum
 from dataclasses import dataclass
 import numpy as np
+import warnings
 
 from odl.set.sets import Field, Set, UniversalSet
 
@@ -365,44 +366,13 @@ class LinearSpace(Set):
         else:
             return self.field.element(self._inner(x1, x2))
 
-    def _binary_num_operation(self, low_level_method, x1, x2, out=None):
+    def _binary_num_operation(self, x1, x2, combinator, out=None):
         """Apply the numerical operation implemented by `low_level_method` to
         `x1` and `x2`.
         This is done either in in-place fashion or out-of-place, depending on
         which style is preferred for this space."""
 
-        paradigms = self.supported_num_operation_paradigms
-
-        if x1 not in self:
-            raise LinearSpaceTypeError('`x1` {!r} is not an element of '
-                                       '{!r}'.format(x1, self))
-        if x2 not in self:
-            raise LinearSpaceTypeError('`x2` {!r} is not an element of '
-                                       '{!r}'.format(x2, self))
-
-        if out is not None and out not in self:
-            raise LinearSpaceTypeError('`out` {!r} is not an element of '
-                                       '{!r}'.format(out, self))
-
-        if (paradigms.in_place.is_preferred
-             or not paradigms.out_of_place.is_supported
-             or out is not None and paradigms.in_place.is_supported):
-
-            if out is None:
-                out = self.element()
-
-            low_level_method(x1, x2, out=out)
-
-            return out
-
-        else:
-            assert(paradigms.out_of_place.is_supported)
-            result = self.element(low_level_method(x1, x2, out=None))
-            if out is not None:
-                out.assign(result, avoid_deep_copy=True)
-                return out
-            else:
-                return result
+        raise NotImplementedError("abstract method")
 
     def multiply(self, x1, x2, out=None):
         """Return the pointwise product of ``x1`` and ``x2``.
