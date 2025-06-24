@@ -1095,13 +1095,21 @@ class TensorSpace(LinearSpace):
                     
             return self.astype(self.array_backend.get_dtype_identifier(array=result_data)).element(result_data) 
 
-        if isinstance(x2, ProductSpaceElement):
-            assert isinstance(x1, Tensor), 'Right operand is not an ODL Tensor'
-            return x2.__getattribute__(combinator)(x1)
+        if isinstance(x1, ProductSpaceElement):
+            if not isinstance(x2, Tensor):
+                raise TypeError(f'Right operand is not an ODL Tensor. {type(x2)=}')
+            return x1.space._binary_num_operation(x1, x2, combinator, out)
+
+        elif isinstance(x2, ProductSpaceElement):
+            if not isinstance(x1, Tensor):
+                raise TypeError(f'Left operand is not an ODL Tensor. {type(x1)=}')
+            return x2.space._binary_num_operation(x1, x2, combinator, out)
 
 
-        assert isinstance(x1, Tensor), 'Left operand is not an ODL Tensor'
-        assert isinstance(x2, Tensor), 'Right operand is not an ODL Tensor'
+        if not isinstance(x1, Tensor):
+            raise TypeError(f"Left operand is not an ODL Tensor. {type(x1)=}")
+        if not isinstance(x2, Tensor):
+            raise TypeError(f"Right operand is not an ODL Tensor. {type(x2)=}")
 
         if out is None:     
             return getattr(odl, combinator)(x1, x2)
