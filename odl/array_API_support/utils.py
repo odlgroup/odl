@@ -41,16 +41,20 @@ def lookup_array_backend(impl: str) -> ArrayBackend:
     return _registered_array_backends[impl]
 
 def get_array_and_backend(x):
-    from odl.set.space import LinearSpaceElement
-    if isinstance(x, LinearSpaceElement):
+    from odl.space.base_tensors import Tensor
+    if isinstance(x, Tensor):
         return x.data, x.space.array_backend
+
+    from odl.space.pspace import ProductSpaceElement
+    if isinstance(x, ProductSpaceElement):
+        return get_array_and_backend(x.asarray())
 
     for backend in _registered_array_backends.values():
         if isinstance(x, backend.array_type):
             return x, backend
 
     else:
-        raise ValueError(f"The registered array backends are {_registered_array_backends.keys()}. The argument provided is a {type(x)}, check that the backend you want to use is supported and has been correctly instanciated.")
+        raise ValueError(f"The registered array backends are {list(_registered_array_backends.keys())}. The argument provided is a {type(x)}, check that the backend you want to use is supported and has been correctly instanciated.")
 
 AVAILABLE_DEVICES = {
     'numpy' : ['cpu'],

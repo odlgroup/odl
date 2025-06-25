@@ -21,6 +21,7 @@ from odl.set.space import (LinearSpaceElement,
 from odl.space.weighting import (
     ArrayWeighting, ConstWeighting, CustomDist, CustomInner, CustomNorm,
     Weighting)
+from odl.array_API_support.utils import get_array_and_backend
 from odl.util import indent, is_real_dtype, signature_string
 
 __all__ = ('ProductSpace',)
@@ -1135,7 +1136,7 @@ class ProductSpaceElement(LinearSpaceElement):
                     p[:] = v
 
     def asarray(self, out=None):
-        """Extract the data of this vector as a numpy array.
+        """Extract the data of this vector as a backend-specific array.
 
         Only available if `is_power_space` is True.
 
@@ -1145,10 +1146,10 @@ class ProductSpaceElement(LinearSpaceElement):
 
         Parameters
         ----------
-        out : `numpy.ndarray`, optional
+        out : Arraylike, optional
             Array in which the result should be written in-place.
-            Has to be contiguous and of the correct dtype and
-            shape.
+            Has to be contiguous and of the correct backend,
+            dtype and shape.
 
         Raises
         ------
@@ -1168,11 +1169,19 @@ class ProductSpaceElement(LinearSpaceElement):
             raise ValueError('cannot use `asarray` if `space.is_power_space` '
                              'is `False`')
         else:
-            if out is None:
-                out = np.empty(self.shape, self.dtype)
+            representative_array, representative_backend = get_array_and_backend(self.parts[0])
 
-            for i in range(len(self)):
-                out[i] = np.asarray(self[i])
+            if out is None:
+                out = representative_backend.array_namespace.empty(
+                         shape=self.shape,
+                         dtype=self.dtype,
+                         device=representative_array.device)
+
+            out[0] = representative_array
+
+            for i in range(1, len(self)):
+                out[i], _ = get_array_and_backend(self.parts[i])
+
             return out
 
     @property
