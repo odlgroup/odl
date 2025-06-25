@@ -40,7 +40,9 @@ def any(x):
 
 def asarray(x):
     """
-    Test whether all array elements along a given axis evaluate to True.
+    Returns an array corresponding to an ODL object.
+    Note:
+        This does not actually performs a comparison, yet it is located in this module for technical reasons due to the underlying helper function.
     """
     return _helper(x, 'asarray')
 
