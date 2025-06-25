@@ -910,157 +910,157 @@ def test_operators(odl_arithmetic_op):
     assert all_almost_equal([x, y, z], [x_arr, y_arr, z_arr])
 
 
-# def test_ufuncs():
-#     # Cannot use fixture due to bug in pytest
-#     H = odl.ProductSpace(odl.rn(1), odl.rn(2))
-# 
-#     # one arg
-#     x = H.element([[-1], [-2, -3]])
-# 
-#     z = x.ufuncs.absolute()
-#     assert all_almost_equal(z, [[1], [2, 3]])
-# 
-#     # one arg with out
-#     x = H.element([[-1], [-2, -3]])
-#     y = H.element()
-# 
-#     z = x.ufuncs.absolute(out=y)
-#     assert y is z
-#     assert all_almost_equal(z, [[1], [2, 3]])
-# 
-#     # Two args
-#     x = H.element([[1], [2, 3]])
-#     y = H.element([[4], [5, 6]])
-#     w = H.element()
-# 
-#     z = x.ufuncs.add(y)
-#     assert all_almost_equal(z, [[5], [7, 9]])
-# 
-#     # Two args with out
-#     x = H.element([[1], [2, 3]])
-#     y = H.element([[4], [5, 6]])
-#     w = H.element()
-# 
-#     z = x.ufuncs.add(y, out=w)
-#     assert w is z
-#     assert all_almost_equal(z, [[5], [7, 9]])
-# 
-# 
-# def test_reductions():
-#     H = odl.ProductSpace(odl.rn(1), odl.rn(2))
-#     x = H.element([[1], [2, 3]])
-#     assert x.ufuncs.sum() == 6.0
-#     assert x.ufuncs.prod() == 6.0
-#     assert x.ufuncs.min() == 1.0
-#     assert x.ufuncs.max() == 3.0
-# 
-# 
-# def test_np_reductions():
-#     """Check that reductions via NumPy functions work."""
-#     H = odl.ProductSpace(odl.rn(2), 3)
-#     x = 2 * H.one()
-#     assert np.sum(x) == 2 * 6
-#     assert np.prod(x) == 2 ** 6
-# 
-# 
-# def test_array_wrap_method():
-#     """Verify that the __array_wrap__ method for NumPy works."""
-#     space = odl.ProductSpace(odl.uniform_discr(0, 1, 10), 2)
-#     x_arr, x = noise_elements(space)
-#     y_arr = np.sin(x_arr)
-#     y = np.sin(x)  # Should yield again an ODL product space element
-# 
-#     assert y in space
-#     assert all_equal(y, y_arr)
+def test_ufuncs():
+    # Cannot use fixture due to bug in pytest
+    H = odl.ProductSpace(odl.rn(1), odl.rn(2))
+
+    # one arg
+    x = H.element([[-1], [-2, -3]])
+
+    z = x.ufuncs.absolute()
+    assert all_almost_equal(z, [[1], [2, 3]])
+
+    # one arg with out
+    x = H.element([[-1], [-2, -3]])
+    y = H.element()
+
+    z = x.ufuncs.absolute(out=y)
+    assert y is z
+    assert all_almost_equal(z, [[1], [2, 3]])
+
+    # Two args
+    x = H.element([[1], [2, 3]])
+    y = H.element([[4], [5, 6]])
+    w = H.element()
+
+    z = x.ufuncs.add(y)
+    assert all_almost_equal(z, [[5], [7, 9]])
+
+    # Two args with out
+    x = H.element([[1], [2, 3]])
+    y = H.element([[4], [5, 6]])
+    w = H.element()
+
+    z = x.ufuncs.add(y, out=w)
+    assert w is z
+    assert all_almost_equal(z, [[5], [7, 9]])
 
 
-# def test_real_imag_and_conj():
-#     """Verify that .real .imag and .conj() work for product space elements."""
-#     space = odl.ProductSpace(odl.uniform_discr(0, 1, 3, dtype=complex),
-#                              odl.cn(2))
+def test_reductions():
+    H = odl.ProductSpace(odl.rn(1), odl.rn(2))
+    x = H.element([[1], [2, 3]])
+    assert x.ufuncs.sum() == 6.0
+    assert x.ufuncs.prod() == 6.0
+    assert x.ufuncs.min() == 1.0
+    assert x.ufuncs.max() == 3.0
+
+
+def test_np_reductions():
+    """Check that reductions via NumPy functions work."""
+    H = odl.ProductSpace(odl.rn(2), 3)
+    x = 2 * H.one()
+    assert np.sum(x) == 2 * 6
+    assert np.prod(x) == 2 ** 6
+
+
+def test_array_wrap_method():
+    """Verify that the __array_wrap__ method for NumPy works."""
+    space = odl.ProductSpace(odl.uniform_discr(0, 1, 10), 2)
+    x_arr, x = noise_elements(space)
+    y_arr = np.sin(x_arr)
+    y = np.sin(x)  # Should yield again an ODL product space element
+
+    assert y in space
+    assert all_equal(y, y_arr)
+
+
+def test_real_imag_and_conj():
+    """Verify that .real .imag and .conj() work for product space elements."""
+    space = odl.ProductSpace(odl.uniform_discr(0, 1, 3, dtype=complex),
+                             odl.cn(2))
+    x = noise_element(space)
+
+    # Test real
+    expected_result = space.real_space.element([x[0].real, x[1].real])
+    assert x.real == expected_result
+
+    # Test imag
+    expected_result = space.real_space.element([x[0].imag, x[1].imag])
+    assert x.imag == expected_result
+
+    # Test conj. Note that ProductSpace does not implement asarray if
+    # is_power_space is false. Hence the construction below
+    expected_result = space.element([x[0].conj(), x[1].conj()])
+    x_conj = x.conj()
+    assert x_conj[0] == expected_result[0]
+    assert x_conj[1] == expected_result[1]
+
+
+# def test_real_setter_product_space(space, newpart):
+#     """Verify that the setter for the real part of an element works.
+#     What setting the real part means depends on the inputs; we perform a
+#     recursive deconstruction to cover the possible cases.
+#     Barring deeply nested products, the recursion will only be shallow
+#     (depth 2 for a simple product space). We limit it to a depth of at
+#     most 4, to avoid that if some bug causes an infinite recursion,
+#     the user would get a cryptic stack-overflow error."""
+
+#     def verify_result(x, expected_result, recursion_limit=4):
+#         if recursion_limit <= 0:
+#             return False
+#         try:
+#             # Catch scalar argument
+#             iter(expected_result)
+#         except TypeError:
+#             return verify_result(x, expected_result * space.one(),
+#                                  recursion_limit - 1)
+#         if expected_result in space:
+#             return all_equal(x.real, expected_result.real)
+#         elif all_equal(x.real, expected_result):
+#             return True
+#         elif space.is_power_space:
+#             return verify_result(x, [expected_result for _ in space],
+#                                  recursion_limit - 1)
+
 #     x = noise_element(space)
-# 
-#     # Test real
-#     expected_result = space.real_space.element([x[0].real, x[1].real])
-#     assert x.real == expected_result
-# 
-#     # Test imag
-#     expected_result = space.real_space.element([x[0].imag, x[1].imag])
-#     assert x.imag == expected_result
-# 
-#     # Test conj. Note that ProductSpace does not implement asarray if
-#     # is_power_space is false. Hence the construction below
-#     expected_result = space.element([x[0].conj(), x[1].conj()])
-#     x_conj = x.conj()
-#     assert x_conj[0] == expected_result[0]
-#     assert x_conj[1] == expected_result[1]
+#     x.real = newpart
+
+#     assert x in space
+#     assert(verify_result(x, newpart))
+
+#     return
 
 
-def test_real_setter_product_space(space, newpart):
-    """Verify that the setter for the real part of an element works.
-    What setting the real part means depends on the inputs; we perform a
-    recursive deconstruction to cover the possible cases.
-    Barring deeply nested products, the recursion will only be shallow
-    (depth 2 for a simple product space). We limit it to a depth of at
-    most 4, to avoid that if some bug causes an infinite recursion,
-    the user would get a cryptic stack-overflow error."""
+# def test_imag_setter_product_space(space, newpart):
+#     """Like test_real_setter_product_space but for imaginary part."""
 
-    def verify_result(x, expected_result, recursion_limit=4):
-        if recursion_limit <= 0:
-            return False
-        try:
-            # Catch scalar argument
-            iter(expected_result)
-        except TypeError:
-            return verify_result(x, expected_result * space.one(),
-                                 recursion_limit - 1)
-        if expected_result in space:
-            return all_equal(x.real, expected_result.real)
-        elif all_equal(x.real, expected_result):
-            return True
-        elif space.is_power_space:
-            return verify_result(x, [expected_result for _ in space],
-                                 recursion_limit - 1)
+#     def verify_result(x, expected_result, recursion_limit=4):
+#         if recursion_limit <= 0:
+#             return False
+#         try:
+#             # Catch scalar argument
+#             iter(expected_result)
+#         except TypeError:
+#             return verify_result(x, expected_result * space.one(),
+#                                  recursion_limit - 1)
+#         if expected_result in space:
+#             # The imaginary part is by definition real, and thus the new
+#             # imaginary part is thus the real part of the element we try to set
+#             # the value to
+#             return all_equal(x.imag, expected_result.real)
+#         elif all_equal(x.imag, expected_result):
+#             return True
+#         elif space.is_power_space:
+#             return verify_result(x, [expected_result for _ in space],
+#                                  recursion_limit - 1)
 
-    x = noise_element(space)
-    x.real = newpart
+#     x = noise_element(space)
+#     x.imag = newpart
 
-    assert x in space
-    assert(verify_result(x, newpart))
+#     assert x in space
+#     assert(verify_result(x, newpart))
 
-    return
-
-
-def test_imag_setter_product_space(space, newpart):
-    """Like test_real_setter_product_space but for imaginary part."""
-
-    def verify_result(x, expected_result, recursion_limit=4):
-        if recursion_limit <= 0:
-            return False
-        try:
-            # Catch scalar argument
-            iter(expected_result)
-        except TypeError:
-            return verify_result(x, expected_result * space.one(),
-                                 recursion_limit - 1)
-        if expected_result in space:
-            # The imaginary part is by definition real, and thus the new
-            # imaginary part is thus the real part of the element we try to set
-            # the value to
-            return all_equal(x.imag, expected_result.real)
-        elif all_equal(x.imag, expected_result):
-            return True
-        elif space.is_power_space:
-            return verify_result(x, [expected_result for _ in space],
-                                 recursion_limit - 1)
-
-    x = noise_element(space)
-    x.imag = newpart
-
-    assert x in space
-    assert(verify_result(x, newpart))
-
-    return
+#     return
 
 
 if __name__ == '__main__':

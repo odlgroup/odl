@@ -16,7 +16,7 @@ from collections import OrderedDict
 from contextlib import contextmanager
 from itertools import product
 from functools import lru_cache
-
+from odl.array_API_support.comparisons import asarray
 import numpy as np
 
 __all__ = (
@@ -320,7 +320,8 @@ def array_str(a, nprint=6):
     >>> print(array_str((np.array([2.0]) ** 0.5) ** 2))
     [ 2.]
     """
-    a = np.asarray(a)
+    a = asarray(a)
+    a = np.from_dlpack(a)
 
     max_shape = tuple(n if n < nprint else nprint for n in a.shape)
     with npy_printoptions(threshold=int(np.prod(max_shape)),

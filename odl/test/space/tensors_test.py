@@ -483,7 +483,7 @@ def test_multiply_exceptions(tspace):
 def test_power(tspace):
     """Test ``**`` against direct array exponentiation."""
     [x_arr, y_arr], [x, y] = noise_elements(tspace, n=2)
-    y_pos = tspace.element(np.abs(y) + 0.1)
+    y_pos = tspace.element(odl.abs(y) + 0.1)
     y_pos_arr = np.abs(y_arr) + 0.1
 
     # Testing standard positive integer power out-of-place and in-place
@@ -988,17 +988,17 @@ def test_bool_conversion(odl_tspace_impl):
 
     with pytest.raises(ValueError):
         bool(x)
-    assert np.any(x)
+    assert odl.any(x)
     assert any(x)
-    assert not np.all(x)
+    assert not odl.all(x)
     assert not all(x)
 
     space = odl.tensor_space(1, dtype='float32', impl=impl)
     x = space.one()
 
-    assert np.any(x)
+    assert odl.any(x)
     assert any(x)
-    assert np.all(x)
+    assert odl.all(x)
     assert all(x)
 
 

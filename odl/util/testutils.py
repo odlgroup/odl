@@ -16,7 +16,7 @@ import warnings
 from builtins import object
 from contextlib import contextmanager
 from time import time
-
+from odl.array_API_support.comparisons import allclose, isclose
 import numpy as np
 from odl.util.npy_compat import AVOID_UNNECESSARY_COPY
 
@@ -156,7 +156,7 @@ def all_almost_equal_array(v1, v2, ndigits):
                 return False
         return True
     else:
-        return np.allclose(v1, v2,
+        return allclose(v1, v2,
                            rtol=10 ** -ndigits, atol=10 ** -ndigits,
                            equal_nan=True)
 
@@ -185,7 +185,7 @@ def all_almost_equal(iter1, iter2, ndigits=None):
     except TypeError:
         if ndigits is None:
             ndigits = _ndigits(iter1, iter2, None)
-        return np.isclose(iter1, iter2,
+        return isclose(iter1, iter2,
                           atol=10 ** -ndigits, rtol=10 ** -ndigits,
                           equal_nan=True)
 
