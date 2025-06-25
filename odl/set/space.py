@@ -792,6 +792,17 @@ class LinearSpaceElement(object):
         from odl.operator import InnerProductOperator
         return InnerProductOperator(self.copy())
 
+    def __array__(self):
+        raise RuntimeError("""
+           You are trying to convert an ODL object to a plain array, possibly via a NumPy operation. This is not supported in ODL-1.0 anymore because it interferes with the more general Array API and easily leads to confusing results.
+
+           Instead, you should either:
+
+           - Use the ODL operation (e.g. `odl.sin(x)`)
+           - Unwrap the raw array contained in the ODL object, as `x.data`
+           - Explicitly convert to NumPy (or another raw array type) via DLPack
+           """)
+
     # Give an `Element` a higher priority than any NumPy array type. This
     # forces the usage of `__op__` of `Element` if the other operand
     # is a NumPy object (applies also to scalars!).
