@@ -1095,13 +1095,21 @@ class TensorSpace(LinearSpace):
                     
             return self.astype(self.array_backend.get_dtype_identifier(array=result_data)).element(result_data) 
 
-        if isinstance(x2, ProductSpaceElement):
-            assert isinstance(x1, Tensor), 'Right operand is not an ODL Tensor'
-            return x2.__getattribute__(combinator)(x1)
+        if isinstance(x1, ProductSpaceElement):
+            if not isinstance(x2, Tensor):
+                raise TypeError(f'Right operand is not an ODL Tensor. {type(x2)=}')
+            return x1.space._binary_num_operation(x1, x2, combinator, out)
+
+        elif isinstance(x2, ProductSpaceElement):
+            if not isinstance(x1, Tensor):
+                raise TypeError(f'Left operand is not an ODL Tensor. {type(x1)=}')
+            return x2.space._binary_num_operation(x1, x2, combinator, out)
 
 
-        assert isinstance(x1, Tensor), 'Left operand is not an ODL Tensor'
-        assert isinstance(x2, Tensor), 'Right operand is not an ODL Tensor'
+        if not isinstance(x1, Tensor):
+            raise TypeError(f"Left operand is not an ODL Tensor. {type(x1)=}")
+        if not isinstance(x2, Tensor):
+            raise TypeError(f"Right operand is not an ODL Tensor. {type(x2)=}")
 
         if out is None:     
             return getattr(odl, combinator)(x1, x2)
@@ -1699,61 +1707,6 @@ class Tensor(LinearSpaceElement):
     [X] x2 >> x1: array.__rrshift__()
     """
     ####### Arithmetic Operators #######
-    def __pos__(self):
-        """Return obj positive (+obj)."""
-        return odl.positive(self)
-    
-    def __neg__(self):
-        """Return obj positive (+obj)."""
-        return odl.negative(self)
-    
-    def __add__(self, other):
-        """Return ``self + other``."""
-        return self.space._binary_num_operation(
-            self, other, 'add'
-        )
-    
-    def __sub__(self, other):
-        """Return ``self - other``."""
-        return self.space._binary_num_operation(
-            self, other, 'subtract'
-        )
-    
-    def __mul__(self, other):
-        """Return ``self * other``."""
-        return self.space._binary_num_operation(
-            self, other, 'multiply'
-        )
-    
-    def __truediv__(self, other):
-        """Implement ``self / other``."""
-        with warnings.catch_warnings(record=True) as w:
-            result = self.space._binary_num_operation(
-                self, other, 'divide'
-            )
-            for warning in w:
-                if issubclass(warning.category, RuntimeWarning):
-                    raise RuntimeError(f"Caught a RuntimeWarning: {warning.message}")
-            return result
-    
-    def __floordiv__(self, other):        
-        """Implement ``self // other``."""
-        return self.space._binary_num_operation(
-            self, other, 'floor_divide'
-        )
-
-    def __mod__(self, other):        
-        """Implement ``self % other``."""
-        return self.space._binary_num_operation(
-            self, other, 'remainder'
-        )
-    
-    def __pow__(self, other):
-        """Implement ``self ** other``, element wise"""
-        return self.space._binary_num_operation(
-            self, other, 'pow'
-        )
-    
     ################# Array Operators #################
     def __matmul__(self, other):    
         """Implement ``self @ other``."""
@@ -1819,54 +1772,6 @@ class Tensor(LinearSpaceElement):
         """Return ``self != other``."""
         return not self.__eq__(other)
     
-     ################# In-place Arithmetic Operators #################
-    def __iadd__(self, other):
-        """Implement ``self += other``."""
-        return self.space._binary_num_operation(
-            self, other, 'add', self
-        )
-    
-    def __isub__(self, other):
-        """Implement ``self -= other``."""
-        return self.space._binary_num_operation(
-            self, other, 'subtract', self
-        )
-    
-    def __imul__(self, other):
-        """Return ``self *= other``."""
-        return self.space._binary_num_operation(
-            self, other, 'multiply', self
-        )
-    
-    def __itruediv__(self, other):
-        """Implement ``self /= other``."""
-        with warnings.catch_warnings(record=True) as w:
-            result = self.space._binary_num_operation(
-                self, other, 'divide', self
-            )
-            for warning in w:
-                if issubclass(warning.category, RuntimeWarning):
-                    raise RuntimeError(f"Caught a RuntimeWarning: {warning.message}")
-            return result
-    
-    def __ifloordiv__(self, other):
-        """Implement ``self //= other``."""
-        return self.space._binary_num_operation(
-            self, other, 'floor_divide', self
-        )
-    
-    def __imod__(self, other):
-        """Implement ``self %= other``."""
-        return self.space._binary_num_operation(
-            self, other, 'remainder', self
-        )
-    
-    def __ipow__(self, other):
-        """Implement ``self *= other``, element wise"""
-        return self.space._binary_num_operation(
-            self, other, 'pow', self
-        )
-    
     ################# In-place Array Operators #################
     def __imatmul__(self, other):
         """Implement x1 @= x2 """
@@ -1893,49 +1798,6 @@ class Tensor(LinearSpaceElement):
         """Implement ``self.ibitwise_rshift``."""
         raise NotImplementedError
 
-    ################# Reflected Arithmetic Operators #################
-    def __radd__(self, other):
-        """Return ``other + self``."""
-        return self.space._binary_num_operation(
-            other, self, 'add'
-        )
-    
-    def __rsub__(self, other):
-        """Return ``other - self``."""
-        return self.space._binary_num_operation(
-            other, self, 'subtract'
-        )
- 
-    def __rmul__(self, other):
-        """Return ``other * self``."""
-        return self.space._binary_num_operation(
-            other, self, 'multiply'
-        )
-    
-    def __rtruediv__(self, other):
-        """Implement ``other / self``."""
-        return self.space._binary_num_operation(
-             other, self, 'divide'
-        )
-    
-    def __rfloordiv__(self, other):
-        """Implement ``other // self``."""
-        return self.space._binary_num_operation(
-            other, self, 'floor_divide'
-        )
-    
-    def __rmod__(self, other):        
-        """Implement ``other % self``."""
-        return self.space._binary_num_operation(
-            other, self, 'remainder'
-        )
-    
-    def __rpow__(self, other):
-        """Implement ``other ** self``, element wise"""
-        return self.space._binary_num_operation(
-            other, self, 'pow'
-        )
-    
     ################# Reflected Array Operators #################
     def __rmatmul__(self, other):
         """Implement x1 @= x2 """
