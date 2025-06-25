@@ -2,6 +2,7 @@ from types import ModuleType
 from dataclasses import dataclass
 from typing import Callable
 
+
 __all__ = (
     'AVAILABLE_DEVICES',
     'IMPL_DEVICE_PAIRS',
@@ -32,10 +33,24 @@ class ArrayBackend:
             assert 'array' not in kwargs, 'array and dtype are multually exclusive parameters'
             return self.identifier_of_dtype(kwargs['dtype'])
         raise ValueError("Either 'array' or 'dtype' argument must be provided.")
+    
+    def __eq__(self, other):
+        return isinstance(other, ArrayBackend) and self.impl == other.impl
 
 def lookup_array_backend(impl: str) -> ArrayBackend:
     return _registered_array_backends[impl]
 
+def get_array_and_backend(x):
+    from odl.set.space import LinearSpaceElement
+    if isinstance(x, LinearSpaceElement):
+        return x.data, x.space.array_backend
+
+    for backend in _registered_array_backends.values():
+        if isinstance(x, backend.array_type):
+            return x, backend
+
+    else:
+        raise ValueError(f"The registered array backends are {_registered_array_backends.keys()}. The argument provided is a {type(x)}, check that the backend you want to use is supported and has been correctly instanciated.")
 
 AVAILABLE_DEVICES = {
     'numpy' : ['cpu'],
