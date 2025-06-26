@@ -1,4 +1,6 @@
 from .utils import get_array_and_backend
+from numbers import Number
+import numpy as np
 
 __all__ = (
     "all",    
@@ -10,6 +12,15 @@ __all__ = (
 
 
 def _helper(x, fname, **kwargs):    
+    if isinstance(x, Number):
+        fn = getattr(np, fname)
+        if 'y' in kwargs:
+            y = kwargs.pop('y')
+            assert isinstance(y, Number)
+            return fn(x, y, **kwargs)
+        else: 
+            return fn(x, **kwargs)
+        
     x, backend_x = get_array_and_backend(x)
     fn = getattr(backend_x.array_namespace, fname)
     if 'y' in kwargs:
