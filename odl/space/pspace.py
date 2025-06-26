@@ -11,7 +11,7 @@
 from __future__ import absolute_import, division, print_function
 
 from itertools import product
-from numbers import Integral
+from numbers import Integral, Number
 import operator
 import numpy as np
 
@@ -283,7 +283,11 @@ class ProductSpace(LinearSpace):
         """
         return len(self.spaces)
 
-    def _binary_num_operation(self, x1, x2, combinator:str, out=None):
+    def _elementwise_num_operation(self, x1: LinearSpaceElement | Number
+                                       , x2: None | LinearSpaceElement | Number
+                                       , combinator:str
+                                       , out=None
+                                       , **kwargs ):
         """
         Internal helper function to implement the __magic_functions__ (such as __add__).
 
@@ -312,40 +316,50 @@ class ProductSpace(LinearSpace):
                 raise TypeError(f"Output argument for ProductSpace arithmetic must be a product space. {type(out)=}")
             assert len(out.parts) == len(self)
 
+        if x2 is None:
+            if out is None:
+                return self.element([
+                    xl.space._elementwise_num_operation(xl, combinator=combinator, **kwargs)
+                    for xl in x1.parts ])
+            else:
+                for i, xl in enumerate(x1.parts):
+                    xl.space._elementwise_num_operation(xl, combinator=combinator, out=out.parts[i], **kwargs)
+                return out
+
         if isinstance(x1, ProductSpaceElement) and isinstance(x2, ProductSpaceElement):
             assert len(x1.parts) == len(x2.parts)
             if out is None:
                 return self.element([
-                    xl.space._binary_num_operation(xl, xr, combinator=combinator)
+                    xl.space._elementwise_num_operation(xl, xr, combinator=combinator, **kwargs)
                     for xl, xr in zip(x1.parts, x2.parts) ])
             else:
                 for i, xl in enumerate(x1.parts):
                     xr = x2.parts[i]
-                    xl.space._binary_num_operation(xl, xr, combinator=combinator, out=out.parts[i])
+                    xl.space._elementwise_num_operation(xl, xr, combinator=combinator, out=out.parts[i], **kwargs)
                 return out
 
         elif isinstance(x1, ProductSpaceElement):
             if out is None:
                 return self.element([
-                    x.space._binary_num_operation(x, x2, combinator=combinator)
+                    x.space._elementwise_num_operation(x, x2, combinator=combinator, **kwargs)
                     for x in x1.parts ])
             else:
                 for i, x in enumerate(x1.parts):
-                    x.space._binary_num_operation(x, x2, combinator=combinator, out=out.parts[i])
+                    x.space._elementwise_num_operation(x, x2, combinator=combinator, out=out.parts[i], **kwargs)
                 return out
 
         elif isinstance(x2, ProductSpaceElement):
             if out is None:
                 return self.element([
-                    x.space._binary_num_operation(x1, x, combinator=combinator)
+                    x.space._elementwise_num_operation(x1, x, combinator=combinator, **kwargs)
                     for x in x2.parts ])
             else:
                 for i, x in enumerate(x2.parts):
-                    x.space._binary_num_operation(x1, x, combinator=combinator, out=out.parts[i])
+                    x.space._elementwise_num_operation(x1, x, combinator=combinator, out=out.parts[i], **kwargs)
                 return out
 
         else:
-            raise TypeError(f"At least one of the arguments to `ProductSpace._binary_num_operation` should be a `ProductSpaceElement`, but got {type(x1)=}, {type(x2)=}")
+            raise TypeError(f"At least one of the arguments to `ProductSpace._elementwise_num_operation` should be a `ProductSpaceElement`, but got {type(x1)=}, {type(x2)=}")
                 
 
     @property

@@ -1037,15 +1037,19 @@ class TensorSpace(LinearSpace):
         """
         return self.weighting.norm(x.data)
     
-    def _binary_num_operation(self, x1, x2, combinator:str, out=None):
+    def _elementwise_num_operation(self, x1: LinearSpaceElement | Number
+                                       , x2: None | LinearSpaceElement | Number
+                                       , combinator:str
+                                       , out=None
+                                       , **kwargs ):
         """
         Internal helper function to implement the __magic_functions__ (such as __add__).
 
         Parameters
         ----------
-        x1 : TensorSpaceElement, int, float, complex
+        x1 : LinearSpaceElement, Number
             Left operand
-        x2 : TensorSpaceElement, int, float, complex
+        x2 : LinearSpaceElement, Number
             Right operand
         combinator: str
             Attribute of the array namespace
@@ -1078,32 +1082,42 @@ class TensorSpace(LinearSpace):
         if self.field is None:
             raise NotImplementedError(f"The space has no field.")
 
+        if x2 is None:
+            assert(x1 in self)
+            fn = getattr(self.array_namespace, combinator)
+            if out is None:
+                result_data = fn(x1.data, **kwargs)
+            else:
+                assert out in self, f"out is not an element of the space."
+                result_data = fn(x1.data, out.data, **kwargs)
+            return self.astype(self.array_backend.get_dtype_identifier(array=result_data)).element(result_data) 
+
         if isinstance(x1, (int, float, complex)) or isinstance(x2, (int, float, complex)):
             fn =  getattr(self.array_namespace, combinator)
             if out is None:
                 if isinstance(x1, (int, float, complex)):
-                    result_data = fn(x1, x2.data)
+                    result_data = fn(x1, x2.data, **kwargs)
                 elif isinstance(x2, (int, float, complex)):
-                    result_data = fn(x1.data, x2)
+                    result_data = fn(x1.data, x2, **kwargs)
                     
             else:
                 assert out in self, f"out is not an element of the space."
                 if isinstance(x1, (int, float, complex)):
-                    result_data = fn(x1, x2.data, out.data)
+                    result_data = fn(x1, x2.data, out.data, **kwargs)
                 elif isinstance(x2, (int, float, complex)):
-                    result_data = fn(x1.data, x2, out.data)
+                    result_data = fn(x1.data, x2, out.data, **kwargs)
                     
             return self.astype(self.array_backend.get_dtype_identifier(array=result_data)).element(result_data) 
 
         if isinstance(x1, ProductSpaceElement):
             if not isinstance(x2, Tensor):
                 raise TypeError(f'Right operand is not an ODL Tensor. {type(x2)=}')
-            return x1.space._binary_num_operation(x1, x2, combinator, out)
+            return x1.space._elementwise_num_operation(x1, x2, combinator, out, **kwargs)
 
         elif isinstance(x2, ProductSpaceElement):
             if not isinstance(x1, Tensor):
                 raise TypeError(f'Left operand is not an ODL Tensor. {type(x1)=}')
-            return x2.space._binary_num_operation(x1, x2, combinator, out)
+            return x2.space._elementwise_num_operation(x1, x2, combinator, out, **kwargs)
 
 
         if not isinstance(x1, Tensor):
