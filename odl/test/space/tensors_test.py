@@ -603,11 +603,11 @@ def test_assign(tspace):
 
 def test_inner(tspace):
     """Test the inner method against numpy.vdot."""
-    xd = noise_element(tspace)
-    yd = noise_element(tspace)
+    xarr, xd = noise_elements(tspace)
+    yarr, yd = noise_elements(tspace)
 
     # TODO: add weighting
-    correct_inner = np.vdot(yd, xd)
+    correct_inner = np.vdot(yarr, xarr)
     assert tspace.inner(xd, yd) == pytest.approx(correct_inner)
     assert xd.inner(yd) == pytest.approx(correct_inner)
 
@@ -1373,10 +1373,10 @@ def test_custom_norm(tspace):
         w.inner(x, y)
 
     true_norm = np.linalg.norm(xarr.ravel())
-    assert w.norm(x) == pytest.approx(true_norm)
+    assert tspace.norm(x) == pytest.approx(true_norm)
 
     true_dist = np.linalg.norm((xarr - yarr).ravel())
-    assert w.dist(x, y) == pytest.approx(true_dist)
+    assert tspace.dist(x, y) == pytest.approx(true_dist)
 
     with pytest.raises(ValueError):
         odl.space_weighting(impl=tspace.impl, norm=norm, weight = 1)
@@ -1407,7 +1407,7 @@ def test_custom_dist(tspace):
         w.norm(x)
 
     true_dist = ns.linalg.norm((xarr - yarr).ravel())
-    assert w.dist(x, y) == pytest.approx(true_dist)
+    assert tspace.dist(x, y) == pytest.approx(true_dist)
 
     with pytest.raises(ValueError):
         odl.space_weighting(impl=tspace.impl, dist=dist, weight = 1)
