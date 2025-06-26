@@ -1037,7 +1037,7 @@ class TensorSpace(LinearSpace):
         """
         return self.weighting.norm(x.data)
     
-    def _elementwise_num_operation(self, combinator:str
+    def _elementwise_num_operation(self, operation:str
                                        , x1: LinearSpaceElement | Number
                                        , x2: None | LinearSpaceElement | Number = None
                                        , out=None
@@ -1051,7 +1051,7 @@ class TensorSpace(LinearSpace):
             Left operand
         x2 : LinearSpaceElement, Number
             Right operand
-        combinator: str
+        operation: str
             Attribute of the array namespace
         out : TensorSpaceElement, Optional
             LinearSpaceElement for out-of-place operations
@@ -1059,7 +1059,7 @@ class TensorSpace(LinearSpace):
         Returns
         -------
         TensorSpaceElement
-            The result of the operation `combinator` wrapped in a space with the right datatype.
+            The result of the operation `operation` wrapped in a space with the right datatype.
 
         Notes:
             The dtype of the returned TensorSpaceElement (and the space that wraps it) is infered 
@@ -1075,7 +1075,7 @@ class TensorSpace(LinearSpace):
         1) if either of the operands are Python numeric types (int, float complex)
             -> the operation is performed on the backend of the TensorSpaceElement and the dtype infered from it.
         2) if the two operands are TensorSpaceElements
-            -> the operation is delegated to the general odl.combinator which performs the checks on space shape and 
+            -> the operation is delegated to the general odl.operation which performs the checks on space shape and 
             device consistency.
 
         """
@@ -1084,15 +1084,15 @@ class TensorSpace(LinearSpace):
 
         if out is not None:
             assert isinstance(out, Tensor)
-            assert self.shape == out.space.shape, f"The shapes of {self} and out {out.space.shape} differ, cannot perform {combinator}"
-            assert self.device == out.space.device, f"The devices of {self} and out {out.space.device} differ, cannot perform {combinator}"
+            assert self.shape == out.space.shape, f"The shapes of {self} and out {out.space.shape} differ, cannot perform {operation}"
+            assert self.device == out.space.device, f"The devices of {self} and out {out.space.device} differ, cannot perform {operation}"
         
         if x1 is None:
             raise TypeError("The left-hand argument always needs to be provided")
 
         if x2 is None:
             assert(x1 in self)
-            fn = getattr(self.array_namespace, combinator)
+            fn = getattr(self.array_namespace, operation)
             if out is None:
                 result_data = fn(x1.data, **kwargs)
             else:
@@ -1100,7 +1100,7 @@ class TensorSpace(LinearSpace):
             return self.astype(self.array_backend.get_dtype_identifier(array=result_data)).element(result_data) 
 
         if isinstance(x1, (int, float, complex)) or isinstance(x2, (int, float, complex)):
-            fn =  getattr(self.array_namespace, combinator)
+            fn =  getattr(self.array_namespace, operation)
             if out is None:
                 if isinstance(x1, (int, float, complex)):
                     result_data = fn(x1, x2.data, **kwargs)
@@ -1119,12 +1119,12 @@ class TensorSpace(LinearSpace):
         if isinstance(x1, ProductSpaceElement):
             if not isinstance(x2, Tensor):
                 raise TypeError(f'Right operand is not an ODL Tensor. {type(x2)=}')
-            return x1.space._elementwise_num_operation(combinator, x1, x2, out, **kwargs)
+            return x1.space._elementwise_num_operation(operation, x1, x2, out, **kwargs)
 
         elif isinstance(x2, ProductSpaceElement):
             if not isinstance(x1, Tensor):
                 raise TypeError(f'Left operand is not an ODL Tensor. {type(x1)=}')
-            return x2.space._elementwise_num_operation(combinator, x1, x2, out, **kwargs)
+            return x2.space._elementwise_num_operation(operation, x1, x2, out, **kwargs)
 
 
         if not isinstance(x1, Tensor):
@@ -1132,10 +1132,10 @@ class TensorSpace(LinearSpace):
         if not isinstance(x2, Tensor):
             raise TypeError(f"Right operand is not an ODL Tensor. {type(x2)=}")
 
-        element_wise_function = getattr(x1.array_namespace, combinator)
+        element_wise_function = getattr(x1.array_namespace, operation)
  
-        assert self.shape == x2.space.shape, f"The shapes of {self} and x2 {x2.space.shape} differ, cannot perform {combinator}"
-        assert self.device == x2.space.device, f"The devices of {self} and x2 {x2.space.device} differ, cannot perform {combinator}"
+        assert self.shape == x2.space.shape, f"The shapes of {self} and x2 {x2.space.shape} differ, cannot perform {operation}"
+        assert self.device == x2.space.device, f"The devices of {self} and x2 {x2.space.device} differ, cannot perform {operation}"
 
         if out is None:
             result = element_wise_function(x1.data, x2.data)

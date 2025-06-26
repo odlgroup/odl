@@ -367,7 +367,7 @@ class LinearSpace(Set):
         else:
             return self.field.element(self._inner(x1, x2))
 
-    def _elementwise_num_operation(self, combinator:str
+    def _elementwise_num_operation(self, operation:str
                                        , x1: Union["LinearSpaceElement", Number]
                                        , x2: Union[None, "LinearSpaceElement", Number] = None
                                        , out=None

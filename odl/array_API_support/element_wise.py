@@ -79,7 +79,7 @@ __all__ = (
 
 def _apply_element_wise(x1, operation: str, out=None, x2=None, **kwargs):
 
-    return x1.space._elementwise_num_operation(combinator=operation, x1=x1, x2=x2, out=out, **kwargs)
+    return x1.space._elementwise_num_operation(operation=operation, x1=x1, x2=x2, out=out, **kwargs)
 
 
 def abs(x, out=None):

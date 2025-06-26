@@ -283,7 +283,7 @@ class ProductSpace(LinearSpace):
         """
         return len(self.spaces)
 
-    def _elementwise_num_operation(self, combinator:str
+    def _elementwise_num_operation(self, operation:str
                                        , x1: LinearSpaceElement | Number
                                        , x2: None | LinearSpaceElement | Number
                                        , out=None
@@ -297,7 +297,7 @@ class ProductSpace(LinearSpace):
             Left operand
         x2 : ProductSpaceElement, TensorSpaceElement, int, float, complex
             Right operand
-        combinator: str
+        operation: str
             Attribute of the array namespace
         out : ProductSpaceElement, Optional
             ProductSpaceElement for out-of-place operations
@@ -305,7 +305,7 @@ class ProductSpace(LinearSpace):
         Returns
         -------
         ProductSpaceElement
-            The result of the operation `combinator` wrapped in a space with the right datatype.
+            The result of the operation `operation` wrapped in a space with the right datatype.
 
         """
         if self.field is None:
@@ -319,43 +319,43 @@ class ProductSpace(LinearSpace):
         if x2 is None:
             if out is None:
                 return self.element([
-                    xl.space._elementwise_num_operation(combinator=combinator, x1=xl, **kwargs)
+                    xl.space._elementwise_num_operation(operation=operation, x1=xl, **kwargs)
                     for xl in x1.parts ])
             else:
                 for i, xl in enumerate(x1.parts):
-                    xl.space._elementwise_num_operation(combinator=combinator, x1=xl, out=out.parts[i], **kwargs)
+                    xl.space._elementwise_num_operation(operation=operation, x1=xl, out=out.parts[i], **kwargs)
                 return out
 
         if isinstance(x1, ProductSpaceElement) and isinstance(x2, ProductSpaceElement):
             assert len(x1.parts) == len(x2.parts)
             if out is None:
                 return self.element([
-                    xl.space._elementwise_num_operation(combinator=combinator, x1=xl, x2=xr, **kwargs)
+                    xl.space._elementwise_num_operation(operation=operation, x1=xl, x2=xr, **kwargs)
                     for xl, xr in zip(x1.parts, x2.parts) ])
             else:
                 for i, xl in enumerate(x1.parts):
                     xr = x2.parts[i]
-                    xl.space._elementwise_num_operation(combinator=combinator, x1=xl, x2=xr, out=out.parts[i], **kwargs)
+                    xl.space._elementwise_num_operation(operation=operation, x1=xl, x2=xr, out=out.parts[i], **kwargs)
                 return out
 
         elif isinstance(x1, ProductSpaceElement):
             if out is None:
                 return self.element([
-                    x.space._elementwise_num_operation(combinator=combinator, x1=x, x2=x2, **kwargs)
+                    x.space._elementwise_num_operation(operation=operation, x1=x, x2=x2, **kwargs)
                     for x in x1.parts ])
             else:
                 for i, x in enumerate(x1.parts):
-                    x.space._elementwise_num_operation(combinator=combinator, x1=x, x2=x2, out=out.parts[i], **kwargs)
+                    x.space._elementwise_num_operation(operation=operation, x1=x, x2=x2, out=out.parts[i], **kwargs)
                 return out
 
         elif isinstance(x2, ProductSpaceElement):
             if out is None:
                 return self.element([
-                    x.space._elementwise_num_operation(combinator=combinator, x1=x1, x2=x, **kwargs)
+                    x.space._elementwise_num_operation(operation=operation, x1=x1, x2=x, **kwargs)
                     for x in x2.parts ])
             else:
                 for i, x in enumerate(x2.parts):
-                    x.space._elementwise_num_operation(combinator=combinator, x1=x1, x2=x, out=out.parts[i], **kwargs)
+                    x.space._elementwise_num_operation(operation=operation, x1=x1, x2=x, out=out.parts[i], **kwargs)
                 return out
 
         else:
