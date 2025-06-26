@@ -1458,7 +1458,7 @@ class Tensor(LinearSpaceElement):
 
         Parameters
         ----------
-        newimag : array-like or scalar
+        newimag : `Tensor`, array-like, or scalar
             Values to be assigned to the imaginary part of this element.
 
         Raises
@@ -1468,7 +1468,11 @@ class Tensor(LinearSpaceElement):
         """
         if self.space.is_real:
             raise ValueError('cannot set imaginary part in real spaces')
-        self.imag.data[:] = newimag
+        if isinstance(newimag, Tensor):
+            assert(newimag in self.space.real_space)
+        else:
+            newimag = self.space.real_space.element(newimag)
+        self.data.imag = newimag.data
 
     @real.setter
     def real(self, newreal):
@@ -1478,10 +1482,14 @@ class Tensor(LinearSpaceElement):
 
         Parameters
         ----------
-        newreal : array-like or scalar
+        newreal : `Tensor`, array-like, or scalar
             Values to be assigned to the real part of this element.
         """
-        self.real.data[:] = newreal
+        if isinstance(newreal, Tensor):
+            assert(newreal in self.space.real_space)
+        else:
+            newreal = self.space.real_space.element(newreal)
+        self.data.real = newreal.data
     
     def show(self, title=None, method='', indices=None, force_show=False,
              fig=None, **kwargs):

@@ -12,6 +12,7 @@ import pytest
 import operator
 
 import odl
+from odl.set.sets import ComplexNumbers, RealNumbers
 from odl.util.testutils import (
     all_equal, all_almost_equal, noise_elements, noise_element, simple_fixture)
 
@@ -993,71 +994,80 @@ def test_real_imag_and_conj():
     assert x_conj[1] == expected_result[1]
 
 
-# def test_real_setter_product_space(space, newpart):
-#     """Verify that the setter for the real part of an element works.
-#     What setting the real part means depends on the inputs; we perform a
-#     recursive deconstruction to cover the possible cases.
-#     Barring deeply nested products, the recursion will only be shallow
-#     (depth 2 for a simple product space). We limit it to a depth of at
-#     most 4, to avoid that if some bug causes an infinite recursion,
-#     the user would get a cryptic stack-overflow error."""
+def test_real_setter_product_space(space, newpart):
+    """Verify that the setter for the real part of an element works.
+    What setting the real part means depends on the inputs; we perform a
+    recursive deconstruction to cover the possible cases.
+    Barring deeply nested products, the recursion will only be shallow
+    (depth 2 for a simple product space). We limit it to a depth of at
+    most 4, to avoid that if some bug causes an infinite recursion,
+    the user would get a cryptic stack-overflow error."""
 
-#     def verify_result(x, expected_result, recursion_limit=4):
-#         if recursion_limit <= 0:
-#             return False
-#         try:
-#             # Catch scalar argument
-#             iter(expected_result)
-#         except TypeError:
-#             return verify_result(x, expected_result * space.one(),
-#                                  recursion_limit - 1)
-#         if expected_result in space:
-#             return all_equal(x.real, expected_result.real)
-#         elif all_equal(x.real, expected_result):
-#             return True
-#         elif space.is_power_space:
-#             return verify_result(x, [expected_result for _ in space],
-#                                  recursion_limit - 1)
+    if getattr(newpart, 'space', odl.rn(1)).field == ComplexNumbers():
+        # It is not possible to set a real part to a complex number, skip this case
+        return
 
-#     x = noise_element(space)
-#     x.real = newpart
+    def verify_result(x, expected_result, recursion_limit=4):
+        if recursion_limit <= 0:
+            return False
+        try:
+            # Catch scalar argument
+            iter(expected_result)
+        except TypeError:
+            return verify_result(x, expected_result * space.one(),
+                                 recursion_limit - 1)
+        if expected_result in space:
+            return all_equal(x.real, expected_result.real)
+        elif all_equal(x.real, expected_result):
+            return True
+        elif space.is_power_space:
+            return verify_result(x, [expected_result for _ in space],
+                                 recursion_limit - 1)
 
-#     assert x in space
-#     assert(verify_result(x, newpart))
+    x = noise_element(space)
+    x.real = newpart
 
-#     return
+    assert x in space
+    assert(verify_result(x, newpart))
+
+    return
 
 
-# def test_imag_setter_product_space(space, newpart):
-#     """Like test_real_setter_product_space but for imaginary part."""
+def test_imag_setter_product_space(space, newpart):
+    """Like test_real_setter_product_space but for imaginary part."""
 
-#     def verify_result(x, expected_result, recursion_limit=4):
-#         if recursion_limit <= 0:
-#             return False
-#         try:
-#             # Catch scalar argument
-#             iter(expected_result)
-#         except TypeError:
-#             return verify_result(x, expected_result * space.one(),
-#                                  recursion_limit - 1)
-#         if expected_result in space:
-#             # The imaginary part is by definition real, and thus the new
-#             # imaginary part is thus the real part of the element we try to set
-#             # the value to
-#             return all_equal(x.imag, expected_result.real)
-#         elif all_equal(x.imag, expected_result):
-#             return True
-#         elif space.is_power_space:
-#             return verify_result(x, [expected_result for _ in space],
-#                                  recursion_limit - 1)
+    if getattr(newpart, 'space', odl.rn(1)).field == ComplexNumbers():
+        # The imaginary part is itself a real quantity, and
+        # cannot be set to a complex value. Skip test.
+        return
 
-#     x = noise_element(space)
-#     x.imag = newpart
+    def verify_result(x, expected_result, recursion_limit=4):
+        if recursion_limit <= 0:
+            return False
+        try:
+            # Catch scalar argument
+            iter(expected_result)
+        except TypeError:
+            return verify_result(x, expected_result * space.one(),
+                                 recursion_limit - 1)
+        if expected_result in space:
+            # The imaginary part is by definition real, and thus the new
+            # imaginary part is thus the real part of the element we try to set
+            # the value to
+            return all_equal(x.imag, expected_result.real)
+        elif all_equal(x.imag, expected_result):
+            return True
+        elif space.is_power_space:
+            return verify_result(x, [expected_result for _ in space],
+                                 recursion_limit - 1)
 
-#     assert x in space
-#     assert(verify_result(x, newpart))
+    x = noise_element(space)
+    x.imag = newpart
 
-#     return
+    assert x in space
+    assert(verify_result(x, newpart))
+
+    return
 
 
 if __name__ == '__main__':

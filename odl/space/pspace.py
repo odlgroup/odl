@@ -1273,7 +1273,7 @@ class ProductSpaceElement(LinearSpaceElement):
                 # Set same value in all parts
                 for part in self.parts:
                     part.real = newreal
-            except (ValueError, TypeError):
+            except (AttributeError, ValueError, TypeError):
                 # Iterate over all parts and set them separately
                 for part, new_re in zip(self.parts, newreal):
                     part.real = new_re
@@ -1356,7 +1356,7 @@ class ProductSpaceElement(LinearSpaceElement):
                 # Set same value in all parts
                 for part in self.parts:
                     part.imag = newimag
-            except (ValueError, TypeError):
+            except (AttributeError, ValueError, TypeError):
                 # Iterate over all parts and set them separately
                 for part, new_im in zip(self.parts, newimag):
                     part.imag = new_im
