@@ -380,6 +380,10 @@ class LinearSpace(Set):
 
         raise NotImplementedError("abstract method")
 
+    def _element_reduction(self, operation:str
+                               , x: "LinearSpaceElement"):
+        raise NotImplementedError("abstract method")
+
     @property
     def element_type(self):
         """Type of elements of this space (`LinearSpaceElement`)."""

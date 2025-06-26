@@ -953,18 +953,11 @@ def test_ufuncs():
 def test_reductions():
     H = odl.ProductSpace(odl.rn(1), odl.rn(2))
     x = H.element([[1], [2, 3]])
-    assert x.ufuncs.sum() == 6.0
-    assert x.ufuncs.prod() == 6.0
-    assert x.ufuncs.min() == 1.0
-    assert x.ufuncs.max() == 3.0
+    assert odl.sum(x) == 6.0
+    assert odl.prod(x) == 6.0
+    assert odl.min(x) == 1.0
+    assert odl.max(x) == 3.0
 
-
-def test_np_reductions():
-    """Check that reductions via NumPy functions work."""
-    H = odl.ProductSpace(odl.rn(2), 3)
-    x = 2 * H.one()
-    assert np.sum(x) == 2 * 6
-    assert np.prod(x) == 2 ** 6
 
 
 def test_array_wrap_method():

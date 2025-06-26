@@ -1766,18 +1766,15 @@ def test_custom_dist(tspace):
 #         assert np.allclose(out, result_npy)
 
 
-# def test_ufunc_reduction_docs_notempty(odl_tspace_impl):
-#     """Check that the generated docstrings are not empty."""
-#     impl = odl_tspace_impl
-#     x = odl.rn(3, impl=impl).element()
+def test_reduction(odl_tspace_impl):
+    """Check that the generated docstrings are not empty."""
+    impl = odl_tspace_impl
+    x = odl.rn(3, impl=impl).element()
 
-#     for name, _, __, ___ in UFUNCS:
-#         ufunc = getattr(x.ufuncs, name)
-#         assert ufunc.__doc__.splitlines()[0] != ''
-
-#     for name in ['sum', 'prod', 'min', 'max']:
-#         reduction = getattr(x.ufuncs, name)
-#         assert reduction.__doc__.splitlines()[0] != ''
+    for name in ['sum', 'prod', 'min', 'max']:
+        reduction = getattr(odl, name)
+        reduction_arr = getattr(np, name)
+        assert reduction(x) == reduction_arr(x.data)
 
 
 if __name__ == '__main__':

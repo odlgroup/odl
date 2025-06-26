@@ -1153,6 +1153,17 @@ class TensorSpace(LinearSpace):
         # for instance, if two spaces have a int dtype, the result of the division 
         # of one of their element by another return should be of float dtype
         return x1.space.astype(x1.space.array_backend.get_dtype_identifier(array=result)).element(result) 
+
+    def _element_reduction(self, operation:str
+                               , x: "Tensor"):
+        fn = getattr(self.array_namespace, operation)
+        result = fn(x.data)
+        try:
+            return result.item()
+        except AttributeError:
+            assert result.shape == ()
+            return result[0]
+        
         
 
 class Tensor(LinearSpaceElement):

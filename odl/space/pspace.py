@@ -361,6 +361,12 @@ class ProductSpace(LinearSpace):
         else:
             raise TypeError(f"At least one of the arguments to `ProductSpace._elementwise_num_operation` should be a `ProductSpaceElement`, but got {type(x1)=}, {type(x2)=}")
                 
+    def _element_reduction(self, operation:str
+                               , x: "ProductSpaceElement"):
+        assert(x in self)
+        part_results = np.array([ xp.space._element_reduction(operation, xp)
+                        for xp in x.parts ])
+        return getattr(np, operation)(part_results).item()
 
     @property
     def nbytes(self):
