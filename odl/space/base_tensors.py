@@ -1037,9 +1037,9 @@ class TensorSpace(LinearSpace):
         """
         return self.weighting.norm(x.data)
     
-    def _elementwise_num_operation(self, x1: LinearSpaceElement | Number
-                                       , x2: None | LinearSpaceElement | Number
-                                       , combinator:str
+    def _elementwise_num_operation(self, combinator:str
+                                       , x1: LinearSpaceElement | Number
+                                       , x2: None | LinearSpaceElement | Number = None
                                        , out=None
                                        , **kwargs ):
         """
@@ -1112,12 +1112,12 @@ class TensorSpace(LinearSpace):
         if isinstance(x1, ProductSpaceElement):
             if not isinstance(x2, Tensor):
                 raise TypeError(f'Right operand is not an ODL Tensor. {type(x2)=}')
-            return x1.space._elementwise_num_operation(x1, x2, combinator, out, **kwargs)
+            return x1.space._elementwise_num_operation(combinator, x1, x2, out, **kwargs)
 
         elif isinstance(x2, ProductSpaceElement):
             if not isinstance(x1, Tensor):
                 raise TypeError(f'Left operand is not an ODL Tensor. {type(x1)=}')
-            return x2.space._elementwise_num_operation(x1, x2, combinator, out, **kwargs)
+            return x2.space._elementwise_num_operation(combinator, x1, x2, out, **kwargs)
 
 
         if not isinstance(x1, Tensor):

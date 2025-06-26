@@ -283,9 +283,9 @@ class ProductSpace(LinearSpace):
         """
         return len(self.spaces)
 
-    def _elementwise_num_operation(self, x1: LinearSpaceElement | Number
+    def _elementwise_num_operation(self, combinator:str
+                                       , x1: LinearSpaceElement | Number
                                        , x2: None | LinearSpaceElement | Number
-                                       , combinator:str
                                        , out=None
                                        , **kwargs ):
         """
@@ -319,43 +319,43 @@ class ProductSpace(LinearSpace):
         if x2 is None:
             if out is None:
                 return self.element([
-                    xl.space._elementwise_num_operation(xl, combinator=combinator, **kwargs)
+                    xl.space._elementwise_num_operation(combinator=combinator, x1=xl, **kwargs)
                     for xl in x1.parts ])
             else:
                 for i, xl in enumerate(x1.parts):
-                    xl.space._elementwise_num_operation(xl, combinator=combinator, out=out.parts[i], **kwargs)
+                    xl.space._elementwise_num_operation(combinator=combinator, x1=xl, out=out.parts[i], **kwargs)
                 return out
 
         if isinstance(x1, ProductSpaceElement) and isinstance(x2, ProductSpaceElement):
             assert len(x1.parts) == len(x2.parts)
             if out is None:
                 return self.element([
-                    xl.space._elementwise_num_operation(xl, xr, combinator=combinator, **kwargs)
+                    xl.space._elementwise_num_operation(combinator=combinator, x1=xl, x2=xr, **kwargs)
                     for xl, xr in zip(x1.parts, x2.parts) ])
             else:
                 for i, xl in enumerate(x1.parts):
                     xr = x2.parts[i]
-                    xl.space._elementwise_num_operation(xl, xr, combinator=combinator, out=out.parts[i], **kwargs)
+                    xl.space._elementwise_num_operation(combinator=combinator, x1=xl, x2=xr, out=out.parts[i], **kwargs)
                 return out
 
         elif isinstance(x1, ProductSpaceElement):
             if out is None:
                 return self.element([
-                    x.space._elementwise_num_operation(x, x2, combinator=combinator, **kwargs)
+                    x.space._elementwise_num_operation(combinator=combinator, x1=x, x2=x2, **kwargs)
                     for x in x1.parts ])
             else:
                 for i, x in enumerate(x1.parts):
-                    x.space._elementwise_num_operation(x, x2, combinator=combinator, out=out.parts[i], **kwargs)
+                    x.space._elementwise_num_operation(combinator=combinator, x1=x, x2=x2, out=out.parts[i], **kwargs)
                 return out
 
         elif isinstance(x2, ProductSpaceElement):
             if out is None:
                 return self.element([
-                    x.space._elementwise_num_operation(x1, x, combinator=combinator, **kwargs)
+                    x.space._elementwise_num_operation(combinator=combinator, x1=x1, x2=x, **kwargs)
                     for x in x2.parts ])
             else:
                 for i, x in enumerate(x2.parts):
-                    x.space._elementwise_num_operation(x1, x, combinator=combinator, out=out.parts[i], **kwargs)
+                    x.space._elementwise_num_operation(combinator=combinator, x1=x1, x2=x, out=out.parts[i], **kwargs)
                 return out
 
         else:

@@ -367,9 +367,9 @@ class LinearSpace(Set):
         else:
             return self.field.element(self._inner(x1, x2))
 
-    def _elementwise_num_operation(self, x1: Union["LinearSpaceElement", Number]
-                                       , x2: Union[None, "LinearSpaceElement", Number]
-                                       , combinator:str
+    def _elementwise_num_operation(self, combinator:str
+                                       , x1: Union["LinearSpaceElement", Number]
+                                       , x2: Union[None, "LinearSpaceElement", Number] = None
                                        , out=None
                                        , **kwargs ):
         """TODO(Justus) rewrite docstring
@@ -508,19 +508,19 @@ class LinearSpaceElement(object):
     def __add__(self, other):
         """Return ``self + other``."""
         return self.space._elementwise_num_operation(
-            self, other, 'add'
+            'add', self, other
         )
     
     def __sub__(self, other):
         """Return ``self - other``."""
         return self.space._elementwise_num_operation(
-            self, other, 'subtract'
+            'subtract', self, other
         )
     
     def __mul__(self, other):
         """Return ``self * other``."""
         return self.space._elementwise_num_operation(
-            self, other, 'multiply'
+            'multiply', self, other
         )
     
     def __truediv__(self, other):
@@ -528,85 +528,85 @@ class LinearSpaceElement(object):
         if isinstance(other, Number) and other == 0:
             raise ZeroDivisionError
         return self.space._elementwise_num_operation(
-                self, other, 'divide'
+                'divide', self, other
             )
     
     def __floordiv__(self, other):        
         """Implement ``self // other``."""
         return self.space._elementwise_num_operation(
-            self, other, 'floor_divide'
+            'floor_divide', self, other
         )
 
     def __mod__(self, other):        
         """Implement ``self % other``."""
         return self.space._elementwise_num_operation(
-            self, other, 'remainder'
+            'remainder', self, other
         )
     
     def __pow__(self, other):
         """Implement ``self ** other``, element wise"""
         return self.space._elementwise_num_operation(
-            self, other, 'pow'
+            'pow', self, other
         )
 
     def __radd__(self, other):
         """Return ``other + self``."""
         return self.space._elementwise_num_operation(
-            other, self, 'add'
+            'add', other, self
         )
 
     def __rsub__(self, other):
         """Return ``other - self``."""
         return self.space._elementwise_num_operation(
-            other, self, 'subtract'
+            'subtract', other, self
         )
  
     def __rmul__(self, other):
         """Return ``other * self``."""
         return self.space._elementwise_num_operation(
-            other, self, 'multiply'
+            'multiply', other, self
         )
     
     def __rtruediv__(self, other):
         """Implement ``other / self``."""
         return self.space._elementwise_num_operation(
-             other, self, 'divide'
+             'divide', other, self
         )
     
     def __rfloordiv__(self, other):
         """Implement ``other // self``."""
         return self.space._elementwise_num_operation(
-            other, self, 'floor_divide'
+            'floor_divide', other, self
         )
     
     def __rmod__(self, other):        
         """Implement ``other % self``."""
         return self.space._elementwise_num_operation(
-            other, self, 'remainder'
+            'remainder', other, self
         )
     
     def __rpow__(self, other):
         """Implement ``other ** self``, element wise"""
         return self.space._elementwise_num_operation(
-            other, self, 'pow'
+            'pow', other, self
         )
     
     def __iadd__(self, other):
         """Implement ``self += other``."""
         return self.space._elementwise_num_operation(
-            self, other, 'add', self
+            'add', self, other, self
         )
     
     def __isub__(self, other):
         """Implement ``self -= other``."""
         return self.space._elementwise_num_operation(
-            self, other, 'subtract', self
+            'subtract', self, other, self
         )
     
     def __imul__(self, other):
         """Return ``self *= other``."""
         return self.space._elementwise_num_operation(
-            self, other, 'multiply', self
+            'multiply', self, other, self
         )
     
     def __itruediv__(self, other):
@@ -614,25 +614,25 @@ class LinearSpaceElement(object):
         if isinstance(other, Number) and other == 0:
             raise ZeroDivisionError
         return self.space._elementwise_num_operation(
-                self, other, 'divide', self
+                'divide', self, other, self
             )
     
     def __ifloordiv__(self, other):
         """Implement ``self //= other``."""
         return self.space._elementwise_num_operation(
-            self, other, 'floor_divide', self
+            'floor_divide', self, other, self
         )
     
     def __imod__(self, other):
         """Implement ``self %= other``."""
         return self.space._elementwise_num_operation(
-            self, other, 'remainder', self
+            'remainder', self, other, self
         )
     
     def __ipow__(self, other):
         """Implement ``self *= other``, element wise"""
         return self.space._elementwise_num_operation(
-            self, other, 'pow', self
+            'pow', self, other, self
         )
     
     def __neg__(self):
