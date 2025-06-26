@@ -233,9 +233,13 @@ def test_multiply():
     z = HxH.element()
 
     expected = [v1 * u1, v2 * u2]
-    HxH.multiply(v, u, out=z)
+    z = v * u
 
     assert all_almost_equal(z, expected)
+
+    odl.multiply(v, u, out=z)
+    assert all_almost_equal(z, expected)
+
 
 
 def test_metric():
@@ -917,14 +921,14 @@ def test_ufuncs():
     # one arg
     x = H.element([[-1], [-2, -3]])
 
-    z = x.ufuncs.absolute()
+    z = odl.abs(x)
     assert all_almost_equal(z, [[1], [2, 3]])
 
     # one arg with out
     x = H.element([[-1], [-2, -3]])
     y = H.element()
 
-    z = x.ufuncs.absolute(out=y)
+    z = odl.abs(x, out=y)
     assert y is z
     assert all_almost_equal(z, [[1], [2, 3]])
 
@@ -933,7 +937,7 @@ def test_ufuncs():
     y = H.element([[4], [5, 6]])
     w = H.element()
 
-    z = x.ufuncs.add(y)
+    z = odl.add(x, y)
     assert all_almost_equal(z, [[5], [7, 9]])
 
     # Two args with out
@@ -941,7 +945,7 @@ def test_ufuncs():
     y = H.element([[4], [5, 6]])
     w = H.element()
 
-    z = x.ufuncs.add(y, out=w)
+    z = odl.add(x, y, out=w)
     assert w is z
     assert all_almost_equal(z, [[5], [7, 9]])
 
@@ -968,7 +972,7 @@ def test_array_wrap_method():
     space = odl.ProductSpace(odl.uniform_discr(0, 1, 10), 2)
     x_arr, x = noise_elements(space)
     y_arr = np.sin(x_arr)
-    y = np.sin(x)  # Should yield again an ODL product space element
+    y = odl.sin(x)  # Should yield again an ODL product space element
 
     assert y in space
     assert all_equal(y, y_arr)
