@@ -792,7 +792,7 @@ class TensorSpace(LinearSpace):
             posargs = [self.size]
         else:
             posargs = [self.shape]
-        posargs += [self.device, self.impl, self.dtype_identifier]
+        posargs += [self.dtype_identifier, self.impl, self.device]
         if self.is_real:
             ctor_name = 'rn'
         elif self.is_complex:
