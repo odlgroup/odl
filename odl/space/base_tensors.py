@@ -1082,13 +1082,20 @@ class TensorSpace(LinearSpace):
         if self.field is None:
             raise NotImplementedError(f"The space has no field.")
 
+        if out is not None:
+            assert isinstance(out, Tensor)
+            assert self.shape == out.space.shape, f"The shapes of {self} and out {out.space.shape} differ, cannot perform {combinator}"
+            assert self.device == out.space.device, f"The devices of {self} and out {out.space.device} differ, cannot perform {combinator}"
+        
+        if x1 is None:
+            raise TypeError("The left-hand argument always needs to be provided")
+
         if x2 is None:
             assert(x1 in self)
             fn = getattr(self.array_namespace, combinator)
             if out is None:
                 result_data = fn(x1.data, **kwargs)
             else:
-                assert out in self, f"out is not an element of the space."
                 result_data = fn(x1.data, out.data, **kwargs)
             return self.astype(self.array_backend.get_dtype_identifier(array=result_data)).element(result_data) 
 
@@ -1125,10 +1132,20 @@ class TensorSpace(LinearSpace):
         if not isinstance(x2, Tensor):
             raise TypeError(f"Right operand is not an ODL Tensor. {type(x2)=}")
 
-        if out is None:     
-            return getattr(odl, combinator)(x1, x2)
+        element_wise_function = getattr(x1.array_namespace, combinator)
+ 
+        assert self.shape == x2.space.shape, f"The shapes of {self} and x2 {x2.space.shape} differ, cannot perform {combinator}"
+        assert self.device == x2.space.device, f"The devices of {self} and x2 {x2.space.device} differ, cannot perform {combinator}"
+
+        if out is None:
+            result = element_wise_function(x1.data, x2.data)
         else:
-            return getattr(odl, combinator)(x1, x2, out)
+            result = element_wise_function(x1.data, x2.data, out=out.data)
+ 
+        # We make sure to return an element of the right type: 
+        # for instance, if two spaces have a int dtype, the result of the division 
+        # of one of their element by another return should be of float dtype
+        return x1.space.astype(x1.space.array_backend.get_dtype_identifier(array=result)).element(result) 
         
 
 class Tensor(LinearSpaceElement):

@@ -77,26 +77,10 @@ __all__ = (
 )
 
 
-def _apply_element_wise(x1, operation: str, out=None, **kwargs):
-    element_wise_function = getattr(x1.array_namespace, operation)
+def _apply_element_wise(x1, operation: str, out=None, x2=None, **kwargs):
 
-    if out is not None:
-        assert x1.space.shape == out.space.shape, f"The shapes of x1 {x1.space.shape} and out {out.space.shape} differ, cannot perform {operation}"
-        assert x1.space.device == out.space.device, f"The devices of x1 {x1.space.device} and out {out.space.device} differ, cannot perform {operation}"
-        out = out.data
-    
-    if "x2" in kwargs:
-        x2 = kwargs["x2"]
-        assert x1.space.shape == x2.space.shape, f"The shapes of x1 {x1.space.shape} and x2 {x2.space.shape} differ, cannot perform {operation}"
-        assert x1.space.device == x2.space.device, f"The devices of x1 {x1.space.device} and x2 {x2.space.device} differ, cannot perform {operation}"
-        result = element_wise_function(x1.data, x2.data, out=out)
-    else:
-        result = element_wise_function(x1.data, out=out, **kwargs)
+    return x1.space._elementwise_num_operation(combinator=operation, x1=x1, x2=x2, out=out, **kwargs)
 
-    # We make sure to return an element of the right type: 
-    # for instance, if two spaces have a int dtype, the result of the division 
-    # of one of their element by another return should be of float dtype
-    return x1.space.astype(x1.space.array_backend.get_dtype_identifier(array=result)).element(result) 
 
 def abs(x, out=None):
     """Calculates the absolute value for each element `x_i` of the input array
