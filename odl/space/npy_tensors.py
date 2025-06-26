@@ -272,7 +272,7 @@ class NumpyTensor(Tensor):
         """Initialize a new instance."""
         # Tensor.__init__(self, space)
         LinearSpaceElement.__init__(self, space)
-        self.__data = data
+        self.__data = np.asarray(data, dtype=space.dtype)
 
     @property
     def data(self):

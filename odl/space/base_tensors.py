@@ -28,6 +28,7 @@ from odl.util import (
     signature_string)
 from odl.util.utility import(
     SCALAR_DTYPES, AVAILABLE_DTYPES,
+    REAL_DTYPES, INTEGER_DTYPES,
     FLOAT_DTYPES, COMPLEX_DTYPES,
     TYPE_PROMOTION_COMPLEX_TO_REAL, 
     TYPE_PROMOTION_REAL_TO_COMPLEX)
@@ -551,6 +552,12 @@ class TensorSpace(LinearSpace):
                     "shape of `inp` not equal to space shape: "
                     "{} != {}".format(arr.shape, self.shape)
                 )
+            if ( self.dtype_identifier in REAL_DTYPES
+                and self.array_backend.get_dtype_identifier(array=arr) not in REAL_DTYPES ):
+                raise TypeError(f"A real space cannot have complex elements. Got {arr.dtype}")
+            elif ( self.dtype_identifier in INTEGER_DTYPES
+                and self.array_backend.get_dtype_identifier(array=arr) not in INTEGER_DTYPES ):
+                raise TypeError(f"An integer space can only have integer elements. Got {arr.dtype}")
             
             return self.element_type(self, arr)
 
