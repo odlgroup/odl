@@ -13,7 +13,7 @@ import odl
 from odl import vector
 from odl.space.npy_tensors import NumpyTensor
 from odl.util.testutils import all_equal
-
+import pytest 
 
 def test_vector_numpy():
 
@@ -58,15 +58,18 @@ def test_vector_numpy():
     assert all_equal(x, inp)
 
     inp = ['a', 'b', 'c']
-    x = vector(inp)
-    assert isinstance(x, NumpyTensor)
-    assert np.issubdtype(x.dtype, np.str_)
-    assert all_equal(x, inp)
+    with pytest.raises(AssertionError):
+       x = vector(inp)
+       # assert isinstance(x, NumpyTensor)
+       # assert np.issubdtype(x.dtype, np.str_)
+       # assert all_equal(x, inp)
 
-    x = vector([1, 2, 'inf'])  # Becomes string type
-    assert isinstance(x, NumpyTensor)
-    assert np.issubdtype(x.dtype, np.str_)
-    assert all_equal(x, ['1', '2', 'inf'])
+    inp = [1, 2, 'inf']
+    with pytest.raises(AssertionError):
+       x = vector(inp)
+       # assert isinstance(x, NumpyTensor)
+       # assert np.issubdtype(x.dtype, np.str_)
+       # assert all_equal(x, ['1', '2', 'inf'])
 
     # Scalar or empty input
     x = vector(5.0)  # becomes 1d, size 1

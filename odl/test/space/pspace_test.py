@@ -32,10 +32,10 @@ def space(request):
     name = request.param.strip()
 
     if name == 'product_space':
-        space = odl.ProductSpace(odl.uniform_discr(0, 1, 3, dtype=complex),
+        space = odl.ProductSpace(odl.cn(3),
                                  odl.cn(2))
     elif name == 'power_space':
-        space = odl.ProductSpace(odl.uniform_discr(0, 1, 3, dtype=complex), 2)
+        space = odl.ProductSpace(odl.cn(3), 2)
     else:
         raise ValueError('undefined space')
 
@@ -963,7 +963,7 @@ def test_reductions():
 
 def test_array_wrap_method():
     """Verify that the __array_wrap__ method for NumPy works."""
-    space = odl.ProductSpace(odl.uniform_discr(0, 1, 10), 2)
+    space = odl.ProductSpace(odl.rn(10), 2)
     x_arr, x = noise_elements(space)
     y_arr = np.sin(x_arr)
     y = odl.sin(x)  # Should yield again an ODL product space element
@@ -974,7 +974,7 @@ def test_array_wrap_method():
 
 def test_real_imag_and_conj():
     """Verify that .real .imag and .conj() work for product space elements."""
-    space = odl.ProductSpace(odl.uniform_discr(0, 1, 3, dtype=complex),
+    space = odl.ProductSpace(odl.cn(3),
                              odl.cn(2))
     x = noise_element(space)
 
