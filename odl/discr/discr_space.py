@@ -20,7 +20,7 @@ from odl.discr.partition import (
 from odl.set import IntervalProd, RealNumbers
 from odl.set.space import SupportedNumOperationParadigms, NumOperationParadigmSupport
 from odl.space import ProductSpace
-from odl.space.base_tensors import Tensor, TensorSpace
+from odl.space.base_tensors import Tensor, TensorSpace, default_dtype
 from odl.space.entry_points import tensor_space_impl
 from odl.space.weighting import ConstWeighting
 from odl.util import (
@@ -228,13 +228,6 @@ class DiscretizedSpace(TensorSpace):
             are stored as rows.
         """
         return self.partition.points(order)
-
-    def default_dtype(self, field=None):
-        """Default data type for new elements in this space.
-
-        This is equal to the default data type of `tspace`.
-        """
-        return self.tspace.default_dtype(field)
 
     def available_dtypes(self):
         """Available data types for new elements in this space.
@@ -594,7 +587,7 @@ class DiscretizedSpace(TensorSpace):
                 posmod = [array_str, array_str, '']
 
             default_dtype_s = dtype_str(
-                self.tspace.default_dtype(RealNumbers())
+                default_dtype(self.tspace.array_backend, RealNumbers())
             )
 
             dtype_s = dtype_str(self.dtype)
@@ -1575,7 +1568,7 @@ def uniform_discr_frompartition(partition, dtype=None, impl='numpy', **kwargs):
 
     tspace_type = tensor_space_impl(impl)
     if dtype is None:
-        dtype = tspace_type.default_dtype()
+        dtype = default_dtype(impl)
 
     weighting = kwargs.pop('weighting', None)
     exponent = kwargs.pop('exponent', 2.0)
@@ -1627,7 +1620,7 @@ def uniform_discr_fromintv(intv_prod, shape, dtype=None, impl='numpy',
         uniform partition of a function domain
     """
     if dtype is None:
-        dtype = tensor_space_impl(str(impl).lower()).default_dtype()
+        dtype = default_dtype(impl)
 
     nodes_on_bdry = kwargs.pop('nodes_on_bdry', False)
     partition = uniform_partition_fromintv(intv_prod, shape, nodes_on_bdry)
