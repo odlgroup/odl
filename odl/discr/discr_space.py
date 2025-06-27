@@ -225,13 +225,8 @@ class DiscretizedSpace(TensorSpace):
         """All sampling points in the partition as a sparse meshgrid."""
         return self.partition.meshgrid
 
-    def points(self, order='C'):
+    def points(self):
         """All sampling points in the partition.
-
-        Parameters
-        ----------
-        order : {'C', 'F'}
-            Axis ordering in the resulting point array.
 
         Returns
         -------
@@ -239,7 +234,7 @@ class DiscretizedSpace(TensorSpace):
             The shape of the array is ``size x ndim``, i.e. the points
             are stored as rows.
         """
-        return self.partition.points(order)
+        return self.partition.points()
 
     def available_dtypes(self):
         """Available data types for new elements in this space.
@@ -287,7 +282,7 @@ class DiscretizedSpace(TensorSpace):
 
     # --- Element creation
 
-    def element(self, inp=None, order=None, **kwargs):
+    def element(self, inp=None, **kwargs):
         """Create an element from ``inp`` or from scratch.
 
         Parameters
@@ -297,15 +292,12 @@ class DiscretizedSpace(TensorSpace):
             are available:
 
             - ``None``: an empty element is created with no guarantee of
-              its state (memory allocation only). The new element will
-              use ``order`` as storage order if provided, otherwise
-              `default_order`.
+              its state (memory allocation only).
 
             - array-like: an element wrapping a `tensor` is created,
               where a copy is avoided whenever possible. This usually
-              requires correct `shape`, `dtype` and `impl` if applicable,
-              and if ``order`` is provided, also contiguousness in that
-              ordering. See the ``element`` method of `tspace` for more
+              requires correct `shape`, `dtype` and `impl` if applicable.
+              See the ``element`` method of `tspace` for more
               information.
 
               If any of these conditions is not met, a copy is made.
@@ -313,10 +305,6 @@ class DiscretizedSpace(TensorSpace):
             - callable: a new element is created by sampling the function
               using `point_collocation`.
 
-        order : {None, 'C', 'F'}, optional
-            Storage order of the returned element. For ``'C'`` and ``'F'``,
-            contiguous memory in the respective ordering is enforced.
-            The default ``None`` enforces no contiguousness.
         kwargs :
             Additional arguments passed on to `point_collocation` when
             called on ``inp``, in the form
@@ -359,10 +347,10 @@ class DiscretizedSpace(TensorSpace):
         uniform_discr(-1.0, 1.0, 4).element([ 0.5 ,  0.5 ,  0.5 ,  0.75])
         """
         if inp is None:
-            return self.element_type(self, self.tspace.element(order=order))
-        elif inp in self and order is None:
+            return self.element_type(self, self.tspace.element())
+        elif inp in self:
             return inp
-        elif inp in self.tspace and order is None:
+        elif inp in self.tspace:
             return self.element_type(self, inp)
         elif callable(inp):
             func = sampling_function(
@@ -370,12 +358,12 @@ class DiscretizedSpace(TensorSpace):
             )
             sampled = point_collocation(func, self.meshgrid, **kwargs)
             return self.element_type(
-                self, self.tspace.element(sampled, order=order)
+                self, self.tspace.element(sampled)
             )
         else:
             # Sequence-type input
             return self.element_type(
-                self, self.tspace.element(inp, order=order)
+                self, self.tspace.element(inp)
             )
 
     def zero(self):
@@ -642,7 +630,7 @@ class DiscretizedSpace(TensorSpace):
             posargs = [self.partition, self.tspace]
             inner_parts = signature_string_parts(posargs, [])
             return repr_string(ctor, inner_parts, allow_mixed_seps=False)
-
+        
     def __str__(self):
         """Return ``str(self)``."""
         return repr(self)
