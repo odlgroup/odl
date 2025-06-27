@@ -110,6 +110,16 @@ def dtype_tol(dtype, default=None):
 def all_equal(iter1, iter2):
     """Return ``True`` if all elements in ``a`` and ``b`` are equal."""
     # Direct comparison for scalars, tuples or lists
+
+    from odl.set.space import LinearSpaceElement
+
+    if isinstance(iter1, LinearSpaceElement) and isinstance(iter2, LinearSpaceElement):
+        return iter1 == iter2
+    elif isinstance(iter1, LinearSpaceElement):
+        return iter1 == iter1.space.element(iter2)
+    elif isinstance(iter2, LinearSpaceElement):
+        return iter2.space.element(iter1) == iter2
+
     try:
         if iter1 == iter2:
             return True

@@ -1829,7 +1829,7 @@ class Tensor(LinearSpaceElement):
                 self.shape == other.shape and               
                 self.impl == other.impl and
                 self.device == other.device and
-                odl.all(odl.equal(self, other))
+                self.array_namespace.all(self.data == other.data)
                 )
     
     def __ne__(self, other):
