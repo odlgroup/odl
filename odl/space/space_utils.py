@@ -12,15 +12,18 @@ from __future__ import print_function, division, absolute_import
 import numpy as np
 
 from odl.util.npy_compat import AVOID_UNNECESSARY_COPY
+from odl.array_API_support import lookup_array_backend
 
-from odl.set import RealNumbers, ComplexNumbers
-from odl.space.entry_points import tensor_space_impl
+from odl.space.base_tensors import default_dtype
+from odl.space.npy_tensors import NumpyTensorSpace
+from odl.util.utility import AVAILABLE_DTYPES, COMPLEX_DTYPES, FLOAT_DTYPES
 
+TENSOR_SPACE_IMPLS = {'numpy': NumpyTensorSpace}
 
 __all__ = ('vector', 'tensor_space', 'cn', 'rn')
 
 
-def vector(array, dtype=None, order=None, impl='numpy'):
+def vector(array, dtype=None, order=None, impl='numpy', device = 'cpu'):
     """Create a vector from an array-like object.
 
     Parameters
@@ -86,11 +89,11 @@ def vector(array, dtype=None, order=None, impl='numpy'):
     else:
         space_dtype = arr.dtype
 
-    space = tensor_space(arr.shape, dtype=space_dtype, impl=impl)
+    space = tensor_space(arr.shape, dtype=space_dtype, impl=impl, device=device)
     return space.element(arr)
 
 
-def tensor_space(shape, dtype=None, impl='numpy', **kwargs):
+def tensor_space(shape, dtype='float64', impl='numpy', device = 'cpu', **kwargs):
     """Return a tensor space with arbitrary scalar data type.
 
     Parameters
@@ -98,12 +101,8 @@ def tensor_space(shape, dtype=None, impl='numpy', **kwargs):
     shape : positive int or sequence of positive ints
         Number of entries per axis for elements in this space. A
         single integer results in a space with 1 axis.
-    dtype : optional
-        Data type of each element. Can be provided in any way the
-        `numpy.dtype` function understands, e.g. as built-in type or
-        as a string.
-        For ``None``, the `TensorSpace.default_dtype` of the
-        created space is used.
+    dtype (str) : optional
+        Data type of each element. Defaults to float64
     impl : str, optional
         Impmlementation back-end for the space. See
         `odl.space.entry_points.tensor_space_impl_names` for available
@@ -141,17 +140,21 @@ def tensor_space(shape, dtype=None, impl='numpy', **kwargs):
     --------
     rn, cn : Constructors for real and complex spaces
     """
-    tspace_cls = tensor_space_impl(impl)
-
-    if dtype is None:
-        dtype = tspace_cls.default_dtype()
+    # Check the dtype argument
+    assert (
+        dtype in AVAILABLE_DTYPES
+    ), f"The dtype must be in {AVAILABLE_DTYPES}, but {dtype} was provided"
+    # Check the impl argument
+    assert (
+        impl in TENSOR_SPACE_IMPLS.keys()
+    ), f"The only supported impls are {TENSOR_SPACE_IMPLS.keys()}, but {impl} was provided"
 
     # Use args by keyword since the constructor may take other arguments
     # by position
-    return tspace_cls(shape=shape, dtype=dtype, **kwargs)
+    return TENSOR_SPACE_IMPLS[impl](shape=shape, dtype=dtype, device=device, **kwargs)
 
 
-def cn(shape, dtype=None, impl='numpy', **kwargs):
+def cn(shape, dtype='complex128', impl='numpy', device='cpu', **kwargs):
     """Return a space of complex tensors.
 
     Parameters
@@ -159,14 +162,10 @@ def cn(shape, dtype=None, impl='numpy', **kwargs):
     shape : positive int or sequence of positive ints
         Number of entries per axis for elements in this space. A
         single integer results in a space with 1 axis.
-    dtype : optional
-        Data type of each element. Can be provided in any way the
-        `numpy.dtype` function understands, e.g. as built-in type or
-        as a string. Only complex floating-point data types are allowed.
-        For ``None``, the `TensorSpace.default_dtype` of the
-        created space is used in the form
-        ``default_dtype(ComplexNumbers())``.
-    impl : str, optional
+    dtype (str) : optional
+        Data type of each element. Must be provided as a string or Python complex type.
+        Defaults to complex128
+    impl (str) : str, optional
         Impmlementation back-end for the space. See
         `odl.space.entry_points.tensor_space_impl_names` for available
         options.
@@ -203,21 +202,11 @@ def cn(shape, dtype=None, impl='numpy', **kwargs):
     tensor_space : Space of tensors with arbitrary scalar data type.
     rn : Real tensor space.
     """
-    cn_cls = tensor_space_impl(impl)
-
-    if dtype is None:
-        dtype = cn_cls.default_dtype(ComplexNumbers())
-
-    # Use args by keyword since the constructor may take other arguments
-    # by position
-    cn = cn_cls(shape=shape, dtype=dtype, **kwargs)
-    if not cn.is_complex:
-        raise ValueError('data type {!r} not a complex floating-point type.'
-                         ''.format(dtype))
-    return cn
+    assert dtype in COMPLEX_DTYPES, f'For cn, the type must be complex, but got {dtype}'
+    return tensor_space(shape, dtype=dtype, impl=impl, device=device, **kwargs)
 
 
-def rn(shape, dtype=None, impl='numpy', **kwargs):
+def rn(shape, dtype=None, impl='numpy', device ='cpu', **kwargs):
     """Return a space of real tensors.
 
     Parameters
@@ -225,16 +214,12 @@ def rn(shape, dtype=None, impl='numpy', **kwargs):
     shape : positive int or sequence of positive ints
         Number of entries per axis for elements in this space. A
         single integer results in a space with 1 axis.
-    dtype : optional
-        Data type of each element. Can be provided in any way the
-        `numpy.dtype` function understands, e.g. as built-in type or
-        as a string. Only real floating-point data types are allowed.
-        For ``None``, the `TensorSpace.default_dtype` of the
-        created space is used in the form
-        ``default_dtype(RealNumbers())``.
-    impl : str, optional
-        Impmlementation back-end for the space. See
-        `odl.space.entry_points.tensor_space_impl_names` for available
+    dtype (str) : optional
+        Data type of each element. See REAL_DTYPES in 
+        `odl.util.utility.py` for available options. Defaults to float64
+    impl (str) : str, optional
+        Impmlementation back-end for the space. See the constant
+        TENSOR_SPACE_IMPLS for available backends
         options.
     kwargs :
         Extra keyword arguments passed to the space constructor.
@@ -255,32 +240,24 @@ def rn(shape, dtype=None, impl='numpy', **kwargs):
     >>> odl.rn((2, 3), dtype='float32')
     rn((2, 3), dtype='float32')
 
-    The default data type depends on the implementation. For
-    ``impl='numpy'``, it is ``'float64'``:
+    The default data type is float32
 
     >>> ts = odl.rn((2, 3))
     >>> ts
     rn((2, 3))
     >>> ts.dtype
-    dtype('float64')
+    dtype('float32')
 
     See Also
     --------
     tensor_space : Space of tensors with arbitrary scalar data type.
     cn : Complex tensor space.
     """
-    rn_cls = tensor_space_impl(impl)
-
     if dtype is None:
-        dtype = rn_cls.default_dtype(RealNumbers())
+        dtype = default_dtype(lookup_array_backend(str(impl).lower()))
+    assert dtype in FLOAT_DTYPES, f'For rn, the type must be float, but got {dtype}'
+    return tensor_space(shape, dtype=dtype, impl=impl, device=device, **kwargs)
 
-    # Use args by keyword since the constructor may take other arguments
-    # by position
-    rn = rn_cls(shape=shape, dtype=dtype, **kwargs)
-    if not rn.is_real:
-        raise ValueError('data type {!r} not a real floating-point type.'
-                         ''.format(dtype))
-    return rn
 
 
 if __name__ == '__main__':

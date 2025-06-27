@@ -12,6 +12,7 @@ import pytest
 import operator
 
 import odl
+from odl.set.sets import ComplexNumbers, RealNumbers
 from odl.util.testutils import (
     all_equal, all_almost_equal, noise_elements, noise_element, simple_fixture)
 
@@ -31,10 +32,10 @@ def space(request):
     name = request.param.strip()
 
     if name == 'product_space':
-        space = odl.ProductSpace(odl.uniform_discr(0, 1, 3, dtype=complex),
+        space = odl.ProductSpace(odl.cn(3),
                                  odl.cn(2))
     elif name == 'power_space':
-        space = odl.ProductSpace(odl.uniform_discr(0, 1, 3, dtype=complex), 2)
+        space = odl.ProductSpace(odl.cn(3), 2)
     else:
         raise ValueError('undefined space')
 
@@ -233,9 +234,13 @@ def test_multiply():
     z = HxH.element()
 
     expected = [v1 * u1, v2 * u2]
-    HxH.multiply(v, u, out=z)
+    z = v * u
 
     assert all_almost_equal(z, expected)
+
+    odl.multiply(v, u, out=z)
+    assert all_almost_equal(z, expected)
+
 
 
 def test_metric():
@@ -917,14 +922,14 @@ def test_ufuncs():
     # one arg
     x = H.element([[-1], [-2, -3]])
 
-    z = x.ufuncs.absolute()
+    z = odl.abs(x)
     assert all_almost_equal(z, [[1], [2, 3]])
 
     # one arg with out
     x = H.element([[-1], [-2, -3]])
     y = H.element()
 
-    z = x.ufuncs.absolute(out=y)
+    z = odl.abs(x, out=y)
     assert y is z
     assert all_almost_equal(z, [[1], [2, 3]])
 
@@ -933,7 +938,7 @@ def test_ufuncs():
     y = H.element([[4], [5, 6]])
     w = H.element()
 
-    z = x.ufuncs.add(y)
+    z = odl.add(x, y)
     assert all_almost_equal(z, [[5], [7, 9]])
 
     # Two args with out
@@ -941,7 +946,7 @@ def test_ufuncs():
     y = H.element([[4], [5, 6]])
     w = H.element()
 
-    z = x.ufuncs.add(y, out=w)
+    z = odl.add(x, y, out=w)
     assert w is z
     assert all_almost_equal(z, [[5], [7, 9]])
 
@@ -949,26 +954,19 @@ def test_ufuncs():
 def test_reductions():
     H = odl.ProductSpace(odl.rn(1), odl.rn(2))
     x = H.element([[1], [2, 3]])
-    assert x.ufuncs.sum() == 6.0
-    assert x.ufuncs.prod() == 6.0
-    assert x.ufuncs.min() == 1.0
-    assert x.ufuncs.max() == 3.0
+    assert odl.sum(x) == 6.0
+    assert odl.prod(x) == 6.0
+    assert odl.min(x) == 1.0
+    assert odl.max(x) == 3.0
 
-
-def test_np_reductions():
-    """Check that reductions via NumPy functions work."""
-    H = odl.ProductSpace(odl.rn(2), 3)
-    x = 2 * H.one()
-    assert np.sum(x) == 2 * 6
-    assert np.prod(x) == 2 ** 6
 
 
 def test_array_wrap_method():
     """Verify that the __array_wrap__ method for NumPy works."""
-    space = odl.ProductSpace(odl.uniform_discr(0, 1, 10), 2)
+    space = odl.ProductSpace(odl.rn(10), 2)
     x_arr, x = noise_elements(space)
     y_arr = np.sin(x_arr)
-    y = np.sin(x)  # Should yield again an ODL product space element
+    y = odl.sin(x)  # Should yield again an ODL product space element
 
     assert y in space
     assert all_equal(y, y_arr)
@@ -976,7 +974,7 @@ def test_array_wrap_method():
 
 def test_real_imag_and_conj():
     """Verify that .real .imag and .conj() work for product space elements."""
-    space = odl.ProductSpace(odl.uniform_discr(0, 1, 3, dtype=complex),
+    space = odl.ProductSpace(odl.cn(3),
                              odl.cn(2))
     x = noise_element(space)
 
@@ -1004,6 +1002,10 @@ def test_real_setter_product_space(space, newpart):
     (depth 2 for a simple product space). We limit it to a depth of at
     most 4, to avoid that if some bug causes an infinite recursion,
     the user would get a cryptic stack-overflow error."""
+
+    if getattr(newpart, 'space', odl.rn(1)).field == ComplexNumbers():
+        # It is not possible to set a real part to a complex number, skip this case
+        return
 
     def verify_result(x, expected_result, recursion_limit=4):
         if recursion_limit <= 0:
@@ -1033,6 +1035,11 @@ def test_real_setter_product_space(space, newpart):
 
 def test_imag_setter_product_space(space, newpart):
     """Like test_real_setter_product_space but for imaginary part."""
+
+    if getattr(newpart, 'space', odl.rn(1)).field == ComplexNumbers():
+        # The imaginary part is itself a real quantity, and
+        # cannot be set to a complex value. Skip test.
+        return
 
     def verify_result(x, expected_result, recursion_limit=4):
         if recursion_limit <= 0:

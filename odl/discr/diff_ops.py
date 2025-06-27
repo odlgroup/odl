@@ -560,7 +560,7 @@ class Divergence(PointwiseTensorFieldOperator):
         ndim = self.range.ndim
         dx = self.range.cell_sides
 
-        tmp = np.empty(out.shape, out.dtype, order=out.space.default_order)
+        tmp = np.empty(out.shape, out.dtype)
         with writable_array(out) as out_arr:
             for axis in range(ndim):
                 finite_diff(x[axis], axis=axis, dx=dx[axis],
