@@ -810,7 +810,10 @@ class DiscretizedSpaceElement(Tensor):
         newreal : array-like or scalar
             Values to be assigned to the real part of this element.
         """
-        self.tensor.real = newreal
+        if isinstance(newreal, DiscretizedSpaceElement):
+            self.tensor.real = newreal.tensor
+        else:
+            self.tensor.real = newreal
 
     @property
     def imag(self):
@@ -866,7 +869,10 @@ class DiscretizedSpaceElement(Tensor):
         """
         if self.space.is_real:
             raise ValueError('cannot set imaginary part in real spaces')
-        self.tensor.imag = newimag
+        if isinstance(newimag, DiscretizedSpaceElement):
+            self.tensor.imag = newimag.tensor
+        else:
+            self.tensor.imag = newimag
 
     def conj(self, out=None):
         """Complex conjugate of this element.
