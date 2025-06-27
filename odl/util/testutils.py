@@ -116,7 +116,10 @@ def all_equal(iter1, iter2):
     if isinstance(iter1, LinearSpaceElement) and isinstance(iter2, LinearSpaceElement):
         return iter1 == iter2
     elif isinstance(iter1, LinearSpaceElement):
-        return iter1 == iter1.space.element(iter2)
+        try:
+            return iter1 == iter1.space.element(iter2)
+        except ValueError as e:
+            pass
     elif isinstance(iter2, LinearSpaceElement):
         return iter2.space.element(iter1) == iter2
 
