@@ -12,6 +12,7 @@ from __future__ import absolute_import, division, print_function
 
 import numpy as np
 from odl.util.normalize import normalized_scalar_param_list, safe_int_conv
+from odl.array_API_support.utils import get_array_and_backend
 
 __all__ = (
     'apply_on_boundary',
@@ -100,7 +101,7 @@ def apply_on_boundary(array, func, only_once=True, which_boundaries=None,
     >>> result is out
     True
     """
-    array = np.asarray(array)
+    array, backend = get_array_and_backend(array)
 
     if callable(func):
         func = [func] * array.ndim
