@@ -18,7 +18,7 @@ from odl.discr.discr_utils import point_collocation, sampling_function
 from odl.discr.partition import (
     RectPartition, uniform_partition, uniform_partition_fromintv)
 from odl.set import IntervalProd, RealNumbers
-from odl.set.space import SupportedNumOperationParadigms, NumOperationParadigmSupport
+from odl.set.space import LinearSpace, SupportedNumOperationParadigms, NumOperationParadigmSupport
 from odl.space import ProductSpace
 from odl.space.base_tensors import Tensor, TensorSpace, default_dtype
 from odl.space.entry_points import tensor_space_impl
@@ -78,7 +78,19 @@ class DiscretizedSpace(TensorSpace):
         self.__tspace = tspace
         self.__partition = partition
 
-        super(DiscretizedSpace, self).__init__(tspace.shape, tspace.dtype)
+        self._init_dtype(tspace.dtype)
+
+        self._init_shape(tspace.shape, tspace.dtype)
+
+        self._init_device(tspace.device)
+
+        self.__use_in_place_ops = kwargs.pop('use_in_place_ops', True)
+  
+        self._init_weighting()
+
+        field = self._init_field()
+
+        LinearSpace.__init__(self, field)
 
         # Set axis labels
         axis_labels = kwargs.pop('axis_labels', None)
