@@ -1246,11 +1246,10 @@ class OperatorVectorSum(Operator):
     def _call(self, x, out=None):
         """Evaluate the residual at ``x`` and write to ``out`` if given."""
         if out is None:
-            out = self.operator(x)
+            out = self.operator(x) + self.vector
         else:
-            self.operator(x, out=out)
+            out[:] = self.operator(x) + self.vector
 
-        out += self.vector
         return out
 
     def derivative(self, point):
@@ -1283,7 +1282,9 @@ class OperatorVectorSum(Operator):
 
     def __str__(self):
         """Return ``str(self)``."""
-        return '({} + {})'.format(self.left, self.right)
+        # return '({} + {})'.format(self.left, self.right)
+        return '{}({!r}, {!r})'.format(self.__class__.__name__,
+                                       self.operator, self.vector)
 
 
 class OperatorComp(Operator):
@@ -1484,8 +1485,8 @@ class OperatorPointwiseProduct(Operator):
         if self.is_linear:
             return self
         else:
-            left = self.right(x) * self.left.derivative(x)
-            right = self.left(x) * self.right.derivative(x)
+            left = self.right(x) @ self.left.derivative(x)
+            right = self.left(x) @ self.right.derivative(x)
             return left + right
 
     def __repr__(self):
@@ -2030,7 +2031,7 @@ class OperatorLeftVectorMult(Operator):
         if self.is_linear:
             return self
         else:
-            return self.vector * self.operator.derivative(x)
+            return self.vector @ self.operator.derivative(x)
 
     @property
     def adjoint(self):
@@ -2177,9 +2178,9 @@ class OperatorRightVectorMult(Operator):
 
         if self.vector.space.is_real:
             # The complex conjugate of a real vector is the vector itself.
-            return self.vector * self.operator.adjoint
+            return self.vector @ self.operator.adjoint
         else:
-            return self.vector.conj() * self.operator.adjoint
+            return self.vector.conj() @ self.operator.adjoint
 
     def __repr__(self):
         """Return ``repr(self)``."""
