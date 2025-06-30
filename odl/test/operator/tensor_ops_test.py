@@ -211,10 +211,10 @@ def test_pointwise_norm_gradient_real(exponent):
     direction = noise_element(vfspace)
 
     # Computing expected result
-    tmp = pwnorm(point).ufuncs.power(1 - exponent)
+    tmp = odl.pow(pwnorm(point), 1 - exponent)
     v_field = vfspace.element()
     for i in range(len(v_field)):
-        v_field[i] = tmp * point[i] * np.abs(point[i]) ** (exponent - 2)
+        v_field[i] = tmp * point[i] * odl.abs(point[i]) ** (exponent - 2)
     pwinner = odl.PointwiseInner(vfspace, v_field)
     expected_result = pwinner(direction)
 
@@ -231,10 +231,10 @@ def test_pointwise_norm_gradient_real(exponent):
     direction = noise_element(vfspace)
 
     # Computing expected result
-    tmp = pwnorm(point).ufuncs.power(1 - exponent)
+    tmp = odl.pow(pwnorm(point), 1 - exponent)
     v_field = vfspace.element()
     for i in range(len(v_field)):
-        v_field[i] = tmp * point[i] * np.abs(point[i]) ** (exponent - 2)
+        v_field[i] = tmp * point[i] * odl.abs(point[i]) ** (exponent - 2)
     pwinner = odl.PointwiseInner(vfspace, v_field)
     expected_result = pwinner(direction)
 
@@ -263,7 +263,7 @@ def test_pointwise_norm_gradient_real_with_zeros(exponent):
     direction = vfspace.element(test_direction)
     func_pwnorm = pwnorm.derivative(point)
 
-    assert not np.any(np.isnan(func_pwnorm(direction)))
+    assert not odl.any(odl.isnan(func_pwnorm(direction)))
 
     # 3d
     fspace = odl.uniform_discr([0, 0], [1, 1], (2, 2))
@@ -287,7 +287,7 @@ def test_pointwise_norm_gradient_real_with_zeros(exponent):
     direction = vfspace.element(test_direction)
     func_pwnorm = pwnorm.derivative(point)
 
-    assert not np.any(np.isnan(func_pwnorm(direction)))
+    assert not odl.any(odl.isnan(func_pwnorm(direction)))
 
 # ---- PointwiseInner ----
 
@@ -675,7 +675,7 @@ def test_matrix_op_call_explicit():
         true_result = np.repeat(np.sum(xarr, axis=axis, keepdims=True),
                                 repeats=3, axis=axis)
         assert result.shape == true_result.shape
-        assert np.allclose(result, true_result)
+        assert odl.allclose(result, true_result)
 
 
 def test_matrix_op_adjoint(matrix):
