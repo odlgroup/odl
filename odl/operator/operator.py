@@ -656,7 +656,8 @@ class Operator(object):
                                 'when range is a field')
 
             result = self._call_in_place(x, out=out, **kwargs)
-            if result is not None and result is not out:
+            # TODO: At present, we perform an equality check on the entire array, which is as inefficient as it gets. We'd rather perform a pointer equality with the "is" keyword. However, the current machinery for the _call_in_place function might be creating a new out object, which leads to the "is" equality failing. We must investigate this _call_in_place function to identify when and why are objects created/deleted.
+            if result is not None and result != out:
                 raise ValueError('`op` returned a different value than `out`. '
                                  'With in-place evaluation, the operator can '
                                  'only return nothing (`None`) or the `out` '
@@ -1246,10 +1247,11 @@ class OperatorVectorSum(Operator):
     def _call(self, x, out=None):
         """Evaluate the residual at ``x`` and write to ``out`` if given."""
         if out is None:
-            out = self.operator(x) + self.vector
+            out = self.operator(x)
         else:
-            out[:] = self.operator(x) + self.vector
+            self.operator(x, out=out) 
 
+        out += self.vector
         return out
 
     def derivative(self, point):
