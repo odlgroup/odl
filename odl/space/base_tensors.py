@@ -1772,9 +1772,6 @@ class Tensor(LinearSpaceElement):
     """
     ####### Arithmetic Operators #######
     ################# Array Operators #################
-    def __matmul__(self, other):    
-        """Implement ``self @ other``."""
-        raise NotImplementedError
 
     ################# Bitwise Operators #################
     def __invert__(self):
@@ -1837,9 +1834,6 @@ class Tensor(LinearSpaceElement):
         return not self.__eq__(other)
     
     ################# In-place Array Operators #################
-    def __imatmul__(self, other):
-        """Implement x1 @= x2 """
-        raise NotImplementedError
     
     ################# In-place Bitwise Operators #################    
     def __iand__(self, other):
@@ -1863,9 +1857,6 @@ class Tensor(LinearSpaceElement):
         raise NotImplementedError
 
     ################# Reflected Array Operators #################
-    def __rmatmul__(self, other):
-        """Implement x1 @= x2 """
-        raise NotImplementedError
     
     ################# Reflected Bitwise Operators #################    
     def __rand__(self, other):
