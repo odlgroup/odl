@@ -653,7 +653,7 @@ def writable_array(obj, **kwargs):
     """
     arr = None
     try:
-        arr = np.asarray(obj, **kwargs)
+        arr = asarray(obj, **kwargs)
         yield arr
     finally:
         if arr is not None:
