@@ -17,8 +17,9 @@ import odl
 from odl.discr.discr_ops import _SUPPORTED_RESIZE_PAD_MODES
 from odl.space.entry_points import tensor_space_impl
 from odl.util import is_numeric_dtype, is_real_floating_dtype
-from odl.util.testutils import dtype_tol, noise_element
+from odl.util.testutils import dtype_tol, noise_element, all_equal
 
+from odl.util.utility import AVAILABLE_DTYPES, SCALAR_DTYPES, FLOAT_DTYPES, REAL_DTYPES
 # --- pytest fixtures --- #
 
 
@@ -107,12 +108,10 @@ def test_resizing_op_raise():
 def test_resizing_op_properties(odl_tspace_impl, padding):
 
     impl = odl_tspace_impl
-    dtypes = [dt for dt in tensor_space_impl(impl).available_dtypes()
-              if is_numeric_dtype(dt)]
 
     pad_mode, pad_const = padding
 
-    for dtype in dtypes:
+    for dtype in SCALAR_DTYPES:
         # Explicit range
         space = odl.uniform_discr([0, -1], [1, 1], (10, 5), dtype=dtype)
         res_space = odl.uniform_discr([0, -3], [2, 3], (20, 15), dtype=dtype)
@@ -148,10 +147,8 @@ def test_resizing_op_properties(odl_tspace_impl, padding):
 def test_resizing_op_call(odl_tspace_impl):
 
     impl = odl_tspace_impl
-    dtypes = [dt for dt in tensor_space_impl(impl).available_dtypes()
-              if is_numeric_dtype(dt)]
-
-    for dtype in dtypes:
+    
+    for dtype in AVAILABLE_DTYPES:
         # Minimal test since this operator only wraps resize_array
         space = odl.uniform_discr(
             [0, -1], [1, 1], (4, 5), dtype=dtype, impl=impl
@@ -163,11 +160,11 @@ def test_resizing_op_call(odl_tspace_impl):
         out = res_op(space.one())
         true_res = np.zeros((8, 2), dtype=dtype)
         true_res[:4, :] = 1
-        assert np.array_equal(out, true_res)
+        assert all_equal(out, true_res)
 
         out = res_space.element()
         res_op(space.one(), out=out)
-        assert np.array_equal(out, true_res)
+        assert all_equal(out, true_res)
 
         # Test also mapping to default impl for other 'impl'
         if impl != 'numpy':
@@ -208,10 +205,8 @@ def test_resizing_op_inverse(padding, odl_tspace_impl):
 
     impl = odl_tspace_impl
     pad_mode, pad_const = padding
-    dtypes = [dt for dt in tensor_space_impl(impl).available_dtypes()
-              if is_numeric_dtype(dt)]
 
-    for dtype in dtypes:
+    for dtype in SCALAR_DTYPES:
 
         if pad_mode == 'order1' and (
                 np.issubdtype(dtype, np.unsignedinteger)
@@ -238,10 +233,7 @@ def test_resizing_op_adjoint(padding, odl_tspace_impl):
 
     impl = odl_tspace_impl
     pad_mode, pad_const = padding
-    dtypes = [dt for dt in tensor_space_impl(impl).available_dtypes()
-              if is_real_floating_dtype(dt)]
-
-    for dtype in dtypes:
+    for dtype in FLOAT_DTYPES:
         space = odl.uniform_discr([0, -1], [1, 1], (4, 5), dtype=dtype,
                                   impl=impl)
         res_space = odl.uniform_discr([0, -1.4], [1.5, 1.4], (6, 7),
@@ -289,7 +281,7 @@ def test_resizing_op_mixed_uni_nonuni():
                    [1, 1, 1],
                    [1, 1, 1],
                    [0, 0, 0]]
-    assert np.array_equal(result, true_result)
+    assert all_equal(result, true_result)
 
     # Test adjoint
     elem = noise_element(space)

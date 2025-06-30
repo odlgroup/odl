@@ -16,6 +16,7 @@ from odl.discr.discr_space import DiscretizedSpace
 from odl.operator.tensor_ops import PointwiseTensorFieldOperator
 from odl.space import ProductSpace
 from odl.util import indent, signature_string, writable_array
+from odl.array_API_support import asarray
 
 __all__ = ('PartialDerivative', 'Gradient', 'Divergence', 'Laplacian')
 
@@ -716,7 +717,7 @@ class Laplacian(PointwiseTensorFieldOperator):
 
         x_arr = x.asarray()
         out_arr = out.asarray()
-        tmp = np.empty(out.shape, out.dtype, order=out.space.default_order)
+        tmp = np.empty(out.shape, out.dtype)
 
         ndim = self.domain.ndim
         dx = self.domain.cell_sides
@@ -884,7 +885,7 @@ def finite_diff(f, axis, dx=1.0, method='forward', out=None,
     >>> out is finite_diff(f, axis=0, out=out)
     True
     """
-    f_arr = np.asarray(f)
+    f_arr = asarray(f)
     ndim = f_arr.ndim
 
     if f_arr.shape[axis] < 2:
