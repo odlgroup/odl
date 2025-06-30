@@ -5,6 +5,7 @@ import numpy as np
 __all__ = (
     "all",    
     "allclose",
+    "all_equal",
     "any",
     "asarray",
     "isclose"
@@ -40,8 +41,15 @@ def all(x):
 def allclose(x, y, rtol=1e-05, atol=1e-08, equal_nan=False):
     """
     Returns True if two arrays are element-wise equal within a tolerance.
+    Note: This is not a Python Array API method, but it happens to work in Numpy and Pytorch.
     """
     return _helper(x, 'allclose', y=y, rtol=1e-05, atol=1e-08, equal_nan=False)
+
+def all_equal(x, y):
+    """
+    Test whether all array elements along a given axis evaluate to True.
+    """
+    return _helper(_helper(x, 'equal', y=y), 'all')
 
 def any(x):
     """
@@ -60,6 +68,7 @@ def asarray(x):
 def isclose(x, y, rtol=1e-05, atol=1e-08, equal_nan=False):
     """
     Returns a boolean array where two arrays are element-wise equal within a tolerance.
+    Note: This is not a Python Array API method, but it happens to work in Numpy and Pytorch.
     """
     return _helper(x, 'isclose', y=y, rtol=1e-05, atol=1e-08, equal_nan=False)
 
