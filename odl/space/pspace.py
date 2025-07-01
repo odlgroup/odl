@@ -316,9 +316,20 @@ class ProductSpace(LinearSpace):
                 raise TypeError(f"Output argument for ProductSpace arithmetic must be a product space. {type(out)=}")
             assert len(out.parts) == len(self)
 
+        def _dtype_adaptive_wrapper(new_parts):
+            if all([xln.space == spc for xln, spc in zip(new_parts, self)]):
+                return self.element(new_parts)
+            else:
+                # The `xl.space._elementwise_num_operation` may change the dtype, and thus the
+                # part-space. For example, the `isfinite` function has boolean results.
+                # In this case, the resulting product space also has the new dtype, which we
+                # accomplish by creating the new space on the spot.
+                new_space = ProductSpace(*[xln.space for xln in new_parts])
+                return new_space.element(new_parts)
+
         if x2 is None:
             if out is None:
-                return self.element([
+                return _dtype_adaptive_wrapper([
                     xl.space._elementwise_num_operation(operation=operation, x1=xl, **kwargs)
                     for xl in x1.parts ])
             else:
@@ -329,7 +340,7 @@ class ProductSpace(LinearSpace):
         if isinstance(x1, ProductSpaceElement) and isinstance(x2, ProductSpaceElement):
             assert len(x1.parts) == len(x2.parts)
             if out is None:
-                return self.element([
+                return _dtype_adaptive_wrapper([
                     xl.space._elementwise_num_operation(operation=operation, x1=xl, x2=xr, **kwargs)
                     for xl, xr in zip(x1.parts, x2.parts) ])
             else:
@@ -340,7 +351,7 @@ class ProductSpace(LinearSpace):
 
         elif isinstance(x1, ProductSpaceElement):
             if out is None:
-                return self.element([
+                return _dtype_adaptive_wrapper([
                     x.space._elementwise_num_operation(operation=operation, x1=x, x2=x2, **kwargs)
                     for x in x1.parts ])
             else:
@@ -350,7 +361,7 @@ class ProductSpace(LinearSpace):
 
         elif isinstance(x2, ProductSpaceElement):
             if out is None:
-                return self.element([
+                return _dtype_adaptive_wrapper([
                     x.space._elementwise_num_operation(operation=operation, x1=x1, x2=x, **kwargs)
                     for x in x2.parts ])
             else:
