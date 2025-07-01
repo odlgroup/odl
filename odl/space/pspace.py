@@ -638,6 +638,9 @@ class ProductSpace(LinearSpace):
 
         if inp in self:
             return inp
+        
+        if isinstance(inp, Number):
+            inp = [space.element(inp) for space in self.spaces]
 
         if len(inp) != len(self):
             raise ValueError('length of `inp` {} does not match length of '
