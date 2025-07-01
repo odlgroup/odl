@@ -78,8 +78,15 @@ __all__ = (
 
 
 def _apply_element_wise(operation: str, x1, x2=None, out=None, **kwargs):
-
-    return x1.space._elementwise_num_operation(operation=operation, x1=x1, x2=x2, out=out, **kwargs)
+    # Lazy import of LinearSpaceElement for dispatching call
+    from odl.set.space import LinearSpaceElement
+    if isinstance(x1, LinearSpaceElement):
+        return x1.space._elementwise_num_operation(operation=operation, x1=x1, x2=x2, out=out, **kwargs)
+    # Handling the left argument as a float/int/complex and right argument as a LinearSpaceElement
+    elif isinstance(x2, LinearSpaceElement):
+        return x2.space._elementwise_num_operation(operation=operation, x1=x1, x2=x2, out=out, **kwargs)       
+    else:
+        raise(AttributeError(f"Either x1 or x2 need to be a LinearSpaceElemtn, got {type(x1)} and {type(x2)} with values {x1=} and {x2=}"))
 
 
 def abs(x, out=None):
@@ -295,12 +302,16 @@ def isfinite(x1, out=None):
 def isinf(x1, out=None):
     """Tests each element `x_i` of the input array `x` to determine if it is a
     positive or negative infinity."""
+    if x1 == float('Inf') or x1 == -float("Inf"):
+        return True
     return _apply_element_wise('isinf', x1, out=out)
 
 
 def isnan(x1, out=None):
     """Tests each element `x_i` of the input array `x` to determine if it is a
     `NaN`."""
+    if x1 == float('Nan'):
+        return True
     return _apply_element_wise('isnan', x1, out=out)
 
 
