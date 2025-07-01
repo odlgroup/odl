@@ -713,7 +713,22 @@ class LinearSpaceElement(object):
         """Return ``+self``."""
         return self.copy()
 
-    # Metric space method
+    def __lt__(self, other):
+        """Implement ``self < other``."""
+        return self.space._elementwise_num_operation('less', self, other)
+    
+    def __le__(self, other):
+        """Implement ``self <= other``."""
+        return self.space._elementwise_num_operation('less_equal', self, other)
+    
+    def __gt__(self, other):
+        """Implement ``self > other``."""
+        return self.space._elementwise_num_operation('greater', self, other)
+    
+    def __ge__(self, other):
+        """Implement ``self >= other``."""
+        return self.space._elementwise_num_operation('greater_equal', self, other)
+    
     def __eq__(self, other):
         """Return ``self == other``.
 

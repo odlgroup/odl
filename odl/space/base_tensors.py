@@ -1811,22 +1811,6 @@ class Tensor(LinearSpaceElement):
         raise NotImplementedError
     
     ################# Comparison Operators #################
-    def __lt__(self, other):
-        """Implement ``self < other``."""
-        raise NotImplementedError
-    
-    def __le__(self, other):
-        """Implement ``self <= other``."""
-        raise NotImplementedError
-    
-    def __gt__(self, other):
-        """Implement ``self > other``."""
-        raise NotImplementedError
-    
-    def __ge__(self, other):
-        """Implement ``self >= other``."""
-        raise NotImplementedError
-    
     def __eq__(self, other):
         """Implement ``self == other``."""
         if other is self:
