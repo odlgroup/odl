@@ -277,15 +277,17 @@ def proximal_arg_scaling(prox_factory, scaling):
     #   the others.
     # Since these checks are computationally expensive, we do not execute them
     # unconditionally, but only if the scaling factor is a scalar:
+    domain = prox_factory(1.0).domain
     if np.isscalar(scaling):
         if scaling == 0:
-            return proximal_const_func(prox_factory(1.0).domain)
+            return proximal_const_func(domain)
         elif scaling.imag != 0:
             raise ValueError("Complex scaling not supported.")
         else:
             scaling = float(scaling.real)
+    
     else:
-        scaling = np.asarray(scaling)
+        assert scaling in domain 
 
     def arg_scaling_prox_factory(sigma):
         """Create proximal for the translation with a given sigma.
@@ -383,22 +385,20 @@ def proximal_quadratic_perturbation(prox_factory, a, u=None):
             The proximal operator of ``sigma * (F(x) + a * \|x\|^2 + <u,x>)``,
             where ``sigma`` is the step size
         """
-        if np.isscalar(sigma):
-            sigma = float(sigma)
-        else:
-            sigma = np.asarray(sigma)
+        sigma = u.space.element(sigma)
 
-        const = 1.0 / np.sqrt(sigma * 2.0 * a + 1)
+        const = 1.0 / sqrt(sigma * 2.0 * a + 1)
         prox = proximal_arg_scaling(prox_factory, const)(sigma)
+        const=u.space.element(const)
         if u is not None:
-            return (MultiplyOperator(const, domain=u.space, range=u.space) *
-                    prox *
+            return (MultiplyOperator(const, domain=u.space, range=u.space) @
+                    prox @
                     (MultiplyOperator(const, domain=u.space, range=u.space) -
                      sigma * const * u))
         else:
             space = prox.domain
-            return (MultiplyOperator(const, domain=space, range=space) *
-                    prox * MultiplyOperator(const, domain=space, range=space))
+            return (MultiplyOperator(const, domain=space, range=space) @
+                    prox @ MultiplyOperator(const, domain=space, range=space))
 
     return quadratic_perturbation_prox_factory
 
