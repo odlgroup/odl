@@ -371,6 +371,7 @@ class LinearSpace(Set):
                                        , x1: Union["LinearSpaceElement", Number]
                                        , x2: Union[None, "LinearSpaceElement", Number] = None
                                        , out=None
+                                       , namespace=None
                                        , **kwargs ):
         """TODO(Justus) rewrite docstring
         Apply the numerical operation implemented by `low_level_method` to

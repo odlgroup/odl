@@ -1057,6 +1057,7 @@ class TensorSpace(LinearSpace):
                                        , x1: LinearSpaceElement | Number
                                        , x2: None | LinearSpaceElement | Number = None
                                        , out=None
+                                       , namespace=None
                                        , **kwargs ):
         """
         Internal helper function to implement the __magic_functions__ (such as __add__).
@@ -1097,6 +1098,11 @@ class TensorSpace(LinearSpace):
         """
         if self.field is None:
             raise NotImplementedError(f"The space has no field.")
+        
+        if namespace is None:
+            local_namespace = self.array_namespace
+        else:
+            local_namespace = namespace
 
         if out is not None:
             assert isinstance(out, Tensor)
@@ -1108,7 +1114,7 @@ class TensorSpace(LinearSpace):
 
         if x2 is None:
             assert(x1 in self)
-            fn = getattr(self.array_namespace, operation)
+            fn = getattr(local_namespace, operation)
             if out is None:
                 result_data = fn(x1.data, **kwargs)
             else:
@@ -1116,7 +1122,7 @@ class TensorSpace(LinearSpace):
             return self.astype(self.array_backend.get_dtype_identifier(array=result_data)).element(result_data) 
 
         if isinstance(x1, (int, float, complex)) or isinstance(x2, (int, float, complex)):
-            fn =  getattr(self.array_namespace, operation)
+            fn =  getattr(local_namespace, operation)
             if out is None:
                 if isinstance(x1, (int, float, complex)):
                     result_data = fn(x1, x2.data, **kwargs)
@@ -1135,12 +1141,12 @@ class TensorSpace(LinearSpace):
         if isinstance(x1, ProductSpaceElement):
             if not isinstance(x2, Tensor):
                 raise TypeError(f'Right operand is not an ODL Tensor. {type(x2)=}')
-            return x1.space._elementwise_num_operation(operation, x1, x2, out, **kwargs)
+            return x1.space._elementwise_num_operation(operation, x1, x2, out, namespace=namespace, **kwargs)
 
         elif isinstance(x2, ProductSpaceElement):
             if not isinstance(x1, Tensor):
                 raise TypeError(f'Left operand is not an ODL Tensor. {type(x1)=}')
-            return x2.space._elementwise_num_operation(operation, x1, x2, out, **kwargs)
+            return x2.space._elementwise_num_operation(operation, x1, x2, out, namespace=namespace, **kwargs)
 
 
         if not isinstance(x1, Tensor):
@@ -1148,7 +1154,7 @@ class TensorSpace(LinearSpace):
         if not isinstance(x2, Tensor):
             raise TypeError(f"Right operand is not an ODL Tensor. {type(x2)=}")
 
-        element_wise_function = getattr(x1.array_namespace, operation)
+        element_wise_function = getattr(local_namespace, operation)
  
         assert self.shape == x2.space.shape, f"The shapes of {self} and x2 {x2.space.shape} differ, cannot perform {operation}"
         assert self.device == x2.space.device, f"The devices of {self} and x2 {x2.space.device} differ, cannot perform {operation}"

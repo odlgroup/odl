@@ -285,8 +285,9 @@ class ProductSpace(LinearSpace):
 
     def _elementwise_num_operation(self, operation:str
                                        , x1: LinearSpaceElement | Number
-                                       , x2: None | LinearSpaceElement | Number
+                                       , x2: None | LinearSpaceElement | Number = None
                                        , out=None
+                                       , namespace=None
                                        , **kwargs ):
         """
         Internal helper function to implement the __magic_functions__ (such as __add__).
@@ -330,43 +331,43 @@ class ProductSpace(LinearSpace):
         if x2 is None:
             if out is None:
                 return _dtype_adaptive_wrapper([
-                    xl.space._elementwise_num_operation(operation=operation, x1=xl, **kwargs)
+                    xl.space._elementwise_num_operation(operation=operation, x1=xl, namespace=namespace, **kwargs)
                     for xl in x1.parts ])
             else:
                 for i, xl in enumerate(x1.parts):
-                    xl.space._elementwise_num_operation(operation=operation, x1=xl, out=out.parts[i], **kwargs)
+                    xl.space._elementwise_num_operation(operation=operation, x1=xl, out=out.parts[i], namespace=namespace, **kwargs)
                 return out
 
         if isinstance(x1, ProductSpaceElement) and isinstance(x2, ProductSpaceElement):
             assert len(x1.parts) == len(x2.parts)
             if out is None:
                 return _dtype_adaptive_wrapper([
-                    xl.space._elementwise_num_operation(operation=operation, x1=xl, x2=xr, **kwargs)
+                    xl.space._elementwise_num_operation(operation=operation, x1=xl, x2=xr, namespace=namespace, **kwargs)
                     for xl, xr in zip(x1.parts, x2.parts) ])
             else:
                 for i, xl in enumerate(x1.parts):
                     xr = x2.parts[i]
-                    xl.space._elementwise_num_operation(operation=operation, x1=xl, x2=xr, out=out.parts[i], **kwargs)
+                    xl.space._elementwise_num_operation(operation=operation, x1=xl, x2=xr, out=out.parts[i], namespace=namespace, **kwargs)
                 return out
 
         elif isinstance(x1, ProductSpaceElement):
             if out is None:
                 return _dtype_adaptive_wrapper([
-                    x.space._elementwise_num_operation(operation=operation, x1=x, x2=x2, **kwargs)
+                    x.space._elementwise_num_operation(operation=operation, x1=x, x2=x2, namespace=namespace, **kwargs)
                     for x in x1.parts ])
             else:
                 for i, x in enumerate(x1.parts):
-                    x.space._elementwise_num_operation(operation=operation, x1=x, x2=x2, out=out.parts[i], **kwargs)
+                    x.space._elementwise_num_operation(operation=operation, x1=x, x2=x2, out=out.parts[i], namespace=namespace, **kwargs)
                 return out
 
         elif isinstance(x2, ProductSpaceElement):
             if out is None:
                 return _dtype_adaptive_wrapper([
-                    x.space._elementwise_num_operation(operation=operation, x1=x1, x2=x, **kwargs)
+                    x.space._elementwise_num_operation(operation=operation, x1=x1, x2=x, namespace=namespace, **kwargs)
                     for x in x2.parts ])
             else:
                 for i, x in enumerate(x2.parts):
-                    x.space._elementwise_num_operation(operation=operation, x1=x1, x2=x, out=out.parts[i], **kwargs)
+                    x.space._elementwise_num_operation(operation=operation, x1=x1, x2=x, out=out.parts[i], namespace=namespace, **kwargs)
                 return out
 
         else:
