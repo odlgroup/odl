@@ -1118,7 +1118,7 @@ class TensorSpace(LinearSpace):
             if out is None:
                 result_data = fn(x1.data, **kwargs)
             else:
-                result_data = fn(x1.data, out.data, **kwargs)
+                result_data = fn(x1.data, out=out.data, **kwargs)
             return self.astype(self.array_backend.get_dtype_identifier(array=result_data)).element(result_data) 
 
         if isinstance(x1, (int, float, complex)) or isinstance(x2, (int, float, complex)):
@@ -1132,9 +1132,9 @@ class TensorSpace(LinearSpace):
             else:
                 assert out in self, f"out is not an element of the space."
                 if isinstance(x1, (int, float, complex)):
-                    result_data = fn(x1, x2.data, out.data, **kwargs)
+                    result_data = fn(x1, x2.data, out=out.data, **kwargs)
                 elif isinstance(x2, (int, float, complex)):
-                    result_data = fn(x1.data, x2, out.data, **kwargs)
+                    result_data = fn(x1.data, x2, out=out.data, **kwargs)
                     
             return self.astype(self.array_backend.get_dtype_identifier(array=result_data)).element(result_data) 
 
