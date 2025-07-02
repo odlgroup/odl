@@ -43,7 +43,7 @@ def allclose(x, y, rtol=1e-05, atol=1e-08, equal_nan=False):
     Returns True if two arrays are element-wise equal within a tolerance.
     Note: This is not a Python Array API method, but it happens to work in Numpy and Pytorch.
     """
-    return _helper(x, 'allclose', y=y, rtol=1e-05, atol=1e-08, equal_nan=False)
+    return _helper(x, 'allclose', y=y, rtol=rtol, atol=atol, equal_nan=equal_nan)
 
 def all_equal(x, y):
     """
@@ -70,5 +70,5 @@ def isclose(x, y, rtol=1e-05, atol=1e-08, equal_nan=False):
     Returns a boolean array where two arrays are element-wise equal within a tolerance.
     Note: This is not a Python Array API method, but it happens to work in Numpy and Pytorch.
     """
-    return _helper(x, 'isclose', y=y, rtol=1e-05, atol=1e-08, equal_nan=False)
+    return _helper(x, 'isclose', y=y, rtol=rtol, atol=atol, equal_nan=equal_nan)
 
