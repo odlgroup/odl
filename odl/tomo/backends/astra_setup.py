@@ -555,7 +555,7 @@ def astra_data(astra_geom, datatype, data=None, ndim=2, allow_copy=AVOID_UNNECES
         given ``datatype``.
     datatype : {'volume', 'projection'}
         Type of the data container.
-    data : `DiscretizedSpaceElement` or `numpy.ndarray`, optional
+    data : array-like, optional
         Data for the initialization of the data object. If ``None``,
         an ASTRA data object filled with zeros is created.
     ndim : {2, 3}, optional
@@ -572,11 +572,10 @@ def astra_data(astra_geom, datatype, data=None, ndim=2, allow_copy=AVOID_UNNECES
         Handle for the new ASTRA internal data object.
     """
     if data is not None:
-        if isinstance(data, (DiscretizedSpaceElement, np.ndarray)):
+        if isinstance(data, np.ndarray):
             ndim = data.ndim
         else:
-            raise TypeError('`data` {!r} is neither DiscretizedSpaceElement '
-                            'instance nor a `numpy.ndarray`'.format(data))
+            raise TypeError('`data` {!r} is not a `numpy.ndarray`'.format(data))
     else:
         ndim = int(ndim)
 
@@ -601,8 +600,7 @@ def astra_data(astra_geom, datatype, data=None, ndim=2, allow_copy=AVOID_UNNECES
     # ASTRA checks if data is c-contiguous and aligned
     if data is not None:
         if allow_copy:
-            data_array = np.asarray(data, dtype='float32', order='C')
-            return link(astra_dtype_str, astra_geom, data_array)
+            return link(astra_dtype_str, astra_geom, data.copy())
         else:
             if isinstance(data, np.ndarray):
                 return link(astra_dtype_str, astra_geom, data)
