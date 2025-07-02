@@ -185,7 +185,8 @@ def test_element():
 
     # wrong length
     with pytest.raises(ValueError):
-        HxH.element([[1, 2]])
+        # The user tries to input a list of length 1. This would be broadcasted to all parts of the space if cast is True. Hence we need to explicitely set it to False if the strict semantics are desired.
+        HxH.element([[1, 2]], cast = False)
 
     with pytest.raises(ValueError):
         HxH.element([[1, 2], [3, 4], [5, 6]])

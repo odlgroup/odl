@@ -650,16 +650,22 @@ class ProductSpace(LinearSpace):
             inp = [space.element(inp) for space in self.spaces]
 
         if len(inp) != len(self):
-            raise ValueError('length of `inp` {} does not match length of '
+            # Here, we handle the case where the user provides an input with a single element that we will try to broadcast to all of the parts of the ProductSpace. 
+            if len(inp) == 1 and cast:
+                parts = [space.element(inp[0]) for space in self.spaces]
+            else:                
+                raise ValueError('length of `inp` {} does not match length of '
                              'space {}'.format(len(inp), len(self)))
 
-        if (all(isinstance(v, LinearSpaceElement) and v.space == space
+        elif (all(isinstance(v, LinearSpaceElement) and v.space == space
                 for v, space in zip(inp, self.spaces))):
             parts = list(inp)
-        elif cast:
+
+        elif cast and len(inp) == len(self):
             # Delegate constructors
             parts = [space.element(arg)
                      for arg, space in zip(inp, self.spaces)]
+            
         else:
             raise TypeError('input {!r} not a sequence of elements of the '
                             'component spaces'.format(inp))
