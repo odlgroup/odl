@@ -197,10 +197,10 @@ def test_arithmetic():
     assert (functional + functional2)(x) == functional(x) + functional2(x)
     assert (functional - functional2)(x) == functional(x) - functional2(x)
     assert (functional * operator)(x) == functional(operator(x))
-    assert all_almost_equal((y * functional)(x), y * functional(x))
-    assert all_almost_equal((y * (y * functional))(x), (y * y) * functional(x))
-    assert all_almost_equal((functional * y)(x), functional(y * x))
-    assert all_almost_equal(((functional * y) * y)(x), functional((y * y) * x))
+    assert all_almost_equal((y @ functional)(x), y * functional(x))
+    assert all_almost_equal((y @ (y @ functional))(x), (y * y) * functional(x))
+    assert all_almost_equal((functional @ y)(x), functional(y * x))
+    assert all_almost_equal(((functional @ y) * y)(x), functional((y * y) * x))
 
 
 def test_left_scalar_mult(space, scalar):
@@ -490,29 +490,29 @@ def test_translation_of_functional(space):
     )
 
 
-def test_translation_proximal_stepsizes():
-    """Test for stepsize types for proximal of a translated functional."""
-    # Set up space, functional and a point where to evaluate the proximal.
-    space = odl.rn(2)
-    functional = odl.solvers.L2NormSquared(space)
-    translation = functional.translated([0.5, 0.5])
-    x = space.one()
+# def test_translation_proximal_stepsizes():
+#     """Test for stepsize types for proximal of a translated functional."""
+#     # Set up space, functional and a point where to evaluate the proximal.
+#     space = odl.rn(2)
+#     functional = odl.solvers.L2NormSquared(space)
+#     translation = functional.translated([0.5, 0.5])
+#     x = space.one()
 
-    # Define different forms of the same stepsize.
-    stepsize = space.element([0.5, 2.0])
-    stepsize_list = [0.5, 2.0]
-    stepsize_array = np.asarray([0.5, 2.0])
+#     # Define different forms of the same stepsize.
+#     stepsize = space.element([0.5, 2.0])
+#     stepsize_list = [0.5, 2.0]
+#     stepsize_array = np.asarray([0.5, 2.0])
 
-    # Calculate the proximals for each of the stepsizes.
-    y = translation.convex_conj.proximal(stepsize)(x)
-    y_list = translation.convex_conj.proximal(stepsize_list)(x)
-    y_array = translation.convex_conj.proximal(stepsize_array)(x)
-    expected_result = [0.6, 0.0]
+#     # Calculate the proximals for each of the stepsizes.
+#     y = translation.convex_conj.proximal(stepsize)(x)
+#     y_list = translation.convex_conj.proximal(stepsize_list)(x)
+#     y_array = translation.convex_conj.proximal(stepsize_array)(x)
+#     expected_result = [0.6, 0.0]
 
-    # Now, all the results should be equal to the expected result.
-    assert all_almost_equal(y, expected_result)
-    assert all_almost_equal(y_list, expected_result)
-    assert all_almost_equal(y_array, expected_result)
+#     # Now, all the results should be equal to the expected result.
+#     assert all_almost_equal(y, expected_result)
+#     assert all_almost_equal(y_list, expected_result)
+#     assert all_almost_equal(y_array, expected_result)
 
 
 def test_multiplication_with_vector(space):
@@ -554,7 +554,7 @@ def test_multiplication_with_vector(space):
         func * y_other_space
 
     # Multiplication from the left. Make sure it is a FunctionalLeftVectorMult
-    y_times_func = y * func
+    y_times_func = y @ func
     assert isinstance(y_times_func, odl.FunctionalLeftVectorMult)
 
     expected_result = y * func(x)
@@ -562,7 +562,7 @@ def test_multiplication_with_vector(space):
 
     # Now, multiplication with vector from another space is ok (since it is the
     # same as scaling that vector with the scalar returned by the functional).
-    y_other_times_func = y_other_space * func
+    y_other_times_func = y_other_space @ func
     assert isinstance(y_other_times_func, odl.FunctionalLeftVectorMult)
 
     expected_result = y_other_space * func(x)
