@@ -23,7 +23,7 @@ Foundations and Trends in Optimization, 1 (2014), pp 127-239.
 
 from __future__ import print_function, division, absolute_import
 import numpy as np
-
+import math
 from odl.operator import (
     Operator, IdentityOperator, ConstantOperator, DiagonalOperator,
     PointwiseNorm, MultiplyOperator)
@@ -278,7 +278,7 @@ def proximal_arg_scaling(prox_factory, scaling):
     # Since these checks are computationally expensive, we do not execute them
     # unconditionally, but only if the scaling factor is a scalar:
     domain = prox_factory(1.0).domain
-    if np.isscalar(scaling):
+    if isinstance(scaling, (int, float)):
         if scaling == 0:
             return proximal_const_func(domain)
         elif scaling.imag != 0:
@@ -287,7 +287,7 @@ def proximal_arg_scaling(prox_factory, scaling):
             scaling = float(scaling.real)
     
     else:
-        assert scaling in domain 
+        assert scaling in domain, f"The scaling {scaling} was passed as a {type(scaling)}, which is not supported. Please pass it either as a float or as an element of the domain of the prox_factory."
 
     def arg_scaling_prox_factory(sigma):
         """Create proximal for the translation with a given sigma.
@@ -385,11 +385,10 @@ def proximal_quadratic_perturbation(prox_factory, a, u=None):
             The proximal operator of ``sigma * (F(x) + a * \|x\|^2 + <u,x>)``,
             where ``sigma`` is the step size
         """
-        sigma = u.space.element(sigma)
 
-        const = 1.0 / sqrt(sigma * 2.0 * a + 1)
+        const = 1.0 / math.sqrt(sigma * 2.0 * a + 1)
         prox = proximal_arg_scaling(prox_factory, const)(sigma)
-        const=u.space.element(const)
+
         if u is not None:
             return (MultiplyOperator(const, domain=u.space, range=u.space) @
                     prox @
