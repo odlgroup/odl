@@ -10,6 +10,7 @@
 
 from __future__ import print_function, division, absolute_import
 import numpy as np
+from odl.array_API_support import maximum, any, log, sum
 
 __all__ = ('mlem', 'osmlem', 'poisson_log_likelihood')
 
@@ -156,13 +157,13 @@ def osmlem(op, x, data, niter, callback=None, **kwargs):
     # TODO: let users give this.
     eps = 1e-8
 
-    if np.any(np.less(x, 0)):
+    if any(x < 0):
         raise ValueError('`x` must be non-negative')
 
     # Extract the sensitivites parameter
     sensitivities = kwargs.pop('sensitivities', None)
     if sensitivities is None:
-        sensitivities = [np.maximum(opi.adjoint(opi.range.one()), eps)
+        sensitivities = [maximum(opi.adjoint(opi.range.one()), eps)
                          for opi in op]
     else:
         # Make sure the sensitivities is a list of the correct size.
@@ -177,7 +178,8 @@ def osmlem(op, x, data, niter, callback=None, **kwargs):
     for _ in range(niter):
         for i in range(n_ops):
             op[i](x, out=tmp_ran[i])
-            tmp_ran[i].ufuncs.maximum(eps, out=tmp_ran[i])
+            maximum(tmp_ran[i], eps, out=tmp_ran[i])
+
             data[i].divide(tmp_ran[i], out=tmp_ran[i])
 
             op[i].adjoint(tmp_ran[i], out=tmp_dom)
@@ -199,7 +201,7 @@ def poisson_log_likelihood(x, data):
     data : ``op.range`` element
         Data whose log-likelihood given ``x`` shall be calculated.
     """
-    if np.any(np.less(x, 0)):
+    if any(x < 0):
         raise ValueError('`x` must be non-negative')
 
-    return np.sum(data * np.log(x + 1e-8) - x)
+    return sum(data * log(x + 1e-8) - x)
