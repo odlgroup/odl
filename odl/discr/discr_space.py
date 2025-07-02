@@ -12,6 +12,8 @@ from __future__ import absolute_import, division, print_function
 
 from numbers import Integral
 
+from contextlib import contextmanager
+
 import numpy as np
 
 from odl.discr.discr_utils import point_collocation, sampling_function
@@ -703,6 +705,16 @@ class DiscretizedSpaceElement(Tensor):
             Has to be contiguous and of the correct dtype.
         """
         return self.tensor.asarray(out=out, must_be_contiguous=must_be_contiguous)
+
+    @contextmanager
+    def writable_array(self, must_be_contiguous: bool =False):
+        arr = None
+        try:
+            arr = self.tensor.asarray(must_be_contiguous=must_be_contiguous)
+            yield arr
+        finally:
+            if arr is not None:
+                self.tensor.data[:] = arr
 
     def astype(self, dtype):
         """Return a copy of this element with new ``dtype``.

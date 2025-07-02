@@ -14,6 +14,7 @@ from types import ModuleType
 from typing import Dict
 from numbers import Integral, Number
 import warnings
+from contextlib import contextmanager
 import numpy as np
 
 import odl
@@ -1406,6 +1407,40 @@ class Tensor(LinearSpaceElement):
         else:
             out[:] = self.data
             return out
+
+    @contextmanager
+    def writable_array(self, must_be_contiguous: bool =False):
+        """Context manager that casts `self` to a backend-specific array and saves changes
+        made to that array back in `self`.
+    
+        Parameters
+        ----------
+        must_be_contiguous : bool
+            Whether the writable array should guarantee standard C order.
+            See documentation to `asarray` for the semantics.
+    
+        Examples
+        --------
+    
+        >>> space = odl.uniform_discr(0, 1, 3)
+        >>> x = space.element([1, 2, 3])
+        >>> with x.writable_array() as arr:
+        ...     arr += [1, 1, 1]
+        >>> x
+        uniform_discr(0.0, 1.0, 3).element([ 2.,  3.,  4.])
+    
+        Note that the changes are in general only saved upon exiting the 
+        context manager. Before, the input object may remain unchanged.
+        """
+        arr = None
+        try:
+            # TODO(Justus) it should be possible to avoid making a copy here,
+            # and actually just modify `data` in place.
+            arr = self.asarray(must_be_contiguous=must_be_contiguous)
+            yield arr
+        finally:
+            if arr is not None:
+                self.data[:] = arr
     
     def astype(self, dtype):
         """Return a copy of this element with new ``dtype``.

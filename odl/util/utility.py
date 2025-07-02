@@ -602,8 +602,9 @@ except AttributeError:
 
 
 @contextmanager
-def writable_array(obj, **kwargs):
-    """Context manager that casts obj to a `numpy.array` and saves changes.
+def writable_array(obj, must_be_contiguous: bool =False):
+    """Context manager that casts `obj` to a backend-specific array and saves changes
+    made on that array back into `obj`.
 
     Parameters
     ----------
@@ -611,19 +612,11 @@ def writable_array(obj, **kwargs):
         Object that should be made available as writable array.
         It must be valid as input to `numpy.asarray` and needs to
         support the syntax ``obj[:] = arr``.
-    kwargs :
-        Keyword arguments that should be passed to `numpy.asarray`.
+    must_be_contiguous : bool
+        Whether the writable array should guarantee standard C order.
 
     Examples
     --------
-    Convert list to array and use with numpy:
-
-    >>> lst = [1, 2, 3]
-    >>> with writable_array(lst) as arr:
-    ...    arr *= 2
-    >>> lst
-    [2, 4, 6]
-
     Usage with ODL vectors:
 
     >>> space = odl.uniform_discr(0, 1, 3)
@@ -633,31 +626,25 @@ def writable_array(obj, **kwargs):
     >>> x
     uniform_discr(0.0, 1.0, 3).element([ 2.,  3.,  4.])
 
-    Additional keyword arguments are passed to `numpy.asarray`:
-
-    >>> lst = [1, 2, 3]
-    >>> with writable_array(lst, dtype='complex') as arr:
-    ...     print(arr)
-    [ 1.+0.j  2.+0.j  3.+0.j]
-
-    Note that the changes are only saved upon exiting the context
-    manger exits. Before, the input object is unchanged:
-
-    >>> lst = [1, 2, 3]
-    >>> with writable_array(lst) as arr:
-    ...     arr *= 2
-    ...     print(lst)
-    [1, 2, 3]
-    >>> print(lst)
-    [2, 4, 6]
+    Note that the changes are in general only saved upon exiting the 
+    context manager. Before, the input object may remain unchanged.
     """
-    arr = None
-    try:
-        arr = asarray(obj, **kwargs)
-        yield arr
-    finally:
-        if arr is not None:
-            obj[:] = arr
+    if isinstance(obj, np.ndarray):
+        if must_be_contiguous and not obj.data.c_contiguous:
+            # Needs to convert to contiguous array
+            arr = np.ascontiguousarray(obj)
+            try:
+                yield arr
+            finally:
+                obj[:] = arr
+        else:
+            try:
+                yield obj
+            finally:
+                pass
+    else:
+        with obj.writable_array(must_be_contiguous=must_be_contiguous) as arr:
+            yield arr
 
 
 def signature_string(posargs, optargs, sep=', ', mod='!r'):

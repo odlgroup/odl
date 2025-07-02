@@ -16,6 +16,7 @@ import operator
 import numpy as np
 
 import warnings
+from contextlib import contextmanager
 
 from odl.set import LinearSpace
 from odl.set.space import (LinearSpaceElement,
@@ -1234,6 +1235,16 @@ class ProductSpaceElement(LinearSpaceElement):
 
             return out
 
+    @contextmanager
+    def writable_array(self, must_be_contiguous: bool =False):
+        arr = None
+        try:
+            arr = self.asarray(must_be_contiguous=must_be_contiguous)
+            yield arr
+        finally:
+            if arr is not None:
+                for i in range(1, len(self)):
+                    self.parts[i]._assign(self.parts[i].space.element(arr[i]))
     @property
     def real(self):
         """Real part of the element.
