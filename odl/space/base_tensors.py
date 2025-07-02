@@ -1175,9 +1175,11 @@ class TensorSpace(LinearSpace):
         return x1.space.astype(x1.space.array_backend.get_dtype_identifier(array=result)).element(result) 
 
     def _element_reduction(self, operation:str
-                               , x: "Tensor"):
+                               , x: "Tensor"
+                               , **kwargs
+                               ):
         fn = getattr(self.array_namespace, operation)
-        result = fn(x.data)
+        result = fn(x.data, **kwargs)
         try:
             return result.item()
         except AttributeError:

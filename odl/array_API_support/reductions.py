@@ -20,41 +20,41 @@ __all__ = (
 
 # TODO: add kwargs handling
 # TODO: rename module to 'statistical' to be array API compliant
-def _apply_reduction(operation: str, x):
-    return x.space._element_reduction(operation=operation, x=x)
+def _apply_reduction(operation: str, x, **kwargs):
+    return x.space._element_reduction(operation=operation, x=x, **kwargs)
 
-def cumulative_prod(x):
+def cumulative_prod(x, axis=None, dtype=None, include_initial=False):
     """Calculates the cumulative product of elements in the input array x."""
-    return _apply_reduction('cumulative_prod', x)
+    return _apply_reduction('cumulative_prod', x, axis=axis, dtype=dtype, include_initial=include_initial)
 
-def cumulative_sum(x):
+def cumulative_sum(x, axis=None, dtype=None, include_initial=False):
     """Calculates the cumulative sum of elements in the input array x."""
-    return _apply_reduction('cumulative_sum', x)
+    return _apply_reduction('cumulative_sum', x, axis=axis, dtype=dtype, include_initial=include_initial)
 
-def max(x):
+def max(x, axis=None, keepdims=False):
     """Calculates the maximum value of the input array x."""
-    return _apply_reduction('max', x)
+    return _apply_reduction('max', x, axis=axis, keepdims=keepdims)
 
-def mean(x):
+def mean(x, axis=None, keepdims=False):
     """Calculates the arithmetic mean of the input array x."""
-    return _apply_reduction('mean', x)
+    return _apply_reduction('mean', x, axis=axis, keepdims=keepdims)
 
-def min(x):
+def min(x, axis=None, keepdims=False):
     """Calculates the minimum value of the input array x."""
-    return _apply_reduction('min', x)
+    return _apply_reduction('min', x, axis=axis, keepdims=keepdims)
 
-def prod(x):
+def prod(x, axis=None, dtype=None, keepdims=False):
     "Calculates the product of input array x elements."
-    return _apply_reduction('prod', x)
+    return _apply_reduction('prod', x, axis=axis, dtype=dtype, keepdims=keepdims)
 
-def std(x):
+def std(x, axis=None, correction=0.0, keepdims=False):
     """Calculates the standard deviation of the input array x."""
-    return _apply_reduction('std', x)
+    return _apply_reduction('std', x, axis=axis, correction=correction, keepdims=keepdims)
 
-def sum(x):
+def sum(x, axis=None, dtype=None, keepdims=False):
     """Calculates the sum of the input array x."""
-    return _apply_reduction('sum', x)
+    return _apply_reduction('sum', x, axis=axis, dtype=dtype, keepdims=keepdims)
 
-def var(x):
+def var(x, axis=None, correction=0.0, keepdims=False):
     """Calculates the variance of the input array x."""
-    return _apply_reduction('var', x)
+    return _apply_reduction('var', x, axis=axis, correction=correction, keepdims=keepdims)

@@ -382,7 +382,9 @@ class LinearSpace(Set):
         raise NotImplementedError("abstract method")
 
     def _element_reduction(self, operation:str
-                               , x: "LinearSpaceElement"):
+                               , x: "LinearSpaceElement"
+                               , **kwargs
+                               ):
         raise NotImplementedError("abstract method")
 
     @property
