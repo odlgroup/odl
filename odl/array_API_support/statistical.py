@@ -18,8 +18,6 @@ __all__ = (
     'var'   
 )
 
-# TODO: add kwargs handling
-# TODO: rename module to 'statistical' to be array API compliant
 def _apply_reduction(operation: str, x, **kwargs):
     return x.space._element_reduction(operation=operation, x=x, **kwargs)
 

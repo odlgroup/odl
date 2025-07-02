@@ -29,8 +29,8 @@ from odl.operator import (
     PointwiseNorm, MultiplyOperator)
 from odl.space import ProductSpace
 from odl.set.space import LinearSpaceElement
-from odl.array_API_support.element_wise import maximum, minimum, abs, divide, subtract, add, sign, square, sqrt, less_equal, logical_not, exp, multiply
-from odl.array_API_support.reductions import sum
+from odl.array_API_support.element_wise import maximum, minimum, abs, divide, sign, square, sqrt, less_equal, logical_not, exp
+from odl.array_API_support.statistical import sum
 from odl.util.scipy_compatibility import lambertw
 
 
