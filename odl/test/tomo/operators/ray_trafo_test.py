@@ -227,7 +227,7 @@ def test_projector(projector, in_place):
 
     # We expect maximum value to be along diagonal
     expected_max = projector.domain.partition.extent[0] * np.sqrt(2)
-    assert proj.ufuncs.max() == pytest.approx(expected_max, rel=rtol)
+    assert odl.max(proj) == pytest.approx(expected_max, rel=rtol)
 
 
 def test_adjoint(projector):
