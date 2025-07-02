@@ -1183,7 +1183,7 @@ class ProductSpaceElement(LinearSpaceElement):
                 for p, v in zip(indexed_parts, values):
                     p[:] = v
 
-    def asarray(self, out=None):
+    def asarray(self, out=None, must_be_contiguous=False):
         """Extract the data of this vector as a backend-specific array.
 
         Only available if `is_power_space` is True.
@@ -1220,6 +1220,8 @@ class ProductSpaceElement(LinearSpaceElement):
             representative_array, representative_backend = get_array_and_backend(self.parts[0])
 
             if out is None:
+                # We are assuming that `empty` always produces a contiguous array,
+                # so no need to ensure it separately.
                 out = representative_backend.array_namespace.empty(
                          shape=self.shape,
                          dtype=self.dtype,
@@ -1228,7 +1230,7 @@ class ProductSpaceElement(LinearSpaceElement):
             out[0] = representative_array
 
             for i in range(1, len(self)):
-                out[i], _ = get_array_and_backend(self.parts[i])
+                self.parts[i].asarray(out = out[i])
 
             return out
 

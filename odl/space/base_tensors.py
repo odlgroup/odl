@@ -1351,7 +1351,7 @@ class Tensor(LinearSpaceElement):
         return self.space.size
 
     ######### public methods #########
-    def asarray(self, out=None):
+    def asarray(self, out=None, must_be_contiguous: bool =False):
         """Extract the data of this array as a ``numpy.ndarray``.
 
         This method is invoked when calling `numpy.asarray` on this
@@ -1362,6 +1362,15 @@ class Tensor(LinearSpaceElement):
         out : `numpy.ndarray`, optional
             Array in which the result should be written in-place.
             Has to be contiguous and of the correct dtype.
+        must_be_contiguous: `bool`
+            If this is `True`, then the returned array must occupy
+            a single block of memory and the axes be ordered
+            (in C order). Cf. `numpy.ascontiguousarray`.
+            This may require making a copy.
+            If `False` is given, the returned array may be a view
+            or have transposed axes, if this allows avoiding a copy.
+            If an `out` argument is provided, `must_be_contiguous`
+            is irrelevant.
 
         Returns
         -------
@@ -1390,7 +1399,10 @@ class Tensor(LinearSpaceElement):
                [ 1.,  1.,  1.]])
         """
         if out is None:
-            return self.data
+            if must_be_contiguous:
+                return self.array_backend.make_contiguous(self.data)
+            else:
+                return self.data
         else:
             out[:] = self.data
             return out

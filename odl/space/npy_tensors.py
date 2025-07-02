@@ -47,6 +47,7 @@ numpy_array_backend = ArrayBackend(
     array_namespace = xp,
     array_constructor = np.array,
     array_type = np.ndarray,
+    make_contiguous = lambda x: x if x.data.c_contiguous else np.ascontiguousarray(x),
     identifier_of_dtype = lambda dt: str(dt)
  )
 
