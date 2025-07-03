@@ -36,7 +36,7 @@ from odl.tomo.geometry import (
     DivergentBeamGeometry, Flat1dDetector, Flat2dDetector, Geometry,
     ParallelBeamGeometry)
 from odl.tomo.util.utility import euler_matrix
-
+from odl.set.space import LinearSpaceElement
 try:
     import astra
 except ImportError:
@@ -573,6 +573,9 @@ def astra_data(astra_geom, datatype, data=None, ndim=2, allow_copy=AVOID_UNNECES
     """
     if data is not None:
         if isinstance(data, np.ndarray):
+            ndim = data.ndim
+        elif isinstance(data, LinearSpaceElement):
+            data = data.data
             ndim = data.ndim
         else:
             raise TypeError('`data` {!r} is not a `numpy.ndarray`'.format(data))
