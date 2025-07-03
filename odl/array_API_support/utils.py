@@ -7,7 +7,10 @@ __all__ = (
     'AVAILABLE_DEVICES',
     'IMPL_DEVICE_PAIRS',
     'check_device',
-    'ArrayBackend', 'lookup_array_backend',)
+    'ArrayBackend', 
+    'lookup_array_backend',
+    'get_array_and_backend'
+    )
 
 
 _registered_array_backends = {}
