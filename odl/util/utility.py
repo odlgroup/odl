@@ -505,22 +505,12 @@ def complex_dtype(dtype, default=None):
     >>> complex_dtype(('float32', (3,)))
     dtype(('<c8', (3,)))
     """
-    dtype, dtype_in = np.dtype(dtype), dtype
-
-    if is_complex_floating_dtype(dtype):
+    if dtype in REAL_DTYPES: 
+        return TYPE_PROMOTION_REAL_TO_COMPLEX[dtype]
+    elif dtype in COMPLEX_DTYPES:
         return dtype
-
-    try:
-        complex_base_dtype = TYPE_PROMOTION_REAL_TO_COMPLEX[dtype.base]
-    except KeyError:
-        if default is not None:
-            return default
-        else:
-            raise ValueError('no complex counterpart exists for `dtype` {}'
-                             ''.format(dtype_repr(dtype_in)))
     else:
-        return np.dtype((complex_base_dtype, dtype.shape))
-
+        raise ValueError(f'The dtype {dtype=} is neither complex {COMPLEX_DTYPES} nor real {REAL_DTYPES}. Make sure you pass a string dtype and not a np.dtype or a torch.dtype.')
 
 def is_string(obj):
     """Return ``True`` if ``obj`` behaves like a string, ``False`` else."""
