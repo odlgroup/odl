@@ -624,6 +624,26 @@ def test_fanbeam_src_det_shifts(init1=None):
     assert all_almost_equal(geom.src_position(geom.angles),
                             geom_ds.src_position(geom_ds.angles))
 
+# def test_helical_pitch_interface(detector_type, shift):
+#     full_angle = 2 * np.pi
+#     apart = odl.uniform_partition(0, full_angle, 13)
+#     dpart = odl.uniform_partition([0, 0], [1, 1], (10, 10))
+#     src_rad = 10
+#     det_rad = 5
+#     pitch = 2.0
+#     translation = np.array([shift, shift, shift], dtype=float)
+#     if detector_type == 'spherical':
+#         curve_rad = [src_rad + det_rad + 1] * 2
+#     elif detector_type == 'cylindrical':
+#         curve_rad = [src_rad + det_rad + 1, None]
+#     else:
+#         curve_rad = None
+#     for pitch in [2.0, np.linspace(0,2,13), list(np.linspace(0,2,13))]:
+#         geom = odl.tomo.ConeBeamGeometry(apart, dpart, src_rad, det_rad,
+#                                      det_curvature_radius=curve_rad,
+#                                      pitch=pitch, translation=translation)
+#         geom.det_refpoint(np.linspace(0,2,13))
+        
 
 def test_helical_cone_beam_props(detector_type, shift):
     """Test basic properties of 3D helical cone beam geometries."""

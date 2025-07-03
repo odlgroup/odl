@@ -437,20 +437,20 @@ def test_shifted_volume(geometry_type):
     # part of the volume, yielding a value around 10 (=side length).
 
     # 0 degrees: All on the left
-    assert np.max(proj[0, :15]) > 5
-    assert np.max(proj[0, 15:]) == 0
+    assert odl.max(proj[0, :15]) > 5
+    assert odl.max(proj[0, 15:]) == 0
 
     # 90 degrees: Left and right
-    assert np.max(proj[1, :15]) > 5
-    assert np.max(proj[1, 15:]) > 5
+    assert odl.max(proj[1, :15]) > 5
+    assert odl.max(proj[1, 15:]) > 5
 
     # 180 degrees: All on the right
-    assert np.max(proj[2, :15]) == 0
-    assert np.max(proj[2, 15:]) > 5
+    assert odl.max(proj[2, :15]) == 0
+    assert odl.max(proj[2, 15:]) > 5
 
     # 270 degrees: Left and right
-    assert np.max(proj[3, :15]) > 5
-    assert np.max(proj[3, 15:]) > 5
+    assert odl.max(proj[3, :15]) > 5
+    assert odl.max(proj[3, 15:]) > 5
 
     # Do the same for axis 1
     shift = np.zeros(ndim)
@@ -461,20 +461,20 @@ def test_shifted_volume(geometry_type):
     proj = ray_trafo(space.one())
 
     # 0 degrees: Left and right
-    assert np.max(proj[0, :15]) > 5
-    assert np.max(proj[0, 15:]) > 5
+    assert odl.max(proj[0, :15]) > 5
+    assert odl.max(proj[0, 15:]) > 5
 
     # 90 degrees: All on the left
-    assert np.max(proj[1, :15]) > 5
-    assert np.max(proj[1, 15:]) == 0
+    assert odl.max(proj[1, :15]) > 5
+    assert odl.max(proj[1, 15:]) == 0
 
     # 180 degrees: Left and right
-    assert np.max(proj[2, :15]) > 5
-    assert np.max(proj[2, 15:]) > 5
+    assert odl.max(proj[2, :15]) > 5
+    assert odl.max(proj[2, 15:]) > 5
 
     # 270 degrees: All on the right
-    assert np.max(proj[3, :15]) == 0
-    assert np.max(proj[3, 15:]) > 5
+    assert odl.max(proj[3, :15]) == 0
+    assert odl.max(proj[3, 15:]) > 5
 
 
 def test_detector_shifts_2d():
@@ -753,10 +753,10 @@ def test_source_shifts_3d():
     y_ffs = op_ffs(phantom)
     y1 = op1(phantom)
     y2 = op2(phantom)
-    assert all_almost_equal(np.mean(y_ffs[::2], axis=(1, 2)),
-                            np.mean(y1, axis=(1, 2)))
-    assert all_almost_equal(np.mean(y_ffs[1::2], axis=(1, 2)),
-                            np.mean(y2, axis=(1, 2)))
+    assert all_almost_equal(odl.mean(y_ffs[::2], axis=(1, 2)),
+                            odl.mean(y1, axis=(1, 2)))
+    assert all_almost_equal(odl.mean(y_ffs[1::2], axis=(1, 2)),
+                            odl.mean(y2, axis=(1, 2)))
     im = op_ffs.adjoint(y_ffs).asarray()
     im_combined = (op1.adjoint(y1).asarray() + op2.adjoint(y2).asarray())
     # the scaling is a bit off for older versions of astra
