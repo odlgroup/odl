@@ -22,37 +22,64 @@ def _apply_reduction(operation: str, x, **kwargs):
     return x.space._element_reduction(operation=operation, x=x, **kwargs)
 
 def cumulative_prod(x, axis=None, dtype=None, include_initial=False):
-    """Calculates the cumulative product of elements in the input array x."""
+    """
+    Calculates the cumulative product of elements in the input array x.
+    Note: This function might not be doing what you expect. If you want to return an array (np.ndarray, torch.Tensor...), you are in the right place. However, you cannot use it to create a new LinearSpaceSelement.
+    """
     return _apply_reduction('cumulative_prod', x, axis=axis, dtype=dtype, include_initial=include_initial)
 
 def cumulative_sum(x, axis=None, dtype=None, include_initial=False):
-    """Calculates the cumulative sum of elements in the input array x."""
+    """
+    Calculates the cumulative sum of elements in the input array x.
+    Note: This function might not be doing what you expect. If you want to return an array (np.ndarray, torch.Tensor...), you are in the right place. However, you cannot use it to create a new LinearSpaceSelement.
+    """
     return _apply_reduction('cumulative_sum', x, axis=axis, dtype=dtype, include_initial=include_initial)
 
 def max(x, axis=None, keepdims=False):
-    """Calculates the maximum value of the input array x."""
+    """
+    Calculates the maximum value of the input array x.
+    Note: This function might not be doing what you expect. If you want to return an array (np.ndarray, torch.Tensor...), you are in the right place. However, you cannot use it to create a new LinearSpaceSelement.
+    """
     return _apply_reduction('max', x, axis=axis, keepdims=keepdims)
 
 def mean(x, axis=None, keepdims=False):
-    """Calculates the arithmetic mean of the input array x."""
+    """
+    Calculates the arithmetic mean of the input array x.
+    Note: This function might not be doing what you expect. If you want to return an array (np.ndarray, torch.Tensor...), you are in the right place. However, you cannot use it to create a new LinearSpaceSelement.
+    """
     return _apply_reduction('mean', x, axis=axis, keepdims=keepdims)
 
 def min(x, axis=None, keepdims=False):
-    """Calculates the minimum value of the input array x."""
+    """
+    Calculates the minimum value of the input array x.
+    Note: This function might not be doing what you expect. If you want to return an array (np.ndarray, torch.Tensor...), you are in the right place. However, you cannot use it to create a new LinearSpaceSelement.
+    """
     return _apply_reduction('min', x, axis=axis, keepdims=keepdims)
 
 def prod(x, axis=None, dtype=None, keepdims=False):
-    "Calculates the product of input array x elements."
+    """
+    Calculates the product of input array x elements.
+    Note: This function might not be doing what you expect. If you want to return an array (np.ndarray, torch.Tensor...), you are in the right place. However, you cannot use it to create a new LinearSpaceSelement.
+    """
     return _apply_reduction('prod', x, axis=axis, dtype=dtype, keepdims=keepdims)
 
 def std(x, axis=None, correction=0.0, keepdims=False):
-    """Calculates the standard deviation of the input array x."""
+    """
+    Calculates the standard deviation of the input array x.
+    Note: This function might not be doing what you expect. If you want to return an array (np.ndarray, torch.Tensor...), you are in the right place. However, you cannot use it to create a new LinearSpaceSelement.
+    """
     return _apply_reduction('std', x, axis=axis, correction=correction, keepdims=keepdims)
 
 def sum(x, axis=None, dtype=None, keepdims=False):
-    """Calculates the sum of the input array x."""
+    """
+    Calculates the sum of the input array x.
+    Note: This function might not be doing what you expect. If you want to return an array (np.ndarray, torch.Tensor...), you are in the right place. However, you cannot use it to create a new LinearSpaceSelement.
+    """
     return _apply_reduction('sum', x, axis=axis, dtype=dtype, keepdims=keepdims)
 
 def var(x, axis=None, correction=0.0, keepdims=False):
-    """Calculates the variance of the input array x."""
+    """    
+    Calculates the variance of the input array x.
+    Note: This function might not be doing what you expect. If you want to return an array (np.ndarray, torch.Tensor...), you are in the right place. However, you cannot use it to create a new LinearSpaceSelement.
+    """
     return _apply_reduction('var', x, axis=axis, correction=correction, keepdims=keepdims)
