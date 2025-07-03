@@ -23,6 +23,7 @@ from odl.util import (
     is_complex_floating_dtype, is_numeric_dtype, is_real_dtype,
     is_real_floating_dtype, is_string, normalized_axes_tuple,
     normalized_scalar_param_list)
+from odl.array_API_support import get_array_and_backend, ArrayBackend
 
 __all__ = ('reciprocal_grid', 'realspace_grid',
            'reciprocal_space',
@@ -296,7 +297,9 @@ def dft_preprocess_data(arr, shift=True, axes=None, sign='-', out=None):
     type and ``shift`` is not ``True``. In this case, the return type
     is the complex counterpart of ``arr.dtype``.
     """
-    arr = np.asarray(arr)
+    arr, backend = get_array_and_backend(arr)
+    backend : ArrayBackend
+    dtype = backend.get_dtype_identifier(array=arr)
     if not is_numeric_dtype(arr.dtype):
         raise ValueError('array has non-numeric data type {}'
                          ''.format(dtype_repr(arr.dtype)))
@@ -318,7 +321,7 @@ def dft_preprocess_data(arr, shift=True, axes=None, sign='-', out=None):
     # Make a copy of arr with correct data type if necessary, or copy values.
     if out is None:
         if is_real_dtype(arr.dtype) and not all(shift_list):
-            out = np.array(arr, dtype=complex_dtype(arr.dtype), copy=True)
+            out = np.array(arr, dtype=complex_dtype(dtype), copy=True)
         else:
             out = arr.copy()
     else:
@@ -460,7 +463,9 @@ def dft_postprocess_data(arr, real_grid, recip_grid, shift, axes,
     *Numerical Recipes in C - The Art of Scientific Computing* (Volume 3).
     Cambridge University Press, 2007.
     """
-    arr = np.asarray(arr)
+    arr, backend = get_array_and_backend(arr)
+    backend : ArrayBackend
+    dtype = backend.get_dtype_identifier(array=arr)
     if is_real_floating_dtype(arr.dtype):
         arr = arr.astype(complex_dtype(arr.dtype))
     elif not is_complex_floating_dtype(arr.dtype):
@@ -612,7 +617,7 @@ def reciprocal_space(space, axes=None, halfcomplex=False, shift=True,
 
     dtype = kwargs.pop('dtype', None)
     if dtype is None:
-        dtype = complex_dtype(space.dtype)
+        dtype = complex_dtype(space.dtype_identifier)
     else:
         if not is_complex_floating_dtype(dtype):
             raise ValueError('{} is not a complex data type'
