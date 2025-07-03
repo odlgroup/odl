@@ -224,16 +224,16 @@ def test_dft_call(impl):
                 [0, 0, 0, 0, 0],
                 [0, 0, 0, 0, 0],
                 [0, 0, 0, 0, 0]]
-    assert np.allclose(one_dft1, true_dft)
-    assert np.allclose(one_dft2, true_dft)
-    assert np.allclose(one_dft3, true_dft)
+    assert all_almost_equal(one_dft1, true_dft)
+    assert all_almost_equal(one_dft2, true_dft)
+    assert all_almost_equal(one_dft3, true_dft)
 
     one_idft1 = idft(one_dft1, flags=('FFTW_ESTIMATE',))
     one_idft2 = dft.inverse(one_dft1, flags=('FFTW_ESTIMATE',))
     one_idft3 = dft.adjoint(one_dft1, flags=('FFTW_ESTIMATE',))
-    assert np.allclose(one_idft1, one)
-    assert np.allclose(one_idft2, one)
-    assert np.allclose(one_idft3, one)
+    assert all_almost_equal(one_idft1, one)
+    assert all_almost_equal(one_idft2, one)
+    assert all_almost_equal(one_idft3, one)
 
     rand_arr = noise_element(dft_dom)
     rand_arr_dft = dft(rand_arr, flags=('FFTW_ESTIMATE',))
@@ -257,12 +257,12 @@ def test_dft_call(impl):
     true_dft = [[4, 4, 4, 4, 4],  # transform axis shortened
                 [0, 0, 0, 0, 0],
                 [0, 0, 0, 0, 0]]
-    assert np.allclose(one_dft, true_dft)
+    assert all_almost_equal(one_dft, true_dft)
 
     one_idft1 = idft(one_dft, flags=('FFTW_ESTIMATE',))
     one_idft2 = dft.inverse(one_dft, flags=('FFTW_ESTIMATE',))
-    assert np.allclose(one_idft1, one)
-    assert np.allclose(one_idft2, one)
+    assert all_almost_equal(one_idft1, one)
+    assert all_almost_equal(one_idft2, one)
 
     rand_arr = noise_element(dft_dom)
     rand_arr_dft = dft(rand_arr, flags=('FFTW_ESTIMATE',))
@@ -483,13 +483,13 @@ def test_fourier_trafo_call(impl, odl_floating_dtype):
     ift = ft.inverse
 
     one = space_discr.one()
-    assert np.allclose(ift(ft(one)), one)
+    assert odl.allclose(ift(ft(one)), one)
 
     # With temporaries
     ft.create_temporaries()
     ift = ft.inverse  # shares temporaries
     one = space_discr.one()
-    assert np.allclose(ift(ft(one)), one)
+    assert odl.allclose(ift(ft(one)), one)
 
 
 def test_fourier_trafo_charfun_1d():
@@ -555,24 +555,24 @@ def test_fourier_trafo_sign(impl, odl_real_floating_dtype):
     func_ft_minus = ft_minus(char_interval)
     func_ft_plus = ft_plus(char_interval)
 
-    if odl_real_floating_dtype == np.float16:
-        tolerance = np.linalg.norm(func_ft_minus) * 1e-3
-    elif odl_real_floating_dtype == np.float32:
-        tolerance = np.linalg.norm(func_ft_minus) * 1e-7
-    elif odl_real_floating_dtype == np.float64:
-        tolerance = np.linalg.norm(func_ft_minus) * 1e-15
-    elif odl_real_floating_dtype == np.float128:
+    if odl_real_floating_dtype == "float16":
+        tolerance = np.linalg.norm(func_ft_minus.data) * 1e-3
+    elif odl_real_floating_dtype == "float32" or odl_real_floating_dtype == float:
+        tolerance = np.linalg.norm(func_ft_minus.data) * 1e-7
+    elif odl_real_floating_dtype == "float64" :
+        tolerance = np.linalg.norm(func_ft_minus.data) * 1e-15
+    elif odl_real_floating_dtype == "float128":
         if np.__version__<'2':
             # NumPy-1 does not use quadruple precision for the FFT, but double precision
             # and converts the result, so we do not achieve closer tolerance there.
-            tolerance = np.linalg.norm(func_ft_minus) * 1e-15
+            tolerance = np.linalg.norm(func_ft_minus.data) * 1e-15
         else:
-            tolerance = np.linalg.norm(func_ft_minus) * 1e-19
+            tolerance = np.linalg.norm(func_ft_minus.data) * 1e-19
     else:
         raise TypeError(f"No known tolerance for dtype {odl_real_floating_dtype}")
 
     def assert_close(x,y):
-        assert(np.linalg.norm(x-y) < tolerance)
+        assert(np.linalg.norm((x-y).data) < tolerance)
 
     assert_close(func_ft_minus.real, func_ft_plus.real)
     assert_close(func_ft_minus.imag, -func_ft_plus.imag)
@@ -765,7 +765,7 @@ def test_fourier_trafo_completely():
 
     # Discretize f, check values
     f_discr = discr.element(f)
-    assert np.allclose(f_discr, [0, 1, 1, 0])
+    assert all_almost_equal(f_discr, [0, 1, 1, 0])
 
     # "s" = shifted, "n" = not shifted
 
@@ -789,8 +789,8 @@ def test_fourier_trafo_completely():
 
     fpre_s = dft_preprocess_data(f_discr, shift=True)
     fpre_n = dft_preprocess_data(f_discr, shift=False)
-    assert np.allclose(fpre_s, f_discr * discr.element(preproc_s))
-    assert np.allclose(fpre_n, f_discr * discr.element(preproc_n))
+    assert all_almost_equal(fpre_s, f_discr * discr.element(preproc_s))
+    assert all_almost_equal(fpre_n, f_discr * discr.element(preproc_n))
 
     # FFT step, replicating the _call_numpy method
     fft_s = np.fft.fftn(fpre_s, s=discr.shape, axes=[0])
@@ -839,8 +839,8 @@ def test_fourier_trafo_completely():
 
     ft_f_s = ft_op_s(f)
     ft_f_n = ft_op_n(f)
-    assert np.allclose(ft_f_s, fhat(recip_s.coord_vectors[0]))
-    assert np.allclose(ft_f_n, fhat(recip_n.coord_vectors[0]))
+    assert all_almost_equal(ft_f_s, fhat(recip_s.coord_vectors[0]))
+    assert all_almost_equal(ft_f_n, fhat(recip_n.coord_vectors[0]))
 
     # Second test function, asymmetric. Can also be represented exactly in the
     # discretization.
@@ -852,19 +852,19 @@ def test_fourier_trafo_completely():
 
     # Discretize f, check values
     f_discr = discr.element(f)
-    assert np.allclose(f_discr, [0, 0, 1, 0])
+    assert all_almost_equal(f_discr, [0, 0, 1, 0])
 
     # Pre-processing
     fpre_s = dft_preprocess_data(f_discr, shift=True)
     fpre_n = dft_preprocess_data(f_discr, shift=False)
-    assert np.allclose(fpre_s, [0, 0, 1, 0])
-    assert np.allclose(fpre_n, [0, 0, -1j, 0])
+    assert all_almost_equal(fpre_s, [0, 0, 1, 0])
+    assert all_almost_equal(fpre_n, [0, 0, -1j, 0])
 
     # FFT step
     fft_s = np.fft.fftn(fpre_s, s=discr.shape, axes=[0])
     fft_n = np.fft.fftn(fpre_n, s=discr.shape, axes=[0])
-    assert np.allclose(fft_s, [1, -1, 1, -1])
-    assert np.allclose(fft_n, [-1j, 1j, -1j, 1j])
+    assert all_almost_equal(fft_s, [1, -1, 1, -1])
+    assert all_almost_equal(fft_n, [-1j, 1j, -1j, 1j])
 
     fpost_s = dft_postprocess_data(
         range_s.element(fft_s), real_grid=discr.grid, recip_grid=recip_s,
@@ -873,18 +873,18 @@ def test_fourier_trafo_completely():
         range_n.element(fft_n), real_grid=discr.grid, recip_grid=recip_n,
         shift=[False], axes=(0,), interp='nearest')
 
-    assert np.allclose(fpost_s, fft_s * postproc_s * interp_s)
-    assert np.allclose(fpost_n, fft_n * postproc_n * interp_n)
+    assert all_almost_equal(fpost_s, fft_s * postproc_s * interp_s)
+    assert all_almost_equal(fpost_n, fft_n * postproc_n * interp_n)
 
     # Comparing to the known result exp(-1j*x/2) * sinc(x/2) / sqrt(2*pi)
-    assert np.allclose(fpost_s, fhat(recip_s.coord_vectors[0]))
-    assert np.allclose(fpost_n, fhat(recip_n.coord_vectors[0]))
+    assert all_almost_equal(fpost_s, fhat(recip_s.coord_vectors[0]))
+    assert all_almost_equal(fpost_n, fhat(recip_n.coord_vectors[0]))
 
     # Doing the exact same with direct application of the FT operator
     ft_f_s = ft_op_s(f)
     ft_f_n = ft_op_n(f)
-    assert np.allclose(ft_f_s, fhat(recip_s.coord_vectors[0]))
-    assert np.allclose(ft_f_n, fhat(recip_n.coord_vectors[0]))
+    assert all_almost_equal(ft_f_s, fhat(recip_s.coord_vectors[0]))
+    assert all_almost_equal(ft_f_n, fhat(recip_n.coord_vectors[0]))
 
 
 if __name__ == '__main__':
