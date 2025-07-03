@@ -13,11 +13,14 @@ __all__ = (
 
 
 def _helper(x, fname, **kwargs):    
-    if isinstance(x, Number):
-        fn = getattr(np, fname)
+    if isinstance(x, Number):        
         if 'y' in kwargs:
             y = kwargs.pop('y')
-            assert isinstance(y, Number)
+            if isinstance(y, Number):
+                fn = getattr(np, fname)
+            else:
+                y, backend_y = get_array_and_backend(y)
+                fn = getattr(backend_y, fname)
             return fn(x, y, **kwargs)
         else: 
             return fn(x, **kwargs)
@@ -26,8 +29,11 @@ def _helper(x, fname, **kwargs):
     fn = getattr(backend_x.array_namespace, fname)
     if 'y' in kwargs:
         y = kwargs.pop('y')
-        y, backend_y = get_array_and_backend(y)
-        assert backend_x == backend_y, f"Two different backends {backend_x.impl} and {backend_y.impl} were provided, This operation is not supported by odl functions. Please ensure that your objects have the same implementation."
+        if isinstance(y, Number):
+            pass
+        else:
+            y, backend_y = get_array_and_backend(y)
+            assert backend_x == backend_y, f"Two different backends {backend_x.impl} and {backend_y.impl} were provided, This operation is not supported by odl functions. Please ensure that your objects have the same implementation."
         return fn(x, y, **kwargs)
     else:
         return fn(x, **kwargs)
