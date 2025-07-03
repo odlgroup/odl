@@ -410,8 +410,8 @@ def test_fast_1d_tensor_mult_error():
 # --- resize_array --- #
 
 
-def test_resize_array_fwd(resize_setup, odl_scalar_dtype):
-    dtype = odl_scalar_dtype
+def test_resize_array_fwd(resize_setup, odl_floating_dtype):
+    dtype = odl_floating_dtype
     pad_mode, pad_const, newshp, offset, array_in, true_out = resize_setup
     array_in = np.array(array_in, dtype=dtype)
     true_out = np.array(true_out, dtype=dtype)
