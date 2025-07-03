@@ -13,6 +13,8 @@ from builtins import object
 from enum import Enum
 from dataclasses import dataclass
 import numpy as np
+from numbers import Number
+from typing import Union
 
 from odl.set.sets import Field, Set, UniversalSet
 
@@ -365,88 +367,35 @@ class LinearSpace(Set):
         else:
             return self.field.element(self._inner(x1, x2))
 
-    def _binary_num_operation(self, low_level_method, x1, x2, out=None):
-        """Apply the numerical operation implemented by `low_level_method` to
+    def _elementwise_num_operation(self, operation:str
+                                       , x1: Union["LinearSpaceElement", Number]
+                                       , x2: Union[None, "LinearSpaceElement", Number] = None
+                                       , out=None
+                                       , namespace=None
+                                       , **kwargs ):
+        """TODO(Justus) rewrite docstring
+        Apply the numerical operation implemented by `low_level_method` to
         `x1` and `x2`.
         This is done either in in-place fashion or out-of-place, depending on
         which style is preferred for this space."""
 
-        paradigms = self.supported_num_operation_paradigms
+        raise NotImplementedError("abstract method")
 
-        if x1 not in self:
-            raise LinearSpaceTypeError('`x1` {!r} is not an element of '
-                                       '{!r}'.format(x1, self))
-        if x2 not in self:
-            raise LinearSpaceTypeError('`x2` {!r} is not an element of '
-                                       '{!r}'.format(x2, self))
-
-        if out is not None and out not in self:
-            raise LinearSpaceTypeError('`out` {!r} is not an element of '
-                                       '{!r}'.format(out, self))
-
-        if (paradigms.in_place.is_preferred
-             or not paradigms.out_of_place.is_supported
-             or out is not None and paradigms.in_place.is_supported):
-
-            if out is None:
-                out = self.element()
-
-            low_level_method(x1, x2, out=out)
-
-            return out
-
-        else:
-            assert(paradigms.out_of_place.is_supported)
-            result = self.element(low_level_method(x1, x2, out=None))
-            if out is not None:
-                out.assign(result, avoid_deep_copy=True)
-                return out
-            else:
-                return result
-
-    def multiply(self, x1, x2, out=None):
-        """Return the pointwise product of ``x1`` and ``x2``.
-
-        Parameters
-        ----------
-        x1, x2 : `LinearSpaceElement`
-            Multiplicands in the product.
-        out : `LinearSpaceElement`, optional
-            Element to which the result is written.
-
-        Returns
-        -------
-        out : `LinearSpaceElement`
-            Product of the elements. If ``out`` was provided, the
-            returned object is a reference to it.
-        """
-        return self._binary_num_operation(self._multiply, x1, x2, out)
-
-    def divide(self, x1, x2, out=None):
-        """Return the pointwise quotient of ``x1`` and ``x2``
-
-        Parameters
-        ----------
-        x1 : `LinearSpaceElement`
-            Dividend in the quotient.
-        x2 : `LinearSpaceElement`
-            Divisor in the quotient.
-        out : `LinearSpaceElement`, optional
-            Element to which the result is written.
-
-        Returns
-        -------
-        out : `LinearSpaceElement`
-            Quotient of the elements. If ``out`` was provided, the
-            returned object is a reference to it.
-        """
-        return self._binary_num_operation(self._divide, x1, x2, out)
+    def _element_reduction(self, operation:str
+                               , x: "LinearSpaceElement"
+                               , **kwargs
+                               ):
+        raise NotImplementedError("abstract method")
 
     @property
     def element_type(self):
         """Type of elements of this space (`LinearSpaceElement`)."""
         return LinearSpaceElement
 
+    def __str__(self):
+        """Return ``str(self)``."""
+        return repr(self)
+    
     def __pow__(self, shape):
         """Return ``self ** shape``.
 
@@ -628,286 +577,134 @@ class LinearSpaceElement(object):
 
     def __add__(self, other):
         """Return ``self + other``."""
-        # Instead of using __iadd__ we duplicate code here for performance
-        if getattr(other, '__array_priority__', 0) > self.__array_priority__:
-            return other.__radd__(self)
-        elif self.space.field is None:
-            return NotImplemented
-        elif other in self.space:
-            return self.space.lincomb(1, self, 1, other)
-        elif isinstance(other, LinearSpaceElement):
-            return NotImplemented
-        elif other in self.space.field:
-            one = getattr(self.space, 'one', None)
-            if one is None:
-                return NotImplemented
-            else:
-                tmp = one()
-                return self.space.lincomb(1, self, other, tmp, out=tmp)
-        else:
-            try:
-                other = self.space.element(other)
-            except (TypeError, ValueError):
-                return NotImplemented
-            else:
-                return self.__add__(other)
+        return self.space._elementwise_num_operation(
+            'add', self, other
+        )
+    
+    def __sub__(self, other):
+        """Return ``self - other``."""
+        return self.space._elementwise_num_operation(
+            'subtract', self, other
+        )
+    
+    def __mul__(self, other):
+        """Return ``self * other``."""
+        return self.space._elementwise_num_operation(
+            'multiply', self, other
+        )
+    
+    def __truediv__(self, other):
+        """Implement ``self / other``."""
+        if isinstance(other, Number) and other == 0:
+            raise ZeroDivisionError
+        return self.space._elementwise_num_operation(
+                'divide', self, other
+            )
+    
+    def __floordiv__(self, other):        
+        """Implement ``self // other``."""
+        return self.space._elementwise_num_operation(
+            'floor_divide', self, other
+        )
+
+    def __mod__(self, other):        
+        """Implement ``self % other``."""
+        return self.space._elementwise_num_operation(
+            'remainder', self, other
+        )
+    
+    def __pow__(self, other):
+        """Implement ``self ** other``, element wise"""
+        return self.space._elementwise_num_operation(
+            'pow', self, other
+        )
 
     def __radd__(self, other):
         """Return ``other + self``."""
-        if getattr(other, '__array_priority__', 0) > self.__array_priority__:
-            return other.__add__(self)
-        else:
-            return self.__add__(other)
-
-    def __isub__(self, other):
-        """Implement ``self -= other``."""
-        if self.space.field is None:
-            return NotImplemented
-        elif other in self.space:
-            return self.space.lincomb(1, self, -1, other, out=self)
-        elif isinstance(other, LinearSpaceElement):
-            # We do not `return NotImplemented` here since we don't want a
-            # fallback for in-place. Otherwise python attempts
-            # `self = self - other` which does not modify self.
-            raise TypeError('cannot subtract {!r} and {!r} in-place'
-                            ''.format(self, other))
-        elif self.space.field is None:
-            return NotImplemented
-        elif other in self.space.field:
-            one = getattr(self.space, 'one', None)
-            if one is None:
-                raise TypeError('cannot subtract {!r} and {!r} in-place'
-                                ''.format(self, other))
-            else:
-                return self.space.lincomb(1, self, -other, one(), out=self)
-        else:
-            try:
-                other = self.space.element(other)
-            except (TypeError, ValueError):
-                raise TypeError('cannot subtract {!r} and {!r} in-place'
-                                ''.format(self, other))
-            else:
-                return self.__isub__(other)
-
-    def __sub__(self, other):
-        """Return ``self - other``."""
-        # Instead of using __isub__ we duplicate code here for performance
-        if getattr(other, '__array_priority__', 0) > self.__array_priority__:
-            return other.__rsub__(self)
-        elif self.space.field is None:
-            return NotImplemented
-        elif other in self.space:
-            return self.space.lincomb(1, self, -1, other)
-        elif isinstance(other, LinearSpaceElement):
-            return NotImplemented
-        elif other in self.space.field:
-            one = getattr(self.space, 'one', None)
-            if one is None:
-                return NotImplemented
-            else:
-                tmp = one()
-                return self.space.lincomb(1, self, -other, tmp, out=tmp)
-        else:
-            try:
-                other = self.space.element(other)
-            except (TypeError, ValueError):
-                return NotImplemented
-            else:
-                return self.__sub__(other)
+        return self.space._elementwise_num_operation(
+            'add', other, self
+        )
 
     def __rsub__(self, other):
         """Return ``other - self``."""
-        if getattr(other, '__array_priority__', 0) > self.__array_priority__:
-            return other.__sub__(self)
-        elif self.space.field is None:
-            return NotImplemented
-        elif other in self.space:
-            tmp = self.space.element()
-            return self.space.lincomb(1, other, -1, self, out=tmp)
-        elif isinstance(other, LinearSpaceElement):
-            return NotImplemented
-        elif other in self.space.field:
-            one = getattr(self.space, 'one', None)
-            if one is None:
-                return NotImplemented
-            else:
-                # other --> other * space.one()
-                tmp = one()
-                self.space.lincomb(other, tmp, out=tmp)
-                return self.space.lincomb(1, tmp, -1, self, out=tmp)
-        else:
-            try:
-                other = self.space.element(other)
-            except (TypeError, ValueError):
-                return NotImplemented
-            else:
-                return self.__rsub__(other)
-
-    def __imul__(self, other):
-        """Implement ``self *= other``."""
-        if self.space.field is None:
-            return NotImplemented
-        elif other in self.space.field:
-            return self.space.lincomb(other, self, out=self)
-        elif other in self.space:
-            return self.space.multiply(other, self, out=self)
-        elif isinstance(other, LinearSpaceElement):
-            # We do not `return NotImplemented` here since we don't want a
-            # fallback for in-place. Otherwise python attempts
-            # `self = self * other` which does not modify self.
-            raise TypeError('cannot multiply {!r} and {!r} in-place'
-                            ''.format(self, other))
-        else:
-            try:
-                other = self.space.element(other)
-            except (TypeError, ValueError):
-                raise TypeError('cannot multiply {!r} and {!r} in-place'
-                                ''.format(self, other))
-            else:
-                return self.__imul__(other)
-
-    def __mul__(self, other):
-        """Return ``self * other``."""
-        # Instead of using __imul__ we duplicate code here for performance
-        if getattr(other, '__array_priority__', 0) > self.__array_priority__:
-            return other.__rmul__(self)
-        elif self.space.field is None:
-            return NotImplemented
-        elif other in self.space.field:
-            return self.space.lincomb(other, self)
-        elif other in self.space:
-            return self.space.multiply(other, self)
-        elif isinstance(other, LinearSpaceElement):
-            return NotImplemented
-        else:
-            try:
-                other = self.space.element(other)
-            except (TypeError, ValueError):
-                return NotImplemented
-            else:
-                return self.__mul__(other)
-
+        return self.space._elementwise_num_operation(
+            'subtract', other, self
+        )
+ 
     def __rmul__(self, other):
         """Return ``other * self``."""
-        if getattr(other, '__array_priority__', 0) > self.__array_priority__:
-            return other.__mul__(self)
-        else:
-            return self.__mul__(other)
-
+        return self.space._elementwise_num_operation(
+            'multiply', other, self
+        )
+    
+    def __rtruediv__(self, other):
+        """Implement ``other / self``."""
+        return self.space._elementwise_num_operation(
+             'divide', other, self
+        )
+    
+    def __rfloordiv__(self, other):
+        """Implement ``other // self``."""
+        return self.space._elementwise_num_operation(
+            'floor_divide', other, self
+        )
+    
+    def __rmod__(self, other):        
+        """Implement ``other % self``."""
+        return self.space._elementwise_num_operation(
+            'remainder', other, self
+        )
+    
+    def __rpow__(self, other):
+        """Implement ``other ** self``, element wise"""
+        return self.space._elementwise_num_operation(
+            'pow', other, self
+        )
+    
+    def __iadd__(self, other):
+        """Implement ``self += other``."""
+        return self.space._elementwise_num_operation(
+            'add', self, other, self
+        )
+    
+    def __isub__(self, other):
+        """Implement ``self -= other``."""
+        return self.space._elementwise_num_operation(
+            'subtract', self, other, self
+        )
+    
+    def __imul__(self, other):
+        """Return ``self *= other``."""
+        return self.space._elementwise_num_operation(
+            'multiply', self, other, self
+        )
+    
     def __itruediv__(self, other):
         """Implement ``self /= other``."""
-        if self.space.field is None:
-            return NotImplemented
-        if other in self.space.field:
-            return self.space.lincomb(1.0 / other, self, out=self)
-        elif other in self.space:
-            return self.space.divide(self, other, out=self)
-        elif isinstance(other, LinearSpaceElement):
-            # We do not `return NotImplemented` here since we don't want a
-            # fallback for in-place. Otherwise python attempts
-            # `self = self / other` which does not modify self.
-            raise TypeError('cannot divide {!r} and {!r} in-place'
-                            ''.format(self, other))
-        else:
-            try:
-                other = self.space.element(other)
-            except (TypeError, ValueError):
-                raise TypeError('cannot divide {!r} and {!r} in-place'
-                                ''.format(self, other))
-            else:
-                return self.__itruediv__(other)
-
-    __idiv__ = __itruediv__
-
-    def __truediv__(self, other):
-        """Return ``self / other``."""
-        if getattr(other, '__array_priority__', 0) > self.__array_priority__:
-            return other.__rtruediv__(self)
-        elif self.space.field is None:
-            return NotImplemented
-        elif other in self.space.field:
-            return self.space.lincomb(1.0 / other, self)
-        elif other in self.space:
-            return self.space.divide(self, other)
-        elif isinstance(other, LinearSpaceElement):
-            return NotImplemented
-        else:
-            try:
-                other = self.space.element(other)
-            except (TypeError, ValueError):
-                return NotImplemented
-            else:
-                return self.__truediv__(other)
-
-    __div__ = __truediv__
-
-    def __rtruediv__(self, other):
-        """Return ``other / self``."""
-        if getattr(other, '__array_priority__', 0) > self.__array_priority__:
-            return other.__truediv__(self)
-        elif self.space.field is None:
-            return NotImplemented
-        elif other in self.space.field:
-            one = getattr(self.space, 'one', None)
-            if one is None:
-                return NotImplemented
-            else:
-                # other --> other * space.one()
-                tmp = one()
-                self.space.lincomb(other, tmp, out=tmp)
-                return self.space.divide(tmp, self, out=tmp)
-        elif other in self.space:
-            tmp = self.space.element()
-            return self.space.divide(other, self, out=tmp)
-        elif isinstance(other, LinearSpaceElement):
-            return NotImplemented
-        else:
-            try:
-                other = self.space.element(other)
-            except (TypeError, ValueError):
-                return NotImplemented
-            else:
-                return self.__rtruediv__(other)
-
-    __rdiv__ = __rtruediv__
-
-    def __ipow__(self, p):
-        """Implement ``self ** p``.
-
-        This is only defined for integer ``p``."""
-        if self.space.field is None:
-            return NotImplemented
-        p, p_in = int(p), p
-        if p != p_in:
-            raise ValueError('expected integer `p`, got {}'.format(p_in))
-        if p < 0:
-            self **= -p
-            self.space.divide(self.space.one(), self, out=self)
-            return self
-        elif p == 0:
-            self.assign(self.space.one())
-            return self
-        elif p == 1:
-            return self
-        elif p % 2 == 0:
-            self *= self
-            self **= p // 2
-            return self
-        else:
-            tmp = self.copy()
-            for _ in range(p - 2):
-                tmp *= self
-            self *= tmp
-            return self
-
-    def __pow__(self, p):
-        """Return ``self ** p``."""
-        if self.space.field is None:
-            return NotImplemented
-        tmp = self.copy()
-        tmp.__ipow__(p)
-        return tmp
-
+        if isinstance(other, Number) and other == 0:
+            raise ZeroDivisionError
+        return self.space._elementwise_num_operation(
+                'divide', self, other, self
+            )
+    
+    def __ifloordiv__(self, other):
+        """Implement ``self //= other``."""
+        return self.space._elementwise_num_operation(
+            'floor_divide', self, other, self
+        )
+    
+    def __imod__(self, other):
+        """Implement ``self %= other``."""
+        return self.space._elementwise_num_operation(
+            'remainder', self, other, self
+        )
+    
+    def __ipow__(self, other):
+        """Implement ``self *= other``, element wise"""
+        return self.space._elementwise_num_operation(
+            'pow', self, other, self
+        )
+    
     def __neg__(self):
         """Return ``-self``."""
         if self.space.field is None:
@@ -918,7 +715,22 @@ class LinearSpaceElement(object):
         """Return ``+self``."""
         return self.copy()
 
-    # Metric space method
+    def __lt__(self, other):
+        """Implement ``self < other``."""
+        return self.space._elementwise_num_operation('less', self, other)
+    
+    def __le__(self, other):
+        """Implement ``self <= other``."""
+        return self.space._elementwise_num_operation('less_equal', self, other)
+    
+    def __gt__(self, other):
+        """Implement ``self > other``."""
+        return self.space._elementwise_num_operation('greater', self, other)
+    
+    def __ge__(self, other):
+        """Implement ``self >= other``."""
+        return self.space._elementwise_num_operation('greater_equal', self, other)
+    
     def __eq__(self, other):
         """Return ``self == other``.
 
@@ -1070,6 +882,17 @@ class LinearSpaceElement(object):
         """
         from odl.operator import InnerProductOperator
         return InnerProductOperator(self.copy())
+
+    def __array__(self):
+        raise RuntimeError("""
+           You are trying to convert an ODL object to a plain array, possibly via a NumPy operation. This is not supported in ODL-1.0 anymore because it interferes with the more general Array API and easily leads to confusing results.
+
+           Instead, you should either:
+
+           - Use the ODL operation (e.g. `odl.sin(x)`)
+           - Unwrap the raw array contained in the ODL object, as `x.data`
+           - Explicitly convert to NumPy (or another raw array type) via DLPack
+           """)
 
     # Give an `Element` a higher priority than any NumPy array type. This
     # forces the usage of `__op__` of `Element` if the other operand

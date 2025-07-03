@@ -126,9 +126,9 @@ def astra_cpu_forward_projector(vol_data, geometry, proj_space, out=None,
             ''.format(vol_data.ndim, geometry.ndim)
         )
     if out is None:
-        out = proj_space.element()
+        out = proj_space.real_space.element()
     else:
-        if out not in proj_space:
+        if out not in proj_space.real_space:
             raise TypeError(
                 '`out` {} is neither None nor a `DiscretizedSpaceElement` '
                 'instance'.format(out)
@@ -146,11 +146,12 @@ def astra_cpu_forward_projector(vol_data, geometry, proj_space, out=None,
     proj_id = astra_projector(astra_proj_type, vol_geom, proj_geom, ndim)
 
     # Create ASTRA data structures
-    vol_data_arr = np.asarray(vol_data)
-    vol_id = astra_data(vol_geom, datatype='volume', data=vol_data_arr,
+    vol_data_arr = vol_data.asarray()
+    vol_id = astra_data(vol_geom, datatype='volume', data=vol_data.asarray(),
                         allow_copy=True)
 
-    with writable_array(out, dtype='float32', order='C') as out_arr:
+    assert(out.dtype_identifier == 'float32')
+    with writable_array(out, must_be_contiguous=True) as out_arr:
         sino_id = astra_data(proj_geom, datatype='projection', data=out_arr,
                              ndim=proj_space.ndim)
 
@@ -227,9 +228,9 @@ def astra_cpu_back_projector(proj_data, geometry, vol_space, out=None,
             ''.format(vol_space.ndim, geometry.ndim)
         )
     if out is None:
-        out = vol_space.element()
+        out = vol_space.real_space.element()
     else:
-        if out not in vol_space:
+        if out not in vol_space.real_space:
             raise TypeError(
                 '`out` {} is neither None nor a `DiscretizedSpaceElement` '
                 'instance'.format(out)
@@ -243,7 +244,7 @@ def astra_cpu_back_projector(proj_data, geometry, vol_space, out=None,
 
     # Create ASTRA data structure
     sino_id = astra_data(
-        proj_geom, datatype='projection', data=proj_data, allow_copy=True
+        proj_geom, datatype='projection', data=proj_data.asarray(), allow_copy=True
     )
 
     # Create projector
@@ -251,8 +252,10 @@ def astra_cpu_back_projector(proj_data, geometry, vol_space, out=None,
         astra_proj_type = default_astra_proj_type(geometry)
     proj_id = astra_projector(astra_proj_type, vol_geom, proj_geom, ndim)
 
-    # Convert out to correct dtype and order if needed.
-    with writable_array(out, dtype='float32', order='C') as out_arr:
+    # Ensure out has correct dtype. 
+    assert(out.dtype_identifier == 'float32')
+    # Enforce also collated order.
+    with writable_array(out, must_be_contiguous=True) as out_arr:
         vol_id = astra_data(
             vol_geom, datatype='volume', data=out_arr, ndim=vol_space.ndim
         )

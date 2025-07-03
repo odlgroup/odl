@@ -23,12 +23,15 @@ Foundations and Trends in Optimization, 1 (2014), pp 127-239.
 
 from __future__ import print_function, division, absolute_import
 import numpy as np
-
+import math
 from odl.operator import (
     Operator, IdentityOperator, ConstantOperator, DiagonalOperator,
     PointwiseNorm, MultiplyOperator)
 from odl.space import ProductSpace
 from odl.set.space import LinearSpaceElement
+from odl.array_API_support.element_wise import maximum, minimum, abs, divide, sign, square, sqrt, less_equal, logical_not, exp
+from odl.array_API_support.statistical import sum
+from odl.util.scipy_compatibility import lambertw
 
 
 __all__ = ('combine_proximals', 'proximal_convex_conj', 'proximal_translation',
@@ -274,15 +277,17 @@ def proximal_arg_scaling(prox_factory, scaling):
     #   the others.
     # Since these checks are computationally expensive, we do not execute them
     # unconditionally, but only if the scaling factor is a scalar:
-    if np.isscalar(scaling):
+    domain = prox_factory(1.0).domain
+    if isinstance(scaling, (int, float)):
         if scaling == 0:
-            return proximal_const_func(prox_factory(1.0).domain)
+            return proximal_const_func(domain)
         elif scaling.imag != 0:
             raise ValueError("Complex scaling not supported.")
         else:
             scaling = float(scaling.real)
+    
     else:
-        scaling = np.asarray(scaling)
+        assert scaling in domain, f"The scaling {scaling} was passed as a {type(scaling)}, which is not supported. Please pass it either as a float or as an element of the domain of the prox_factory."
 
     def arg_scaling_prox_factory(sigma):
         """Create proximal for the translation with a given sigma.
@@ -380,22 +385,19 @@ def proximal_quadratic_perturbation(prox_factory, a, u=None):
             The proximal operator of ``sigma * (F(x) + a * \|x\|^2 + <u,x>)``,
             where ``sigma`` is the step size
         """
-        if np.isscalar(sigma):
-            sigma = float(sigma)
-        else:
-            sigma = np.asarray(sigma)
 
-        const = 1.0 / np.sqrt(sigma * 2.0 * a + 1)
+        const = 1.0 / math.sqrt(sigma * 2.0 * a + 1)
         prox = proximal_arg_scaling(prox_factory, const)(sigma)
+
         if u is not None:
-            return (MultiplyOperator(const, domain=u.space, range=u.space) *
-                    prox *
+            return (MultiplyOperator(const, domain=u.space, range=u.space) @
+                    prox @
                     (MultiplyOperator(const, domain=u.space, range=u.space) -
                      sigma * const * u))
         else:
             space = prox.domain
-            return (MultiplyOperator(const, domain=space, range=space) *
-                    prox * MultiplyOperator(const, domain=space, range=space))
+            return (MultiplyOperator(const, domain=space, range=space) @
+                    prox @ MultiplyOperator(const, domain=space, range=space))
 
     return quadratic_perturbation_prox_factory
 
@@ -608,12 +610,12 @@ def proximal_box_constraint(space, lower=None, upper=None):
         def _call(self, x, out):
             """Apply the operator to ``x`` and store the result in ``out``."""
             if lower is not None and upper is None:
-                x.ufuncs.maximum(lower, out=out)
+                maximum(x, lower, out=out)
             elif lower is None and upper is not None:
-                x.ufuncs.minimum(upper, out=out)
+                minimum(x, upper, out=out)
             elif lower is not None and upper is not None:
-                x.ufuncs.maximum(lower, out=out)
-                out.ufuncs.minimum(upper, out=out)
+                maximum(x, lower, out=out)
+                minimum(out, upper, out=out)
             else:
                 out.assign(x)
 
@@ -992,7 +994,7 @@ def proximal_l2_squared(space, lam=1, g=None):
                                 2 * sig * lam / (1 + 2 * sig * lam), g)
             else:   # sig in space
                 if g is None:
-                    x.divide(1 + 2 * sig * lam, out=out)
+                    divide(x, 1 + 2 * sig * lam, out=out)
                 else:
                     if x is out:
                         # Can't write to `out` since old `x` is still needed
@@ -1124,12 +1126,12 @@ def proximal_convex_conj_l1(space, lam=1, g=None):
                     diff = x
 
             # out = max( |x-sig*g|, lam ) / lam
-            diff.ufuncs.absolute(out=out)
-            out.ufuncs.maximum(lam, out=out)
+            abs(diff, out=out)
+            maximum(out, lam, out=out)
             out /= lam
 
             # out = diff / ...
-            diff.divide(out, out=out)
+            divide(diff, out, out=out)
 
     return ProximalConvexConjL1
 
@@ -1228,7 +1230,7 @@ def proximal_convex_conj_l1_l2(space, lam=1, g=None):
             # denom = max( |x-sig*g|_2, lam ) / lam  (|.|_2 pointwise)
             pwnorm = PointwiseNorm(self.domain, exponent=2)
             denom = pwnorm(diff)
-            denom.ufuncs.maximum(lam, out=denom)
+            maximum(denom, lam, out=denom)
             denom /= lam
 
             # Pointwise division
@@ -1336,12 +1338,12 @@ def proximal_l1(space, lam=1, g=None):
 
             # We write the operator as
             # x - (x - g) / max(|x - g| / sig*lam, 1)
-            denom = diff.ufuncs.absolute()
+            denom = abs(diff)
             denom /= self.sigma * lam
-            denom.ufuncs.maximum(1, out=denom)
+            maximum(denom, 1, out=denom)
 
             # out = (x - g) / denom
-            diff.ufuncs.divide(denom, out=out)
+            divide(diff, denom, out=out)
 
             # out = x - ...
             out.lincomb(1, x, -1, out)
@@ -1436,11 +1438,11 @@ def proximal_l1_l2(space, lam=1, g=None):
             pwnorm = PointwiseNorm(self.domain, exponent=2)
             denom = pwnorm(diff)
             denom /= self.sigma * lam
-            denom.ufuncs.maximum(1, out=denom)
+            maximum(denom, 1, out=denom)
 
             # out = (x - g) / denom
             for out_i, diff_i in zip(out, diff):
-                diff_i.divide(denom, out=out_i)
+                divide(diff_i, denom, out=out_i)
 
             # out = x - ...
             out.lincomb(1, x, -1, out)
@@ -1607,11 +1609,11 @@ def proj_l1(x, radius=1, out=None):
     if out is None:
         out = x.space.element()
 
-    u = x.ufuncs.absolute()
-    if u.ufuncs.sum() <= radius:
+    u = abs(x)
+    if sum(u) <= radius:
         out[:] = x
     else:
-        v = x.ufuncs.sign()
+        v = sign(u)
         proj_simplex(u, radius, out)
         out *= v
 
@@ -1787,7 +1789,7 @@ def proximal_convex_conj_kl(space, lam=1, g=None):
             else:
                 out.assign(x)
             out -= lam
-            out.ufuncs.square(out=out)
+            square(out, out=out)
 
             # out = ... + 4*lam*sigma*g
             # If g is None, it is taken as the one element
@@ -1797,7 +1799,7 @@ def proximal_convex_conj_kl(space, lam=1, g=None):
                 out.lincomb(1, out, 4.0 * lam * self.sigma, g)
 
             # out = x - sqrt(...) + lam
-            out.ufuncs.sqrt(out=out)
+            sqrt(out, out=out)
             out.lincomb(1, x, -1, out)
             out += lam
 
@@ -1917,12 +1919,12 @@ def proximal_convex_conj_kl_cross_entropy(space, lam=1, g=None):
             if g is None:
                 # If g is None, it is taken as the one element
                 # Different branches of lambertw is not an issue, see Notes
-                lambw = scipy.special.lambertw(
-                    (self.sigma / lam) * np.exp(x / lam))
+                lambw = lambertw(
+                    (self.sigma / lam) * exp(x / lam))
             else:
                 # Different branches of lambertw is not an issue, see Notes
-                lambw = scipy.special.lambertw(
-                    (self.sigma / lam) * g * np.exp(x / lam))
+                lambw = lambertw(
+                    (self.sigma / lam) * g * exp(x / lam))
 
             if not np.issubdtype(self.domain.dtype, np.complexfloating):
                 lambw = lambw.real
@@ -1982,13 +1984,13 @@ def proximal_huber(space, gamma):
             if isinstance(self.domain, ProductSpace):
                 norm = PointwiseNorm(self.domain, 2)(x)
             else:
-                norm = x.ufuncs.absolute()
+                norm = abs(x)
 
-            mask = norm.ufuncs.less_equal(gamma + self.sigma)
+            mask = less_equal(norm, gamma + self.sigma)
             out[mask] = gamma / (gamma + self.sigma) * x[mask]
 
-            mask.ufuncs.logical_not(out=mask)
-            sign_x = x.ufuncs.sign()
+            logical_not(mask, out=mask)
+            sign_x = sign(x)
             out[mask] = x[mask] - self.sigma * sign_x[mask]
 
             return out

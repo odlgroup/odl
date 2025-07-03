@@ -22,6 +22,7 @@ from odl.space import ProductSpace, tensor_space
 from odl.space.base_tensors import TensorSpace
 from odl.space.weighting import ArrayWeighting
 from odl.util import dtype_repr, indent, signature_string, writable_array
+from odl.array_API_support import abs, maximum, pow, sqrt, multiply
 
 __all__ = ('PointwiseNorm', 'PointwiseInner', 'PointwiseSum', 'MatrixOperator',
            'SamplingOperator', 'WeightedSumSamplingOperator',
@@ -235,7 +236,8 @@ class PointwiseNorm(PointwiseTensorFieldOperator):
 
     def _call_vecfield_1(self, vf, out):
         """Implement ``self(vf, out)`` for exponent 1."""
-        vf[0].ufuncs.absolute(out=out)
+        
+        abs(vf[0], out=out)
         if self.is_weighted:
             out *= self.weights[0]
 
@@ -244,14 +246,14 @@ class PointwiseNorm(PointwiseTensorFieldOperator):
 
         tmp = self.range.element()
         for fi, wi in zip(vf[1:], self.weights[1:]):
-            fi.ufuncs.absolute(out=tmp)
+            abs(fi, out=tmp)
             if self.is_weighted:
                 tmp *= wi
             out += tmp
 
     def _call_vecfield_inf(self, vf, out):
         """Implement ``self(vf, out)`` for exponent ``inf``."""
-        vf[0].ufuncs.absolute(out=out)
+        abs(vf[0], out=out)
         if self.is_weighted:
             out *= self.weights[0]
 
@@ -260,45 +262,45 @@ class PointwiseNorm(PointwiseTensorFieldOperator):
 
         tmp = self.range.element()
         for vfi, wi in zip(vf[1:], self.weights[1:]):
-            vfi.ufuncs.absolute(out=tmp)
+            abs(vfi, out=tmp)
             if self.is_weighted:
                 tmp *= wi
-            out.ufuncs.maximum(tmp, out=out)
+            maximum(out, tmp, out=out)
 
     def _call_vecfield_p(self, vf, out):
         """Implement ``self(vf, out)`` for exponent 1 < p < ``inf``."""
         # Optimization for 1 component - just absolute value (maybe weighted)
         if len(self.domain) == 1:
-            vf[0].ufuncs.absolute(out=out)
+            abs(vf[0], out=out)
             if self.is_weighted:
                 out *= self.weights[0] ** (1 / self.exponent)
             return
 
         # Initialize out, avoiding one copy
-        self._abs_pow_ufunc(vf[0], out=out, p=self.exponent)
+        self._abs_pow(vf[0], out=out, p=self.exponent)
         if self.is_weighted:
             out *= self.weights[0]
 
         tmp = self.range.element()
         for fi, wi in zip(vf[1:], self.weights[1:]):
-            self._abs_pow_ufunc(fi, out=tmp, p=self.exponent)
+            self._abs_pow(fi, out=tmp, p=self.exponent)
             if self.is_weighted:
                 tmp *= wi
             out += tmp
 
-        self._abs_pow_ufunc(out, out=out, p=(1 / self.exponent))
+        self._abs_pow(out, out=out, p=(1 / self.exponent))
 
-    def _abs_pow_ufunc(self, fi, out, p):
+    def _abs_pow(self, fi, out, p):
         """Compute |F_i(x)|^p point-wise and write to ``out``."""
-        # Optimization for very common cases
+        # Optimization for very common cases        
         if p == 0.5:
-            fi.ufuncs.absolute(out=out)
-            out.ufuncs.sqrt(out=out)
+            abs(fi, out=out)
+            sqrt(out, out=out)
         elif p == 2.0 and self.base_space.field == RealNumbers():
-            fi.multiply(fi, out=out)
+            multiply(fi, fi, out=out)
         else:
-            fi.ufuncs.absolute(out=out)
-            out.ufuncs.power(p, out=out)
+            abs(fi, out=out)
+            pow(out, p, out=out)
 
     def derivative(self, vf):
         """Derivative of the point-wise norm operator at ``vf``.
@@ -345,7 +347,7 @@ class PointwiseNorm(PointwiseTensorFieldOperator):
         inner_vf = vf.copy()
 
         for gi in inner_vf:
-            gi *= gi.ufuncs.absolute().ufuncs.power(self.exponent - 2)
+            gi *= pow(abs(gi), self.exponent - 2)
             if self.exponent >= 2:
                 # Any component that is zero is not divided with
                 nz = (vf_pwnorm_fac.asarray() != 0)
@@ -916,26 +918,25 @@ class MatrixOperator(Operator):
 
         if out is None:
             if scipy.sparse.isspmatrix(self.matrix):
-                out = self.matrix.dot(x)
+                out = self.matrix.dot(x.data)
             else:
-                dot = np.tensordot(self.matrix, x, axes=(1, self.axis))
+                dot = np.tensordot(self.matrix, x.data, axes=(1, self.axis))
                 # New axis ends up as first, need to swap it to its place
                 out = np.moveaxis(dot, 0, self.axis)
         else:
             if scipy.sparse.isspmatrix(self.matrix):
                 # Unfortunately, there is no native in-place dot product for
                 # sparse matrices
-                out[:] = self.matrix.dot(x)
+                out[:] = self.matrix.dot(x.data)
             elif self.range.ndim == 1:
                 with writable_array(out) as out_arr:
-                    self.matrix.dot(x, out=out_arr)
+                    self.matrix.dot(x.data, out=out_arr)
             else:
                 # Could use einsum to have out, but it's damn slow
                 # TODO: investigate speed issue
-                dot = np.tensordot(self.matrix, x, axes=(1, self.axis))
+                dot = np.tensordot(self.matrix, x.data, axes=(1, self.axis))
                 # New axis ends up as first, need to move it to its place
                 out[:] = np.moveaxis(dot, 0, self.axis)
-
         return out
 
     def __repr__(self):
@@ -1335,7 +1336,7 @@ class WeightedSumSamplingOperator(Operator):
 
     def _call(self, x):
         """Sum all values if indices are given multiple times."""
-        y = np.bincount(self._indices_flat, weights=x,
+        y = np.bincount(self._indices_flat, weights=x.data,
                         minlength=self.range.size)
 
         out = y.reshape(self.range.shape)

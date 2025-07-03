@@ -30,7 +30,7 @@ ndim = simple_fixture('ndim', [1, 2, 3])
 def space(request, ndim, dtype, odl_tspace_impl):
     """Provide a space for unit tests."""
     impl = odl_tspace_impl
-    supported_dtypes = tensor_space_impl(impl).available_dtypes()
+    supported_dtypes = odl.lookup_array_backend(impl).available_dtypes
     if np.dtype(dtype) not in supported_dtypes:
         pytest.skip('dtype not available for this backend')
 

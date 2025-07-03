@@ -29,6 +29,11 @@ from odl.solvers.nonsmooth.proximal_operators import (
 from odl.space import ProductSpace
 from odl.util import conj_exponent
 
+from odl.array_API_support import (all as odl_all,
+abs, sign, pow, square, log, isfinite, exp,
+max, min, sum as odl_sum)
+from odl.util.scipy_compatibility import xlogy
+
 __all__ = ('ZeroFunctional', 'ConstantFunctional', 'ScalingFunctional',
            'IdentityFunctional',
            'LpNorm', 'L1Norm', 'GroupL1Norm', 'L2Norm', 'L2NormSquared',
@@ -82,17 +87,17 @@ class LpNorm(Functional):
         if self.exponent == 0:
             return self.domain.one().inner(np.not_equal(x, 0))
         elif self.exponent == 1:
-            return x.ufuncs.absolute().inner(self.domain.one())
+            return abs(x).inner(self.domain.one())
         elif self.exponent == 2:
             return np.sqrt(x.inner(x))
         elif np.isfinite(self.exponent):
-            tmp = x.ufuncs.absolute()
-            tmp.ufuncs.power(self.exponent, out=tmp)
+            tmp = abs(x)
+            pow(tmp, self.exponent, out=tmp)
             return np.power(tmp.inner(self.domain.one()), 1 / self.exponent)
         elif self.exponent == np.inf:
-            return x.ufuncs.absolute().ufuncs.max()
+            return max(abs(x))
         elif self.exponent == -np.inf:
-            return x.ufuncs.absolute().ufuncs.min()
+            return min(abs(x))
         else:
             raise RuntimeError('unknown exponent')
 
@@ -144,7 +149,7 @@ class LpNorm(Functional):
 
                 def _call(self, x):
                     """Apply the gradient operator to the given point."""
-                    return x.ufuncs.sign()
+                    return sign(x)
 
                 def derivative(self, x):
                     """Derivative is a.e. zero."""
@@ -297,7 +302,7 @@ class GroupL1Norm(Functional):
             def _call(self, x, out):
                 """Return ``self(x)``."""
                 pwnorm_x = functional.pointwise_norm(x)
-                pwnorm_x.ufuncs.sign(out=pwnorm_x)
+                sign(pwnorm_x, out=pwnorm_x)
                 functional.pointwise_norm.derivative(x).adjoint(pwnorm_x,
                                                                 out=out)
 
@@ -384,7 +389,7 @@ class IndicatorGroupL1UnitBall(Functional):
 
     def _call(self, x):
         """Return ``self(x)``."""
-        x_norm = self.pointwise_norm(x).ufuncs.max()
+        x_norm = max(self.pointwise_norm(x))
 
         if x_norm > 1:
             return np.inf
@@ -1126,9 +1131,9 @@ class KullbackLeibler(Functional):
 
         with np.errstate(invalid='ignore', divide='ignore'):
             if self.prior is None:
-                res = (x - 1 - np.log(x)).inner(self.domain.one())
+                res = (x - 1 - log(x)).inner(self.domain.one())
             else:
-                xlogy = scipy.special.xlogy(self.prior, self.prior / x)
+                xlogy = self.prior * log(self.prior / x)
                 res = (x - self.prior + xlogy).inner(self.domain.one())
 
         if not np.isfinite(res):
@@ -1260,9 +1265,9 @@ class KullbackLeiblerConvexConj(Functional):
 
         with np.errstate(invalid='ignore'):
             if self.prior is None:
-                res = -(np.log(1 - x)).inner(self.domain.one())
+                res = -(log(1 - x)).inner(self.domain.one())
             else:
-                xlogy = scipy.special.xlogy(self.prior, 1 - x)
+                xlogy = self.prior * log(1-x)
                 res = -self.domain.element(xlogy).inner(self.domain.one())
 
         if not np.isfinite(res):
@@ -1403,15 +1408,16 @@ class KullbackLeiblerCrossEntropy(Functional):
         infinity.
         """
         # Lazy import to improve `import odl` time
-        import scipy.special
-
+        # import scipy.special
+        
         with np.errstate(invalid='ignore', divide='ignore'):
             if self.prior is None:
-                xlogx = scipy.special.xlogy(x, x)
+                xlogx = xlogy(x, x)
                 res = (1 - x + xlogx).inner(self.domain.one())
             else:
-                xlogy = scipy.special.xlogy(x, x / self.prior)
-                res = (self.prior - x + xlogy).inner(self.domain.one())
+                # xlogy = scipy.special.xlogy(x, x / self.prior)
+                xlogx = xlogy(x, x/self.prior)
+                res = (self.prior - x + xlogx).inner(self.domain.one())
 
         if not np.isfinite(res):
             # In this case, some element was less than or equal to zero
@@ -1444,11 +1450,11 @@ class KullbackLeiblerCrossEntropy(Functional):
                 than or equal to zero.
                 """
                 if functional.prior is None:
-                    tmp = np.log(x)
+                    tmp = log(x)
                 else:
-                    tmp = np.log(x / functional.prior)
+                    tmp = log(x / functional.prior)
 
-                if np.all(np.isfinite(tmp)):
+                if odl_all(isfinite(tmp)):
                     return tmp
                 else:
                     # The derivative is not defined.
@@ -1530,9 +1536,9 @@ class KullbackLeiblerCrossEntropyConvexConj(Functional):
     def _call(self, x):
         """Return the value in the point ``x``."""
         if self.prior is None:
-            tmp = self.domain.element((np.exp(x) - 1)).inner(self.domain.one())
+            tmp = self.domain.element((exp(x) - 1)).inner(self.domain.one())
         else:
-            tmp = (self.prior * (np.exp(x) - 1)).inner(self.domain.one())
+            tmp = (self.prior * (exp(x) - 1)).inner(self.domain.one())
         return tmp
 
     # TODO: replace this when UFuncOperators is in place: PL #576
@@ -1553,9 +1559,9 @@ class KullbackLeiblerCrossEntropyConvexConj(Functional):
             def _call(self, x):
                 """Apply the gradient operator to the given point."""
                 if functional.prior is None:
-                    return self.domain.element(np.exp(x))
+                    return self.domain.element(exp(x))
                 else:
-                    return functional.prior * np.exp(x)
+                    return functional.prior * exp(x)
 
         return KLCrossEntCCGradient()
 
@@ -1670,12 +1676,12 @@ class SeparableSum(Functional):
                 isinstance(functionals[1], Integral)):
             functionals = [functionals[0]] * functionals[1]
 
-        if not all(isinstance(op, Functional) for op in functionals):
+        if not np.all(isinstance(op, Functional) for op in functionals):
             raise TypeError('all arguments must be `Functional` instances')
 
         domains = [func.domain for func in functionals]
         domain = ProductSpace(*domains)
-        linear = all(func.is_linear for func in functionals)
+        linear = np.all(func.is_linear for func in functionals)
 
         super(SeparableSum, self).__init__(space=domain, linear=linear)
         self.__functionals = tuple(functionals)
@@ -2280,9 +2286,9 @@ class IndicatorSimplex(Functional):
     def _call(self, x):
         """Return ``self(x)``."""
 
-        sum_constr = abs(x.ufuncs.sum() / self.diameter - 1) <= self.sum_rtol
-
-        nonneq_constr = x.ufuncs.greater_equal(0).asarray().all()
+        sum_constr = abs(odl_sum(x) / self.diameter - 1) <= self.sum_rtol
+        nonneq_constr = all(0 <= x)
+        # nonneq_constr = x.ufuncs.greater_equal(0).asarray().all()
 
         if sum_constr and nonneq_constr:
             return 0
@@ -2398,7 +2404,7 @@ class IndicatorSumConstraint(Functional):
     def _call(self, x):
         """Return ``self(x)``."""
 
-        if abs(x.ufuncs.sum() / self.sum_value - 1) <= self.sum_rtol:
+        if abs(odl_sum(x) / self.sum_value - 1) <= self.sum_rtol:
             return 0
         else:
             return np.inf
@@ -2428,7 +2434,7 @@ class IndicatorSumConstraint(Functional):
 
             def _call(self, x, out):
 
-                offset = 1 / x.size * (self.sum_value - x.ufuncs.sum())
+                offset = 1 / x.size * (self.sum_value - odl_sum(x))
                 out.assign(x)
                 out += offset
 
@@ -2636,13 +2642,14 @@ class Huber(Functional):
         if isinstance(self.domain, ProductSpace):
             norm = PointwiseNorm(self.domain, 2)(x)
         else:
-            norm = x.ufuncs.absolute()
+            norm = abs(x)
 
         if self.gamma > 0:
-            tmp = norm.ufuncs.square()
+            tmp = square(norm)
             tmp *= 1 / (2 * self.gamma)
 
-            index = norm.ufuncs.greater_equal(self.gamma)
+            # index = norm.ufuncs.greater_equal(self.gamma)
+            index = self.gamma <= norm
             tmp[index] = norm[index] - self.gamma / 2
         else:
             tmp = norm
@@ -2726,11 +2733,12 @@ class Huber(Functional):
                 if isinstance(self.domain, ProductSpace):
                     norm = PointwiseNorm(self.domain, 2)(x)
                 else:
-                    norm = x.ufuncs.absolute()
+                    norm = abs(x)
 
                 grad = x / functional.gamma
 
-                index = norm.ufuncs.greater_equal(functional.gamma)
+                # index = norm.ufuncs.greater_equal(functional.gamma)
+                index = functional.gamma <= norm
                 if isinstance(self.domain, ProductSpace):
                     for xi, gi in zip(x, grad):
                         gi[index] = xi[index] / norm[index]

@@ -14,6 +14,7 @@ from __future__ import absolute_import, division, print_function
 
 from copy import copy
 
+from numbers import Number
 import numpy as np
 
 from odl.operator.operator import Operator
@@ -301,6 +302,15 @@ class MultiplyOperator(Operator):
         >>> op2(3, out)
         rn(3).element([ 3.,  6.,  9.])
         """
+        # TODO: handle the complex conversion case better.
+        if not isinstance(multiplicand, LinearSpaceElement):
+            assert domain is not None or range is not None
+            if domain is None:
+                domain = range
+            if range is None:
+                range = domain
+            assert isinstance(multiplicand, Number)
+
         if domain is None:
             domain = multiplicand.space
 

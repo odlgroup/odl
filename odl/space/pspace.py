@@ -11,9 +11,12 @@
 from __future__ import absolute_import, division, print_function
 
 from itertools import product
-from numbers import Integral
-
+from numbers import Integral, Number
+import operator
 import numpy as np
+
+import warnings
+from contextlib import contextmanager
 
 from odl.set import LinearSpace
 from odl.set.space import (LinearSpaceElement,
@@ -21,8 +24,8 @@ from odl.set.space import (LinearSpaceElement,
 from odl.space.weighting import (
     ArrayWeighting, ConstWeighting, CustomDist, CustomInner, CustomNorm,
     Weighting)
+from odl.array_API_support.utils import get_array_and_backend
 from odl.util import indent, is_real_dtype, signature_string
-from odl.util.ufuncs import ProductSpaceUfuncs
 
 __all__ = ('ProductSpace',)
 
@@ -283,6 +286,109 @@ class ProductSpace(LinearSpace):
         """
         return len(self.spaces)
 
+    def _elementwise_num_operation(self, operation:str
+                                       , x1: LinearSpaceElement | Number
+                                       , x2: None | LinearSpaceElement | Number = None
+                                       , out=None
+                                       , namespace=None
+                                       , **kwargs ):
+        """
+        Internal helper function to implement the __magic_functions__ (such as __add__).
+
+        Parameters
+        ----------
+        x1 : ProductSpaceElement, TensorSpaceElement, int, float, complex
+            Left operand
+        x2 : ProductSpaceElement, TensorSpaceElement, int, float, complex
+            Right operand
+        operation: str
+            Attribute of the array namespace
+        out : ProductSpaceElement, Optional
+            ProductSpaceElement for out-of-place operations
+
+        Returns
+        -------
+        ProductSpaceElement
+            The result of the operation `operation` wrapped in a space with the right datatype.
+
+        """
+        if self.field is None:
+            raise NotImplementedError(f"The space has no field.")
+        
+        if out is not None:
+            if not isinstance(out, ProductSpaceElement):
+                raise TypeError(f"Output argument for ProductSpace arithmetic must be a product space. {type(out)=}")
+            assert len(out.parts) == len(self)
+
+        def _dtype_adaptive_wrapper(new_parts):
+            if all([xln.space == spc for xln, spc in zip(new_parts, self)]):
+                return self.element(new_parts)
+            else:
+                # The `xl.space._elementwise_num_operation` may change the dtype, and thus the
+                # part-space. For example, the `isfinite` function has boolean results.
+                # In this case, the resulting product space also has the new dtype, which we
+                # accomplish by creating the new space on the spot.
+                new_space = ProductSpace(*[xln.space for xln in new_parts])
+                return new_space.element(new_parts)
+
+        if x2 is None:
+            if out is None:
+                return _dtype_adaptive_wrapper([
+                    xl.space._elementwise_num_operation(operation=operation, x1=xl, namespace=namespace, **kwargs)
+                    for xl in x1.parts ])
+            else:
+                for i, xl in enumerate(x1.parts):
+                    xl.space._elementwise_num_operation(operation=operation, x1=xl, out=out.parts[i], namespace=namespace, **kwargs)
+                return out
+
+        from odl.operator import Operator
+        if isinstance(x2, Operator):
+            warnings.warn("The composition of a LinearSpaceElement and an Operator using the * operator is deprecated and will be removed in future ODL versions. Please replace * with @.")
+            return x2.__rmul__(x1)
+
+        if isinstance(x1, ProductSpaceElement) and isinstance(x2, ProductSpaceElement):
+            assert len(x1.parts) == len(x2.parts)
+            if out is None:
+                return _dtype_adaptive_wrapper([
+                    xl.space._elementwise_num_operation(operation=operation, x1=xl, x2=xr, namespace=namespace, **kwargs)
+                    for xl, xr in zip(x1.parts, x2.parts) ])
+            else:
+                for i, xl in enumerate(x1.parts):
+                    xr = x2.parts[i]
+                    xl.space._elementwise_num_operation(operation=operation, x1=xl, x2=xr, out=out.parts[i], namespace=namespace, **kwargs)
+                return out
+
+        elif isinstance(x1, ProductSpaceElement):
+            if out is None:
+                return _dtype_adaptive_wrapper([
+                    x.space._elementwise_num_operation(operation=operation, x1=x, x2=x2, namespace=namespace, **kwargs)
+                    for x in x1.parts ])
+            else:
+                for i, x in enumerate(x1.parts):
+                    x.space._elementwise_num_operation(operation=operation, x1=x, x2=x2, out=out.parts[i], namespace=namespace, **kwargs)
+                return out
+
+        elif isinstance(x2, ProductSpaceElement):
+            if out is None:
+                return _dtype_adaptive_wrapper([
+                    x.space._elementwise_num_operation(operation=operation, x1=x1, x2=x, namespace=namespace, **kwargs)
+                    for x in x2.parts ])
+            else:
+                for i, x in enumerate(x2.parts):
+                    x.space._elementwise_num_operation(operation=operation, x1=x1, x2=x, out=out.parts[i], namespace=namespace, **kwargs)
+                return out
+
+        else:
+            raise TypeError(f"At least one of the arguments to `ProductSpace._elementwise_num_operation` should be a `ProductSpaceElement`, but got {type(x1)=}, {type(x2)=}")
+                
+    def _element_reduction(self, operation:str
+                               , x: "ProductSpaceElement"
+                               , **kwargs
+                               ):
+        assert(x in self)
+        part_results = np.array([ xp.space._element_reduction(operation, xp, **kwargs) for xp in x.parts ])
+        return getattr(np, operation)(part_results).item()
+
     @property
     def nbytes(self):
         """Total number of bytes in memory used by an element of this space."""
@@ -541,18 +647,27 @@ class ProductSpace(LinearSpace):
 
         if inp in self:
             return inp
+        
+        if isinstance(inp, Number):
+            inp = [space.element(inp) for space in self.spaces]
 
         if len(inp) != len(self):
-            raise ValueError('length of `inp` {} does not match length of '
+            # Here, we handle the case where the user provides an input with a single element that we will try to broadcast to all of the parts of the ProductSpace. 
+            if len(inp) == 1 and cast:
+                parts = [space.element(inp[0]) for space in self.spaces]
+            else:                
+                raise ValueError('length of `inp` {} does not match length of '
                              'space {}'.format(len(inp), len(self)))
 
-        if (all(isinstance(v, LinearSpaceElement) and v.space == space
+        elif (all(isinstance(v, LinearSpaceElement) and v.space == space
                 for v, space in zip(inp, self.spaces))):
             parts = list(inp)
-        elif cast:
+
+        elif cast and len(inp) == len(self):
             # Delegate constructors
             parts = [space.element(arg)
                      for arg, space in zip(inp, self.spaces)]
+            
         else:
             raise TypeError('input {!r} not a sequence of elements of the '
                             'component spaces'.format(inp))
@@ -1070,8 +1185,8 @@ class ProductSpaceElement(LinearSpaceElement):
                 for p, v in zip(indexed_parts, values):
                     p[:] = v
 
-    def asarray(self, out=None):
-        """Extract the data of this vector as a numpy array.
+    def asarray(self, out=None, must_be_contiguous=False):
+        """Extract the data of this vector as a backend-specific array.
 
         Only available if `is_power_space` is True.
 
@@ -1081,10 +1196,10 @@ class ProductSpaceElement(LinearSpaceElement):
 
         Parameters
         ----------
-        out : `numpy.ndarray`, optional
+        out : Arraylike, optional
             Array in which the result should be written in-place.
-            Has to be contiguous and of the correct dtype and
-            shape.
+            Has to be contiguous and of the correct backend,
+            dtype and shape.
 
         Raises
         ------
@@ -1104,120 +1219,33 @@ class ProductSpaceElement(LinearSpaceElement):
             raise ValueError('cannot use `asarray` if `space.is_power_space` '
                              'is `False`')
         else:
-            if out is None:
-                out = np.empty(self.shape, self.dtype)
+            representative_array, representative_backend = get_array_and_backend(self.parts[0])
 
-            for i in range(len(self)):
-                out[i] = np.asarray(self[i])
+            if out is None:
+                # We are assuming that `empty` always produces a contiguous array,
+                # so no need to ensure it separately.
+                out = representative_backend.array_namespace.empty(
+                         shape=self.shape,
+                         dtype=self.dtype,
+                         device=representative_array.device)
+
+            out[0] = representative_array
+
+            for i in range(1, len(self)):
+                self.parts[i].asarray(out = out[i])
+
             return out
 
-    def __array__(self):
-        """An array representation of ``self``.
-
-        Only available if `is_power_space` is True.
-
-        The ordering is such that it commutes with indexing::
-
-            np.array(self[ind]) == np.array(self)[ind]
-
-        Raises
-        ------
-        ValueError
-            If `is_power_space` is false.
-
-        Examples
-        --------
-        >>> spc = odl.ProductSpace(odl.rn(3), 2)
-        >>> x = spc.element([[ 1.,  2.,  3.],
-        ...                  [ 4.,  5.,  6.]])
-        >>> np.asarray(x)
-        array([[ 1.,  2.,  3.],
-               [ 4.,  5.,  6.]])
-        """
-        return self.asarray()
-
-    def __array_wrap__(self, array):
-        """Return a new product space element wrapping the ``array``.
-
-        Only available if `is_power_space` is ``True``.
-
-        Parameters
-        ----------
-        array : `numpy.ndarray`
-            Array to be wrapped.
-
-        Returns
-        -------
-        wrapper : `ProductSpaceElement`
-            Product space element wrapping ``array``.
-        """
-        # HACK(kohr-h): This is to support (full) reductions like
-        # `np.sum(x)` for numpy>=1.16, where many such reductions
-        # moved from plain functions to `ufunc.reduce.*`, thus
-        # invoking the `__array__` and `__array_wrap__` machinery.
-        if array.shape == ():
-            return array.item()
-
-        return self.space.element(array)
-
-    @property
-    def ufuncs(self):
-        """`ProductSpaceUfuncs`, access to Numpy style ufuncs.
-
-        These are always available if the underlying spaces are
-        `TensorSpace`.
-
-        Examples
-        --------
-        >>> r22 = odl.ProductSpace(odl.rn(2), 2)
-        >>> x = r22.element([[1, -2], [-3, 4]])
-        >>> x.ufuncs.absolute()
-        ProductSpace(rn(2), 2).element([
-            [ 1.,  2.],
-            [ 3.,  4.]
-        ])
-
-        These functions can also be used with non-vector arguments and
-        support broadcasting, per component and even recursively:
-
-        >>> x.ufuncs.add([1, 2])
-        ProductSpace(rn(2), 2).element([
-            [ 2.,  0.],
-            [-2.,  6.]
-        ])
-        >>> x.ufuncs.subtract(1)
-        ProductSpace(rn(2), 2).element([
-            [ 0., -3.],
-            [-4.,  3.]
-        ])
-
-        There is also support for various reductions (sum, prod, min, max):
-
-        >>> x.ufuncs.sum()
-        0.0
-
-        Writing to ``out`` is also supported:
-
-        >>> y = r22.element()
-        >>> result = x.ufuncs.absolute(out=y)
-        >>> result
-        ProductSpace(rn(2), 2).element([
-            [ 1.,  2.],
-            [ 3.,  4.]
-        ])
-        >>> result is y
-        True
-
-        See Also
-        --------
-        odl.util.ufuncs.TensorSpaceUfuncs
-            Base class for ufuncs in `TensorSpace` spaces, subspaces may
-            override this for greater efficiency.
-        odl.util.ufuncs.ProductSpaceUfuncs
-            For a list of available ufuncs.
-        """
-        return ProductSpaceUfuncs(self)
-
+    @contextmanager
+    def writable_array(self, must_be_contiguous: bool =False):
+        arr = None
+        try:
+            arr = self.asarray(must_be_contiguous=must_be_contiguous)
+            yield arr
+        finally:
+            if arr is not None:
+                for i in range(1, len(self)):
+                    self.parts[i]._assign(self.parts[i].space.element(arr[i]))
     @property
     def real(self):
         """Real part of the element.
@@ -1287,7 +1315,7 @@ class ProductSpaceElement(LinearSpaceElement):
                 # Set same value in all parts
                 for part in self.parts:
                     part.real = newreal
-            except (ValueError, TypeError):
+            except (AttributeError, ValueError, TypeError):
                 # Iterate over all parts and set them separately
                 for part, new_re in zip(self.parts, newreal):
                     part.real = new_re
@@ -1370,7 +1398,7 @@ class ProductSpaceElement(LinearSpaceElement):
                 # Set same value in all parts
                 for part in self.parts:
                     part.imag = newimag
-            except (ValueError, TypeError):
+            except (AttributeError, ValueError, TypeError):
                 # Iterate over all parts and set them separately
                 for part, new_im in zip(self.parts, newimag):
                     part.imag = new_im
@@ -1555,62 +1583,76 @@ class ProductSpaceElement(LinearSpaceElement):
                 figs.append(fig)
 
         return tuple(figs)
+    
+    # def _broadcast_arithmetic_impl(self, other):
+    #     if (self.space.is_power_space and other in self.space[0]):
+    #         results = []
+    #         for xi in self:
+    #             res = getattr(xi, op)(other)
+    #             if res is NotImplemented:
+    #                 return NotImplemented
+    #             else:
+    #                 results.append(res)
+
+    #         return self.space.element(results)
+    #     else:
+    #         return getattr(LinearSpaceElement, op)(self, other)
 
 
 # --- Add arithmetic operators that broadcast --- #
 
 
-def _broadcast_arithmetic(op):
-    """Return ``op(self, other)`` with broadcasting.
+# def _broadcast_arithmetic(op):
+#     """Return ``op(self, other)`` with broadcasting.
 
-    Parameters
-    ----------
-    op : string
-        Name of the operator, e.g. ``'__add__'``.
+#     Parameters
+#     ----------
+#     op : string
+#         Name of the operator, e.g. ``'__add__'``.
 
-    Returns
-    -------
-    broadcast_arithmetic_op : function
-        Function intended to be used as a method for `ProductSpaceVector`
-        which performs broadcasting if possible.
+#     Returns
+#     -------
+#     broadcast_arithmetic_op : function
+#         Function intended to be used as a method for `ProductSpaceVector`
+#         which performs broadcasting if possible.
 
-    Notes
-    -----
-    Broadcasting is the operation of "applying an operator multiple times" in
-    some sense. For example:
+#     Notes
+#     -----
+#     Broadcasting is the operation of "applying an operator multiple times" in
+#     some sense. For example:
 
-    .. math::
-        (1, 2) + 1 = (2, 3)
+#     .. math::
+#         (1, 2) + 1 = (2, 3)
 
-    is a form of broadcasting. In this implementation, we only allow "single
-    layer" broadcasting, i.e., we do not support broadcasting over several
-    product spaces at once.
-    """
-    def _broadcast_arithmetic_impl(self, other):
-        if (self.space.is_power_space and other in self.space[0]):
-            results = []
-            for xi in self:
-                res = getattr(xi, op)(other)
-                if res is NotImplemented:
-                    return NotImplemented
-                else:
-                    results.append(res)
+#     is a form of broadcasting. In this implementation, we only allow "single
+#     layer" broadcasting, i.e., we do not support broadcasting over several
+#     product spaces at once.
+#     """
+#     def _broadcast_arithmetic_impl(self, other):
+#         if (self.space.is_power_space and other in self.space[0]):
+#             results = []
+#             for xi in self:
+#                 res = getattr(xi, op)(other)
+#                 if res is NotImplemented:
+#                     return NotImplemented
+#                 else:
+#                     results.append(res)
 
-            return self.space.element(results)
-        else:
-            return getattr(LinearSpaceElement, op)(self, other)
+#             return self.space.element(results)
+#         else:
+#             return getattr(LinearSpaceElement, op)(self, other)
 
-    # Set docstring
-    docstring = """Broadcasted {op}.""".format(op=op)
-    _broadcast_arithmetic_impl.__doc__ = docstring
+#     # Set docstring
+#     docstring = """Broadcasted {op}.""".format(op=op)
+#     _broadcast_arithmetic_impl.__doc__ = docstring
 
-    return _broadcast_arithmetic_impl
+#     return _broadcast_arithmetic_impl
 
 
-for op in ['add', 'sub', 'mul', 'div', 'truediv']:
-    for modifier in ['', 'r', 'i']:
-        name = '__{}{}__'.format(modifier, op)
-        setattr(ProductSpaceElement, name, _broadcast_arithmetic(name))
+# for op in ['add', 'sub', 'mul', 'div', 'truediv']:
+#     for modifier in ['', 'r', 'i']:
+#         name = '__{}{}__'.format(modifier, op)
+#         setattr(ProductSpaceElement, name, _broadcast_arithmetic(name))
 
 
 class ProductSpaceArrayWeighting(ArrayWeighting):
@@ -1669,7 +1711,7 @@ class ProductSpaceArrayWeighting(ArrayWeighting):
           during initialization.
         """
         super(ProductSpaceArrayWeighting, self).__init__(
-            array, impl='numpy', exponent=exponent)
+            array, impl=None, device=None, exponent=exponent)
 
     def inner(self, x1, x2):
         """Calculate the array-weighted inner product of two elements.
@@ -1777,7 +1819,7 @@ class ProductSpaceConstWeighting(ConstWeighting):
           inner product or norm, respectively.
         """
         super(ProductSpaceConstWeighting, self).__init__(
-            constant, impl='numpy', exponent=exponent)
+            constant, impl=None, device=None, exponent=exponent)
 
     def inner(self, x1, x2):
         """Calculate the constant-weighted inner product of two elements.
@@ -1876,7 +1918,7 @@ class ProductSpaceCustomInner(CustomInner):
             - ``<x, x> = 0``  if and only if  ``x = 0``
         """
         super(ProductSpaceCustomInner, self).__init__(
-            impl='numpy', inner=inner)
+            impl=None, inner=inner, device=None)
 
 
 class ProductSpaceCustomNorm(CustomNorm):
@@ -1902,7 +1944,7 @@ class ProductSpaceCustomNorm(CustomNorm):
             - ``||s * x|| = |s| * ||x||``
             - ``||x + y|| <= ||x|| + ||y||``
         """
-        super(ProductSpaceCustomNorm, self).__init__(norm, impl='numpy')
+        super(ProductSpaceCustomNorm, self).__init__(norm, impl=None, device=None)
 
 
 class ProductSpaceCustomDist(CustomDist):
@@ -1928,7 +1970,7 @@ class ProductSpaceCustomDist(CustomDist):
             - ``dist(x, y) = dist(y, x)``
             - ``dist(x, y) <= dist(x, z) + dist(z, y)``
         """
-        super(ProductSpaceCustomDist, self).__init__(dist, impl='numpy')
+        super(ProductSpaceCustomDist, self).__init__(dist, impl=None, device=None)
 
 
 def _strip_space(x):

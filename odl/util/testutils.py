@@ -16,7 +16,7 @@ import warnings
 from builtins import object
 from contextlib import contextmanager
 from time import time
-
+from odl.array_API_support.comparisons import allclose, isclose
 import numpy as np
 from odl.util.npy_compat import AVOID_UNNECESSARY_COPY
 
@@ -110,6 +110,19 @@ def dtype_tol(dtype, default=None):
 def all_equal(iter1, iter2):
     """Return ``True`` if all elements in ``a`` and ``b`` are equal."""
     # Direct comparison for scalars, tuples or lists
+
+    from odl.set.space import LinearSpaceElement
+
+    if isinstance(iter1, LinearSpaceElement) and isinstance(iter2, LinearSpaceElement):
+        return iter1 == iter2
+    elif isinstance(iter1, LinearSpaceElement):
+        try:
+            return iter1 == iter1.space.element(iter2)
+        except ValueError as e:
+            pass
+    elif isinstance(iter2, LinearSpaceElement):
+        return iter2.space.element(iter1) == iter2
+
     try:
         if iter1 == iter2:
             return True
@@ -156,7 +169,7 @@ def all_almost_equal_array(v1, v2, ndigits):
                 return False
         return True
     else:
-        return np.allclose(v1, v2,
+        return allclose(v1, v2,
                            rtol=10 ** -ndigits, atol=10 ** -ndigits,
                            equal_nan=True)
 
@@ -185,7 +198,7 @@ def all_almost_equal(iter1, iter2, ndigits=None):
     except TypeError:
         if ndigits is None:
             ndigits = _ndigits(iter1, iter2, None)
-        return np.isclose(iter1, iter2,
+        return isclose(iter1, iter2,
                           atol=10 ** -ndigits, rtol=10 ** -ndigits,
                           equal_nan=True)
 
@@ -351,7 +364,7 @@ def noise_array(space):
         return result
 
     else:
-        if space.dtype == bool:
+        if space.dtype == np.bool:
             arr = np.random.randint(0, 2, size=space.shape, dtype=bool)
         elif np.issubdtype(space.dtype, np.unsignedinteger):
             arr = np.random.randint(0, 10, space.shape)

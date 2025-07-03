@@ -26,6 +26,8 @@ from odl.util import (
     complex_dtype, conj_exponent, dtype_repr, is_complex_floating_dtype,
     is_real_dtype, normalized_axes_tuple, normalized_scalar_param_list)
 
+from odl.array_API_support import lookup_array_backend
+
 __all__ = ('DiscreteFourierTransform', 'DiscreteFourierTransformInverse',
            'FourierTransform', 'FourierTransformInverse')
 
@@ -109,7 +111,7 @@ class DiscreteFourierTransformBase(Operator):
         else:
             self.__halfcomplex = bool(halfcomplex)
 
-        ran_dtype = complex_dtype(domain.dtype)
+        ran_dtype = complex_dtype(domain.dtype_identifier)
 
         # Sign of the transform
         if sign not in ('+', '-'):
@@ -1319,14 +1321,14 @@ class FourierTransform(FourierTransformBase):
         # There is no significant time difference between (full) R2C and
         # C2C DFT in Numpy.
         preproc = self._preprocess(x)
-
+        dtype = lookup_array_backend('numpy').get_dtype_identifier(dtype=preproc.dtype)
         # The actual call to the FFT library, out-of-place unfortunately
         if self.halfcomplex:
             out = np.fft.rfftn(preproc, axes=self.axes)
         else:
             if self.sign == '-':
                 out = ( np.fft.fftn(preproc, axes=self.axes)
-                       .astype(complex_dtype(preproc.dtype), copy=AVOID_UNNECESSARY_COPY)
+                       .astype(complex_dtype(dtype), copy=AVOID_UNNECESSARY_COPY)
                        )
             else:
                 out = np.fft.ifftn(preproc, axes=self.axes)

@@ -20,7 +20,7 @@ import odl
 from odl.space.entry_points import tensor_space_impl_names
 from odl.trafos.backends import PYFFTW_AVAILABLE, PYWT_AVAILABLE
 from odl.util.testutils import simple_fixture
-from odl.util.utility import SCTYPES
+from odl.util.utility import INTEGER_DTYPES, FLOAT_DTYPES, COMPLEX_DTYPES
 
 try:
     import pytest
@@ -133,27 +133,26 @@ def pytest_ignore_collect(path, config):
 odl_tspace_impl = simple_fixture(name='tspace_impl',
                                  params=tensor_space_impl_names())
 
-real_floating_dtypes = SCTYPES['float']
-real_floating_dtype_params = [np.dtype(dt) for dt in real_floating_dtypes]
+real_floating_dtypes = FLOAT_DTYPES
 odl_real_floating_dtype = simple_fixture(name='dtype',
-                                    params=real_floating_dtype_params,
-                                    fmt=' {name} = np.{value.name} ')
+                                    params=real_floating_dtypes)
 
-floating_dtypes = SCTYPES['float'] + SCTYPES['complex']
-floating_dtype_params = [np.dtype(dt) for dt in floating_dtypes]
+complex_floating_dtypes = COMPLEX_DTYPES
+odl_complex_floating_dtype = simple_fixture(name='dtype',
+                                    params=complex_floating_dtypes)
+
+floating_dtypes = FLOAT_DTYPES + COMPLEX_DTYPES
 odl_floating_dtype = simple_fixture(name='dtype',
-                                    params=floating_dtype_params,
-                                    fmt=' {name} = np.{value.name} ')
+                                    params=floating_dtypes)
 
-scalar_dtypes = floating_dtype_params + SCTYPES['int'] + SCTYPES['uint']
-scalar_dtype_params = [np.dtype(dt) for dt in floating_dtypes]
+scalar_dtypes = INTEGER_DTYPES + FLOAT_DTYPES + COMPLEX_DTYPES
 odl_scalar_dtype = simple_fixture(name='dtype',
-                                  params=scalar_dtype_params,
-                                  fmt=' {name} = np.{value.name} ')
+                                  params=scalar_dtypes)
 
-odl_elem_order = simple_fixture(name='order', params=[None, 'C', 'F'])
+odl_impl_device_pairs = simple_fixture(name='impl_device', params=odl.IMPL_DEVICE_PAIRS)
 
-odl_ufunc = simple_fixture('ufunc', [p[0] for p in odl.util.ufuncs.UFUNCS])
+odl_elem_order = simple_fixture(name='order', params=['C'])
+
 odl_reduction = simple_fixture('reduction', ['sum', 'prod', 'min', 'max'])
 
 # More complicated ones with non-trivial documentation

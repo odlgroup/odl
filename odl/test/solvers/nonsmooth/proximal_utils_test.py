@@ -46,13 +46,17 @@ def test_proximal_arg_scaling(scalar, sigma):
     prox_factory = proximal_l2_squared(space, lam=lam)
 
     scaling_param = scalar
-    prox = proximal_arg_scaling(prox_factory, scaling_param)(sigma)
+    if isinstance(scaling_param, np.ndarray):  
+        with pytest.raises(AssertionError):
+            prox = proximal_arg_scaling(prox_factory, scaling_param)(sigma)
+    else:
+        prox = proximal_arg_scaling(prox_factory, scaling_param)(sigma)
 
-    x = noise_element(space)
-    # works for scaling_param == 0, too
-    expected_result = x / (2 * sigma * lam * scaling_param ** 2 + 1)
+        x = noise_element(space)
+        # works for scaling_param == 0, too
+        expected_result = x / (2 * sigma * lam * scaling_param ** 2 + 1)
 
-    assert all_almost_equal(prox(x), expected_result, ndigits=NDIGITS)
+        assert all_almost_equal(prox(x), expected_result, ndigits=NDIGITS)
 
 
 def test_proximal_translation(sigma):
@@ -123,9 +127,13 @@ def test_proximal_composition(pos_scalar, sigma):
 
     x = space.element(np.arange(-5, 5))
     prox_x = prox(x)
-    equiv_prox = proximal_arg_scaling(prox_factory, scal)(sigma)
-    expected_result = equiv_prox(x)
-    assert all_almost_equal(prox_x, expected_result, ndigits=NDIGITS)
+    if isinstance(scal, np.ndarray):  
+        with pytest.raises(AssertionError):
+            equiv_prox = proximal_arg_scaling(prox_factory, scal)(sigma)
+    else:
+        equiv_prox = proximal_arg_scaling(prox_factory, scal)(sigma)
+        expected_result = equiv_prox(x)
+        assert all_almost_equal(prox_x, expected_result, ndigits=NDIGITS)
 
 
 if __name__ == '__main__':

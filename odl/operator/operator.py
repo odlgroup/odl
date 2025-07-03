@@ -656,7 +656,8 @@ class Operator(object):
                                 'when range is a field')
 
             result = self._call_in_place(x, out=out, **kwargs)
-            if result is not None and result is not out:
+            # TODO: At present, we perform an equality check on the entire array, which is as inefficient as it gets. We'd rather perform a pointer equality with the "is" keyword. However, the current machinery for the _call_in_place function might be creating a new out object, which leads to the "is" equality failing. We must investigate this _call_in_place function to identify when and why are objects created/deleted.
+            if result is not None and result != out:
                 raise ValueError('`op` returned a different value than `out`. '
                                  'With in-place evaluation, the operator can '
                                  'only return nothing (`None`) or the `out` '
@@ -1248,7 +1249,7 @@ class OperatorVectorSum(Operator):
         if out is None:
             out = self.operator(x)
         else:
-            self.operator(x, out=out)
+            self.operator(x, out=out) 
 
         out += self.vector
         return out
@@ -1283,7 +1284,9 @@ class OperatorVectorSum(Operator):
 
     def __str__(self):
         """Return ``str(self)``."""
-        return '({} + {})'.format(self.left, self.right)
+        # return '({} + {})'.format(self.left, self.right)
+        return '{}({!r}, {!r})'.format(self.__class__.__name__,
+                                       self.operator, self.vector)
 
 
 class OperatorComp(Operator):
@@ -1484,8 +1487,8 @@ class OperatorPointwiseProduct(Operator):
         if self.is_linear:
             return self
         else:
-            left = self.right(x) * self.left.derivative(x)
-            right = self.left(x) * self.right.derivative(x)
+            left = self.right(x) @ self.left.derivative(x)
+            right = self.left(x) @ self.right.derivative(x)
             return left + right
 
     def __repr__(self):
@@ -2030,7 +2033,7 @@ class OperatorLeftVectorMult(Operator):
         if self.is_linear:
             return self
         else:
-            return self.vector * self.operator.derivative(x)
+            return self.vector @ self.operator.derivative(x)
 
     @property
     def adjoint(self):
@@ -2177,9 +2180,9 @@ class OperatorRightVectorMult(Operator):
 
         if self.vector.space.is_real:
             # The complex conjugate of a real vector is the vector itself.
-            return self.vector * self.operator.adjoint
+            return self.vector @ self.operator.adjoint
         else:
-            return self.vector.conj() * self.operator.adjoint
+            return self.vector.conj() @ self.operator.adjoint
 
     def __repr__(self):
         """Return ``repr(self)``."""

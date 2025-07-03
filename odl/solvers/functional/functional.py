@@ -691,7 +691,7 @@ class FunctionalRightVectorMult(Functional, OperatorRightVectorMult):
     @property
     def gradient(self):
         """Gradient operator of the functional."""
-        return self.vector * self.operator.gradient * self.vector
+        return self.vector @ self.operator.gradient @ self.vector
 
     @property
     def convex_conj(self):

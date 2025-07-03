@@ -10,23 +10,62 @@
 
 from __future__ import absolute_import, division, print_function
 
-from numbers import Integral
-
+from types import ModuleType
+from typing import Dict
+from numbers import Integral, Number
+import warnings
+from contextlib import contextmanager
 import numpy as np
 
-from odl.util.npy_compat import AVOID_UNNECESSARY_COPY
-
+import odl
 from odl.set.sets import ComplexNumbers, RealNumbers
-from odl.set.space import LinearSpace, LinearSpaceElement
+from odl.set.space import (
+    LinearSpace, LinearSpaceElement, LinearSpaceTypeError,
+    SupportedNumOperationParadigms, NumOperationParadigmSupport)
+from odl.array_API_support import ArrayBackend, lookup_array_backend
 from odl.util import (
-    array_str, dtype_str, indent, is_complex_floating_dtype, is_floating_dtype,
-    is_numeric_dtype, is_real_dtype, is_real_floating_dtype, safe_int_conv,
-    signature_string, writable_array)
-from odl.util.ufuncs import TensorSpaceUfuncs
-from odl.util.utility import TYPE_MAP_C2R, TYPE_MAP_R2C, nullcontext
+    array_str, indent, is_complex_floating_dtype,
+    is_numeric_dtype, is_real_floating_dtype, safe_int_conv,
+    signature_string)
+from odl.util.utility import(
+    SCALAR_DTYPES, AVAILABLE_DTYPES,
+    REAL_DTYPES, INTEGER_DTYPES,
+    FLOAT_DTYPES, COMPLEX_DTYPES,
+    TYPE_PROMOTION_COMPLEX_TO_REAL, 
+    TYPE_PROMOTION_REAL_TO_COMPLEX)
+from .weighting import Weighting, ConstWeighting
+from .pspace import ProductSpaceElement
 
 __all__ = ('TensorSpace',)
 
+def default_dtype(array_backend: ArrayBackend | str, field=None):
+    """Return the default data type for a given field.
+
+    Parameters
+    ----------
+    array_backend : `ArrayBackend` or `str`
+        The implementation, defining what dtypes are available.
+        If a string is given, it is interpreted as an `impl`
+        identifier of an array backend from the global registry.
+    field : `Field`, optional
+        Set of numbers to be represented by a data type.
+        Currently supported : `RealNumbers`, `ComplexNumbers`
+        The default ``None`` means `RealNumbers`
+
+    Returns
+    -------
+    dtype :
+        Backend data type specifier.
+    """
+    if not isinstance(array_backend, ArrayBackend):
+        array_backend = lookup_array_backend(array_backend)
+    if field is None or field == RealNumbers():
+        return array_backend.available_dtypes['float64']
+    elif field == ComplexNumbers():
+       return array_backend.available_dtypes['complex128']
+    else:
+        raise ValueError('no default data type defined for field {}'
+                         ''.format(field))
 
 class TensorSpace(LinearSpace):
 
@@ -62,7 +101,7 @@ class TensorSpace(LinearSpace):
     .. _Wikipedia article on tensors: https://en.wikipedia.org/wiki/Tensor
     """
 
-    def __init__(self, shape, dtype):
+    def __init__(self, shape, dtype, device, **kwargs):
         """Initialize a new instance.
 
         Parameters
@@ -77,68 +116,183 @@ class TensorSpace(LinearSpace):
             For a data type with a ``dtype.shape``, these extra dimensions
             are added *to the left* of ``shape``.
         """
+        # Handle shape and dtype, taking care also of dtypes with shape        
+        self._init_dtype(dtype)
+
+        self._init_shape(shape, dtype)
+
+        self._init_device(device)
+
+        self.__use_in_place_ops = kwargs.pop('use_in_place_ops', True)
+  
+        self._init_weighting(**kwargs)
+
+        field = self._init_field()
+
+        LinearSpace.__init__(self, field)
+
+    ################ Init Methods, Non static ################
+    def _init_device(self, device:str):
+        odl.check_device(self.impl, device)
+        self.__device = device 
+
+    def _init_dtype(self, dtype:str | int | float | complex):
+        """
+        Process the dtype argument. This parses the (str or Number) dtype input argument to a backend.dtype and sets two attributes
+
+        self.dtype_identifier (str)      -> Used for passing dtype information from one backend to another
+        self.__dtype (backend.dtype) -> Actual dtype of the TensorSpace implementation
+
+        Note:
+        The check below is here just in case a user initialise a space directly from this class, which is not recommended
+        """
+
+        available_dtypes = self.array_backend.available_dtypes
+
+        ### We check if the datatype has been provided in a "sane" way, 
+        # 1) a Python scalar type
+        if isinstance(dtype, (int, float, complex)):
+            self.__dtype_identifier = str(dtype)
+            self.__dtype = available_dtypes[dtype] 
+        # 2) as a string
+        if dtype in available_dtypes.keys():
+            self.__dtype_identifier = dtype
+            self.__dtype = available_dtypes[dtype]
+        ### If the check has failed, i.e the dtype is not a Key of the available_dtypes dict or a python scalar, we try to parse the dtype 
+        ### as a string using the get_dtype_identifier(dtype=dtype) call: This is for the situation where the dtype passed is
+        ### in the .values() of available_dtypes dict (something like 'numpy.float32')
+        elif dtype in available_dtypes.values():
+            self.__dtype_identifier = self.array_backend.get_dtype_identifier(dtype=dtype)
+            self.__dtype = dtype
+            # If that fails, we throw an error: the dtype is not a python scalar dtype, not a string describing the dtype or the 
+            # backend call to parse the dtype has failed.
+        else:
+            raise ValueError(f"The dtype must be in {available_dtypes.keys()} or must be a dtype of the backend, but {dtype} was provided")
+
+    def _init_shape(self, shape, dtype):
         # Handle shape and dtype, taking care also of dtypes with shape
         try:
             shape, shape_in = tuple(safe_int_conv(s) for s in shape), shape
         except TypeError:
             shape, shape_in = (safe_int_conv(shape),), shape
         if any(s < 0 for s in shape):
-            raise ValueError('`shape` must have only nonnegative entries, got '
-                             '{}'.format(shape_in))
-        dtype = np.dtype(dtype)
+            raise ValueError(
+                "`shape` must have only nonnegative entries, got " "{}".format(shape_in)
+            )
 
         # We choose this order in contrast to Numpy, since we usually want
         # to represent discretizations of vector- or tensor-valued functions,
         # i.e., if dtype.shape == (3,) we expect f[0] to have shape `shape`.
-        self.__shape = dtype.shape + shape
-        self.__dtype = dtype.base
+        # <!> this is likely to break in Pytorch
+        self.__shape = np.dtype(dtype).shape + shape
 
-        if is_real_dtype(self.dtype):
+    def _init_field(self):
+        if self.dtype_identifier in TYPE_PROMOTION_REAL_TO_COMPLEX:
             # real includes non-floating-point like integers
             field = RealNumbers()
             self.__real_dtype = self.dtype
             self.__real_space = self
-            self.__complex_dtype = TYPE_MAP_R2C.get(self.dtype, None)
+            self.__complex_dtype = self.array_backend.available_dtypes[
+                TYPE_PROMOTION_REAL_TO_COMPLEX[self.dtype_identifier]
+            ]
+            
             self.__complex_space = None  # Set in first call of astype
-        elif is_complex_floating_dtype(self.dtype):
+        elif self.dtype_identifier in TYPE_PROMOTION_COMPLEX_TO_REAL:
             field = ComplexNumbers()
-            self.__real_dtype = TYPE_MAP_C2R[self.dtype]
+            self.__real_dtype = self.array_backend.available_dtypes[
+                TYPE_PROMOTION_COMPLEX_TO_REAL[self.dtype_identifier]
+            ]
             self.__real_space = None  # Set in first call of astype
             self.__complex_dtype = self.dtype
             self.__complex_space = self
         else:
             field = None
-
-        LinearSpace.__init__(self, field)
-
-    ########## static methods ##########
-    @staticmethod
-    def available_dtypes():
-        """Return the set of data types available in this implementation.
-
-        This method should be overridden by subclasses.
-        """
-        raise NotImplementedError('abstract method')
-
-    @staticmethod
-    def default_dtype(field=None):
-        """Return the default data type for a given field.
-
-        This method should be overridden by subclasses.
-
-        Parameters
-        ----------
-        field : `Field`, optional
-            Set of numbers to be represented by a data type.
-
-        Returns
-        -------
-        dtype :
-            Numpy data type specifier.
-        """
-        raise NotImplementedError('abstract method')
-
+        return field
+    
+    def _init_weighting(self, **kwargs):
+        weighting = kwargs.pop("weighting", None)    
+        if weighting is None:
+            self.__weighting = odl.space_weighting(impl=self.impl, device=self.device, **kwargs)
+        else:
+            if issubclass(type(weighting), Weighting):
+                if weighting.impl != self.impl:
+                    raise ValueError(
+                        f"`weighting.impl` and space.impl must be consistent, but got \
+                        {weighting.impl} and {self.impl}" 
+                    )
+                if weighting.device != self.device:
+                    raise ValueError(
+                        f"`weighting.device` and space.device must be consistent, but got \
+                        {weighting.device} and {self.device}" 
+                    )
+                self.__weighting = weighting
+                if weighting.shape and weighting.shape != self.shape:
+                    raise ValueError(
+                        f"`weighting.shape` and space.shape must be consistent, but got \
+                        {weighting.shape} and {self.shape}" 
+                    )
+            elif hasattr(weighting, '__array__') or isinstance(weighting, (int, float)):
+                self.__weighting = odl.space_weighting(impl=self.impl, device=self.device, weight=weighting, **kwargs)
+            else:
+                raise TypeError(
+                    f"""Wrong type of 'weighting' argument. Only floats, array-like and odl.Weightings are accepted 
+                    """
+                    )
+    
     ########## Attributes ##########
+    @property
+    def array_backend(self) -> ArrayBackend:
+        return lookup_array_backend(self.impl)
+
+    @property
+    def array_namespace(self) -> ModuleType:
+        """Name of the array_namespace of this tensor set. This relates to the
+        python array api.
+        """
+        return self.array_backend.array_namespace
+    
+    @property
+    def byaxis(self):
+        """Return the subspace defined along one or several dimensions.
+
+        Examples
+        --------
+        Indexing with integers or slices:
+
+        >>> space = odl.rn((2, 3, 4))
+        >>> space.byaxis[0]
+        rn(2)
+        >>> space.byaxis[1:]
+        rn((3, 4))
+
+        Lists can be used to stack spaces arbitrarily:
+
+        >>> space.byaxis[[2, 1, 2]]
+        rn((4, 3, 4))
+        """
+        space = self
+
+        class TensorSpacebyaxis(object):
+
+            """Helper class for indexing by axis."""
+
+            def __getitem__(self, indices):
+                """Return ``self[indices]``."""
+                try:
+                    iter(indices)
+                except TypeError:
+                    newshape = space.shape[indices]
+                else:
+                    newshape = tuple(space.shape[i] for i in indices)
+
+                return type(space)(newshape, space.dtype, weighting=space.weighting)
+
+            def __repr__(self):
+                """Return ``repr(self)``."""
+                return repr(space) + '.byaxis'
+
+        return TensorSpacebyaxis()
+    
     @property
     def complex_dtype(self):
         """The complex dtype corresponding to this space's `dtype`.
@@ -168,12 +322,12 @@ class TensorSpace(LinearSpace):
         return self.astype(self.complex_dtype)
     
     @property
-    def default_order(self):
-        """Default storage order for new elements in this space.
+    def device(self):
+        """Device on which the tensorSpace is implemented.
 
         This property should be overridden by subclasses.
         """
-        raise NotImplementedError('abstract method')
+        return self.__device
     
     @property
     def dtype(self):
@@ -181,9 +335,14 @@ class TensorSpace(LinearSpace):
         return self.__dtype
     
     @property
+    def dtype_identifier(self):
+        """Scalar data type of each entry in an element of this space."""
+        return self.__dtype_identifier
+    
+    @property
     def element_type(self):
         """Type of elements in this space: `Tensor`."""
-        return Tensor
+        raise NotImplementedError
     
     @property
     def examples(self):
@@ -213,6 +372,11 @@ class TensorSpace(LinearSpace):
         np.random.set_state(rand_state)
 
     @property
+    def exponent(self):
+        """Exponent of the norm and the distance."""
+        return self.weighting.exponent
+    
+    @property
     def impl(self):
         """Name of the implementation back-end of this tensor set.
 
@@ -223,7 +387,7 @@ class TensorSpace(LinearSpace):
     @property
     def itemsize(self):
         """Size in bytes of one entry in an element of this space."""
-        return int(self.dtype.itemsize)
+        return  int(self.array_backend.array_constructor([], dtype=self.dtype).itemsize)
     
     @property
     def is_complex(self):
@@ -235,6 +399,14 @@ class TensorSpace(LinearSpace):
         """True if this is a space of real tensors."""
         return is_real_floating_dtype(self.dtype)
     
+    @property
+    def is_weighted(self):
+        """Return ``True`` if the space is not weighted by constant 1.0."""
+        return not (
+            isinstance(self.weighting, ConstWeighting) and
+            self.weighting.const == 1.0 )
+
+        
     @property
     def nbytes(self):
         """Total number of bytes in memory used by an element of this space."""
@@ -274,6 +446,21 @@ class TensorSpace(LinearSpace):
         return self.astype(self.real_dtype)
     
     @property
+    def supported_num_operation_paradigms(self) -> NumOperationParadigmSupport:
+        """NumPy has full support for in-place operation, which is usually
+        advantageous to reduce memory allocations.
+        This can be deactivated, mostly for testing purposes, by setting
+        `use_in_place_ops = False` when constructing the space."""
+        if self.__use_in_place_ops:
+            return SupportedNumOperationParadigms(
+                    in_place = NumOperationParadigmSupport.PREFERRED,
+                    out_of_place = NumOperationParadigmSupport.SUPPORTED)
+        else:
+            return SupportedNumOperationParadigms(
+                    in_place = NumOperationParadigmSupport.NOT_SUPPORTED,
+                    out_of_place = NumOperationParadigmSupport.PREFERRED)
+        
+    @property
     def shape(self):
         """Number of scalar elements per axis.
 
@@ -293,6 +480,11 @@ class TensorSpace(LinearSpace):
         """Total number of entries in an element of this space."""
         return (0 if self.shape == () else
                 int(np.prod(self.shape, dtype='int64')))
+    
+    @property
+    def weighting(self):
+        """This space's weighting scheme."""
+        return self.__weighting
 
     ########## public methods ##########
     def astype(self, dtype):
@@ -315,24 +507,152 @@ class TensorSpace(LinearSpace):
             # Need to filter this out since Numpy iterprets it as 'float'
             raise ValueError('`None` is not a valid data type')
 
-        dtype = np.dtype(dtype)
+        available_dtypes = self.array_backend.available_dtypes
+        
+        ### We check if the datatype has been provided in a "sane" way, 
+        # 1) a Python scalar type
+        if isinstance(dtype, (int, float, complex)):
+            dtype_identifier = str(dtype)
+            dtype = available_dtypes[dtype]
+        # 2) as a string
+        elif dtype in available_dtypes.keys():
+            dtype_identifier = dtype
+            dtype = available_dtypes[dtype]
+        ### If the check has failed, i.e the dtype is not a Key of the available_dtypes dict or a python scalar, we try to parse the dtype 
+        ### as a string using the get_dtype_identifier(dtype=dtype) call: This is for the situation where the dtype passed is
+        ### in the .values() of available_dtypes dict (something like 'numpy.float32')
+        elif self.array_backend.get_dtype_identifier(dtype=dtype) in available_dtypes:
+            dtype_identifier = self.array_backend.get_dtype_identifier(dtype=dtype)
+            dtype = available_dtypes[dtype_identifier]
+            # If that fails, we throw an error: the dtype is not a python scalar dtype, not a string describing the dtype or the 
+            # backend call to parse the dtype has failed.
+        else:
+            raise ValueError(f"The dtype must be in {self.available_dtypes.keys()} or must be a dtype of the backend, but {dtype} was provided")
+
+        # try:
+        #     dtype_identifier = dtype
+        #     dtype = available_dtypes[dtype]
+        # except KeyError:
+        #     raise KeyError(f"The dtype must be in {available_dtypes.keys()}, but {dtype} was provided")
+        
         if dtype == self.dtype:
             return self
 
-        if is_numeric_dtype(self.dtype):
+        if dtype_identifier in FLOAT_DTYPES + COMPLEX_DTYPES:
+            if self.dtype_identifier == 'bool':
+                return self._astype(dtype_identifier)
             # Caching for real and complex versions (exact dtype mappings)
-            if dtype == self.__real_dtype:
+            elif dtype == self.real_dtype:
                 if self.__real_space is None:
-                    self.__real_space = self._astype(dtype)
+                    self.__real_space = self._astype(dtype_identifier)
                 return self.__real_space
-            elif dtype == self.__complex_dtype:
+            elif dtype == self.complex_dtype:
                 if self.__complex_space is None:
-                    self.__complex_space = self._astype(dtype)
+                    self.__complex_space = self._astype(dtype_identifier)
                 return self.__complex_space
             else:
-                return self._astype(dtype)
+                return self._astype(dtype_identifier)
         else:
-            return self._astype(dtype)
+            return self._astype(dtype_identifier)
+        
+    def element(self, inp=None, device=None, copy=True):
+        def wrapped_array(arr):
+            if arr.shape != self.shape:
+                raise ValueError(
+                    "shape of `inp` not equal to space shape: "
+                    "{} != {}".format(arr.shape, self.shape)
+                )
+            if ( self.dtype_identifier in REAL_DTYPES
+                and self.array_backend.get_dtype_identifier(array=arr) not in REAL_DTYPES ):
+                raise TypeError(f"A real space cannot have complex elements. Got {arr.dtype}")
+            elif ( self.dtype_identifier in INTEGER_DTYPES
+                and self.array_backend.get_dtype_identifier(array=arr) not in INTEGER_DTYPES ):
+                raise TypeError(f"An integer space can only have integer elements. Got {arr.dtype}")
+            
+            return self.element_type(self, arr)
+
+
+        def dlpack_transfer(arr, device=None, copy=True):
+            # We check that the object implements the dlpack protocol:
+            # assert hasattr(inp, "__dlpack_device__") and hasattr(
+            #     arr, "__dlpack__"
+            # ), """The input does not support the DLpack framework. 
+            #     Please convert it to an object that supports it first. 
+            # (cf:https://data-apis.org/array-api/latest/purpose_and_scope.html)"""
+            try:
+                # from_dlpack(inp, device=device, copy=copy)
+                # As of Pytorch 2.7, the pytorch API from_dlpack does not implement the
+                # keywords that specify the device and copy arguments
+                return self.array_namespace.from_dlpack(arr)
+            except BufferError:
+                raise BufferError(
+                    "The data cannot be exported as DLPack (e.g., incompatible dtype, strides, or device). "
+                    "It may also be that the export fails for other reasons "
+                    "(e.g., not enough memory available to materialize the data)."
+                    ""
+                )
+            except ValueError:
+                raise ValueError(
+                    "The data exchange is possible via an explicit copy but copy is set to False."
+                )
+            ### This is a temporary fix, until pytorch provides the right API for dlpack with args!!
+            # The RuntimeError should be raised only when using a GPU device 
+            except RuntimeError:
+                if self.impl == 'numpy':
+                    # if isinstance(arr, torch.Tensor):
+                    #     arr = arr.detach().cpu()
+                    return np.asarray(arr, dtype=self.dtype)
+                # elif self.impl == 'pytorch':                    
+                #     return torch.asarray(arr, device=self.device, dtype=self.dtype)
+                    
+                else:
+                    raise NotImplementedError
+
+        # Case 1: no input provided
+        if inp is None:
+            return wrapped_array(
+                self.array_namespace.empty(
+                    self.shape, dtype=self.dtype, device=self.device
+                )
+            )
+        # Case 2: input is provided
+        # Case 2.1: the input is an ODL OBJECT
+        # ---> The data of the input is transferred to the space's device and data type AND wrapped into the space.
+        if hasattr(inp, "odl_tensor"):
+            return wrapped_array(dlpack_transfer(inp.data, device, copy))
+        # Case 2.2: the input is an object that implements the python array aPI (np.ndarray, torch.Tensor...)
+        # ---> The input is transferred to the space's device and data type AND wrapped into the space.
+        elif hasattr(inp, '__array__'):
+            return wrapped_array(dlpack_transfer(inp, device, copy))
+        # Case 2.3: the input is an array like object [[1,2,3],[4,5,6],...]
+        # ---> The input is transferred to the space's device and data type AND wrapped into the space.
+        # TODO: Add the iterable type instead of list and tuple and the numerics type instead of int, float, complex
+        elif isinstance(inp, (int, float, complex, list, tuple)):
+            arr = self.array_namespace.broadcast_to(
+                    self.array_namespace.asarray(inp, device=self.device),
+                    self.shape
+                    )
+            # Make sure the result is writeable, if not make copy.
+            # This happens for e.g. results of `np.broadcast_to()`.
+            if not arr.flags.writeable:
+                arr = arr.copy()
+            return wrapped_array(arr)
+        else:
+            raise ValueError  
+        
+    def finfo(self):
+        "Machine limits for floating-point data types."
+        return self.array_namespace.finfo(self.dtype)
+    
+    def iinfo(self):
+        "Machine limits for integer data types."
+        return self.array_namespace.iinfo(self.dtype)
+        
+    def divide(self, x1, x2, out=None):
+        return self._divide(x1, x2, out)
+    
+    def multiply(self, x1, x2, out=None):
+        return self._multiply(x1, x2, out)    
     
     def one(self):
         """Return a tensor of all ones.
@@ -344,7 +664,9 @@ class TensorSpace(LinearSpace):
         one : `Tensor`
             A tensor of all one.
         """
-        raise NotImplementedError('abstract method')
+        return self.element(
+            self.array_namespace.ones(self.shape, dtype=self.dtype, device=self.device)
+        )
     
     def zero(self):
         """Return a tensor of all zeros.
@@ -356,7 +678,9 @@ class TensorSpace(LinearSpace):
         zero : `Tensor`
             A tensor of all zeros.
         """
-        raise NotImplementedError('abstract method')
+        return self.element(
+            self.array_namespace.zeros(self.shape, dtype=self.dtype, device=self.device)
+        )
 
     ######### magic methods #########
     def __contains__(self, other):
@@ -458,11 +782,15 @@ class TensorSpace(LinearSpace):
 
         return (type(other) is type(self) and
                 self.shape == other.shape and
-                self.dtype == other.dtype)
+                self.dtype == other.dtype and
+                self.impl == other.impl and
+                self.weighting == other.weighting and 
+                self.device == other.device
+                )
 
     def __hash__(self):
         """Return ``hash(self)``."""
-        return hash((type(self), self.shape, self.dtype))
+        return hash((type(self), self.shape, self.dtype, self.device, self.impl, self.weighting))
 
     def __len__(self):
         """Number of tensor entries along the first axis."""
@@ -470,52 +798,489 @@ class TensorSpace(LinearSpace):
     
     def __repr__(self):
         """Return ``repr(self)``."""
-        posargs = [self.shape, dtype_str(self.dtype)]
-        return "{}({})".format(self.__class__.__name__,
-                               signature_string(posargs, []))
+        if self.ndim == 1:
+            posargs = [self.size]
+        else:
+            posargs = [self.shape]
+        posargs += [self.dtype_identifier, self.impl, self.device]
+        if self.is_real:
+            ctor_name = 'rn'
+        elif self.is_complex:
+            ctor_name = 'cn'
+        else:
+            ctor_name = 'tensor_space'
+
+        if (ctor_name == 'tensor_space' or
+                not self.dtype_identifier in SCALAR_DTYPES or
+                self.dtype != default_dtype(self.array_backend, self.field)):
+            optargs = [('dtype', self.dtype_identifier, '')]
+            if self.dtype_identifier in (AVAILABLE_DTYPES):
+                optmod = '!s'
+            else:
+                optmod = ''
+        else:
+            optargs = []
+            optmod = ''
+
+        inner_str = signature_string(posargs, optargs, mod=['', optmod])
+        weight_str = self.weighting.repr_part
+        if weight_str:
+            inner_str += ', ' + weight_str
+
+        return '{}({})'.format(ctor_name, inner_str)
 
     def __str__(self):
         """Return ``str(self)``."""
         return repr(self)
         
     ########## _underscore methods ##########
-    def _astype(self, dtype):
+    def _astype(self, dtype:str):
         """Internal helper for `astype`.
 
         Subclasses with differing init parameters should overload this
         method.
         """
         kwargs = {}
-        if is_floating_dtype(dtype):
+        if dtype in FLOAT_DTYPES + COMPLEX_DTYPES:
             # Use weighting only for floating-point types, otherwise, e.g.,
             # `space.astype(bool)` would fail
-            weighting = getattr(self, 'weighting', None)
+            weighting = getattr(self, "weighting", None)
             if weighting is not None:
-                kwargs['weighting'] = weighting
+                kwargs["weighting"] = weighting
 
-        return type(self)(self.shape, dtype=dtype, **kwargs)
+        return type(self)(self.shape, dtype=dtype, device=self.device, **kwargs)
+    
+    def _dist(self, x1, x2):
+        """Return the distance between ``x1`` and ``x2``.
+
+        This function is part of the subclassing API. Do not
+        call it directly.
+
+        Parameters
+        ----------
+        x1, x2 : `NumpyTensor`
+            Elements whose mutual distance is calculated.
+
+        Returns
+        -------
+        dist : `float`
+            Distance between the elements.
+
+        Examples
+        --------
+        Different exponents result in difference metrics:
+
+        >>> space_2 = odl.rn(3, exponent=2)
+        >>> x = space_2.element([-1, -1, 2])
+        >>> y = space_2.one()
+        >>> space_2.dist(x, y)
+        3.0
+
+        >>> space_1 = odl.rn(3, exponent=1)
+        >>> x = space_1.element([-1, -1, 2])
+        >>> y = space_1.one()
+        >>> space_1.dist(x, y)
+        5.0
+
+        Weighting is supported, too:
+
+        >>> space_1_w = odl.rn(3, exponent=1, weighting=[2, 1, 1])
+        >>> x = space_1_w.element([-1, -1, 2])
+        >>> y = space_1_w.one()
+        >>> space_1_w.dist(x, y)
+        7.0
+        """
+        return self.weighting.dist(x1.data, x2.data)
     
     def _divide(self, x1, x2, out):
-        """The entry-wise quotient of two tensors, assigned to ``out``.
+        """Compute the entry-wise quotient ``x1 / x2``.
 
-        This method should be overridden by subclasses.
+        This function is part of the subclassing API. Do not
+        call it directly.
+
+        Parameters
+        ----------
+        x1, x2 : `NumpyTensor`
+            Dividend and divisor in the quotient.
+        out : `NumpyTensor`
+            Element to which the result is written.
+
+        Examples
+        --------
+        >>> space = odl.rn(3)
+        >>> x = space.element([2, 0, 4])
+        >>> y = space.element([1, 1, 2])
+        >>> space.divide(x, y)
+        rn(3).element([ 2.,  0.,  2.])
+        >>> out = space.element()
+        >>> result = space.divide(x, y, out=out)
+        >>> result
+        rn(3).element([ 2.,  0.,  2.])
+        >>> result is out
+        True
         """
-        raise NotImplementedError('abstract method')
+        return odl.divide(x1, x2, out)
+    
+    def _inner(self, x1, x2):
+        """Return the inner product of ``x1`` and ``x2``.
+
+        This function is part of the subclassing API. Do not
+        call it directly.
+
+        Parameters
+        ----------
+        x1, x2 : `NumpyTensor`
+            Elements whose inner product is calculated.
+
+        Returns
+        -------
+        inner : `field` `element`
+            Inner product of the elements.
+
+        Examples
+        --------
+        >>> space = odl.rn(3)
+        >>> x = space.element([1, 0, 3])
+        >>> y = space.one()
+        >>> space.inner(x, y)
+        4.0
+
+        Weighting is supported, too:
+
+        >>> space_w = odl.rn(3, weighting=[2, 1, 1])
+        >>> x = space_w.element([1, 0, 3])
+        >>> y = space_w.one()
+        >>> space_w.inner(x, y)
+        5.0
+        """
+        return self.weighting.inner(x1.data, x2.data)
+    
+    def _lincomb(self, a, x1, b, x2, out):
+        """Implement the linear combination of ``x1`` and ``x2``.
+
+        Compute ``out = a*x1 + b*x2`` using optimized
+        BLAS routines if possible.
+
+        This function is part of the subclassing API. Do not
+        call it directly.
+
+        Parameters
+        ----------
+        a, b : `TensorSpace.field` element
+            Scalars to multiply ``x1`` and ``x2`` with.
+        x1, x2 : `NumpyTensor`
+            Summands in the linear combination.
+        out : `NumpyTensor`
+            Tensor to which the result is written.
+
+        Examples
+        --------
+        >>> space = odl.rn(3)
+        >>> x = space.element([0, 1, 1])
+        >>> y = space.element([0, 0, 1])
+        >>> out = space.element()
+        >>> result = space.lincomb(1, x, 2, y, out)
+        >>> result
+        rn(3).element([ 0.,  1.,  3.])
+        >>> result is out
+        True
+        """
+        return odl.add(a*x1, b*x2, out)
 
     def _multiply(self, x1, x2, out):
-        """The entry-wise product of two tensors, assigned to ``out``.
+        """Compute the entry-wise product ``out = x1 * x2``.
 
-        This method should be overridden by subclasses.
+        This function is part of the subclassing API. Do not
+        call it directly.
+
+        Parameters
+        ----------
+        x1, x2 : `NumpyTensor`
+            Factors in the product.
+        out : `NumpyTensor`
+            Element to which the result is written.
+
+        Examples
+        --------
+        >>> space = odl.rn(3)
+        >>> x = space.element([1, 0, 3])
+        >>> y = space.element([-1, 1, -1])
+        >>> space.multiply(x, y)
+        rn(3).element([-1.,  0., -3.])
+        >>> out = space.element()
+        >>> result = space.multiply(x, y, out=out)
+        >>> result
+        rn(3).element([-1.,  0., -3.])
+        >>> result is out
+        True
         """
-        raise NotImplementedError('abstract method')
+        return odl.multiply(x1, x2, out)
+
+    def _norm(self, x):
+        """Return the norm of ``x``.
+
+        This function is part of the subclassing API. Do not
+        call it directly.
+
+        Parameters
+        ----------
+        x : `NumpyTensor`
+            Element whose norm is calculated.
+
+        Returns
+        -------
+        norm : `float`
+            Norm of the element.
+
+        Examples
+        --------
+        Different exponents result in difference norms:
+
+        >>> space_2 = odl.rn(3, exponent=2)
+        >>> x = space_2.element([3, 0, 4])
+        >>> space_2.norm(x)
+        5.0
+        >>> space_1 = odl.rn(3, exponent=1)
+        >>> x = space_1.element([3, 0, 4])
+        >>> space_1.norm(x)
+        7.0
+
+        Weighting is supported, too:
+
+        >>> space_1_w = odl.rn(3, exponent=1, weighting=[2, 1, 1])
+        >>> x = space_1_w.element([3, 0, 4])
+        >>> space_1_w.norm(x)
+        10.0
+        """
+        return self.weighting.norm(x.data)
+    
+    def _elementwise_num_operation(self, operation:str
+                                       , x1: LinearSpaceElement | Number
+                                       , x2: None | LinearSpaceElement | Number = None
+                                       , out=None
+                                       , namespace=None
+                                       , **kwargs ):
+        """
+        Internal helper function to implement the __magic_functions__ (such as __add__).
+
+        Parameters
+        ----------
+        x1 : LinearSpaceElement, Number
+            Left operand
+        x2 : LinearSpaceElement, Number
+            Right operand
+        operation: str
+            Attribute of the array namespace
+        out : TensorSpaceElement, Optional
+            LinearSpaceElement for out-of-place operations
+
+        Returns
+        -------
+        TensorSpaceElement
+            The result of the operation `operation` wrapped in a space with the right datatype.
+
+        Notes:
+            The dtype of the returned TensorSpaceElement (and the space that wraps it) is infered 
+            from the dtype of the array returned by the backend in which the TensorSpaceElement is 
+            implemented. \n
+            In order to minimise the expensive operations performed under the hood, i.e clearly 
+            unspecified by the user, cross-backend AND cross-devices operations are NOT allowed. \n
+            -> 1j + TensorSpaceElement(dtype='float32') IS supported \n
+            -> TensorSpaceElement(device=device1) + TensorSpaceElement(device=device2) IS NOT supported \n
+            -> TensorSpaceElement(impl=impl1) + TensorSpaceElement(impl=imp2) IS NOT supported \n
+
+        The logic is as follows:
+        1) if either of the operands are Python numeric types (int, float complex)
+            -> the operation is performed on the backend of the TensorSpaceElement and the dtype infered from it.
+        2) if the two operands are TensorSpaceElements
+            -> the operation is delegated to the general odl.operation which performs the checks on space shape and 
+            device consistency.
+
+        """
+        if self.field is None:
+            raise NotImplementedError(f"The space has no field.")
+        
+        if namespace is None:
+            local_namespace = self.array_namespace
+        else:
+            local_namespace = namespace
+
+        if out is not None:
+            assert isinstance(out, Tensor)
+            assert self.shape == out.space.shape, f"The shapes of {self} and out {out.space.shape} differ, cannot perform {operation}"
+            assert self.device == out.space.device, f"The devices of {self} and out {out.space.device} differ, cannot perform {operation}"
+        
+        if x1 is None:
+            raise TypeError("The left-hand argument always needs to be provided")
+
+        if x2 is None:
+            assert(x1 in self)
+            fn = getattr(local_namespace, operation)
+            if out is None:
+                result_data = fn(x1.data, **kwargs)
+            else:
+                result_data = fn(x1.data, out=out.data, **kwargs)
+            return self.astype(self.array_backend.get_dtype_identifier(array=result_data)).element(result_data) 
+
+        if isinstance(x1, (int, float, complex)) or isinstance(x2, (int, float, complex)):
+            fn =  getattr(local_namespace, operation)
+            if out is None:
+                if isinstance(x1, (int, float, complex)):
+                    result_data = fn(x1, x2.data, **kwargs)
+                elif isinstance(x2, (int, float, complex)):
+                    result_data = fn(x1.data, x2, **kwargs)
+                    
+            else:
+                assert out in self, f"out is not an element of the space."
+                if isinstance(x1, (int, float, complex)):
+                    result_data = fn(x1, x2.data, out=out.data, **kwargs)
+                elif isinstance(x2, (int, float, complex)):
+                    result_data = fn(x1.data, x2, out=out.data, **kwargs)
+                    
+            return self.astype(self.array_backend.get_dtype_identifier(array=result_data)).element(result_data) 
+
+        if isinstance(x1, ProductSpaceElement):
+            if not isinstance(x2, Tensor):
+                raise TypeError(f'Right operand is not an ODL Tensor. {type(x2)=}')
+            return x1.space._elementwise_num_operation(operation, x1, x2, out, namespace=namespace, **kwargs)
+
+        elif isinstance(x2, ProductSpaceElement):
+            if not isinstance(x1, Tensor):
+                raise TypeError(f'Left operand is not an ODL Tensor. {type(x1)=}')
+            return x2.space._elementwise_num_operation(operation, x1, x2, out, namespace=namespace, **kwargs)
+        
+        from odl.operator import Operator
+        if isinstance(x2, Operator):
+            warnings.warn("The composition of a LinearSpaceElement and an Operator using the * operator is deprecated and will be removed in future ODL versions. Please replace * with @.")
+            return x2.__rmul__(x1)
+
+        if not isinstance(x1, Tensor):
+            raise TypeError(f"Left operand is not an ODL Tensor. {type(x1)=}")
+        if not isinstance(x2, Tensor):
+            raise TypeError(f"Right operand is not an ODL Tensor. {type(x2)=}")
+
+        element_wise_function = getattr(local_namespace, operation)
+ 
+        assert self.shape == x2.space.shape, f"The shapes of {self} and x2 {x2.space.shape} differ, cannot perform {operation}"
+        assert self.device == x2.space.device, f"The devices of {self} and x2 {x2.space.device} differ, cannot perform {operation}"
+
+        if out is None:
+            result = element_wise_function(x1.data, x2.data)
+        else:
+            result = element_wise_function(x1.data, x2.data, out=out.data)
+ 
+        # We make sure to return an element of the right type: 
+        # for instance, if two spaces have a int dtype, the result of the division 
+        # of one of their element by another return should be of float dtype
+        return x1.space.astype(x1.space.array_backend.get_dtype_identifier(array=result)).element(result) 
+
+    def _element_reduction(self, operation:str
+                               , x: "Tensor"
+                               , **kwargs
+                               ):
+        fn = getattr(self.array_namespace, operation)
+        result = fn(x.data, **kwargs)
+        try:
+            return result.item()
+        except AttributeError:
+            assert result.shape == ()
+            return result[0]
+        except ValueError:
+            # Arises when we are performing the 'reductions' along certains axis only. We can't take the item of an array with several dimensions. 
+            # TODO: We should handle that differently than with try and excepts.
+            return result
+        
+        
 
 class Tensor(LinearSpaceElement):
 
     """Abstract class for representation of `TensorSpace` elements."""
-
     ######### static methods #########
 
     ######### Attributes #########
+    @property
+    def array_backend(self) -> ArrayBackend:
+        return self.space.array_backend
+
+    @property
+    def array_namespace(self) -> ModuleType:
+        """Name of the array_namespace of this tensor.
+
+        This relates to the python array api
+        """
+        return self.space.array_namespace
+    
+    @property
+    def data(self):
+        """The backend-specific array representing the data of ``self``."""
+        raise NotImplementedError("abstract method")
+    
+    @property
+    def device(self):
+        """Device on which the space lives."""
+        return self.space.device
+    
+    @property
+    def dtype(self):
+        """Data type of each entry."""
+        return self.space.dtype
+    
+    @property
+    def dtype_identifier(self):
+        """Data type as a string of each entry."""
+        return self.space.dtype_identifier
+    
+    @property
+    def imag(self):
+        """Imaginary part of ``self``.
+
+        Returns
+        -------
+        imag : `NumpyTensor`
+            Imaginary part this element as an element of a
+            `NumpyTensorSpace` with real data type.
+
+        Examples
+        --------
+        Get the imaginary part:
+
+        >>> space = odl.cn(3)
+        >>> x = space.element([1 + 1j, 2, 3 - 3j])
+        >>> x.imag
+        rn(3).element([ 1.,  0., -3.])
+
+        Set the imaginary part:
+
+        >>> space = odl.cn(3)
+        >>> x = space.element([1 + 1j, 2, 3 - 3j])
+        >>> zero = odl.rn(3).zero()
+        >>> x.imag = zero
+        >>> x
+        cn(3).element([ 1.+0.j,  2.+0.j,  3.+0.j])
+
+        Other array-like types and broadcasting:
+
+        >>> x.imag = 1.0
+        >>> x
+        cn(3).element([ 1.+1.j,  2.+1.j,  3.+1.j])
+        >>> x.imag = [2, 3, 4]
+        >>> x
+        cn(3).element([ 1.+2.j,  2.+3.j,  3.+4.j])
+        """
+        if self.space.is_real:
+            return self.space.zero()
+        elif self.space.is_complex:
+            real_space = self.space.astype(self.space.real_dtype)
+            return real_space.element(self.data.imag)
+        else:
+            raise NotImplementedError('`imag` not defined for non-numeric '
+                                      'dtype {}'.format(self.dtype))
+        
+    @property
+    def impl(self):
+        """Name of the implementation back-end of this tensor."""
+        return self.space.impl
+
     @property
     def itemsize(self):
         """Size in bytes of one tensor entry."""
@@ -527,64 +1292,161 @@ class Tensor(LinearSpaceElement):
         return self.space.nbytes
     
     @property
-    def impl(self):
-        """Name of the implementation back-end of this tensor."""
-        return self.space.impl
+    def ndim(self):
+        """Number of axes (=dimensions) of this tensor."""
+        return self.space.ndim
+    
+    @property
+    def odl_tensor(self):
+        """Number of axes (=dimensions) of this tensor."""
+        return True
+    
+    @property
+    def real(self):
+        """Real part of ``self``.
 
+        Returns
+        -------
+        real : `NumpyTensor`
+            Real part of this element as a member of a
+            `NumpyTensorSpace` with corresponding real data type.
+
+        Examples
+        --------
+        Get the real part:
+
+        >>> space = odl.cn(3)
+        >>> x = space.element([1 + 1j, 2, 3 - 3j])
+        >>> x.real
+        rn(3).element([ 1.,  2.,  3.])
+
+        Set the real part:
+
+        >>> space = odl.cn(3)
+        >>> x = space.element([1 + 1j, 2, 3 - 3j])
+        >>> zero = odl.rn(3).zero()
+        >>> x.real = zero
+        >>> x
+        cn(3).element([ 0.+1.j,  0.+0.j,  0.-3.j])
+
+        Other array-like types and broadcasting:
+
+        >>> x.real = 1.0
+        >>> x
+        cn(3).element([ 1.+1.j,  1.+0.j,  1.-3.j])
+        >>> x.real = [2, 3, 4]
+        >>> x
+        cn(3).element([ 2.+1.j,  3.+0.j,  4.-3.j])
+        """
+        if self.space.is_real:
+            return self
+        elif self.space.is_complex:
+            real_space = self.space.astype(self.space.real_dtype)
+            return real_space.element(self.data.real)
+        else:
+            raise NotImplementedError('`real` not defined for non-numeric '
+                                      'dtype {}'.format(self.dtype))
+    
     @property
     def shape(self):
         """Number of elements per axis."""
         return self.space.shape
 
     @property
-    def dtype(self):
-        """Data type of each entry."""
-        return self.space.dtype
-
-    @property
     def size(self):
         """Total number of entries."""
         return self.space.size
 
-    @property
-    def ndim(self):
-        """Number of axes (=dimensions) of this tensor."""
-        return self.space.ndim
-
-    @property
-    def ufuncs(self):
-        """Access to Numpy style universal functions.
-
-        These default ufuncs are always available, but may or may not be
-        optimized for the specific space in use.
-
-        .. note::
-            This interface is will be deprecated when Numpy 1.13 becomes
-            the minimum required version. Use Numpy ufuncs directly, e.g.,
-            ``np.sqrt(x)`` instead of ``x.ufuncs.sqrt()``.
-        """
-        return TensorSpaceUfuncs(self)
-
-
     ######### public methods #########
-    def asarray(self, out=None):
-        """Extract the data of this tensor as a Numpy array.
+    def asarray(self, out=None, must_be_contiguous: bool =False):
+        """Extract the data of this array as a ``numpy.ndarray``.
 
-        This method should be overridden by subclasses.
+        This method is invoked when calling `numpy.asarray` on this
+        tensor.
 
         Parameters
         ----------
         out : `numpy.ndarray`, optional
-            Array to write the result to.
+            Array in which the result should be written in-place.
+            Has to be contiguous and of the correct dtype.
+        must_be_contiguous: `bool`
+            If this is `True`, then the returned array must occupy
+            a single block of memory and the axes be ordered
+            (in C order). Cf. `numpy.ascontiguousarray`.
+            This may require making a copy.
+            If `False` is given, the returned array may be a view
+            or have transposed axes, if this allows avoiding a copy.
+            If an `out` argument is provided, `must_be_contiguous`
+            is irrelevant.
 
         Returns
         -------
         asarray : `numpy.ndarray`
-            Numpy array of the same data type and shape as the space.
-            If ``out`` was given, the returned object is a reference
+            Numpy array with the same data type as ``self``. If
+            ``out`` was given, the returned object is a reference
             to it.
+
+        Examples
+        --------
+        >>> space = odl.rn(3, dtype='float32')
+        >>> x = space.element([1, 2, 3])
+        >>> x.asarray()
+        array([ 1.,  2.,  3.], dtype=float32)
+        >>> np.asarray(x) is x.asarray()
+        True
+        >>> out = np.empty(3, dtype='float32')
+        >>> result = x.asarray(out=out)
+        >>> out
+        array([ 1.,  2.,  3.], dtype=float32)
+        >>> result is out
+        True
+        >>> space = odl.rn((2, 3))
+        >>> space.one().asarray()
+        array([[ 1.,  1.,  1.],
+               [ 1.,  1.,  1.]])
         """
-        raise NotImplementedError('abstract method')
+        if out is None:
+            if must_be_contiguous:
+                return self.array_backend.make_contiguous(self.data)
+            else:
+                return self.data
+        else:
+            out[:] = self.data
+            return out
+
+    @contextmanager
+    def writable_array(self, must_be_contiguous: bool =False):
+        """Context manager that casts `self` to a backend-specific array and saves changes
+        made to that array back in `self`.
+    
+        Parameters
+        ----------
+        must_be_contiguous : bool
+            Whether the writable array should guarantee standard C order.
+            See documentation to `asarray` for the semantics.
+    
+        Examples
+        --------
+    
+        >>> space = odl.uniform_discr(0, 1, 3)
+        >>> x = space.element([1, 2, 3])
+        >>> with x.writable_array() as arr:
+        ...     arr += [1, 1, 1]
+        >>> x
+        uniform_discr(0.0, 1.0, 3).element([ 2.,  3.,  4.])
+    
+        Note that the changes are in general only saved upon exiting the 
+        context manager. Before, the input object may remain unchanged.
+        """
+        arr = None
+        try:
+            # TODO(Justus) it should be possible to avoid making a copy here,
+            # and actually just modify `data` in place.
+            arr = self.asarray(must_be_contiguous=must_be_contiguous)
+            yield arr
+        finally:
+            if arr is not None:
+                self.data[:] = arr
     
     def astype(self, dtype):
         """Return a copy of this element with new ``dtype``.
@@ -599,10 +1461,107 @@ class Tensor(LinearSpaceElement):
 
         Returns
         -------
-        newelem : `Tensor`
+        newelem : `NumpyTensor`
             Version of this element with given data type.
         """
-        raise NotImplementedError('abstract method')
+        return self.space.astype(dtype).element(self.data.astype(dtype))
+    
+    def conj(self, out=None):
+        """Return the complex conjugate of ``self``.
+
+        Parameters
+        ----------
+        out : `NumpyTensor`, optional
+            Element to which the complex conjugate is written.
+            Must be an element of ``self.space``.
+
+        Returns
+        -------
+        out : `NumpyTensor`
+            The complex conjugate element. If ``out`` was provided,
+            the returned object is a reference to it.
+
+        Examples
+        --------
+        >>> space = odl.cn(3)
+        >>> x = space.element([1 + 1j, 2, 3 - 3j])
+        >>> x.conj()
+        cn(3).element([ 1.-1.j,  2.-0.j,  3.+3.j])
+        >>> out = space.element()
+        >>> result = x.conj(out=out)
+        >>> result
+        cn(3).element([ 1.-1.j,  2.-0.j,  3.+3.j])
+        >>> result is out
+        True
+
+        In-place conjugation:
+
+        >>> result = x.conj(out=x)
+        >>> x
+        cn(3).element([ 1.-1.j,  2.-0.j,  3.+3.j])
+        >>> result is x
+        True
+        """
+        if self.space.is_real:
+            if out is None:
+                return self
+            else:
+                out[:] = self
+                return out
+
+        if not is_numeric_dtype(self.space.dtype):
+            raise NotImplementedError('`conj` not defined for non-numeric '
+                                      'dtype {}'.format(self.dtype))
+
+        if out is None:
+            return self.space.element(self.data.conj())
+        else:
+            if out not in self.space:
+                raise LinearSpaceTypeError('`out` {!r} not in space {!r}'
+                                           ''.format(out, self.space))
+            self.data.conj(out.data)
+            return out
+    
+    @imag.setter
+    def imag(self, newimag):
+        """Setter for the imaginary part.
+
+        This method is invoked by ``x.imag = other``.
+
+        Parameters
+        ----------
+        newimag : `Tensor`, array-like, or scalar
+            Values to be assigned to the imaginary part of this element.
+
+        Raises
+        ------
+        ValueError
+            If the space is real, i.e., no imagninary part can be set.
+        """
+        if self.space.is_real:
+            raise ValueError('cannot set imaginary part in real spaces')
+        if isinstance(newimag, Tensor):
+            assert(newimag in self.space.real_space)
+        else:
+            newimag = self.space.real_space.element(newimag)
+        self.data.imag = newimag.data
+
+    @real.setter
+    def real(self, newreal):
+        """Setter for the real part.
+
+        This method is invoked by ``x.real = other``.
+
+        Parameters
+        ----------
+        newreal : `Tensor`, array-like, or scalar
+            Values to be assigned to the real part of this element.
+        """
+        if isinstance(newreal, Tensor):
+            assert(newreal in self.space.real_space)
+        else:
+            newreal = self.space.real_space.element(newreal)
+        self.data.real = newreal.data
     
     def show(self, title=None, method='', indices=None, force_show=False,
              fig=None, **kwargs):
@@ -705,233 +1664,7 @@ class Tensor(LinearSpaceElement):
         return show_discrete_data(values, grid, title=title, method=method,
                                   force_show=force_show, fig=fig, **kwargs)
 
-    ######### magic methods #########
-
-    def __array__(self, dtype=None):
-        """Return a Numpy array from this tensor.
-
-        Parameters
-        ----------
-        dtype :
-            Specifier for the data type of the output array.
-
-        Returns
-        -------
-        array : `numpy.ndarray`
-        """
-        if dtype is None:
-            return self.asarray()
-        else:
-            return self.asarray().astype(dtype, copy=AVOID_UNNECESSARY_COPY)
-
-    def __array_wrap__(self, array):
-        """Return a new tensor wrapping the ``array``.
-
-        Parameters
-        ----------
-        array : `numpy.ndarray`
-            Array to be wrapped.
-
-        Returns
-        -------
-        wrapper : `Tensor`
-            Tensor wrapping ``array``.
-        """
-        if array.ndim == 0:
-            return self.space.field.element(array)
-        else:
-            return self.space.element(array)
-
-    def __array_ufunc__(self, ufunc, method, *inputs, **kwargs):
-        """Interface to Numpy's ufunc machinery.
-
-        This method is called by Numpy version 1.13 and higher as a single
-        point for the ufunc dispatch logic. An object implementing
-        ``__array_ufunc__`` takes over control when a `numpy.ufunc` is
-        called on it, allowing it to use custom implementations and
-        output types.
-
-        This includes handling of in-place arithmetic like
-        ``npy_array += custom_obj``. In this case, the custom object's
-        ``__array_ufunc__`` takes precedence over the baseline
-        `numpy.ndarray` implementation. It will be called with
-        ``npy_array`` as ``out`` argument, which ensures that the
-        returned object is a Numpy array. For this to work properly,
-        ``__array_ufunc__`` has to accept Numpy arrays as ``out`` arguments.
-
-        See the `corresponding NEP`_ and the `interface documentation`_
-        for further details. See also the `general documentation on
-        Numpy ufuncs`_.
-
-        .. note::
-            This basic implementation casts inputs and
-            outputs to Numpy arrays and evaluates ``ufunc`` on those.
-            For `numpy.ndarray` based data storage, this incurs no
-            significant overhead compared to direct usage of Numpy arrays.
-
-            For other (in particular non-local) implementations, e.g.,
-            GPU arrays or distributed memory, overhead is significant due
-            to copies to CPU main memory. In those classes, the
-            ``__array_ufunc__`` mechanism should be overridden in favor of
-            a native implementations if possible.
-
-        .. note::
-            If no ``out`` parameter is provided, this implementation
-            just returns the raw array and does not attempt to wrap the
-            result in any kind of space.
-
-        Parameters
-        ----------
-        ufunc : `numpy.ufunc`
-            Ufunc that should be called on ``self``.
-        method : str
-            Method on ``ufunc`` that should be called on ``self``.
-            Possible values:
-
-            ``'__call__'``, ``'accumulate'``, ``'at'``, ``'outer'``,
-            ``'reduce'``, ``'reduceat'``
-
-        input1, ..., inputN:
-            Positional arguments to ``ufunc.method``.
-        kwargs:
-            Keyword arguments to ``ufunc.method``.
-
-        Returns
-        -------
-        ufunc_result : `Tensor`, `numpy.ndarray` or tuple
-            Result of the ufunc evaluation. If no ``out`` keyword argument
-            was given, the result is a `Tensor` or a tuple
-            of such, depending on the number of outputs of ``ufunc``.
-            If ``out`` was provided, the returned object or tuple entries
-            refer(s) to ``out``.
-
-        References
-        ----------
-        .. _corresponding NEP:
-           https://docs.scipy.org/doc/numpy/neps/ufunc-overrides.html
-
-        .. _interface documentation:
-           https://docs.scipy.org/doc/numpy/reference/arrays.classes.html\
-        #numpy.class.__array_ufunc__
-
-        .. _general documentation on Numpy ufuncs:
-           https://docs.scipy.org/doc/numpy/reference/ufuncs.html
-
-        .. _reduceat documentation:
-           https://docs.scipy.org/doc/numpy/reference/generated/\
-        numpy.ufunc.reduceat.html
-        """
-        # --- Process `out` --- #
-
-        # Unwrap out if provided. The output parameters are all wrapped
-        # in one tuple, even if there is only one.
-        out_tuple = kwargs.pop('out', ())
-
-        # Check number of `out` args, depending on `method`
-        if method == '__call__' and len(out_tuple) not in (0, ufunc.nout):
-            raise ValueError(
-                "ufunc {}: need 0 or {} `out` arguments for "
-                "`method='__call__'`, got {}"
-                ''.format(ufunc.__name__, ufunc.nout, len(out_tuple)))
-        elif method != '__call__' and len(out_tuple) not in (0, 1):
-            raise ValueError(
-                'ufunc {}: need 0 or 1 `out` arguments for `method={!r}`, '
-                'got {}'.format(ufunc.__name__, method, len(out_tuple)))
-
-        # We allow our own tensors, the data container type and
-        # `numpy.ndarray` objects as `out` (see docs for reason for the
-        # latter)
-        valid_types = (type(self), type(self.data), np.ndarray)
-        if not all(isinstance(o, valid_types) or o is None
-                   for o in out_tuple):
-            return NotImplemented
-
-        # Assign to `out` or `out1` and `out2`, respectively
-        out = out1 = out2 = None
-        if len(out_tuple) == 1:
-            out = out_tuple[0]
-        elif len(out_tuple) == 2:
-            out1 = out_tuple[0]
-            out2 = out_tuple[1]
-
-        # --- Process `inputs` --- #
-
-        # Convert inputs that are ODL tensors or their data containers to
-        # Numpy arrays so that the native Numpy ufunc is called later
-        inputs = tuple(
-            np.asarray(inp) if isinstance(inp, (type(self), type(self.data)))
-            else inp
-            for inp in inputs)
-
-        # --- Get some parameters for later --- #
-
-        # Arguments for `writable_array` and/or space constructors
-        out_dtype = kwargs.get('dtype', None)
-        if out_dtype is None:
-            array_kwargs = {}
-        else:
-            array_kwargs = {'dtype': out_dtype}
-
-        # --- Evaluate ufunc --- #
-
-        if method == '__call__':
-            if ufunc.nout == 1:
-                # Make context for output (trivial one returns `None`)
-                if out is None:
-                    out_ctx = nullcontext()
-                else:
-                    out_ctx = writable_array(out, **array_kwargs)
-
-                # Evaluate ufunc
-                with out_ctx as out_arr:
-                    kwargs['out'] = out_arr
-                    res = ufunc(*inputs, **kwargs)
-
-                # Return result (may be a raw array or a space element)
-                return res
-
-            elif ufunc.nout == 2:
-                # Make contexts for outputs (trivial ones return `None`)
-                if out1 is not None:
-                    out1_ctx = writable_array(out1, **array_kwargs)
-                else:
-                    out1_ctx = nullcontext()
-                if out2 is not None:
-                    out2_ctx = writable_array(out2, **array_kwargs)
-                else:
-                    out2_ctx = nullcontext()
-
-                # Evaluate ufunc
-                with out1_ctx as out1_arr, out2_ctx as out2_arr:
-                    kwargs['out'] = (out1_arr, out2_arr)
-                    res1, res2 = ufunc(*inputs, **kwargs)
-
-                # Return results (may be raw arrays or space elements)
-                return res1, res2
-
-            else:
-                raise NotImplementedError('nout = {} not supported'
-                                          ''.format(ufunc.nout))
-
-        else:  # method != '__call__'
-            # Make context for output (trivial one returns `None`)
-            if out is None:
-                out_ctx = nullcontext()
-            else:
-                out_ctx = writable_array(out, **array_kwargs)
-
-            # Evaluate ufunc method
-            if method == 'at':
-                with writable_array(inputs[0]) as inp_arr:
-                    res = ufunc.at(inp_arr, *inputs[1:], **kwargs)
-            else:
-                with out_ctx as out_arr:
-                    kwargs['out'] = out_arr
-                    res = getattr(ufunc, method)(*inputs, **kwargs)
-
-            # Return result (may be scalar, raw array or space element)
-            return res
-        
+    ######### magic methods #########        
     def __bool__(self):
         """Return ``bool(self)``."""
         if self.size > 1:
@@ -940,6 +1673,41 @@ class Tensor(LinearSpaceElement):
                              'Use np.any(a) or np.all(a)')
         else:
             return bool(self.asarray())
+        
+    def __complex__(self):
+        """Return ``complex(self)``."""
+        return self.data.astype(complex).item()
+    
+    def __float__(self):
+        """Return ``float(self)``."""
+        return self.data.astype(float).item()
+    
+    def __int__(self):
+        """Return ``int(self)``."""
+        return self.data.astype(int).item()
+    
+    def __copy__(self):
+        """Return ``copy(self)``.
+
+        This implements the (shallow) copy interface of the ``copy``
+        module of the Python standard library.
+
+        See Also
+        --------
+        copy
+
+        Examples
+        --------
+        >>> from copy import copy
+        >>> space = odl.rn(3)
+        >>> x = space.element([1, 2, 3])
+        >>> y = copy(x)
+        >>> y == x
+        True
+        >>> y is x
+        False
+        """
+        return self.copy()
         
     def __getitem__(self, indices):
         """Return ``self[indices]``.
@@ -1000,9 +1768,171 @@ class Tensor(LinearSpaceElement):
     def __str__(self):
         """Return ``str(self)``."""
         return array_str(self)
+    
+    """
+    [+] = implemented
+    [-] = not implemented yet
+    [X] = Will not be implemented
+    The Python array API expects the following operators:
+    #####################################################
+    ################# Arithmetic Operators #################
+    [+] +x: array.__pos__()
+    [+] -x: array.__neg__()
+    [+] x1 +  x2: array.__add__()
+    [+] x1 -  x2: array.__sub__()
+    [+] x1 *  x2: array.__mul__()
+    [+] x1 /  x2: array.__truediv__()
+    [+] x1 // x2: array.__floordiv__()
+    [+] x1 %  x2: array.__mod__()
+    [+] x1 ** x2: array.__pow__()
+    ################# Array Operators #################
+    [X] x1 @ x2: array.__matmul__() -> In ODL, a matmul should be implemented as composition of operators
+    ################# Bitwise Operators #################
+    [X] ~x: array.__invert__()
+    [X] x1 &  x2: array.__and__()
+    [X] x1 |  x2: array.__or__()
+    [X] x1 ^  x2: array.__xor__()
+    [X] x1 << x2: array.__lshift__()
+    [X] x1 >> x2: array.__rshift__()
+    ################# Comparison Operators #################
+    [X] x1 <  x2: array.__lt__() ONLY DEFINED FOR REAL-VALUED DATA TYPES
+    [X] x1 <= x2: array.__le__() ONLY DEFINED FOR REAL-VALUED DATA TYPES
+    [X] x1 >  x2: array.__gt__() ONLY DEFINED FOR REAL-VALUED DATA TYPES
+    [X] x1 >= x2: array.__ge__() ONLY DEFINED FOR REAL-VALUED DATA TYPES
+    [+] x1 == x2: array.__eq__()
+    [+] x1 != x2: array.__ne__()
+    #####################################################
+    ################# In-place Arithmetic Operators #################
+    [+] x1 +=  x2: array.__iadd__()
+    [+] x1 -=  x2: array.__isub__()
+    [+] x1 *=  x2: array.__imul__()
+    [+] x1 /=  x2: array.__itruediv__()
+    [+] x1 //= x2: array.__ifloordiv__()
+    [+] x1 %=  x2: array.__imod__()
+    [+] x1 **= x2: array.__ipow__()
+    ################# In-place Array Operators #################
+    [X] x1 @= x2: array.__imatmul__() -> In ODL, a matmul should be implemented as composition of operators
+    ################# In-place Bitwise Operators #################
+    [X] x1 &=  x2: array.__iand__()
+    [X] x1 |=  x2: array.__ior__()
+    [X] x1 ^=  x2: array.__ixor__()
+    [X] x1 <<= x2: array.__ilshift__()
+    [X] x1 >>= x2: array.__irshift__()
+    ################# Reflected Arithmetic Operators #################
+    [+] x2 +  x1: array.__radd__()
+    [+] x2 -  x1: array.__rsub__()
+    [+] x2 *  x1: array.__rmul__()
+    [+] x2 /  x1: array.__rtruediv__()
+    [+] x2 // x1: array.__rfloordiv__()
+    [+] x2 %  x1: array.__rmod__()
+    [+] x2 ** x1: array.__rpow__()
+    ################# Reflected Array Operators #################
+    [X] x2 @ x1: array.__rmatmul__() -> In ODL, a matmul should be implemented as composition of operators
+    ################# Reflected Bitwise Operators #################
+    [X] x2 &  x1: array.__rand__()
+    [X] x2 |  x1: array.__ror__()
+    [X] x2 ^  x1: array.__rxor__()
+    [X] x2 << x1: array.__rlshift__()
+    [X] x2 >> x1: array.__rrshift__()
+    """
+    ####### Arithmetic Operators #######
+    ################# Array Operators #################
+
+    ################# Bitwise Operators #################
+    def __invert__(self):
+        """Implement ``self.invert``."""
+        raise NotImplementedError
+    
+    def __and__(self, other):
+        """Implement ``self.bitwise_and``."""
+        raise NotImplementedError
+    
+    def __or__(self, other):
+        """Implement ``self.bitwise_or``."""
+        raise NotImplementedError
+    
+    def __xor__(self, other):
+        """Implement ``self.bitwise_xor``."""
+        raise NotImplementedError
+    
+    def __lshift__(self, other):
+        """Implement ``self.bitwise_lshift``."""
+        raise NotImplementedError
+    
+    def __rshift__(self, other):
+        """Implement ``self.bitwise_rshift``."""
+        raise NotImplementedError
+    
+    ################# Comparison Operators #################
+    def __eq__(self, other):
+        """Implement ``self == other``."""
+        if other is self:
+            return True
+        elif other not in self.space:
+            return False
+        else:
+            return (               
+                self.shape == other.shape and               
+                self.impl == other.impl and
+                self.device == other.device and
+                self.array_namespace.all(self.data == other.data)
+                )
+    
+    def __ne__(self, other):
+        """Return ``self != other``."""
+        return not self.__eq__(other)
+    
+    ################# In-place Array Operators #################
+    
+    ################# In-place Bitwise Operators #################    
+    def __iand__(self, other):
+        """Implement ``self.ibitwise_and``."""
+        raise NotImplementedError
+    
+    def __ior__(self, other):
+        """Implement ``self.ibitwise_or``."""
+        raise NotImplementedError
+    
+    def __ixor__(self, other):
+        """Implement ``self.ibitwise_xor``."""
+        raise NotImplementedError
+    
+    def __lshift__(self, other):
+        """Implement ``self.ibitwise_lshift``."""
+        raise NotImplementedError
+    
+    def __irshift__(self, other):
+        """Implement ``self.ibitwise_rshift``."""
+        raise NotImplementedError
+
+    ################# Reflected Array Operators #################
+    
+    ################# Reflected Bitwise Operators #################    
+    def __rand__(self, other):
+        """Implement ``self.ibitwise_and``."""
+        raise NotImplementedError
+    
+    def __ror__(self, other):
+        """Implement ``self.ibitwise_or``."""
+        raise NotImplementedError
+    
+    def __rxor__(self, other):
+        """Implement ``self.ibitwise_xor``."""
+        raise NotImplementedError
+    
+    def __rshift__(self, other):
+        """Implement ``self.ibitwise_lshift``."""
+        raise NotImplementedError
+    
+    def __rrshift__(self, other):
+        """Implement ``self.ibitwise_rshift``."""
+        raise NotImplementedError
         
     ######### private methods #########
-
+    def _assign(self, other, avoid_deep_copy):
+        """Assign the values of ``other``, which is assumed to be in the
+        same space, to ``self``."""
+        raise NotImplementedError("abstract method")
 
 if __name__ == '__main__':
     from odl.util.testutils import run_doctests

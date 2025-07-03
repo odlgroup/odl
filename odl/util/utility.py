@@ -16,7 +16,7 @@ from collections import OrderedDict
 from contextlib import contextmanager
 from itertools import product
 from functools import lru_cache
-
+from odl.array_API_support.comparisons import asarray
 import numpy as np
 
 __all__ = (
@@ -49,25 +49,65 @@ __all__ = (
     'npy_random_seed',
     'unique',
 )
+REPR_PRECISION = 4
 
-try:
-    SCTYPES = np.core.sctypes
-    assert isinstance(SCTYPES, dict)
-except AttributeError:
-    # As of 29/04/25, we are aware that the module 
-    # np.core might be removed in future versions. If that happens, the
-    # npy types will have to be queried in a different way. We advise to
-    # install the npy version listed in the odl/conda/meta.yaml
-    raise ImportError('You are using a numpy version that was not tested with ' \
-    'ODL. Please install the npy version listed in the odl/conda/meta.yaml')
+BOOLEAN_DTYPES = [
+    bool,
+    "bool"
+    ]
 
-REPR_PRECISION = 4  # For printing scalars and array entries
-TYPE_MAP_R2C = {np.dtype(dtype): np.result_type(dtype, 1j)
-                for dtype in SCTYPES['float']}
+INTEGER_DTYPES = [
+    int,
+    "int8",
+    "int16",
+    "int32",
+    "int64",
+    "uint8",
+    "uint16",
+    "uint32",
+    "uint64"
+    ]
 
-TYPE_MAP_C2R = {cdt: np.empty(0, dtype=cdt).real.dtype
-                for rdt, cdt in TYPE_MAP_R2C.items()}
-TYPE_MAP_C2R.update({k: k for k in TYPE_MAP_R2C.keys()})
+FLOAT_DTYPES = [
+    float,
+    "float32",
+    "float64"
+]
+
+COMPLEX_DTYPES = [
+    complex,
+    "complex64",
+    "complex128"
+]
+
+REAL_DTYPES = INTEGER_DTYPES + FLOAT_DTYPES
+SCALAR_DTYPES = REAL_DTYPES + COMPLEX_DTYPES
+AVAILABLE_DTYPES = BOOLEAN_DTYPES + REAL_DTYPES + COMPLEX_DTYPES 
+
+"""
+See type promotion rules https://data-apis.org/array-api/latest/API_specification/type_promotion.html#type-promotion
+"""
+##### Not sure about this one #####
+TYPE_PROMOTION_REAL_TO_COMPLEX = {
+    int : "complex64",
+    float : "complex64",
+    "int8"  : "complex64",
+    "int16" : "complex64",
+    "int32" : "complex64",
+    "int64" : "complex64",
+    "uint8" : "complex64",
+    "uint16" : "complex64",
+    "uint32"  : "complex128",
+    "uint64"  : "complex128",
+    "float32" : "complex64",
+    "float64" : "complex128"
+}
+##### Not sure about this one #####
+TYPE_PROMOTION_COMPLEX_TO_REAL = {
+    complex : "float64",
+    "complex64"  : "float32",
+    "complex128" : "float64"
+}
 
 
 def indent(string, indent_str='    '):
@@ -280,7 +320,8 @@ def array_str(a, nprint=6):
     >>> print(array_str((np.array([2.0]) ** 0.5) ** 2))
     [ 2.]
     """
-    a = np.asarray(a)
+    a = asarray(a)
+    a = np.from_dlpack(a)
 
     max_shape = tuple(n if n < nprint else nprint for n in a.shape)
     with npy_printoptions(threshold=int(np.prod(max_shape)),
@@ -412,7 +453,7 @@ def real_dtype(dtype, default=None):
         return dtype
 
     try:
-        real_base_dtype = TYPE_MAP_C2R[dtype.base]
+        real_base_dtype = TYPE_PROMOTION_COMPLEX_TO_REAL[dtype.base]
     except KeyError:
         if default is not None:
             return default
@@ -464,22 +505,12 @@ def complex_dtype(dtype, default=None):
     >>> complex_dtype(('float32', (3,)))
     dtype(('<c8', (3,)))
     """
-    dtype, dtype_in = np.dtype(dtype), dtype
-
-    if is_complex_floating_dtype(dtype):
+    if dtype in REAL_DTYPES: 
+        return TYPE_PROMOTION_REAL_TO_COMPLEX[dtype]
+    elif dtype in COMPLEX_DTYPES:
         return dtype
-
-    try:
-        complex_base_dtype = TYPE_MAP_R2C[dtype.base]
-    except KeyError:
-        if default is not None:
-            return default
-        else:
-            raise ValueError('no complex counterpart exists for `dtype` {}'
-                             ''.format(dtype_repr(dtype_in)))
     else:
-        return np.dtype((complex_base_dtype, dtype.shape))
-
+        raise ValueError(f'The dtype {dtype=} is neither complex {COMPLEX_DTYPES} nor real {REAL_DTYPES}. Make sure you pass a string dtype and not a np.dtype or a torch.dtype.')
 
 def is_string(obj):
     """Return ``True`` if ``obj`` behaves like a string, ``False`` else."""
@@ -561,8 +592,9 @@ except AttributeError:
 
 
 @contextmanager
-def writable_array(obj, **kwargs):
-    """Context manager that casts obj to a `numpy.array` and saves changes.
+def writable_array(obj, must_be_contiguous: bool =False):
+    """Context manager that casts `obj` to a backend-specific array and saves changes
+    made on that array back into `obj`.
 
     Parameters
     ----------
@@ -570,19 +602,11 @@ def writable_array(obj, **kwargs):
         Object that should be made available as writable array.
         It must be valid as input to `numpy.asarray` and needs to
         support the syntax ``obj[:] = arr``.
-    kwargs :
-        Keyword arguments that should be passed to `numpy.asarray`.
+    must_be_contiguous : bool
+        Whether the writable array should guarantee standard C order.
 
     Examples
     --------
-    Convert list to array and use with numpy:
-
-    >>> lst = [1, 2, 3]
-    >>> with writable_array(lst) as arr:
-    ...    arr *= 2
-    >>> lst
-    [2, 4, 6]
-
     Usage with ODL vectors:
 
     >>> space = odl.uniform_discr(0, 1, 3)
@@ -592,31 +616,25 @@ def writable_array(obj, **kwargs):
     >>> x
     uniform_discr(0.0, 1.0, 3).element([ 2.,  3.,  4.])
 
-    Additional keyword arguments are passed to `numpy.asarray`:
-
-    >>> lst = [1, 2, 3]
-    >>> with writable_array(lst, dtype='complex') as arr:
-    ...     print(arr)
-    [ 1.+0.j  2.+0.j  3.+0.j]
-
-    Note that the changes are only saved upon exiting the context
-    manger exits. Before, the input object is unchanged:
-
-    >>> lst = [1, 2, 3]
-    >>> with writable_array(lst) as arr:
-    ...     arr *= 2
-    ...     print(lst)
-    [1, 2, 3]
-    >>> print(lst)
-    [2, 4, 6]
+    Note that the changes are in general only saved upon exiting the 
+    context manager. Before, the input object may remain unchanged.
     """
-    arr = None
-    try:
-        arr = np.asarray(obj, **kwargs)
-        yield arr
-    finally:
-        if arr is not None:
-            obj[:] = arr
+    if isinstance(obj, np.ndarray):
+        if must_be_contiguous and not obj.data.c_contiguous:
+            # Needs to convert to contiguous array
+            arr = np.ascontiguousarray(obj)
+            try:
+                yield arr
+            finally:
+                obj[:] = arr
+        else:
+            try:
+                yield obj
+            finally:
+                pass
+    else:
+        with obj.writable_array(must_be_contiguous=must_be_contiguous) as arr:
+            yield arr
 
 
 def signature_string(posargs, optargs, sep=', ', mod='!r'):
