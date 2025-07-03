@@ -126,9 +126,9 @@ def astra_cpu_forward_projector(vol_data, geometry, proj_space, out=None,
             ''.format(vol_data.ndim, geometry.ndim)
         )
     if out is None:
-        out = proj_space.element()
+        out = proj_space.real_space.element()
     else:
-        if out not in proj_space:
+        if out not in proj_space.real_space:
             raise TypeError(
                 '`out` {} is neither None nor a `DiscretizedSpaceElement` '
                 'instance'.format(out)
@@ -228,9 +228,9 @@ def astra_cpu_back_projector(proj_data, geometry, vol_space, out=None,
             ''.format(vol_space.ndim, geometry.ndim)
         )
     if out is None:
-        out = vol_space.element()
+        out = vol_space.real_space.element()
     else:
-        if out not in vol_space:
+        if out not in vol_space.real_space:
             raise TypeError(
                 '`out` {} is neither None nor a `DiscretizedSpaceElement` '
                 'instance'.format(out)

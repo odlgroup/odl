@@ -215,9 +215,9 @@ class AstraCudaImpl:
             assert vol_data in self.vol_space.real_space
 
             if out is not None:
-                assert out in self.proj_space
+                assert out in self.proj_space.real_space
             else:
-                out = self.proj_space.element()
+                out = self.proj_space.real_space.element()
 
             # Copy data to GPU memory
             if self.geometry.ndim == 2:
@@ -274,9 +274,9 @@ class AstraCudaImpl:
             assert proj_data in self.proj_space.real_space
 
             if out is not None:
-                assert out in self.vol_space
+                assert out in self.vol_space.real_space
             else:
-                out = self.vol_space.element()
+                out = self.vol_space.real_space.element()
 
             # Copy data to GPU memory
             if self.geometry.ndim == 2:
