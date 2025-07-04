@@ -28,22 +28,34 @@ from odl.space.npy_tensors import NumpyTensorSpace
 __all__ = ()
 
 IS_INITIALIZED = False
-TENSOR_SPACE_IMPLS = {'numpy': NumpyTensorSpace}
+TENSOR_SPACE_IMPLS = {
+    'numpy': NumpyTensorSpace
+    }
+AVAILABLE_DEVICES = {
+    'numpy': ['cpu']
+}
 
+IMPL_DEVICE_PAIRS = []
 
 def _initialize_if_needed():
     """Initialize ``TENSOR_SPACE_IMPLS`` if not already done."""
-    global IS_INITIALIZED, TENSOR_SPACE_IMPLS
+    global IS_INITIALIZED, TENSOR_SPACE_IMPLS, AVAILABLE_DEVICES, IMPL_DEVICE_PAIRS
     if not IS_INITIALIZED:
-        # pkg_resources has long import time
-        from pkg_resources import iter_entry_points
-        for entry_point in iter_entry_points(group='odl.space', name=None):
-            try:
-                module = entry_point.load()
-            except ImportError:
-                pass
-            else:
-                TENSOR_SPACE_IMPLS.update(module.tensor_space_impls())
+        # import importlib.util       
+        # torch_module = importlib.util.find_spec("torch")
+        # if torch_module is not None:
+        #     try:
+        #         from odl.space.pytorch_tensors import PyTorchTensorSpace, pytorch_array_backend
+        #         pytorch_array_backend : ArrayBackend
+        #         TENSOR_SPACE_IMPLS['pytorch'] = PyTorchTensorSpace
+        #         AVAILABLE_DEVICES['pytorch'] = pytorch_array_backend.available_devices
+        #     except ModuleNotFoundError:
+        #         pass
+    
+        for impl in AVAILABLE_DEVICES.keys():
+            for device in AVAILABLE_DEVICES[impl]:
+                IMPL_DEVICE_PAIRS.append((impl, device))
+
         IS_INITIALIZED = True
 
 

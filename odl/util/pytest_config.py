@@ -17,7 +17,7 @@ from os import path
 import numpy as np
 
 import odl
-from odl.space.entry_points import tensor_space_impl_names
+from odl.space.entry_points import tensor_space_impl_names, IMPL_DEVICE_PAIRS
 from odl.trafos.backends import PYFFTW_AVAILABLE, PYWT_AVAILABLE
 from odl.util.testutils import simple_fixture
 from odl.util.utility import INTEGER_DTYPES, FLOAT_DTYPES, COMPLEX_DTYPES
@@ -149,7 +149,7 @@ scalar_dtypes = INTEGER_DTYPES + FLOAT_DTYPES + COMPLEX_DTYPES
 odl_scalar_dtype = simple_fixture(name='dtype',
                                   params=scalar_dtypes)
 
-odl_impl_device_pairs = simple_fixture(name='impl_device', params=odl.IMPL_DEVICE_PAIRS)
+odl_impl_device_pairs = simple_fixture(name='impl_device', params=IMPL_DEVICE_PAIRS)
 
 odl_elem_order = simple_fixture(name='order', params=['C'])
 

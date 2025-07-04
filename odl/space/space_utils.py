@@ -15,10 +15,9 @@ from odl.util.npy_compat import AVOID_UNNECESSARY_COPY
 from odl.array_API_support import lookup_array_backend
 
 from odl.space.base_tensors import default_dtype
-from odl.space.npy_tensors import NumpyTensorSpace
-from odl.util.utility import AVAILABLE_DTYPES, COMPLEX_DTYPES, FLOAT_DTYPES
 
-TENSOR_SPACE_IMPLS = {'numpy': NumpyTensorSpace}
+from odl.util.utility import AVAILABLE_DTYPES, COMPLEX_DTYPES, FLOAT_DTYPES
+from odl.space.entry_points import tensor_space_impl, tensor_space_impl_names
 
 __all__ = ('vector', 'tensor_space', 'cn', 'rn')
 
@@ -146,12 +145,12 @@ def tensor_space(shape, dtype='float64', impl='numpy', device = 'cpu', **kwargs)
     ), f"The dtype must be in {AVAILABLE_DTYPES}, but {dtype} was provided"
     # Check the impl argument
     assert (
-        impl in TENSOR_SPACE_IMPLS.keys()
-    ), f"The only supported impls are {TENSOR_SPACE_IMPLS.keys()}, but {impl} was provided"
+        impl in tensor_space_impl_names()
+    ), f"The only supported impls are {tensor_space_impl_names()}, but {impl} was provided"
 
     # Use args by keyword since the constructor may take other arguments
     # by position
-    return TENSOR_SPACE_IMPLS[impl](shape=shape, dtype=dtype, device=device, **kwargs)
+    return tensor_space_impl(impl)(shape=shape, dtype=dtype, device=device, **kwargs)
 
 
 def cn(shape, dtype='complex128', impl='numpy', device='cpu', **kwargs):
