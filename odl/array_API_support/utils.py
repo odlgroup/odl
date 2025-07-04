@@ -4,12 +4,10 @@ from typing import Callable
 
 
 __all__ = (
-    'AVAILABLE_DEVICES',
-    'IMPL_DEVICE_PAIRS',
-    'check_device',
     'ArrayBackend', 
     'lookup_array_backend',
-    'get_array_and_backend'
+    'get_array_and_backend',
+    'check_device'
     )
 
 
@@ -24,10 +22,10 @@ class ArrayBackend:
     array_constructor: Callable
     make_contiguous: Callable
     identifier_of_dtype: Callable[object, str]
+    available_devices : list
     def __post_init__(self):
         if self.impl in _registered_array_backends:
-            raise KeyError(f"An array-backend with the identifier {self.impl} is already registered."
-                          + " Every backend needs to have a unique identifier.")
+            raise KeyError(f"An array-backend with the identifier {self.impl} is already registered. Every backend needs to have a unique identifier.")
         _registered_array_backends[self.impl] = self
     def get_dtype_identifier(self, **kwargs):
         if 'array' in kwargs:
@@ -63,22 +61,13 @@ def get_array_and_backend(x, must_be_contiguous=False):
     else:
         raise ValueError(f"The registered array backends are {list(_registered_array_backends.keys())}. The argument provided is a {type(x)}, check that the backend you want to use is supported and has been correctly instanciated.")
 
-AVAILABLE_DEVICES = {
-    'numpy' : ['cpu'],
-    # 'pytorch' : ['cpu'] +  [f'cuda:{i}' for i in range(torch.cuda.device_count())]
-}
-
-IMPL_DEVICE_PAIRS = []
-for impl in AVAILABLE_DEVICES.keys():
-    for device in AVAILABLE_DEVICES[impl]:
-        IMPL_DEVICE_PAIRS.append((impl, device))
-
 def check_device(impl:str, device:str):
     """
     Checks the device argument 
     This checks that the device requested is available and that its compatible with the backend requested
     """
-    assert device in AVAILABLE_DEVICES[impl], f"For {impl} Backend, devices {AVAILABLE_DEVICES[impl]} but {device} was provided."
+    backend = lookup_array_backend(impl)
+    assert device in backend.available_devices, f"For {impl} Backend, only devices {backend.available_devices} are present, but {device} was provided."
     
 if __name__ =='__main__':
     check_device('numpy', 'cpu')
