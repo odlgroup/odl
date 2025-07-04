@@ -9,7 +9,6 @@
 """NumPy implementation of tensor spaces."""
 
 from __future__ import absolute_import, division, print_function
-from future.utils import native
 
 import numpy as np
 
@@ -20,12 +19,12 @@ from odl.array_API_support import ArrayBackend
 
 import array_api_compat.numpy as xp
 
-__all__ = ('NumpyTensorSpace',)
+__all__ = ('NumpyTensorSpace','numpy_array_backend')
 
 numpy_array_backend = ArrayBackend(
     impl = 'numpy',
     available_dtypes = {
-      key : np.dtype(key) for key in [
+      key : xp.dtype(key) for key in [
         bool,
         "bool",
         "int8",
@@ -45,19 +44,12 @@ numpy_array_backend = ArrayBackend(
         "complex128",
       ]},
     array_namespace = xp,
-    array_constructor = np.array,
-    array_type = np.ndarray,
-    make_contiguous = lambda x: x if x.data.c_contiguous else np.ascontiguousarray(x),
-    identifier_of_dtype = lambda dt: str(dt)
+    array_constructor = xp.array,
+    array_type = xp.ndarray,
+    make_contiguous = lambda x: x if x.data.c_contiguous else xp.ascontiguousarray(x),
+    identifier_of_dtype = lambda dt: str(dt),
+    available_devices = ['cpu']
  )
-
-_BLAS_DTYPES = (np.dtype('float32'), np.dtype('float64'),
-                np.dtype('complex64'), np.dtype('complex128'))
-
-# Define size thresholds to switch implementations
-THRESHOLD_SMALL = 100
-THRESHOLD_MEDIUM = 50000
-
 
 class NumpyTensorSpace(TensorSpace):
 
@@ -106,7 +98,7 @@ class NumpyTensorSpace(TensorSpace):
         dtype (str): optional
             Data type of each element. Defaults to 'float64'
         device (str):
-            Device on which the data is. For Numpy, tt must be 'cpu'.
+            Device on which the data is. For Numpy, it must be 'cpu'.
 
         Other Parameters
         ----------------
@@ -273,7 +265,7 @@ class NumpyTensor(Tensor):
         """Initialize a new instance."""
         # Tensor.__init__(self, space)
         LinearSpaceElement.__init__(self, space)
-        self.__data = np.asarray(data, dtype=space.dtype)
+        self.__data = xp.asarray(data, dtype=space.dtype, device=space.device)
 
     @property
     def data(self):
@@ -401,7 +393,7 @@ class NumpyTensor(Tensor):
             indices = indices.data
         arr = self.data[indices]
 
-        if np.isscalar(arr):
+        if xp.isscalar(arr):
             if self.space.field is not None:
                 return self.space.field.element(arr)
             else:
@@ -494,140 +486,6 @@ class NumpyTensor(Tensor):
             values = values.data
 
         self.data[indices] = values
-
-def _blas_is_applicable(*args):
-    """Whether BLAS routines can be applied or not.
-
-    BLAS routines are available for single and double precision
-    float or complex data only. If the arrays are non-contiguous,
-    BLAS methods are usually slower, and array-writing routines do
-    not work at all. Hence, only contiguous arrays are allowed.
-
-    Parameters
-    ----------
-    x1,...,xN : `NumpyTensor`
-        The tensors to be tested for BLAS conformity.
-
-    Returns
-    -------
-    blas_is_applicable : bool
-        ``True`` if all mentioned requirements are met, ``False`` otherwise.
-    """
-    if any(x.dtype != args[0].dtype for x in args[1:]):
-        return False
-    elif any(x.dtype not in _BLAS_DTYPES for x in args):
-        return False
-    elif not (all(x.flags.f_contiguous for x in args) or
-              all(x.flags.c_contiguous for x in args)):
-        return False
-    elif any(x.size > np.iinfo('int32').max for x in args):
-        # Temporary fix for 32 bit int overflow in BLAS
-        # TODO: use chunking instead
-        return False
-    else:
-        return True
-
-
-def _lincomb_impl(a, x1, b, x2, out):
-    """Optimized implementation of ``out[:] = a * x1 + b * x2``."""
-    # Lazy import to improve `import odl` time
-    import scipy.linalg
-
-    size = native(x1.size)
-
-    if size < THRESHOLD_SMALL:
-        # Faster for small arrays
-        out.data[:] = a * x1.data + b * x2.data
-        return
-
-    elif (size < THRESHOLD_MEDIUM or
-          not _blas_is_applicable(x1.data, x2.data, out.data)):
-
-        def fallback_axpy(x1, x2, n, a):
-            """Fallback axpy implementation avoiding copy."""
-            if a != 0:
-                x2 /= a
-                x2 += x1
-                x2 *= a
-            return x2
-
-        def fallback_scal(a, x, n):
-            """Fallback scal implementation."""
-            x *= a
-            return x
-
-        def fallback_copy(x1, x2, n):
-            """Fallback copy implementation."""
-            x2[...] = x1[...]
-            return x2
-
-        axpy, scal, copy = (fallback_axpy, fallback_scal, fallback_copy)
-        x1_arr = x1.data
-        x2_arr = x2.data
-        out_arr = out.data
-
-    else:
-        # Need flat data for BLAS, otherwise in-place does not work.
-        # Raveling must happen in fixed order for non-contiguous out,
-        # otherwise 'A' is applied to arrays, which makes the outcome
-        # dependent on their respective contiguousness.
-        if out.data.flags.f_contiguous:
-            ravel_order = 'F'
-        else:
-            ravel_order = 'C'
-
-        x1_arr = x1.data.ravel(order=ravel_order)
-        x2_arr = x2.data.ravel(order=ravel_order)
-        out_arr = out.data.ravel(order=ravel_order)
-        axpy, scal, copy = scipy.linalg.blas.get_blas_funcs(
-            ['axpy', 'scal', 'copy'], arrays=(x1_arr, x2_arr, out_arr))
-
-    if x1 is x2 and b != 0:
-        # x1 is aligned with x2 -> out = (a+b)*x1
-        _lincomb_impl(a + b, x1, 0, x1, out)
-    elif out is x1 and out is x2:
-        # All the vectors are aligned -> out = (a+b)*out
-        if (a + b) != 0:
-            scal(a + b, out_arr, size)
-        else:
-            out_arr[:] = 0
-    elif out is x1:
-        # out is aligned with x1 -> out = a*out + b*x2
-        if a != 1:
-            scal(a, out_arr, size)
-        if b != 0:
-            axpy(x2_arr, out_arr, size, b)
-    elif out is x2:
-        # out is aligned with x2 -> out = a*x1 + b*out
-        if b != 1:
-            scal(b, out_arr, size)
-        if a != 0:
-            axpy(x1_arr, out_arr, size, a)
-    else:
-        # We have exhausted all alignment options, so x1 is not x2 is not out
-        # We now optimize for various values of a and b
-        if b == 0:
-            if a == 0:  # Zero assignment -> out = 0
-                out_arr[:] = 0
-            else:  # Scaled copy -> out = a*x1
-                copy(x1_arr, out_arr, size)
-                if a != 1:
-                    scal(a, out_arr, size)
-
-        else:  # b != 0
-            if a == 0:  # Scaled copy -> out = b*x2
-                copy(x2_arr, out_arr, size)
-                if b != 1:
-                    scal(b, out_arr, size)
-
-            elif a == 1:  # No scaling in x1 -> out = x1 + b*x2
-                copy(x1_arr, out_arr, size)
-                axpy(x2_arr, out_arr, size, b)
-            else:  # Generic case -> out = a*x1 + b*x2
-                copy(x2_arr, out_arr, size)
-                if b != 1:
-                    scal(b, out_arr, size)
-                axpy(x1_arr, out_arr, size, a)
 
 if __name__ == '__main__':
     from odl.util.testutils import run_doctests
