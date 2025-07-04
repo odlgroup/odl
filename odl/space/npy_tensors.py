@@ -10,8 +10,6 @@
 
 from __future__ import absolute_import, division, print_function
 
-import numpy as np
-
 from odl.set.space import LinearSpaceElement
 from odl.space.base_tensors import Tensor, TensorSpace
 from odl.util import is_numeric_dtype
@@ -271,29 +269,6 @@ class NumpyTensor(Tensor):
     def data(self):
         """The `numpy.ndarray` representing the data of ``self``."""
         return self.__data
-    
-    @property
-    def data_ptr(self):
-        """A raw pointer to the data container of ``self``.
-
-        Examples
-        --------
-        >>> import ctypes
-        >>> space = odl.tensor_space(3, dtype='uint16')
-        >>> x = space.element([1, 2, 3])
-        >>> arr_type = ctypes.c_uint16 * 3  # C type "array of 3 uint16"
-        >>> buffer = arr_type.from_address(x.data_ptr)
-        >>> arr = np.frombuffer(buffer, dtype='uint16')
-        >>> arr
-        array([1, 2, 3], dtype=uint16)
-
-        In-place modification via pointer:
-
-        >>> arr[0] = 42
-        >>> x
-        tensor_space(3, dtype='uint16').element([42,  2,  3])
-        """
-        return self.data.ctypes.data
     
     def _assign(self, other, avoid_deep_copy):
         """Assign the values of ``other``, which is assumed to be in the
