@@ -17,8 +17,6 @@ import pytest
 from odl.discr.discr_space import DiscretizedSpace, DiscretizedSpaceElement
 from odl.space.base_tensors import TensorSpace, default_dtype
 from odl.space.npy_tensors import NumpyTensor
-from odl.space.weighting import ConstWeighting
-from odl.array_API_support.utils import lookup_array_backend
 from odl.util.utility import COMPLEX_DTYPES
 from odl.util.testutils import (
     all_almost_equal, all_equal, noise_elements, simple_fixture)

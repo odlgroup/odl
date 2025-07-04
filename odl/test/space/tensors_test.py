@@ -23,7 +23,7 @@ from odl.util.testutils import (
     all_almost_equal, all_equal, noise_array, noise_element, noise_elements,
     simple_fixture)
 from odl.array_API_support import lookup_array_backend
-from odl.util.ufuncs import UFUNCS
+from odl.space.entry_points import IMPL_DEVICE_PAIRS, AVAILABLE_DEVICES
 
 # --- Test helpers --- #
 
@@ -48,12 +48,9 @@ getitem_indices_params = (setitem_indices_params +
                           [([0, 1, 1, 0], [0, 1, 1, 2]), (Ellipsis, None)])
 getitem_indices = simple_fixture('indices', getitem_indices_params)
 
-IMPL_DEVICES = {
-    'numpy' : ['cpu']
-}
 DEFAULT_SHAPE = (3,4)
 
-@pytest.fixture(scope='module', params=odl.IMPL_DEVICE_PAIRS)
+@pytest.fixture(scope='module', params=IMPL_DEVICE_PAIRS)
 def tspace(request, odl_floating_dtype):
     impl, device = request.param
     dtype = odl_floating_dtype
@@ -66,7 +63,7 @@ def test_device(odl_impl_device_pairs):
 def test_init_tspace(odl_tspace_impl, odl_scalar_dtype):
     constant_weighting = odl.space_weighting(odl_tspace_impl, weight = 1.5)
     array_weighting    = odl.space_weighting(odl_tspace_impl, weight = _pos_array(odl.rn(DEFAULT_SHAPE)))
-    for device in IMPL_DEVICES[odl_tspace_impl]:
+    for device in AVAILABLE_DEVICES[odl_tspace_impl]:
         for weighting in [constant_weighting, array_weighting, None]:
             NumpyTensorSpace(DEFAULT_SHAPE, dtype=odl_scalar_dtype, device=device, weighting=weighting)
             odl.tensor_space(DEFAULT_SHAPE, dtype=odl_scalar_dtype, device=device, weighting=weighting)
@@ -74,7 +71,7 @@ def test_init_tspace(odl_tspace_impl, odl_scalar_dtype):
 def test_init_tspace_from_cn(odl_tspace_impl, odl_complex_floating_dtype, odl_real_floating_dtype):
     constant_weighting = odl.space_weighting(odl_tspace_impl, weight = 1.5)
     array_weighting    = odl.space_weighting(odl_tspace_impl, weight = _pos_array(odl.rn(DEFAULT_SHAPE)))
-    for device in IMPL_DEVICES[odl_tspace_impl]:
+    for device in AVAILABLE_DEVICES[odl_tspace_impl]:
         for weighting in [constant_weighting, array_weighting, None]:
             odl.cn(DEFAULT_SHAPE, dtype=odl_complex_floating_dtype, device=device, weighting = weighting)
             with pytest.raises(AssertionError):
@@ -83,7 +80,7 @@ def test_init_tspace_from_cn(odl_tspace_impl, odl_complex_floating_dtype, odl_re
 def test_init_tspace_from_rn(odl_tspace_impl, odl_real_floating_dtype, odl_complex_floating_dtype):
     constant_weighting = odl.space_weighting(odl_tspace_impl, weight = 1.5)
     array_weighting    = odl.space_weighting(odl_tspace_impl, weight = _pos_array(odl.rn(DEFAULT_SHAPE)))
-    for device in IMPL_DEVICES[odl_tspace_impl]:
+    for device in AVAILABLE_DEVICES[odl_tspace_impl]:
         for weighting in [constant_weighting, array_weighting, None]:
             odl.rn(DEFAULT_SHAPE, dtype=odl_real_floating_dtype, device=device, weighting = weighting)
             with pytest.raises(AssertionError):
@@ -143,7 +140,7 @@ def test_init_tspace_weighting(exponent, odl_tspace_impl, odl_scalar_dtype):
     """Test if weightings during init give the correct weighting classes."""
     impl = odl_tspace_impl
 
-    for device in IMPL_DEVICES[impl]:
+    for device in AVAILABLE_DEVICES[impl]:
         weight_params = [1, 0.5, _pos_array(odl.rn(DEFAULT_SHAPE, impl=impl, device=device))]
         for weight in weight_params:
             # We compare that a space instanciated with a given weight has its weight
@@ -268,7 +265,7 @@ def test_size(odl_tspace_impl, odl_scalar_dtype):
 def test_equals_space(odl_tspace_impl, odl_scalar_dtype):
     """Test equality check of spaces."""
     impl = odl_tspace_impl
-    for device in IMPL_DEVICES[impl]:
+    for device in AVAILABLE_DEVICES[impl]:
         space = odl.tensor_space(3, impl=impl, dtype=odl_scalar_dtype, device=device)
         same_space = odl.tensor_space(3, impl=impl, dtype=odl_scalar_dtype, device=device)
         other_space = odl.tensor_space(4, impl=impl, dtype=odl_scalar_dtype, device=device)
@@ -713,7 +710,7 @@ def test_dist(tspace):
 
 def test_dist_exceptions(odl_tspace_impl):
     """Test if dist raises correctly for bad input."""
-    for device in IMPL_DEVICES[odl_tspace_impl]:
+    for device in AVAILABLE_DEVICES[odl_tspace_impl]:
         tspace = odl.tensor_space(DEFAULT_SHAPE, impl=odl_tspace_impl, device=device)
         other_space = odl.rn((4, 3))
         other_x = other_space.zero()
