@@ -129,10 +129,10 @@ def is_int_dtype(dtype: "str | Number |xp.dtype") -> bool:
     """Return ``True`` if ``dtype`` is an integer type."""
     return _convert_dtype(dtype) in INTEGER_DTYPES
 
-# @lru_cache
-# def is_floating_dtype(dtype: "str | Number |xp.dtype") -> bool:
-#     """Return ``True`` if ``dtype`` is a floating point type."""
-#     return _convert_dtype(dtype) in FLOAT_DTYPES
+@lru_cache
+def is_floating_dtype(dtype: "str | Number |xp.dtype") -> bool:
+    """Return ``True`` if ``dtype`` is a floating point type."""
+    return _convert_dtype(dtype) in FLOAT_DTYPES
 
 # @lru_cache
 # def is_complex_dtype(dtype: "str | Number |xp.dtype") -> bool:
@@ -200,10 +200,10 @@ def is_int_dtype(dtype: "str | Number |xp.dtype") -> bool:
 #     return np.issubdtype(getattr(dtype, 'base', None), np.integer)
 
 
-@lru_cache
-def is_floating_dtype(dtype):
-    """Return ``True`` if ``dtype`` is a floating point type."""
-    return is_real_floating_dtype(dtype) or is_complex_floating_dtype(dtype)
+# @lru_cache
+# def is_floating_dtype(dtype):
+#     """Return ``True`` if ``dtype`` is a floating point type."""
+#     return is_real_floating_dtype(dtype) or is_complex_floating_dtype(dtype)
 
 
 @lru_cache
