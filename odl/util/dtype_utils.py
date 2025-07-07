@@ -16,9 +16,6 @@ __all__ = (
     'is_floating_dtype',
     'is_complex_dtype',
     'is_real_dtype',
-    # 'is_scalar_dtype',
-    # 'is_real_floating_dtype',
-    # 'is_complex_floating_dtype',
     'real_dtype',
     'complex_dtype'
 )
@@ -141,11 +138,6 @@ def is_complex_dtype(dtype: "str | Number |xp.dtype") -> bool:
 def is_real_dtype(dtype: "str | Number |xp.dtype") -> bool:
     """Return ``True`` if ``dtype`` is a real (including integer) type."""
     return _convert_dtype(dtype) in REAL_DTYPES
-
-# @lru_cache
-# def is_scalar_dtype(dtype: "str | Number |xp.dtype") -> bool:
-#     """Return ``True`` if ``dtype`` is a real or a complex type."""
-#     return _convert_dtype(dtype) in SCALAR_DTYPES
 
 def real_dtype(dtype: "str | Number |xp.dtype", default=None) -> str:
     """
