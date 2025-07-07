@@ -28,9 +28,8 @@ from odl.util import (
     is_numeric_dtype, is_floating_dtype, safe_int_conv,
     signature_string)
 from odl.util.dtype_utils import(
-    SCALAR_DTYPES, AVAILABLE_DTYPES,
-    REAL_DTYPES, INTEGER_DTYPES,
-    FLOAT_DTYPES, COMPLEX_DTYPES,
+    is_real_dtype, is_int_dtype,
+    is_available_dtype,
     TYPE_PROMOTION_COMPLEX_TO_REAL, 
     TYPE_PROMOTION_REAL_TO_COMPLEX)
 from .weighting import Weighting, ConstWeighting
@@ -538,7 +537,7 @@ class TensorSpace(LinearSpace):
         if dtype == self.dtype:
             return self
 
-        if dtype_identifier in FLOAT_DTYPES + COMPLEX_DTYPES:
+        if is_floating_dtype(dtype_identifier) or is_complex_dtype(dtype_identifier):
             if self.dtype_identifier == 'bool':
                 return self._astype(dtype_identifier)
             # Caching for real and complex versions (exact dtype mappings)
@@ -562,11 +561,11 @@ class TensorSpace(LinearSpace):
                     "shape of `inp` not equal to space shape: "
                     "{} != {}".format(arr.shape, self.shape)
                 )
-            if ( self.dtype_identifier in REAL_DTYPES
-                and self.array_backend.get_dtype_identifier(array=arr) not in REAL_DTYPES ):
+            if (is_real_dtype(self.dtype_identifier) and not 
+                is_real_dtype(self.array_backend.get_dtype_identifier(array=arr))):
                 raise TypeError(f"A real space cannot have complex elements. Got {arr.dtype}")
-            elif ( self.dtype_identifier in INTEGER_DTYPES
-                and self.array_backend.get_dtype_identifier(array=arr) not in INTEGER_DTYPES ):
+            elif (is_int_dtype(self.dtype_identifier) and not 
+                is_int_dtype(self.array_backend.get_dtype_identifier(array=arr))):
                 raise TypeError(f"An integer space can only have integer elements. Got {arr.dtype}")
             
             return self.element_type(self, arr)
@@ -811,10 +810,10 @@ class TensorSpace(LinearSpace):
             ctor_name = 'tensor_space'
 
         if (ctor_name == 'tensor_space' or
-                not self.dtype_identifier in SCALAR_DTYPES or
+                not is_numeric_dtype(self.dtype_identifier) or
                 self.dtype != default_dtype(self.array_backend, self.field)):
             optargs = [('dtype', self.dtype_identifier, '')]
-            if self.dtype_identifier in (AVAILABLE_DTYPES):
+            if is_available_dtype(self.dtype_identifier):
                 optmod = '!s'
             else:
                 optmod = ''
@@ -841,7 +840,7 @@ class TensorSpace(LinearSpace):
         method.
         """
         kwargs = {}
-        if dtype in FLOAT_DTYPES + COMPLEX_DTYPES:
+        if is_real_dtype(dtype) or is_complex_dtype(dtype):
             # Use weighting only for floating-point types, otherwise, e.g.,
             # `space.astype(bool)` would fail
             weighting = getattr(self, "weighting", None)
