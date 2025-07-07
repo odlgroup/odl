@@ -16,7 +16,7 @@ from odl.array_API_support import lookup_array_backend
 
 from odl.space.base_tensors import default_dtype
 
-from odl.util.utility import AVAILABLE_DTYPES, COMPLEX_DTYPES, FLOAT_DTYPES
+from odl.util.dtype_utils import AVAILABLE_DTYPES, COMPLEX_DTYPES, FLOAT_DTYPES
 from odl.space.entry_points import tensor_space_impl, tensor_space_impl_names
 
 __all__ = ('vector', 'tensor_space', 'cn', 'rn')

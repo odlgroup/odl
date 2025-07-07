@@ -17,7 +17,7 @@ import odl
 from odl.discr.discr_ops import _SUPPORTED_RESIZE_PAD_MODES
 from odl.util.testutils import dtype_tol, noise_element, all_equal
 
-from odl.util.utility import AVAILABLE_DTYPES, SCALAR_DTYPES, FLOAT_DTYPES, REAL_DTYPES
+from odl.util.dtype_utils import AVAILABLE_DTYPES, SCALAR_DTYPES, FLOAT_DTYPES, REAL_DTYPES
 # --- pytest fixtures --- #
 
 

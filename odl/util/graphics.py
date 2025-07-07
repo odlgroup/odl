@@ -13,7 +13,7 @@ import numpy as np
 import warnings
 
 from odl.util.testutils import run_doctests
-from odl.util.utility import is_real_dtype
+from odl.util.dtype_utils import is_real_dtype
 
 
 __all__ = ('show_discrete_data',)

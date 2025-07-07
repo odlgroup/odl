@@ -27,7 +27,7 @@ from odl.util import (
     array_str, indent, is_complex_floating_dtype,
     is_numeric_dtype, is_real_floating_dtype, safe_int_conv,
     signature_string)
-from odl.util.utility import(
+from odl.util.dtype_utils import(
     SCALAR_DTYPES, AVAILABLE_DTYPES,
     REAL_DTYPES, INTEGER_DTYPES,
     FLOAT_DTYPES, COMPLEX_DTYPES,

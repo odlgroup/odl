@@ -10,7 +10,7 @@ from __future__ import division
 import odl
 import numpy as np
 
-from odl.util.utility import (
+from odl.util.dtype_utils import (
     is_numeric_dtype, is_real_dtype, is_real_floating_dtype,
     is_complex_floating_dtype,
     FLOAT_DTYPES,

@@ -20,7 +20,7 @@ import odl
 from odl.space.entry_points import tensor_space_impl_names, IMPL_DEVICE_PAIRS
 from odl.trafos.backends import PYFFTW_AVAILABLE, PYWT_AVAILABLE
 from odl.util.testutils import simple_fixture
-from odl.util.utility import INTEGER_DTYPES, FLOAT_DTYPES, COMPLEX_DTYPES
+from odl.util.dtype_utils import INTEGER_DTYPES, FLOAT_DTYPES, COMPLEX_DTYPES
 
 try:
     import pytest
