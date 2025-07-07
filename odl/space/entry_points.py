@@ -31,15 +31,10 @@ IS_INITIALIZED = False
 TENSOR_SPACE_IMPLS = {
     'numpy': NumpyTensorSpace
     }
-AVAILABLE_DEVICES = {
-    'numpy': ['cpu']
-}
-
-IMPL_DEVICE_PAIRS = []
 
 def _initialize_if_needed():
     """Initialize ``TENSOR_SPACE_IMPLS`` if not already done."""
-    global IS_INITIALIZED, TENSOR_SPACE_IMPLS, AVAILABLE_DEVICES, IMPL_DEVICE_PAIRS
+    global IS_INITIALIZED, TENSOR_SPACE_IMPLS
     if not IS_INITIALIZED:
         # import importlib.util       
         # torch_module = importlib.util.find_spec("torch")
@@ -51,11 +46,6 @@ def _initialize_if_needed():
         #         AVAILABLE_DEVICES['pytorch'] = pytorch_array_backend.available_devices
         #     except ModuleNotFoundError:
         #         pass
-    
-        for impl in AVAILABLE_DEVICES.keys():
-            for device in AVAILABLE_DEVICES[impl]:
-                IMPL_DEVICE_PAIRS.append((impl, device))
-
         IS_INITIALIZED = True
 
 

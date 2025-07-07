@@ -17,7 +17,8 @@ from os import path
 import numpy as np
 
 import odl
-from odl.space.entry_points import tensor_space_impl_names, IMPL_DEVICE_PAIRS
+from odl.array_API_support import lookup_array_backend
+from odl.space.entry_points import tensor_space_impl_names
 from odl.trafos.backends import PYFFTW_AVAILABLE, PYWT_AVAILABLE
 from odl.util.testutils import simple_fixture
 from odl.util.dtype_utils import INTEGER_DTYPES, FLOAT_DTYPES, COMPLEX_DTYPES
@@ -148,6 +149,14 @@ odl_floating_dtype = simple_fixture(name='dtype',
 scalar_dtypes = INTEGER_DTYPES + FLOAT_DTYPES + COMPLEX_DTYPES
 odl_scalar_dtype = simple_fixture(name='dtype',
                                   params=scalar_dtypes)
+
+
+IMPL_DEVICE_PAIRS = []
+    
+for impl in tensor_space_impl_names():
+    array_backend = lookup_array_backend(impl)
+    for device in array_backend.available_devices:
+        IMPL_DEVICE_PAIRS.append((impl, device))
 
 odl_impl_device_pairs = simple_fixture(name='impl_device', params=IMPL_DEVICE_PAIRS)
 
