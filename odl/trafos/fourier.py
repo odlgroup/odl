@@ -23,7 +23,7 @@ from odl.trafos.util import (
     dft_postprocess_data, dft_preprocess_data, reciprocal_grid,
     reciprocal_space)
 from odl.util import (
-    complex_dtype, conj_exponent, dtype_repr, is_complex_floating_dtype,
+    complex_dtype, conj_exponent, dtype_repr, is_complex_dtype,
     is_real_dtype, normalized_axes_tuple, normalized_scalar_param_list)
 
 from odl.array_API_support import lookup_array_backend

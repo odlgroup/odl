@@ -20,8 +20,8 @@ from odl.discr import (
 from odl.set import RealNumbers
 from odl.util import (
     complex_dtype, conj_exponent, dtype_repr, fast_1d_tensor_mult,
-    is_complex_floating_dtype, is_numeric_dtype, is_real_dtype,
-    is_real_floating_dtype, is_string, normalized_axes_tuple,
+    is_complex_dtype, is_numeric_dtype, is_real_dtype,
+    is_floating_dtype, is_string, normalized_axes_tuple,
     normalized_scalar_param_list)
 from odl.array_API_support import get_array_and_backend, ArrayBackend
 
@@ -303,7 +303,7 @@ def dft_preprocess_data(arr, shift=True, axes=None, sign='-', out=None):
     if not is_numeric_dtype(arr.dtype):
         raise ValueError('array has non-numeric data type {}'
                          ''.format(dtype_repr(arr.dtype)))
-    elif is_real_dtype(arr.dtype) and not is_real_floating_dtype(arr.dtype):
+    elif is_real_dtype(arr.dtype) and not is_floating_dtype(arr.dtype):
         arr = arr.astype('float64')
 
     if axes is None:
@@ -466,9 +466,9 @@ def dft_postprocess_data(arr, real_grid, recip_grid, shift, axes,
     arr, backend = get_array_and_backend(arr)
     backend : ArrayBackend
     dtype = backend.get_dtype_identifier(array=arr)
-    if is_real_floating_dtype(arr.dtype):
+    if is_floating_dtype(arr.dtype):
         arr = arr.astype(complex_dtype(arr.dtype))
-    elif not is_complex_floating_dtype(arr.dtype):
+    elif not is_complex_dtype(arr.dtype):
         raise ValueError('array data type {} is not a complex floating point '
                          'data type'.format(dtype_repr(arr.dtype)))
 
@@ -619,7 +619,7 @@ def reciprocal_space(space, axes=None, halfcomplex=False, shift=True,
     if dtype is None:
         dtype = complex_dtype(space.dtype_identifier)
     else:
-        if not is_complex_floating_dtype(dtype):
+        if not is_complex_dtype(dtype):
             raise ValueError('{} is not a complex data type'
                              ''.format(dtype_repr(dtype)))
 

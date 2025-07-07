@@ -11,8 +11,8 @@ import odl
 import numpy as np
 
 from odl.util.dtype_utils import (
-    is_numeric_dtype, is_real_dtype, is_real_floating_dtype,
-    is_complex_floating_dtype,
+    is_numeric_dtype, is_real_dtype, is_floating_dtype,
+    is_complex_dtype,
     FLOAT_DTYPES,
     COMPLEX_DTYPES,
     INTEGER_DTYPES    
@@ -42,12 +42,12 @@ def test_is_real_dtype():
 
 def test_is_real_floating_dtype():
     for dtype in real_float_dtypes:
-        assert is_real_floating_dtype(dtype)
+        assert is_floating_dtype(dtype)
 
 
 def test_is_complex_floating_dtype():
     for dtype in complex_float_dtypes:
-        assert is_complex_floating_dtype(dtype)
+        assert is_complex_dtype(dtype)
 
 
 if __name__ == '__main__':

@@ -24,8 +24,8 @@ from odl.set.space import (
     SupportedNumOperationParadigms, NumOperationParadigmSupport)
 from odl.array_API_support import ArrayBackend, lookup_array_backend
 from odl.util import (
-    array_str, indent, is_complex_floating_dtype,
-    is_numeric_dtype, is_real_floating_dtype, safe_int_conv,
+    array_str, indent, is_complex_dtype,
+    is_numeric_dtype, is_floating_dtype, safe_int_conv,
     signature_string)
 from odl.util.dtype_utils import(
     SCALAR_DTYPES, AVAILABLE_DTYPES,
@@ -392,12 +392,12 @@ class TensorSpace(LinearSpace):
     @property
     def is_complex(self):
         """True if this is a space of complex tensors."""
-        return is_complex_floating_dtype(self.dtype)
+        return is_complex_dtype(self.dtype)
     
     @property
     def is_real(self):
         """True if this is a space of real tensors."""
-        return is_real_floating_dtype(self.dtype)
+        return is_floating_dtype(self.dtype)
     
     @property
     def is_weighted(self):

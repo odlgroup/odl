@@ -16,11 +16,11 @@ __all__ = (
     'is_boolean_dtype',
     'is_int_dtype',
     'is_floating_dtype',
-    # 'is_complex_dtype',
+    'is_complex_dtype',
     'is_real_dtype',
     # 'is_scalar_dtype',
-    'is_real_floating_dtype',
-    'is_complex_floating_dtype',
+    # 'is_real_floating_dtype',
+    # 'is_complex_floating_dtype',
     'real_dtype',
     'complex_dtype'
 )
@@ -209,18 +209,18 @@ def is_floating_dtype(dtype: "str | Number |xp.dtype") -> bool:
 @lru_cache
 def is_real_dtype(dtype):
     """Return ``True`` if ``dtype`` is a real (including integer) type."""
-    return is_numeric_dtype(dtype) and not is_complex_floating_dtype(dtype)
+    return is_numeric_dtype(dtype) and not is_complex_dtype(dtype)
 
 
 @lru_cache
-def is_real_floating_dtype(dtype):
+def is_floating_dtype(dtype):
     """Return ``True`` if ``dtype`` is a real floating point type."""
     dtype = np.dtype(dtype)
     return np.issubdtype(getattr(dtype, 'base', None), np.floating)
 
 
 @lru_cache
-def is_complex_floating_dtype(dtype):
+def is_complex_dtype(dtype):
     """Return ``True`` if ``dtype`` is a complex floating point type."""
     dtype = np.dtype(dtype)
     return np.issubdtype(getattr(dtype, 'base', None), np.complexfloating)
@@ -273,7 +273,7 @@ def real_dtype(dtype, default=None):
     """
     dtype, dtype_in = np.dtype(dtype), dtype
 
-    if is_real_floating_dtype(dtype):
+    if is_floating_dtype(dtype):
         return dtype
 
     try:
