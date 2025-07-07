@@ -11,9 +11,9 @@ import numpy as np
 from odl.util.print_utils import dtype_repr
 
 __all__ = (
-    # 'is_available_dtype',
+    'is_available_dtype',
     'is_numeric_dtype',
-    # 'is_boolean_dtype',
+    'is_boolean_dtype',
     'is_int_dtype',
     'is_floating_dtype',
     # 'is_complex_dtype',
@@ -105,29 +105,29 @@ def _convert_dtype(dtype: "str | Number |xp.dtype") -> str :
             return array_backend.identifier_of_dtype(dtype)
     raise ValueError(f'The provided dtype {dtype} is not a string, a python Number or a backend-specific dtype. Please provide either of these.')
 
-# @lru_cache
-# def is_available_dtype(dtype: "str | Number |xp.dtype") -> bool:
-#     """Return ``True`` if ``dtype`` is available."""
-#     try: 
-#         _convert_dtype(dtype)
-#         return True
-#     except ValueError or AssertionError:
-#         return False 
+@lru_cache
+def is_available_dtype(dtype: "str | Number |xp.dtype") -> bool:
+    """Return ``True`` if ``dtype`` is available."""
+    try: 
+        _convert_dtype(dtype)
+        return True
+    except ValueError or AssertionError:
+        return False 
     
-# @lru_cache
-# def is_numeric_dtype(dtype: "str | Number |xp.dtype") -> bool:
-#     """Return ``True`` if ``dtype`` is a numeric type."""
-#     return _convert_dtype(dtype) in AVAILABLE_DTYPES
+@lru_cache
+def is_numeric_dtype(dtype: "str | Number |xp.dtype") -> bool:
+    """Return ``True`` if ``dtype`` is a numeric type."""
+    return _convert_dtype(dtype) in SCALAR_DTYPES
 
-# @lru_cache
-# def is_boolean_dtype(dtype: "str | Number |xp.dtype") -> bool:
-#     """Return ``True`` if ``dtype`` is an boolean type."""
-#     return _convert_dtype(dtype) in BOOLEAN_DTYPES
+@lru_cache
+def is_boolean_dtype(dtype: "str | Number |xp.dtype") -> bool:
+    """Return ``True`` if ``dtype`` is an boolean type."""
+    return _convert_dtype(dtype) in BOOLEAN_DTYPES
 
-# @lru_cache
-# def is_int_dtype(dtype: "str | Number |xp.dtype") -> bool:
-#     """Return ``True`` if ``dtype`` is an integer type."""
-#     return _convert_dtype(dtype) in INTEGER_DTYPES
+@lru_cache
+def is_int_dtype(dtype: "str | Number |xp.dtype") -> bool:
+    """Return ``True`` if ``dtype`` is an integer type."""
+    return _convert_dtype(dtype) in INTEGER_DTYPES
 
 # @lru_cache
 # def is_floating_dtype(dtype: "str | Number |xp.dtype") -> bool:
@@ -186,18 +186,18 @@ def _convert_dtype(dtype: "str | Number |xp.dtype") -> str :
 #             return default
 
 
-@lru_cache
-def is_numeric_dtype(dtype):
-    """Return ``True`` if ``dtype`` is a numeric type."""
-    dtype = np.dtype(dtype)
-    return np.issubdtype(getattr(dtype, 'base', None), np.number)
+# @lru_cache
+# def is_numeric_dtype(dtype):
+#     """Return ``True`` if ``dtype`` is a numeric type."""
+#     dtype = np.dtype(dtype)
+#     return np.issubdtype(getattr(dtype, 'base', None), np.number)
 
 
-@lru_cache
-def is_int_dtype(dtype):
-    """Return ``True`` if ``dtype`` is an integer type."""
-    dtype = np.dtype(dtype)
-    return np.issubdtype(getattr(dtype, 'base', None), np.integer)
+# @lru_cache
+# def is_int_dtype(dtype):
+#     """Return ``True`` if ``dtype`` is an integer type."""
+#     dtype = np.dtype(dtype)
+#     return np.issubdtype(getattr(dtype, 'base', None), np.integer)
 
 
 @lru_cache
