@@ -138,11 +138,6 @@ def is_complex_dtype(dtype: "str | Number |xp.dtype") -> bool:
     return _convert_dtype(dtype) in COMPLEX_DTYPES
 
 @lru_cache
-def is_floating_dtype(dtype: "str | Number |xp.dtype") -> bool:
-    """Return ``True`` if ``dtype`` is a real (including integer) type."""
-    return _convert_dtype(dtype) in FLOAT_DTYPES
-
-@lru_cache
 def is_real_dtype(dtype: "str | Number |xp.dtype") -> bool:
     """Return ``True`` if ``dtype`` is a real (including integer) type."""
     return _convert_dtype(dtype) in REAL_DTYPES
