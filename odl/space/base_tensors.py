@@ -183,7 +183,8 @@ class TensorSpace(LinearSpace):
         # to represent discretizations of vector- or tensor-valued functions,
         # i.e., if dtype.shape == (3,) we expect f[0] to have shape `shape`.
         # <!> this is likely to break in Pytorch
-        self.__shape = np.dtype(dtype).shape + shape
+        # Believe it or not, this broke with pytorch
+        self.__shape = shape
 
     def _init_field(self):
         if self.dtype_identifier in TYPE_PROMOTION_REAL_TO_COMPLEX:
