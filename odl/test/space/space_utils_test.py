@@ -58,14 +58,14 @@ def test_vector_numpy():
     assert all_equal(x, inp)
 
     inp = ['a', 'b', 'c']
-    with pytest.raises(AssertionError):
+    with pytest.raises(ValueError):
        x = vector(inp)
        # assert isinstance(x, NumpyTensor)
        # assert np.issubdtype(x.dtype, np.str_)
        # assert all_equal(x, inp)
 
     inp = [1, 2, 'inf']
-    with pytest.raises(AssertionError):
+    with pytest.raises(ValueError):
        x = vector(inp)
        # assert isinstance(x, NumpyTensor)
        # assert np.issubdtype(x.dtype, np.str_)

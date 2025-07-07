@@ -16,7 +16,7 @@ from odl.array_API_support import lookup_array_backend
 
 from odl.space.base_tensors import default_dtype
 
-from odl.util.dtype_utils import AVAILABLE_DTYPES, COMPLEX_DTYPES, FLOAT_DTYPES
+from odl.util.dtype_utils import is_available_dtype, is_complex_dtype, is_floating_dtype
 from odl.space.entry_points import tensor_space_impl, tensor_space_impl_names
 
 __all__ = ('vector', 'tensor_space', 'cn', 'rn')
@@ -140,9 +140,7 @@ def tensor_space(shape, dtype='float64', impl='numpy', device = 'cpu', **kwargs)
     rn, cn : Constructors for real and complex spaces
     """
     # Check the dtype argument
-    assert (
-        dtype in AVAILABLE_DTYPES
-    ), f"The dtype must be in {AVAILABLE_DTYPES}, but {dtype} was provided"
+    is_available_dtype(dtype)
     # Check the impl argument
     assert (
         impl in tensor_space_impl_names()
@@ -201,7 +199,7 @@ def cn(shape, dtype='complex128', impl='numpy', device='cpu', **kwargs):
     tensor_space : Space of tensors with arbitrary scalar data type.
     rn : Real tensor space.
     """
-    assert dtype in COMPLEX_DTYPES, f'For cn, the type must be complex, but got {dtype}'
+    is_complex_dtype(dtype)
     return tensor_space(shape, dtype=dtype, impl=impl, device=device, **kwargs)
 
 
@@ -254,7 +252,7 @@ def rn(shape, dtype=None, impl='numpy', device ='cpu', **kwargs):
     """
     if dtype is None:
         dtype = default_dtype(lookup_array_backend(str(impl).lower()))
-    assert dtype in FLOAT_DTYPES, f'For rn, the type must be float, but got {dtype}'
+    is_floating_dtype(dtype)
     return tensor_space(shape, dtype=dtype, impl=impl, device=device, **kwargs)
 
 
