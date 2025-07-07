@@ -19,6 +19,8 @@ from .utility import *
 from .vectorization import *
 from .sparse import *
 from .scipy_compatibility import *
+from .dtype_utils import *
+from .print_utils import *
 
 __all__ = ()
 __all__ += graphics.__all__
@@ -30,3 +32,5 @@ __all__ += utility.__all__
 __all__ += vectorization.__all__
 __all__ += sparse.__all__
 __all__ += scipy_compatibility.__all__
+__all__ += dtype_utils.__all__
+__all__ += print_utils.__all__
