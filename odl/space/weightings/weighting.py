@@ -10,10 +10,11 @@
 
 from __future__ import print_function, division, absolute_import
 from builtins import object
+import math
 import numpy as np
 
 from odl.util import array_str, signature_string, indent, is_real_dtype
-
+from odl.array_API_support.utils import get_array_and_backend
 
 __all__ = ('MatrixWeighting', 'ArrayWeighting', 'ConstWeighting',
            'CustomInner', 'CustomNorm', 'CustomDist')
@@ -143,7 +144,7 @@ class Weighting(object):
         norm : float
             The norm of the element.
         """
-        return float(np.sqrt(self.inner(x, x).real))
+        return float(math.sqrt(self.inner(x, x).real))
 
     def dist(self, x1, x2):
         """Calculate the distance between two elements.
@@ -473,32 +474,42 @@ class MatrixWeighting(Weighting):
 
 def _pnorm_diagweight(x, p, w):
     """Diagonally weighted p-norm implementation."""
-    xp = np.abs(x.data)
+    x, array_backend = get_array_and_backend(x)
+    ns = array_backend.array_namespace
+    xp = ns.abs(x.data)
     if p == float('inf'):
         xp *= w
-        return np.max(xp)
+        return ns.max(xp)
     else:
-        xp = np.power(xp, p, out=xp)
+        xp = ns.power(xp, p, out=xp)
         xp *= w
-        return np.sum(xp) ** (1 / p)
+        return ns.sum(xp) ** (1 / p)
 
 def _norm_default(x):
     """Default Euclidean norm implementation."""
-    return np.linalg.vector_norm(x.data)
+    x, array_backend = get_array_and_backend(x)
+    ns = array_backend.array_namespace
+    return ns.linalg.vector_norm(x.data)
 
 def _pnorm_default(x, p):
     """Default p-norm implementation."""
-    return np.linalg.vector_norm(x.data, ord=p)
+    x, array_backend = get_array_and_backend(x)
+    ns = array_backend.array_namespace
+    return ns.linalg.vector_norm(x.data, ord=p)
 
 def _inner_default(x1, x2):
     """Default Euclidean inner product implementation."""
+    x1, array_backend_1 = get_array_and_backend(x1)
+    x2, array_backend_2 = get_array_and_backend(x2)
+    assert  array_backend_1 == array_backend_2, f"{array_backend_1=} and {array_backend_2=} do not match"
+    ns = array_backend_1.array_namespace
     if is_real_dtype(x2.dtype):
-        return np.vecdot(x1.ravel(), x2.ravel())
+        return ns.vecdot(x1.ravel(), x2.ravel())
     else:
         # `vecdot` has the complex conjugate on the left argument,
         # whereas ODL convention is that the inner product should
         # be linear in the left argument (conjugate in the right).
-        return np.vecdot(x2.ravel(), x1.ravel())
+        return ns.vecdot(x2.ravel(), x1.ravel())
 
 
 # TODO: implement intermediate weighting schemes with arrays that are
