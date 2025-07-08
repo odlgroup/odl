@@ -13,6 +13,8 @@ __all__ = (
     'is_numeric_dtype',
     'is_boolean_dtype',
     'is_int_dtype',
+    'is_signed_int_dtype',
+    'is_unsigned_int_dtype',
     'is_floating_dtype',
     'is_complex_dtype',
     'is_real_dtype',
@@ -27,17 +29,21 @@ BOOLEAN_DTYPES = [
     "bool"
     ]
 
-INTEGER_DTYPES = [
+SIGNED_INTEGER_DTYPES = [
     int,
     "int8",
     "int16",
     "int32",
     "int64",
+]
+UNSIGNED_INTEGER_DTYPES = [
     "uint8",
     "uint16",
     "uint32",
     "uint64"
-    ]
+]
+
+INTEGER_DTYPES = SIGNED_INTEGER_DTYPES + UNSIGNED_INTEGER_DTYPES
 
 FLOAT_DTYPES = [
     float,
@@ -118,6 +124,16 @@ def is_numeric_dtype(dtype: "str | Number |xp.dtype") -> bool:
 def is_boolean_dtype(dtype: "str | Number |xp.dtype") -> bool:
     """Return ``True`` if ``dtype`` is an boolean type."""
     return _convert_dtype(dtype) in BOOLEAN_DTYPES
+
+@lru_cache
+def is_signed_int_dtype(dtype: "str | Number |xp.dtype") -> bool:
+    """Return ``True`` if ``dtype`` is an integer type."""
+    return _convert_dtype(dtype) in SIGNED_INTEGER_DTYPES
+
+@lru_cache
+def is_unsigned_int_dtype(dtype: "str | Number |xp.dtype") -> bool:
+    """Return ``True`` if ``dtype`` is an integer type."""
+    return _convert_dtype(dtype) in UNSIGNED_INTEGER_DTYPES
 
 @lru_cache
 def is_int_dtype(dtype: "str | Number |xp.dtype") -> bool:

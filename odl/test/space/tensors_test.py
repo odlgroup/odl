@@ -25,6 +25,8 @@ from odl.util.testutils import (
 from odl.array_API_support import lookup_array_backend
 from odl.util.pytest_config import IMPL_DEVICE_PAIRS
 
+from odl.util.dtype_utils import is_complex_dtype
+
 # --- Test helpers --- #
 
 # Functions to return arrays and classes corresponding to impls. Extend
@@ -1763,15 +1765,19 @@ def test_custom_dist(tspace):
 #         assert np.allclose(out, result_npy)
 
 
-def test_reduction(odl_tspace_impl):
+def test_reduction(tspace):
     """Check that the generated docstrings are not empty."""
-    impl = odl_tspace_impl
-    x = odl.rn(3, impl=impl).element()
-
+    ## In Python 2.6, max and min reductions are not implemented for ComplexDouble dtype
+    x = tspace.element()
+    backend = tspace.array_backend.array_namespace
     for name in ['sum', 'prod', 'min', 'max']:
         reduction = getattr(odl, name)
-        reduction_arr = getattr(np, name)
-        assert reduction(x) == reduction_arr(x.data)
+        reduction_arr = getattr(backend, name)
+        if name in ['min', 'max'] and is_complex_dtype(tspace.dtype) and tspace.impl == 'pytorch':
+            with pytest.raises(RuntimeError):
+                assert reduction(x) == reduction_arr(x.data)
+        else:
+            assert reduction(x) == reduction_arr(x.data)
 
 
 if __name__ == '__main__':

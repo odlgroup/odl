@@ -36,16 +36,14 @@ def _initialize_if_needed():
     """Initialize ``TENSOR_SPACE_IMPLS`` if not already done."""
     global IS_INITIALIZED, TENSOR_SPACE_IMPLS
     if not IS_INITIALIZED:
-        # import importlib.util       
-        # torch_module = importlib.util.find_spec("torch")
-        # if torch_module is not None:
-        #     try:
-        #         from odl.space.pytorch_tensors import PyTorchTensorSpace, pytorch_array_backend
-        #         pytorch_array_backend : ArrayBackend
-        #         TENSOR_SPACE_IMPLS['pytorch'] = PyTorchTensorSpace
-        #         AVAILABLE_DEVICES['pytorch'] = pytorch_array_backend.available_devices
-        #     except ModuleNotFoundError:
-        #         pass
+        import importlib.util       
+        torch_module = importlib.util.find_spec("torch")
+        if torch_module is not None:
+            try:
+                from odl.space.pytorch_tensors import PyTorchTensorSpace
+                TENSOR_SPACE_IMPLS['pytorch'] = PyTorchTensorSpace
+            except ModuleNotFoundError:
+                pass
         IS_INITIALIZED = True
 
 
