@@ -481,7 +481,11 @@ def _pnorm_diagweight(x, p, w):
         xp *= w
         return ns.max(xp)
     else:
-        xp = ns.power(xp, p, out=xp)
+        # Believe it or not, Pytorch and Numpy implement power in a *different* way
+        try:
+            xp = ns.power(xp, p, out=xp)
+        except AttributeError:
+            xp = ns.pow(xp, p, out=xp)
         xp *= w
         return ns.sum(xp) ** (1 / p)
 
