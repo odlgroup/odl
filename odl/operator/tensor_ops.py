@@ -20,7 +20,7 @@ from odl.operator.operator import Operator
 from odl.set import ComplexNumbers, RealNumbers
 from odl.space import ProductSpace, tensor_space
 from odl.space.base_tensors import TensorSpace
-from odl.space.weighting import ArrayWeighting
+from odl.space.weightings.weighting import ArrayWeighting
 from odl.util import dtype_repr, indent, signature_string, writable_array
 from odl.array_API_support import abs, maximum, pow, sqrt, multiply
 

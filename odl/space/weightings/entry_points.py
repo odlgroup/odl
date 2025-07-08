@@ -1,7 +1,5 @@
-import numpy as np
-from numpy.typing import ArrayLike
-
-from odl.space.weighting import Weighting, ConstWeighting, ArrayWeighting, CustomInner, CustomNorm, CustomDist
+from odl.array_API_support import get_array_and_backend
+from .weighting import ConstWeighting, ArrayWeighting, CustomInner, CustomNorm, CustomDist
 
 def space_weighting(
         impl : str,
@@ -92,24 +90,16 @@ def space_weighting(
             else:
                 raise ValueError("If the weight is a scalar, it must be positive")
             return ConstWeighting(const=weight, impl=impl, device=device, exponent=exponent)
-        
-        elif hasattr(weight, 'odl_tensor'):
-            if np.all(0 < weight.data):
-                assert impl == weight.impl
-                weight = weight.data
-                assert device == weight.device
-            else:
-                raise ValueError("If the weight is an ODL Tensor, all its entries must be positive")
-            
+                    
         elif hasattr(weight, '__array__'):
-            if np.all(0 < weight):
-                pass
-                assert device == weight.device
+            weight, backend = get_array_and_backend(weight)
+            if backend.array_namespace.all(0 < weight):
+                assert device == weight.device.__str__(), f"The weighing is expecting the device {device}, but the array provided for the weight has a device {weight.device}. Please make sure that the two devices are consistent"
             else:
                 raise ValueError("If the weight is an array, all its elements must be positive")          
 
         else:
-            raise ValueError(f"A weight can only be a positive __array__, a positive float or a positive ODL Tensor")      
+            raise ValueError(f"A weight can only be a positive __array__, a positive float.")      
 
         return ArrayWeighting(array=weight, impl=impl, device=device, exponent=exponent)
 

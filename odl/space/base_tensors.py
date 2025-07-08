@@ -22,7 +22,7 @@ from odl.set.sets import ComplexNumbers, RealNumbers
 from odl.set.space import (
     LinearSpace, LinearSpaceElement, LinearSpaceTypeError,
     SupportedNumOperationParadigms, NumOperationParadigmSupport)
-from odl.array_API_support import ArrayBackend, lookup_array_backend
+from odl.array_API_support import ArrayBackend, lookup_array_backend, get_array_and_backend
 from odl.util import (
     array_str, indent, is_complex_dtype,
     is_numeric_dtype, is_floating_dtype, safe_int_conv,
@@ -32,7 +32,7 @@ from odl.util.dtype_utils import(
     is_available_dtype,
     TYPE_PROMOTION_COMPLEX_TO_REAL, 
     TYPE_PROMOTION_REAL_TO_COMPLEX)
-from .weighting import Weighting, ConstWeighting
+from .weightings.weighting import Weighting, ConstWeighting
 from .pspace import ProductSpaceElement
 
 __all__ = ('TensorSpace',)

@@ -24,7 +24,7 @@ from odl.set.space import LinearSpace, SupportedNumOperationParadigms, NumOperat
 from odl.space import ProductSpace
 from odl.space.base_tensors import Tensor, TensorSpace, default_dtype
 from odl.space.entry_points import tensor_space_impl
-from odl.space.weighting import ConstWeighting
+from odl.space.weightings.weighting import ConstWeighting
 from odl.util import (
     apply_on_boundary, array_str, dtype_str, is_floating_dtype,
     is_numeric_dtype, normalized_nodes_on_bdry, normalized_scalar_param_list,

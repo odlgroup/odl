@@ -21,7 +21,7 @@ from contextlib import contextmanager
 from odl.set import LinearSpace
 from odl.set.space import (LinearSpaceElement,
     SupportedNumOperationParadigms, NumOperationParadigmSupport)
-from odl.space.weighting import (
+from .weightings.weighting import (
     ArrayWeighting, ConstWeighting, CustomDist, CustomInner, CustomNorm,
     Weighting)
 from odl.array_API_support.utils import get_array_and_backend
