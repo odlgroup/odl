@@ -32,7 +32,7 @@ from odl.util.dtype_utils import(
     is_available_dtype,
     TYPE_PROMOTION_COMPLEX_TO_REAL, 
     TYPE_PROMOTION_REAL_TO_COMPLEX)
-from .weightings.weighting import Weighting, ConstWeighting
+from .weightings.weighting import Weighting, ConstWeighting, ArrayWeighting
 from .pspace import ProductSpaceElement
 
 __all__ = ('TensorSpace',)
@@ -220,7 +220,7 @@ class TensorSpace(LinearSpace):
                         f"`weighting.impl` and space.impl must be consistent, but got \
                         {weighting.impl} and {self.impl}" 
                     )
-                if weighting.device != self.device:
+                if isinstance(weighting, ArrayWeighting) and weighting.device != self.device:
                     raise ValueError(
                         f"`weighting.device` and space.device must be consistent, but got \
                         {weighting.device} and {self.device}" 
