@@ -20,7 +20,7 @@ def _helper(x, fname, **kwargs):
                 fn = getattr(np, fname)
             else:
                 y, backend_y = get_array_and_backend(y)
-                fn = getattr(backend_y, fname)
+                fn = getattr(backend_y.array_namespace, fname)
             return fn(x, y, **kwargs)
         else: 
             return fn(x, **kwargs)
