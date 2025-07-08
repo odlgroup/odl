@@ -23,6 +23,9 @@ from odl.util.npy_compat import AVOID_UNNECESSARY_COPY
 from future.moves.itertools import zip_longest
 
 from odl.util.utility import is_string, run_from_ipython
+from odl.util.dtype_utils import (
+    is_boolean_dtype, is_signed_int_dtype, is_unsigned_int_dtype,
+    is_floating_dtype, is_complex_dtype)
 
 __all__ = (
     'dtype_ndigits',
@@ -364,23 +367,23 @@ def noise_array(space):
         return result
 
     else:
-        if space.dtype == np.bool:
-            arr = np.random.randint(0, 2, size=space.shape, dtype=bool)
-        elif np.issubdtype(space.dtype, np.unsignedinteger):
+        dtype = space.dtype_identifier
+        if is_boolean_dtype(dtype):
+            arr = np.random.randint(0, 2, size=space.shape, dtype=dtype)
+        elif is_unsigned_int_dtype(dtype):
             arr = np.random.randint(0, 10, space.shape)
-        elif np.issubdtype(space.dtype, np.signedinteger):
+        elif is_signed_int_dtype(dtype):
             arr = np.random.randint(-10, 10, space.shape)
-        elif np.issubdtype(space.dtype, np.floating):
+        elif is_floating_dtype(dtype):
             arr = np.random.randn(*space.shape)
-        elif np.issubdtype(space.dtype, np.complexfloating):
+        elif is_complex_dtype(dtype):
             arr = (
                 np.random.randn(*space.shape)
                 + 1j * np.random.randn(*space.shape)
             ) / np.sqrt(2.0)
         else:
             raise ValueError('bad dtype {}'.format(space.dtype))
-
-        return arr.astype(space.dtype, copy=AVOID_UNNECESSARY_COPY)
+        return space.element(arr).data
 
 
 def noise_element(space):
@@ -476,7 +479,7 @@ def noise_elements(space, n=1):
     arrs = tuple(noise_array(space) for _ in range(n))
 
     # Make space elements from arrays
-    elems = tuple(space.element(arr.copy()) for arr in arrs)
+    elems = tuple(space.element(arr) for arr in arrs)
 
     if n == 1:
         return tuple(arrs + elems)
