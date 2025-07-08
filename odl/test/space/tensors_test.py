@@ -1242,91 +1242,105 @@ def test_const_weighting_inner(tspace):
     """Test inner product with const weighting."""
     [xarr, yarr], [x, y] = noise_elements(tspace, 2)
 
+    ns = tspace.array_namespace
+
     constant = 1.5
-    true_result_const = constant * np.vdot(yarr, xarr)
+    true_result_const = constant * ns.vecdot(yarr.ravel(), xarr.ravel())
 
     w_const = odl.space_weighting(impl=tspace.impl, weight=constant)
-    assert w_const.inner(x.data, y.data) == pytest.approx(true_result_const)
+
+    assert w_const.inner(x, y) == true_result_const
 
     # Exponent != 2 -> no inner
     w_const = odl.space_weighting(impl=tspace.impl, weight=constant, exponent=1)
     with pytest.raises(NotImplementedError):
-        w_const.inner(x.data, y.data)
+        w_const.inner(x, y)
 
 
 def test_const_weighting_norm(tspace, exponent):
     """Test norm with const weighting."""
     xarr, x = noise_elements(tspace)
 
+    ns = tspace.array_namespace
+
     constant = 1.5
     if exponent == float('inf'):
         factor = constant
     else:
         factor = constant ** (1 / exponent)
 
-    true_norm = factor * np.linalg.norm(xarr.ravel(), ord=exponent)
+    true_norm = float(factor * ns.linalg.norm(xarr.ravel(), ord=exponent))
 
     w_const =  odl.space_weighting(impl=tspace.impl, weight=constant, exponent=exponent)
 
+    array_backend = tspace.array_backend
+    real_dtype = array_backend.identifier_of_dtype(tspace.real_dtype)
 
-    if tspace.real_dtype == np.float16:
+    if real_dtype == "float16":
         tolerance = 5e-2
-    elif tspace.real_dtype == np.float32:
-        tolerance = 1e-6
-    elif tspace.real_dtype == np.float64:
+    elif real_dtype == "float32":
+        tolerance = 5e-6
+    elif real_dtype == "float64" or real_dtype == float:
         tolerance = 1e-15
-    elif tspace.real_dtype == np.float128:
+    elif real_dtype == "float128":
         tolerance = 1e-19
     else:
-        raise TypeError(f"No known tolerance for dtype {tspace.dtype}")
+        raise TypeError(f"No known tolerance for dtype {real_dtype}")
     
-    assert w_const.norm(x) == pytest.approx(true_norm, rel=tolerance)
+    # assert w_const.norm(x) == pytest.approx(true_norm, rel=tolerance)
+    assert isclose(w_const.norm(x), true_norm, rtol=tolerance)
 
 
 def test_const_weighting_dist(tspace, exponent):
     """Test dist with const weighting."""
     [xarr, yarr], [x, y] = noise_elements(tspace, 2)
 
+    ns = tspace.array_namespace
 
     constant = 1.5
     if exponent == float('inf'):
         factor = constant
     else:
         factor = constant ** (1 / exponent)
-    true_dist = factor * np.linalg.norm((xarr - yarr).ravel(), ord=exponent)
-
+    true_dist = float(factor * ns.linalg.norm((xarr - yarr).ravel(), ord=exponent))
     w_const = w_const = odl.space_weighting(impl=tspace.impl, weight=constant, exponent=exponent)
 
-    if tspace.real_dtype == np.float16:
+    array_backend = tspace.array_backend
+    real_dtype = array_backend.identifier_of_dtype(tspace.real_dtype)
+    if real_dtype == "float16":
         tolerance = 5e-2
-    elif tspace.real_dtype == np.float32:
+    elif real_dtype == "float32":
         tolerance = 5e-7
-    elif tspace.real_dtype == np.float64:
+    elif real_dtype == "float64" or real_dtype == float:
         tolerance = 1e-15
-    elif tspace.real_dtype == np.float128:
+    elif real_dtype == "float128":
         tolerance = 1e-19
     else:
-        raise TypeError(f"No known tolerance for dtype {tspace.dtype}")
+        raise TypeError(f"No known tolerance for dtype {real_dtype}")
 
-    assert w_const.dist(x, y) == pytest.approx(true_dist, rel=tolerance)
+    # assert w_const.dist(x, y) == pytest.approx(true_dist, rel=tolerance)
+    assert isclose(w_const.dist(x,y), true_dist, rtol=tolerance)
 
 
 
 def test_custom_inner(tspace):
     """Test weighting with a custom inner product."""
     ns = tspace.array_namespace
-    rtol = ns.sqrt(ns.finfo(tspace.dtype).resolution)
+    rtol = math.sqrt(ns.finfo(tspace.dtype).resolution)
 
     [xarr, yarr], [x, y] = noise_elements(tspace, 2)
 
     def inner(x, y):
         return ns.linalg.vecdot(y.ravel(), x.ravel())
+    
+    def inner_lspacelement(x, y):
+        return ns.linalg.vecdot(y.data.ravel(), x.data.ravel())
 
     def dot(x,y):
         return ns.dot(x,y)
     
-    w = odl.space_weighting(impl=tspace.impl, inner=inner)
-    w_same = odl.space_weighting(impl=tspace.impl, inner=inner)
+    w = odl.space_weighting(impl=tspace.impl, inner=inner_lspacelement)
+    w_same = odl.space_weighting(impl=tspace.impl, inner=inner_lspacelement)
     w_other = odl.space_weighting(impl=tspace.impl, inner=dot)
 
     assert w == w
@@ -1334,13 +1348,13 @@ def test_custom_inner(tspace):
     assert w != w_other
 
     true_inner = inner(xarr, yarr)
-    assert w.inner(x.data, y.data) == pytest.approx(true_inner)
+    assert isclose(w.inner(x, y), true_inner)
 
-    true_norm = np.linalg.norm(xarr.ravel())
-    assert w.norm(x.data) == pytest.approx(true_norm)
+    true_norm = float(ns.linalg.norm(xarr.ravel()))
+    assert isclose(w.norm(x), true_norm)
 
-    true_dist = np.linalg.norm((xarr - yarr).ravel())
-    assert w.dist(x.data, y.data) == pytest.approx(true_dist, rel=rtol)
+    true_dist = float(ns.linalg.norm((xarr - yarr).ravel()))
+    assert isclose( w.dist(x, y), true_dist, rtol=rtol)
 
     with pytest.raises(ValueError):
         odl.space_weighting(impl=tspace.impl, inner=inner, weight = 1)
@@ -1368,11 +1382,11 @@ def test_custom_norm(tspace):
     with pytest.raises(NotImplementedError):
         w.inner(x, y)
 
-    true_norm = np.linalg.norm(xarr.ravel())
-    assert tspace.norm(x) == pytest.approx(true_norm)
+    true_norm = ns.linalg.norm(xarr.ravel())
+    assert isclose(tspace.norm(x), true_norm)
 
-    true_dist = np.linalg.norm((xarr - yarr).ravel())
-    assert tspace.dist(x, y) == pytest.approx(true_dist)
+    true_dist = ns.linalg.norm((xarr - yarr).ravel())
+    assert isclose(tspace.dist(x, y), true_dist)
 
     with pytest.raises(ValueError):
         odl.space_weighting(impl=tspace.impl, norm=norm, weight = 1)
@@ -1384,12 +1398,15 @@ def test_custom_dist(tspace):
     ns = tspace.array_namespace
     def dist(x, y):
         return ns.linalg.norm(x - y)
+    
+    def dist_lspace_element(x, y):
+        return ns.linalg.norm(x.data - y.data)
 
     def other_dist(x, y):
         return ns.linalg.norm(x - y, ord=1)
 
-    w = odl.space_weighting(impl=tspace.impl, dist=dist)
-    w_same = odl.space_weighting(impl=tspace.impl, dist=dist)
+    w = odl.space_weighting(impl=tspace.impl, dist=dist_lspace_element)
+    w_same = odl.space_weighting(impl=tspace.impl, dist=dist_lspace_element)
     w_other = odl.space_weighting(impl=tspace.impl, dist=other_dist)
 
     assert w == w
