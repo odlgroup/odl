@@ -603,28 +603,28 @@ class TensorSpace(LinearSpace):
 
         # Case 1: no input provided
         if inp is None:
-            return wrapped_array(
-                self.array_namespace.empty(
+            arr = self.array_namespace.empty(
                     self.shape, dtype=self.dtype, device=self.device
-                )
-            )
+                )    
         # Case 2: input is provided
         # Case 2.1: the input is an ODL OBJECT
         # ---> The data of the input is transferred to the space's device and data type AND wrapped into the space.
-        if hasattr(inp, "odl_tensor"):
-            return wrapped_array(dlpack_transfer(inp.data))
+        elif hasattr(inp, "odl_tensor"):
+            arr = dlpack_transfer(inp.data)
         # Case 2.2: the input is an object that implements the python array aPI (np.ndarray, torch.Tensor...)
         # ---> The input is transferred to the space's device and data type AND wrapped into the space.
         elif hasattr(inp, '__array__'):
-            return wrapped_array(dlpack_transfer(inp))
+            arr = dlpack_transfer(inp)
         # Case 2.3: the input is an array like object [[1,2,3],[4,5,6],...]
         # ---> The input is transferred to the space's device and data type AND wrapped into the space.
         # TODO: Add the iterable type instead of list and tuple and the numerics type instead of int, float, complex
         elif isinstance(inp, (int, float, complex, list, tuple)):
             arr = self.broadcast_to(inp)
-            return wrapped_array(arr)
+            
         else:
             raise ValueError  
+        
+        return wrapped_array(arr)
         
     def finfo(self):
         "Machine limits for floating-point data types."
