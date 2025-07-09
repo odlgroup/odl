@@ -253,6 +253,16 @@ class NumpyTensorSpace(TensorSpace):
         return 'numpy'
 
     ######### public methods #########
+    def broadcast_to(self, inp):
+        arr = self.array_namespace.broadcast_to(
+                    self.array_namespace.asarray(inp, device=self.device),
+                    self.shape
+                    )
+        # Make sure the result is writeable, if not make copy.
+        # This happens for e.g. results of `np.broadcast_to()`.
+        if not arr.flags.writeable:
+            arr = arr.copy()
+        return arr
 
     ######### private methods #########    
 
@@ -283,7 +293,7 @@ class NumpyTensor(Tensor):
         else:
             self.__data[:] = other.__data
 
-    ######### Public methods #########        
+    ######### Public methods #########            
     def copy(self):
         """Return an identical (deep) copy of this tensor.
 

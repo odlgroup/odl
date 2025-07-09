@@ -572,7 +572,7 @@ class TensorSpace(LinearSpace):
             return self.element_type(self, arr)
 
 
-        def dlpack_transfer(arr, device=None, copy=True):
+        def dlpack_transfer(arr):
             # We check that the object implements the dlpack protocol:
             # assert hasattr(inp, "__dlpack_device__") and hasattr(
             #     arr, "__dlpack__"
@@ -598,15 +598,8 @@ class TensorSpace(LinearSpace):
             ### This is a temporary fix, until pytorch provides the right API for dlpack with args!!
             # The RuntimeError should be raised only when using a GPU device 
             except RuntimeError:
-                if self.impl == 'numpy':
-                    # if isinstance(arr, torch.Tensor):
-                    #     arr = arr.detach().cpu()
-                    return np.asarray(arr, dtype=self.dtype)
-                # elif self.impl == 'pytorch':                    
-                #     return torch.asarray(arr, device=self.device, dtype=self.dtype)
-                    
-                else:
-                    raise NotImplementedError
+                return self.array_backend.array_constructor(
+                    arr, dtype=self.dtype, device=self.device)
 
         # Case 1: no input provided
         if inp is None:
@@ -619,23 +612,16 @@ class TensorSpace(LinearSpace):
         # Case 2.1: the input is an ODL OBJECT
         # ---> The data of the input is transferred to the space's device and data type AND wrapped into the space.
         if hasattr(inp, "odl_tensor"):
-            return wrapped_array(dlpack_transfer(inp.data, device, copy))
+            return wrapped_array(dlpack_transfer(inp.data))
         # Case 2.2: the input is an object that implements the python array aPI (np.ndarray, torch.Tensor...)
         # ---> The input is transferred to the space's device and data type AND wrapped into the space.
         elif hasattr(inp, '__array__'):
-            return wrapped_array(dlpack_transfer(inp, device, copy))
+            return wrapped_array(dlpack_transfer(inp))
         # Case 2.3: the input is an array like object [[1,2,3],[4,5,6],...]
         # ---> The input is transferred to the space's device and data type AND wrapped into the space.
         # TODO: Add the iterable type instead of list and tuple and the numerics type instead of int, float, complex
         elif isinstance(inp, (int, float, complex, list, tuple)):
-            arr = self.array_namespace.broadcast_to(
-                    self.array_namespace.asarray(inp, device=self.device),
-                    self.shape
-                    )
-            # Make sure the result is writeable, if not make copy.
-            # This happens for e.g. results of `np.broadcast_to()`.
-            if not arr.flags.writeable:
-                arr = arr.copy()
+            arr = self.broadcast_to(inp)
             return wrapped_array(arr)
         else:
             raise ValueError  
