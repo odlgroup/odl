@@ -3,6 +3,7 @@ from future.moves.itertools import zip_longest
 from contextlib import contextmanager
 # ODL import
 from odl.array_API_support.comparisons import asarray
+from odl.array_API_support.utils import get_array_and_backend
 # Third-party import
 import numpy as np
 
@@ -244,8 +245,8 @@ def array_str(a, nprint=6):
     [ 2.]
     """
     a = asarray(a)
-    a = np.from_dlpack(a)
-
+    a, backend = get_array_and_backend(a)
+    a = backend.to_numpy(a)
     max_shape = tuple(n if n < nprint else nprint for n in a.shape)
     with npy_printoptions(threshold=int(np.prod(max_shape)),
                           edgeitems=nprint // 2,
