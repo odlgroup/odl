@@ -1663,15 +1663,18 @@ class Tensor(LinearSpaceElement):
         
     def __complex__(self):
         """Return ``complex(self)``."""
-        return self.data.astype(complex).item()
+        assert len(self.data) == 1
+        return complex(self.data.item())
     
     def __float__(self):
         """Return ``float(self)``."""
-        return self.data.astype(float).item()
+        assert len(self.data) == 1
+        return float(self.data.item())
     
     def __int__(self):
         """Return ``int(self)``."""
-        return self.data.astype(int).item()
+        assert len(self.data) == 1
+        return int(self.data.item())
     
     def __copy__(self):
         """Return ``copy(self)``.
