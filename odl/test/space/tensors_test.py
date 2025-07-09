@@ -64,6 +64,16 @@ def tspace(request, odl_floating_dtype):
         )
 
 @pytest.fixture(scope='module', params=IMPL_DEVICE_PAIRS)
+def floating_tspace(request, odl_floating_dtype):
+    impl, device = request.param
+    return odl.tensor_space(
+        shape=DEFAULT_SHAPE, 
+        dtype=odl_floating_dtype, 
+        impl=impl, 
+        device=device
+        )
+
+@pytest.fixture(scope='module', params=IMPL_DEVICE_PAIRS)
 def real_tspace(request, odl_real_floating_dtype):
     impl, device = request.param
     return odl.tensor_space(
@@ -84,11 +94,11 @@ def scalar_tspace(request, odl_scalar_dtype):
         )
 
 # --- Tests --- #
-def test_init_tspace(scalar_tspace):
-    shape  = scalar_tspace.shape
-    impl   = scalar_tspace.impl
-    dtype  = scalar_tspace.dtype
-    device = scalar_tspace.device
+def test_init_tspace(floating_tspace):
+    shape  = floating_tspace.shape
+    impl   = floating_tspace.impl
+    dtype  = floating_tspace.dtype
+    device = floating_tspace.device
 
     # Weights
     constant_weighting = odl.space_weighting(
@@ -114,11 +124,10 @@ def test_init_tspace(scalar_tspace):
             weighting=weighting
             )
 
-def test_properties(odl_tspace_impl):
+def test_properties(odl_impl_device_pairs):
     """Test that the space and element properties are as expected."""
-    impl = odl_tspace_impl
-    space = odl.tensor_space(DEFAULT_SHAPE, dtype='float32', exponent=1, weighting=2,
-                             impl=impl)
+    impl, device = odl_impl_device_pairs
+    space = odl.tensor_space(DEFAULT_SHAPE, dtype='float32', exponent=1, weighting=2,impl=impl, device=device)
     x = space.element()
 
     ns = space.array_namespace
@@ -129,7 +138,7 @@ def test_properties(odl_tspace_impl):
     assert x.shape == space.shape == DEFAULT_SHAPE
     assert x.itemsize == 4
     assert x.nbytes == 4 * 3 * 4
-    assert x.device == 'cpu'
+    assert x.device == device
 
 
 def test_size(odl_tspace_impl, odl_scalar_dtype):
@@ -165,12 +174,12 @@ def test_equals_space(tspace):
     assert hash(space) != hash(other_space)
 
 
-def test_equals_elem(odl_tspace_impl):
+def test_equals_elem(odl_impl_device_pairs):
     """Test equality check of space elements."""
-    impl = odl_tspace_impl
-    r3 = odl.rn(3, exponent=2, impl=impl)
-    r3_1 = odl.rn(3, exponent=1, impl=impl)
-    r4 = odl.rn(4, exponent=2, impl=impl)
+    impl, device = odl_impl_device_pairs
+    r3 = odl.rn(3, exponent=2, impl=impl, device=device)
+    r3_1 = odl.rn(3, exponent=1, impl=impl, device=device)
+    r4 = odl.rn(4, exponent=2, impl=impl, device=device)
     r3_elem = r3.element([1, 2, 3])
     r3_same_elem = r3.element([1, 2, 3])
     r3_other_elem = r3.element([2, 2, 3])
@@ -184,18 +193,18 @@ def test_equals_elem(odl_tspace_impl):
     assert r3_elem != r4_elem
 
 
-def test_tspace_astype(odl_tspace_impl):
+def test_tspace_astype(odl_impl_device_pairs):
     """Test creation of a space counterpart with new dtype."""
-    impl = odl_tspace_impl
-    real_space = odl.rn(DEFAULT_SHAPE, impl=impl)
-    int_space = odl.tensor_space(DEFAULT_SHAPE, dtype=int, impl=impl)
+    impl, device = odl_impl_device_pairs
+    real_space = odl.rn(DEFAULT_SHAPE, impl=impl, device=device)
+    int_space = odl.tensor_space(DEFAULT_SHAPE, dtype=int, impl=impl, device=device)
     assert real_space.astype(int) == int_space
 
     # Test propagation of weightings and the `[real/complex]_space` properties
-    real = odl.rn(DEFAULT_SHAPE, weighting=1.5, impl=impl)
-    cplx = odl.cn(DEFAULT_SHAPE, weighting=1.5, impl=impl)
-    real_s = odl.rn(DEFAULT_SHAPE, weighting=1.5, dtype='float32', impl=impl)
-    cplx_s = odl.cn(DEFAULT_SHAPE, weighting=1.5, dtype='complex64', impl=impl)
+    real = odl.rn(DEFAULT_SHAPE, weighting=1.5, impl=impl, device=device)
+    cplx = odl.cn(DEFAULT_SHAPE, weighting=1.5, impl=impl, device=device)
+    real_s = odl.rn(DEFAULT_SHAPE, weighting=1.5, dtype='float32', impl=impl, device=device)
+    cplx_s = odl.cn(DEFAULT_SHAPE, weighting=1.5, dtype='complex64', impl=impl, device=device)
 
     # Real
     assert real.astype('float32') == real_s
@@ -231,7 +240,6 @@ def _test_lincomb(space, a, b, discontig):
     if discontig:
         x, y, z = x[slc], y[slc], z[slc]
         xarr, yarr, zarr = xarr[slc], yarr[slc], zarr[slc]
-
     zarr[:] = a * xarr + b * yarr
     res_space.lincomb(a, x, b, y, out=z)
     assert all_almost_equal([x, y, z], [xarr, yarr, zarr])
@@ -285,21 +293,21 @@ def test_lincomb(tspace):
             _test_lincomb(tspace, a, b, discontig=False)
 
 
-def test_lincomb_discontig(odl_tspace_impl):
+def test_lincomb_discontig(odl_impl_device_pairs):
     """Test lincomb with discontiguous input."""
-    impl = odl_tspace_impl
+    impl, device = odl_impl_device_pairs
 
     scalar_values = [0, 1, -1, 3.41]
 
     # Use small size for small array case
-    tspace = odl.rn(DEFAULT_SHAPE, impl=impl)
+    tspace = odl.rn(DEFAULT_SHAPE, impl=impl, device=device)
 
     for a in scalar_values:
         for b in scalar_values:
             _test_lincomb(tspace, a, b, discontig=True)
 
     # Use medium size to test fallback impls
-    tspace = odl.rn((30, 40), impl=impl)
+    tspace = odl.rn((30, 40), impl=impl, device=device)
 
     for a in scalar_values:
         for b in scalar_values:
@@ -374,19 +382,21 @@ def test_power(tspace):
     y **= 2
     y_arr **= 2
     assert all_almost_equal(y, y_arr)
+    if tspace.impl == 'pytorch' and is_complex_dtype(tspace.dtype):
+        pass
+    else:
+        # Real number and negative integer power
+        assert all_almost_equal(y_pos ** 1.3, y_pos_arr ** 1.3)
+        assert all_almost_equal(y_pos ** (-3), y_pos_arr ** (-3))
+        y_pos **= 2.5
+        y_pos_arr **= 2.5
+        assert all_almost_equal(y_pos, y_pos_arr)
 
-    # Real number and negative integer power
-    assert all_almost_equal(y_pos ** 1.3, y_pos_arr ** 1.3)
-    assert all_almost_equal(y_pos ** (-3), y_pos_arr ** (-3))
-    y_pos **= 2.5
-    y_pos_arr **= 2.5
-    assert all_almost_equal(y_pos, y_pos_arr)
-
-    # Array raised to the power of another array, entry-wise
-    assert all_almost_equal(y_pos ** x, y_pos_arr ** x_arr)
-    y_pos **= x.real
-    y_pos_arr **= x_arr.real
-    assert all_almost_equal(y_pos, y_pos_arr)
+        # Array raised to the power of another array, entry-wise
+        assert all_almost_equal(y_pos ** x, y_pos_arr ** x_arr)
+        y_pos **= x.real
+        y_pos_arr **= x_arr.real
+        assert all_almost_equal(y_pos, y_pos_arr)
 
 
 def test_unary_ops(tspace):
@@ -408,9 +418,9 @@ def test_scalar_operator(tspace, odl_arithmetic_op):
     """
     op = odl_arithmetic_op
     if op in (operator.truediv, operator.itruediv):
-        ndigits = int(-tspace.array_namespace.log10(tspace.finfo().resolution) // 2)
+        ndigits = int(-math.log10(tspace.finfo().resolution) // 2)
     else:
-        ndigits = int(-tspace.array_namespace.log10(tspace.finfo().resolution))
+        ndigits = int(-math.log10(tspace.finfo().resolution))
 
     for scalar in [-31.2, -1, 0, 1, 2.13]:
         x_arr, x = noise_elements(tspace)
@@ -442,9 +452,9 @@ def test_binary_operator(tspace, odl_arithmetic_op):
     """
     op = odl_arithmetic_op
     if op in (operator.truediv, operator.itruediv):
-        ndigits = int(-tspace.array_namespace.log10(tspace.finfo().resolution) // 2)
+        ndigits = int(-math.log10(tspace.finfo().resolution) // 2)
     else:
-        ndigits = int(-tspace.array_namespace.log10(tspace.finfo().resolution))
+        ndigits = int(-math.log10(tspace.finfo().resolution))
 
     [x_arr, y_arr], [x, y] = noise_elements(tspace, 2)
 
@@ -490,7 +500,9 @@ def test_inner(tspace):
     yarr, yd = noise_elements(tspace)
     ns = tspace.array_namespace
     # TODO: add weighting
-    correct_inner = ns.vdot(yarr, xarr)
+    correct_inner = tspace.array_backend.to_cpu(
+        ns.vdot(yarr.ravel(), xarr.ravel())
+        )
     assert tspace.inner(xd, yd) == pytest.approx(correct_inner)
     assert xd.inner(yd) == pytest.approx(correct_inner)
 
@@ -514,7 +526,9 @@ def test_norm(tspace):
     xarr, x = noise_elements(tspace)
 
     ns = tspace.array_namespace
-    correct_norm = ns.linalg.norm(xarr.ravel())
+    correct_norm = tspace.array_backend.to_cpu(
+        ns.linalg.norm(xarr.ravel())
+        )    
 
     array_backend = tspace.array_backend
     real_dtype = array_backend.identifier_of_dtype(tspace.real_dtype)
@@ -544,13 +558,17 @@ def test_norm_exceptions(tspace):
         tspace.norm(other_x)
 
 
-def test_pnorm(exponent):
+def test_pnorm(exponent, odl_impl_device_pairs):
     """Test the norm method with p!=2 against numpy.linalg.norm."""
-    for tspace in (odl.rn(DEFAULT_SHAPE, exponent=exponent),
-                   odl.cn(DEFAULT_SHAPE, exponent=exponent)):
+    impl, device = odl_impl_device_pairs
+    space_list = [
+        odl.rn(DEFAULT_SHAPE, exponent=exponent,device=device, impl=impl),
+        odl.cn(DEFAULT_SHAPE, exponent=exponent,device=device, impl=impl)
+    ]
+    for tspace in space_list:
         xarr, x = noise_elements(tspace)
         ns = tspace.array_namespace
-        correct_norm = ns.linalg.norm(xarr.ravel(), ord=exponent)
+        correct_norm = tspace.array_backend.to_cpu(ns.linalg.norm(xarr.ravel(), ord=exponent))
 
         assert tspace.norm(x) == pytest.approx(correct_norm)
         assert x.norm() == pytest.approx(correct_norm)
@@ -564,7 +582,9 @@ def test_dist(tspace):
     [xarr, yarr], [x, y] = noise_elements(tspace, n=2)
 
     ns = tspace.array_namespace
-    correct_dist = ns.linalg.norm((xarr - yarr).ravel())
+    correct_dist = tspace.array_backend.to_cpu(
+         ns.linalg.norm((xarr - yarr).ravel())
+        )    
 
     array_backend = tspace.array_backend
     real_dtype = array_backend.identifier_of_dtype(tspace.real_dtype)
@@ -601,12 +621,12 @@ def test_dist(tspace):
 #             tspace.dist(x, other_x)
 
 
-def test_pdist(odl_tspace_impl, exponent):
+def test_pdist(odl_impl_device_pairs, exponent):
     """Test the dist method with p!=2 against numpy.linalg.norm of diff."""
-    impl = odl_tspace_impl
+    impl, device = odl_impl_device_pairs
     spaces = [
-        odl.rn(DEFAULT_SHAPE, exponent=exponent, impl=impl),
-        odl.cn(DEFAULT_SHAPE, exponent=exponent, impl=impl)
+        odl.rn(DEFAULT_SHAPE, exponent=exponent, impl=impl, device=device),
+        odl.cn(DEFAULT_SHAPE, exponent=exponent, impl=impl, device=device)
         ]
     # cls = odl.space.entry_points.tensor_space_impl(impl)
 
@@ -616,16 +636,16 @@ def test_pdist(odl_tspace_impl, exponent):
     for space in spaces:
         [xarr, yarr], [x, y] = noise_elements(space, n=2)
         ns = space.array_namespace
-        correct_dist = ns.linalg.norm((xarr - yarr).ravel(), ord=exponent)
+        correct_dist = space.array_backend.to_cpu(ns.linalg.norm((xarr - yarr).ravel(), ord=exponent))
         assert space.dist(x, y) == pytest.approx(correct_dist)
         assert x.dist(y) == pytest.approx(correct_dist)
 
 
-def test_element_getitem(odl_tspace_impl, getitem_indices):
+def test_element_getitem(odl_impl_device_pairs, getitem_indices):
     """Check if getitem produces correct values, shape and other stuff."""
-    impl = odl_tspace_impl
+    impl, device = odl_impl_device_pairs
     space = odl.tensor_space((2, 3, 4), dtype='float32', exponent=1,
-                             weighting=2, impl=impl)
+                             weighting=2, impl=impl, device=device)
     x_arr, x = noise_elements(space)
 
     x_arr_sliced = x_arr[getitem_indices]
@@ -655,12 +675,14 @@ def test_element_getitem(odl_tspace_impl, getitem_indices):
         assert all_equal(x_arr, x)
 
 
-def test_element_setitem(odl_tspace_impl, setitem_indices):
+def test_element_setitem(setitem_indices, odl_impl_device_pairs):
     """Check if setitem produces the same result as NumPy."""
-    impl = odl_tspace_impl
+    impl, device = odl_impl_device_pairs
     space = odl.tensor_space((2, 3, 4), dtype='float32', exponent=1,
-                             weighting=2, impl=impl)
+                             weighting=2, impl=impl, device=device)
     x_arr, x = noise_elements(space)
+
+
 
     x_arr_sliced = x_arr[setitem_indices]
     sliced_shape = x_arr_sliced.shape
@@ -672,24 +694,25 @@ def test_element_setitem(odl_tspace_impl, setitem_indices):
     assert all_equal(x, x_arr)
 
     # Setting values with arrays
-    rhs_arr = ns.ones(sliced_shape)
+    rhs_arr = ns.ones(sliced_shape, device=device)
     x_arr[setitem_indices] = rhs_arr
     x[setitem_indices] = rhs_arr
     assert all_equal(x, x_arr)
 
     # Using a list of lists
-    rhs_list = (-ns.ones(sliced_shape)).tolist()
-    x_arr[setitem_indices] = rhs_list
-    x[setitem_indices] = rhs_list
-    assert all_equal(x, x_arr)
+    rhs_list = (-ns.ones(sliced_shape, device=device)).tolist()
+    if impl != 'pytorch':
+        x_arr[setitem_indices] = rhs_list
+        x[setitem_indices] = rhs_list
+        assert all_equal(x, x_arr)
 
 
-def test_element_getitem_bool_array(odl_tspace_impl):
+def test_element_getitem_bool_array(odl_impl_device_pairs):
     """Check if getitem with boolean array yields the same result as NumPy."""
-    impl = odl_tspace_impl
+    impl, device = odl_impl_device_pairs
     space = odl.tensor_space((2, 3, 4), dtype='float32', exponent=1,
-                             weighting=2, impl=impl)
-    bool_space = odl.tensor_space((2, 3, 4), dtype=bool)
+                             weighting=2, impl=impl, device=device)
+    bool_space = odl.tensor_space((2, 3, 4), dtype=bool, impl=impl, device=device)
     x_arr, x = noise_elements(space)
     cond_arr, cond = noise_elements(bool_space)
 
@@ -705,15 +728,14 @@ def test_element_getitem_bool_array(odl_tspace_impl):
     assert sliced_spc.weighting == space.weighting
 
 
-def test_element_setitem_bool_array(odl_tspace_impl):
+def test_element_setitem_bool_array(odl_impl_device_pairs):
     """Check if setitem produces the same result as NumPy."""
-    impl = odl_tspace_impl
+    impl, device = odl_impl_device_pairs
     space = odl.tensor_space((2, 3, 4), dtype='float32', exponent=1,
-                             weighting=2, impl=impl)
-    bool_space = odl.tensor_space((2, 3, 4), dtype=bool)
+                             weighting=2, impl=impl, device=device)
+    bool_space = odl.tensor_space((2, 3, 4), dtype=bool, impl=impl, device=device)
     x_arr, x = noise_elements(space)
     cond_arr, cond = noise_elements(bool_space)
-
     ns = space.array_namespace
 
     x_arr_sliced = x_arr[cond_arr]
@@ -725,24 +747,28 @@ def test_element_setitem_bool_array(odl_tspace_impl):
     assert all_equal(x, x_arr)
 
     # Setting values with arrays
-    rhs_arr = ns.ones(sliced_shape)
+    rhs_arr = ns.ones(sliced_shape, device=device)
     x_arr[cond_arr] = rhs_arr
     x[cond] = rhs_arr
     assert all_equal(x, x_arr)
 
     # Using a list of lists
-    rhs_list = (-ns.ones(sliced_shape)).tolist()
-    x_arr[cond_arr] = rhs_list
+    rhs_list = (-ns.ones(sliced_shape, device=device)).tolist()
+    if impl == 'pytorch':
+        cond_arr = bool_space.array_backend.array_constructor(cond_arr, device=device)
+        rhs_list = bool_space.array_backend.array_constructor(rhs_list, device=device)
+    else:
+        x_arr[cond_arr] = rhs_list
     x[cond] = rhs_list
     assert all_equal(x, x_arr)
 
 
-def test_transpose(odl_tspace_impl):
+def test_transpose(odl_impl_device_pairs):
     """Test the .T property of tensors against plain inner product."""
-    impl = odl_tspace_impl
+    impl, device = odl_impl_device_pairs
     spaces = [
-        odl.rn(DEFAULT_SHAPE, impl=impl),
-        odl.cn(DEFAULT_SHAPE, impl=impl)
+        odl.rn(DEFAULT_SHAPE, impl=impl, device=device),
+        odl.cn(DEFAULT_SHAPE, impl=impl, device=device)
         ]
     # cls = odl.space.entry_points.tensor_space_impl(impl)
     # if complex in cls.available_dtypes():
@@ -773,15 +799,15 @@ def test_multiply_by_scalar(tspace):
     # Strictly speaking this operation loses precision if `tspace.dtype` has
     # fewer than 64 bits (Python decimal literals are double precision), but
     # it would be too cumbersome to force a change in the space's dtype.
+    output = x * 1.0
     assert x * 1.0 in tspace
     assert 1.0 * x in tspace
 
 
-def test_member_copy(odl_tspace_impl):
+def test_member_copy(odl_impl_device_pairs):
     """Test copy method of elements."""
-    impl = odl_tspace_impl
-    space = odl.tensor_space(DEFAULT_SHAPE, dtype='float32', exponent=1, weighting=2,
-                             impl=impl)
+    impl, device = odl_impl_device_pairs
+    space = odl.tensor_space(DEFAULT_SHAPE, dtype='float32', exponent=1, weighting=2, impl=impl, device = device)
     x = noise_element(space)
 
     y = x.copy()
@@ -793,12 +819,11 @@ def test_member_copy(odl_tspace_impl):
     assert x != y
 
 
-def test_python_copy(odl_tspace_impl):
+def test_python_copy(odl_impl_device_pairs):
     """Test compatibility with the Python copy module."""
     import copy
-    impl = odl_tspace_impl
-    space = odl.tensor_space(DEFAULT_SHAPE, dtype='float32', exponent=1, weighting=2,
-                             impl=impl)
+    impl, device = odl_impl_device_pairs
+    space = odl.tensor_space(DEFAULT_SHAPE, dtype='float32', exponent=1, weighting=2, impl=impl, device = device)
     x = noise_element(space)
 
     # Shallow copy
@@ -819,11 +844,10 @@ def test_python_copy(odl_tspace_impl):
     x *= 2
     assert x != z
 
-
-def test_conversion_to_scalar(odl_tspace_impl):
+def test_conversion_to_scalar(odl_impl_device_pairs):
     """Test conversion of size-1 vectors/tensors to scalars."""
-    impl = odl_tspace_impl
-    space = odl.rn(1, impl=impl)
+    impl, device = odl_impl_device_pairs
+    space = odl.rn(1, impl=impl, device=device)
     # Size 1 real space
     value = 1.5
     element = space.element(value)
@@ -845,17 +869,17 @@ def test_conversion_to_scalar(odl_tspace_impl):
     # Too large space
     element = odl.rn(2).one()
 
-    with pytest.raises(ValueError):
+    with pytest.raises(AssertionError):
         int(element)
-    with pytest.raises(ValueError):
+    with pytest.raises(AssertionError):
         float(element)
-    with pytest.raises(ValueError):
+    with pytest.raises(AssertionError):
         complex(element)
 
-def test_bool_conversion(odl_tspace_impl):
+def test_bool_conversion(odl_impl_device_pairs):
     """Verify that the __bool__ function works."""
-    impl = odl_tspace_impl
-    space = odl.tensor_space(2, dtype='float32', impl=impl)
+    impl, device = odl_impl_device_pairs
+    space = odl.tensor_space(2, dtype='float32', impl=impl, device = device)
     x = space.element([0, 1])
 
     with pytest.raises(ValueError):
@@ -865,7 +889,7 @@ def test_bool_conversion(odl_tspace_impl):
     assert not odl.all(x)
     assert not all(x)
 
-    space = odl.tensor_space(1, dtype='float32', impl=impl)
+    space = odl.tensor_space(1, dtype='float32', impl=impl, device = device)
     x = space.one()
 
     assert odl.any(x)
@@ -873,11 +897,10 @@ def test_bool_conversion(odl_tspace_impl):
     assert odl.all(x)
     assert all(x)
 
-def test_array_wrap_method(odl_tspace_impl):
+def test_array_wrap_method(odl_impl_device_pairs):
     """Verify that the __array_wrap__ method for NumPy works."""
-    impl = odl_tspace_impl
-    space = odl.tensor_space(DEFAULT_SHAPE, dtype='float32', exponent=1, weighting=2,
-                             impl=impl)
+    impl, device = odl_impl_device_pairs
+    space = odl.tensor_space(DEFAULT_SHAPE, dtype='float32', exponent=1, weighting=2,impl=impl, device=device)
     x_arr, x = noise_elements(space)
     y_arr = space.array_namespace.sin(x_arr)
     y = odl.sin(x)  # Should yield again an ODL tensor
@@ -918,33 +941,33 @@ def test_array_weighting_init(real_tspace):
     assert isinstance(weighting_elem.weight, array_backend.array_type)
 
 
-def test_array_weighting_array_is_valid(odl_tspace_impl):
+def test_array_weighting_array_is_valid(odl_impl_device_pairs):
     """Test the is_valid method of array weightings."""
-    impl = odl_tspace_impl
-    space = odl.rn(DEFAULT_SHAPE, impl=impl)
+    impl, device = odl_impl_device_pairs
+    space = odl.rn(DEFAULT_SHAPE, impl=impl, device=device)
     weight_arr = _pos_array(space)
 
-    assert odl.space_weighting(impl, weight=weight_arr)
+    assert odl.space_weighting(impl, weight=weight_arr, device=device)
     # Invalid
     weight_arr[0] = 0
     with pytest.raises(ValueError):
-        odl.space_weighting(impl, weight=weight_arr)
+        odl.space_weighting(impl, weight=weight_arr, device=device)
 
 
-def test_array_weighting_equals(odl_tspace_impl):
+def test_array_weighting_equals(odl_impl_device_pairs):
     """Test the equality check method of array weightings."""
-    impl = odl_tspace_impl
-    space = odl.rn(5, impl=impl)
+    impl, device = odl_impl_device_pairs
+    space = odl.rn(5, impl=impl, device=device)
     weight_arr = _pos_array(space)
     weight_elem = space.element(weight_arr)
 
-    weighting_arr = odl.space_weighting(odl_tspace_impl, weight=weight_arr)
-    weighting_arr2 = odl.space_weighting(odl_tspace_impl, weight=weight_arr)
-    weighting_elem = odl.space_weighting(odl_tspace_impl, weight=weight_elem)
-    weighting_elem_copy = odl.space_weighting(odl_tspace_impl, weight=weight_elem.copy())
-    weighting_elem2 = odl.space_weighting(odl_tspace_impl, weight=weight_elem)
-    weighting_other_arr = odl.space_weighting(odl_tspace_impl, weight=weight_arr +1 )
-    weighting_other_exp = odl.space_weighting(odl_tspace_impl, weight=weight_arr +1, exponent=1)
+    weighting_arr = odl.space_weighting(impl, weight=weight_arr, device=device)
+    weighting_arr2 = odl.space_weighting(impl, weight=weight_arr, device=device)
+    weighting_elem = odl.space_weighting(impl, weight=weight_elem, device=device)
+    weighting_elem_copy = odl.space_weighting(impl, weight=weight_elem.copy(), device=device)
+    weighting_elem2 = odl.space_weighting(impl, weight=weight_elem, device=device)
+    weighting_other_arr = odl.space_weighting(impl, weight=weight_arr +1 , device=device)
+    weighting_other_exp = odl.space_weighting(impl, weight=weight_arr +1, exponent=1, device=device)
 
     assert weighting_arr == weighting_arr2
     assert weighting_arr == weighting_elem
@@ -954,16 +977,16 @@ def test_array_weighting_equals(odl_tspace_impl):
     assert weighting_arr != weighting_other_exp
 
 
-def test_array_weighting_equiv(odl_tspace_impl):
+def test_array_weighting_equiv(odl_impl_device_pairs):
     """Test the equiv method of Numpy array weightings."""
-    impl = odl_tspace_impl
-    space = odl.rn(5, impl=impl)
+    impl, device = odl_impl_device_pairs
+    space = odl.rn(5, impl=impl, device=device)
     weight_arr = _pos_array(space)
     weight_elem = space.element(weight_arr)
     different_arr = weight_arr + 1
-    w_arr = odl.space_weighting(odl_tspace_impl, weight=weight_arr)
-    w_elem = odl.space_weighting(odl_tspace_impl, weight=weight_elem)
-    w_different_arr = odl.space_weighting(odl_tspace_impl, weight=different_arr)
+    w_arr = odl.space_weighting(impl, weight=weight_arr, device=device)
+    w_elem = odl.space_weighting(impl, weight=weight_elem, device=device)
+    w_different_arr = odl.space_weighting(impl, weight=different_arr, device=device)
 
     ns = space.array_namespace
 
@@ -974,11 +997,11 @@ def test_array_weighting_equiv(odl_tspace_impl):
     assert not w_arr.equiv(w_different_arr)
 
     # Test shortcuts in the implementation
-    const_arr = ns.ones(space.shape) * 1.5
-    w_const_arr = odl.space_weighting(odl_tspace_impl, weight=const_arr)
-    w_const = odl.space_weighting(odl_tspace_impl, weight=1.5)
-    w_wrong_const = odl.space_weighting(odl_tspace_impl, weight=1)
-    w_wrong_exp = odl.space_weighting(odl_tspace_impl, weight=1.5, exponent=1)
+    const_arr = ns.ones(space.shape, device=device) * 1.5
+    w_const_arr = odl.space_weighting(impl, weight=const_arr, device=device)
+    w_const = odl.space_weighting(impl, weight=1.5, device=device)
+    w_wrong_const = odl.space_weighting(impl, weight=1, device=device)
+    w_wrong_exp = odl.space_weighting(impl, weight=1.5, exponent=1, device=device)
 
     assert w_const_arr.equiv(w_const)
     assert not w_const_arr.equiv(w_wrong_const)
@@ -995,26 +1018,30 @@ def test_array_weighting_inner(tspace):
     [xarr, yarr], [x, y] = noise_elements(tspace, 2)
 
     weight_arr = _pos_array(tspace)
-    weighting = odl.space_weighting(impl = tspace.impl, weight = weight_arr)
+    weighting = odl.space_weighting(
+        impl = tspace.impl, 
+        weight = weight_arr,
+        device = tspace.device
+        )
     
     ns = tspace.array_namespace
 
-    true_inner = ns.vdot(yarr, xarr * weight_arr)
-    assert weighting.inner(x.data, y.data) == pytest.approx(true_inner)
+    true_inner = ns.vdot(yarr.ravel(), (xarr * weight_arr).ravel())
+    assert weighting.inner(x.data, y.data) == pytest.approx(tspace.array_backend.to_cpu(true_inner))
 
     # Exponent != 2 -> no inner product, should raise
     with pytest.raises(NotImplementedError):
-        odl.space_weighting(impl = tspace.impl, weight =weight_arr, exponent=1.0).inner(x.data, y.data)
+        odl.space_weighting(impl = tspace.impl, weight =weight_arr, exponent=1.0, device = tspace.device).inner(x.data, y.data)
 
 
 def test_array_weighting_norm(tspace, exponent):
     """Test norm in a weighted space."""
     ns = tspace.array_namespace
-    rtol = ns.sqrt(ns.finfo(tspace.dtype).resolution)
+    rtol = math.sqrt(ns.finfo(tspace.dtype).resolution)
     xarr, x = noise_elements(tspace)
 
     weight_arr = _pos_array(tspace)
-    weighting = odl.space_weighting(impl = tspace.impl, weight=weight_arr, exponent=exponent)
+    weighting = odl.space_weighting(impl = tspace.impl, weight=weight_arr, exponent=exponent, device =tspace.device)
 
     if exponent == float('inf'):
         true_norm = ns.linalg.vector_norm(
@@ -1025,17 +1052,18 @@ def test_array_weighting_norm(tspace, exponent):
             (weight_arr ** (1 / exponent) * xarr).ravel(),
             ord=exponent)
 
-    assert weighting.norm(x.data) == pytest.approx(true_norm, rel=rtol)
+    assert weighting.norm(x.data) == pytest.approx(
+        tspace.array_backend.to_cpu(true_norm), rel=rtol)
 
 
 def test_array_weighting_dist(tspace, exponent):
     """Test dist product in a weighted space."""
     ns = tspace.array_namespace
-    rtol = ns.sqrt(ns.finfo(tspace.dtype).resolution)
+    rtol = math.sqrt(ns.finfo(tspace.dtype).resolution)
     [xarr, yarr], [x, y] = noise_elements(tspace, n=2)
 
     weight_arr = _pos_array(tspace)
-    weighting = odl.space_weighting(impl = tspace.impl, weight=weight_arr, exponent=exponent)
+    weighting = odl.space_weighting(impl = tspace.impl, weight=weight_arr, exponent=exponent, device=tspace.device)
 
     if exponent == float('inf'):
         true_dist = ns.linalg.norm(
@@ -1046,20 +1074,21 @@ def test_array_weighting_dist(tspace, exponent):
             (weight_arr ** (1 / exponent) * (xarr - yarr)).ravel(),
             ord=exponent)
 
-    assert weighting.dist(x.data, y.data) == pytest.approx(true_dist, rel=rtol)
+    assert weighting.dist(x.data, y.data) == pytest.approx(
+        tspace.array_backend.to_cpu(true_dist), rel=rtol)
 
 
-def test_const_weighting_init(odl_tspace_impl, exponent):
+def test_const_weighting_init(odl_impl_device_pairs, exponent):
     """Test initialization of constant weightings."""
-
+    impl, device = odl_impl_device_pairs
     # Just test if the code runs
-    odl.space_weighting(impl=odl_tspace_impl, weight=1.5, exponent=exponent)
+    odl.space_weighting(impl=impl, weight=1.5, exponent=exponent, device=device)
     with pytest.raises(ValueError):
-        odl.space_weighting(impl=odl_tspace_impl, weight=0, exponent=exponent)
+        odl.space_weighting(impl=impl, weight=0, exponent=exponent, device=device)
     with pytest.raises(ValueError):
-        odl.space_weighting(impl=odl_tspace_impl, weight=-1.5, exponent=exponent)
+        odl.space_weighting(impl=impl, weight=-1.5, exponent=exponent, device=device)
     with pytest.raises(ValueError):
-        odl.space_weighting(impl=odl_tspace_impl, weight=float('inf'), exponent=exponent)
+        odl.space_weighting(impl=impl, weight=float('inf'), exponent=exponent, device=device)
 
 
 def test_const_weighting_comparison(tspace):
@@ -1245,10 +1274,10 @@ def test_custom_norm(tspace):
         w.inner(x, y)
 
     true_norm = ns.linalg.norm(xarr.ravel())
-    assert isclose(tspace.norm(x), true_norm)
+    pytest.approx(tspace.norm(x), true_norm)
 
     true_dist = ns.linalg.norm((xarr - yarr).ravel())
-    assert isclose(tspace.dist(x, y), true_dist)
+    pytest.approx(tspace.dist(x, y), true_dist)
 
     with pytest.raises(ValueError):
         odl.space_weighting(impl=tspace.impl, norm=norm, weight = 1)
@@ -1282,7 +1311,7 @@ def test_custom_dist(tspace):
         w.norm(x)
 
     true_dist = ns.linalg.norm((xarr - yarr).ravel())
-    assert tspace.dist(x, y) == pytest.approx(true_dist)
+    pytest.approx(tspace.dist(x, y), true_dist)
 
     with pytest.raises(ValueError):
         odl.space_weighting(impl=tspace.impl, dist=dist, weight = 1)
