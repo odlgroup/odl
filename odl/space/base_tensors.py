@@ -1519,7 +1519,8 @@ class Tensor(LinearSpaceElement):
             if out not in self.space:
                 raise LinearSpaceTypeError('`out` {!r} not in space {!r}'
                                            ''.format(out, self.space))
-            self.data.conj(out.data)
+            # self.data.conj(out.data)
+            out.data = self.array_namespace.conj(self.data)
             return out
     
     @imag.setter

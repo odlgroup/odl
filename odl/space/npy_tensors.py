@@ -42,7 +42,7 @@ numpy_array_backend = ArrayBackend(
         "complex128",
       ]},
     array_namespace = xp,
-    array_constructor = xp.array,
+    array_constructor = xp.asarray,
     array_type = xp.ndarray,
     make_contiguous = lambda x: x if x.data.c_contiguous else xp.ascontiguousarray(x),
     identifier_of_dtype = lambda dt: str(dt),
@@ -270,6 +270,10 @@ class NumpyTensor(Tensor):
     def data(self):
         """The `numpy.ndarray` representing the data of ``self``."""
         return self.__data
+    
+    @data.setter
+    def data(self, value):
+        self.__data = value 
     
     def _assign(self, other, avoid_deep_copy):
         """Assign the values of ``other``, which is assumed to be in the
