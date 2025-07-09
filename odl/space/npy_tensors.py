@@ -47,7 +47,8 @@ numpy_array_backend = ArrayBackend(
     make_contiguous = lambda x: x if x.data.c_contiguous else xp.ascontiguousarray(x),
     identifier_of_dtype = lambda dt: str(dt),
     available_devices = ['cpu'],
-    to_cpu = lambda x: x
+    to_cpu = lambda x: x,
+    to_numpy = lambda x : x
  )
 
 class NumpyTensorSpace(TensorSpace):
