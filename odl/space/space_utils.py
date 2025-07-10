@@ -22,7 +22,7 @@ from odl.space.entry_points import tensor_space_impl, tensor_space_impl_names
 __all__ = ('vector', 'tensor_space', 'cn', 'rn')
 
 
-def vector(array, dtype=None, order=None, impl='numpy', device = 'cpu'):
+def vector(array, dtype=None, impl='numpy', device = 'cpu'):
     """Create a vector from an array-like object.
 
     Parameters
@@ -33,9 +33,6 @@ def vector(array, dtype=None, order=None, impl='numpy', device = 'cpu'):
     dtype : optional
         Set the data type of the vector manually with this option.
         By default, the space type is inferred from the input data.
-    order : {None, 'C', 'F'}, optional
-        Axis ordering of the data storage. For the default ``None``,
-        no contiguousness is enforced, avoiding a copy if possible.
     impl : str, optional
         Impmlementation back-end for the space. See
         `odl.space.entry_points.tensor_space_impl_names` for available
@@ -77,8 +74,11 @@ def vector(array, dtype=None, order=None, impl='numpy', device = 'cpu'):
          [4, 5, 6]]
     )
     """
+    backend = lookup_array_backend(impl)
     # Sanitize input
-    arr = np.array(array, copy=AVOID_UNNECESSARY_COPY, order=order, ndmin=1)
+    # I don't understand was a ndim prepended to the array dimension
+    arr = backend.array_constructor(array, copy=AVOID_UNNECESSARY_COPY, device = device)
+
     if arr.dtype is object:
         raise ValueError('invalid input data resulting in `dtype==object`')
 
