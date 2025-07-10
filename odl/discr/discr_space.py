@@ -348,6 +348,8 @@ class DiscretizedSpace(TensorSpace):
         >>> space.element(f, c=0.5)
         uniform_discr(-1.0, 1.0, 4).element([ 0.5 ,  0.5 ,  0.5 ,  0.75])
         """
+        if 'order' in kwargs:
+            raise RuntimeError('The use of the order argument is now deprecated, please remove it. All arrays are C contiguous.')
         if inp is None:
             return self.element_type(self, self.tspace.element())
         elif inp in self:
@@ -356,7 +358,7 @@ class DiscretizedSpace(TensorSpace):
             return self.element_type(self, inp)
         elif callable(inp):
             func = sampling_function(
-                inp, self.domain, out_dtype=self.dtype,
+                inp, self.domain, out_dtype=self.dtype_identifier,
             )
             sampled = point_collocation(func, self.meshgrid, **kwargs)
             return self.element_type(
@@ -1192,8 +1194,8 @@ def uniform_discr_frompartition(partition, dtype=None, impl='numpy', **kwargs):
     if not partition.is_uniform:
         raise ValueError('`partition` is not uniform')
 
-    if dtype is not None:
-        dtype = np.dtype(dtype)
+    # if dtype is not None:
+    #     dtype = np.dtype(dtype)
 
     tspace_type = tensor_space_impl(impl)
     if dtype is None:
