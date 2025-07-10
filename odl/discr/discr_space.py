@@ -26,7 +26,7 @@ from odl.space.base_tensors import Tensor, TensorSpace, default_dtype
 from odl.space.entry_points import tensor_space_impl
 from odl.space.weightings.weighting import ConstWeighting
 from odl.util import (
-    apply_on_boundary, array_str, dtype_str, is_floating_dtype,
+    apply_on_boundary, array_str, dtype_str, is_real_floating_dtype,
     is_numeric_dtype, normalized_nodes_on_bdry, normalized_scalar_param_list,
     repr_string, safe_int_conv, signature_string_parts)
 
@@ -603,7 +603,7 @@ class DiscretizedSpace(TensorSpace):
             if (
                 self.exponent == float('inf')
                 or self.ndim == 0
-                or not is_floating_dtype(self.dtype)
+                or not is_real_floating_dtype(self.dtype)
             ):
                 # In these cases, weighting constant 1 is the default
                 if (

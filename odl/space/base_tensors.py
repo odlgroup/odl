@@ -25,7 +25,7 @@ from odl.set.space import (
 from odl.array_API_support import ArrayBackend, lookup_array_backend, get_array_and_backend
 from odl.util import (
     array_str, indent, is_complex_dtype,
-    is_numeric_dtype, is_floating_dtype, safe_int_conv,
+    is_numeric_dtype, is_real_floating_dtype, safe_int_conv,
     signature_string)
 from odl.util.dtype_utils import(
     is_real_dtype, is_int_dtype,
@@ -397,7 +397,7 @@ class TensorSpace(LinearSpace):
     @property
     def is_real(self):
         """True if this is a space of real tensors."""
-        return is_floating_dtype(self.dtype)
+        return is_real_floating_dtype(self.dtype)
     
     @property
     def is_weighted(self):
@@ -538,7 +538,7 @@ class TensorSpace(LinearSpace):
         if dtype == self.dtype:
             return self
 
-        if is_floating_dtype(dtype_identifier) or is_complex_dtype(dtype_identifier):
+        if is_real_floating_dtype(dtype_identifier) or is_complex_dtype(dtype_identifier):
             if self.dtype_identifier == 'bool' or self.dtype_identifier == bool:
                 return self._astype(dtype_identifier)
             # Caching for real and complex versions (exact dtype mappings)

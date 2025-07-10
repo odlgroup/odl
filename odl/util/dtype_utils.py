@@ -16,6 +16,7 @@ __all__ = (
     'is_signed_int_dtype',
     'is_unsigned_int_dtype',
     'is_floating_dtype',
+    'is_real_floating_dtype',
     'is_complex_dtype',
     'is_real_dtype',
     'real_dtype',
@@ -142,6 +143,11 @@ def is_int_dtype(dtype: "str | Number |xp.dtype") -> bool:
 
 @lru_cache
 def is_floating_dtype(dtype: "str | Number |xp.dtype") -> bool:
+    """Return ``True`` if ``dtype`` is a floating point type."""
+    return _convert_dtype(dtype) in FLOAT_DTYPES + COMPLEX_DTYPES
+
+@lru_cache
+def is_real_floating_dtype(dtype: "str | Number |xp.dtype") -> bool:
     """Return ``True`` if ``dtype`` is a floating point type."""
     return _convert_dtype(dtype) in FLOAT_DTYPES
 

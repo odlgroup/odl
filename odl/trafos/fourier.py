@@ -24,7 +24,7 @@ from odl.trafos.util import (
     reciprocal_space)
 from odl.util import (
     complex_dtype, conj_exponent, dtype_repr, is_complex_dtype,
-    is_real_dtype, normalized_axes_tuple, normalized_scalar_param_list)
+    is_real_floating_dtype, normalized_axes_tuple, normalized_scalar_param_list)
 
 from odl.array_API_support import lookup_array_backend
 
@@ -1374,11 +1374,11 @@ class FourierTransform(FourierTransformBase):
         # Pre-processing before calculating the sums, in-place for C2C and R2C
         if self.halfcomplex:
             preproc = self._preprocess(x)
-            assert is_real_dtype(preproc.dtype)
+            assert is_real_floating_dtype(preproc.dtype)
         else:
             # out is preproc in this case
             preproc = self._preprocess(x, out=out)
-            assert is_complex_floating_dtype(preproc.dtype)
+            assert is_complex_dtype(preproc.dtype)
 
         # The actual call to the FFT library. We store the plan for re-use.
         # The FFT is calculated in-place, except if the range is real and
@@ -1388,11 +1388,11 @@ class FourierTransform(FourierTransformBase):
             preproc, out, direction=direction, halfcomplex=self.halfcomplex,
             axes=self.axes, normalise_idft=False, **kwargs)
 
-        assert is_complex_floating_dtype(out.dtype)
+        assert is_complex_dtype(out.dtype)
 
         # Post-processing accounting for shift, scaling and interpolation
         out = self._postprocess(out, out=out)
-        assert is_complex_floating_dtype(out.dtype)
+        assert is_complis_complex_dtypeex(out.dtype)
         return out
 
     @property
@@ -1578,7 +1578,7 @@ class FourierTransformInverse(FourierTransformBase):
         # Post-processing in IFT = pre-processing in FT (in-place)
         self._postprocess(out, out=out)
         if self.halfcomplex:
-            assert is_real_dtype(out.dtype)
+            assert is_real_floating_dtype(out.dtype)
 
         if self.range.field == RealNumbers():
             return out.real
