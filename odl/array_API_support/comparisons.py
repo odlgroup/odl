@@ -7,7 +7,7 @@ __all__ = (
     "allclose",
     "all_equal",
     "any",
-    "asarray",
+    # "asarray",
     "isclose"
 )
 
@@ -63,13 +63,13 @@ def any(x):
     """
     return _helper(x, 'any')
 
-def asarray(x):
-    """
-    Returns an array corresponding to an ODL object.
-    Note:
-        This does not actually performs a comparison, yet it is located in this module for technical reasons due to the underlying helper function.
-    """
-    return _helper(x, 'asarray')
+# def asarray(x):
+#     """
+#     Returns an array corresponding to an ODL object.
+#     Note:
+#         This does not actually performs a comparison, yet it is located in this module for technical reasons due to the underlying helper function.
+#     """
+#     return _helper(x, 'asarray')
 
 def isclose(x, y, rtol=1e-05, atol=1e-08, equal_nan=False):
     """
