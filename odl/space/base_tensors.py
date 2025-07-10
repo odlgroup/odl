@@ -539,7 +539,7 @@ class TensorSpace(LinearSpace):
             return self
 
         if is_floating_dtype(dtype_identifier) or is_complex_dtype(dtype_identifier):
-            if self.dtype_identifier == 'bool':
+            if self.dtype_identifier == 'bool' or self.dtype_identifier == bool:
                 return self._astype(dtype_identifier)
             # Caching for real and complex versions (exact dtype mappings)
             elif dtype == self.real_dtype:
