@@ -1,37 +1,42 @@
-from .utils import get_array_and_backend
+from .utils import get_array_and_backend, lookup_array_backend
 from numbers import Number
 import numpy as np
 
 __all__ = (
-    # 'arange',
+    'arange',
     'asarray',
-    # 'empty',
+    'empty',
     # 'eye',
     'from_dlpack',
     # 'full',
     'full_like',
     # 'linspace',
     # 'meshgrid',
-    # 'ones',
+    'ones',
     'ones_like',
     'tril',
     'triu',
-    # 'zeros',
+    'zeros',
     'zeros_like'
 )
 
-def _helper_from_array(fname, x, *args, **kwargs):    
-        
+def _helper_from_array(fname, x, **kwargs):    
     x, backend_x = get_array_and_backend(x)
     fn = getattr(backend_x.array_namespace, fname)
-    
     return fn(x, **kwargs)
 
-# def arange(start, stop=None, step=1, dtype=None, device=None):
-#     """
-#     Returns evenly spaced values within the half-open interval [start, stop) as a one-dimensional array.
-#     """
-#     return _helper('arange', start=start, stop=stop, step=step, dtype=dtype, device=device)
+def _helper_from_shape(fname, impl, shape, **kwargs):    
+    backend = lookup_array_backend(impl)
+    fn = getattr(backend.array_namespace, fname)
+    return fn(shape, **kwargs)
+
+def arange(impl, start, stop=None, step=1, dtype=None, device=None):
+    """
+    Returns evenly spaced values within the half-open interval [start, stop) as a one-dimensional array.
+    """
+    backend = lookup_array_backend(impl)
+    fn = getattr(backend.array_namespace, 'arange')
+    return fn(start, stop=stop, step=step, dtype=dtype, device=device)
 
 def asarray(x):
     """
@@ -41,11 +46,11 @@ def asarray(x):
     """
     return _helper_from_array('asarray', x)
 
-# def empty(shape, dtype=None, device=None):
-#     """
-#     Returns an uninitialized array having a specified shape.
-#     """
-#     return _helper('empty', shape=shape, dtype=dtype, device=device)
+def empty(impl, shape, dtype=None, device=None):
+    """
+    Returns an uninitialized array having a specified shape.
+    """
+    return _helper_from_shape('empty', impl, shape=shape, dtype=dtype, device=device)
 
 def empty_like(x, dtype=None, device=None):
     """
@@ -89,11 +94,11 @@ def full_like(x, dtype=None, device=None):
 #     """
 #     return _helper('meshgrid', *arrays, indexing=indexing)
 
-# def ones(shape, dtype=None, device=None):
-#     """
-#     Returns a new array having a specified shape and filled with ones.
-#     """
-#     return _helper('ones', shape=shape, dtype=dtype, device=device)
+def ones(impl, shape, dtype=None, device=None):
+    """
+    Returns a new array having a specified shape and filled with ones.
+    """
+    return _helper_from_shape('ones', impl, shape, dtype=dtype, device=device)
 
 def ones_like(x, dtype=None, device=None):
     """
@@ -113,11 +118,11 @@ def triu(x, k=0):
     """
     return _helper_from_array('triu', x, k=k)
 
-# def zeros(x, dtype=None, device=None):
-#     """
-#     Returns a new array having a specified shape and filled with zeros.
-#     """
-#     return _helper('zeros', x, dtype=dtype, device=device)
+def zeros(impl, shape, dtype=None, device=None):
+    """
+    Returns a new array having a specified shape and filled with zeros.
+    """
+    return _helper_from_shape('zeros', impl, shape, dtype=dtype, device=device)
 
 def zeros_like(x, dtype=None, device=None):
     """
