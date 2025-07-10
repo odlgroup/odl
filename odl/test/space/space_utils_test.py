@@ -7,73 +7,88 @@
 # obtain one at https://mozilla.org/MPL/2.0/.
 
 from __future__ import division
-import numpy as np
 
 import odl
 from odl import vector
-from odl.space.npy_tensors import NumpyTensor
+from odl.space.entry_points import TENSOR_SPACE_IMPLS
 from odl.util.testutils import all_equal
 import pytest 
 
-def test_vector_numpy():
+default_precision_dict = {
+    'pytorch':{
+        'integer' : 'int32',
+        'float'   : 'float32',
+        'complex' : 'complex64'
+    },
+    'numpy':{
+        'integer' : 'int64',
+        'float'   : 'float64',
+        'complex' : 'complex128'
+    }
+}
 
-    # Rn
+error_dict = {
+    'pytorch' : TypeError,
+    'numpy'   : ValueError
+}
+
+def test_vector_numpy(odl_impl_device_pairs):
+
+    impl, device = odl_impl_device_pairs
+    tspace = TENSOR_SPACE_IMPLS[impl]((0))
+    tspace_element_type = tspace.element_type
+
     inp = [[1.0, 2.0, 3.0],
-           [4.0, 5.0, 6.0]]
+            [4.0, 5.0, 6.0]]
 
-    x = vector(inp)
-    assert isinstance(x, NumpyTensor)
-    assert x.dtype == np.dtype('float64')
+    x = vector(inp, impl=impl, device=device)
+
+    assert isinstance(x, tspace_element_type)
+    assert x.dtype_identifier == default_precision_dict[impl]['float']
     assert all_equal(x, inp)
 
-    x = vector([1.0, 2.0, float('inf')])
-    assert x.dtype == np.dtype('float64')
-    assert isinstance(x, NumpyTensor)
+    x = vector([1.0, 2.0, float('inf')], impl=impl, device=device)
+    assert x.dtype_identifier == default_precision_dict[impl]['float']
+    assert isinstance(x, tspace_element_type)
 
-    x = vector([1.0, 2.0, float('nan')])
-    assert x.dtype == np.dtype('float64')
-    assert isinstance(x, NumpyTensor)
+    x = vector([1.0, 2.0, float('nan')], impl=impl, device=device)
+    assert x.dtype_identifier == default_precision_dict[impl]['float']
+    assert isinstance(x, tspace_element_type)
 
-    x = vector([1, 2, 3], dtype='float32')
-    assert x.dtype == np.dtype('float32')
-    assert isinstance(x, NumpyTensor)
+    x = vector([1, 2, 3], dtype='float32', impl=impl, device=device)
+    assert x.dtype_identifier == 'float32'
+    assert isinstance(x, tspace_element_type)
 
     # Cn
     inp = [[1 + 1j, 2, 3 - 2j],
-           [4 + 1j, 5, 6 - 1j]]
+            [4 + 1j, 5, 6 - 1j]]
 
-    x = vector(inp)
-    assert isinstance(x, NumpyTensor)
-    assert x.dtype == np.dtype('complex128')
+    x = vector(inp, impl=impl, device=device)
+    assert isinstance(x, tspace_element_type)
+    assert x.dtype_identifier == default_precision_dict[impl]['complex']
     assert all_equal(x, inp)
 
-    x = vector([1, 2, 3], dtype='complex64')
-    assert isinstance(x, NumpyTensor)
+    x = vector([1, 2, 3], dtype='complex64', impl=impl, device=device)
+    assert isinstance(x, tspace_element_type)
 
     # Generic TensorSpace
     inp = [1, 2, 3]
-    x = vector(inp)
-    assert isinstance(x, NumpyTensor)
-    assert x.dtype == np.dtype('int')
+    x = vector(inp,impl=impl, device=device)
+    assert isinstance(x, tspace_element_type)
+    assert x.dtype_identifier == 'int64'
     assert all_equal(x, inp)
 
     inp = ['a', 'b', 'c']
     with pytest.raises(ValueError):
-       x = vector(inp)
-       # assert isinstance(x, NumpyTensor)
-       # assert np.issubdtype(x.dtype, np.str_)
-       # assert all_equal(x, inp)
+        x = vector(inp ,impl=impl, device=device)
 
     inp = [1, 2, 'inf']
-    with pytest.raises(ValueError):
-       x = vector(inp)
-       # assert isinstance(x, NumpyTensor)
-       # assert np.issubdtype(x.dtype, np.str_)
-       # assert all_equal(x, ['1', '2', 'inf'])
+    with pytest.raises(error_dict[impl]):
+        x = vector(inp,impl=impl, device=device)
 
     # Scalar or empty input
-    x = vector(5.0)  # becomes 1d, size 1
-    assert x.shape == (1,)
+    x = vector(5.0 ,impl=impl, device=device) # becomes 1d, size 1
+    assert x.shape == ()
 
     x = vector([])  # becomes 1d, size 0
     assert x.shape == (0,)
