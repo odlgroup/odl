@@ -351,7 +351,7 @@ def noise_array(space):
     if isinstance(space, ProductSpace):
 
         if space.is_power_space:
-            return np.array([noise_array(si) for si in space])
+            return [noise_array(si) for si in space]
 
         # Non-power–product-space elements are represented as arrays of arrays,
         # each in general with a different shape. These cannot be monolithic
@@ -361,7 +361,7 @@ def noise_array(space):
         # outer array with dtype=object but store the inner elements as for the
         # constituent spaces. The resulting ragged arrays support some, but not
         # all numerical operations.
-        result = np.array([None for si in space], dtype=object)
+        result = [None for si in space]
         for i, si in enumerate(space):
             result[i] = noise_array(si)
         return result
