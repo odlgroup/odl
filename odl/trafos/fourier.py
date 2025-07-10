@@ -1392,7 +1392,7 @@ class FourierTransform(FourierTransformBase):
 
         # Post-processing accounting for shift, scaling and interpolation
         out = self._postprocess(out, out=out)
-        assert is_complis_complex_dtypeex(out.dtype)
+        assert is_complex_dtype(out.dtype)
         return out
 
     @property
