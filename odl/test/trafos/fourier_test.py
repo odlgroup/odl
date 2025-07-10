@@ -747,7 +747,7 @@ def test_fourier_trafo_completely():
     # Complete explicit test of all FT components on two small examples
 
     # Discretization with 4 points
-    discr = odl.uniform_discr(-2, 2, 4, dtype='complex')
+    discr = odl.uniform_discr(-2, 2, 4, dtype=complex)
     # Interval boundaries -2, -1, 0, 1, 2
     assert np.allclose(discr.partition.cell_boundary_vecs[0],
                        [-2, -1, 0, 1, 2])
@@ -779,9 +779,9 @@ def test_fourier_trafo_completely():
 
     # Range
     range_part_s = odl.uniform_partition_fromgrid(recip_s)
-    range_s = odl.uniform_discr_frompartition(range_part_s, dtype='complex')
+    range_s = odl.uniform_discr_frompartition(range_part_s, dtype=complex)
     range_part_n = odl.uniform_partition_fromgrid(recip_n)
-    range_n = odl.uniform_discr_frompartition(range_part_n, dtype='complex')
+    range_n = odl.uniform_discr_frompartition(range_part_n, dtype=complex)
 
     # Pre-processing
     preproc_s = [1, -1, 1, -1]

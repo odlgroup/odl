@@ -37,9 +37,9 @@ domain = simple_fixture(
     name='domain',
     params=[odl.uniform_discr(-2, 2, 10 ** 5),
             odl.uniform_discr([-2, -2, -2], [2, 2, 2], [200, 200, 200]),
-            odl.uniform_discr(-2, 2, 10 ** 5, dtype='complex'),
+            odl.uniform_discr(-2, 2, 10 ** 5, dtype=complex),
             odl.uniform_discr([-2, -2, -2], [2, 2, 2], [200, 200, 200],
-                              dtype='complex')])
+                              dtype=complex)])
 
 
 # --- FourierTransform tests --- #

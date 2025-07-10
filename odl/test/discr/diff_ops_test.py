@@ -10,7 +10,6 @@
 
 from __future__ import division
 
-import numpy as np
 import pytest
 
 import odl
@@ -18,7 +17,7 @@ from odl.discr.diff_ops import (
     Divergence, Gradient, Laplacian, PartialDerivative, finite_diff)
 from odl.util.testutils import (
     all_almost_equal, all_equal, dtype_tol, noise_element, simple_fixture)
-
+from odl.array_API_support.utils import get_array_and_backend
 # --- pytest fixtures --- #
 
 
@@ -29,55 +28,56 @@ padding = simple_fixture('padding', [('constant', 0), ('constant', 1),
 
 
 @pytest.fixture(scope="module", params=[1, 2, 3], ids=['1d', '2d', '3d'])
-def space(request, odl_tspace_impl):
-    impl = odl_tspace_impl
+def space(request, odl_impl_device_pairs):
+    impl, device = odl_impl_device_pairs
     ndim = request.param
 
-    return odl.uniform_discr([0] * ndim, [1] * ndim, [5] * ndim, impl=impl)
+    return odl.uniform_discr([0] * ndim, [1] * ndim, [5] * ndim, impl=impl, device=device)
 
-
-# Test data
-DATA_1D = np.array([0.5, 1, 3.5, 2, -.5, 3, -1, -1, 0, 3])
-
-
+@pytest.fixture(scope="module")
+def data(odl_impl_device_pairs):
+    impl, device = odl_impl_device_pairs
+    return odl.uniform_discr(0, 1, 10, impl=impl, device=device).element([0.5, 1, 3.5, 2, -.5, 3, -1, -1, 0, 3])
 # --- finite_diff --- #
 
 
-def test_finite_diff_invalid_args():
+def test_finite_diff_invalid_args(data):
     """Test finite difference function for invalid arguments."""
-
+    arr, backend = get_array_and_backend(data)
     # Test that old "edge order" argument fails.
     with pytest.raises(TypeError):
-        finite_diff(DATA_1D, axis=0, edge_order=0)
+        finite_diff(data, axis=0, edge_order=0)
 
     # at least a two-element array is required
     with pytest.raises(ValueError):
-        finite_diff(np.array([0.0]), axis=0)
+        finite_diff(backend.array_constructor([0.0]), axis=0)
 
     # axis
     with pytest.raises(IndexError):
-        finite_diff(DATA_1D, axis=2)
+        finite_diff(data, axis=2)
 
     # in-place argument
-    out = np.zeros(DATA_1D.size + 1)
+    # size is an attribute of numpy arrays but of method of pytorch tensors
+    out = backend.array_namespace.zeros(len(arr) + 1)
     with pytest.raises(ValueError):
-        finite_diff(DATA_1D, axis=0, out=out)
+        finite_diff(data, axis=0, out=out)
     with pytest.raises(ValueError):
-        finite_diff(DATA_1D, axis=0, dx=0)
+        finite_diff(data, axis=0, dx=0)
 
     # wrong method
     with pytest.raises(ValueError):
-        finite_diff(DATA_1D, axis=0, method='non-method')
+        finite_diff(data, axis=0, method='non-method')
 
 
-def test_finite_diff_explicit():
+def test_finite_diff_explicit(data):
     """Compare finite differences function to explicit computation."""
 
     # phantom data
-    arr = DATA_1D
+    arr, backend = get_array_and_backend(data)
+    ns = backend.array_namespace
 
     # explicitly calculated finite difference
-    diff_ex = np.zeros_like(arr)
+    diff_ex = ns.zeros_like(arr)
 
     # interior: second-order accurate differences
     diff_ex[1:-1] = (arr[2:] - arr[:-2]) / 2.0
@@ -123,90 +123,90 @@ def test_finite_diff_explicit():
     assert df1[-1] != df2[-1]
 
     # in-place evaluation
-    out = np.zeros_like(arr)
+    out = ns.zeros_like(arr)
     assert out is finite_diff(arr, axis=0, out=out)
     assert all_equal(out, finite_diff(arr, axis=0))
     assert out is not finite_diff(arr, axis=0)
 
     # axis
-    arr = np.array([[0., 2., 4., 6., 8.],
+    arr = backend.array_constructor([[0., 2., 4., 6., 8.],
                     [1., 3., 5., 7., 9.]])
     df0 = finite_diff(arr, axis=0, pad_mode='order1')
-    darr0 = 1 * np.ones(arr.shape)
+    darr0 = 1 * ns.ones(arr.shape)
     assert all_equal(df0, darr0)
-    darr1 = 2 * np.ones(arr.shape)
+    darr1 = 2 * ns.ones(arr.shape)
     df1 = finite_diff(arr, axis=1, pad_mode='order1')
     assert all_equal(df1, darr1)
 
     # complex arrays
-    arr = np.array([0., 1., 2., 3., 4.]) + 1j * np.array([10., 9., 8., 7.,
+    arr = backend.array_constructor([0., 1., 2., 3., 4.]) + 1j * backend.array_constructor([10., 9., 8., 7.,
                                                           6.])
     diff = finite_diff(arr, axis=0, pad_mode='order1')
     assert all(diff.real == 1)
     assert all(diff.imag == -1)
 
 
-def test_finite_diff_symmetric_padding():
+def test_finite_diff_symmetric_padding(data):
     """Finite difference using replicate padding."""
 
     # Using replicate padding forward and backward differences have zero
     # derivative at the upper or lower endpoint, respectively
-    assert finite_diff(DATA_1D, axis=0, method='forward',
+    assert finite_diff(data, axis=0, method='forward',
                        pad_mode='symmetric')[-1] == 0
-    assert finite_diff(DATA_1D, axis=0, method='backward',
+    assert finite_diff(data, axis=0, method='backward',
                        pad_mode='symmetric')[0] == 0
 
-    diff = finite_diff(DATA_1D, axis=0, method='central', pad_mode='symmetric')
-    assert diff[0] == (DATA_1D[1] - DATA_1D[0]) / 2
-    assert diff[-1] == (DATA_1D[-1] - DATA_1D[-2]) / 2
+    diff = finite_diff(data, axis=0, method='central', pad_mode='symmetric')
+    assert diff[0] == (data[1] - data[0]) / 2
+    assert diff[-1] == (data[-1] - data[-2]) / 2
 
 
-def test_finite_diff_constant_padding():
+def test_finite_diff_constant_padding(data):
     """Finite difference using constant padding."""
 
     for pad_const in [-1, 0, 1]:
-        diff_forward = finite_diff(DATA_1D, axis=0, method='forward',
+        diff_forward = finite_diff(data, axis=0, method='forward',
                                    pad_mode='constant',
                                    pad_const=pad_const)
 
-        assert diff_forward[0] == DATA_1D[1] - DATA_1D[0]
-        assert diff_forward[-1] == pad_const - DATA_1D[-1]
+        assert diff_forward[0] == data[1] - data[0]
+        assert diff_forward[-1] == pad_const - data[-1]
 
-        diff_backward = finite_diff(DATA_1D, axis=0, method='backward',
+        diff_backward = finite_diff(data, axis=0, method='backward',
                                     pad_mode='constant',
                                     pad_const=pad_const)
 
-        assert diff_backward[0] == DATA_1D[0] - pad_const
-        assert diff_backward[-1] == DATA_1D[-1] - DATA_1D[-2]
+        assert diff_backward[0] == data[0] - pad_const
+        assert diff_backward[-1] == data[-1] - data[-2]
 
-        diff_central = finite_diff(DATA_1D, axis=0, method='central',
+        diff_central = finite_diff(data, axis=0, method='central',
                                    pad_mode='constant',
                                    pad_const=pad_const)
 
-        assert diff_central[0] == (DATA_1D[1] - pad_const) / 2
-        assert diff_central[-1] == (pad_const - DATA_1D[-2]) / 2
+        assert diff_central[0] == (data[1] - pad_const) / 2
+        assert diff_central[-1] == (pad_const - data[-2]) / 2
 
 
-def test_finite_diff_periodic_padding():
+def test_finite_diff_periodic_padding(data):
     """Finite difference using periodic padding."""
 
-    diff_forward = finite_diff(DATA_1D, axis=0, method='forward',
+    diff_forward = finite_diff(data, axis=0, method='forward',
                                pad_mode='periodic')
 
-    assert diff_forward[0] == DATA_1D[1] - DATA_1D[0]
-    assert diff_forward[-1] == DATA_1D[0] - DATA_1D[-1]
+    assert diff_forward[0] == data[1] - data[0]
+    assert diff_forward[-1] == data[0] - data[-1]
 
-    diff_backward = finite_diff(DATA_1D, axis=0, method='backward',
+    diff_backward = finite_diff(data, axis=0, method='backward',
                                 pad_mode='periodic')
 
-    assert diff_backward[0] == DATA_1D[0] - DATA_1D[-1]
-    assert diff_backward[-1] == DATA_1D[-1] - DATA_1D[-2]
+    assert diff_backward[0] == data[0] - data[-1]
+    assert diff_backward[-1] == data[-1] - data[-2]
 
-    diff_central = finite_diff(DATA_1D, axis=0, method='central',
+    diff_central = finite_diff(data, axis=0, method='central',
                                pad_mode='periodic')
 
-    assert diff_central[0] == (DATA_1D[1] - DATA_1D[-1]) / 2
-    assert diff_central[-1] == (DATA_1D[0] - DATA_1D[-2]) / 2
+    assert diff_central[0] == (data[1] - data[-1]) / 2
+    assert diff_central[-1] == (data[0] - data[-2]) / 2
 
 
 # --- PartialDerivative --- #
@@ -406,7 +406,7 @@ def test_divergence(space, method, padding):
     div_dom_vec = div(dom_vec)
 
     # computation of divergence with helper function
-    expected_result = np.zeros(space.shape)
+    expected_result = space.array_namespace.zeros(space.shape)
     for axis, dx in enumerate(space.cell_sides):
         expected_result += finite_diff(dom_vec[axis], axis=axis, dx=dx,
                                        method=method, pad_mode=pad_mode,
@@ -466,7 +466,7 @@ def test_laplacian(space, padding):
     div_dom_vec = lap(dom_vec)
 
     # computation of divergence with helper function
-    expected_result = np.zeros(space.shape)
+    expected_result = space.array_namespace.zeros(space.shape)
     for axis, dx in enumerate(space.cell_sides):
         diff_f = finite_diff(dom_vec.asarray(), axis=axis, dx=dx ** 2,
                              method='forward', pad_mode=pad_mode,
