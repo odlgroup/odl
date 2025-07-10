@@ -122,7 +122,9 @@ def apply_on_boundary(array, func, only_once=True, which_boundaries=None,
                          ''.format(len(axis_order), array.ndim))
 
     if out is None:
-        out = array.copy()
+        out = backend.array_constructor(
+            array, copy=True
+        )
     else:
         out[:] = array  # Self assignment is free, in case out is array
 
