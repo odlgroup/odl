@@ -11,21 +11,8 @@ from __future__ import division
 import odl
 from odl import vector
 from odl.space.entry_points import TENSOR_SPACE_IMPLS
-from odl.util.testutils import all_equal
+from odl.util.testutils import all_equal, default_precision_dict
 import pytest 
-
-default_precision_dict = {
-    'pytorch':{
-        'integer' : 'int32',
-        'float'   : 'float32',
-        'complex' : 'complex64'
-    },
-    'numpy':{
-        'integer' : 'int64',
-        'float'   : 'float64',
-        'complex' : 'complex128'
-    }
-}
 
 error_dict = {
     'pytorch' : TypeError,

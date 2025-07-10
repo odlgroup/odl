@@ -766,5 +766,18 @@ def test_file(file, args=None):
     pytest.main(args)
 
 
+default_precision_dict = {
+    'pytorch':{
+        'integer' : 'int32',
+        'float'   : 'float32',
+        'complex' : 'complex64'
+    },
+    'numpy':{
+        'integer' : 'int64',
+        'float'   : 'float64',
+        'complex' : 'complex128'
+    }
+}
+
 if __name__ == '__main__':
     run_doctests()
