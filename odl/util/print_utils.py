@@ -2,7 +2,7 @@
 from future.moves.itertools import zip_longest
 from contextlib import contextmanager
 # ODL import
-from odl.array_API_support.comparisons import asarray
+from odl.array_API_support.array_creation import asarray
 from odl.array_API_support.utils import get_array_and_backend
 # Third-party import
 import numpy as np
