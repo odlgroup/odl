@@ -1207,8 +1207,9 @@ def uniform_discr_frompartition(partition, dtype=None, impl='numpy', **kwargs):
         else:
             weighting = partition.cell_volume
 
+    device = kwargs.pop('device', 'cpu')
     tspace = tspace_type(partition.shape, dtype, exponent=exponent,
-                         weighting=weighting)
+                         weighting=weighting, device=device)
     return DiscretizedSpace(partition, tspace, **kwargs)
 
 
