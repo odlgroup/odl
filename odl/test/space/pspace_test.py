@@ -907,80 +907,78 @@ def test_element_setitem_broadcast(odl_impl_device_pairs):
     assert x[1] is old_x1
     assert x[1] == new_x0
 
-# This should not be supported. It assumes that the elements is a list wrapped in numpy and relies on numpy to do the operations
-# def test_unary_ops():
-#     # Verify that the unary operators (`+x` and `-x`) work as expected
+def test_unary_ops(odl_impl_device_pairs):
+    impl, device = odl_impl_device_pairs
+    # Verify that the unary operators (`+x` and `-x`) work as expected
+    space = odl.rn(3, impl=impl, device=device)
+    pspace = odl.ProductSpace(space, 2)
 
-#     space = odl.rn(3)
-#     pspace = odl.ProductSpace(space, 2)
+    for op in [operator.pos, operator.neg]:
+        x_arr, x = noise_elements(pspace)
 
-#     for op in [operator.pos, operator.neg]:
-#         x_arr, x = noise_elements(pspace)
+        y_arr = [op(x_) for x_ in x_arr]
+        y = op(x)
 
-#         y_arr = op(x_arr)
-#         y = op(x)
+        assert all_almost_equal([x, y], [x_arr, y_arr])
 
-#         assert all_almost_equal([x, y], [x_arr, y_arr])
+def test_operators(odl_arithmetic_op, odl_impl_device_pairs):
+    impl, device = odl_impl_device_pairs
+    # Test of the operators `+`, `-`, etc work as expected by numpy
 
-# This should not be supported. It assumes that the elements is a list wrapped in numpy and relies on numpy to do the operations
-# def test_operators(odl_arithmetic_op):
-#     # Test of the operators `+`, `-`, etc work as expected by numpy
+    op = odl_arithmetic_op
 
-#     op = odl_arithmetic_op
+    space = odl.rn(3, impl=impl, device=device)
+    pspace = odl.ProductSpace(space, 2)
 
-#     space = odl.rn(3)
-#     pspace = odl.ProductSpace(space, 2)
+    # Interactions with scalars
 
-#     # Interactions with scalars
+    for scalar in [-31.2, -1, 0, 1, 2.13]:
 
-#     for scalar in [-31.2, -1, 0, 1, 2.13]:
+        # Left op
+        x_arr, x = noise_elements(pspace)
+        if scalar == 0 and op in [operator.truediv, operator.itruediv]:
+            # Check for correct zero division behaviour
+            with pytest.raises(ZeroDivisionError):
+                y = op(x, scalar)
+        else:
+            y_arr = [op(x_, scalar) for x_ in x_arr]
+            y = op(x, scalar)
 
-#         # Left op
-#         x_arr, x = noise_elements(pspace)
-#         if scalar == 0 and op in [operator.truediv, operator.itruediv]:
-#             # Check for correct zero division behaviour
-#             with pytest.raises(ZeroDivisionError):
-#                 y = op(x, scalar)
-#         else:
-#             y_arr = op(x_arr, scalar)
-#             y = op(x, scalar)
+            assert all_almost_equal([x, y], [x_arr, y_arr])
 
-#             assert all_almost_equal([x, y], [x_arr, y_arr])
+        # Right op
+        x_arr, x = noise_elements(pspace)
 
-#         # Right op
-#         x_arr, x = noise_elements(pspace)
+        y_arr = [op(scalar, x_) for x_ in x_arr]
+        y = op(scalar, x)
 
-#         y_arr = op(scalar, x_arr)
-#         y = op(scalar, x)
+        assert all_almost_equal([x, y], [x_arr, y_arr])
 
-#         assert all_almost_equal([x, y], [x_arr, y_arr])
+    # Verify that the statement z=op(x, y) gives equivalent results to NumPy
+    x_arr, x = noise_elements(space, 1)
+    y_arr, y = noise_elements(pspace, 1)
 
-#     # Verify that the statement z=op(x, y) gives equivalent results to NumPy
-#     x_arr, x = noise_elements(space, 1)
-#     y_arr, y = noise_elements(pspace, 1)
+    # non-aliased left
+    if op in [operator.iadd, operator.isub, operator.itruediv, operator.imul]:
+        # Check for correct error since in-place op is not possible here
+        with pytest.raises(TypeError):
+            z = op(x, y)
+    else:
+        z_arr = [op(x_arr, y_) for y_ in y_arr]
+        z = op(x, y)
 
-#     # non-aliased left
-#     if op in [operator.iadd, operator.isub, operator.itruediv, operator.imul]:
-#         # Check for correct error since in-place op is not possible here
-#         with pytest.raises(TypeError):
-#             z = op(x, y)
-#     else:
-#         z_arr = op(x_arr, y_arr)
-#         z = op(x, y)
+        assert all_almost_equal([x, y, z], [x_arr, y_arr, z_arr])
 
-#         assert all_almost_equal([x, y, z], [x_arr, y_arr, z_arr])
+    # non-aliased right
+    z_arr = [op(y_, x_arr) for y_ in y_arr]
+    z = op(y, x)
+    assert all_almost_equal([x, y, z], [x_arr, y_arr, z_arr])
 
-#     # non-aliased right
-#     z_arr = op(y_arr, x_arr)
-#     z = op(y, x)
+    # aliased operation
+    z_arr = [op(y_arr[i], y_arr[i]) for i in range(len(y_arr))]
+    z = op(y, y)
 
-#     assert all_almost_equal([x, y, z], [x_arr, y_arr, z_arr])
-
-#     # aliased operation
-#     z_arr = op(y_arr, y_arr)
-#     z = op(y, y)
-
-#     assert all_almost_equal([x, y, z], [x_arr, y_arr, z_arr])
+    assert all_almost_equal([x, y, z], [x_arr, y_arr, z_arr])
 
 
 def test_ufuncs(odl_impl_device_pairs):
