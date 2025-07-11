@@ -425,22 +425,24 @@ def resize_array(arr, newshp, offset=None, pad_mode='constant', pad_const=0,
         raise TypeError('`newshp` must be a sequence, got {!r}'.format(newshp))
 
     if out is not None:
-        if not isinstance(out, np.ndarray):
-            raise TypeError('`out` must be a `numpy.ndarray` instance, got '
-                            '{!r}'.format(out))
         if out.shape != newshp:
             raise ValueError('`out` must have shape {}, got {}'
                              ''.format(newshp, out.shape))
+        out, backend = get_array_and_backend(out)
 
-        order = 'C' if out.flags.c_contiguous else 'F'
-        arr = np.asarray(arr, dtype=out.dtype, order=order)
+        arr = backend.array_constructor(arr, dtype=out.dtype)
         if arr.ndim != out.ndim:
             raise ValueError('number of axes of `arr` and `out` do not match '
                              '({} != {})'.format(arr.ndim, out.ndim))
     else:
-        arr = np.asarray(arr)
-        order = 'C' if arr.flags.c_contiguous else 'F'
-        out = np.empty(newshp, dtype=arr.dtype, order=order)
+        # If the arr provided is a tuple or a list (basic python iterable), we use numpy as the default backend 
+        if isinstance(arr, (tuple, list)):
+            arr = np.asarray(arr)
+            out = np.empty(newshp, dtype=arr.dtype)
+        else:
+            arr, backend = get_array_and_backend(arr)
+            out = backend.array_namespace.empty(newshp, dtype=arr.dtype)
+
         if len(newshp) != arr.ndim:
             raise ValueError('number of axes of `arr` and `len(newshp)` do '
                              'not match ({} != {})'

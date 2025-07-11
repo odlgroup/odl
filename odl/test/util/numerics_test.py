@@ -518,7 +518,7 @@ def test_resize_array_raise():
         resize_array(arr_1d, 19)
 
     # out given, but not an ndarray
-    with pytest.raises(TypeError):
+    with pytest.raises(AttributeError):
         resize_array(arr_1d, (10,), out=[])
 
     # out has wrong shape
