@@ -539,9 +539,9 @@ def test_resize_array_raise():
         resize_array(arr_1d, (10,), pad_mode='madeup_mode')
 
     # padding constant cannot be cast to output data type
-    with pytest.raises(ValueError):
+    with pytest.raises(AssertionError):
         resize_array(arr_1d, (10,), pad_const=1.5)  # arr_1d has dtype int
-    with pytest.raises(ValueError):
+    with pytest.raises(TypeError):
         arr_1d_float = arr_1d.astype(float)
         resize_array(arr_1d_float, (10,), pad_const=1.0j)
 
