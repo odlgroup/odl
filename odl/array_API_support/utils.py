@@ -39,12 +39,36 @@ class ArrayBackend:
         raise ValueError("Either 'array' or 'dtype' argument must be provided.")
     
     def __eq__(self, other):
+        """
+        Implements the `==` operator.
+        It compares if `other` is also an `ArrayBackend` and if `self` and `other` have the same implementation `impl`
+        """
         return isinstance(other, ArrayBackend) and self.impl == other.impl
 
 def lookup_array_backend(impl: str) -> ArrayBackend:
-    return _registered_array_backends[impl]
+    """
+    Convenience function for getting an `ArrayBackend` from an `impl` argument.
+    This is helpful to both ensure that a backend actually exists and to retrieve it.
+    """
+    try:
+        return _registered_array_backends[impl]
+    except KeyError:
+        raise KeyError(f"The implementation {impl} is not supported by ODL. Please selec a backend in {_registered_array_backends.keys()}")
 
 def get_array_and_backend(x, must_be_contiguous=False):
+    """
+    Convenience function for getting an `ArrayBackend` from an `array-like` argument. 
+
+    Arguments: 
+    x : Array-Like.
+        It can be a `np.ndarray`, a `torch.Tensor`, an ODL `Tensor` or a `ProductSpaceElement`. Object to return the `ArrayBackend` and actual underlying array from.
+    must_be_contiguous : bool
+        Boolean flag to indicate whether or not to make the array contiguous.
+
+    Returns:
+    x : actual array unwrapped from the LinearSpaceElement/returned as is if it was already an array.
+    backend : ODL `ArrayBackend` object
+    """
     from odl.space.base_tensors import Tensor
     if isinstance(x, Tensor):
         return x.asarray(must_be_contiguous=must_be_contiguous), x.space.array_backend

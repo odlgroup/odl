@@ -6,6 +6,7 @@ __all__ = (
     'arange',
     'asarray',
     'empty',
+    'empty_like',
     # 'eye',
     'from_dlpack',
     # 'full',

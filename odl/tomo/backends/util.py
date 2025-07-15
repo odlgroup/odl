@@ -46,6 +46,11 @@ def _add_default_complex_impl(fn):
         if self.vol_space.is_real and self.proj_space.is_real:
             return fn(self, x, out, **kwargs)
         elif self.vol_space.is_complex and self.proj_space.is_complex:
+            result_parts = [
+                fn(self, x.real, getattr(out, 'real', None), **kwargs),
+                fn(self, x.imag, getattr(out, 'imag', None), **kwargs)
+            ]
+
             if out is None:
                 if x in self.vol_space:
                     range = self.proj_space
@@ -53,9 +58,8 @@ def _add_default_complex_impl(fn):
                     range = self.vol_space
 
                 out = range.element()
-                
-            fn(self, x.real, out.real, **kwargs)
-            fn(self, x.imag, out.imag, **kwargs)
+                out.real = result_parts[0]
+                out.imag = result_parts[1]
 
             return out
         else:
