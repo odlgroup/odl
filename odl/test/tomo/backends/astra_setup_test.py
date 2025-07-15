@@ -18,7 +18,7 @@ from odl.tomo.backends.astra_setup import (
     astra_algorithm, astra_data, astra_projection_geometry, astra_projector,
     astra_supports, astra_volume_geometry)
 from odl.util.testutils import is_subdict
-
+from odl.util.testutils import simple_fixture
 try:
     import astra
 except ImportError:
@@ -26,8 +26,10 @@ except ImportError:
 
 pytestmark = pytest.mark.skipif("not odl.tomo.ASTRA_AVAILABLE")
 
+astra_impl = simple_fixture('astra_impl', params=['cpu', 'cuda'])
 
-def _discrete_domain(ndim):
+
+def _discrete_domain(ndim, impl, device):
     """Create `DiscretizedSpace` space with isotropic grid stride.
 
     Parameters
@@ -44,10 +46,10 @@ def _discrete_domain(ndim):
     min_pt = -max_pt
     shape = np.arange(1, ndim + 1) * 10
 
-    return odl.uniform_discr(min_pt, max_pt, shape=shape, dtype='float32')
+    return odl.uniform_discr(min_pt, max_pt, impl=impl, device=device, shape=shape, dtype='float32')
 
 
-def _discrete_domain_anisotropic(ndim):
+def _discrete_domain_anisotropic(ndim, impl, device):
     """Create `DiscretizedSpace` space with anisotropic grid stride.
 
     Parameters
@@ -64,55 +66,90 @@ def _discrete_domain_anisotropic(ndim):
     max_pt = [1] * ndim
     shape = np.arange(1, ndim + 1) * 10
 
-    return odl.uniform_discr(min_pt, max_pt, shape=shape, dtype='float32')
+    return odl.uniform_discr(min_pt, max_pt, impl=impl, device=device, shape=shape, dtype='float32')
 
 
-def test_vol_geom_2d():
+
+def test_vol_geom_2d(astra_impl, odl_impl_device_pairs):
+    impl, device = odl_impl_device_pairs
     """Check correctness of ASTRA 2D volume geometries."""
     x_pts = 10  # x_pts = Rows
     y_pts = 20  # y_pts = Columns
 
     # Isotropic voxel case
-    discr_dom = _discrete_domain(2)
+    discr_dom = _discrete_domain(2, impl=impl, device=device)
     correct_dict = {
-        'GridColCount': y_pts,
-        'GridRowCount': x_pts,
-        'option': {
-            'WindowMinX': -2.0,  # y_min
-            'WindowMaxX': 2.0,  # y_max
-            'WindowMinY': -1.0,  # x_min
-            'WindowMaxY': 1.0}}  # x_amx
+        'cpu': {
+            'GridColCount': y_pts,
+            'GridRowCount': x_pts,
+            'option': {
+                'WindowMinX': -2.0,  # y_min
+                'WindowMaxX': 2.0,   # y_max
+                'WindowMinY': -1.0,  # x_min
+                'WindowMaxY': 1.0}   # x_amx
+            },
+        'cuda':  {
+            'GridColCount': y_pts,
+            'GridRowCount': x_pts,
+            'GridSliceCount': 1,
+            'option': {
+                'WindowMinX': -2.0,  # y_min
+                'WindowMaxX': 2.0,   # y_max
+                'WindowMinY': -1.0,  # x_min
+                'WindowMaxY': 1.0,   # x_amx
+                'WindowMinZ': -1,    # z_min
+                'WindowMaxZ': 1,     # z_max
+                }
+            }  
+    }
 
-    vol_geom = astra_volume_geometry(discr_dom)
-    assert vol_geom == correct_dict
+    vol_geom = astra_volume_geometry(discr_dom, astra_impl)
+    assert vol_geom == correct_dict[astra_impl]
 
     # Anisotropic voxel case
-    discr_dom = _discrete_domain_anisotropic(2)
+    discr_dom = _discrete_domain_anisotropic(2, impl=impl, device=device)
     correct_dict = {
+        'cpu': {
         'GridColCount': y_pts,
         'GridRowCount': x_pts,
         'option': {
             'WindowMinX': -1.0,  # y_min
             'WindowMaxX': 1.0,  # y_max
             'WindowMinY': -1.0,  # x_min
-            'WindowMaxY': 1.0}}  # x_amx
+            'WindowMaxY': 1.0}   # x_max
+        },
+        'cuda':  {
+        'GridColCount': y_pts,
+        'GridRowCount': x_pts,
+        'GridSliceCount': 1,
+        'option': {
+            'WindowMinX': -1.0,  # y_min
+            'WindowMaxX': 1.0,   # y_max
+            'WindowMinY': -1.0,  # x_min
+            'WindowMaxY': 1.0,   # x_amx
+            'WindowMinZ': -1,    # z_min
+            'WindowMaxZ': 1,     # z_max
+            }
+        }  
+    }
 
     if astra_supports('anisotropic_voxels_2d'):
-        vol_geom = astra_volume_geometry(discr_dom)
-        assert vol_geom == correct_dict
+        vol_geom = astra_volume_geometry(discr_dom,astra_impl)
+        assert vol_geom == correct_dict[astra_impl]
     else:
         with pytest.raises(NotImplementedError):
-            astra_volume_geometry(discr_dom)
+            astra_volume_geometry(discr_dom, astra_impl)
 
 
-def test_vol_geom_3d():
+def test_vol_geom_3d(astra_impl, odl_impl_device_pairs):
+    impl, device = odl_impl_device_pairs
     """Check correctness of ASTRA 3D volume geometies."""
     x_pts = 10
     y_pts = 20
     z_pts = 30
 
     # Isotropic voxel case
-    discr_dom = _discrete_domain(3)
+    discr_dom = _discrete_domain(3, impl=impl, device=device)
     # x = columns, y = rows, z = slices
     correct_dict = {
         'GridColCount': z_pts,
@@ -126,10 +163,10 @@ def test_vol_geom_3d():
             'WindowMinZ': -1.0,  # x_min
             'WindowMaxZ': 1.0}}  # x_amx
 
-    vol_geom = astra_volume_geometry(discr_dom)
+    vol_geom = astra_volume_geometry(discr_dom, astra_impl)
     assert vol_geom == correct_dict
 
-    discr_dom = _discrete_domain_anisotropic(3)
+    discr_dom = _discrete_domain_anisotropic(3, impl=impl, device=device)
     # x = columns, y = rows, z = slices
     correct_dict = {
         'GridColCount': z_pts,
@@ -144,35 +181,47 @@ def test_vol_geom_3d():
             'WindowMaxZ': 1.0}}  # x_amx
 
     if astra_supports('anisotropic_voxels_3d'):
-        vol_geom = astra_volume_geometry(discr_dom)
+        vol_geom = astra_volume_geometry(discr_dom, astra_impl)
         assert vol_geom == correct_dict
     else:
         with pytest.raises(NotImplementedError):
-            astra_volume_geometry(discr_dom)
+            astra_volume_geometry(discr_dom, astra_impl)
 
 
-def test_proj_geom_parallel_2d():
+def test_proj_geom_parallel_2d(astra_impl):
     """Create ASTRA 2D projection geometry."""
 
     apart = odl.uniform_partition(0, 2, 5)
     dpart = odl.uniform_partition(-1, 1, 10)
     geom = odl.tomo.Parallel2dGeometry(apart, dpart)
 
-    proj_geom = astra_projection_geometry(geom)
+    proj_geom = astra_projection_geometry(geom, astra_impl)
 
     correct_subdict = {
-        'type': 'parallel',
-        'DetectorCount': 10, 'DetectorWidth': 0.2}
+        'cpu' : {
+            'type': 'parallel',
+            'DetectorCount': 10, 
+            'DetectorWidth': 0.2
+            },
+        'cuda' : {
+            'type': 'parallel3d_vec',
+            'DetectorRowCount': 1, 
+            'DetectorColCount': 10
+            },
+    }
 
-    assert is_subdict(correct_subdict, proj_geom)
-    assert 'ProjectionAngles' in proj_geom
+    assert is_subdict(correct_subdict[astra_impl], proj_geom)
+    if astra_impl == 'cpu':
+        assert 'ProjectionAngles' in proj_geom
+    else:
+        assert 'Vectors' in proj_geom
 
 
-def test_astra_projection_geometry():
+def test_astra_projection_geometry(astra_impl):
     """Create ASTRA projection geometry from geometry objects."""
 
     with pytest.raises(TypeError):
-        astra_projection_geometry(None)
+        astra_projection_geometry(None, astra_impl=astra_impl)
 
     apart = odl.uniform_partition(0, 2 * np.pi, 5)
     dpart = odl.uniform_partition(-40, 40, 10)
@@ -182,42 +231,47 @@ def test_astra_projection_geometry():
                                 odl.RectGrid([0, 1, 3]))
     geom_p2d = odl.tomo.Parallel2dGeometry(apart, dpart=dpart_0)
     with pytest.raises(ValueError):
-        astra_projection_geometry(geom_p2d)
+        astra_projection_geometry(geom_p2d, astra_impl)
 
     # detector sampling grid, motion sampling grid
     geom_p2d = odl.tomo.Parallel2dGeometry(apart, dpart)
-    astra_projection_geometry(geom_p2d)
+    astra_projection_geometry(geom_p2d, astra_impl)
 
     # Parallel 2D geometry
     geom_p2d = odl.tomo.Parallel2dGeometry(apart, dpart)
-    astra_geom = astra_projection_geometry(geom_p2d)
-    assert astra_geom['type'] == 'parallel'
-
+    astra_geom = astra_projection_geometry(geom_p2d, astra_impl)
+    if astra_impl == 'cpu':
+        assert astra_geom['type'] == 'parallel'
+    else:
+        assert astra_geom['type'] == 'parallel3d_vec'
     # Fan flat
     src_rad = 10
     det_rad = 5
     geom_ff = odl.tomo.FanBeamGeometry(apart, dpart, src_rad, det_rad)
-    astra_geom = astra_projection_geometry(geom_ff)
-    assert astra_geom['type'] == 'fanflat_vec'
+    astra_geom = astra_projection_geometry(geom_ff, astra_impl)
+    if astra_impl == 'cpu':
+        assert astra_geom['type'] == 'fanflat_vec'
+    else:
+        assert astra_geom['type'] == 'cone_vec'
 
     dpart = odl.uniform_partition([-40, -3], [40, 3], (10, 5))
 
     # Parallel 3D geometry
     geom_p3d = odl.tomo.Parallel3dAxisGeometry(apart, dpart)
-    astra_projection_geometry(geom_p3d)
-    astra_geom = astra_projection_geometry(geom_p3d)
+    astra_projection_geometry(geom_p3d,astra_impl)
+    astra_geom = astra_projection_geometry(geom_p3d, astra_impl)
     assert astra_geom['type'] == 'parallel3d_vec'
 
     # Circular conebeam flat
     geom_ccf = odl.tomo.ConeBeamGeometry(apart, dpart, src_rad, det_rad)
-    astra_geom = astra_projection_geometry(geom_ccf)
+    astra_geom = astra_projection_geometry(geom_ccf, astra_impl)
     assert astra_geom['type'] == 'cone_vec'
 
     # Helical conebeam flat
     pitch = 1
     geom_hcf = odl.tomo.ConeBeamGeometry(apart, dpart, src_rad, det_rad,
                                          pitch=pitch)
-    astra_geom = astra_projection_geometry(geom_hcf)
+    astra_geom = astra_projection_geometry(geom_hcf, astra_impl)
     assert astra_geom['type'] == 'cone_vec'
 
 
@@ -235,7 +289,7 @@ def test_volume_data_2d():
     assert data_out.shape == (10, 20)
 
     # From existing
-    discr_dom = _discrete_domain(2)
+    discr_dom = _discrete_domain(2, impl='numpy', device='cpu')
     data_in = discr_dom.element(np.ones((10, 20), dtype='float32'))
     data_id = astra_data(VOL_GEOM_2D, 'volume', data=data_in)
     data_out = astra.data2d.get_shared(data_id)
@@ -256,7 +310,7 @@ def test_volume_data_3d():
     assert data_out.shape == (10, 20, 30)
 
     # From existing
-    discr_dom = _discrete_domain(3)
+    discr_dom = _discrete_domain(3, impl='numpy', device='cpu')
     data_in = discr_dom.element(np.ones((10, 20, 30), dtype='float32'))
     data_id = astra_data(VOL_GEOM_3D, 'volume', data=data_in)
     data_out = astra.data3d.get_shared(data_id)
@@ -319,7 +373,7 @@ def test_astra_algorithm():
         astra_algorithm('none', ndim, vol_id, sino_id, proj_id, 'none')
     with pytest.raises(ValueError):
         astra_algorithm(
-            'backward', ndim, vol_id, sino_id, proj_id=None, impl='cpu'
+            'backward', ndim, vol_id, sino_id, proj_id=None, astra_impl='cpu'
         )
     alg_id = astra_algorithm(direction, ndim, vol_id, sino_id, proj_id, impl)
     astra.algorithm.delete(alg_id)
@@ -350,13 +404,13 @@ def test_astra_algorithm_gpu():
 
     # 2D CUDA FP
     alg_id = astra_algorithm(
-        'forward', ndim, vol_id, sino_id, proj_id=proj_id, impl='cuda'
+        'forward', ndim, vol_id, sino_id, proj_id=proj_id, astra_impl='cuda'
     )
     astra.algorithm.delete(alg_id)
 
     # 2D CUDA BP
     alg_id = astra_algorithm(
-        'backward', ndim, rec_id, sino_id, proj_id=proj_id, impl='cuda'
+        'backward', ndim, rec_id, sino_id, proj_id=proj_id, astra_impl='cuda'
     )
     astra.algorithm.delete(alg_id)
 
@@ -367,12 +421,12 @@ def test_astra_algorithm_gpu():
 
     with pytest.raises(NotImplementedError):
         astra_algorithm(
-            direction, ndim, vol_id, sino_id, proj_id=proj_id, impl='cpu'
+            direction, ndim, vol_id, sino_id, proj_id=proj_id, astra_impl='cpu'
         )
 
     for direction in {'forward', 'backward'}:
         astra_algorithm(
-            direction, ndim, vol_id, sino_id, proj_id=proj_id, impl='cuda'
+            direction, ndim, vol_id, sino_id, proj_id=proj_id, astra_impl='cuda'
         )
 
 

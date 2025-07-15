@@ -54,7 +54,6 @@ def test_astra_cpu_projector_parallel2d():
 @skip_if_no_astra
 def test_astra_cpu_projector_fanflat():
     """ASTRA CPU forward and back projection for fanflat geometry."""
-
     # Create reco space and a phantom
     reco_space = odl.uniform_discr([-4, -5], [4, 5], (4, 5), dtype='float32')
     phantom = odl.phantom.cuboid(reco_space, min_pt=[0, 0], max_pt=[4, 5])

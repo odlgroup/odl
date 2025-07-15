@@ -33,7 +33,8 @@ space_and_geometry_ids = [
 
 
 @pytest.fixture(scope="module", params=projectors, ids=space_and_geometry_ids)
-def space_and_geometry(request):
+def space_and_geometry(request, odl_impl_device_pairs):
+    impl, device = odl_impl_device_pairs
     dtype = 'float32'
     geom = request.param
 
@@ -41,30 +42,30 @@ def space_and_geometry(request):
 
     if geom == 'par2d':
         reco_space = odl.uniform_discr([-4, -5], [4, 5], (4, 5),
-                                       dtype=dtype)
+                                       dtype=dtype, impl=impl, device=device)
         dpart = odl.uniform_partition(-6, 6, 6)
         geom = odl.tomo.Parallel2dGeometry(apart, dpart)
     elif geom == 'par3d':
         reco_space = odl.uniform_discr([-4, -5, -6], [4, 5, 6], (4, 5, 6),
-                                       dtype=dtype)
+                                       dtype=dtype, impl=impl, device=device)
         dpart = odl.uniform_partition([-7, -8], [7, 8], (7, 8))
         geom = odl.tomo.Parallel3dAxisGeometry(apart, dpart)
     elif geom == 'cone2d':
         reco_space = odl.uniform_discr([-4, -5], [4, 5], (4, 5),
-                                       dtype=dtype)
+                                       dtype=dtype, impl=impl, device=device)
         dpart = odl.uniform_partition(-6, 6, 6)
         geom = odl.tomo.FanBeamGeometry(apart, dpart, src_radius=100,
                                         det_radius=10)
     elif geom == 'cone3d':
         reco_space = odl.uniform_discr([-4, -5, -6], [4, 5, 6], (4, 5, 6),
-                                       dtype=dtype)
+                                       dtype=dtype, impl=impl, device=device)
         dpart = odl.uniform_partition([-7, -8], [7, 8], (7, 8))
 
         geom = odl.tomo.ConeBeamGeometry(apart, dpart,
                                          src_radius=200, det_radius=100)
     elif geom == 'helical':
         reco_space = odl.uniform_discr([-4, -5, -6], [4, 5, 6], (4, 5, 6),
-                                       dtype=dtype)
+                                       dtype=dtype, impl=impl, device=device)
 
         # overwrite angle
         apart = odl.uniform_partition(0, 2 * 2 * np.pi, 18)
@@ -88,23 +89,28 @@ def test_astra_cuda_projector(space_and_geometry):
     phantom = odl.phantom.cuboid(vol_space)
 
     # Make projection space
-    proj_space = odl.uniform_discr_frompartition(geom.partition,
-                                                 dtype=vol_space.dtype)
+    proj_space = odl.uniform_discr_frompartition(
+        geom.partition,
+        dtype=vol_space.dtype_identifier, 
+        impl=vol_space.impl,
+        device=vol_space.device)
 
     # create RayTransform implementation
     astra_cuda = AstraCudaImpl(geom, vol_space, proj_space)
 
+    out = astra_cuda.proj_space.zero()
     # Forward evaluation
     proj_data = astra_cuda.call_forward(phantom)
     assert proj_data in proj_space
     assert proj_data.norm() > 0
-    assert np.all(proj_data.asarray() >= 0)
+    assert odl.all(0 <= proj_data)
 
     # Backward evaluation
     backproj = astra_cuda.call_backward(proj_data)
     assert backproj in vol_space
     assert backproj.norm() > 0
-    assert np.all(proj_data.asarray() >= 0)
+    assert odl.all(0 <= backproj)
+    # assert np.all(proj_data.asarray() >= 0)
 
 
 if __name__ == '__main__':
