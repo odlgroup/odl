@@ -27,6 +27,7 @@ from odl.tomo.geometry import (
     ConeBeamGeometry, FanBeamGeometry, Geometry, Parallel2dGeometry,
     Parallel3dAxisGeometry)
 from odl.discr.discr_space import DiscretizedSpaceElement
+from odl.array_API_support import empty, get_array_and_backend
 
 try:
     import astra
@@ -51,21 +52,13 @@ def ensure_contiguous(data, impl):
     
 
 def index_of_cuda_device(device: torch.device):
-    try:
-        torch.cuda.get_device_name(device)
-        # is a gpu
-        return device.index
-    except ValueError:
-        # is other kind of device
+    if device == 'cpu':
         return None
+    else:
+        return int(str(device).split(':')[-1])
 
 class AstraCudaImpl:
     """`RayTransform` implementation for CUDA algorithms in ASTRA."""
-
-    algo_forward_id = None
-    algo_backward_id = None
-    vol_id = None
-    sino_id = None
     projector_id = None
 
     def __init__(self, geometry, vol_space, proj_space):
@@ -174,7 +167,11 @@ class AstraCudaImpl:
         self.proj_geom = astra_projection_geometry(self.geometry, 'cuda')
 
         self.projector_id = astra_projector(
-            'cuda3d', self.vol_geom, self.proj_geom, 3, bool(self.geometry.ndim == 2)
+            astra_proj_type = 'cuda3d', 
+            astra_vol_geom  = self.vol_geom, 
+            astra_proj_geom = self.proj_geom, 
+            ndim = 3, 
+            override_2D = bool(self.geometry.ndim == 2)
         )        
 
     @_add_default_complex_impl
@@ -203,22 +200,17 @@ class AstraCudaImpl:
             assert vol_data in self.vol_space.real_space
 
             if out is not None:
-                assert out in self.proj_space
+                assert out in self.proj_space.real_space, f"The out argument provided is a {type(out)}, which is not an element of the projection space {self.proj_space.real_space}"
                 if self.vol_space.impl == 'pytorch':
                     warnings.warn("You requested an out-of-place transform with PyTorch. This will require cloning the data and will allocate extra memory", RuntimeWarning)
                 proj_data = out.data[None] if self.proj_ndim==2 else out.data
             else:
-                if self.proj_space.impl == 'pytorch':
-                    proj_data = torch.zeros(
-                        astra.geom_size(self.proj_geom), 
-                        dtype=torch.float32, 
-                        device=self.proj_space.tspace._torch_device #type:ignore
-                        )
-                elif self.proj_space.impl == 'numpy':
-                    proj_data = np.zeros(
-                        astra.geom_size(self.proj_geom), 
-                        dtype=np.float32, 
-                        )
+                proj_data = empty(
+                    impl   = self.proj_space.impl,
+                    shape  = astra.geom_size(self.proj_geom),
+                    dtype  = self.proj_space.dtype,
+                    device = self.proj_space.device
+                )
                     
             if self.proj_ndim == 2:
                 volume_data = vol_data.data[None]
@@ -227,11 +219,12 @@ class AstraCudaImpl:
             else:
                 raise NotImplementedError
 
-            volume_data = ensure_contiguous(volume_data, vol_data.impl)  
+            volume_data, vol_backend = get_array_and_backend(volume_data, must_be_contiguous=True)
+            proj_data, proj_backend  = get_array_and_backend(proj_data, must_be_contiguous=True)
 
             if self.proj_space.impl == 'pytorch':
                 device_index = index_of_cuda_device(
-                                  self.proj_space.tspace._torch_device) #type:ignore
+                                  self.proj_space.tspace.device) #type:ignore
                 if device_index is not None:
                     astra.set_gpu_index(device_index)
 
@@ -245,10 +238,9 @@ class AstraCudaImpl:
             proj_data = proj_data[0] if self.geometry.ndim == 2 else proj_data.transpose(*self.transpose_tuple)
 
             if out is not None:
-                out[:] = proj_data if self.proj_space.impl == 'numpy' else proj_data.clone()
-                return out
+                out.data[:] = proj_data if self.proj_space.impl == 'numpy' else proj_data.clone()
             else:
-                return proj_data
+                return self.proj_space.element(proj_data)
 
     @_add_default_complex_impl
     def call_backward(self, x, out=None, **kwargs):
@@ -277,41 +269,35 @@ class AstraCudaImpl:
             assert proj_data in self.proj_space.real_space
 
             if out is not None:
+                assert out in self.vol_space.real_space, f"The out argument provided is a {type(out)}, which is not an element of the projection space {self.vol_space.real_space}"
                 if self.vol_space.impl == 'pytorch':
                     warnings.warn(
                         "You requested an out-of-place transform with PyTorch. \
                         This will require cloning the data and will allocate extra memory", 
                         RuntimeWarning)
-                assert out in self.vol_space
                 volume_data = out.data[None] if self.geometry.ndim==2 else out.data
             else:
-                if self.vol_space.impl == 'pytorch':
-                    volume_data = torch.zeros(
-                        astra.geom_size(self.vol_geom), 
-                        dtype=torch.float32, 
-                        device=self.vol_space.tspace._torch_device #type:ignore
-                        )
-                elif self.vol_space.impl == 'numpy':
-                    volume_data = np.zeros(
-                        astra.geom_size(self.vol_geom), 
-                        dtype=np.float32, 
-                        )
-                else:
-                    raise NotImplementedError
+                volume_data = empty(
+                    self.vol_space.impl,
+                    astra.geom_size(self.vol_geom),
+                    dtype  = self.vol_space.dtype,
+                    device = self.vol_space.device
+                )
 
             ### Transpose projection tensor            
             if self.proj_ndim == 2:
-                projection_data = proj_data.data[None]
+                proj_data = proj_data.data[None]
             elif self.proj_ndim == 3:                
-                projection_data = proj_data.data.transpose(*self.transpose_tuple)
+                proj_data = proj_data.data.transpose(*self.transpose_tuple)
             else:
                 raise NotImplementedError
                 
             # Ensure data is contiguous otherwise astra will throw an error
-            projection_data = ensure_contiguous(projection_data, proj_data.impl)    
+            volume_data, vol_backend = get_array_and_backend(volume_data, must_be_contiguous=True)
+            proj_data, proj_backend  = get_array_and_backend(proj_data, must_be_contiguous=True)
             
-            if proj_data.impl == 'pytorch':
-                device_index = index_of_cuda_device(self.vol_space.tspace._torch_device) #type:ignore
+            if self.vol_space.tspace.impl == 'pytorch':
+                device_index = index_of_cuda_device(self.vol_space.tspace.device) #type:ignore
                 if device_index is not None:
                     astra.set_gpu_index(device_index)
 
@@ -319,7 +305,7 @@ class AstraCudaImpl:
             astra.experimental.direct_BP3D( #type:ignore
                 self.projector_id,
                 volume_data,
-                projection_data                
+                proj_data                
             )
             volume_data *= self.bp_scaling_factor
             volume_data = volume_data[0] if self.geometry.ndim == 2 else volume_data
@@ -328,7 +314,7 @@ class AstraCudaImpl:
                 out[:] = volume_data if self.vol_space.impl == 'numpy' else volume_data.clone()
                 return out
             else:
-                return volume_data
+                return self.vol_space.element(volume_data)
 
     def __del__(self):
         """Delete ASTRA objects."""
