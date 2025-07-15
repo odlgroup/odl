@@ -435,13 +435,8 @@ def resize_array(arr, newshp, offset=None, pad_mode='constant', pad_const=0,
             raise ValueError('number of axes of `arr` and `out` do not match '
                              '({} != {})'.format(arr.ndim, out.ndim))
     else:
-        # If the arr provided is a tuple or a list (basic python iterable), we use numpy as the default backend 
-        if isinstance(arr, (tuple, list)):
-            arr = np.asarray(arr)
-            out = np.empty(newshp, dtype=arr.dtype)
-        else:
-            arr, backend = get_array_and_backend(arr)
-            out = backend.array_namespace.empty(newshp, dtype=arr.dtype)
+        arr, backend = get_array_and_backend(arr)
+        out = backend.array_namespace.empty(newshp, dtype=arr.dtype)
 
         if len(newshp) != arr.ndim:
             raise ValueError('number of axes of `arr` and `len(newshp)` do '
@@ -463,13 +458,8 @@ def resize_array(arr, newshp, offset=None, pad_mode='constant', pad_const=0,
     if (pad_mode == 'constant' and
         any(n_new > n_orig
             for n_orig, n_new in zip(arr.shape, out.shape))):
-        try:
-            pad_const_scl = np.array([pad_const], out.dtype)
-            assert(pad_const_scl == np.array([pad_const]))
-        except Exception as e:
-            raise ValueError('`pad_const` {} cannot be safely cast to the data '
-                             'type {} of the output array'
-                             ''.format(pad_const, out.dtype))
+        pad_const_scl = backend.array_constructor([pad_const], dtype=out.dtype)
+        assert(pad_const_scl == backend.array_constructor([pad_const]))
 
     # Handle direction
     direction, direction_in = str(direction).lower(), direction
@@ -482,9 +472,9 @@ def resize_array(arr, newshp, offset=None, pad_mode='constant', pad_const=0,
                          "got {}".format(pad_const))
 
     if direction == 'forward' and pad_mode == 'constant' and pad_const != 0:
-        out.fill(pad_const)
+        out.fill(pad_const) if backend.impl in ['numpy'] else out.fill_(pad_const)
     else:
-        out.fill(0)
+        out.fill(0) if backend.impl in ['numpy'] else out.fill_(0)
 
     # Perform the resizing
     if direction == 'forward':
@@ -630,6 +620,14 @@ def _apply_padding(lhs_arr, rhs_arr, offset, pad_mode, direction):
     """
     if pad_mode not in ('periodic', 'symmetric', 'order0', 'order1'):
         return
+    
+    lhs_arr, lhs_backend = get_array_and_backend(lhs_arr)
+    rhs_arr, rhs_backend = get_array_and_backend(rhs_arr)
+
+    assert lhs_backend == rhs_backend
+    assert lhs_arr.device == rhs_arr.device
+
+    ns = lhs_backend.array_namespace
 
     full_slc = [slice(None)] * lhs_arr.ndim
     intersec_slc, _ = _intersection_slice_tuples(lhs_arr, rhs_arr, offset)
@@ -701,6 +699,7 @@ def _apply_padding(lhs_arr, rhs_arr, offset, pad_mode, direction):
             if direction == 'forward':
                 rhs_slc_l[axis] = pad_slc_inner_l
                 rhs_slc_r[axis] = pad_slc_inner_r
+
                 lhs_slc_l, rhs_slc_l, lhs_slc_r, rhs_slc_r = map(
                     tuple, [lhs_slc_l, rhs_slc_l, lhs_slc_r, rhs_slc_r])
 
@@ -735,10 +734,10 @@ def _apply_padding(lhs_arr, rhs_arr, offset, pad_mode, direction):
                 lhs_slc_l, rhs_slc_l, lhs_slc_r, rhs_slc_r = map(
                     tuple, [lhs_slc_l, rhs_slc_l, lhs_slc_r, rhs_slc_r])
 
-                lhs_arr[lhs_slc_l] += np.sum(
+                lhs_arr[lhs_slc_l] += ns.sum(
                     lhs_arr[rhs_slc_l],
                     axis=axis, keepdims=True, dtype=lhs_arr.dtype)
-                lhs_arr[lhs_slc_r] += np.sum(
+                lhs_arr[lhs_slc_r] += ns.sum(
                     lhs_arr[rhs_slc_r],
                     axis=axis, keepdims=True, dtype=lhs_arr.dtype)
 
@@ -775,10 +774,10 @@ def _apply_padding(lhs_arr, rhs_arr, offset, pad_mode, direction):
             # The `np.arange`s, broadcast along `axis`, are used to create the
             # constant-slope continuation (forward) or to calculate the
             # first order moments (adjoint).
-            arange_l = np.arange(-n_pad_l, 0,
-                                 dtype=lhs_arr.dtype)[bcast_slc]
-            arange_r = np.arange(1, n_pad_r + 1,
-                                 dtype=lhs_arr.dtype)[bcast_slc]
+            arange_l = ns.arange(-n_pad_l, 0,
+                                 dtype=lhs_arr.dtype, device=lhs_arr.device)[bcast_slc]
+            arange_r = ns.arange(1, n_pad_r + 1,
+                                 dtype=lhs_arr.dtype, device=lhs_arr.device)[bcast_slc]
 
             lhs_slc_l, rhs_slc_l, lhs_slc_r, rhs_slc_r = map(
                 tuple, [lhs_slc_l, rhs_slc_l, lhs_slc_r, rhs_slc_r])
@@ -786,18 +785,18 @@ def _apply_padding(lhs_arr, rhs_arr, offset, pad_mode, direction):
             if direction == 'forward':
                 # Take first order difference to get the derivative
                 # along `axis`.
-                slope_l = np.diff(lhs_arr[slope_slc_l], n=1, axis=axis)
-                slope_r = np.diff(lhs_arr[slope_slc_r], n=1, axis=axis)
+                slope_l = ns.diff(lhs_arr[slope_slc_l], n=1, axis=axis)
+                slope_r = ns.diff(lhs_arr[slope_slc_r], n=1, axis=axis)
 
                 # Finally assign the constant slope values
                 lhs_arr[lhs_slc_l] = lhs_arr[bdry_slc_l] + arange_l * slope_l
                 lhs_arr[lhs_slc_r] = lhs_arr[bdry_slc_r] + arange_r * slope_r
             else:
                 # Same as in 'order0'
-                lhs_arr[bdry_slc_l] += np.sum(lhs_arr[rhs_slc_l],
+                lhs_arr[bdry_slc_l] += ns.sum(lhs_arr[rhs_slc_l],
                                               axis=axis, keepdims=True,
                                               dtype=lhs_arr.dtype)
-                lhs_arr[bdry_slc_r] += np.sum(lhs_arr[rhs_slc_r],
+                lhs_arr[bdry_slc_r] += ns.sum(lhs_arr[rhs_slc_r],
                                               axis=axis, keepdims=True,
                                               dtype=lhs_arr.dtype)
 
@@ -812,7 +811,7 @@ def _apply_padding(lhs_arr, rhs_arr, offset, pad_mode, direction):
                 # Add moment1 at the "width-2 boundary layers", with the sign
                 # corresponding to the sign in the derivative calculation
                 # of the forward padding.
-                sign = np.array([-1, 1])[bcast_slc]
+                sign = lhs_backend.array_constructor([-1, 1], device=lhs_arr.device)[bcast_slc]
                 lhs_arr[slope_slc_l] += moment1_l * sign
                 lhs_arr[slope_slc_r] += moment1_r * sign
 
