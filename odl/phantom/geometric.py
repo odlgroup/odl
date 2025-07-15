@@ -360,7 +360,7 @@ def _ellipse_phantom_2d(space, ellipses):
     shepp_logan : The typical use-case for this function.
     """
     # Blank image
-    p = np.zeros(space.shape, dtype=space.dtype)
+    p = np.zeros(space.shape, dtype=space.dtype_identifier)
 
     minp = space.grid.min_pt
     maxp = space.grid.max_pt
