@@ -24,7 +24,7 @@ ODL geometry representation to ASTRA's data structures, including:
 """
 
 from __future__ import absolute_import, division, print_function
-
+from typing import Dict
 import warnings
 
 import numpy as np
@@ -171,7 +171,7 @@ def astra_versions_supporting(feature):
         raise ValueError('unknown feature {!r}'.format(feature))
 
 
-def astra_volume_geometry(vol_space, impl):
+def astra_volume_geometry(vol_space:DiscretizedSpace, astra_impl:str):
     """Create an ASTRA volume geometry from the discretized domain.
 
     From the ASTRA documentation:
@@ -189,6 +189,8 @@ def astra_volume_geometry(vol_space, impl):
     vol_space : `DiscretizedSpace`
         Discretized space where the reconstruction (volume) lives.
         It must be 2- or 3-dimensional and uniformly discretized.
+    astra_impl : str
+            cuda or cpu
 
     Returns
     -------
@@ -239,19 +241,19 @@ def astra_volume_geometry(vol_space, impl):
         # NOTE: We need to flip the sign of the (ODL) x component since
         # ASTRA seems to move it in the other direction. Not quite clear
         # why.
-        if impl == 'cpu':
+        if astra_impl == 'cpu':
             vol_geom = astra.create_vol_geom(
                 vol_shp[0],   vol_shp[1],
                 vol_min[1],   vol_max[1],
                 -vol_max[0], -vol_min[0])
-        elif impl == 'cuda':
+        elif astra_impl == 'cuda':
             vol_geom = astra.create_vol_geom(
                 vol_shp[0], vol_shp[1], 1,
                 vol_min[1], vol_max[1],
                 vol_min[0], vol_max[0], 
                 -1,1)
         else:
-            raise ValueError(f'impl argument can only be "cpu" or "cuda, got {impl}')
+            raise ValueError(f'astra_impl argument can only be "cpu" or "cuda, got {astra_impl}')
 
         
 
@@ -289,7 +291,7 @@ def astra_volume_geometry(vol_space, impl):
     return vol_geom
 
 
-def astra_conebeam_3d_geom_to_vec(geometry):
+def astra_conebeam_3d_geom_to_vec(geometry:Geometry):
     """Create vectors for ASTRA projection geometries from ODL geometry.
 
     The 3D vectors are used to create an ASTRA projection geometry for
@@ -353,7 +355,7 @@ def astra_conebeam_3d_geom_to_vec(geometry):
 
     return vectors
 
-def astra_fanflat_2d_geom_to_conebeam_vec(geometry):
+def astra_fanflat_2d_geom_to_conebeam_vec(geometry:Geometry):
     """ Create vectors for ASTRA projection geometry.
     This is required for the CUDA implementation of fanflat geometry.
     """
@@ -378,7 +380,7 @@ def astra_fanflat_2d_geom_to_conebeam_vec(geometry):
 
     return vectors
 
-def astra_conebeam_2d_geom_to_vec(geometry):
+def astra_conebeam_2d_geom_to_vec(geometry:Geometry):
     """Create vectors for ASTRA projection geometries from ODL geometry.
 
     The 2D vectors are used to create an ASTRA projection geometry for
@@ -437,7 +439,7 @@ def astra_conebeam_2d_geom_to_vec(geometry):
     return vectors
 
 
-def astra_parallel_3d_geom_to_vec(geometry):
+def astra_parallel_3d_geom_to_vec(geometry:Geometry):
     """Create vectors for ASTRA projection geometries from ODL geometry.
 
     The 3D vectors are used to create an ASTRA projection geometry for
@@ -502,7 +504,7 @@ def astra_parallel_3d_geom_to_vec(geometry):
 
     return vectors
 
-def astra_parallel_2d_geom_to_parallel3d_vec(geometry):
+def astra_parallel_2d_geom_to_parallel3d_vec(geometry:Geometry):
     angles = geometry.angles
     mid_pt = geometry.det_params.mid_pt
 
@@ -527,8 +529,8 @@ def astra_parallel_2d_geom_to_parallel3d_vec(geometry):
     return vectors
 
 def astra_projection_geometry(
-        geometry,
-        astra_impl):
+        geometry:Geometry,
+        astra_impl:str):
     """Create an ASTRA projection geometry from an ODL geometry object.
 
     As of ASTRA version 1.7, the length values are not required any more to be
@@ -621,7 +623,7 @@ def astra_projection_geometry(
     return proj_geom
 
 
-def astra_data(astra_geom, datatype, data=None, ndim=2, allow_copy=False):
+def astra_data(astra_geom:Dict, datatype:str, data=None, ndim:int=2,        allow_copy=False):
     """Create an ASTRA data object.
 
     Parameters
@@ -694,7 +696,7 @@ def astra_data(astra_geom, datatype, data=None, ndim=2, allow_copy=False):
 
 
 def astra_projector(
-        astra_proj_type, astra_vol_geom, astra_proj_geom, ndim, 
+        astra_proj_type:str, astra_vol_geom:Dict, astra_proj_geom:Dict, ndim:2, 
         override_2D = False
         ):
     """Create an ASTRA projector configuration dictionary.
@@ -788,7 +790,7 @@ def astra_projector(
         return astra.projector3d.create(proj_cfg)
 
 
-def astra_algorithm(direction, ndim, vol_id, sino_id, proj_id, impl):
+def astra_algorithm(direction:str, ndim:int, vol_id:int, sino_id:int, proj_id:int, astra_impl:str):
     """Create an ASTRA algorithm object to run the projector.
 
     Parameters
@@ -817,13 +819,13 @@ def astra_algorithm(direction, ndim, vol_id, sino_id, proj_id, impl):
     if ndim not in (2, 3):
         raise ValueError('{}-dimensional projectors not supported'
                          ''.format(ndim))
-    if impl not in ('cpu', 'cuda'):
+    if astra_impl not in ('cpu', 'cuda'):
         raise ValueError("`impl` type '{}' not understood"
-                         ''.format(impl))
-    if ndim == 3 and impl == 'cpu':
+                         ''.format(astra_impl))
+    if ndim == 3 and astra_impl == 'cpu':
         raise NotImplementedError(
             '3d algorithms for CPU not supported by ASTRA')
-    if proj_id is None and impl == 'cpu':
+    if proj_id is None and astra_impl == 'cpu':
         raise ValueError("'cpu' implementation requires projector ID")
 
     algo_map = {'forward': {2: {'cpu': 'FP', 'cuda': 'FP_CUDA'},
@@ -831,7 +833,7 @@ def astra_algorithm(direction, ndim, vol_id, sino_id, proj_id, impl):
                 'backward': {2: {'cpu': 'BP', 'cuda': 'BP_CUDA'},
                              3: {'cpu': None, 'cuda': 'BP3D_CUDA'}}}
 
-    algo_cfg = {'type': algo_map[direction][ndim][impl],
+    algo_cfg = {'type': algo_map[direction][ndim][astra_impl],
                 'ProjectorId': proj_id,
                 'ProjectionDataId': sino_id}
     if direction == 'forward':
