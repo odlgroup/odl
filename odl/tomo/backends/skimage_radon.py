@@ -211,10 +211,20 @@ class SkImageImpl:
                 '`vol_space` must be a `DiscretizedSpace` instance, got {!r}'
                 ''.format(vol_space)
             )
+        if vol_space.impl != 'numpy':
+            raise TypeError(
+                '`vol_space` implementation must be `numpy`, got {!r}'
+                ''.format(vol_space.impl)
+            )
         if not isinstance(proj_space, DiscretizedSpace):
             raise TypeError(
                 '`proj_space` must be a `DiscretizedSpace` instance, got {!r}'
                 ''.format(proj_space)
+            )
+        if proj_space.impl != 'numpy':
+            raise TypeError(
+                '`proj_space` implementation must be `numpy`, got {!r}'
+                ''.format(proj_space.impl)
             )
         if not isinstance(geometry, Parallel2dGeometry):
             raise TypeError(
