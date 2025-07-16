@@ -15,7 +15,7 @@ import sys
 
 import odl
 from odl.tomo.backends.astra_cpu import (
-    astra_cpu_forward_projector, astra_cpu_back_projector)
+    astra_cpu_projector)
 from odl.tomo.util.testutils import skip_if_no_astra
 
 # TODO: clean up and improve tests
@@ -24,11 +24,11 @@ from odl.tomo.util.testutils import skip_if_no_astra
 @pytest.mark.xfail(sys.platform == 'win32', run=False,
                    reason="Crashes on windows")
 @skip_if_no_astra
-def test_astra_cpu_projector_parallel2d():
+def test_astra_cpu_projector_parallel2d(odl_impl_device_pairs):
     """ASTRA CPU forward and back projection for 2d parallel geometry."""
-
+    impl, device = odl_impl_device_pairs 
     # Create reco space and a phantom
-    reco_space = odl.uniform_discr([-4, -5], [4, 5], (4, 5), dtype='float32')
+    reco_space = odl.uniform_discr([-4, -5], [4, 5], (4, 5), dtype='float32', impl=impl, device=device)
     phantom = odl.phantom.cuboid(reco_space, min_pt=[0, 0], max_pt=[4, 5])
 
     # Create parallel geometry
@@ -37,25 +37,30 @@ def test_astra_cpu_projector_parallel2d():
     geom = odl.tomo.Parallel2dGeometry(angle_part, det_part)
 
     # Make projection space
-    proj_space = odl.uniform_discr_frompartition(geom.partition,
-                                                 dtype='float32')
+    proj_space = odl.uniform_discr_frompartition(
+        geom.partition,
+        dtype='float32',
+        impl=impl, 
+        device=device
+        )
 
     # Forward evaluation
-    proj_data = astra_cpu_forward_projector(phantom, geom, proj_space)
+    proj_data = astra_cpu_projector('forward', phantom, geom, proj_space)
     assert proj_data.shape == proj_space.shape
     assert proj_data.norm() > 0
 
     # Backward evaluation
-    backproj = astra_cpu_back_projector(proj_data, geom, reco_space)
+    backproj = astra_cpu_projector('backward', proj_data, geom, reco_space)
     assert backproj.shape == reco_space.shape
     assert backproj.norm() > 0
 
 
 @skip_if_no_astra
-def test_astra_cpu_projector_fanflat():
+def test_astra_cpu_projector_fanflat(odl_impl_device_pairs):
     """ASTRA CPU forward and back projection for fanflat geometry."""
     # Create reco space and a phantom
-    reco_space = odl.uniform_discr([-4, -5], [4, 5], (4, 5), dtype='float32')
+    impl, device = odl_impl_device_pairs
+    reco_space = odl.uniform_discr([-4, -5], [4, 5], (4, 5), dtype='float32', impl=impl, device=device)
     phantom = odl.phantom.cuboid(reco_space, min_pt=[0, 0], max_pt=[4, 5])
 
     # Create fan beam geometry with flat detector
@@ -67,15 +72,15 @@ def test_astra_cpu_projector_fanflat():
 
     # Make projection space
     proj_space = odl.uniform_discr_frompartition(geom.partition,
-                                                 dtype='float32')
+                                                 dtype='float32', impl=impl, device=device)
 
     # Forward evaluation
-    proj_data = astra_cpu_forward_projector(phantom, geom, proj_space)
+    proj_data = astra_cpu_projector('forward', phantom, geom, proj_space)
     assert proj_data.shape == proj_space.shape
     assert proj_data.norm() > 0
 
     # Backward evaluation
-    backproj = astra_cpu_back_projector(proj_data, geom, reco_space)
+    backproj = astra_cpu_projector('backward', proj_data, geom, reco_space)
     assert backproj.shape == reco_space.shape
     assert backproj.norm() > 0
 

@@ -41,15 +41,7 @@ except ImportError:
 __all__ = (
     'ASTRA_CUDA_AVAILABLE',
 )
-
-def ensure_contiguous(data, impl):
-    if impl == 'pytorch':
-        return data.contiguous()
-    elif impl == 'numpy':
-        return np.ascontiguousarray(data)
-    else:
-        raise NotImplementedError
-    
+   
 
 def index_of_cuda_device(device: torch.device):
     if device == 'cpu':
@@ -227,7 +219,7 @@ class AstraCudaImpl:
                                   self.proj_space.tspace.device) #type:ignore
                 if device_index is not None:
                     astra.set_gpu_index(device_index)
-
+                    
             astra.experimental.direct_FP3D( #type:ignore
                 self.projector_id,
                 volume_data,

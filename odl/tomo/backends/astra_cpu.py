@@ -11,7 +11,7 @@
 from __future__ import absolute_import, division, print_function
 
 import warnings
-
+import numpy as np
 from odl.discr import DiscretizedSpace, DiscretizedSpaceElement
 from odl.tomo.backends.astra_setup import (
     astra_algorithm, astra_data, astra_projection_geometry, astra_projector,
@@ -27,8 +27,7 @@ except ImportError:
     pass
 
 __all__ = (
-    'astra_cpu_forward_projector',
-    'astra_cpu_back_projector',
+    'astra_cpu_projector',
     'default_astra_proj_type',
 )
 
@@ -66,23 +65,28 @@ def default_astra_proj_type(geom):
             'explicitly'.format(type(geom))
         )
 
-
-def astra_cpu_forward_projector(vol_data, geometry, proj_space, out=None,
-                                astra_proj_type=None):
-    """Run an ASTRA forward projection on the given data using the CPU.
+def astra_cpu_projector(
+        direction:str,
+        input_data:DiscretizedSpaceElement,
+        geometry:Geometry,
+        range_space:DiscretizedSpace,
+        out :DiscretizedSpaceElement = None,
+        astra_proj_type: str | None = None
+        ) -> DiscretizedSpaceElement:
+    """Run an ASTRA projection on the given data using the CPU.
 
     Parameters
     ----------
-    vol_data : `DiscretizedSpaceElement`
-        Volume data to which the forward projector is applied.
+    input_data : `DiscretizedSpaceElement`
+        Input data to which the projector is applied.
     geometry : `Geometry`
         Geometry defining the tomographic setup.
-    proj_space : `DiscretizedSpace`
+    range_space : `DiscretizedSpace`
         Space to which the calling operator maps.
-    out : ``proj_space`` element, optional
-        Element of the projection space to which the result is written. If
-        ``None``, an element in ``proj_space`` is created.
-    astra_proj_type : str, optional
+    out : ``range_space`` element, optional
+        Element of the range_space space to which the result is written. If
+        ``None``, an element in ``range`` is created.
+    astra_proj_type : str, range_space
         Type of projector that should be used. See `the ASTRA documentation
         <http://www.astra-toolbox.com/docs/proj2d.html>`_ for details.
         By default, a suitable projector type for the given geometry is
@@ -94,43 +98,57 @@ def astra_cpu_forward_projector(vol_data, geometry, proj_space, out=None,
         Projection data resulting from the application of the projector.
         If ``out`` was provided, the returned object is a reference to it.
     """
-    if not isinstance(vol_data, DiscretizedSpaceElement):
+    ### Asserting that we get the right data types.
+    assert direction in ['forward', 'backward']
+    if not isinstance(input_data, DiscretizedSpaceElement):
         raise TypeError(
-            'volume data {!r} is not a `DiscretizedSpaceElement` instance'
-            ''.format(vol_data)
+            'Input data {!r} is not a `DiscretizedSpaceElement` instance'
+            ''.format(input_data)
         )
     if not isinstance(geometry, Geometry):
         raise TypeError(
             'geometry {!r} is not a Geometry instance'.format(geometry)
         )
-    if not isinstance(proj_space, DiscretizedSpace):
+    if not isinstance(range_space, DiscretizedSpace):
         raise TypeError(
-            '`proj_space` {!r} is not a DiscretizedSpace instance.'
-            ''.format(proj_space)
+            '`range_space` {!r} is not a DiscretizedSpace instance.'
+            ''.format(range_space)
         )
-    
-    vol_data_arr, vol_backend = get_array_and_backend(vol_data, must_be_contiguous=True)
-    proj_backend = lookup_array_backend(proj_space.impl)
-    assert vol_backend == proj_backend
-
-    if vol_data.ndim != geometry.ndim:
+    if input_data.ndim != geometry.ndim:
         raise ValueError(
-            'dimensions {} of volume data and {} of geometry do not match'
-            ''.format(vol_data.ndim, geometry.ndim)
+            'dimensions {} of input data and {} of geometry do not match'
+            ''.format(input_data.ndim, geometry.ndim)
         )
     if out is None:
-        out = proj_space.real_space.element()
+        out_element = range_space.real_space.element()
     else:
-        if out not in proj_space.real_space:
+        if out not in range_space.real_space:
             raise TypeError(
                 '`out` {} is neither None nor a `DiscretizedSpaceElement` '
                 'instance'.format(out)
             )
+        out_element = out.data
+    ### Unpacking the dimension of the problem
+    ndim = input_data.ndim
+        
+    ### Unpacking the underlying arrays
+    input_data_arr, input_backend = get_array_and_backend(input_data, must_be_contiguous=True)
 
-    ndim = vol_data.ndim
+    if input_backend.impl != 'numpy':
+        out_element = np.ascontiguousarray(input_backend.to_numpy(out_element))
+        input_data_arr = np.ascontiguousarray(input_backend.to_numpy(input_data_arr))
+
+    range_backend = lookup_array_backend(range_space.impl)
+    assert input_backend == range_backend, f"The input's tensor space backend does not match the range's: {input_backend} != {range_backend}"    
 
     # Create astra geometries
-    vol_geom = astra_volume_geometry(vol_data.space, 'cpu')
+    # The volume geometry is defined by the space of the input data in the forward mode and the range_space in the backward mode
+    if direction == 'forward':        
+        vol_geom = astra_volume_geometry(input_data.space, 'cpu')
+    else:
+        vol_geom = astra_volume_geometry(range_space, 'cpu')
+
+    # Parsing the pprojection geometry does not depend on the mode       
     proj_geom = astra_projection_geometry(geometry, 'cpu')
 
     # Create projector
@@ -139,136 +157,63 @@ def astra_cpu_forward_projector(vol_data, geometry, proj_space, out=None,
     proj_id = astra_projector(astra_proj_type, vol_geom, proj_geom, ndim)
 
     # Create ASTRA data structures
-    vol_id = astra_data(vol_geom, datatype='volume', data=vol_data_arr,
+    # In the forward mode, the input is the volume
+    # In the backward mode, the input is the sinogram/projection
+    if direction == 'forward': 
+        input_id = astra_data(vol_geom, datatype='volume', data=input_data_arr,
                         allow_copy=True)
-    
-    with writable_array(out, must_be_contiguous=True) as out_arr:
-        sino_id = astra_data(proj_geom, datatype='projection', data=out_arr,
-                             ndim=proj_space.ndim)
-
-        # Create algorithm
-        algo_id = astra_algorithm('forward', ndim, vol_id, sino_id, proj_id,
-                                  astra_impl='cpu')
-
-        # Run algorithm
-        astra.algorithm.run(algo_id)
-
-    # Delete ASTRA objects
-    astra.algorithm.delete(algo_id)
-    astra.data2d.delete((vol_id, sino_id))
-    astra.projector.delete(proj_id)
-
-    return proj_space.element(out)
-
-
-def astra_cpu_back_projector(proj_data, geometry, vol_space, out=None,
-                             astra_proj_type=None):
-    """Run an ASTRA back-projection on the given data using the CPU.
-
-    Parameters
-    ----------
-    proj_data : `DiscretizedSpaceElement`
-        Projection data to which the back-projector is applied.
-    geometry : `Geometry`
-        Geometry defining the tomographic setup.
-    vol_space : `DiscretizedSpace`
-        Space to which the calling operator maps.
-    out : ``vol_space`` element, optional
-        Element of the reconstruction space to which the result is written.
-        If ``None``, an element in ``vol_space`` is created.
-    astra_proj_type : str, optional
-        Type of projector that should be used. See `the ASTRA documentation
-        <http://www.astra-toolbox.com/docs/proj2d.html>`_ for details.
-        By default, a suitable projector type for the given geometry is
-        selected, see `default_astra_proj_type`.
-
-    Returns
-    -------
-    out : ``vol_space`` element
-        Reconstruction data resulting from the application of the backward
-        projector. If ``out`` was provided, the returned object is a
-        reference to it.
-    """
-    if not isinstance(proj_data, DiscretizedSpaceElement):
-        raise TypeError(
-            'projection data {!r} is not a `DiscretizedSpaceElement` '
-            'instance'.format(proj_data)
-        )
-    if not isinstance(geometry, Geometry):
-        raise TypeError(
-            'geometry {!r} is not a Geometry instance'.format(geometry)
-        )
-    if not isinstance(vol_space, DiscretizedSpace):
-        raise TypeError(
-            'volume space {!r} is not a DiscretizedSpace instance'
-            ''.format(vol_space)
-        )
-    if vol_space.ndim != geometry.ndim:
-        raise ValueError(
-            'dimensions {} of reconstruction space and {} of geometry '
-            'do not match'
-            ''.format(vol_space.ndim, geometry.ndim)
-        )
-    if out is None:
-        out = vol_space.real_space.element()
     else:
-        if out not in vol_space.real_space:
-            raise TypeError(
-                '`out` {} is neither None nor a `DiscretizedSpaceElement` '
-                'instance'.format(out)
-            )
-
-    # 1) Getting the number of dimension of the input projections
-    ndim = proj_data.ndim
-
-    # 2) Storing the projection space and unpacking the projection_data
-    proj_space = proj_data.space
-    proj_data, proj_backend = get_array_and_backend(proj_data, must_be_contiguous=True)
-    # 3) Asserting that the volume and the projection backends are the same
-    vol_backend = lookup_array_backend(vol_space.impl)
-    assert vol_backend == proj_backend
-
-    # Create astra geometries
-    vol_geom = astra_volume_geometry(vol_space, 'cpu')
-    proj_geom = astra_projection_geometry(geometry, 'cpu')
-
-    # Create ASTRA data structure
-    sino_id = astra_data(
-        proj_geom, datatype='projection', data=proj_data, allow_copy=True
+        input_id = astra_data(proj_geom, datatype='projection', data=input_data_arr, allow_copy=True
     )
+    
+    with writable_array(out_element, must_be_contiguous=True) as out_arr:
+        if direction == 'forward': 
+            output_id = astra_data(
+                proj_geom, 
+                datatype='projection', 
+                data=out_arr,
+                ndim=range_space.ndim)
+            vol_id  = input_id
+            sino_id = output_id
+        else:
+            output_id = astra_data(
+                vol_geom, 
+                datatype='volume', 
+                data=out_arr,
+                ndim=range_space.ndim)
+            vol_id = output_id
+            sino_id = input_id
 
-    # Create projector
-    if astra_proj_type is None:
-        astra_proj_type = default_astra_proj_type(geometry)
-    proj_id = astra_projector(astra_proj_type, vol_geom, proj_geom, ndim)
-
-    # Convert out to correct dtype and order if needed.
-    with writable_array(out, must_be_contiguous=True) as out_arr:
-        vol_id = astra_data(
-            vol_geom, datatype='volume', data=out_arr, ndim=vol_space.ndim
-        )
         # Create algorithm
         algo_id = astra_algorithm(
-            'backward', ndim, vol_id, sino_id, proj_id, astra_impl='cpu'
-        )
+            direction=direction,
+            ndim = ndim,
+            vol_id  = vol_id,
+            sino_id = sino_id,
+            proj_id = proj_id,
+            astra_impl='cpu')
 
         # Run algorithm
         astra.algorithm.run(algo_id)
 
-    # Weight the adjoint by appropriate weights
-    scaling_factor = float(proj_space.weighting.const)
-    scaling_factor /= float(vol_space.weighting.const)
+    # There is no scaling for the forward mode
+    if direction == 'backward':
+        # Weight the adjoint by appropriate weights
+        scaling_factor = float(input_data.space.weighting.const)
+        scaling_factor /= float(range_space.weighting.const)
 
-    out *= scaling_factor
+        out_element *= scaling_factor
 
     # Delete ASTRA objects
     astra.algorithm.delete(algo_id)
     astra.data2d.delete((vol_id, sino_id))
     astra.projector.delete(proj_id)
 
-    return vol_space.element(out)
-
-
+    if out is None:
+        return range_space.element(out_element)
+    else:
+        out.data[:] = range_space.element(out_element).data
+        
 class AstraCpuImpl:
     """Thin wrapper implementing ASTRA CPU for `RayTransform`."""
 
@@ -327,14 +272,20 @@ class AstraCpuImpl:
 
     @_add_default_complex_impl
     def call_backward(self, x, out=None, **kwargs):
-        return astra_cpu_back_projector(
-            x, self.geometry, self.vol_space.real_space, out, **kwargs
+        # return astra_cpu_back_projector(
+        #     x, self.geometry, self.vol_space.real_space, out, **kwargs
+        # )
+        return astra_cpu_projector(
+            'backward', x, self.geometry, self.vol_space.real_space, out, **kwargs
         )
 
     @_add_default_complex_impl
     def call_forward(self, x, out=None, **kwargs):
-        return astra_cpu_forward_projector(
-            x, self.geometry, self.proj_space.real_space, out, **kwargs
+        # return astra_cpu_forward_projector(
+        #     x, self.geometry, self.proj_space.real_space, out, **kwargs
+        # )
+        return astra_cpu_projector(
+            'forward', x, self.geometry, self.proj_space.real_space, out, **kwargs
         )
 
 
