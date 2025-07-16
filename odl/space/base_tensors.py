@@ -1171,7 +1171,7 @@ class TensorSpace(LinearSpace):
         except AttributeError:
             assert result.shape == ()
             return result[0]
-        except ValueError:
+        except (ValueError, RuntimeError):
             # Arises when we are performing the 'reductions' along certains axis only. We can't take the item of an array with several dimensions. 
             # TODO: We should handle that differently than with try and excepts.
             return result
