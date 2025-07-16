@@ -24,6 +24,8 @@ from warnings import warn
 
 import numpy as np
 
+from odl.array_API_support import asarray
+
 from odl.util.npy_compat import AVOID_UNNECESSARY_COPY
 
 from odl.util import (
@@ -420,7 +422,7 @@ def linear_interpolator(f, coord_vecs):
            [ 3.7 ,  5.3 ],
            [ 2.85,  3.65]])
     """
-    f = np.asarray(f)
+    f = asarray(f)
 
     # TODO(kohr-h): pass reasonable options on to the interpolator
     def linear_interp(x, out=None):

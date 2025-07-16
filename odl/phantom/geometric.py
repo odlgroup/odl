@@ -484,7 +484,7 @@ def _ellipsoid_phantom_3d(space, ellipsoids):
     shepp_logan : The typical use-case for this function.
     """
     # Blank volume
-    p = np.zeros(space.shape, dtype=space.dtype)
+    p = np.zeros(space.shape, dtype=space.dtype_identifier)
 
     minp = space.grid.min_pt
     maxp = space.grid.max_pt
