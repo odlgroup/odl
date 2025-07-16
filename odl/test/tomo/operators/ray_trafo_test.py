@@ -337,6 +337,10 @@ def test_complex(impl, odl_impl_device_pairs):
     space_c = odl.uniform_discr([-1, -1], [1, 1], (10, 10), dtype='complex64', impl=tspace_impl, device=device)
     space_r = space_c.real_space
     geom = odl.tomo.parallel_beam_geometry(space_c)
+
+    if tspace_impl == 'pytorch' and impl == 'skimage':
+        pytest.skip(f'Skimage backend not available with pytorch') 
+    
     ray_trafo_c = odl.tomo.RayTransform(space_c, geom, impl=impl)
     ray_trafo_r = odl.tomo.RayTransform(space_r, geom, impl=impl)
     vol = odl.phantom.shepp_logan(space_c)
@@ -346,8 +350,8 @@ def test_complex(impl, odl_impl_device_pairs):
     true_data_re = ray_trafo_r(vol.real)
     true_data_im = ray_trafo_r(vol.imag)
 
-    assert all_almost_equal(data.real, true_data_re)
-    assert all_almost_equal(data.imag, true_data_im)
+    assert odl.all_equal(data.real, true_data_re)
+    assert odl.all_equal(data.imag, true_data_im)
 
     # test adjoint for complex data
     backproj_r = ray_trafo_r.adjoint
@@ -356,8 +360,8 @@ def test_complex(impl, odl_impl_device_pairs):
     true_vol_im = backproj_r(data.imag)
     backproj_vol = backproj_c(data)
 
-    assert all_almost_equal(backproj_vol.real, true_vol_re)
-    assert all_almost_equal(backproj_vol.imag, true_vol_im)
+    assert odl.all_equal(backproj_vol.real, true_vol_re)
+    assert odl.all_equal(backproj_vol.imag, true_vol_im)
 
 
 def test_anisotropic_voxels(geometry, odl_impl_device_pairs):
@@ -504,6 +508,9 @@ def test_detector_shifts_2d(impl, odl_impl_device_pairs):
 
     if astra_impl == 'astra_cuda':
         pytest.skip(reason='This test produces a known error for astra_cuda, passing')
+
+    if impl == 'skimage':
+        pytest.skip(f'Skimage backend not available with pytofor Fan-Beam Geometry') 
     
     d = 10
     space = odl.uniform_discr([-1] * 2, [1] * 2, [d] * 2, dtype='float32', impl=tspace_impl, device=device)
@@ -559,13 +566,16 @@ def test_source_shifts_2d(odl_impl_device_pairs):
     geometries which mimic ffs by using initial angular offsets and
     detector shifts
     """
-    impl, device = odl_impl_device_pairs
+    tspace_impl, device = odl_impl_device_pairs
 
     if not odl.tomo.ASTRA_AVAILABLE:
         pytest.skip(reason='ASTRA required but not available')
 
+    if tspace_impl == 'pytorch' and impl == 'skimage':
+        pytest.skip(f'Skimage backend not available with pytorch') 
+
     d = 10
-    space = odl.uniform_discr([-1] * 2, [1] * 2, [d] * 2, dtype='float32', impl=impl, device=device)
+    space = odl.uniform_discr([-1] * 2, [1] * 2, [d] * 2, dtype='float32', impl=tspace_impl, device=device)
     ns = space.array_namespace
     phantom = odl.phantom.cuboid(space, [-1 / 3] * 2, [1 / 3] * 2)
 
@@ -634,19 +644,19 @@ def test_source_shifts_2d(odl_impl_device_pairs):
     assert ns.max(rel_error) < 1e-6
 
 
-def test_detector_shifts_3d(odl_impl_device_pairs):
+def test_detector_shifts_3d(impl, odl_impl_device_pairs):
     """Check that detector shifts are handled correctly.
 
     We forward project a cubic phantom and check that ray transform
     and back-projection with and without detector shifts are
     numerically close (the error depends on domain discretization).
     """
-    impl, device = odl_impl_device_pairs
+    tspace_impl, device = odl_impl_device_pairs
     if not odl.tomo.ASTRA_CUDA_AVAILABLE:
         pytest.skip(reason='ASTRA CUDA required but not available')
 
     d = 100
-    space = odl.uniform_discr([-1] * 3, [1] * 3, [d] * 3, dtype='float32', impl=impl, device=device)
+    space = odl.uniform_discr([-1] * 3, [1] * 3, [d] * 3, dtype='float32', impl=tspace_impl, device=device)
     ns = space.array_namespace
     phantom = odl.phantom.cuboid(space, [-1 / 3] * 3, [1 / 3] * 3)
 
@@ -777,9 +787,9 @@ def test_source_shifts_3d(odl_impl_device_pairs):
     y_ffs = op_ffs(phantom)
     y1 = op1(phantom)
     y2 = op2(phantom)
-    assert all_almost_equal(odl.mean(y_ffs[::2], axis=(1, 2)),
+    assert odl.all_equal(odl.mean(y_ffs[::2], axis=(1, 2)),
                             odl.mean(y1, axis=(1, 2)))
-    assert all_almost_equal(odl.mean(y_ffs[1::2], axis=(1, 2)),
+    assert odl.all_equal(odl.mean(y_ffs[1::2], axis=(1, 2)),
                             odl.mean(y2, axis=(1, 2)))
     im = op_ffs.adjoint(y_ffs).asarray()
     im_combined = (op1.adjoint(y1).asarray() + op2.adjoint(y2).asarray())

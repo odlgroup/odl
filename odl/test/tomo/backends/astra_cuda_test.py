@@ -110,7 +110,6 @@ def test_astra_cuda_projector(space_and_geometry):
     assert backproj in vol_space
     assert backproj.norm() > 0
     assert odl.all(0 <= backproj)
-    # assert np.all(proj_data.asarray() >= 0)
 
 
 if __name__ == '__main__':
