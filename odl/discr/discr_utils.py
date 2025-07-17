@@ -489,7 +489,7 @@ def per_axis_interpolator(f, coord_vecs, interp):
            [ 4. ,  5. ],
            [ 3. ,  3.5]])
     """
-    f = np.asarray(f)
+    f = asarray(f)
 
     interp = _normalize_interp(interp, f.ndim)
 
