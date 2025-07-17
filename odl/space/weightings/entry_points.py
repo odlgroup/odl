@@ -1,4 +1,4 @@
-from odl.array_API_support import get_array_and_backend
+from odl.array_API_support import get_array_and_backend, lookup_array_backend
 from .weighting import ConstWeighting, ArrayWeighting, CustomInner, CustomNorm, CustomDist
 
 def space_weighting(
@@ -90,6 +90,12 @@ def space_weighting(
             else:
                 raise ValueError("If the weight is a scalar, it must be positive")
             return ConstWeighting(const=weight, impl=impl, device=device, exponent=exponent)
+        
+        elif isinstance(weight, (tuple, list)):
+            array_backend = lookup_array_backend(impl)
+            weight = array_backend.array_constructor(weight, device=device)
+            if array_backend.array_namespace.any(weight < 0):
+                raise ValueError("If the weight is an array, all its elements must be positive")
                     
         elif hasattr(weight, '__array__'):
             weight, backend = get_array_and_backend(weight)
