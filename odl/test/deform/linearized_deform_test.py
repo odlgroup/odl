@@ -20,21 +20,21 @@ from odl.util.testutils import simple_fixture
 # --- pytest fixtures --- #
 
 
-dtype = simple_fixture('dtype', ['float', 'complex'])
+dtype = simple_fixture('dtype', [float, complex])
 interp = simple_fixture('interp', ['linear', 'nearest'])
 ndim = simple_fixture('ndim', [1, 2, 3])
 
 
 @pytest.fixture
-def space(request, ndim, dtype, odl_tspace_impl):
+def space(request, ndim, dtype, odl_impl_device_pairs):
     """Provide a space for unit tests."""
-    impl = odl_tspace_impl
+    impl, device = odl_impl_device_pairs
     supported_dtypes = odl.lookup_array_backend(impl).available_dtypes
-    if np.dtype(dtype) not in supported_dtypes:
-        pytest.skip('dtype not available for this backend')
+    # if np.dtype(dtype) not in supported_dtypes:
+    #     pytest.skip('dtype not available for this backend')
 
     return odl.uniform_discr(
-        [-1] * ndim, [1] * ndim, [20] * ndim, impl=impl, dtype=dtype
+        [-1] * ndim, [1] * ndim, [20] * ndim, impl=impl, dtype=dtype, device=device
     )
 
 

@@ -19,6 +19,7 @@ from odl.operator import Operator, PointwiseInner
 from odl.space import ProductSpace
 from odl.space.pspace import ProductSpaceElement
 from odl.util import indent, signature_string
+from odl.array_API_support import exp
 
 __all__ = ('LinDeformFixedTempl', 'LinDeformFixedDisp', 'linear_deform')
 
@@ -449,7 +450,7 @@ class LinDeformFixedDisp(Operator):
         # TODO allow users to select what method to use here.
         div_op = Divergence(domain=self.displacement.space, method='forward',
                             pad_mode='symmetric')
-        jacobian_det = self.domain.element(np.exp(-div_op(self.displacement)))
+        jacobian_det = self.domain.element(exp(-div_op(self.displacement)))
 
         return jacobian_det * self.inverse
 
