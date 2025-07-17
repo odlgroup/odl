@@ -392,12 +392,12 @@ class TensorSpace(LinearSpace):
     @property
     def is_complex(self):
         """True if this is a space of complex tensors."""
-        return is_complex_dtype(self.dtype)
+        return is_complex_dtype(self.dtype_identifier)
     
     @property
     def is_real(self):
         """True if this is a space of real tensors."""
-        return is_real_floating_dtype(self.dtype)
+        return is_real_floating_dtype(self.dtype_identifier)
     
     @property
     def is_weighted(self):
