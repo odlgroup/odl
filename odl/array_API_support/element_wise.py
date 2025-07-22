@@ -6,6 +6,8 @@
 # v. 2.0. If a copy of the MPL was not distributed with this file, You can
 # obtain one at https://mozilla.org/MPL/2.0/.
 
+"""Element-wise functions expected by the python array API"""
+
 __all__ = (
     'abs',
     'acos',
@@ -25,7 +27,7 @@ __all__ = (
     'ceil',
     'clip',
     'conj',
-    'copy_sign',
+    'copysign',
     'cos',
     'cosh',
     'divide',
@@ -56,7 +58,7 @@ __all__ = (
     'minimum',
     'multiply',
     'negative',
-    'next_after',
+    'nextafter',
     'not_equal',
     'positive',
     'pow',
@@ -78,15 +80,55 @@ __all__ = (
 
 
 def _apply_element_wise(operation: str, x1, x2=None, out=None, **kwargs):
-    # Lazy import of LinearSpaceElement for dispatching call
+    """
+    Helper function to apply an element-wise `operation` on:
+        -> a python int/float/complex and a LinearSpaceElement
+        -> two LinearSpaceElement
+        -> a single LinearSpaceElement
+
+    Args:
+        operation (str): a string identifier to lookup the desired function in the LinearSpaceElement's namespace.
+        x1 (int | float | complex | LinearSpaceElement): Left operand
+        x2 (int | float | complex | LinearSpaceElement, optional): Right operand. Defaults to None.
+        out (LinearSpaceElement, optional): Out LinearSpaceElement for inplace updates. Defaults to None.
+
+    Returns:
+        LinearSpaceElement: result of the element-wise operation on the array wrapped inside the element of an ODL space. 
+
+    Notes:
+        1) The output array is wrapped in a space of which type depends of the output array's. This is a change of behaviour compared to ODL < 0.8.2
+        2) Although one could use it to perform an operation on array-specific backend, there is no clean way to infer a LinearSpace from the output. As such, one of the two operands must be a LinearSpaceElement
+
+    Examples
+    >>> e0 = odl.rn(3).zero()
+    >>> e1 = odl.rn(3).one()
+    >>> e2 = e0 + e1
+    >>> print(e2)
+    [ 1.,  1.,  1.]
+    >>> e3 = odl.add(e0, e1)
+    >>> print(e3)
+    [ 1.,  1.,  1.]
+    >>> e2 == e3 
+    True
+    >>> e2 in odl.rn(3)
+    True
+    >>> new_el = e0 + 3j 
+    >>> new_el in odl.rn(3)
+    False
+    >>> odl.add(np.zeros(3), e1)
+    rn(3, 'float64', 'numpy', 'cpu').element([ 1.,  1.,  1.])
+    """
+    # Lazy import of LinearSpaceElement and Operator for dispatching call
+    from odl.operator import Operator
     from odl.set.space import LinearSpaceElement
+    assert not isinstance(x1, Operator) or not isinstance(x2, Operator), f"ODL's array-API support for element-wise functions does not allow ODL Operators"
     if isinstance(x1, LinearSpaceElement):
         return x1.space._elementwise_num_operation(operation=operation, x1=x1, x2=x2, out=out, **kwargs)
     # Handling the left argument as a float/int/complex and right argument as a LinearSpaceElement
     elif isinstance(x2, LinearSpaceElement):
-        return x2.space._elementwise_num_operation(operation=operation, x1=x1, x2=x2, out=out, **kwargs)       
+        return x2.space._elementwise_num_operation(operation=operation, x1=x1, x2=x2, out=out, **kwargs)   
     else:
-        raise(AttributeError(f"Either x1 or x2 need to be a LinearSpaceElemtn, got {type(x1)} and {type(x2)} with values {x1=} and {x2=}"))
+        raise(AttributeError(f"Either x1 or x2 (if provided) need to be a LinearSpaceElement, got {type(x1)} and {type(x2)} with values {x1=} and {x2=}"))
 
 
 def abs(x, out=None):
@@ -140,7 +182,7 @@ def atan2(x1, x2, out=None):
     of ordered pairs of elements `(x1_i, x2_i)`) and codomain `[-pi, +pi]`,
     for each pair of elements `(x1_i, x2_i)` of the input arrays `x1` and `x2`,
     respectively."""
-    return _apply_element_wise(x1, "atan2", out, x2=x2)
+    return _apply_element_wise("atan2", x1, x2=x2, out=out)
 
 
 def atanh(x, out=None):
@@ -208,10 +250,10 @@ def conj(x, out=None):
     return _apply_element_wise('conj', x, out=out)
 
 
-def copy_sign(x1, x2, out=None):
+def copysign(x1, x2, out=None):
     """Composes a floating-point value with the magnitude of `x1_i` and the
     sign of `x2_i` for each element of the input array `x1`."""
-    return _apply_element_wise('copy_sign', x1, x2=x2, out=out)
+    return _apply_element_wise('copysign', x1, x2=x2, out=out)
 
 
 def cos(x, out=None):
@@ -249,7 +291,7 @@ def exp(x1, out=None):
 def expm1(x1, out=None):
     """Calculates an implementation-dependent approximation to `exp(x_i) - 1`
     for each element `x_i` of the input array `x`."""
-    return _apply_element_wise(x1, "expm1", out)
+    return _apply_element_wise("expm1", x1, out=out)
 
 
 def floor(x1, out=None):
@@ -342,19 +384,19 @@ def log1p(x1, out=None):
     For small `x`, the result of this function should be more accurate
     than `log(1 + x)`.
     """
-    return _apply_element_wise(x1, "log1p", out)
+    return _apply_element_wise("log1p", x1, out=out)
 
 
 def log2(x1, out=None):
     """Calculates an implementation-dependent approximation to the base two
     logarithm for each element `x_i` of the input array `x`."""
-    return _apply_element_wise(x1, "log2", out)
+    return _apply_element_wise("log2", x1, out=out)
 
 
 def log10(x1, out=None):
     """Calculates an implementation-dependent approximation to the base ten
     logarithm for each element `x_i` of the input array `x`."""
-    return _apply_element_wise(x1, "log10", out)
+    return _apply_element_wise("log10", x1, out=out)
 
 
 def logaddexp(x1, x2, out=None):
@@ -411,11 +453,11 @@ def negative(x1, out=None):
     return _apply_element_wise('negative', x1, out=out)
 
 
-def next_after(x1, x2, out=None):
+def nextafter(x1, x2, out=None):
     """Returns the next representable floating-point value for each element
     `x1_i` of the input array `x1` in the direction of the respective element
     `x2_i` of the input array `x2`."""
-    return _apply_element_wise('next_after', x1, x2=x2, out=out)
+    return _apply_element_wise('nextafter', x1, x2=x2, out=out)
 
 
 def not_equal(x1, x2, out=None):

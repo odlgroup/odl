@@ -1,15 +1,18 @@
+# Copyright 2014-2025 The ODL contributors
+#
+# This file is part of ODL.
+#
+# This Source Code Form is subject to the terms of the Mozilla Public License,
+# v. 2.0. If a copy of the MPL was not distributed with this file, You can
+# obtain one at https://mozilla.org/MPL/2.0/.
+
+"""
+Linear Algebra functions expected by the python array API.
+Note: This is not obvious that we should actually support it.
+"""
+
 __all__ = ('vecdot',)
 
 def vecdot(x1, x2, axis=-1, out = None):
     """Computes the (vector) dot product of two arrays."""
-    assert x1.space.shape == x2.space.shape, f"The shapes of x1 {x1.space.shape} and x2 {x2.space.shape} differ, cannot perform vecdot"
-    assert x1.space.device == x2.space.device, f"The devices of x1 {x1.space.device} and x2 {x2.space.device} differ, cannot perform vecdot"
-    if out is not None:
-        assert x1.space.shape == out.space.shape, f"The shapes of x1 {x1.space.shape} and out {out.space.shape} differ, cannot perform vecdot"
-        assert x1.space.device == out.space.device, f"The devices of x1 {x1.space.device} and out {out.space.device} differ, cannot perform vecdot"
-        out = out.data
-        result = x1.array_namespace.linalg.vecdot(x1.data, x2.data, out=out)
-    else:
-        result = x1.array_namespace.linalg.vecdot(x1.data, x2.data)
-
-    return result
+    raise NotImplementedError("WIP")
