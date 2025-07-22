@@ -11,7 +11,6 @@
 from __future__ import absolute_import, division, print_function
 
 from types import ModuleType
-from typing import Dict
 from numbers import Integral, Number
 import warnings
 from contextlib import contextmanager
@@ -22,7 +21,7 @@ from odl.set.sets import ComplexNumbers, RealNumbers
 from odl.set.space import (
     LinearSpace, LinearSpaceElement, LinearSpaceTypeError,
     SupportedNumOperationParadigms, NumOperationParadigmSupport)
-from odl.array_API_support import ArrayBackend, lookup_array_backend, get_array_and_backend
+from odl.array_API_support import ArrayBackend, lookup_array_backend
 from odl.util import (
     array_str, indent, is_complex_dtype,
     is_numeric_dtype, is_real_floating_dtype, safe_int_conv,
@@ -132,6 +131,22 @@ class TensorSpace(LinearSpace):
 
     ################ Init Methods, Non static ################
     def _init_device(self, device:str):
+        """
+        Checks that the backend accepts the device passed as an argument.
+
+        Parameters
+        ----------
+        device : str
+            Device identifier
+
+        Examples
+        --------
+        >>> odl.check_device('numpy', 'cpu')
+        >>> odl.check_device('numpy', 'anything_but_cpu')
+        Traceback (most recent call last):
+        AssertionError: "For numpy Backend, only devices ['cpu'] are present, but 'anything_but_cpu' was provided."
+
+        """
         odl.check_device(self.impl, device)
         self.__device = device 
 
@@ -527,7 +542,7 @@ class TensorSpace(LinearSpace):
             # If that fails, we throw an error: the dtype is not a python scalar dtype, not a string describing the dtype or the 
             # backend call to parse the dtype has failed.
         else:
-            raise ValueError(f"The dtype must be in {self.available_dtypes.keys()} or must be a dtype of the backend, but {dtype} was provided")
+            raise ValueError(f"The dtype must be in {self.array_backend.available_dtypes.keys()} or must be a dtype of the backend, but {dtype} was provided")
 
         # try:
         #     dtype_identifier = dtype
@@ -1105,7 +1120,7 @@ class TensorSpace(LinearSpace):
             local_namespace = namespace
 
         if out is not None:
-            assert isinstance(out, Tensor)
+            assert isinstance(out, Tensor), f"The out argument must be an ODL Tensor, got {type(out)}."
             assert self.shape == out.space.shape, f"The shapes of {self} and out {out.space.shape} differ, cannot perform {operation}"
             assert self.device == out.space.device, f"The devices of {self} and out {out.space.device} differ, cannot perform {operation}"
         
@@ -1113,7 +1128,7 @@ class TensorSpace(LinearSpace):
             raise TypeError("The left-hand argument always needs to be provided")
 
         if x2 is None:
-            assert(x1 in self)
+            assert x1 in self, f"The left operand is not an element of the space."
             fn = getattr(local_namespace, operation)
             if out is None:
                 result_data = fn(x1.data, **kwargs)
@@ -1130,7 +1145,6 @@ class TensorSpace(LinearSpace):
                     result_data = fn(x1.data, x2, **kwargs)
                     
             else:
-                assert out in self, f"out is not an element of the space."
                 if isinstance(x1, (int, float, complex)):
                     result_data = fn(x1, x2.data, out=out.data, **kwargs)
                 elif isinstance(x2, (int, float, complex)):
@@ -1138,14 +1152,37 @@ class TensorSpace(LinearSpace):
                     
             return self.astype(self.array_backend.get_dtype_identifier(array=result_data)).element(result_data) 
 
+        if isinstance(x1, self.array_backend.array_type) or isinstance(x2, self.array_backend.array_type):
+            fn =  getattr(local_namespace, operation)
+            if out is None:
+                if isinstance(x1, self.array_backend.array_type):
+                    assert x1.shape  == self.shape, f"The shape of self {self.shape} and x1 {x1.shape} differ, cannot perform {operation}"
+                    assert str(x1.device) == self.device, f"The device of self {self.device} and x1 {x1.device} differ, cannot perform {operation}"
+                    result_data = fn(x1, x2.data, **kwargs)
+                elif isinstance(x2, self.array_backend.array_type):
+                    assert x2.shape  == self.shape, f"The shape of self {self.shape} and x2 {x2.shape} differ, cannot perform {operation}"
+                    assert str(x2.device) == self.device, f"The device of self {self.device} and x2 {x2.device} differ, cannot perform {operation}"
+                    result_data = fn(x1.data, x2, **kwargs)
+
+            else:
+                if isinstance(x1, self.array_backend.array_type):
+                    assert x1.shape  == self.shape, f"The shape of self {self.shape} and x1 {x1.shape} differ, cannot perform {operation}"
+                    assert str(x1.device) == self.device, f"The device of self {self.device} and x1 {x1.device} differ, cannot perform {operation}"
+                    result_data = fn(x1, x2.data, out=out.data, **kwargs)
+                elif isinstance(x2, self.array_backend.array_type):
+                    assert x2.shape  == self.shape, f"The shape of self {self.shape} and x2 {x2.shape} differ, cannot perform {operation}"
+                    assert str(x2.device) == self.device, f"The device of self {self.device} and x2 {x2.device} differ, cannot perform {operation}"
+                    result_data = fn(x1.data, x2, out=out.data, **kwargs)
+            return self.astype(self.array_backend.get_dtype_identifier(array=result_data)).element(result_data) 
+        
         if isinstance(x1, ProductSpaceElement):
             if not isinstance(x2, Tensor):
-                raise TypeError(f'Right operand is not an ODL Tensor. {type(x2)=}')
+                raise TypeError(f'The right operand is not an ODL Tensor. {type(x2)=}')
             return x1.space._elementwise_num_operation(operation, x1, x2, out, namespace=namespace, **kwargs)
 
         elif isinstance(x2, ProductSpaceElement):
             if not isinstance(x1, Tensor):
-                raise TypeError(f'Left operand is not an ODL Tensor. {type(x1)=}')
+                raise TypeError(f'The left operand is not an ODL Tensor. {type(x1)=}')
             return x2.space._elementwise_num_operation(operation, x1, x2, out, namespace=namespace, **kwargs)
         
         from odl.operator import Operator
@@ -1153,13 +1190,12 @@ class TensorSpace(LinearSpace):
             warnings.warn("The composition of a LinearSpaceElement and an Operator using the * operator is deprecated and will be removed in future ODL versions. Please replace * with @.")
             return x2.__rmul__(x1)
 
-        if not isinstance(x1, Tensor):
-            raise TypeError(f"Left operand is not an ODL Tensor. {type(x1)=}")
-        if not isinstance(x2, Tensor):
-            raise TypeError(f"Right operand is not an ODL Tensor. {type(x2)=}")
+        if not isinstance(x1, Tensor) and not isinstance(x2, Tensor):
+            raise TypeError(f"Neither x1 nor x2 are odl ODL Tensors. Got {type(x1)} and {type(x2)}")
 
         element_wise_function = getattr(local_namespace, operation)
- 
+
+        assert self.array_backend.array_type == x2.array_backend.array_type, f"The types of {self.array_backend.array_type} and x2 {x2.array_backend.array_type} differ, cannot perform {operation}"
         assert self.shape == x2.space.shape, f"The shapes of {self} and x2 {x2.space.shape} differ, cannot perform {operation}"
         assert self.device == x2.space.device, f"The devices of {self} and x2 {x2.space.device} differ, cannot perform {operation}"
 

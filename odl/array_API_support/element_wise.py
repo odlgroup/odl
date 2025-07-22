@@ -82,14 +82,14 @@ __all__ = (
 def _apply_element_wise(operation: str, x1, x2=None, out=None, **kwargs):
     """
     Helper function to apply an element-wise `operation` on:
-        -> a python int/float/complex and a LinearSpaceElement
+        -> a python int/float/complex/backend-specific array and a LinearSpaceElement
         -> two LinearSpaceElement
         -> a single LinearSpaceElement
 
     Args:
         operation (str): a string identifier to lookup the desired function in the LinearSpaceElement's namespace.
-        x1 (int | float | complex | LinearSpaceElement): Left operand
-        x2 (int | float | complex | LinearSpaceElement, optional): Right operand. Defaults to None.
+        x1 (int | float | complex | LinearSpaceElement | backend-specific array): Left operand
+        x2 (int | float | complex | LinearSpaceElement  | backend-specific array, optional): Right operand. Defaults to None.
         out (LinearSpaceElement, optional): Out LinearSpaceElement for inplace updates. Defaults to None.
 
     Returns:
@@ -97,7 +97,7 @@ def _apply_element_wise(operation: str, x1, x2=None, out=None, **kwargs):
 
     Notes:
         1) The output array is wrapped in a space of which type depends of the output array's. This is a change of behaviour compared to ODL < 0.8.2
-        2) Although one could use it to perform an operation on array-specific backend, there is no clean way to infer a LinearSpace from the output. As such, one of the two operands must be a LinearSpaceElement
+        2) Although one could use it to perform an operation on array-specific backend only, there is no clean way to infer a LinearSpace from the output. As such, one of the two operands must be a LinearSpaceElement
 
     Examples
     >>> e0 = odl.rn(3).zero()
