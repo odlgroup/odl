@@ -198,14 +198,10 @@ def test_element(odl_impl_device_pairs):
         HxH.element([[1, 2], [3, 4], [5, 6]])
 
     # wrong length of subspace element
-    err_dict = {
-        'numpy':ValueError,
-        'pytorch':RuntimeError
-    }
-    with pytest.raises(err_dict[impl]):
+    with pytest.raises(ValueError):
         HxH.element([[1, 2, 3], [4, 5]])
 
-    with pytest.raises(err_dict[impl]):
+    with pytest.raises(ValueError):
         HxH.element([[1, 2], [3, 4, 5]])
 
 
