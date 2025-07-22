@@ -1,5 +1,5 @@
 # Python imports
-from future.moves.itertools import zip_longest
+from itertools import zip_longest
 from contextlib import contextmanager
 # ODL import
 from odl.array_API_support.array_creation import asarray

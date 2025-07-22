@@ -18,15 +18,13 @@ from contextlib import contextmanager
 from time import time
 from odl.array_API_support.comparisons import allclose, isclose
 import numpy as np
-from odl.util.npy_compat import AVOID_UNNECESSARY_COPY
-
-from future.moves.itertools import zip_longest
 
 from odl.util.utility import is_string, run_from_ipython
 from odl.util.dtype_utils import (
     is_boolean_dtype, is_signed_int_dtype, is_unsigned_int_dtype,
     is_floating_dtype, is_complex_dtype)
 
+from itertools import zip_longest
 __all__ = (
     'dtype_ndigits',
     'dtype_tol',
