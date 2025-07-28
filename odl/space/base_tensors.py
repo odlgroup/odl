@@ -1306,7 +1306,7 @@ class Tensor(LinearSpaceElement):
             return self.space.zero()
         elif self.space.is_complex:
             real_space = self.space.astype(self.space.real_dtype)
-            return real_space.element(self.data.imag)
+            return real_space.element(self.data.imag, copy=False)
         else:
             raise NotImplementedError('`imag` not defined for non-numeric '
                                       'dtype {}'.format(self.dtype))
@@ -1377,7 +1377,7 @@ class Tensor(LinearSpaceElement):
             return self
         elif self.space.is_complex:
             real_space = self.space.astype(self.space.real_dtype)
-            return real_space.element(self.data.real)
+            return real_space.element(self.data.real, copy=False)
         else:
             raise NotImplementedError('`real` not defined for non-numeric '
                                       'dtype {}'.format(self.dtype))
