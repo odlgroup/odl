@@ -82,14 +82,14 @@ __all__ = (
 def _apply_element_wise(operation: str, x1, x2=None, out=None, **kwargs):
     """
     Helper function to apply an element-wise `operation` on:
-        -> a python int/float/complex/backend-specific array and a LinearSpaceElement
+        -> a python int/float/complex and a LinearSpaceElement
         -> two LinearSpaceElement
         -> a single LinearSpaceElement
 
     Args:
         operation (str): a string identifier to lookup the desired function in the LinearSpaceElement's namespace.
-        x1 (int | float | complex | LinearSpaceElement | backend-specific array): Left operand
-        x2 (int | float | complex | LinearSpaceElement  | backend-specific array, optional): Right operand. Defaults to None.
+        x1 (int | float | complex | LinearSpaceElement : Left operand
+        x2 (int | float | complex | LinearSpaceElement (Optional) : Right operand. Defaults to None.
         out (LinearSpaceElement, optional): Out LinearSpaceElement for inplace updates. Defaults to None.
 
     Returns:
@@ -115,7 +115,7 @@ def _apply_element_wise(operation: str, x1, x2=None, out=None, **kwargs):
     >>> new_el = e0 + 3j 
     >>> new_el in odl.rn(3)
     False
-    >>> odl.add(np.zeros(3), e1)
+    >>> odl.add(odl.zeros_like(e1), e1)
     rn(3, 'float64', 'numpy', 'cpu').element([ 1.,  1.,  1.])
     """
     # Lazy import of LinearSpaceElement and Operator for dispatching call

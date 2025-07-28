@@ -596,7 +596,7 @@ class TensorSpace(LinearSpace):
             # (cf:https://data-apis.org/array-api/latest/purpose_and_scope.html)"""
             # We begin by checking that the transfer is actually needed:
             if arr.device == self.device and arr.dtype == self.dtype:
-                return arr
+                return self.array_backend.array_constructor(arr, copy=copy)
             try:
                 # from_dlpack(inp, device=device, copy=copy)
                 # As of Pytorch 2.7, the pytorch API from_dlpack does not implement the
@@ -617,7 +617,7 @@ class TensorSpace(LinearSpace):
             # The RuntimeError should be raised only when using a GPU device 
             except RuntimeError:
                 return self.array_backend.array_constructor(
-                    arr, dtype=self.dtype, device=self.device)
+                    arr, dtype=self.dtype, device=self.device, copy=copy)
 
         # Case 1: no input provided
         if inp is None:
@@ -1152,28 +1152,28 @@ class TensorSpace(LinearSpace):
                     
             return self.astype(self.array_backend.get_dtype_identifier(array=result_data)).element(result_data) 
 
-        if isinstance(x1, self.array_backend.array_type) or isinstance(x2, self.array_backend.array_type):
-            fn =  getattr(local_namespace, operation)
-            if out is None:
-                if isinstance(x1, self.array_backend.array_type):
-                    assert x1.shape  == self.shape, f"The shape of self {self.shape} and x1 {x1.shape} differ, cannot perform {operation}"
-                    assert str(x1.device) == self.device, f"The device of self {self.device} and x1 {x1.device} differ, cannot perform {operation}"
-                    result_data = fn(x1, x2.data, **kwargs)
-                elif isinstance(x2, self.array_backend.array_type):
-                    assert x2.shape  == self.shape, f"The shape of self {self.shape} and x2 {x2.shape} differ, cannot perform {operation}"
-                    assert str(x2.device) == self.device, f"The device of self {self.device} and x2 {x2.device} differ, cannot perform {operation}"
-                    result_data = fn(x1.data, x2, **kwargs)
+        # if isinstance(x1, self.array_backend.array_type) or isinstance(x2, self.array_backend.array_type):
+        #     fn =  getattr(local_namespace, operation)
+        #     if out is None:
+        #         if isinstance(x1, self.array_backend.array_type):
+        #             assert x1.shape  == self.shape, f"The shape of self {self.shape} and x1 {x1.shape} differ, cannot perform {operation}"
+        #             assert str(x1.device) == self.device, f"The device of self {self.device} and x1 {x1.device} differ, cannot perform {operation}"
+        #             result_data = fn(x1, x2.data, **kwargs)
+        #         elif isinstance(x2, self.array_backend.array_type):
+        #             assert x2.shape  == self.shape, f"The shape of self {self.shape} and x2 {x2.shape} differ, cannot perform {operation}"
+        #             assert str(x2.device) == self.device, f"The device of self {self.device} and x2 {x2.device} differ, cannot perform {operation}"
+        #             result_data = fn(x1.data, x2, **kwargs)
 
-            else:
-                if isinstance(x1, self.array_backend.array_type):
-                    assert x1.shape  == self.shape, f"The shape of self {self.shape} and x1 {x1.shape} differ, cannot perform {operation}"
-                    assert str(x1.device) == self.device, f"The device of self {self.device} and x1 {x1.device} differ, cannot perform {operation}"
-                    result_data = fn(x1, x2.data, out=out.data, **kwargs)
-                elif isinstance(x2, self.array_backend.array_type):
-                    assert x2.shape  == self.shape, f"The shape of self {self.shape} and x2 {x2.shape} differ, cannot perform {operation}"
-                    assert str(x2.device) == self.device, f"The device of self {self.device} and x2 {x2.device} differ, cannot perform {operation}"
-                    result_data = fn(x1.data, x2, out=out.data, **kwargs)
-            return self.astype(self.array_backend.get_dtype_identifier(array=result_data)).element(result_data) 
+        #     else:
+        #         if isinstance(x1, self.array_backend.array_type):
+        #             assert x1.shape  == self.shape, f"The shape of self {self.shape} and x1 {x1.shape} differ, cannot perform {operation}"
+        #             assert str(x1.device) == self.device, f"The device of self {self.device} and x1 {x1.device} differ, cannot perform {operation}"
+        #             result_data = fn(x1, x2.data, out=out.data, **kwargs)
+        #         elif isinstance(x2, self.array_backend.array_type):
+        #             assert x2.shape  == self.shape, f"The shape of self {self.shape} and x2 {x2.shape} differ, cannot perform {operation}"
+        #             assert str(x2.device) == self.device, f"The device of self {self.device} and x2 {x2.device} differ, cannot perform {operation}"
+        #             result_data = fn(x1.data, x2, out=out.data, **kwargs)
+        #     return self.astype(self.array_backend.get_dtype_identifier(array=result_data)).element(result_data) 
         
         if isinstance(x1, ProductSpaceElement):
             if not isinstance(x2, Tensor):
