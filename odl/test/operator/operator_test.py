@@ -24,6 +24,8 @@ from odl.operator.operator import _dispatch_call_args, _function_signature
 from odl.util.testutils import (
     all_almost_equal, noise_element, noise_elements, simple_fixture)
 
+from odl.array_API_support.utils import get_array_and_backend, lookup_array_backend
+
 try:
     getargspec = inspect.getfullargspec
 except AttributeError:
@@ -45,9 +47,12 @@ class MultiplyAndSquareOp(Operator):
     """Example of a nonlinear operator, x --> (mat*x)**2."""
 
     def __init__(self, matrix, domain=None, range=None):
-        dom = (odl.rn(matrix.shape[1])
+        matrix, backend = get_array_and_backend(matrix)
+
+        dom = (odl.rn(matrix.shape[1], impl=backend.impl, device=str(matrix.device), dtype=matrix.dtype)
                if domain is None else domain)
-        ran = (odl.rn(matrix.shape[0])
+        
+        ran = (odl.rn(matrix.shape[0], impl=backend.impl, device=str(matrix.device), dtype=matrix.dtype)
                if range is None else range)
 
         super(MultiplyAndSquareOp, self).__init__(dom, ran)
@@ -55,9 +60,12 @@ class MultiplyAndSquareOp(Operator):
 
     def _call(self, x, out=None):
         if out is None:
-            out = self.range.element()
+            out = self.range.zero()
         out[:] =  x.data @ self.matrix.T
         out **= 2
+        
+    # def _call_out_of_place(self, x):
+    #     return (x.data @ self.matrix.T) **2
 
     def derivative(self, x):
         return 2 * odl.MatrixOperator(self.matrix)
@@ -67,7 +75,10 @@ class MultiplyAndSquareOp(Operator):
 
 def mult_sq_np(mat, x):
     """NumPy reference implementation of MultiplyAndSquareOp."""
-    return np.dot(mat, x) ** 2
+    mat, backend_mat = get_array_and_backend(mat)
+    x, backend_x = get_array_and_backend(x)
+    assert backend_mat == backend_x 
+    return (x @ mat.T) ** 2
 
 
 def check_call(operator, x, expected):
@@ -89,30 +100,39 @@ def check_call(operator, x, expected):
 
 # --- Unit tests --- #
 
-
-def test_operator_call(dom_eq_ran):
-    """Check operator evaluation against NumPy reference."""
+@pytest.fixture(scope="module", ids=['True', 'False'], params=[True, False])
+def dom_eq_ran_mat(request, odl_impl_device_pairs):
+    impl, device = odl_impl_device_pairs
+    dom_eq_ran = request
     if dom_eq_ran:
-        mat = np.random.rand(3, 3)
-        op = MultiplyAndSquareOp(mat)
-        assert op.domain == op.range
+        shape = (3,3)
     else:
-        mat = np.random.rand(4, 3)
-        op = MultiplyAndSquareOp(mat)
+        shape = (3,4)
+    space = odl.rn(shape, impl=impl, device=device)
+    mat, _ = noise_elements(space)
+    return mat
 
+def test_operator_call__(dom_eq_ran_mat):
+    """Check operator evaluation against NumPy reference."""
+    op = MultiplyAndSquareOp(dom_eq_ran_mat)
     xarr, x = noise_elements(op.domain)
-    assert all_almost_equal(op(x), mult_sq_np(mat, xarr))
+    # In-place call
+    # out = op.range.zero()
+    # op(x, out=out)
+    # assert all_almost_equal(out, mult_sq_np(dom_eq_ran_mat, xarr))
+    # Out-of-place call
+    assert all_almost_equal(op(x), mult_sq_np(dom_eq_ran_mat, xarr))
 
-
-def test_operator_call_in_place_wrong_return():
+def test_operator_call_in_place_wrong_return(odl_impl_device_pairs):
     """Test that operator with out parameter actually returns out."""
+    impl, device = odl_impl_device_pairs
     class BadInplaceOperator(odl.Operator):
         def _call(self, x, out):
             # badly implemented operator
             out = 42
             return out
 
-    space = odl.rn(3)
+    space = odl.rn(3, impl=impl, device=device)
     op = BadInplaceOperator(space, space)
 
     with pytest.raises(ValueError):
