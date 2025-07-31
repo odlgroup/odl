@@ -59,13 +59,13 @@ class MultiplyAndSquareOp(Operator):
         self.matrix = matrix
 
     def _call(self, x, out=None):
+        out_of_place = False
         if out is None:
-            out = self.range.zero()
-        out[:] =  x.data @ self.matrix.T
+            out = self.range.element()
+        out[:] = x.data @ self.matrix.T
         out **= 2
-        
-    # def _call_out_of_place(self, x):
-    #     return (x.data @ self.matrix.T) **2
+        if out_of_place:
+            return out
 
     def derivative(self, x):
         return 2 * odl.MatrixOperator(self.matrix)

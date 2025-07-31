@@ -666,6 +666,9 @@ class Operator(object):
         else:  # Out-of-place evaluation
             out = self._call_out_of_place(x, **kwargs)
 
+            if self.domain is not None and out is None:
+                raise OpRangeErr(
+                        "The out-of-place version of the operator does not return a value.")
             if out not in self.range:
                 try:
                     out = self.range.element(out)
