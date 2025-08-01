@@ -12,7 +12,6 @@ from __future__ import absolute_import
 
 from .element_wise import *
 from .statistical import *
-from .linalg import *
 from .utils import *
 from .comparisons import *
 from .array_creation import *
@@ -20,7 +19,6 @@ from .array_creation import *
 __all__ = ()
 __all__ += element_wise.__all__
 __all__ += statistical.__all__
-__all__ += linalg.__all__
 __all__ += utils.__all__
 __all__ += comparisons.__all__
 __all__ += array_creation.__all__

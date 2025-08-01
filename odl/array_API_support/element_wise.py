@@ -6,7 +6,25 @@
 # v. 2.0. If a copy of the MPL was not distributed with this file, You can
 # obtain one at https://mozilla.org/MPL/2.0/.
 
-"""Element-wise functions expected by the python array API"""
+"""Element-wise functions expected by the python array API.
+Internally, all functions apply an element-wise `operation` on:
+        -> a python int/float/complex and a LinearSpaceElement
+        -> two LinearSpaceElement
+        -> a single LinearSpaceElement
+
+Args:
+    operation (str): a string identifier to lookup the desired function in the LinearSpaceElement's namespace.
+    x1 (int | float | complex | LinearSpaceElement : Left operand
+    x2 (int | float | complex | LinearSpaceElement (Optional) : Right operand. Defaults to None.
+    out (LinearSpaceElement, optional): Out LinearSpaceElement for inplace updates. Defaults to None.
+
+Returns:
+    LinearSpaceElement: result of the element-wise operation on the array wrapped inside the element of an ODL space. 
+
+Notes:
+    1) The output array is wrapped in a space of which type depends of the output array's. This is a change of behaviour compared to ODL < 0.8.2
+    2) Although one could use it to perform an operation on array-specific backend only, there is no clean way to infer a LinearSpace from the output. As such, one of the two operands must be a LinearSpaceElement
+"""
 
 __all__ = (
     'abs',
@@ -81,24 +99,6 @@ __all__ = (
 
 def _apply_element_wise(operation: str, x1, x2=None, out=None, **kwargs):
     """
-    Helper function to apply an element-wise `operation` on:
-        -> a python int/float/complex and a LinearSpaceElement
-        -> two LinearSpaceElement
-        -> a single LinearSpaceElement
-
-    Args:
-        operation (str): a string identifier to lookup the desired function in the LinearSpaceElement's namespace.
-        x1 (int | float | complex | LinearSpaceElement : Left operand
-        x2 (int | float | complex | LinearSpaceElement (Optional) : Right operand. Defaults to None.
-        out (LinearSpaceElement, optional): Out LinearSpaceElement for inplace updates. Defaults to None.
-
-    Returns:
-        LinearSpaceElement: result of the element-wise operation on the array wrapped inside the element of an ODL space. 
-
-    Notes:
-        1) The output array is wrapped in a space of which type depends of the output array's. This is a change of behaviour compared to ODL < 0.8.2
-        2) Although one could use it to perform an operation on array-specific backend only, there is no clean way to infer a LinearSpace from the output. As such, one of the two operands must be a LinearSpaceElement
-
     Examples
     >>> e0 = odl.rn(3).zero()
     >>> e1 = odl.rn(3).one()
@@ -116,7 +116,8 @@ def _apply_element_wise(operation: str, x1, x2=None, out=None, **kwargs):
     >>> new_el in odl.rn(3)
     False
     >>> odl.add(odl.zeros_like(e1), e1)
-    rn(3, 'float64', 'numpy', 'cpu').element([ 1.,  1.,  1.])
+    Traceback (most recent call last):
+    TypeError: The type of the left operand <class 'numpy.ndarray'> is not supported.
     """
     # Lazy import of LinearSpaceElement and Operator for dispatching call
     from odl.operator import Operator
