@@ -596,7 +596,7 @@ class TensorSpace(LinearSpace):
             # (cf:https://data-apis.org/array-api/latest/purpose_and_scope.html)"""
             # We begin by checking that the transfer is actually needed:
             if arr.device == self.device and arr.dtype == self.dtype:
-                return arr
+                return self.array_backend.array_constructor(arr, copy=copy)
             try:
                 # from_dlpack(inp, device=device, copy=copy)
                 # As of Pytorch 2.7, the pytorch API from_dlpack does not implement the
@@ -617,7 +617,7 @@ class TensorSpace(LinearSpace):
             # The RuntimeError should be raised only when using a GPU device 
             except RuntimeError:
                 return self.array_backend.array_constructor(
-                    arr, dtype=self.dtype, device=self.device)
+                    arr, dtype=self.dtype, device=self.device, copy=copy)
 
         # Case 1: no input provided
         if inp is None:
@@ -1135,6 +1135,13 @@ class TensorSpace(LinearSpace):
             else:
                 result_data = fn(x1.data, out=out.data, **kwargs)
             return self.astype(self.array_backend.get_dtype_identifier(array=result_data)).element(result_data) 
+        
+        from odl.operator import Operator
+        if not isinstance(x1, (int, float, complex, Tensor, ProductSpaceElement, Operator)):
+            raise TypeError(f'The type of the left operand {type(x1)} is not supported.')
+        
+        if not isinstance(x2, (int, float, complex, Tensor, ProductSpaceElement, Operator)):
+            raise TypeError(f'The type of the right operand {type(x2)} is not supported.')
 
         if isinstance(x1, (int, float, complex)) or isinstance(x2, (int, float, complex)):
             fn =  getattr(local_namespace, operation)
@@ -1151,29 +1158,29 @@ class TensorSpace(LinearSpace):
                     result_data = fn(x1.data, x2, out=out.data, **kwargs)
                     
             return self.astype(self.array_backend.get_dtype_identifier(array=result_data)).element(result_data) 
+        
+        # if isinstance(x1, self.array_backend.array_type) or isinstance(x2, self.array_backend.array_type):
+        #     fn =  getattr(local_namespace, operation)
+        #     if out is None:
+        #         if isinstance(x1, self.array_backend.array_type):
+        #             assert x1.shape  == self.shape, f"The shape of self {self.shape} and x1 {x1.shape} differ, cannot perform {operation}"
+        #             assert str(x1.device) == self.device, f"The device of self {self.device} and x1 {x1.device} differ, cannot perform {operation}"
+        #             result_data = fn(x1, x2.data, **kwargs)
+        #         elif isinstance(x2, self.array_backend.array_type):
+        #             assert x2.shape  == self.shape, f"The shape of self {self.shape} and x2 {x2.shape} differ, cannot perform {operation}"
+        #             assert str(x2.device) == self.device, f"The device of self {self.device} and x2 {x2.device} differ, cannot perform {operation}"
+        #             result_data = fn(x1.data, x2, **kwargs)
 
-        if isinstance(x1, self.array_backend.array_type) or isinstance(x2, self.array_backend.array_type):
-            fn =  getattr(local_namespace, operation)
-            if out is None:
-                if isinstance(x1, self.array_backend.array_type):
-                    assert x1.shape  == self.shape, f"The shape of self {self.shape} and x1 {x1.shape} differ, cannot perform {operation}"
-                    assert str(x1.device) == self.device, f"The device of self {self.device} and x1 {x1.device} differ, cannot perform {operation}"
-                    result_data = fn(x1, x2.data, **kwargs)
-                elif isinstance(x2, self.array_backend.array_type):
-                    assert x2.shape  == self.shape, f"The shape of self {self.shape} and x2 {x2.shape} differ, cannot perform {operation}"
-                    assert str(x2.device) == self.device, f"The device of self {self.device} and x2 {x2.device} differ, cannot perform {operation}"
-                    result_data = fn(x1.data, x2, **kwargs)
-
-            else:
-                if isinstance(x1, self.array_backend.array_type):
-                    assert x1.shape  == self.shape, f"The shape of self {self.shape} and x1 {x1.shape} differ, cannot perform {operation}"
-                    assert str(x1.device) == self.device, f"The device of self {self.device} and x1 {x1.device} differ, cannot perform {operation}"
-                    result_data = fn(x1, x2.data, out=out.data, **kwargs)
-                elif isinstance(x2, self.array_backend.array_type):
-                    assert x2.shape  == self.shape, f"The shape of self {self.shape} and x2 {x2.shape} differ, cannot perform {operation}"
-                    assert str(x2.device) == self.device, f"The device of self {self.device} and x2 {x2.device} differ, cannot perform {operation}"
-                    result_data = fn(x1.data, x2, out=out.data, **kwargs)
-            return self.astype(self.array_backend.get_dtype_identifier(array=result_data)).element(result_data) 
+        #     else:
+        #         if isinstance(x1, self.array_backend.array_type):
+        #             assert x1.shape  == self.shape, f"The shape of self {self.shape} and x1 {x1.shape} differ, cannot perform {operation}"
+        #             assert str(x1.device) == self.device, f"The device of self {self.device} and x1 {x1.device} differ, cannot perform {operation}"
+        #             result_data = fn(x1, x2.data, out=out.data, **kwargs)
+        #         elif isinstance(x2, self.array_backend.array_type):
+        #             assert x2.shape  == self.shape, f"The shape of self {self.shape} and x2 {x2.shape} differ, cannot perform {operation}"
+        #             assert str(x2.device) == self.device, f"The device of self {self.device} and x2 {x2.device} differ, cannot perform {operation}"
+        #             result_data = fn(x1.data, x2, out=out.data, **kwargs)
+        #     return self.astype(self.array_backend.get_dtype_identifier(array=result_data)).element(result_data) 
         
         if isinstance(x1, ProductSpaceElement):
             if not isinstance(x2, Tensor):
@@ -1185,29 +1192,30 @@ class TensorSpace(LinearSpace):
                 raise TypeError(f'The left operand is not an ODL Tensor. {type(x1)=}')
             return x2.space._elementwise_num_operation(operation, x1, x2, out, namespace=namespace, **kwargs)
         
-        from odl.operator import Operator
         if isinstance(x2, Operator):
             warnings.warn("The composition of a LinearSpaceElement and an Operator using the * operator is deprecated and will be removed in future ODL versions. Please replace * with @.")
             return x2.__rmul__(x1)
 
-        if not isinstance(x1, Tensor) and not isinstance(x2, Tensor):
+        if isinstance(x1, Tensor) and isinstance(x2, Tensor):
+            element_wise_function = getattr(local_namespace, operation)
+
+            assert self.array_backend.array_type == x2.array_backend.array_type, f"The types of {self.array_backend.array_type} and x2 {x2.array_backend.array_type} differ, cannot perform {operation}"
+            assert self.shape == x2.space.shape, f"The shapes of {self} and x2 {x2.space.shape} differ, cannot perform {operation}"
+            assert self.device == x2.space.device, f"The devices of {self} and x2 {x2.space.device} differ, cannot perform {operation}"
+
+            if out is None:
+                result = element_wise_function(x1.data, x2.data)
+            else:
+                result = element_wise_function(x1.data, x2.data, out=out.data)
+    
+            # We make sure to return an element of the right type: 
+            # for instance, if two spaces have a int dtype, the result of the division 
+            # of one of their element by another return should be of float dtype
+            return x1.space.astype(x1.space.array_backend.get_dtype_identifier(array=result)).element(result) 
+        else:
             raise TypeError(f"Neither x1 nor x2 are odl ODL Tensors. Got {type(x1)} and {type(x2)}")
 
-        element_wise_function = getattr(local_namespace, operation)
-
-        assert self.array_backend.array_type == x2.array_backend.array_type, f"The types of {self.array_backend.array_type} and x2 {x2.array_backend.array_type} differ, cannot perform {operation}"
-        assert self.shape == x2.space.shape, f"The shapes of {self} and x2 {x2.space.shape} differ, cannot perform {operation}"
-        assert self.device == x2.space.device, f"The devices of {self} and x2 {x2.space.device} differ, cannot perform {operation}"
-
-        if out is None:
-            result = element_wise_function(x1.data, x2.data)
-        else:
-            result = element_wise_function(x1.data, x2.data, out=out.data)
- 
-        # We make sure to return an element of the right type: 
-        # for instance, if two spaces have a int dtype, the result of the division 
-        # of one of their element by another return should be of float dtype
-        return x1.space.astype(x1.space.array_backend.get_dtype_identifier(array=result)).element(result) 
+        
 
     def _element_reduction(self, operation:str
                                , x: "Tensor"
@@ -1306,7 +1314,7 @@ class Tensor(LinearSpaceElement):
             return self.space.zero()
         elif self.space.is_complex:
             real_space = self.space.astype(self.space.real_dtype)
-            return real_space.element(self.data.imag)
+            return real_space.element(self.data.imag, copy=False)
         else:
             raise NotImplementedError('`imag` not defined for non-numeric '
                                       'dtype {}'.format(self.dtype))
@@ -1377,7 +1385,7 @@ class Tensor(LinearSpaceElement):
             return self
         elif self.space.is_complex:
             real_space = self.space.astype(self.space.real_dtype)
-            return real_space.element(self.data.real)
+            return real_space.element(self.data.real, copy=False)
         else:
             raise NotImplementedError('`real` not defined for non-numeric '
                                       'dtype {}'.format(self.dtype))

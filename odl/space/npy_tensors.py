@@ -397,7 +397,7 @@ class NumpyTensor(Tensor):
             space = type(self.space)(
                 arr.shape, dtype=self.dtype, exponent=self.space.exponent,
                 weighting=weighting)
-            return space.element(arr)
+            return space.element(arr, copy=False)
 
     def __setitem__(self, indices, values):
         """Implement ``self[indices] = values``.

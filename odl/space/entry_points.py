@@ -72,13 +72,10 @@ def tensor_space_impl(impl):
     ValueError
         If ``impl`` is not a valid name of a tensor space imlementation.
     """
-    if impl != 'numpy':
-        # Shortcut to improve "import odl" times since most users do not use
-        # non-numpy backends
-        _initialize_if_needed()
-
     try:
         return TENSOR_SPACE_IMPLS[impl]
     except KeyError:
         raise ValueError("`impl` {!r} does not correspond to a valid tensor "
                          "space implmentation".format(impl))
+
+_initialize_if_needed()

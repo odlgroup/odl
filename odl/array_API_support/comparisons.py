@@ -6,7 +6,10 @@
 # v. 2.0. If a copy of the MPL was not distributed with this file, You can
 # obtain one at https://mozilla.org/MPL/2.0/.
 
-"""Comparisons functions expected by the python array API"""
+"""
+Comparisons functions expected by the python array API
+
+"""
 
 from .utils import get_array_and_backend
 from numbers import Number
@@ -21,7 +24,10 @@ __all__ = (
 )
 
 
-def _helper(x, fname, **kwargs):    
+def _helper(x, fname, **kwargs):
+    """
+    Helper function to apply a comparison between
+    """    
     if isinstance(x, Number):        
         if 'y' in kwargs:
             y = kwargs.pop('y')
@@ -71,14 +77,6 @@ def any(x):
     Test whether any array element along a given axis evaluates to True.
     """
     return _helper(x, 'any')
-
-# def asarray(x):
-#     """
-#     Returns an array corresponding to an ODL object.
-#     Note:
-#         This does not actually performs a comparison, yet it is located in this module for technical reasons due to the underlying helper function.
-#     """
-#     return _helper(x, 'asarray')
 
 def isclose(x, y, rtol=1e-05, atol=1e-08, equal_nan=False):
     """
