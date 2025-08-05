@@ -546,34 +546,34 @@ class LinearSpaceElement(object):
         return self.space.lincomb(0, self, 0, self, out=self)
 
     # Convenience methods
-    def __iadd__(self, other):
-        """Implement ``self += other``."""
-        if self.space.field is None:
-            return NotImplemented
-        elif other in self.space:
-            return self.space.lincomb(1, self, 1, other, out=self)
-        elif isinstance(other, LinearSpaceElement):
-            # We do not `return NotImplemented` here since we don't want a
-            # fallback for in-place. Otherwise python attempts
-            # `self = self + other` which does not modify self.
-            raise TypeError('cannot add {!r} and {!r} in-place'
-                            ''.format(self, other))
-        elif other in self.space.field:
-            one = getattr(self.space, 'one', None)
-            if one is None:
-                raise TypeError('cannot add {!r} and {!r} in-place'
-                                ''.format(self, other))
-            else:
-                # other --> other * space.one()
-                return self.space.lincomb(1, self, other, one(), out=self)
-        else:
-            try:
-                other = self.space.element(other)
-            except (TypeError, ValueError):
-                raise TypeError('cannot add {!r} and {!r} in-place'
-                                ''.format(self, other))
-            else:
-                return self.__iadd__(other)
+    # def __iadd__(self, other):
+    #     """Implement ``self += other``."""
+    #     if self.space.field is None:
+    #         return NotImplemented
+    #     elif other in self.space:
+    #         return self.space.lincomb(1, self, 1, other, out=self)
+    #     elif isinstance(other, LinearSpaceElement):
+    #         # We do not `return NotImplemented` here since we don't want a
+    #         # fallback for in-place. Otherwise python attempts
+    #         # `self = self + other` which does not modify self.
+    #         raise TypeError('cannot add {!r} and {!r} in-place'
+    #                         ''.format(self, other))
+    #     elif other in self.space.field:
+    #         one = getattr(self.space, 'one', None)
+    #         if one is None:
+    #             raise TypeError('cannot add {!r} and {!r} in-place'
+    #                             ''.format(self, other))
+    #         else:
+    #             # other --> other * space.one()
+    #             return self.space.lincomb(1, self, other, one(), out=self)
+    #     else:
+    #         try:
+    #             other = self.space.element(other)
+    #         except (TypeError, ValueError):
+    #             raise TypeError('cannot add {!r} and {!r} in-place'
+    #                             ''.format(self, other))
+    #         else:
+    #             return self.__iadd__(other)
 
     def __add__(self, other):
         """Return ``self + other``."""
@@ -663,47 +663,54 @@ class LinearSpaceElement(object):
     
     def __iadd__(self, other):
         """Implement ``self += other``."""
-        return self.space._elementwise_num_operation(
+        self.space._elementwise_num_operation(
             'add', self, other, self
         )
+        return self
     
     def __isub__(self, other):
         """Implement ``self -= other``."""
-        return self.space._elementwise_num_operation(
+        self.space._elementwise_num_operation(
             'subtract', self, other, self
         )
+        return self
     
     def __imul__(self, other):
         """Return ``self *= other``."""
-        return self.space._elementwise_num_operation(
+        self.space._elementwise_num_operation(
             'multiply', self, other, self
         )
+        return self
     
     def __itruediv__(self, other):
         """Implement ``self /= other``."""
         if isinstance(other, Number) and other == 0:
             raise ZeroDivisionError
-        return self.space._elementwise_num_operation(
+        self.space._elementwise_num_operation(
                 'divide', self, other, self
             )
+        return self
     
     def __ifloordiv__(self, other):
         """Implement ``self //= other``."""
-        return self.space._elementwise_num_operation(
+        self.space._elementwise_num_operation(
             'floor_divide', self, other, self
         )
+        return self
     
     def __imod__(self, other):
         """Implement ``self %= other``."""
-        return self.space._elementwise_num_operation(
+        self.space._elementwise_num_operation(
             'remainder', self, other, self
         )
+        return self
     
     def __ipow__(self, other):
         """Implement ``self *= other``, element wise"""
-        return self.space._elementwise_num_operation(
+        self.space._elementwise_num_operation(
             'pow', self, other, self
         )
+        return self
     
     def __neg__(self):
         """Return ``-self``."""
