@@ -16,7 +16,7 @@ from odl.util import (
     is_real_dtype, complex_dtype)
 from odl.util.testutils import (
     all_almost_equal, simple_fixture)
-
+from odl.util.dtype_utils import FLOAT_DTYPES, COMPLEX_DTYPES
 
 pytestmark = pytest.mark.skipif(not PYFFTW_AVAILABLE,
                                 reason='`pyfftw` backend not available')
@@ -141,7 +141,10 @@ def test_pyfftw_call_bad_input(direction):
     # Bad dtype
     dtype_in = np.dtype('complex128')
     arr_in = np.empty(3, dtype=dtype_in)
-    bad_dtypes_out = np.sctypes['float'] + np.sctypes['complex']
+    backend = odl.lookup_array_backend('numpy')
+    float_dt = {backend.available_dtypes[dtype] for dtype in FLOAT_DTYPES}
+    complex_dt = {backend.available_dtypes[dtype] for dtype in COMPLEX_DTYPES}
+    bad_dtypes_out = float_dt.union( complex_dt)
     if dtype_in in bad_dtypes_out:
         # This one is correct, so we remove it
         bad_dtypes_out.remove(dtype_in)
@@ -198,7 +201,10 @@ def test_pyfftw_call_bad_input(direction):
     # Bad dtype
     dtype_in = 'float64'
     arr_in = np.empty(10, dtype=dtype_in)
-    bad_dtypes_out = np.sctypes['float'] + np.sctypes['complex']
+    backend = odl.lookup_array_backend('numpy')
+    float_dt = {backend.available_dtypes[dtype] for dtype in FLOAT_DTYPES}
+    complex_dt = {backend.available_dtypes[dtype] for dtype in COMPLEX_DTYPES}
+    bad_dtypes_out = float_dt.union( complex_dt)
     try:
         # This one is correct, so we remove it
         bad_dtypes_out.remove(np.dtype('complex128'))
