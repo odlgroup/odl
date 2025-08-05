@@ -570,7 +570,7 @@ class TensorSpace(LinearSpace):
         else:
             return self._astype(dtype_identifier)
         
-    def element(self, inp=None, device=None, copy=True):
+    def element(self, inp=None, device=None, copy=None):
         def wrapped_array(arr):
             if arr.shape != self.shape:
                 raise ValueError(
