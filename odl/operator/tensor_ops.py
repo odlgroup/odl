@@ -19,10 +19,10 @@ from odl.util.npy_compat import AVOID_UNNECESSARY_COPY
 from odl.operator.operator import Operator
 from odl.set import ComplexNumbers, RealNumbers
 from odl.space import ProductSpace, tensor_space
-from odl.space.base_tensors import TensorSpace
+from odl.space.base_tensors import TensorSpace, Tensor
 from odl.space.weightings.weighting import ArrayWeighting
 from odl.util import dtype_repr, indent, signature_string, writable_array
-from odl.array_API_support import abs, maximum, pow, sqrt, multiply
+from odl.array_API_support import abs, maximum, pow, sqrt, multiply, get_array_and_backend, can_cast
 
 __all__ = ('PointwiseNorm', 'PointwiseInner', 'PointwiseSum', 'MatrixOperator',
            'SamplingOperator', 'WeightedSumSamplingOperator',
@@ -799,9 +799,13 @@ class MatrixOperator(Operator):
 
         if scipy.sparse.isspmatrix(matrix):
             self.__matrix = matrix
+        elif isinstance(matrix, Tensor):
+            self.__matrix = np.array(matrix.data, copy=AVOID_UNNECESSARY_COPY, ndmin=2)        
         else:
             self.__matrix = np.array(matrix, copy=AVOID_UNNECESSARY_COPY, ndmin=2)
 
+        _, backend = get_array_and_backend(self.matrix)
+        ns = backend.array_namespace
         self.__axis, axis_in = int(axis), axis
         if self.axis != axis_in:
             raise ValueError('`axis` must be integer, got {}'.format(axis_in))
@@ -812,8 +816,12 @@ class MatrixOperator(Operator):
 
         # Infer or check domain
         if domain is None:
+            dtype = backend.identifier_of_dtype(self.matrix.dtype)
             domain = tensor_space((self.matrix.shape[1],),
-                                  dtype=self.matrix.dtype)
+                                  dtype=dtype,
+                                  impl = backend.impl,
+                                #   device = self.matrix.device.__str__()
+                                  )
         else:
             if not isinstance(domain, TensorSpace):
                 raise TypeError('`domain` must be a `TensorSpace` '
@@ -834,14 +842,18 @@ class MatrixOperator(Operator):
 
         if range is None:
             # Infer range
-            range_dtype = np.promote_types(self.matrix.dtype, domain.dtype)
+            range_dtype = ns.result_type(
+                self.matrix.dtype, domain.dtype)
+            range_dtype = backend.identifier_of_dtype(range_dtype)
             if (range_shape != domain.shape and
                     isinstance(domain.weighting, ArrayWeighting)):
                 # Cannot propagate weighting due to size mismatch.
                 weighting = None
             else:
                 weighting = domain.weighting
-            range = tensor_space(range_shape, dtype=range_dtype,
+            range = tensor_space(range_shape, 
+                                 impl = backend.impl,
+                                 dtype=range_dtype,
                                  weighting=weighting,
                                  exponent=domain.exponent)
         else:
@@ -855,8 +867,8 @@ class MatrixOperator(Operator):
                                  ''.format(tuple(range_shape), range.shape))
 
         # Check compatibility of data types
-        result_dtype = np.promote_types(domain.dtype, self.matrix.dtype)
-        if not np.can_cast(result_dtype, range.dtype):
+        result_dtype = ns.result_type(domain.dtype, self.matrix.dtype)
+        if not can_cast(ns, result_dtype, range.dtype):
             raise ValueError('result data type {} cannot be safely cast to '
                              'range data type {}'
                              ''.format(dtype_repr(result_dtype),

@@ -117,11 +117,6 @@ def test_operator_call__(dom_eq_ran_mat):
     """Check operator evaluation against NumPy reference."""
     op = MultiplyAndSquareOp(dom_eq_ran_mat)
     xarr, x = noise_elements(op.domain)
-    # In-place call
-    # out = op.range.zero()
-    # op(x, out=out)
-    # assert all_almost_equal(out, mult_sq_np(dom_eq_ran_mat, xarr))
-    # Out-of-place call
     assert all_almost_equal(op(x), mult_sq_np(dom_eq_ran_mat, xarr))
 
 def test_operator_call_in_place_wrong_return(odl_impl_device_pairs):
@@ -144,15 +139,10 @@ def test_operator_call_in_place_wrong_return(odl_impl_device_pairs):
         op(space.zero(), out=out)
 
 
-def test_operator_sum(dom_eq_ran):
+def test_operator_sum(dom_eq_ran_mat):
     """Check operator sum against NumPy reference."""
-    if dom_eq_ran:
-        mat1 = np.random.rand(3, 3)
-        mat2 = np.random.rand(3, 3)
-    else:
-        mat1 = np.random.rand(4, 3)
-        mat2 = np.random.rand(4, 3)
-
+    mat1 = dom_eq_ran_mat
+    mat2 = dom_eq_ran_mat + 0.5
     op1 = MultiplyAndSquareOp(mat1)
     op2 = MultiplyAndSquareOp(mat2)
     xarr, x = noise_elements(op1.domain)
@@ -176,12 +166,9 @@ def test_operator_sum(dom_eq_ran):
         OperatorSum(op1, op_wrong_ran)
 
 
-def test_operator_scaling(dom_eq_ran):
+def test_operator_scaling(dom_eq_ran_mat):
     """Check operator scaling against NumPy reference."""
-    if dom_eq_ran:
-        mat = np.random.rand(3, 3)
-    else:
-        mat = np.random.rand(4, 3)
+    mat = dom_eq_ran_mat
 
     op = MultiplyAndSquareOp(mat)
     xarr, x = noise_elements(op.domain)
@@ -220,12 +207,9 @@ def test_operator_scaling(dom_eq_ran):
             wrongscalar * op
 
 
-def test_operator_vector_mult(dom_eq_ran):
+def test_operator_vector_mult(dom_eq_ran_mat):
     """Check operator-vector multiplication against NumPy reference."""
-    if dom_eq_ran:
-        mat = np.random.rand(3, 3)
-    else:
-        mat = np.random.rand(4, 3)
+    mat = dom_eq_ran_mat
 
     op = MultiplyAndSquareOp(mat)
     right = op.domain.element(np.arange(op.domain.size))
@@ -248,14 +232,10 @@ def test_operator_vector_mult(dom_eq_ran):
     check_call(left @ op, x, left_as_array * mult_sq_np(mat, xarr))
 
 
-def test_operator_composition(dom_eq_ran):
+def test_operator_composition(dom_eq_ran_mat):
     """Check operator composition against NumPy reference."""
-    if dom_eq_ran:
-        mat1 = np.random.rand(3, 3)
-        mat2 = np.random.rand(3, 3)
-    else:
-        mat1 = np.random.rand(5, 4)
-        mat2 = np.random.rand(4, 3)
+    mat1 = dom_eq_ran_mat
+    mat2 = dom_eq_ran_mat + 0.5
 
     op1 = MultiplyAndSquareOp(mat1)
     op2 = MultiplyAndSquareOp(mat2)
@@ -271,41 +251,36 @@ def test_operator_composition(dom_eq_ran):
             OperatorComp(op2, op1)
 
 
-def test_linear_operator_call(dom_eq_ran):
+def test_linear_operator_call(dom_eq_ran_mat):
     """Check call of a linear operator against NumPy, and ``is_linear``."""
-    if dom_eq_ran:
-        mat = np.random.rand(3, 3)
-    else:
-        mat = np.random.rand(4, 3)
+    mat = dom_eq_ran_mat
 
     op = MatrixOperator(mat)
+    _, backend = get_array_and_backend(mat)
+    ns = backend.array_namespace
     assert op.is_linear
 
     xarr, x = noise_elements(op.domain)
-    check_call(op, x, np.dot(mat, xarr))
+    check_call(op, x, ns.matmul(mat, xarr))
 
 
-def test_linear_operator_adjoint(dom_eq_ran):
+def test_linear_operator_adjoint(dom_eq_ran_mat):
     """Check adjoint of a linear operator against NumPy."""
-    if dom_eq_ran:
-        mat = np.random.rand(3, 3)
-    else:
-        mat = np.random.rand(4, 3)
+    mat = dom_eq_ran_mat
 
     op = MatrixOperator(mat)
+    _, backend = get_array_and_backend(mat)
+    ns = backend.array_namespace
     xarr, x = noise_elements(op.range)
-    check_call(op.adjoint, x, np.dot(mat.T, xarr))
+    check_call(op.adjoint, x, ns.matmul(mat.T, xarr))
 
 
-def test_linear_operator_addition(dom_eq_ran):
+def test_linear_operator_addition(dom_eq_ran_mat):
     """Check call and adjoint of a sum of linear operators."""
-    if dom_eq_ran:
-        mat1 = np.random.rand(3, 3)
-        mat2 = np.random.rand(3, 3)
-    else:
-        mat1 = np.random.rand(4, 3)
-        mat2 = np.random.rand(4, 3)
-
+    mat1 = dom_eq_ran_mat
+    mat2 = dom_eq_ran_mat + 0.5
+    _, backend = get_array_and_backend(mat1)
+    ns = backend.array_namespace
     op1 = MatrixOperator(mat1)
     op2 = MatrixOperator(mat2)
     xarr, x = noise_elements(op1.domain)
@@ -315,26 +290,26 @@ def test_linear_operator_addition(dom_eq_ran):
     sum_op = OperatorSum(op1, op2)
     assert sum_op.is_linear
     assert sum_op.adjoint.is_linear
-    check_call(sum_op, x, np.dot(mat1, xarr) + np.dot(mat2, xarr))
-    check_call(sum_op.adjoint, y, np.dot(mat1.T, yarr) + np.dot(mat2.T, yarr))
+    check_call(sum_op, x, ns.matmul(mat1, xarr) + ns.matmul(mat2, xarr))
+    check_call(sum_op.adjoint, y, ns.matmul(mat1.T, yarr) + ns.matmul(mat2.T, yarr))
 
     # Using operator overloading
-    check_call(op1 + op2, x, np.dot(mat1, xarr) + np.dot(mat2, xarr))
+    check_call(op1 + op2, x, ns.matmul(mat1, xarr) + ns.matmul(mat2, xarr))
     check_call((op1 + op2).adjoint,
-               y, np.dot(mat1.T, yarr) + np.dot(mat2.T, yarr))
+               y, ns.matmul(mat1.T, yarr) + ns.matmul(mat2.T, yarr))
 
 
-def test_linear_operator_scaling(dom_eq_ran):
+def test_linear_operator_scaling(dom_eq_ran_mat):
     """Check call and adjoint of a scaled linear operator."""
-    if dom_eq_ran:
-        mat = np.random.rand(3, 3)
-    else:
-        mat = np.random.rand(4, 3)
+    mat = dom_eq_ran_mat
 
     op = MatrixOperator(mat)
+    _, backend = get_array_and_backend(mat)
+    ns = backend.array_namespace
+
     xarr, x = noise_elements(op.domain)
     yarr, y = noise_elements(op.range)
-
+    
     # Test a range of scalars (scalar multiplication could implement
     # optimizations for (-1, 0, 1).
     scalars = [-1.432, -1, 0, 1, 3.14]
@@ -343,24 +318,23 @@ def test_linear_operator_scaling(dom_eq_ran):
         scaled_op = OperatorRightScalarMult(op, scalar)
         assert scaled_op.is_linear
         assert scaled_op.adjoint.is_linear
-        check_call(scaled_op, x, scalar * np.dot(mat, xarr))
-        check_call(scaled_op.adjoint, y, scalar * np.dot(mat.T, yarr))
+        check_call(scaled_op, x, scalar * ns.matmul(mat, xarr))
+        check_call(scaled_op.adjoint, y, scalar * ns.matmul(mat.T, yarr))
 
         # Using operator overloading
-        check_call(scalar * op, x, scalar * np.dot(mat, xarr))
-        check_call(op * scalar, x, scalar * np.dot(mat, xarr))
-        check_call((scalar * op).adjoint, y, scalar * np.dot(mat.T, yarr))
-        check_call((op * scalar).adjoint, y, scalar * np.dot(mat.T, yarr))
+        check_call(scalar * op, x, scalar * ns.matmul(mat, xarr))
+        check_call(op * scalar, x, scalar * ns.matmul(mat, xarr))
+        check_call((scalar * op).adjoint, y, scalar * ns.matmul(mat.T, yarr))
+        check_call((op * scalar).adjoint, y, scalar * ns.matmul(mat.T, yarr))
 
 
-def test_linear_right_vector_mult(dom_eq_ran):
+def test_linear_right_vector_mult(dom_eq_ran_mat):
     """Check call and adjoint of linear operator x vector."""
-    if dom_eq_ran:
-        mat = np.random.rand(3, 3)
-    else:
-        mat = np.random.rand(4, 3)
+    mat = dom_eq_ran_mat
 
     op = MatrixOperator(mat)
+    _, backend = get_array_and_backend(mat)
+    ns = backend.array_namespace
     (xarr, mul_arr), (x, mul) = noise_elements(op.domain, n=2)
     yarr, y = noise_elements(op.range)
 
@@ -368,22 +342,21 @@ def test_linear_right_vector_mult(dom_eq_ran):
     rmult_op = OperatorRightVectorMult(op, mul)
     assert rmult_op.is_linear
     assert rmult_op.adjoint.is_linear
-    check_call(rmult_op, x, np.dot(mat, mul_arr * xarr))
-    check_call(rmult_op.adjoint, y, mul_arr * np.dot(mat.T, yarr))
+    check_call(rmult_op, x, ns.matmul(mat, mul_arr * xarr))
+    check_call(rmult_op.adjoint, y, mul_arr * ns.matmul(mat.T, yarr))
 
     # Using operator overloading
-    check_call(op * mul, x, np.dot(mat, mul_arr * xarr))
-    check_call((op * mul).adjoint, y, mul_arr * np.dot(mat.T, yarr))
+    check_call(op * mul, x, ns.matmul(mat, mul_arr * xarr))
+    check_call((op * mul).adjoint, y, mul_arr * ns.matmul(mat.T, yarr))
 
 
-def test_linear_left_vector_mult(dom_eq_ran):
+def test_linear_left_vector_mult(dom_eq_ran_mat):
     """Check call and adjoint of vector x linear operator."""
-    if dom_eq_ran:
-        mat = np.random.rand(3, 3)
-    else:
-        mat = np.random.rand(4, 3)
-
+    mat = dom_eq_ran_mat
+    
     op = MatrixOperator(mat)
+    _, backend = get_array_and_backend(mat)
+    ns = backend.array_namespace
     xarr, x = noise_elements(op.domain)
     (yarr, mul_arr), (y, mul) = noise_elements(op.range, n=2)
 
@@ -391,25 +364,23 @@ def test_linear_left_vector_mult(dom_eq_ran):
     lmult_op = OperatorLeftVectorMult(op, mul)
     assert lmult_op.is_linear
     assert lmult_op.adjoint.is_linear
-    check_call(lmult_op, x, mul_arr * np.dot(mat, xarr))
-    check_call(lmult_op.adjoint, y, np.dot(mat.T, mul_arr * yarr))
+    check_call(lmult_op, x, mul_arr * ns.matmul(mat, xarr))
+    check_call(lmult_op.adjoint, y, ns.matmul(mat.T, mul_arr * yarr))
 
     # Using operator overloading
-    check_call(mul @ op, x, mul_arr * np.dot(mat, xarr))
-    check_call((mul @ op).adjoint, y, np.dot(mat.T, mul_arr * yarr))
+    check_call(mul @ op, x, mul_arr * ns.matmul(mat, xarr))
+    check_call((mul @ op).adjoint, y, ns.matmul(mat.T, mul_arr * yarr))
 
 
-def test_linear_operator_composition(dom_eq_ran):
+def test_linear_operator_composition(dom_eq_ran_mat):
     """Check call and adjoint of linear operator composition."""
-    if dom_eq_ran:
-        mat1 = np.random.rand(3, 3)
-        mat2 = np.random.rand(3, 3)
-    else:
-        mat1 = np.random.rand(4, 3)
-        mat2 = np.random.rand(3, 4)
+    mat1 = dom_eq_ran_mat
+    mat2 = dom_eq_ran_mat + 0.5
 
     op1 = MatrixOperator(mat1)
     op2 = MatrixOperator(mat2)
+    _, backend = get_array_and_backend(mat1)
+    ns = backend.array_namespace
     xarr, x = noise_elements(op2.domain)
     yarr, y = noise_elements(op1.range)
 
@@ -417,19 +388,21 @@ def test_linear_operator_composition(dom_eq_ran):
     comp_op = OperatorComp(op1, op2)
     assert comp_op.is_linear
     assert comp_op.adjoint.is_linear
-    check_call(comp_op, x, np.dot(mat1, np.dot(mat2, xarr)))
-    check_call(comp_op.adjoint, y, np.dot(mat2.T, np.dot(mat1.T, yarr)))
+    check_call(comp_op, x, ns.matmul(mat1, ns.matmul(mat2, xarr)))
+    check_call(comp_op.adjoint, y, ns.matmul(mat2.T, ns.matmul(mat1.T, yarr)))
 
     # Using operator overloading
-    check_call(op1 * op2, x, np.dot(mat1, np.dot(mat2, xarr)))
-    check_call((op1 * op2).adjoint, y, np.dot(mat2.T, np.dot(mat1.T, yarr)))
+    check_call(op1 * op2, x, ns.matmul(mat1, ns.matmul(mat2, xarr)))
+    check_call((op1 * op2).adjoint, y, ns.matmul(mat2.T, ns.matmul(mat1.T, yarr)))
 
 
-def test_type_errors():
-    r3 = odl.rn(3)
-    r4 = odl.rn(4)
+def test_type_errors(odl_impl_device_pairs):
+    impl, device = odl_impl_device_pairs
+    r3 = odl.rn(3, impl=impl, device = device)
+    r4 = odl.rn(4, impl=impl, device = device)
+    space = odl.rn((3,3), impl=impl, device=device)
 
-    op = MatrixOperator(np.random.rand(3, 3))
+    op = MatrixOperator(space.element())
     r3_elem1 = r3.zero()
     r3_elem2 = r3.zero()
     r4_elem1 = r4.zero()
@@ -465,18 +438,12 @@ def test_type_errors():
         op.adjoint(r4_elem1, r4_elem2)
 
 
-def test_arithmetic(dom_eq_ran):
+def test_arithmetic(dom_eq_ran_mat):
     """Test that all standard arithmetic works."""
-    if dom_eq_ran:
-        mat1 = np.random.rand(3, 3)
-        mat2 = np.random.rand(3, 3)
-        mat3 = np.random.rand(3, 3)
-        mat4 = np.random.rand(3, 3)
-    else:
-        mat1 = np.random.rand(4, 3)
-        mat2 = np.random.rand(4, 3)
-        mat3 = np.random.rand(3, 3)
-        mat4 = np.random.rand(4, 4)
+    mat1 = dom_eq_ran_mat
+    mat2 = dom_eq_ran_mat + 1 
+    mat3 = dom_eq_ran_mat + 2 
+    mat4 = dom_eq_ran_mat + 3
 
     op = MultiplyAndSquareOp(mat1)
     op2 = MultiplyAndSquareOp(mat2)
@@ -510,17 +477,13 @@ def test_arithmetic(dom_eq_ran):
     # check_call(op + scalar, x, op(x) + scalar)
     # check_call(op - scalar, x, op(x) - scalar)
     # check_call(scalar + op, x, scalar + op(x))
-    #  check_call(scalar - op, x, scalar - op(x))
+    # check_call(scalar - op, x, scalar - op(x))
 
 
-def test_operator_pointwise_product():
+def test_operator_pointwise_product(dom_eq_ran_mat):
     """Check call and adjoint of operator pointwise multiplication."""
-    if dom_eq_ran:
-        mat1 = np.random.rand(3, 3)
-        mat2 = np.random.rand(3, 3)
-    else:
-        mat1 = np.random.rand(4, 3)
-        mat2 = np.random.rand(4, 3)
+    mat1 = dom_eq_ran_mat
+    mat2 = dom_eq_ran_mat + 1 
 
     op1 = MultiplyAndSquareOp(mat1)
     op2 = MultiplyAndSquareOp(mat2)
@@ -580,8 +543,9 @@ class ConstantVector(Operator):
         return SumFunctional(self.range)
 
 
-def test_functional():
-    r3 = odl.rn(3)
+def test_functional(odl_impl_device_pairs):
+    impl, device = odl_impl_device_pairs
+    r3 = odl.rn(3, impl=impl, device=device)
     x = r3.element([1, 2, 3])
 
     op = SumFunctional(r3)
@@ -589,8 +553,9 @@ def test_functional():
     assert op(x) == 6
 
 
-def test_functional_out():
-    r3 = odl.rn(3)
+def test_functional_out(odl_impl_device_pairs):
+    impl, device = odl_impl_device_pairs
+    r3 = odl.rn(3, impl=impl, device=device)
     x = r3.element([1, 2, 3])
 
     op = SumFunctional(r3)
@@ -601,8 +566,9 @@ def test_functional_out():
         op(x, out=out)
 
 
-def test_functional_adjoint():
-    r3 = odl.rn(3)
+def test_functional_adjoint(odl_impl_device_pairs):
+    impl, device = odl_impl_device_pairs
+    r3 = odl.rn(3, impl=impl, device=device)
 
     op = SumFunctional(r3)
 
@@ -612,8 +578,9 @@ def test_functional_adjoint():
     assert op.adjoint.adjoint(x) == op(x)
 
 
-def test_functional_addition():
-    r3 = odl.rn(3)
+def test_functional_addition(odl_impl_device_pairs):
+    impl, device = odl_impl_device_pairs
+    r3 = odl.rn(3, impl=impl, device=device)
 
     op = SumFunctional(r3)
     op2 = SumFunctional(r3)
@@ -629,16 +596,17 @@ def test_functional_addition():
     assert C(x) == 2 * odl.sum(x)
 
     # Test adjoint
-    assert all_almost_equal(C.adjoint(y), y * 2 * np.ones(3))
+    assert all_almost_equal(C.adjoint(y), y * 2 * r3.one())
     assert all_almost_equal(C.adjoint.adjoint(x), C(x))
 
     # Using operator overloading
     assert (op + op2)(x) == 2 * odl.sum(x)
-    assert all_almost_equal((op + op2).adjoint(y), y * 2 * np.ones(3))
+    assert all_almost_equal((op + op2).adjoint(y), y * 2 * r3.one())
 
 
-def test_functional_scale():
-    r3 = odl.rn(3)
+def test_functional_scale(odl_impl_device_pairs):
+    impl, device = odl_impl_device_pairs
+    r3 = odl.rn(3, impl=impl, device=device)
 
     op = SumFunctional(r3)
     x = r3.element([1, 2, 3])
@@ -654,21 +622,22 @@ def test_functional_scale():
         assert C.adjoint.is_linear
 
         assert C(x) == scalar * odl.sum(x)
-        assert all_almost_equal(C.adjoint(y), scalar * y * np.ones(3))
+        assert all_almost_equal(C.adjoint(y), scalar * y * r3.one())
         assert all_almost_equal(C.adjoint.adjoint(x), C(x))
 
         # Using operator overloading
         assert (scalar * op)(x) == scalar * odl.sum(x)
         assert (op * scalar)(x) == scalar * odl.sum(x)
         assert all_almost_equal((scalar * op).adjoint(y),
-                                scalar * y * np.ones(3))
+                                scalar * y * r3.one())
         assert all_almost_equal((op * scalar).adjoint(y),
-                                scalar * y * np.ones(3))
+                                scalar * y * r3.one())
 
 
-def test_functional_left_vector_mult():
-    r3 = odl.rn(3)
-    r4 = odl.rn(4)
+def test_functional_left_vector_mult(odl_impl_device_pairs):
+    impl, device = odl_impl_device_pairs
+    r3 = odl.rn(3, impl=impl, device=device)
+    r4 = odl.rn(4, impl=impl, device=device)
 
     op = SumFunctional(r3)
     x = r3.element([1, 2, 3])
@@ -682,18 +651,19 @@ def test_functional_left_vector_mult():
     assert C.adjoint.is_linear
 
     assert all_almost_equal(C(x), y * odl.sum(x))
-    assert all_almost_equal(C.adjoint(y), y.inner(y) * np.ones(3))
+    assert all_almost_equal(C.adjoint(y), y.inner(y) * r3.one())
     assert all_almost_equal(C.adjoint.adjoint(x), C(x))
 
     # Using operator overloading
     assert all_almost_equal((y @ op)(x),
                             y * odl.sum(x))
     assert all_almost_equal((y @ op).adjoint(y),
-                            y.inner(y) * np.ones(3))
+                            y.inner(y) * r3.one())
 
 
-def test_functional_right_vector_mult():
-    r3 = odl.rn(3)
+def test_functional_right_vector_mult(odl_impl_device_pairs):
+    impl, device = odl_impl_device_pairs
+    r3 = odl.rn(3, impl=impl, device=device)
 
     op = SumFunctional(r3)
     vec = r3.element([1, 2, 3])
@@ -718,8 +688,9 @@ def test_functional_right_vector_mult():
                             vec * y)
 
 
-def test_functional_composition():
-    r3 = odl.rn(3)
+def test_functional_composition(odl_impl_device_pairs):
+    impl, device = odl_impl_device_pairs
+    r3 = odl.rn(3, impl=impl, device=device)
 
     op = SumFunctional(r3)
     op2 = ConstantVector(r3)
@@ -731,17 +702,17 @@ def test_functional_composition():
     assert C.is_linear
     assert C.adjoint.is_linear
 
-    assert all_almost_equal(C(x), odl.sum(x) * np.ones(3))
-    assert all_almost_equal(C.adjoint(x), odl.sum(x) * np.ones(3))
+    assert all_almost_equal(C(x), odl.sum(x) * r3.one())
+    assert all_almost_equal(C.adjoint(x), odl.sum(x) * r3.one())
     assert all_almost_equal(C.adjoint.adjoint(x), C(x))
 
     # Using operator overloading
     assert (op * op2)(y) == y * 3
     assert (op * op2).adjoint(y) == y * 3
     assert all_almost_equal((op2 * op)(x),
-                            odl.sum(x) * np.ones(3))
+                            odl.sum(x) * r3.one())
     assert all_almost_equal((op2 * op).adjoint(x),
-                            odl.sum(x) * np.ones(3))
+                            odl.sum(x) * r3.one())
 
 
 class SumSquaredFunctional(Operator):
@@ -756,8 +727,9 @@ class SumSquaredFunctional(Operator):
         return odl.sum(x ** 2)
 
 
-def test_nonlinear_functional():
-    r3 = odl.rn(3)
+def test_nonlinear_functional(odl_impl_device_pairs):
+    impl, device = odl_impl_device_pairs
+    r3 = odl.rn(3, impl=impl, device=device)
     x = r3.element([1, 2, 3])
 
     op = SumSquaredFunctional(r3)
@@ -765,8 +737,9 @@ def test_nonlinear_functional():
     assert op(x) == pytest.approx(odl.sum(x ** 2))
 
 
-def test_nonlinear_functional_out():
-    r3 = odl.rn(3)
+def test_nonlinear_functional_out(odl_impl_device_pairs):
+    impl, device = odl_impl_device_pairs
+    r3 = odl.rn(3, impl=impl, device=device)
     x = r3.element([1, 2, 3])
 
     op = SumSquaredFunctional(r3)
@@ -776,8 +749,9 @@ def test_nonlinear_functional_out():
         op(x, out=out)
 
 
-def test_nonlinear_functional_operators():
-    r3 = odl.rn(3)
+def test_nonlinear_functional_operators(odl_impl_device_pairs):
+    impl, device = odl_impl_device_pairs
+    r3 = odl.rn(3, impl=impl, device=device)
     x = r3.element([1, 2, 3])
 
     mat = SumSquaredFunctional(r3)
