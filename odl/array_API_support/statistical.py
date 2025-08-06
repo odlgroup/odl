@@ -6,7 +6,20 @@
 # v. 2.0. If a copy of the MPL was not distributed with this file, You can
 # obtain one at https://mozilla.org/MPL/2.0/.
 
-"""Satistical functions expected by the python array API"""
+"""Satistical functions expected by the python array API
+Internally, all functions apply a reduction operation on a LinearSpaceElement.
+
+Args:
+    x (LinearSpaceElement): LinearSpaceElement on which to apply the reduction. 
+
+Returns:
+    x (float | array-like): Output of the reduction. 
+
+Notes:
+    1) The actual implementation of the reduction is in the LinearSpace of this element.
+    2) These functions can return python Numbers or backend-specific array (when calling with keepdims=True for instance), but they will not return odl objects.
+
+"""
 
 __all__ = (
     'cumulative_prod',
@@ -21,16 +34,27 @@ __all__ = (
 )
 
 def _apply_reduction(operation: str, x, **kwargs):
-    """Helper function to apply a reduction operation on a LinearSpaceElement.
-
-    Note:
-    The actual implementation of the reduction is in the LinearSpace of this element.
-    Args:
-        operation (str): Identifier of the function. 
-        x (LinearSpaceElement): LinearSpaceElement on which to apply the reduction. 
-
-    Returns:
-        x (float | array-like): Output of the reduction. 
+    """
+    Examples
+    >>> e1 = odl.rn(3).element((1,2,3))
+    >>> odl.cumulative_prod(e1) == [1,2,6]
+    array([ True,  True,  True], dtype=bool)
+    >>> odl.cumulative_sum(e1) == [1,3,6]
+    array([ True,  True,  True], dtype=bool)
+    >>> odl.max(e1) == 3
+    True
+    >>> odl.mean(e1) == 2
+    True
+    >>> odl.min(e1) == 1
+    True
+    >>> odl.prod(e1) == 6
+    True
+    >>> odl.std(e1) == np.std([1,2,3])
+    True
+    >>> odl.sum(e1) == 6
+    True
+    >>> odl.var(e1) == np.var([1,2,3])
+    True
     """
     return x.space._element_reduction(operation=operation, x=x, **kwargs)
 
