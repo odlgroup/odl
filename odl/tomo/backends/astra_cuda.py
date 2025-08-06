@@ -14,7 +14,6 @@ import warnings
 from multiprocessing import Lock
 
 import numpy as np
-import torch
 from packaging.version import parse as parse_version
 
 from odl.discr import DiscretizedSpace
@@ -43,7 +42,7 @@ __all__ = (
 )
    
 
-def index_of_cuda_device(device: torch.device):
+def index_of_cuda_device(device: "torch.device"):
     if device == 'cpu':
         return None
     else:
