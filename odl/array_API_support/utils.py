@@ -16,7 +16,8 @@ __all__ = (
     'ArrayBackend', 
     'lookup_array_backend',
     'get_array_and_backend',
-    'check_device'
+    'check_device',
+    'can_cast',
     )
 
 
@@ -218,5 +219,71 @@ def check_device(impl:str, device:str):
     backend = lookup_array_backend(impl)
     assert device in backend.available_devices, f"For {impl} Backend, only devices {backend.available_devices} are present, but {device} was provided."
     
+def _dtype_info(array_namespace, dtype):
+    """
+    Return min, max, and kind ('bool', 'int', 'uint', 'float') for a given dtype.
+    Works across Array API backends.
+    """
+    name = str(dtype)
+    if "bool" in name:
+        return 0, 1, "bool"
+    if "int" in name and not "uint" in name:
+        iinfo = array_namespace.iinfo(dtype)
+        return iinfo.min, iinfo.max, "int"
+    if "uint" in name:
+        iinfo = array_namespace.iinfo(dtype)
+        return iinfo.min, iinfo.max, "uint"
+    if "float" in name:
+        finfo = array_namespace.finfo(dtype)
+        # floats have no exact min/max, but finfo.min/max are usable for range checks
+        return finfo.min, finfo.max, "float"
+    raise ValueError(f"Unsupported dtype: {dtype}")
+
+def can_cast(array_namespace, from_dtype, to_dtype, casting="safe"):
+    """
+    NumPy-like can_cast for Python Array API backends.
+    Supports 'safe', 'same_kind', and 'unsafe' casting.
+    """
+    # Convert arrays to dtypes
+    if hasattr(from_dtype, "dtype"):
+        from_dtype = from_dtype.dtype
+    if hasattr(to_dtype, "dtype"):
+        to_dtype = to_dtype.dtype
+
+    # Same type always allowed
+    if from_dtype == to_dtype:
+        return True
+
+    # Unsafe allows anything
+    if casting == "unsafe":
+        return True
+
+    # Determine type categories
+    f_min, f_max, f_kind = _dtype_info(array_namespace, from_dtype)
+    t_min, t_max, t_kind = _dtype_info(array_namespace, to_dtype)
+
+    # Safe casting: all values of from_dtype must fit in to_dtype
+    if casting == "safe":
+        if f_kind == "bool":
+            return True  # bool -> anything is safe
+        if t_kind == "bool":
+            return False  # non-bool -> bool is unsafe
+        if f_kind in ("int", "uint") and t_kind in ("int", "uint", "float"):
+            return f_min >= t_min and f_max <= t_max
+        if f_kind == "float" and t_kind == "float":
+            return array_namespace.finfo(to_dtype).precision >= array_namespace.finfo(from_dtype).precision
+        return False
+
+    # Same-kind casting: allow within same category or safe upcast to float
+    if casting == "same_kind":
+        if f_kind == t_kind:
+            return True
+        # int/uint to float is allowed if range fits
+        if f_kind in ("int", "uint") and t_kind == "float":
+            return f_min >= t_min and f_max <= t_max
+        return False
+
+    raise ValueError(f"Unsupported casting rule: {casting}")
+
 if __name__ =='__main__':
     check_device('numpy', 'cpu')
