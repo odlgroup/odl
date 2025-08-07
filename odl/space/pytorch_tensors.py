@@ -15,9 +15,17 @@ from odl.space.base_tensors import Tensor, TensorSpace
 from odl.util import is_numeric_dtype
 from odl.array_API_support import ArrayBackend
 
-import array_api_compat.torch as xp
 
-import torch
+import importlib.util       
+torch_module = importlib.util.find_spec("torch")
+if torch_module is not None:
+    import torch
+    import array_api_compat.torch as xp
+    PYTORCH_AVAILABLE = True
+else:
+    # if running_from_pytest
+    PYTORCH_AVAILABLE = False
+    # else  error out
 
 __all__ = (
     'PYTORCH_AVAILABLE',
