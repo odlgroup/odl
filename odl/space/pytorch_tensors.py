@@ -15,17 +15,28 @@ from odl.space.base_tensors import Tensor, TensorSpace
 from odl.util import is_numeric_dtype
 from odl.array_API_support import ArrayBackend
 
-
+# Only for module availability checking
 import importlib.util       
+from os import path
+from sys import argv
+
 torch_module = importlib.util.find_spec("torch")
 if torch_module is not None:
     import torch
     import array_api_compat.torch as xp
     PYTORCH_AVAILABLE = True
 else:
-    # if running_from_pytest
-    PYTORCH_AVAILABLE = False
-    # else  error out
+    if path.basename(argv[0]) == 'pytest':
+        # If running the doctest suite, we should be able to load this
+        # module (without running anything) even if Torch is not installed.
+        PYTORCH_AVAILABLE = False
+        import pytest
+        pytest.skip(allow_module_level=True)
+    else:
+        raise ImportError("You are trying to use the PyTorch backend, but"
+                        + " the `torch` dependency is not available."
+                        + "\nEither use a different backend, or install"
+                        + " a suitable version of Torch." )
 
 __all__ = (
     'PYTORCH_AVAILABLE',
@@ -33,7 +44,8 @@ __all__ = (
     'pytorch_array_backend'
     
     )
-device_strings = ['cpu'] + [f'cuda:{i}' for i in range(torch.cuda.device_count())]
+if PYTORCH_AVAILABLE:
+    device_strings = ['cpu'] + [f'cuda:{i}' for i in range(torch.cuda.device_count())]
 
 def to_numpy(x):
     if isinstance(x, (int, float, bool, complex)):
@@ -43,7 +55,8 @@ def to_numpy(x):
     else:
         return x.detach().cpu().numpy()
 
-pytorch_array_backend = ArrayBackend(
+if PYTORCH_AVAILABLE:
+  pytorch_array_backend = ArrayBackend(
     impl = 'pytorch',
     available_dtypes = {      
         bool : xp.bool,
@@ -72,7 +85,9 @@ pytorch_array_backend = ArrayBackend(
     available_devices = device_strings,
     to_cpu = lambda x: x if isinstance(x, (int, float, bool, complex)) else x.detach().cpu(),
     to_numpy = to_numpy
- )
+   )
+else:
+    pytorch_array_backend = None
 
 class PyTorchTensorSpace(TensorSpace):
 
