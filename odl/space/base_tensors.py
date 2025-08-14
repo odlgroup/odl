@@ -29,6 +29,7 @@ from odl.util import (
 from odl.util.dtype_utils import(
     is_real_dtype, is_int_dtype,
     is_available_dtype,
+    _universal_dtype_identifier,
     TYPE_PROMOTION_COMPLEX_TO_REAL, 
     TYPE_PROMOTION_REAL_TO_COMPLEX)
 from .weightings.weighting import Weighting, ConstWeighting, ArrayWeighting
@@ -162,22 +163,11 @@ class TensorSpace(LinearSpace):
         """
 
         available_dtypes = self.array_backend.available_dtypes
+        identifier = _universal_dtype_identifier(dtype, array_backend_selection=[self.array_backend])
 
-        ### We check if the datatype has been provided in a "sane" way, 
-        # 1) a Python scalar type
-        if isinstance(dtype, (int, float, complex)):
-            self.__dtype_identifier = str(dtype)
-            self.__dtype = available_dtypes[dtype] 
-        # 2) as a string
-        if dtype in available_dtypes.keys():
-            self.__dtype_identifier = dtype
-            self.__dtype = available_dtypes[dtype]
-        ### If the check has failed, i.e the dtype is not a Key of the available_dtypes dict or a python scalar, we try to parse the dtype 
-        ### as a string using the get_dtype_identifier(dtype=dtype) call: This is for the situation where the dtype passed is
-        ### in the .values() of available_dtypes dict (something like 'numpy.float32')
-        elif dtype in available_dtypes.values():
-            self.__dtype_identifier = self.array_backend.get_dtype_identifier(dtype=dtype)
-            self.__dtype = dtype
+        if identifier in available_dtypes.keys():
+            self.__dtype_identifier = identifier
+            self.__dtype = available_dtypes[identifier]
             # If that fails, we throw an error: the dtype is not a python scalar dtype, not a string describing the dtype or the 
             # backend call to parse the dtype has failed.
         else:
@@ -523,32 +513,14 @@ class TensorSpace(LinearSpace):
             raise ValueError('`None` is not a valid data type')
 
         available_dtypes = self.array_backend.available_dtypes
-        
-        ### We check if the datatype has been provided in a "sane" way, 
-        # 1) a Python scalar type
-        if isinstance(dtype, (int, float, complex)):
-            dtype_identifier = str(dtype)
-            dtype = available_dtypes[dtype]
-        # 2) as a string
-        elif dtype in available_dtypes.keys():
-            dtype_identifier = dtype
-            dtype = available_dtypes[dtype]
-        ### If the check has failed, i.e the dtype is not a Key of the available_dtypes dict or a python scalar, we try to parse the dtype 
-        ### as a string using the get_dtype_identifier(dtype=dtype) call: This is for the situation where the dtype passed is
-        ### in the .values() of available_dtypes dict (something like 'numpy.float32')
-        elif self.array_backend.get_dtype_identifier(dtype=dtype) in available_dtypes:
-            dtype_identifier = self.array_backend.get_dtype_identifier(dtype=dtype)
+        dtype_identifier = _universal_dtype_identifier(dtype, array_backend_selection=[self.array_backend])
+        if dtype_identifier in available_dtypes:
             dtype = available_dtypes[dtype_identifier]
-            # If that fails, we throw an error: the dtype is not a python scalar dtype, not a string describing the dtype or the 
-            # backend call to parse the dtype has failed.
         else:
-            raise ValueError(f"The dtype must be in {self.array_backend.available_dtypes.keys()} or must be a dtype of the backend, but {dtype} was provided")
-
-        # try:
-        #     dtype_identifier = dtype
-        #     dtype = available_dtypes[dtype]
-        # except KeyError:
-        #     raise KeyError(f"The dtype must be in {available_dtypes.keys()}, but {dtype} was provided")
+            raise ValueError(
+                 f"Tried to convert space to {dtype}, but this cannot be interpreted as any of"
+                 + f" {available_dtypes.keys()}, which are all that are available for backend '{self.impl}'."
+                 )
         
         if dtype == self.dtype:
             return self
