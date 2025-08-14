@@ -59,10 +59,8 @@ if PYTORCH_AVAILABLE:
   pytorch_array_backend = ArrayBackend(
     impl = 'pytorch',
     available_dtypes = {      
-        bool : xp.bool,
         "bool" : xp.bool,
         "int8" : xp.int8,
-        int : xp.int ,
         "int16" : xp.int16,
         "int32" : xp.int32,
         "int64" : xp.int64,
@@ -70,10 +68,8 @@ if PYTORCH_AVAILABLE:
         "uint16" : xp.uint16,
         "uint32" : xp.uint32,
         "uint64" : xp.uint64,
-        float : xp.float,
         "float32" : xp.float32,
         "float64" :xp.float64,
-        complex : xp.complex128,        
         "complex64" : xp.complex64,
         "complex128" : xp.complex128,
       },

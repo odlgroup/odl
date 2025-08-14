@@ -27,12 +27,10 @@ __all__ = (
 ############################# DATA TYPES #############################
 # We store all the data types expected by the python array API as lists, and  the maps for conversion as dicts
 BOOLEAN_DTYPES = [
-    bool,
     "bool"
     ]
 
 SIGNED_INTEGER_DTYPES = [
-    int,
     "int8",
     "int16",
     "int32",
@@ -48,13 +46,11 @@ UNSIGNED_INTEGER_DTYPES = [
 INTEGER_DTYPES = SIGNED_INTEGER_DTYPES + UNSIGNED_INTEGER_DTYPES
 
 FLOAT_DTYPES = [
-    float,
     "float32",
     "float64"
 ]
 
 COMPLEX_DTYPES = [
-    complex,
     "complex64",
     "complex128"
 ]
@@ -68,8 +64,6 @@ See type promotion rules https://data-apis.org/array-api/latest/API_specificatio
 """
 
 TYPE_PROMOTION_REAL_TO_COMPLEX = {
-    int : "complex64",
-    float : "complex128",
     "int8"  : "complex64",
     "int16" : "complex64",
     "int32" : "complex64",
@@ -83,9 +77,15 @@ TYPE_PROMOTION_REAL_TO_COMPLEX = {
 }
 
 TYPE_PROMOTION_COMPLEX_TO_REAL = {
-    complex : "float64",
     "complex64"  : "float32",
     "complex128" : "float64"
+}
+
+DTYPE_SHORTHANDS = {
+    bool: 'bool',
+    int: 'int32',
+    float: 'float64',
+    complex: 'complex128'
 }
 
 # These dicts should not be exposed to the users/developpers outside of the module. We rather provide functions that rely on the available array_backends present
@@ -105,10 +105,18 @@ def _universal_dtype_identifier(dtype: "str | Number |xp.dtype", array_backend_s
     """
     # Lazy import 
     from odl.space.entry_points import TENSOR_SPACE_IMPLS
-    if isinstance(dtype, (str, Number, type)):
-        assert dtype in AVAILABLE_DTYPES, f'The provided dtype {dtype} is not available. Please use a dtype in {AVAILABLE_DTYPES}'
-        return dtype
 
+    original_dtype = dtype
+    shorthand_elaboration = ""
+    if dtype in DTYPE_SHORTHANDS:
+        dtype = DTYPE_SHORTHANDS[dtype]
+        shorthand_elaboration = " (shorthand for {dtype})"
+
+    if isinstance(dtype, (str, Number, type)):
+        if dtype in AVAILABLE_DTYPES:
+            return dtype
+        else:
+            raise TypeError(f'The provided dtype {original_dtype}{shorthand_elaboration} is not available. Please use a dtype in {AVAILABLE_DTYPES}')
     if array_backend_selection is None:
         array_backends = _registered_array_backends.values()
     else:

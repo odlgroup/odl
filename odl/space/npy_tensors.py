@@ -23,10 +23,8 @@ numpy_array_backend = ArrayBackend(
     impl = 'numpy',
     available_dtypes = {
       key : xp.dtype(key) for key in [
-        bool,
         "bool",
         "int8",
-        int ,
         "int16",
         "int32",
         "int64",
@@ -34,10 +32,8 @@ numpy_array_backend = ArrayBackend(
         "uint16",
         "uint32",
         "uint64",
-        float,
         "float32",
         "float64",
-        complex,        
         "complex64",
         "complex128",
       ]},
