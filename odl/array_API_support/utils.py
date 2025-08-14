@@ -70,6 +70,10 @@ class ArrayBackend:
         """
         Method for getting a dtype_identifier (str) from an array or a dtype. 
         This is used to retrieve the dtype of a custom object as a string and pass it to another backend.
+        The dtype must actually be a dtype object pertaining to the `self` backend.
+        Strings or Python types are not allowed here.
+        Use `odl.util.dtype_utils._universal_dtype_identifier` for a general conversion from
+        dtype-ish objects to identifiers.
 
         Parameters
         ----------
@@ -102,10 +106,10 @@ class ArrayBackend:
         TypeError: "ArrayBackend.get_dtype_identifier() takes 1 positional argument but 2 were given"
         """
         if 'array' in kwargs:
-            assert 'dtype' not in kwargs, "array and dtype are multually exclusive parameters"
+            assert 'dtype' not in kwargs, "array and dtype are mutually exclusive parameters"
             return self.identifier_of_dtype(kwargs['array'].dtype)
         if 'dtype' in kwargs:
-            assert 'array' not in kwargs, "array and dtype are multually exclusive parameters"
+            assert 'array' not in kwargs, "array and dtype are mutually exclusive parameters"
             return self.identifier_of_dtype(kwargs['dtype'])
         raise ValueError("Either 'array' or 'dtype' argument must be provided.")
     
