@@ -792,7 +792,7 @@ class TensorSpace(LinearSpace):
         if (ctor_name == 'tensor_space' or
                 not is_numeric_dtype(self.dtype_identifier) or
                 self.dtype != default_dtype(self.array_backend, self.field)):
-            optargs = [('dtype', self.dtype_identifier, '')]
+            optargs = []
             if is_available_dtype(self.dtype_identifier):
                 optmod = '!s'
             else:
