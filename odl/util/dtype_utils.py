@@ -6,7 +6,7 @@ from functools import lru_cache
 # Third-Party import
 import array_api_compat as xp
 # ODL imports
-from odl.array_API_support import lookup_array_backend
+from odl.array_API_support import ArrayBackend, lookup_array_backend
 from odl.array_API_support.utils import _registered_array_backends
 
 __all__ = (
@@ -89,13 +89,19 @@ TYPE_PROMOTION_COMPLEX_TO_REAL = {
 }
 
 # These dicts should not be exposed to the users/developpers outside of the module. We rather provide functions that rely on the available array_backends present
-def _convert_dtype(dtype: "str | Number |xp.dtype", array_backend_selection=None) -> str :
+def _universal_dtype_identifier(dtype: "str | Number |xp.dtype", array_backend_selection: list[ArrayBackend]=None) -> str :
     """
-    Internal helper function to convert a dtype to a string. The dtype can be provided as a string, a python Number or as a xp.dtype. 
+    Internal helper function to convert a dtype to a backend-agnostic string identifying it semantically.
+    (E.g. `'int32'` and `'int64'` and `'float64'` are all possible distinct results, but `np.float64` and
+    `torch.float64` and `float` all map to the unique identifier `'float64'`.)
+    ambiguity
+    The dtype can be provided as a string, a python Number or as an xp.dtype.
     Returns: 
     dtype_as_str (str), dtype identifier 
     Note:
     xp is written here for type hinting, it refers to the fact that the dtype can be provided as a np.float32 or as a torchfloat32, for instance.
+    What concrete types of dtype are allowed is determined by `array_backend_selection`.
+    If that argument is not provided, all registered backends are taken into consideration.
     """
     # Lazy import 
     from odl.space.entry_points import TENSOR_SPACE_IMPLS
@@ -116,7 +122,7 @@ def _convert_dtype(dtype: "str | Number |xp.dtype", array_backend_selection=None
 def is_available_dtype(dtype: "str | Number |xp.dtype") -> bool:
     """Return ``True`` if ``dtype`` is available."""
     try: 
-        _convert_dtype(dtype)
+        _universal_dtype_identifier(dtype)
         return True
     except ValueError or AssertionError:
         return False 
@@ -124,47 +130,47 @@ def is_available_dtype(dtype: "str | Number |xp.dtype") -> bool:
 @lru_cache
 def is_numeric_dtype(dtype: "str | Number |xp.dtype") -> bool:
     """Return ``True`` if ``dtype`` is a numeric type."""
-    return _convert_dtype(dtype) in SCALAR_DTYPES
+    return _universal_dtype_identifier(dtype) in SCALAR_DTYPES
 
 @lru_cache
 def is_boolean_dtype(dtype: "str | Number |xp.dtype") -> bool:
     """Return ``True`` if ``dtype`` is an boolean type."""
-    return _convert_dtype(dtype) in BOOLEAN_DTYPES
+    return _universal_dtype_identifier(dtype) in BOOLEAN_DTYPES
 
 @lru_cache
 def is_signed_int_dtype(dtype: "str | Number |xp.dtype") -> bool:
     """Return ``True`` if ``dtype`` is an integer type."""
-    return _convert_dtype(dtype) in SIGNED_INTEGER_DTYPES
+    return _universal_dtype_identifier(dtype) in SIGNED_INTEGER_DTYPES
 
 @lru_cache
 def is_unsigned_int_dtype(dtype: "str | Number |xp.dtype") -> bool:
     """Return ``True`` if ``dtype`` is an integer type."""
-    return _convert_dtype(dtype) in UNSIGNED_INTEGER_DTYPES
+    return _universal_dtype_identifier(dtype) in UNSIGNED_INTEGER_DTYPES
 
 @lru_cache
 def is_int_dtype(dtype: "str | Number |xp.dtype") -> bool:
     """Return ``True`` if ``dtype`` is an integer type."""
-    return _convert_dtype(dtype) in INTEGER_DTYPES
+    return _universal_dtype_identifier(dtype) in INTEGER_DTYPES
 
 @lru_cache
 def is_floating_dtype(dtype: "str | Number |xp.dtype") -> bool:
     """Return ``True`` if ``dtype`` is a floating point type."""
-    return _convert_dtype(dtype) in FLOAT_DTYPES + COMPLEX_DTYPES
+    return _universal_dtype_identifier(dtype) in FLOAT_DTYPES + COMPLEX_DTYPES
 
 @lru_cache
 def is_real_floating_dtype(dtype: "str | Number |xp.dtype") -> bool:
     """Return ``True`` if ``dtype`` is a floating point type."""
-    return _convert_dtype(dtype) in FLOAT_DTYPES
+    return _universal_dtype_identifier(dtype) in FLOAT_DTYPES
 
 @lru_cache
 def is_complex_dtype(dtype: "str | Number |xp.dtype") -> bool:
     """Return ``True`` if ``dtype`` is a complex type."""
-    return _convert_dtype(dtype) in COMPLEX_DTYPES
+    return _universal_dtype_identifier(dtype) in COMPLEX_DTYPES
 
 @lru_cache
 def is_real_dtype(dtype: "str | Number |xp.dtype") -> bool:
     """Return ``True`` if ``dtype`` is a real (including integer) type."""
-    return _convert_dtype(dtype) in REAL_DTYPES
+    return _universal_dtype_identifier(dtype) in REAL_DTYPES
 
 def real_dtype(dtype: "str | Number |xp.dtype", default=None) -> str:
     """
@@ -177,7 +183,7 @@ def real_dtype(dtype: "str | Number |xp.dtype", default=None) -> str:
         Object to be returned if no real counterpart is found for
         ``dtype``, except for ``None``, in which case an error is raised.
     """
-    dtype = _convert_dtype(dtype)
+    dtype = _universal_dtype_identifier(dtype)
     if dtype in REAL_DTYPES:
         return dtype
     elif dtype in COMPLEX_DTYPES:
@@ -190,7 +196,7 @@ def real_dtype(dtype: "str | Number |xp.dtype", default=None) -> str:
             return default
         
 def complex_dtype(dtype: "str | Number |xp.dtype", default=None) -> str:
-    dtype = _convert_dtype(dtype)
+    dtype = _universal_dtype_identifier(dtype)
     if dtype in COMPLEX_DTYPES:
         return dtype
     elif dtype in REAL_DTYPES:
