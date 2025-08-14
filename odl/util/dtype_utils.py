@@ -7,6 +7,7 @@ from functools import lru_cache
 import array_api_compat as xp
 # ODL imports
 from odl.array_API_support import lookup_array_backend
+from odl.array_API_support.utils import _registered_array_backends
 
 __all__ = (
     'is_available_dtype',
@@ -88,7 +89,7 @@ TYPE_PROMOTION_COMPLEX_TO_REAL = {
 }
 
 # These dicts should not be exposed to the users/developpers outside of the module. We rather provide functions that rely on the available array_backends present
-def _convert_dtype(dtype: "str | Number |xp.dtype") -> str :
+def _convert_dtype(dtype: "str | Number |xp.dtype", array_backend_selection=None) -> str :
     """
     Internal helper function to convert a dtype to a string. The dtype can be provided as a string, a python Number or as a xp.dtype. 
     Returns: 
@@ -101,8 +102,12 @@ def _convert_dtype(dtype: "str | Number |xp.dtype") -> str :
     if isinstance(dtype, (str, Number, type)):
         assert dtype in AVAILABLE_DTYPES, f'The provided dtype {dtype} is not available. Please use a dtype in {AVAILABLE_DTYPES}'
         return dtype
-    for impl in TENSOR_SPACE_IMPLS:
-        array_backend = lookup_array_backend(impl)
+
+    if array_backend_selection is None:
+        array_backends = _registered_array_backends.values()
+    else:
+        array_backends = array_backend_selection
+    for array_backend in array_backends:
         if dtype in array_backend.available_dtypes.values():
             return array_backend.identifier_of_dtype(dtype)
     raise ValueError(f'The provided dtype {dtype} is not a string, a python Number or a backend-specific dtype. Please provide either of these.')
