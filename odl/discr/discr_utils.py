@@ -387,7 +387,7 @@ def linear_interpolator(f, coord_vecs):
     >>> part = odl.uniform_partition(0, 2, 5)
     >>> part.coord_vectors  # grid points
     (array([ 0.2,  0.6,  1. ,  1.4,  1.8]),)
-    >>> f = [1.0, 2.0, 3.0, 4.0, 5.0]
+    >>> f = np.array([1.0, 2.0, 3.0, 4.0, 5.0])
     >>> interpolator = linear_interpolator(f, part.coord_vectors)
     >>> interpolator(0.3)  # 0.75 * 1 + 0.25 * 2 = 1.25
     1.25

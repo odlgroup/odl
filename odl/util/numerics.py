@@ -371,35 +371,35 @@ def resize_array(arr, newshp, offset=None, pad_mode='constant', pad_const=0,
     parameter:
 
     >>> from odl.util.numerics import resize_array
-    >>> resize_array([1, 2, 3], (1,))
+    >>> resize_array(np.array([1, 2, 3]), (1,))
     array([1])
-    >>> resize_array([1, 2, 3], (1,), offset=2)
+    >>> resize_array(np.array([1, 2, 3]), (1,), offset=2)
     array([3])
-    >>> resize_array([1, 2, 3], (6,))
+    >>> resize_array(np.array([1, 2, 3]), (6,))
     array([1, 2, 3, 0, 0, 0])
-    >>> resize_array([1, 2, 3], (7,), offset=2)
+    >>> resize_array(np.array([1, 2, 3]), (7,), offset=2)
     array([0, 0, 1, 2, 3, 0, 0])
 
     The padding constant can be changed, as well as the padding
     mode:
 
-    >>> resize_array([1, 2, 3], (7,), pad_const=-1, offset=2)
+    >>> resize_array(np.array([1, 2, 3]), (7,), pad_const=-1, offset=2)
     array([-1, -1,  1,  2,  3, -1, -1])
-    >>> resize_array([1, 2, 3], (7,), pad_mode='periodic', offset=2)
+    >>> resize_array(np.array([1, 2, 3]), (7,), pad_mode='periodic', offset=2)
     array([2, 3, 1, 2, 3, 1, 2])
-    >>> resize_array([1, 2, 3], (7,), pad_mode='symmetric', offset=2)
+    >>> resize_array(np.array([1, 2, 3]), (7,), pad_mode='symmetric', offset=2)
     array([3, 2, 1, 2, 3, 2, 1])
-    >>> resize_array([1, 2, 3], (7,), pad_mode='order0', offset=2)
+    >>> resize_array(np.array([1, 2, 3]), (7,), pad_mode='order0', offset=2)
     array([1, 1, 1, 2, 3, 3, 3])
-    >>> resize_array([1, 2, 3], (7,), pad_mode='order1', offset=2)
+    >>> resize_array(np.array([1, 2, 3]), (7,), pad_mode='order1', offset=2)
     array([-1,  0,  1,  2,  3,  4,  5])
 
     Everything works for arbitrary number of dimensions:
 
     >>> # Take the middle two columns and extend rows symmetrically
-    >>> resize_array([[1, 2, 3, 4],
-    ...               [5, 6, 7, 8],
-    ...               [9, 10, 11, 12]],
+    >>> resize_array(np.array([[1, 2, 3, 4],
+    ...                        [5, 6, 7, 8],
+    ...                        [9, 10, 11, 12]]),
     ...               (5, 2), pad_mode='symmetric', offset=[1, 1])
     array([[ 6,  7],
            [ 2,  3],
@@ -408,9 +408,10 @@ def resize_array(arr, newshp, offset=None, pad_mode='constant', pad_const=0,
            [ 6,  7]])
     >>> # Take the rightmost two columns and extend rows symmetrically
     >>> # downwards
-    >>> resize_array([[1, 2, 3, 4],
-    ...               [5, 6, 7, 8],
-    ...               [9, 10, 11, 12]], (5, 2), pad_mode='symmetric',
+    >>> resize_array(np.array([[1, 2, 3, 4],
+    ...                        [5, 6, 7, 8],
+    ...                        [9, 10, 11, 12]]),
+    ...              (5, 2), pad_mode='symmetric',
     ...              offset=[0, 2])
     array([[ 3,  4],
            [ 7,  8],
