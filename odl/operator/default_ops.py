@@ -21,6 +21,7 @@ from odl.operator.operator import Operator
 from odl.set import ComplexNumbers, Field, LinearSpace, RealNumbers
 from odl.set.space import LinearSpaceElement
 from odl.space import ProductSpace
+from odl.array_API_support import sqrt, conj
 
 __all__ = ('ScalingOperator', 'ZeroOperator', 'IdentityOperator',
            'LinCombOperator', 'MultiplyOperator', 'PowerOperator',
@@ -393,7 +394,7 @@ class MultiplyOperator(Operator):
                     'adjoint not implemented for domain{!r}'
                     ''.format(self.domain))
         elif self.domain.is_complex:
-            return MultiplyOperator(np.conj(self.multiplicand),
+            return MultiplyOperator(conj(self.multiplicand),
                                     domain=self.range, range=self.domain)
         else:
             return MultiplyOperator(self.multiplicand,
@@ -1410,7 +1411,7 @@ class ComplexModulus(Operator):
 
     def _call(self, x):
         """Return ``self(x)``."""
-        return (x.real ** 2 + x.imag ** 2).ufuncs.sqrt()
+        return sqrt(x.real ** 2 + x.imag ** 2)
 
     def derivative(self, x):
         r"""Return the derivative operator in the "C = R^2" sense.
