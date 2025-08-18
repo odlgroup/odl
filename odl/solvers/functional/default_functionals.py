@@ -2268,7 +2268,7 @@ class IndicatorSimplex(Functional):
 
         ... and one where it lies inside the unit simplex.
 
-        >>> x /= x.ufuncs.sum()
+        >>> x /= odl.sum(x)
         >>> ind_simplex(x)
         0
         """
@@ -2386,7 +2386,7 @@ class IndicatorSumConstraint(Functional):
 
         ... and one where it does.
 
-        >>> x /= x.ufuncs.sum()
+        >>> x /= odl.sum(x)
         >>> ind_sum(x)
         0
         """
