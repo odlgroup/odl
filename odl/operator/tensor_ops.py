@@ -22,7 +22,7 @@ from odl.space import ProductSpace, tensor_space
 from odl.space.base_tensors import TensorSpace, Tensor
 from odl.space.weightings.weighting import ArrayWeighting
 from odl.util import dtype_repr, indent, signature_string, writable_array
-from odl.array_API_support import abs, maximum, pow, sqrt, multiply, get_array_and_backend, can_cast
+from odl.array_API_support import abs as odl_abs, maximum, pow, sqrt, multiply, get_array_and_backend, can_cast
 
 __all__ = ('PointwiseNorm', 'PointwiseInner', 'PointwiseSum', 'MatrixOperator',
            'SamplingOperator', 'WeightedSumSamplingOperator',
@@ -237,7 +237,7 @@ class PointwiseNorm(PointwiseTensorFieldOperator):
     def _call_vecfield_1(self, vf, out):
         """Implement ``self(vf, out)`` for exponent 1."""
         
-        abs(vf[0], out=out)
+        odl_abs(vf[0], out=out)
         if self.is_weighted:
             out *= self.weights[0]
 
@@ -246,14 +246,14 @@ class PointwiseNorm(PointwiseTensorFieldOperator):
 
         tmp = self.range.element()
         for fi, wi in zip(vf[1:], self.weights[1:]):
-            abs(fi, out=tmp)
+            odl_abs(fi, out=tmp)
             if self.is_weighted:
                 tmp *= wi
             out += tmp
 
     def _call_vecfield_inf(self, vf, out):
         """Implement ``self(vf, out)`` for exponent ``inf``."""
-        abs(vf[0], out=out)
+        odl_abs(vf[0], out=out)
         if self.is_weighted:
             out *= self.weights[0]
 
@@ -262,7 +262,7 @@ class PointwiseNorm(PointwiseTensorFieldOperator):
 
         tmp = self.range.element()
         for vfi, wi in zip(vf[1:], self.weights[1:]):
-            abs(vfi, out=tmp)
+            odl_abs(vfi, out=tmp)
             if self.is_weighted:
                 tmp *= wi
             maximum(out, tmp, out=out)
@@ -271,7 +271,7 @@ class PointwiseNorm(PointwiseTensorFieldOperator):
         """Implement ``self(vf, out)`` for exponent 1 < p < ``inf``."""
         # Optimization for 1 component - just absolute value (maybe weighted)
         if len(self.domain) == 1:
-            abs(vf[0], out=out)
+            odl_abs(vf[0], out=out)
             if self.is_weighted:
                 out *= self.weights[0] ** (1 / self.exponent)
             return
@@ -294,12 +294,12 @@ class PointwiseNorm(PointwiseTensorFieldOperator):
         """Compute |F_i(x)|^p point-wise and write to ``out``."""
         # Optimization for very common cases        
         if p == 0.5:
-            abs(fi, out=out)
+            odl_abs(fi, out=out)
             sqrt(out, out=out)
         elif p == 2.0 and self.base_space.field == RealNumbers():
             multiply(fi, fi, out=out)
         else:
-            abs(fi, out=out)
+            odl_abs(fi, out=out)
             pow(out, p, out=out)
 
     def derivative(self, vf):
@@ -347,7 +347,7 @@ class PointwiseNorm(PointwiseTensorFieldOperator):
         inner_vf = vf.copy()
 
         for gi in inner_vf:
-            gi *= pow(abs(gi), self.exponent - 2)
+            gi *= pow(odl_abs(gi), self.exponent - 2)
             if self.exponent >= 2:
                 # Any component that is zero is not divided with
                 nz = (vf_pwnorm_fac.asarray() != 0)

@@ -290,7 +290,7 @@ class CallbackApply(Callback):
         By default, the function is called on each iterate:
 
         >>> def func(x):
-        ...     print(np.max(x))
+        ...     print(odl.max(x))
         >>> callback = CallbackApply(func)
         >>> x = odl.rn(3).element([1, 2, 3])
         >>> callback(x)

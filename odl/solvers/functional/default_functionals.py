@@ -30,7 +30,7 @@ from odl.space import ProductSpace
 from odl.util import conj_exponent
 
 from odl.array_API_support import (all as odl_all,
-abs, sign, pow, square, log, isfinite, exp,
+abs as odl_abs, sign, pow, square, log, isfinite, exp,
 max, min, sum as odl_sum)
 from odl.util.scipy_compatibility import xlogy
 
@@ -87,17 +87,17 @@ class LpNorm(Functional):
         if self.exponent == 0:
             return self.domain.one().inner(np.not_equal(x, 0))
         elif self.exponent == 1:
-            return abs(x).inner(self.domain.one())
+            return odl_abs(x).inner(self.domain.one())
         elif self.exponent == 2:
             return np.sqrt(x.inner(x))
         elif np.isfinite(self.exponent):
-            tmp = abs(x)
+            tmp = odl_abs(x)
             pow(tmp, self.exponent, out=tmp)
             return np.power(tmp.inner(self.domain.one()), 1 / self.exponent)
         elif self.exponent == np.inf:
-            return max(abs(x))
+            return max(odl_abs(x))
         elif self.exponent == -np.inf:
-            return min(abs(x))
+            return min(odl_abs(x))
         else:
             raise RuntimeError('unknown exponent')
 
@@ -2642,7 +2642,7 @@ class Huber(Functional):
         if isinstance(self.domain, ProductSpace):
             norm = PointwiseNorm(self.domain, 2)(x)
         else:
-            norm = abs(x)
+            norm = odl_abs(x)
 
         if self.gamma > 0:
             tmp = square(norm)
@@ -2733,7 +2733,7 @@ class Huber(Functional):
                 if isinstance(self.domain, ProductSpace):
                     norm = PointwiseNorm(self.domain, 2)(x)
                 else:
-                    norm = abs(x)
+                    norm = odl_abs(x)
 
                 grad = x / functional.gamma
 
