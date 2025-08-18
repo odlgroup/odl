@@ -1429,17 +1429,13 @@ class FlatteningOperator(Operator):
     the domain is a discrete function space.
     """
 
-    def __init__(self, domain, order='C'):
+    def __init__(self, domain):
         """Initialize a new instance.
 
         Parameters
         ----------
         domain : `TensorSpace`
             Set of elements on which this operator acts.
-        order : {'C', 'F'}, optional
-            If provided, flattening is performed in this order. ``'C'``
-            means that that the last index is changing fastest, while in
-            ``'F'`` ordering, the first index changes fastest.
 
         Examples
         --------
@@ -1451,29 +1447,17 @@ class FlatteningOperator(Operator):
         ...                    [4, 5, 6]])
         >>> op(x)
         rn(6).element([ 1.,  2.,  3.,  4.,  5.,  6.])
-        >>> op = odl.FlatteningOperator(space, order='F')
-        >>> op(x)
-        rn(6).element([ 1.,  4.,  2.,  5.,  3.,  6.])
         """
         if not isinstance(domain, TensorSpace):
             raise TypeError('`domain` must be a `TensorSpace` instance, got '
                             '{!r}'.format(domain))
-
-        self.__order = str(order).upper()
-        if self.order not in ('C', 'F'):
-            raise ValueError('`order` {!r} not understood'.format(order))
 
         range = tensor_space(domain.size, dtype=domain.dtype)
         super(FlatteningOperator, self).__init__(domain, range, linear=True)
 
     def _call(self, x):
         """Flatten ``x``."""
-        return np.ravel(x, order=self.order)
-
-    @property
-    def order(self):
-        """order of the flattening operation."""
-        return self.__order
+        return self.range.element(x.data.reshape([self.range.shape[0]]))
 
     @property
     def adjoint(self):
@@ -1513,12 +1497,6 @@ class FlatteningOperator(Operator):
             [[ 1.,  2.,  3.,  4.],
              [ 5.,  6.,  7.,  8.]]
         )
-        >>> op = odl.FlatteningOperator(space, order='F')
-        >>> op.inverse(y)
-        uniform_discr([-1., -1.], [ 1.,  1.], (2, 4)).element(
-            [[ 1.,  3.,  5.,  7.],
-             [ 2.,  4.,  6.,  8.]]
-        )
         >>> op(op.inverse(y)) == y
         True
         """
@@ -1541,8 +1519,7 @@ class FlatteningOperator(Operator):
 
             def _call(self, x):
                 """Reshape ``x`` back to n-dim. shape."""
-                return np.reshape(x.asarray(), self.range.shape,
-                                  order=op.order)
+                return np.reshape(x.asarray(), self.range.shape)
 
             @property
             def adjoint(self):
@@ -1567,7 +1544,6 @@ class FlatteningOperator(Operator):
     def __repr__(self):
         """Return ``repr(self)``."""
         posargs = [self.domain]
-        optargs = [('order', self.order, 'C')]
         sig_str = signature_string(posargs, optargs, mod=['!r', ''],
                                    sep=['', '', ',\n'])
         return '{}(\n{}\n)'.format(self.__class__.__name__, indent(sig_str))
