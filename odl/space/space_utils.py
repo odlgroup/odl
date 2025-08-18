@@ -54,22 +54,22 @@ def vector(array, dtype=None, impl='numpy', device = 'cpu'):
     Create one-dimensional vectors:
 
     >>> odl.vector([1, 2, 3])  # No automatic cast to float
-    tensor_space(3, 'int64', 'numpy', 'cpu', dtype=int64).element([1, 2, 3])
+    tensor_space(3, 'int64').element([1, 2, 3])
     >>> odl.vector([1, 2, 3], dtype=float)
-    rn(3, <class 'float'>, 'numpy', 'cpu').element([ 1.,  2.,  3.])
+    rn(3).element([ 1.,  2.,  3.])
     >>> odl.vector([1, 2 - 1j, 3])
-    cn(3, 'complex128', 'numpy', 'cpu').element([ 1.+0.j,  2.-1.j,  3.+0.j])
+    cn(3).element([ 1.+0.j,  2.-1.j,  3.+0.j])
 
     Non-scalar types are also supported:
 
     >>> odl.vector([True, True, False])
-    tensor_space(3, 'bool', 'numpy', 'cpu', dtype=bool).element([ True,  True, False])
+    tensor_space(3, 'bool').element([ True,  True, False])
 
     The function also supports multi-dimensional input:
 
     >>> odl.vector([[1, 2, 3],
     ...             [4, 5, 6]])
-    tensor_space((2, 3), 'int64', 'numpy', 'cpu', dtype=int64).element(
+    tensor_space((2, 3), 'int64').element(
         [[1, 2, 3],
          [4, 5, 6]]
     )
@@ -119,19 +119,19 @@ def tensor_space(shape, dtype='float64', impl='numpy', device = 'cpu', **kwargs)
     vector space):
 
     >>> odl.tensor_space(3, dtype='uint64')
-    tensor_space(3, 'uint64', 'numpy', 'cpu', dtype=uint64)
+    tensor_space(3, 'uint64')
 
     2x3 tensors with same data type:
 
     >>> odl.tensor_space((2, 3), dtype='uint64')
-    tensor_space((2, 3), 'uint64', 'numpy', 'cpu', dtype=uint64)
+    tensor_space((2, 3), 'uint64')
 
-    The default data type depends on the implementation. For
-    ``impl='numpy'``, it is ``'float64'``:
+    The default data type is ``'float64'``. How that is represented as a dtype-object
+    depends on the backend.
 
     >>> ts = odl.tensor_space((2, 3))
     >>> ts
-    rn((2, 3), 'float64', 'numpy', 'cpu')
+    rn((2, 3))
     >>> ts.dtype
     dtype('float64')
 
@@ -178,19 +178,19 @@ def cn(shape, dtype='complex128', impl='numpy', device='cpu', **kwargs):
     Space of complex 3-tuples with ``complex64`` entries:
 
     >>> odl.cn(3, dtype='complex64')
-    cn(3, 'complex64', 'numpy', 'cpu', dtype=complex64)
+    cn(3, 'complex64')
 
     Complex 2x3 tensors with ``complex64`` entries:
 
     >>> odl.cn((2, 3), dtype='complex64')
-    cn((2, 3), 'complex64', 'numpy', 'cpu', dtype=complex64)
+    cn((2, 3), 'complex64')
 
     The default data type depends on the implementation. For
     ``impl='numpy'``, it is ``'complex128'``:
 
     >>> space = odl.cn((2, 3))
     >>> space
-    cn((2, 3), 'complex128', 'numpy', 'cpu')
+    cn((2, 3))
     >>> space.dtype
     dtype('complex128')
 
@@ -230,18 +230,18 @@ def rn(shape, dtype=None, impl='numpy', device ='cpu', **kwargs):
     Space of real 3-tuples with ``float32`` entries:
 
     >>> odl.rn(3, dtype='float32')
-    rn(3, 'float32', 'numpy', 'cpu', dtype=float32)
+    rn(3, 'float32')
 
     Real 2x3 tensors with ``float32`` entries:
 
     >>> odl.rn((2, 3), dtype='float32')
-    rn((2, 3), 'float32', 'numpy', 'cpu', dtype=float32)
+    rn((2, 3), 'float32')
 
     The default data type is float64
 
     >>> ts = odl.rn((2, 3))
     >>> ts
-    rn((2, 3), 'float64', 'numpy', 'cpu')
+    rn((2, 3))
     >>> ts.dtype
     dtype('float64')
 

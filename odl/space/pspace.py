@@ -636,10 +636,7 @@ class ProductSpace(LinearSpace):
         >>> x3 = r3.element([1, 2, 3])
         >>> x = prod.element([x2, x3])
         >>> x
-        ProductSpace(
-            rn(2, 'float64', 'numpy', 'cpu'), 
-            rn(3, 'float64', 'numpy', 'cpu')
-        ).element([
+        ProductSpace(rn(2), rn(3)).element([
             [ 1.,  2.],
             [ 1.,  2.,  3.]
         ])
@@ -832,22 +829,14 @@ class ProductSpace(LinearSpace):
         >>> r2, r3, r4 = odl.rn(2), odl.rn(3), odl.rn(4)
         >>> pspace = odl.ProductSpace(r2, r3, r4)
         >>> pspace[1]
-        rn(3, 'float64', 'numpy', 'cpu')
+        rn(3)
         >>> pspace[1:]
-        ProductSpace(
-            rn(3, 'float64', 'numpy', 'cpu'), 
-            rn(4, 'float64', 'numpy', 'cpu')
-        )
+        ProductSpace(rn(3), rn(4))
 
         With lists, arbitrary components can be stacked together:
 
         >>> pspace[[0, 2, 1, 2]]
-        ProductSpace(
-            rn(2, 'float64', 'numpy', 'cpu'), 
-            rn(4, 'float64', 'numpy', 'cpu'), 
-            rn(3, 'float64', 'numpy', 'cpu'), 
-            rn(4, 'float64', 'numpy', 'cpu')
-        )
+        ProductSpace(rn(2), rn(4), rn(3), rn(4))
 
         Tuples, i.e. multi-indices, will recursively index higher-order
         product spaces. However, remaining indices cannot be passed
@@ -855,21 +844,13 @@ class ProductSpace(LinearSpace):
 
         >>> pspace2 = odl.ProductSpace(pspace, 3)  # 2nd order product space
         >>> pspace2
-        ProductSpace(ProductSpace(
-            rn(2, 'float64', 'numpy', 'cpu'), 
-            rn(3, 'float64', 'numpy', 'cpu'), 
-            rn(4, 'float64', 'numpy', 'cpu')
-        ), 3)
+        ProductSpace(ProductSpace(rn(2), rn(3), rn(4)), 3)
         >>> pspace2[0]
-        ProductSpace(
-            rn(2, 'float64', 'numpy', 'cpu'), 
-            rn(3, 'float64', 'numpy', 'cpu'), 
-            rn(4, 'float64', 'numpy', 'cpu')
-        )
+        ProductSpace(rn(2), rn(3), rn(4))
         >>> pspace2[1, 0]
-        rn(2, 'float64', 'numpy', 'cpu')
+        rn(2)
         >>> pspace2[:-1, 0]
-        ProductSpace(rn(2, 'float64', 'numpy', 'cpu'), 2)
+        ProductSpace(rn(2), 2)
         """
         if isinstance(indices, Integral):
             return self.spaces[indices]
@@ -1278,10 +1259,7 @@ class ProductSpaceElement(LinearSpaceElement):
         >>> x = space.element([[1 + 1j, 2, 3 - 3j],
         ...                    [-1 + 2j, -2 - 3j]])
         >>> x.real
-        ProductSpace(
-            rn(3, 'float64', 'numpy', 'cpu'), 
-            rn(2, 'float64', 'numpy', 'cpu')
-            ).element([
+        ProductSpace(rn(3), rn(2)).element([
             [ 1.,  2.,  3.],
             [-1., -2.]
         ])
@@ -1290,30 +1268,21 @@ class ProductSpaceElement(LinearSpaceElement):
 
         >>> x.real = space.real_space.zero()
         >>> x
-        ProductSpace(
-            cn(3, 'complex128', 'numpy', 'cpu'), 
-            cn(2, 'complex128', 'numpy', 'cpu')
-            ).element([
+        ProductSpace(cn(3), cn(2)).element([
             [ 0.+1.j,  0.+0.j,  0.-3.j],
             [ 0.+2.j,  0.-3.j]
         ])
 
         >>> x.real = 1.0
         >>> x
-        ProductSpace(
-            cn(3, 'complex128', 'numpy', 'cpu'), 
-            cn(2, 'complex128', 'numpy', 'cpu')
-            ).element([
+        ProductSpace(cn(3), cn(2)).element([
             [ 1.+1.j,  1.+0.j,  1.-3.j],
             [ 1.+2.j,  1.-3.j]
         ])
 
         >>> x.real = [[2, 3, 4], [5, 6]]
         >>> x
-        ProductSpace(
-            cn(3, 'complex128', 'numpy', 'cpu'), 
-            cn(2, 'complex128', 'numpy', 'cpu')
-            ).element([
+        ProductSpace(cn(3), cn(2)).element([
             [ 2.+1.j,  3.+0.j,  4.-3.j],
             [ 5.+2.j,  6.-3.j]
         ])
@@ -1373,10 +1342,7 @@ class ProductSpaceElement(LinearSpaceElement):
         >>> x = space.element([[1 + 1j, 2, 3 - 3j],
         ...                    [-1 + 2j, -2 - 3j]])
         >>> x.imag
-        ProductSpace(
-            rn(3, 'float64', 'numpy', 'cpu'), 
-            rn(2, 'float64', 'numpy', 'cpu')
-        ).element([
+        ProductSpace(rn(3), rn(2)).element([
             [ 1.,  0., -3.],
             [ 2., -3.]
         ])
@@ -1385,30 +1351,21 @@ class ProductSpaceElement(LinearSpaceElement):
 
         >>> x.imag = space.real_space.zero()
         >>> x
-        ProductSpace(
-            cn(3, 'complex128', 'numpy', 'cpu'), 
-            cn(2, 'complex128', 'numpy', 'cpu')
-        ).element([
+        ProductSpace(cn(3), cn(2)).element([
             [ 1.+0.j,  2.+0.j,  3.+0.j],
             [-1.+0.j, -2.+0.j]
         ])
 
         >>> x.imag = 1.0
         >>> x
-        ProductSpace(
-            cn(3, 'complex128', 'numpy', 'cpu'), 
-            cn(2, 'complex128', 'numpy', 'cpu')
-        ).element([
+        ProductSpace(cn(3), cn(2)).element([
             [ 1.+1.j,  2.+1.j,  3.+1.j],
             [-1.+1.j, -2.+1.j]
         ])
 
         >>> x.imag = [[2, 3, 4], [5, 6]]
         >>> x
-        ProductSpace(
-            cn(3, 'complex128', 'numpy', 'cpu'), 
-            cn(2, 'complex128', 'numpy', 'cpu')
-        ).element([
+        ProductSpace(cn(3), cn(2)).element([
             [ 1.+2.j,  2.+3.j,  3.+4.j],
             [-1.+5.j, -2.+6.j]
         ])
@@ -1479,10 +1436,7 @@ class ProductSpaceElement(LinearSpaceElement):
         The result is readable:
 
         >>> x
-        ProductSpace(
-            rn(2, 'float64', 'numpy', 'cpu'), 
-            rn(3, 'float64', 'numpy', 'cpu')
-        ).element([
+        ProductSpace(rn(2), rn(3)).element([
             [ 1.,  2.],
             [ 3.,  4.,  5.]
         ])
@@ -1494,10 +1448,7 @@ class ProductSpaceElement(LinearSpaceElement):
         >>> eval(repr(x)) == x
         True
         >>> x
-        ProductSpace(ProductSpace(
-            rn(2, 'float64', 'numpy', 'cpu'), 
-            rn(3, 'float64', 'numpy', 'cpu')
-        ), 2).element([
+        ProductSpace(ProductSpace(rn(2), rn(3)), 2).element([
             [
                 [ 1.,  2.],
                 [ 3.,  4.,  5.]

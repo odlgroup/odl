@@ -266,14 +266,14 @@ class TensorSpace(LinearSpace):
 
         >>> space = odl.rn((2, 3, 4))
         >>> space.byaxis[0]
-        rn(2, 'float64', 'numpy', 'cpu')
+        rn(2)
         >>> space.byaxis[1:]
-        rn((3, 4), 'float64', 'numpy', 'cpu')
+        rn((3, 4))
 
         Lists can be used to stack spaces arbitrarily:
 
         >>> space.byaxis[[2, 1, 2]]
-        rn((4, 3, 4), 'float64', 'numpy', 'cpu')
+        rn((4, 3, 4))
         """
         space = self
 
@@ -781,7 +781,7 @@ class TensorSpace(LinearSpace):
             posargs = [self.size]
         else:
             posargs = [self.shape]
-        posargs += [self.dtype_identifier, self.impl, self.device]
+
         if self.is_real:
             ctor_name = 'rn'
         elif self.is_complex:
@@ -789,19 +789,22 @@ class TensorSpace(LinearSpace):
         else:
             ctor_name = 'tensor_space'
 
-        if (ctor_name == 'tensor_space' or
-                not is_numeric_dtype(self.dtype_identifier) or
-                self.dtype != default_dtype(self.array_backend, self.field)):
-            optargs = []
-            if is_available_dtype(self.dtype_identifier):
-                optmod = '!s'
-            else:
-                optmod = ''
-        else:
-            optargs = []
-            optmod = ''
+        optmod = ''
 
-        inner_str = signature_string(posargs, optargs, mod=['', optmod])
+        if self.device == 'cpu':
+            if self.impl == 'numpy':
+                if ( ctor_name == 'tensor_space'
+                      or not is_numeric_dtype(self.dtype_identifier)
+                      or self.dtype != default_dtype(self.array_backend, self.field) ):
+                    posargs += [self.dtype_identifier]
+                    if is_available_dtype(self.dtype_identifier):
+                        optmod = '!s'
+            else:
+                posargs += [self.dtype_identifier, self.impl]
+        else:
+            posargs += [self.dtype_identifier, self.impl, self.device]
+
+        inner_str = signature_string(posargs, optargs=[], mod=['', optmod])
         weight_str = self.weighting.repr_part
         if weight_str:
             inner_str += ', ' + weight_str
@@ -890,13 +893,13 @@ class TensorSpace(LinearSpace):
         >>> x = space.element([2, 0, 4])
         >>> y = space.element([1, 1, 2])
         >>> space.divide(x, y)
-        rn(3, 'float64', 'numpy', 'cpu').element([ 2.,  0.,  2.])
+        rn(3).element([ 2.,  0.,  2.])
         >>> out = space.element()
         >>> result = space.divide(x, y, out=out)
         >>> result
-        rn(3, 'float64', 'numpy', 'cpu').element([ 2.,  0.,  2.])
+        rn(3).element([ 2.,  0.,  2.])
         >>> out
-        rn(3, 'float64', 'numpy', 'cpu').element([ 2.,  0.,  2.])
+        rn(3).element([ 2.,  0.,  2.])
         >>> out.data is result.data
         True
         >>> out = np.zeros((3))
@@ -967,7 +970,7 @@ class TensorSpace(LinearSpace):
         >>> out = space.element()
         >>> result = space.lincomb(1, x, 2, y, out)
         >>> result
-        rn(3, 'float64', 'numpy', 'cpu').element([ 0.,  1.,  3.])
+        rn(3).element([ 0.,  1.,  3.])
         >>> result is out
         True
         """
@@ -992,11 +995,11 @@ class TensorSpace(LinearSpace):
         >>> x = space.element([1, 0, 3])
         >>> y = space.element([-1, 1, -1])
         >>> space.multiply(x, y)
-        rn(3, 'float64', 'numpy', 'cpu').element([-1.,  0., -3.])
+        rn(3).element([-1.,  0., -3.])
         >>> out = space.element()
         >>> result = space.multiply(x, y, out=out)
         >>> result
-        rn(3, 'float64', 'numpy', 'cpu').element([-1.,  0., -3.])
+        rn(3).element([-1.,  0., -3.])
         >>> result.data is out.data
         True
         """
@@ -1262,7 +1265,7 @@ class Tensor(LinearSpaceElement):
         >>> space = odl.cn(3)
         >>> x = space.element([1 + 1j, 2, 3 - 3j])
         >>> x.imag
-        rn(3, 'float64', 'numpy', 'cpu').element([ 1.,  0., -3.])
+        rn(3).element([ 1.,  0., -3.])
 
         Set the imaginary part:
 
@@ -1271,16 +1274,16 @@ class Tensor(LinearSpaceElement):
         >>> zero = odl.rn(3).zero()
         >>> x.imag = zero
         >>> x
-        cn(3, 'complex128', 'numpy', 'cpu').element([ 1.+0.j,  2.+0.j,  3.+0.j])
+        cn(3).element([ 1.+0.j,  2.+0.j,  3.+0.j])
 
         Other array-like types and broadcasting:
 
         >>> x.imag = 1.0
         >>> x
-        cn(3, 'complex128', 'numpy', 'cpu').element([ 1.+1.j,  2.+1.j,  3.+1.j])
+        cn(3).element([ 1.+1.j,  2.+1.j,  3.+1.j])
         >>> x.imag = [2, 3, 4]
         >>> x
-        cn(3, 'complex128', 'numpy', 'cpu').element([ 1.+2.j,  2.+3.j,  3.+4.j])
+        cn(3).element([ 1.+2.j,  2.+3.j,  3.+4.j])
         """
         if self.space.is_real:
             return self.space.zero()
@@ -1333,7 +1336,7 @@ class Tensor(LinearSpaceElement):
         >>> space = odl.cn(3)
         >>> x = space.element([1 + 1j, 2, 3 - 3j])
         >>> x.real
-        rn(3, 'float64', 'numpy', 'cpu').element([ 1.,  2.,  3.])
+        rn(3).element([ 1.,  2.,  3.])
 
         Set the real part:
 
@@ -1342,16 +1345,16 @@ class Tensor(LinearSpaceElement):
         >>> zero = odl.rn(3).zero()
         >>> x.real = zero
         >>> x
-        cn(3, 'complex128', 'numpy', 'cpu').element([ 0.+1.j,  0.+0.j,  0.-3.j])
+        cn(3).element([ 0.+1.j,  0.+0.j,  0.-3.j])
 
         Other array-like types and broadcasting:
 
         >>> x.real = 1.0
         >>> x
-        cn(3, 'complex128', 'numpy', 'cpu').element([ 1.+1.j,  1.+0.j,  1.-3.j])
+        cn(3).element([ 1.+1.j,  1.+0.j,  1.-3.j])
         >>> x.real = [2, 3, 4]
         >>> x
-        cn(3, 'complex128', 'numpy', 'cpu').element([ 2.+1.j,  3.+0.j,  4.-3.j])
+        cn(3).element([ 2.+1.j,  3.+0.j,  4.-3.j])
         """
         if self.space.is_real:
             return self
@@ -1499,11 +1502,11 @@ class Tensor(LinearSpaceElement):
         >>> space = odl.cn(3)
         >>> x = space.element([1 + 1j, 2, 3 - 3j])
         >>> x.conj()
-        cn(3, 'complex128', 'numpy', 'cpu').element([ 1.-1.j,  2.-0.j,  3.+3.j])
+        cn(3).element([ 1.-1.j,  2.-0.j,  3.+3.j])
         >>> out = space.element()
         >>> result = x.conj(out=out)
         >>> result
-        cn(3, 'complex128', 'numpy', 'cpu').element([ 1.-1.j,  2.-0.j,  3.+3.j])
+        cn(3).element([ 1.-1.j,  2.-0.j,  3.+3.j])
         >>> result is out
         True
 
@@ -1511,7 +1514,7 @@ class Tensor(LinearSpaceElement):
 
         >>> result = x.conj(out=x)
         >>> x
-        cn(3, 'complex128', 'numpy', 'cpu').element([ 1.-1.j,  2.-0.j,  3.+3.j])
+        cn(3).element([ 1.-1.j,  2.-0.j,  3.+3.j])
         >>> result is x
         True
         """

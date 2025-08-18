@@ -410,12 +410,12 @@ class LinearSpace(Set):
 
         >>> r2 = odl.rn(2)
         >>> r2 ** 4
-        ProductSpace(rn(2, 'float64', 'numpy', 'cpu'), 4)
+        ProductSpace(rn(2), 4)
 
         Multiple powers work as expected:
 
         >>> r2 ** (4, 2)
-        ProductSpace(ProductSpace(rn(2, 'float64', 'numpy', 'cpu'), 4), 2)
+        ProductSpace(ProductSpace(rn(2), 4), 2)
         """
         from odl.space import ProductSpace
 
@@ -445,10 +445,7 @@ class LinearSpace(Set):
         >>> r2 = odl.rn(2)
         >>> r3 = odl.rn(3)
         >>> r2 * r3
-        ProductSpace(
-            rn(2, 'float64', 'numpy', 'cpu'),
-            rn(3, 'float64', 'numpy', 'cpu')
-        )
+        ProductSpace(rn(2), rn(3))
         """
         from odl.space import ProductSpace
 

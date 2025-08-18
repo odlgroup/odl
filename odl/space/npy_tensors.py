@@ -212,7 +212,7 @@ class NumpyTensorSpace(TensorSpace):
 
         >>> space = NumpyTensorSpace(3, float)
         >>> space
-        rn(3, <class 'float'>, 'numpy', 'cpu')
+        rn(3)
         >>> space.shape
         (3,)
         >>> space.dtype
@@ -222,10 +222,10 @@ class NumpyTensorSpace(TensorSpace):
 
         >>> space = odl.rn(3, weighting=[1, 2, 3])
         >>> space
-        rn(3, 'float64', 'numpy', 'cpu', weighting=[1, 2, 3])
+        rn(3, weighting=[1, 2, 3])
         >>> space = odl.tensor_space((2, 3), dtype=int)
         >>> space
-        tensor_space((2, 3), <class 'int'>, 'numpy', 'cpu', dtype=<class 'int'>)
+        tensor_space((2, 3), 'int32')
         """
         super(NumpyTensorSpace, self).__init__(shape, dtype, device, **kwargs)
 
@@ -340,7 +340,7 @@ class NumpyTensor(Tensor):
         >>> x[0]
         1.0
         >>> x[1:]
-        rn(2, 'float64', 'numpy', 'cpu').element([ 2.,  3.])
+        rn(2).element([ 2.,  3.])
 
         In higher dimensions, the i-th index expression accesses the
         i-th axis:
@@ -351,7 +351,7 @@ class NumpyTensor(Tensor):
         >>> x[0, 1]
         2.0
         >>> x[:, 1:]
-        rn((2, 2), 'float64', 'numpy', 'cpu').element(
+        rn((2, 2)).element(
             [[ 2.,  3.],
              [ 5.,  6.]]
         )
@@ -361,16 +361,16 @@ class NumpyTensor(Tensor):
         >>> y = x[:, ::2]  # view into x
         >>> y[:] = -9
         >>> x
-        rn((2, 3), 'float64', 'numpy', 'cpu').element(
+        rn((2, 3)).element(
             [[-9.,  2., -9.],
              [-9.,  5., -9.]]
         )
         >>> y = x[[0, 1], [1, 2]]  # not a view, won't modify x
         >>> y
-        rn(2, 'float64', 'numpy', 'cpu').element([ 2., -9.])
+        rn(2).element([ 2., -9.])
         >>> y[:] = 0
         >>> x
-        rn((2, 3), 'float64', 'numpy', 'cpu').element(
+        rn((2, 3)).element(
             [[-9.,  2., -9.],
              [-9.,  5., -9.]]
         )
@@ -421,7 +421,7 @@ class NumpyTensor(Tensor):
         >>> x[0] = -1
         >>> x[1:] = (0, 1)
         >>> x
-        rn(3, 'float64', 'numpy', 'cpu').element([-1.,  0.,  1.])
+        rn(3).element([-1.,  0.,  1.])
 
         It is also possible to use tensors of other spaces for
         casting and assignment:
@@ -431,7 +431,7 @@ class NumpyTensor(Tensor):
         ...                    [4, 5, 6]])
         >>> x[0, 1] = -1
         >>> x
-        rn((2, 3), 'float64', 'numpy', 'cpu').element(
+        rn((2, 3)).element(
             [[ 1., -1.,  3.],
              [ 4.,  5.,  6.]]
         )
@@ -440,7 +440,7 @@ class NumpyTensor(Tensor):
         ...                          [0, 0]])
         >>> x[:, :2] = y
         >>> x
-        rn((2, 3), 'float64', 'numpy', 'cpu').element(
+        rn((2, 3)).element(
             [[-1.,  2.,  3.],
              [ 0.,  0.,  6.]]
         )
@@ -450,19 +450,19 @@ class NumpyTensor(Tensor):
         >>> x[:] = np.array([[0, 0, 0],
         ...                  [1, 1, 1]])
         >>> x
-        rn((2, 3), 'float64', 'numpy', 'cpu').element(
+        rn((2, 3)).element(
             [[ 0.,  0.,  0.],
              [ 1.,  1.,  1.]]
         )
         >>> x[:, 1:] = [7, 8]
         >>> x
-        rn((2, 3), 'float64', 'numpy', 'cpu').element(
+        rn((2, 3)).element(
             [[ 0.,  7.,  8.],
              [ 1.,  7.,  8.]]
         )
         >>> x[:, ::2] = -2.
         >>> x
-        rn((2, 3), 'float64', 'numpy', 'cpu').element(
+        rn((2, 3)).element(
             [[-2.,  7., -2.],
              [-2.,  7., -2.]]
         )
