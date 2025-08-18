@@ -76,7 +76,7 @@ def matrix_representation(op):
             [[ 4.  , -4.75],
              [ 4.  , -6.75]]
     ])
-    >>> np.tensordot(tensor, x, axes=grad.domain.ndim)
+    >>> np.tensordot(tensor, x.data, axes=grad.domain.ndim)
     array([[[ 2.  ,  2.  ],
             [-2.75, -6.75]],
     <BLANKLINE>
@@ -371,12 +371,12 @@ def as_scipy_functional(func, return_gradient=False):
     is ``CudaFn`` or some other nonlocal type, the overhead is significant.
     """
     def func_call(arr):
-        return func(np.asarray(arr).reshape(func.domain.shape))
+        return func(func.domain.element(np.asarray(arr).reshape(func.domain.shape)))
 
     if return_gradient:
         def func_gradient_call(arr):
             return np.asarray(
-                func.gradient(np.asarray(arr).reshape(func.domain.shape)))
+                func.gradient(np.asarray(arr).reshape(func.domain.shape)).data)
 
         return func_call, func_gradient_call
     else:
