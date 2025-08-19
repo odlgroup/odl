@@ -621,7 +621,13 @@ class DiscretizedSpace(TensorSpace):
                     optargs.append(('weighting', self.weighting.const, None))
 
             optmod = [''] * len(optargs)
-            if self.dtype in (float, complex, int, bool):
+
+            # The following applies only if a shorthand Python-type version of
+            # the dtype is shown. In that case, no quotation marks should be put
+            # around it. This is not enabled because `dtype_str` currently always
+            # produces a conventional string (e.g. `'complex128'` instead of
+            # `complex`.
+            if False and self.dtype in (float, complex, int, bool):
                 optmod[2] = '!s'
 
             inner_parts = signature_string_parts(
@@ -1324,7 +1330,7 @@ def uniform_discr(min_pt, max_pt, shape, dtype=None, impl='numpy', **kwargs):
 
     >>> space = uniform_discr([0, 0], [1, 1], (10, 10), dtype=complex)
     >>> space
-    uniform_discr([ 0.,  0.], [ 1.,  1.], (10, 10), dtype=complex)
+    uniform_discr([ 0.,  0.], [ 1.,  1.], (10, 10), dtype='complex128')
     >>> space.is_complex
     True
     >>> space.real_space  # Get real counterpart

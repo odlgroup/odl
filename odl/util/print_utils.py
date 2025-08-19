@@ -4,6 +4,7 @@ from contextlib import contextmanager
 # ODL import
 from odl.array_API_support.array_creation import asarray
 from odl.array_API_support.utils import get_array_and_backend
+from odl.util.dtype_utils import _universal_dtype_identifier
 # Third-party import
 import numpy as np
 
@@ -28,10 +29,10 @@ def is_string(obj):
     return isinstance(obj, str)
 
 def dtype_repr(dtype):
-    return f"'{dtype}'"
+    return f"'{dtype_str(dtype)}'"
 
 def dtype_str(dtype):
-    return f"{dtype}"
+    return f"{_universal_dtype_identifier(dtype)}"
 
 REPR_PRECISION = 4
 
