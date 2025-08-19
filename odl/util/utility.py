@@ -9,7 +9,7 @@
 """Utilities mainly for internal use."""
 
 from __future__ import absolute_import, division, print_function
-from future.moves.itertools import zip_longest
+from itertools import zip_longest
 
 import contextlib
 from collections import OrderedDict

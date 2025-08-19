@@ -20,7 +20,7 @@ from time import time
 import numpy as np
 from odl.util.npy_compat import AVOID_UNNECESSARY_COPY
 
-from future.moves.itertools import zip_longest
+from itertools import zip_longest
 
 from odl.util.utility import is_string, run_from_ipython
 
