@@ -291,8 +291,8 @@ class Gradient(PointwiseTensorFieldOperator):
         >>> adj_g = grad.adjoint(g)
         >>> adj_g
         uniform_discr([ 0.,  0.], [ 2.,  5.], (2, 5)).element(
-            [[  0.,  -2.,  -5.,  -8., -11.],
-             [  0.,  -5., -14., -23., -32.]]
+            [[ -0.,  -2.,  -5.,  -8., -11.],
+             [ -0.,  -5., -14., -23., -32.]]
         )
         >>> g.inner(grad_f) / f.inner(adj_g)
         1.0
