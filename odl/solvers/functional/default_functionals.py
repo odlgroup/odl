@@ -1133,8 +1133,8 @@ class KullbackLeibler(Functional):
             if self.prior is None:
                 res = (x - 1 - log(x)).inner(self.domain.one())
             else:
-                xlogy = self.prior * log(self.prior / x)
-                res = (x - self.prior + xlogy).inner(self.domain.one())
+                plogpx = xlogy(self.prior, self.prior / x)
+                res = (x - self.prior + plogpx).inner(self.domain.one())
 
         if not np.isfinite(res):
             # In this case, some element was less than or equal to zero
