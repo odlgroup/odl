@@ -11,6 +11,7 @@
 from __future__ import absolute_import, division, print_function
 
 from numbers import Integral
+from typing import Optional
 
 import numpy as np
 
@@ -22,7 +23,7 @@ from odl.space import ProductSpace, tensor_space
 from odl.space.base_tensors import TensorSpace, Tensor
 from odl.space.weightings.weighting import ArrayWeighting
 from odl.util import dtype_repr, indent, signature_string, writable_array
-from odl.array_API_support import abs as odl_abs, maximum, pow, sqrt, multiply, get_array_and_backend, can_cast
+from odl.array_API_support import ArrayBackend, lookup_array_backend, abs as odl_abs, maximum, pow, sqrt, multiply, get_array_and_backend, can_cast
 
 __all__ = ('PointwiseNorm', 'PointwiseInner', 'PointwiseSum', 'MatrixOperator',
            'SamplingOperator', 'WeightedSumSamplingOperator',
@@ -718,7 +719,10 @@ class MatrixOperator(Operator):
     recommended to use other alternatives if possible.
     """
 
-    def __init__(self, matrix, domain=None, range=None, axis=0):
+    def __init__(self, matrix, domain=None, range=None,
+                 impl: Optional[str]=None,
+                 device: Optional[str]=None,
+                 axis=0):
         r"""Initialize a new instance.
 
         Parameters
@@ -727,6 +731,10 @@ class MatrixOperator(Operator):
             2-dimensional array representing the linear operator.
             For Scipy sparse matrices only tensor spaces with
             ``ndim == 1`` are allowed as ``domain``.
+            The matrix is copied to `impl`/`device`, if these are
+            specified (only once, when the operator is initialized).
+            If a plain Python list is supplied, it will first
+            be converted to a NumPy array.
         domain : `TensorSpace`, optional
             Space of elements on which the operator can act. Its
             ``dtype`` must be castable to ``range.dtype``.
@@ -739,6 +747,16 @@ class MatrixOperator(Operator):
             of the result of the multiplication.
             For the default ``None``, the range is inferred from
             ``matrix``, ``domain`` and ``axis``.
+        impl : `ArrayBackend`-identifying `str`, optional
+            Which backend to use for the low-level matrix multiplication.
+            If not explicitly provided, it will be inferred in the following
+            order of preference, depending on what is available:
+            1. from `domain`
+            2. from `range`
+            3. from `matrix`
+        device : `str`, optional
+            On which device to store the matrix.
+            Same defaulting logic as for `impl`.
         axis : int, optional
             Sum over this axis of an input tensor in the
             multiplication.
@@ -797,15 +815,46 @@ class MatrixOperator(Operator):
         # Lazy import to improve `import odl` time
         import scipy.sparse
 
+        def infer_backend_from(default_backend):
+            if impl is not None:
+                self.__array_backend = lookup_array_backend(impl)
+            else:
+                assert(isinstance(default_backend, ArrayBackend))
+                self.__array_backend = default_backend
+        def infer_device_from(default_device):
+            self.__device = default_device if device is None else device
+
+        if domain is not None:
+            infer_backend_from(domain.array_backend)
+            infer_device_from(domain.device)
+        elif range is not None:
+            infer_backend_from(range.array_backend)
+            infer_device_from(range.device)
+        elif scipy.sparse.isspmatrix(matrix) or isinstance(matrix, list) or isinstance(matrix, tuple):
+            infer_backend_from(lookup_array_backend('numpy'))
+            infer_device_from('cpu')
+        else:
+            infer_backend_from(get_array_and_backend(matrix)[1])
+            infer_device_from(matrix.device)
+
+        ns = self.array_backend.array_namespace
+
         if scipy.sparse.isspmatrix(matrix):
+            if self.array_backend.impl != 'numpy':
+                raise TypeError("SciPy sparse matrices can only be used with NumPy on CPU, not {array_backend.impl}.")
+            if self.device != 'cpu':
+                raise TypeError("SciPy sparse matrices can only be used with NumPy on CPU, not {device}.")
             self.__matrix = matrix
         elif isinstance(matrix, Tensor):
-            self.__matrix = np.array(matrix.data, copy=AVOID_UNNECESSARY_COPY, ndmin=2)        
+            self.__matrix = matrix.data
+            self.__matrix = ns.asarray(matrix.data, device=self.__device, copy=AVOID_UNNECESSARY_COPY)
+            while len(self.__matrix.shape) < 2:
+                self.__matrix = self.__matrix[None]
         else:
-            self.__matrix = np.array(matrix, copy=AVOID_UNNECESSARY_COPY, ndmin=2)
+            self.__matrix = ns.asarray(matrix, device=self.__device, copy=AVOID_UNNECESSARY_COPY)
+            while len(self.__matrix.shape) < 2:
+                self.__matrix = self.__matrix[None]
 
-        _, backend = get_array_and_backend(self.matrix)
-        ns = backend.array_namespace
         self.__axis, axis_in = int(axis), axis
         if self.axis != axis_in:
             raise ValueError('`axis` must be integer, got {}'.format(axis_in))
@@ -816,11 +865,11 @@ class MatrixOperator(Operator):
 
         # Infer or check domain
         if domain is None:
-            dtype = backend.identifier_of_dtype(self.matrix.dtype)
+            dtype = self.array_backend.identifier_of_dtype(self.matrix.dtype)
             domain = tensor_space((self.matrix.shape[1],),
                                   dtype=dtype,
-                                  impl = backend.impl,
-                                #   device = self.matrix.device.__str__()
+                                  impl = self.array_backend.impl,
+                                  device = self.device
                                   )
         else:
             if not isinstance(domain, TensorSpace):
@@ -844,7 +893,7 @@ class MatrixOperator(Operator):
             # Infer range
             range_dtype = ns.result_type(
                 self.matrix.dtype, domain.dtype)
-            range_dtype = backend.identifier_of_dtype(range_dtype)
+            range_dtype = self.array_backend.identifier_of_dtype(range_dtype)
             if (range_shape != domain.shape and
                     isinstance(domain.weighting, ArrayWeighting)):
                 # Cannot propagate weighting due to size mismatch.
@@ -852,7 +901,7 @@ class MatrixOperator(Operator):
             else:
                 weighting = domain.weighting
             range = tensor_space(range_shape, 
-                                 impl = backend.impl,
+                                 impl = self.array_backend.impl,
                                  dtype=range_dtype,
                                  weighting=weighting,
                                  exponent=domain.exponent)
@@ -880,6 +929,26 @@ class MatrixOperator(Operator):
     def matrix(self):
         """Matrix representing this operator."""
         return self.__matrix
+
+    @property
+    def array_backend(self):
+        """Backend on which to carry out the BLAS matmul operation.
+        Note that this does not necessarily have to be the same as
+        either the range or domain of the operator, but by default it will
+        be chosen such. If a different backend and/or device is used, the
+        operator will always copy data to `self.array_backend` before
+        carrying out the matrix multiplication, then copy the result to
+        `self.range.array_backend`. Such copies should generally be avoided
+        as they can be slow, but they can sometimes be justified if memory
+        is scarce on one of the devices.
+        """
+        return self.__array_backend
+
+    @property
+    def device(self):
+        """Computational device on which to carry out the BLAS operation.
+        See remarks on `array_backend`."""
+        return self.__device
 
     @property
     def axis(self):
