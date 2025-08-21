@@ -1014,8 +1014,7 @@ class MatrixOperator(Operator):
         import scipy.sparse
 
         # Matrix printing itself in an executable way (for dense matrix)
-        if scipy.sparse.isspmatrix(self.matrix):
-            # Don't convert to dense, can take forever
+        if scipy.sparse.isspmatrix(self.matrix) or self.array_backend.impl != 'numpy':
             matrix_str = repr(self.matrix)
         else:
             matrix_str = np.array2string(self.matrix, separator=', ')
@@ -1024,11 +1023,23 @@ class MatrixOperator(Operator):
         # Optional arguments with defaults, inferred from the matrix
         range_shape = list(self.domain.shape)
         range_shape[self.axis] = self.matrix.shape[0]
+
+        try:
+            default_domain = tensor_space(self.matrix.shape[1],
+                                          impl=self.array_backend.impl,
+                                          dtype=self.matrix.dtype)
+        except (ValueError, TypeError):
+            default_domain = None
+        try:
+            default_range = tensor_space(range_shape,
+                                         impl=self.array_backend.impl,
+                                         dtype=self.matrix.dtype)
+        except (ValueError, TypeError):
+            default_range = None
+
         optargs = [
-            ('domain', self.domain, tensor_space(self.matrix.shape[1],
-                                                 self.matrix.dtype)),
-            ('range', self.range, tensor_space(range_shape,
-                                               self.matrix.dtype)),
+            ('domain', self.domain, default_domain),
+            ('range', self.range, default_range),
             ('axis', self.axis, 0)
         ]
 
