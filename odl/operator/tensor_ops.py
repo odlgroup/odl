@@ -992,32 +992,20 @@ class MatrixOperator(Operator):
                               domain=self.range, range=self.domain,
                               axis=self.axis)
 
-    def _call(self, x, out=None):
+    def _call(self, x):
         """Return ``self(x[, out])``."""
         # Lazy import to improve `import odl` time
         import scipy.sparse
 
-        if out is None:
-            if scipy.sparse.isspmatrix(self.matrix):
-                out = self.matrix.dot(x.data)
-            else:
-                dot = np.tensordot(self.matrix, x.data, axes=(1, self.axis))
-                # New axis ends up as first, need to swap it to its place
-                out = np.moveaxis(dot, 0, self.axis)
+        ns = self.array_backend.array_namespace
+
+        if scipy.sparse.isspmatrix(self.matrix):
+            out = self.matrix.dot(x.data)
         else:
-            if scipy.sparse.isspmatrix(self.matrix):
-                # Unfortunately, there is no native in-place dot product for
-                # sparse matrices
-                out[:] = self.matrix.dot(x.data)
-            elif self.range.ndim == 1:
-                with writable_array(out) as out_arr:
-                    self.matrix.dot(x.data, out=out_arr)
-            else:
-                # Could use einsum to have out, but it's damn slow
-                # TODO: investigate speed issue
-                dot = np.tensordot(self.matrix, x.data, axes=(1, self.axis))
-                # New axis ends up as first, need to move it to its place
-                out[:] = np.moveaxis(dot, 0, self.axis)
+            dot = ns.tensordot(self.matrix, x.data, axes=(1, self.axis))
+            # New axis ends up as first, need to swap it to its place
+            out = ns.moveaxis(dot, 0, self.axis)
+
         return out
 
     def __repr__(self):
