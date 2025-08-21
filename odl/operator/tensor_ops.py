@@ -1002,7 +1002,7 @@ class MatrixOperator(Operator):
         if scipy.sparse.isspmatrix(self.matrix):
             out = self.matrix.dot(x.data)
         else:
-            dot = ns.tensordot(self.matrix, x.data, axes=(1, self.axis))
+            dot = ns.tensordot(self.matrix, x.data, axes=([1], [self.axis]))
             # New axis ends up as first, need to swap it to its place
             out = ns.moveaxis(dot, 0, self.axis)
 
