@@ -148,8 +148,7 @@ class TensorSpace(LinearSpace):
         AssertionError: "For numpy Backend, only devices ['cpu'] are present, but 'anything_but_cpu' was provided."
 
         """
-        odl.check_device(self.impl, device)
-        self.__device = device 
+        self.__device = odl.check_device(self.impl, device)
 
     def _init_dtype(self, dtype:str | int | float | complex):
         """

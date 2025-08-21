@@ -10,7 +10,7 @@
 
 from types import ModuleType
 from dataclasses import dataclass
-from typing import Callable
+from typing import Callable, Union
 
 __all__ = (
     'ArrayBackend', 
@@ -201,16 +201,18 @@ def get_array_and_backend(x, must_be_contiguous=False):
     else:
         raise ValueError(f"The registered array backends are {list(_registered_array_backends.keys())}. The argument provided is a {type(x)}, check that the backend you want to use is supported and has been correctly instanciated.")
 
-def check_device(impl:str, device:str):
+def check_device(impl:str, device: Union[str, object]) -> str:
     """
     Checks the device argument.
     This checks that the device requested is available and that its compatible with the backend requested.
+
+    If successful, returns the standard string identifier of the device.
 
     Parameters
     ----------
     impl : str
         backend identifier
-    device : str
+    device : str or backend-specific device-object
         Device identifier
 
     Examples
@@ -221,7 +223,15 @@ def check_device(impl:str, device:str):
     AssertionError: "For numpy Backend, only devices ['cpu'] are present, but 'anything_but_cpu' was provided."
     """
     backend = lookup_array_backend(impl)
-    assert device in backend.available_devices, f"For {impl} Backend, only devices {backend.available_devices} are present, but {device} was provided."
+    for known_device in backend.available_devices:
+        if device == known_device:
+            return device
+        elif str(device) == known_device:
+            # This works at least for PyTorch, but it is not clear
+            # how general this is.
+            return str(device)
+
+    raise ValueError(f"For {impl} Backend, only devices {backend.available_devices} are present, but {device} was provided.")
     
 def _dtype_info(array_namespace, dtype):
     """
