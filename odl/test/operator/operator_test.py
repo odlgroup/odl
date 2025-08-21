@@ -257,11 +257,10 @@ def test_linear_operator_call(dom_eq_ran_mat):
 
     op = MatrixOperator(mat)
     _, backend = get_array_and_backend(mat)
-    ns = backend.array_namespace
     assert op.is_linear
 
     xarr, x = noise_elements(op.domain)
-    check_call(op, x, ns.matmul(mat, xarr))
+    check_call(op, x, np.matmul(mat, xarr))
 
 
 def test_linear_operator_adjoint(dom_eq_ran_mat):
@@ -270,9 +269,8 @@ def test_linear_operator_adjoint(dom_eq_ran_mat):
 
     op = MatrixOperator(mat)
     _, backend = get_array_and_backend(mat)
-    ns = backend.array_namespace
     xarr, x = noise_elements(op.range)
-    check_call(op.adjoint, x, ns.matmul(mat.T, xarr))
+    check_call(op.adjoint, x, np.matmul(mat.T, xarr))
 
 
 def test_linear_operator_addition(dom_eq_ran_mat):
