@@ -124,7 +124,7 @@ def _universal_dtype_identifier(dtype: "str | Number |xp.dtype", array_backend_s
     for array_backend in array_backends:
         if dtype in array_backend.available_dtypes.values():
             return array_backend.identifier_of_dtype(dtype)
-    raise ValueError(f'The provided dtype {dtype} is not a string, a python Number or a backend-specific dtype. Please provide either of these.')
+    raise ValueError(f'The provided dtype {dtype} is not a string, a python Number or a backend-specific dtype of {[be.impl for be in array_backends]}. Please provide either of these.')
 
 @lru_cache
 def is_available_dtype(dtype: "str | Number |xp.dtype") -> bool:
