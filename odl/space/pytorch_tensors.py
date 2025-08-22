@@ -252,11 +252,11 @@ class PyTorchTensorSpace(TensorSpace):
 
         >>> space = PyTorchTensorSpace(3, dtype=float)
         >>> space
-        rn(3, <class 'float'>, 'pytorch', 'cpu', dtype=<class 'float'>)
+        rn(3, 'float64', 'pytorch')
         >>> space.shape
         (3,)
         >>> space.dtype
-        torch.float32
+        torch.float64
         """
         super(PyTorchTensorSpace, self).__init__(shape, dtype, device, **kwargs)
 
@@ -333,7 +333,7 @@ class PyTorchTensor(Tensor):
 
         Examples
         --------
-        >>> space = odl.rn(3)
+        >>> space = odl.rn(3, impl='pytorch')
         >>> x = space.element([1, 2, 3])
         >>> y = x.copy()
         >>> y == x
@@ -363,23 +363,23 @@ class PyTorchTensor(Tensor):
         --------
         For one-dimensional spaces, indexing is as in linear arrays:
 
-        >>> space = odl.rn(3)
+        >>> space = odl.rn(3, impl='pytorch')
         >>> x = space.element([1, 2, 3])
         >>> x[0]
         1.0
         >>> x[1:]
-        rn(2, 'float64', 'numpy', 'cpu').element([ 2.,  3.])
+        rn(2, 'float64', 'pytorch').element([ 2.,  3.])
 
         In higher dimensions, the i-th index expression accesses the
         i-th axis:
 
-        >>> space = odl.rn((2, 3))
+        >>> space = odl.rn((2, 3), impl='pytorch')
         >>> x = space.element([[1, 2, 3],
         ...                    [4, 5, 6]])
         >>> x[0, 1]
         2.0
         >>> x[:, 1:]
-        rn((2, 2), 'float64', 'numpy', 'cpu').element(
+        rn((2, 2), 'float64', 'pytorch').element(
             [[ 2.,  3.],
              [ 5.,  6.]]
         )
@@ -389,16 +389,16 @@ class PyTorchTensor(Tensor):
         >>> y = x[:, ::2]  # view into x
         >>> y[:] = -9
         >>> x
-        rn((2, 3), 'float64', 'numpy', 'cpu').element(
+        rn((2, 3), 'float64', 'pytorch').element(
             [[-9.,  2., -9.],
              [-9.,  5., -9.]]
         )
         >>> y = x[[0, 1], [1, 2]]  # not a view, won't modify x
         >>> y
-        rn(2, 'float64', 'numpy', 'cpu').element([ 2., -9.])
+        rn(2, 'float64', 'pytorch').element([ 2., -9.])
         >>> y[:] = 0
         >>> x
-        rn((2, 3), 'float64', 'numpy', 'cpu').element(
+        rn((2, 3), 'float64', 'pytorch').element(
             [[-9.,  2., -9.],
              [-9.,  5., -9.]]
         )
@@ -449,7 +449,7 @@ class PyTorchTensor(Tensor):
         >>> x[0] = -1
         >>> x[1:] = (0, 1)
         >>> x
-        rn(3, <class 'float'>, 'pytorch', 'cpu', dtype=<class 'float'>).element([-1.,  0.,  1.])
+        rn(3, 'float64', 'pytorch').element([-1.,  0.,  1.])
 
         It is also possible to use tensors of other spaces for
         casting and assignment:
@@ -459,7 +459,7 @@ class PyTorchTensor(Tensor):
         ...                    [4, 5, 6]])
         >>> x[0, 1] = -1
         >>> x
-        rn((2, 3), <class 'float'>, 'pytorch', 'cpu', dtype=<class 'float'>).element(
+        rn((2, 3), 'float64', 'pytorch').element(
             [[ 1., -1.,  3.],
              [ 4.,  5.,  6.]]
         )
@@ -468,7 +468,7 @@ class PyTorchTensor(Tensor):
         ...                          [0, 0]])
         >>> x[:, :2] = y
         >>> x
-        rn((2, 3), <class 'float'>, 'pytorch', 'cpu', dtype=<class 'float'>).element(
+        rn((2, 3), 'float64', 'pytorch').element(
             [[-1.,  2.,  3.],
              [ 0.,  0.,  6.]]
         )
@@ -478,19 +478,19 @@ class PyTorchTensor(Tensor):
         >>> x[:] = torch.tensor([[0, 0, 0],
         ...                  [1, 1, 1]])
         >>> x
-        rn((2, 3), <class 'float'>, 'pytorch', 'cpu', dtype=<class 'float'>).element(
+        rn((2, 3), 'float64', 'pytorch').element(
             [[ 0.,  0.,  0.],
              [ 1.,  1.,  1.]]
         )
         >>> x[:, 1:] = [7, 8]
         >>> x
-        rn((2, 3), <class 'float'>, 'pytorch', 'cpu', dtype=<class 'float'>).element(
+        rn((2, 3), 'float64', 'pytorch').element(
             [[ 0.,  7.,  8.],
              [ 1.,  7.,  8.]]
         )
         >>> x[:, ::2] = -2.
         >>> x
-        rn((2, 3), <class 'float'>, 'pytorch', 'cpu', dtype=<class 'float'>).element(
+        rn((2, 3), 'float64', 'pytorch').element(
             [[-2.,  7., -2.],
              [-2.,  7., -2.]]
         )
