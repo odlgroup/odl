@@ -1,6 +1,6 @@
 package:
     name: odl
-    version: "0.8.2"
+    version: "0.8.3"
 
 source:
     git_url: https://github.com/odlgroup/odl
