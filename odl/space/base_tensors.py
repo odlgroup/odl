@@ -1877,17 +1877,13 @@ class Tensor(LinearSpaceElement):
     ################# Comparison Operators #################
     def __eq__(self, other):
         """Implement ``self == other``."""
+        bool_space = self.space.astype(bool)
         if other is self:
             return True
         elif other not in self.space:
             return False
         else:
-            return (               
-                self.shape == other.shape and               
-                self.impl == other.impl and
-                self.device == other.device and
-                self.array_namespace.all(self.data == other.data)
-                )
+            return bool(self.array_namespace.all(self.data == other.data))
     
     def __ne__(self, other):
         """Return ``self != other``."""
