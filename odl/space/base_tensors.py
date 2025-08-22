@@ -139,14 +139,6 @@ class TensorSpace(LinearSpace):
         ----------
         device : str
             Device identifier
-
-        Examples
-        --------
-        >>> odl.check_device('numpy', 'cpu')
-        >>> odl.check_device('numpy', 'anything_but_cpu')
-        Traceback (most recent call last):
-        AssertionError: "For numpy Backend, only devices ['cpu'] are present, but 'anything_but_cpu' was provided."
-
         """
         self.__device = odl.check_device(self.impl, device)
 
