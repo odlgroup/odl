@@ -1159,8 +1159,11 @@ class TensorSpace(LinearSpace):
             return x2.space._elementwise_num_operation(operation, x1, x2, out, namespace=namespace, **kwargs)
         
         if isinstance(x2, Operator):
-            warnings.warn("The composition of a LinearSpaceElement and an Operator using the * operator is deprecated and will be removed in future ODL versions. Please replace * with @.")
-            return x2.__rmul__(x1)
+            if operation=='multiply':
+                warnings.warn("The composition of a LinearSpaceElement and an Operator using the * operator is deprecated and will be removed in future ODL versions. Please replace * with @.")
+                return x2.__rmul__(x1)
+            else:
+                raise TypeError(f"Attempted numerical operation {operation} between two incompatible objects ({type(x1)=}, {type(x2)=})")
 
         if isinstance(x1, Tensor) and isinstance(x2, Tensor):
             element_wise_function = getattr(local_namespace, operation)
