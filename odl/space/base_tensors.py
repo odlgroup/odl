@@ -534,6 +534,15 @@ class TensorSpace(LinearSpace):
             return self._astype(dtype_identifier)
         
     def element(self, inp=None, device=None, copy=None):
+
+        # Most of the cases further below deal with conversions from various array types.
+        # This only makes sense for plain arrays and ODL objects based on a single plain
+        # array (i.e. `odl.Tensor` subclasses). For other ODL objects, such as product
+        # space element, it would result in confusing errors, so we stop this eventuality
+        # right here.
+        if isinstance(inp, LinearSpaceElement) and not isinstance(inp, Tensor):
+            raise TypeError("Trying to generated a `Tensor` from an ODL object with more structure, {type(inp)=}")
+
         def wrapped_array(arr):
             if arr.shape != self.shape:
                 raise ValueError(
