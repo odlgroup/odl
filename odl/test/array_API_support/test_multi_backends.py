@@ -4,6 +4,11 @@ import odl
 from odl.util.pytest_config import IMPL_DEVICE_PAIRS
 from odl.util.testutils import all_almost_equal
 
+try:
+    import torch
+except ImportError:
+    pass
+
 skip_if_no_pytorch = pytest.mark.skipif(
         "'pytorch' not in odl.space.entry_points.TENSOR_SPACE_IMPLS",
         reason='PYTORCH not available',
@@ -43,6 +48,9 @@ def pytorch_tspace_cpu(odl_floating_dtype):
 
 @pytest.fixture(scope='module')
 def pytorch_tspace_gpu(odl_floating_dtype):
+    if torch.cuda.device_count() == 0:
+        pytest.skip(reason="No Cuda-capable GPU available")
+
     return odl.tensor_space(
         shape=DEFAULT_SHAPE, 
         dtype=odl_floating_dtype, 
