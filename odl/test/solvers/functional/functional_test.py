@@ -18,6 +18,7 @@ from odl.util.testutils import (
     all_almost_equal, dtype_ndigits, dtype_tol, noise_element, simple_fixture)
 from odl.solvers.functional.default_functionals import (
     KullbackLeiblerConvexConj)
+from odl.solvers.nonsmooth.proximal_operators import _numerical_epsilon
 
 
 # TODO: maybe add tests for if translations etc. belongs to the wrong space.
@@ -163,7 +164,7 @@ def test_derivative(functional):
         y = y - odl.max(y) + 0.99
 
     # Compute a "small" step size according to dtype of space
-    step = float(np.sqrt(np.finfo(functional.domain.dtype).eps))
+    step = float(np.sqrt(_numerical_epsilon(functional.domain.dtype)))
 
     # Numerical test of gradient, only low accuracy can be guaranteed.
     assert all_almost_equal((functional(x + step * y) - functional(x)) / step,

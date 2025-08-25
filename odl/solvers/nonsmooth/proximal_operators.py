@@ -28,7 +28,7 @@ from odl.operator import (
     Operator, IdentityOperator, ConstantOperator, DiagonalOperator,
     PointwiseNorm, MultiplyOperator)
 from odl.space import ProductSpace
-from odl.set.space import LinearSpaceElement
+from odl.set.space import LinearSpace, LinearSpaceElement
 from odl.array_API_support.element_wise import maximum, minimum, abs, divide, sign, square, sqrt, less_equal, logical_not, exp
 from odl.array_API_support.statistical import sum
 from odl.util.scipy_compatibility import lambertw
@@ -47,6 +47,15 @@ __all__ = ('combine_proximals', 'proximal_convex_conj', 'proximal_translation',
            'proximal_convex_conj_kl', 'proximal_convex_conj_kl_cross_entropy',
            'proximal_huber')
 
+def _numerical_epsilon(space: LinearSpace):
+    """Determine numerical precision, preferably from the data type of the space,
+    else defaulting to double-precision float in case there is no single dtype
+    (e.g. `ProductSpaces`)."""
+    dtype_id = getattr(space, 'dtype_identifier', 'float64')
+    # Always use NumPy for resolution, assuming that different backends would offer
+    # the same precision for the corresponding types.
+    eps = np.finfo(dtype_id).resolution * 10
+    return eps
 
 def combine_proximals(*factory_list):
     r"""Combine proximal operators into a diagonal product space operator.
@@ -783,8 +792,8 @@ def proximal_l2(space, lam=1, g=None):
 
         def _call(self, x, out):
             """Apply the operator to ``x`` and stores the result in ``out``."""
-            dtype = getattr(self.domain, 'dtype', float)
-            eps = np.finfo(dtype).resolution * 10
+
+            eps = _numerical_epsilon(self.domain)
 
             if g is None:
                 x_norm = x.norm() * (1 + eps)
@@ -1081,8 +1090,7 @@ def proximal_convex_conj_l1(space, lam=1, g=None):
     proximal_l1 : proximal without convex conjugate
     """
     # Fix for rounding errors
-    dtype = getattr(space, 'dtype', float)
-    eps = np.finfo(dtype).resolution * 10
+    eps = _numerical_epsilon(space)
     lam = float(lam * (1 - eps))
 
     if g is not None and g not in space:
@@ -1193,8 +1201,7 @@ def proximal_convex_conj_l1_l2(space, lam=1, g=None):
     proximal_convex_conj_l1 : Scalar or non-isotropic vectorial variant
     """
     # Fix for rounding errors
-    dtype = getattr(space, 'dtype', float)
-    eps = np.finfo(dtype).resolution * 10
+    eps = _numerical_epsilon(space)
     lam = float(lam * (1 - eps))
 
     if g is not None and g not in space:
