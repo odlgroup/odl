@@ -218,9 +218,11 @@ def check_device(impl:str, device: Union[str, object]) -> str:
     Examples
     --------
     >>> odl.check_device('numpy', 'cpu')
+    'cpu'
     >>> odl.check_device('numpy', 'anything_but_cpu')
     Traceback (most recent call last):
-    AssertionError: "For numpy Backend, only devices ['cpu'] are present, but 'anything_but_cpu' was provided."
+    ...
+    ValueError: For numpy Backend, only devices ['cpu'] are present, but anything_but_cpu was provided.
     """
     backend = lookup_array_backend(impl)
     for known_device in backend.available_devices:
