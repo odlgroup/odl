@@ -24,6 +24,14 @@ __all__ = (
 _registered_array_backends = {}
 
 @dataclass
+class ArrayOperation:
+    name: str
+    operation_call: Callable
+    supports_single_input: bool
+    supports_two_inputs: bool
+    supports_out_argument: bool
+
+@dataclass
 class ArrayBackend:
     """
     Class to implement the array backend associated to each TensorSpace Implementations.
@@ -62,6 +70,7 @@ class ArrayBackend:
     available_devices : list[str]
     to_cpu : Callable
     to_numpy: Callable
+    _elementwise_operations: dict[str, ArrayOperation]
     def __post_init__(self):
         if self.impl in _registered_array_backends:
             raise KeyError(f"An array-backend with the identifier {self.impl} is already registered. Every backend needs to have a unique identifier.")
@@ -100,7 +109,7 @@ class ArrayBackend:
         'float64'
         >>> odl.numpy_array_backend.get_dtype_identifier(dtype=np.dtype(float), array=np.zeros(10, float))
         Traceback (most recent call last):
-        AssertionError: "array and dtype are multually exclusive parameters"
+        AssertionError: "array and dtype are mutually exclusive parameters"
         >>> odl.numpy_array_backend.get_dtype_identifier(np.dtype(float))
         Traceback (most recent call last):
         TypeError: "ArrayBackend.get_dtype_identifier() takes 1 positional argument but 2 were given"
@@ -112,6 +121,40 @@ class ArrayBackend:
             assert 'array' not in kwargs, "array and dtype are mutually exclusive parameters"
             return self.identifier_of_dtype(kwargs['dtype'])
         raise ValueError("Either 'array' or 'dtype' argument must be provided.")
+
+    def _probe_elementwise_operation(self, operation):
+        """
+        Attempt to use a low-level operation in this backend. If successful, the operation is
+        then registered in the `_elementwise_operations` dict in a suitable manner."""
+        fn = getattr(self.array_namespace, operation)
+        test_input = self.array_constructor([0,1,2])
+        test_output = None
+        supports_single_input = supports_two_inputs = supports_out_argument = False
+        try:
+            test_output = fn(test_input)
+            supports_single_input = True
+        except TypeError:
+            pass
+        try:
+            test_output = fn(test_input, test_input)
+            supports_two_inputs = True
+        except TypeError:
+            pass
+        try:
+            if supports_single_input:
+                fn(test_input, out=test_output)
+                supports_out_argument = True
+            elif supports_two_inputs:
+                fn(test_input, test_input, out=test_output)
+                supports_out_argument = True
+        except TypeError:
+            pass
+        if supports_single_input or supports_two_inputs:
+            self._elementwise_operations[operation] = ArrayOperation(
+                     name = operation,
+                     supports_single_input = supports_single_input,
+                     supports_two_inputs = supports_two_inputs,
+                     supports_out_argument = supports_out_argument)
     
     def __repr__(self):
         """
