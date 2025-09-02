@@ -1090,9 +1090,9 @@ class TensorSpace(LinearSpace):
             raise NotImplementedError(f"The space has no field.")
         
         if namespace is None:
-            local_namespace = self.array_namespace
+            fn = getattr(self.array_namespace, operation)
         else:
-            local_namespace = namespace
+            fn = getattr(namespace, operation)
 
         if out is not None:
             assert isinstance(out, Tensor), f"The out argument must be an ODL Tensor, got {type(out)}."
@@ -1104,7 +1104,6 @@ class TensorSpace(LinearSpace):
 
         if x2 is None:
             assert x1 in self, f"The left operand is not an element of the space."
-            fn = getattr(local_namespace, operation)
             if out is None:
                 result_data = fn(x1.data, **kwargs)
             else:
@@ -1119,7 +1118,6 @@ class TensorSpace(LinearSpace):
             raise TypeError(f'The type of the right operand {type(x2)} is not supported.')
 
         if isinstance(x1, (int, float, complex)) or isinstance(x2, (int, float, complex)):
-            fn =  getattr(local_namespace, operation)
             if out is None:
                 if isinstance(x1, (int, float, complex)):
                     result_data = fn(x1, x2.data, **kwargs)
@@ -1135,7 +1133,6 @@ class TensorSpace(LinearSpace):
             return self.astype(self.array_backend.get_dtype_identifier(array=result_data)).element(result_data) 
         
         # if isinstance(x1, self.array_backend.array_type) or isinstance(x2, self.array_backend.array_type):
-        #     fn =  getattr(local_namespace, operation)
         #     if out is None:
         #         if isinstance(x1, self.array_backend.array_type):
         #             assert x1.shape  == self.shape, f"The shape of self {self.shape} and x1 {x1.shape} differ, cannot perform {operation}"
@@ -1175,16 +1172,14 @@ class TensorSpace(LinearSpace):
                 raise TypeError(f"Attempted numerical operation {operation} between two incompatible objects ({type(x1)=}, {type(x2)=})")
 
         if isinstance(x1, Tensor) and isinstance(x2, Tensor):
-            element_wise_function = getattr(local_namespace, operation)
-
             assert self.array_backend.array_type == x2.array_backend.array_type, f"The types of {self.array_backend.array_type} and x2 {x2.array_backend.array_type} differ, cannot perform {operation}"
             assert self.shape == x2.space.shape, f"The shapes of {self} and x2 {x2.space.shape} differ, cannot perform {operation}"
             assert self.device == x2.space.device, f"The devices of {self} and x2 {x2.space.device} differ, cannot perform {operation}"
 
             if out is None:
-                result = element_wise_function(x1.data, x2.data)
+                result = fn(x1.data, x2.data)
             else:
-                result = element_wise_function(x1.data, x2.data, out=out.data)
+                result = fn(x1.data, x2.data, out=out.data)
     
             # We make sure to return an element of the right type: 
             # for instance, if two spaces have a int dtype, the result of the division 
