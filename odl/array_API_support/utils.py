@@ -70,11 +70,11 @@ class ArrayBackend:
     available_devices : list[str]
     to_cpu : Callable
     to_numpy: Callable
-    _elementwise_operations: dict[str, ArrayOperation]
     def __post_init__(self):
         if self.impl in _registered_array_backends:
             raise KeyError(f"An array-backend with the identifier {self.impl} is already registered. Every backend needs to have a unique identifier.")
         _registered_array_backends[self.impl] = self
+        self._array_operations = {}
     def get_dtype_identifier(self, **kwargs) -> str:
         """
         Method for getting a dtype_identifier (str) from an array or a dtype. 
@@ -125,7 +125,7 @@ class ArrayBackend:
     def _probe_elementwise_operation(self, operation):
         """
         Attempt to use a low-level operation in this backend. If successful, the operation is
-        then registered in the `_elementwise_operations` dict in a suitable manner."""
+        then registered in the `_array_operations` dict in a suitable manner."""
         fn = getattr(self.array_namespace, operation)
         test_input = self.array_constructor([0,1,2])
         test_output = None
@@ -150,11 +150,20 @@ class ArrayBackend:
         except TypeError:
             pass
         if supports_single_input or supports_two_inputs:
-            self._elementwise_operations[operation] = ArrayOperation(
+            self._array_operations[operation] = ArrayOperation(
                      name = operation,
+                     operation_call = fn,
                      supports_single_input = supports_single_input,
                      supports_two_inputs = supports_two_inputs,
                      supports_out_argument = supports_out_argument)
+
+    def lookup_array_operation(self, operation: str) -> ArrayOperation:
+        if operation not in self._array_operations:
+            self._probe_elementwise_operation(operation)
+        return self._array_operations[operation]
+
+    def lookup_function(self, operation: str) -> Callable:
+        return self.lookup_array_operation(operation).operation_call
     
     def __repr__(self):
         """

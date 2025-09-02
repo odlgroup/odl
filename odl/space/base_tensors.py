@@ -1090,7 +1090,7 @@ class TensorSpace(LinearSpace):
             raise NotImplementedError(f"The space has no field.")
         
         if namespace is None:
-            fn = getattr(self.array_namespace, operation)
+            fn = self.array_backend.lookup_function(operation)
         else:
             fn = getattr(namespace, operation)
 
