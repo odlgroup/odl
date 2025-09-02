@@ -127,35 +127,38 @@ class ArrayBackend:
         Attempt to use a low-level operation in this backend. If successful, the operation is
         then registered in the `_array_operations` dict in a suitable manner."""
         fn = getattr(self.array_namespace, operation)
-        test_input = self.array_constructor([0,1,2])
+        test_inputs = { dtk: self.array_constructor([1,2,3], dtype=dtype)
+                         for dtk, dtype in self.available_dtypes.items() }
         test_output = None
         supports_single_input = supports_two_inputs = supports_out_argument = False
-        try:
-            test_output = fn(test_input)
-            supports_single_input = True
-        except TypeError:
-            pass
-        try:
-            test_output = fn(test_input, test_input)
-            supports_two_inputs = True
-        except TypeError:
-            pass
-        try:
-            if supports_single_input:
-                fn(test_input, out=test_output)
-                supports_out_argument = True
-            elif supports_two_inputs:
-                fn(test_input, test_input, out=test_output)
-                supports_out_argument = True
-        except TypeError:
-            pass
-        if supports_single_input or supports_two_inputs:
-            self._array_operations[operation] = ArrayOperation(
-                     name = operation,
-                     operation_call = fn,
-                     supports_single_input = supports_single_input,
-                     supports_two_inputs = supports_two_inputs,
-                     supports_out_argument = supports_out_argument)
+        for dtype, test_input in test_inputs.items():
+            try:
+                test_output = fn(test_input)
+                supports_single_input = True
+            except (TypeError, RuntimeError):
+                pass
+            try:
+                test_output = fn(test_input, test_input)
+                supports_two_inputs = True
+            except (TypeError, RuntimeError):
+                pass
+            try:
+                if supports_single_input:
+                    fn(test_input, out=test_output)
+                    supports_out_argument = True
+                elif supports_two_inputs:
+                    fn(test_input, test_input, out=test_output)
+                    supports_out_argument = True
+            except (TypeError, RuntimeError):
+                pass
+            if supports_single_input or supports_two_inputs:
+                self._array_operations[operation] = ArrayOperation(
+                         name = operation,
+                         operation_call = fn,
+                         supports_single_input = supports_single_input,
+                         supports_two_inputs = supports_two_inputs,
+                         supports_out_argument = supports_out_argument)
+                return
 
     def lookup_array_operation(self, operation: str) -> ArrayOperation:
         if operation not in self._array_operations:
