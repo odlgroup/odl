@@ -1090,9 +1090,20 @@ class TensorSpace(LinearSpace):
             raise NotImplementedError(f"The space has no field.")
         
         if namespace is None:
-            fn = self.array_backend.lookup_function(operation)
+            arr_operation = self.array_backend.lookup_array_operation(operation)
+            fn = arr_operation.operation_call
+            if arr_operation.supports_out_argument:
+                fn_in_place = arr_operation.operation_call
+            else:
+                # If there is no native `out` argument of the low-level call, an
+                # in-place update needs to be emulated in the relevant branches.
+                fn_in_place = None
         else:
             fn = getattr(namespace, operation)
+            # If an explicit namespace was provided, we have to assume it contains
+            # the function in whichever form appropriate for performing the call
+            # as requested.
+            fn_in_place = fn
 
         if out is not None:
             assert isinstance(out, Tensor), f"The out argument must be an ODL Tensor, got {type(out)}."
@@ -1106,8 +1117,11 @@ class TensorSpace(LinearSpace):
             assert x1 in self, f"The left operand is not an element of the space."
             if out is None:
                 result_data = fn(x1.data, **kwargs)
+            elif fn_in_place is None:
+                result_data = fn(x1.data, **kwargs)
+                out[:] = result_data
             else:
-                result_data = fn(x1.data, out=out.data, **kwargs)
+                result_data = fn_in_place(x1.data, out=out.data, **kwargs)
             return self.astype(self.array_backend.get_dtype_identifier(array=result_data)).element(result_data) 
         
         from odl.operator import Operator
@@ -1126,7 +1140,11 @@ class TensorSpace(LinearSpace):
                     
             else:
                 if isinstance(x1, (int, float, complex)):
-                    result_data = fn(x1, x2.data, out=out.data, **kwargs)
+                    if fn_in_place is None:
+                        result_data = fn(x1, x2.data, **kwargs)
+                        out[:] = result_data
+                    else:
+                        result_data = fn_in_place(x1, x2.data, out=out.data, **kwargs)
                 elif isinstance(x2, (int, float, complex)):
                     result_data = fn(x1.data, x2, out=out.data, **kwargs)
                     
@@ -1178,6 +1196,9 @@ class TensorSpace(LinearSpace):
 
             if out is None:
                 result = fn(x1.data, x2.data)
+            elif fn_in_place is None:
+                result = fn(x1.data, x2.data)
+                out.data[:] = result
             else:
                 result = fn(x1.data, x2.data, out=out.data)
     
