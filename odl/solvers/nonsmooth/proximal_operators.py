@@ -32,6 +32,7 @@ from odl.set.space import LinearSpace, LinearSpaceElement
 from odl.array_API_support.element_wise import maximum, minimum, abs, divide, sign, square, sqrt, less_equal, logical_not, exp
 from odl.array_API_support.statistical import sum
 from odl.util.scipy_compatibility import lambertw
+from odl.util.dtype_utils import is_complex_dtype
 
 
 __all__ = ('combine_proximals', 'proximal_convex_conj', 'proximal_translation',
@@ -800,10 +801,11 @@ def proximal_l2(space, lam=1, g=None):
                 if x_norm > 0:
                     step = self.sigma * lam / x_norm
                 else:
-                    step = np.infty
-
+                    step = np.inf
+                
                 if step < 1.0:
-                    out.lincomb(1.0 - step, x)
+                    out[:] = (1-step)*x
+                    # out.lincomb(1.0 - step, x)
                 else:
                     out.set_zero()
 
@@ -812,10 +814,11 @@ def proximal_l2(space, lam=1, g=None):
                 if x_norm > 0:
                     step = self.sigma * lam / x_norm
                 else:
-                    step = np.infty
+                    step = np.inf
 
                 if step < 1.0:
-                    out.lincomb(1.0 - step, x, step, g)
+                    # out.lincomb(1.0 - step, x, step, g)
+                    out[:] = (1.0-step) *x + step*g
                 else:
                     out.assign(g)
 
@@ -1921,7 +1924,6 @@ def proximal_convex_conj_kl_cross_entropy(space, lam=1, g=None):
         def _call(self, x, out):
             """Return ``self(x, out=out)``."""
             # Lazy import to improve `import odl` time
-            import scipy.special
 
             if g is None:
                 # If g is None, it is taken as the one element
@@ -1933,7 +1935,7 @@ def proximal_convex_conj_kl_cross_entropy(space, lam=1, g=None):
                 lambw = lambertw(
                     (self.sigma / lam) * g * exp(x / lam))
 
-            if not np.issubdtype(self.domain.dtype, np.complexfloating):
+            if not is_complex_dtype(self.domain.dtype):
                 lambw = lambw.real
 
             lambw = x.space.element(lambw)
