@@ -126,6 +126,7 @@ class RayTransform(Operator):
                 geometry.partition.shape,
                 weighting=weighting,
                 dtype=dtype,
+                device=vol_space.device
             )
 
             if geometry.motion_partition.ndim == 0:

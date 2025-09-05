@@ -307,17 +307,6 @@ class AstraCudaImpl:
             else:
                 return self.vol_space.element(volume_data)
 
-    def __del__(self):
-        """Delete ASTRA objects."""
-        if self.geometry.ndim == 2:
-            adata, aproj = astra.data2d, astra.projector
-        else:
-            adata, aproj = astra.data3d, astra.projector3d
-
-        if self.projector_id is not None:
-            aproj.delete(self.projector_id)
-            self.projector_id = None
-
 
 def astra_cuda_fp_scaling_factor(geometry):
     """Volume scaling accounting for differing adjoint definitions.
