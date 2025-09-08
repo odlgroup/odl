@@ -22,7 +22,7 @@ def _shepp_logan_ellipse_2d():
     """Return ellipse parameters for a 2d Shepp-Logan phantom.
 
     This assumes that the ellipses are contained in the square
-    [-1, -1]x[-1, -1].
+    [-1, 1]x[-1, 1].
     """
     rad18 = np.deg2rad(18.0)
     #       value  axisx  axisy     x       y  rotation
