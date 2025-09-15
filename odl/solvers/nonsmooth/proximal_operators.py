@@ -804,8 +804,7 @@ def proximal_l2(space, lam=1, g=None):
                     step = np.inf
                 
                 if step < 1.0:
-                    out[:] = (1-step)*x
-                    # out.lincomb(1.0 - step, x)
+                    out.lincomb(1.0 - step, x)
                 else:
                     out.set_zero()
 
@@ -817,8 +816,7 @@ def proximal_l2(space, lam=1, g=None):
                     step = np.inf
 
                 if step < 1.0:
-                    # out.lincomb(1.0 - step, x, step, g)
-                    out[:] = (1.0-step) *x + step*g
+                    out.lincomb(1.0 - step, x, step, g)
                 else:
                     out.assign(g)
 
