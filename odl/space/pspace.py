@@ -1059,6 +1059,17 @@ class ProductSpaceElement(LinearSpaceElement):
         for tgt, src in zip(self.parts, other.parts):
             tgt.assign(src, avoid_deep_copy=avoid_deep_copy)
 
+    def set_zero(self):
+        """Set this element to zero.
+
+        See Also
+        --------
+        LinearSpace.zero
+        """
+        for tgt in self.parts:
+            tgt.set_zero()
+        return self
+
     def __len__(self):
         """Return ``len(self)``."""
         return len(self.space)

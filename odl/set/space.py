@@ -543,7 +543,8 @@ class LinearSpaceElement(object):
         --------
         LinearSpace.zero
         """
-        return self.space.lincomb(0, self, 0, self, out=self)
+        self.assign(self.space.zero())
+        return self
 
     # Convenience methods
     # def __iadd__(self, other):

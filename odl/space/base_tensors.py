@@ -1511,6 +1511,16 @@ class Tensor(LinearSpaceElement):
         """
         return self.space.astype(dtype).element(self.data.astype(dtype))
     
+    def set_zero(self):
+        """Set this element to zero.
+
+        See Also
+        --------
+        LinearSpace.zero
+        """
+        self.data[:] = 0
+        return self
+
     def conj(self, out=None):
         """Return the complex conjugate of ``self``.
 
