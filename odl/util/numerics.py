@@ -629,9 +629,11 @@ def _apply_padding(lhs_arr, rhs_arr, offset, pad_mode, direction):
     rhs_arr, rhs_backend = get_array_and_backend(rhs_arr)
 
     assert lhs_backend == rhs_backend
+    backend = lhs_backend
+
     assert lhs_arr.device == rhs_arr.device
 
-    ns = lhs_backend.array_namespace
+    ns = backend.array_namespace
 
     full_slc = [slice(None)] * lhs_arr.ndim
     intersec_slc, _ = _intersection_slice_tuples(lhs_arr, rhs_arr, offset)
@@ -815,7 +817,7 @@ def _apply_padding(lhs_arr, rhs_arr, offset, pad_mode, direction):
                 # Add moment1 at the "width-2 boundary layers", with the sign
                 # corresponding to the sign in the derivative calculation
                 # of the forward padding.
-                sign = lhs_backend.array_constructor([-1, 1], device=lhs_arr.device)[bcast_slc]
+                sign = backend.array_constructor([-1, 1], device=lhs_arr.device)[bcast_slc]
                 lhs_arr[slope_slc_l] += moment1_l * sign
                 lhs_arr[slope_slc_r] += moment1_r * sign
 
