@@ -12,6 +12,7 @@ from __future__ import absolute_import, division, print_function
 
 import numpy as np
 from odl.util.normalize import normalized_scalar_param_list, safe_int_conv
+from odl.util.dtype_utils import real_dtype
 from odl.array_API_support.utils import get_array_and_backend
 
 __all__ = (
@@ -777,13 +778,17 @@ def _apply_padding(lhs_arr, rhs_arr, offset, pad_mode, direction):
             slope_slc_r[axis] = slice(right_slc.start - 1, right_slc.stop)
             slope_slc_r = tuple(slope_slc_r)
 
+            slope_dtype = backend.available_dtypes[real_dtype(lhs_arr.dtype)]
+
             # The `np.arange`s, broadcast along `axis`, are used to create the
             # constant-slope continuation (forward) or to calculate the
             # first order moments (adjoint).
             arange_l = ns.arange(-n_pad_l, 0,
-                                 dtype=lhs_arr.dtype, device=lhs_arr.device)[bcast_slc]
+                                 dtype=slope_dtype,
+                                 device=lhs_arr.device)[bcast_slc]
             arange_r = ns.arange(1, n_pad_r + 1,
-                                 dtype=lhs_arr.dtype, device=lhs_arr.device)[bcast_slc]
+                                 dtype=slope_dtype,
+                                 device=lhs_arr.device)[bcast_slc]
 
             lhs_slc_l, rhs_slc_l, lhs_slc_r, rhs_slc_r = map(
                 tuple, [lhs_slc_l, rhs_slc_l, lhs_slc_r, rhs_slc_r])
