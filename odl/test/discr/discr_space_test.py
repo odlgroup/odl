@@ -792,10 +792,9 @@ def test_real_imag(odl_elem_order, odl_impl_device_pairs):
                                   [-1, -1]])
 
     # Incompatible shapes
-    error = ValueError if impl =='numpy' else RuntimeError
-    with pytest.raises(error):
+    with pytest.raises(ValueError):
         x.real = [4, 5, 6, 7]
-    with pytest.raises(error):
+    with pytest.raises(ValueError):
         x.imag = [4, 5, 6, 7]
 
 
