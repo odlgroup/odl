@@ -17,7 +17,7 @@ import pytest
 from odl.discr.discr_space import DiscretizedSpace, DiscretizedSpaceElement
 from odl.space.base_tensors import TensorSpace, default_dtype
 from odl.space.npy_tensors import NumpyTensor
-from odl.util.dtype_utils import COMPLEX_DTYPES
+from odl.util.dtype_utils import COMPLEX_DTYPES, DTYPE_SHORTHANDS
 from odl.util.testutils import (
     all_almost_equal, all_equal, noise_elements, simple_fixture, default_precision_dict)
 from odl.array_API_support import lookup_array_backend
@@ -720,13 +720,12 @@ def test_astype(odl_impl_device_pairs):
     assert cdiscr.real_space == rdiscr
 
     # More exotic dtype
-    # @leftaroundabout why was that even supported?
     discr = odl.uniform_discr([0, 0], [1, 1], [2, 2], dtype=bool, impl=impl, device=device)
     as_float = discr.astype(float)
-    assert as_float.dtype_identifier == default_precision_dict[impl]['float']
+    assert as_float.dtype_identifier == DTYPE_SHORTHANDS[float]
     assert not as_float.is_weighted
     as_complex = discr.astype(complex)
-    assert as_complex.dtype_identifier == 'complex128'
+    assert as_complex.dtype_identifier == DTYPE_SHORTHANDS[complex]
     assert not as_complex.is_weighted
 
 
