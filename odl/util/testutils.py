@@ -764,6 +764,12 @@ def test_file(file, args=None):
     pytest.main(args)
 
 
+# What types will auto-chosen in expressions like `odl.vector([1.0,2.0])` is
+# backend-dependent, with NumPy prioritizing precision and PyTorch speed. This
+# follows what the underlying `np.array` / `torch.tensor` constructors choose.
+# Note that this differs from what happens when `float` is explicitly specified
+# as the `dtype` - this will always be interpreted as double precision
+# (see `DTYPE_SHORTHANDS`).
 default_precision_dict = {
     'pytorch':{
         'integer' : 'int32',
