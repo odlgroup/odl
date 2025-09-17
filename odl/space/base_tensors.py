@@ -1134,16 +1134,16 @@ class TensorSpace(LinearSpace):
         if isinstance(x1, (int, float, complex)) or isinstance(x2, (int, float, complex)):
             if out is None:
                 if isinstance(x1, (int, float, complex)):
-                    x1 = self.array_backend.array_constructor(x1)
+                    x1 = self.array_backend.array_constructor(x1, dtype=self.dtype)
                     result_data = fn(x1, x2.data, **kwargs)
 
                 elif isinstance(x2, (int, float, complex)):
-                    x2 = self.array_backend.array_constructor(x2)
+                    x2 = self.array_backend.array_constructor(x2, dtype=self.dtype)
                     result_data = fn(x1.data, x2, **kwargs)
                     
             else:
                 if isinstance(x1, (int, float, complex)):
-                    x1 = self.array_backend.array_constructor(x1)
+                    x1 = self.array_backend.array_constructor(x1, dtype=self.dtype)
                     if fn_in_place is None:
                         result_data = fn(x1, x2.data, **kwargs)
                         out[:] = result_data
@@ -1151,7 +1151,7 @@ class TensorSpace(LinearSpace):
                         result_data = fn_in_place(x1, x2.data, out=out.data, **kwargs)
 
                 elif isinstance(x2, (int, float, complex)):
-                    x2 = self.array_backend.array_constructor(x2)
+                    x2 = self.array_backend.array_constructor(x2, dtype=self.dtype)
                     if fn_in_place is None:
                         result_data = fn(x1.data, x2, **kwargs)
                         out[:] = result_data
