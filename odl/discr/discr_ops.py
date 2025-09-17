@@ -343,8 +343,8 @@ class ResizingOperator(Operator):
 
         self.__pad_mode = pad_mode
         # Store constant in a way that ensures safe casting (one-element array)
-        self.__pad_const = np.array(kwargs.pop('pad_const', 0),
-                                    dtype=ran.dtype)
+        self.__pad_const = ran.array_backend.array_constructor(kwargs.pop('pad_const', 0),
+                                    dtype=ran.dtype, device=ran.device)
 
         # padding mode 'constant' with `pad_const != 0` is not linear
         linear = (self.pad_mode != 'constant' or self.pad_const == 0.0 or self.pad_const == 0)

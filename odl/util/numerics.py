@@ -459,8 +459,11 @@ def resize_array(arr, newshp, offset=None, pad_mode='constant', pad_const=0,
     if (pad_mode == 'constant' and
         any(n_new > n_orig
             for n_orig, n_new in zip(arr.shape, out.shape))):
-        pad_const_scl = backend.array_constructor([pad_const], dtype=out.dtype)
-        assert(pad_const_scl == backend.array_constructor([pad_const]))
+        
+        if isinstance(pad_const, backend.array_type):
+            pad_const_scl = pad_const.reshape([])
+        else:
+            pad_const_scl = backend.array_constructor([pad_const], dtype=out.dtype)
 
     # Handle direction
     direction, direction_in = str(direction).lower(), direction
