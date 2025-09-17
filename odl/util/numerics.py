@@ -13,7 +13,7 @@ from __future__ import absolute_import, division, print_function
 import numpy as np
 from odl.util.normalize import normalized_scalar_param_list, safe_int_conv
 from odl.util.dtype_utils import real_dtype
-from odl.array_API_support.utils import get_array_and_backend
+from odl.array_API_support.utils import ArrayBackend, get_array_and_backend
 
 __all__ = (
     'apply_on_boundary',
@@ -614,6 +614,59 @@ def _padding_slices_inner(lhs_arr, rhs_arr, axis, offset, pad_mode):
     return pad_slc_l, pad_slc_r
 
 
+def _flip_slice(slc: slice) -> slice:
+    """Turn around a slice, so that `arr[_flip_slice(slc)] == arr[slc].flip`.
+    Only confirmed to work correctly for slices with step +1 or -1 (which is
+    the case for all the slices used in this module). Probably would not work
+    for general step sizes."""
+    step = -1 if slc.step is None else -slc.step
+    if slc.start is None:
+        assert(step < 0)
+        slc = slice(0, slc.stop, slc.step)
+    if slc.start == -1 and slc.stop != -1:
+        stop = None
+    else:
+        stop = slc.start+step if slc.start>=-step or slc.start==slc.stop else None
+    if slc.stop is None:
+        if step < 0:
+            return slice(-1, stop, step)
+        else:
+            return slice(0, stop, step)
+    return slice(slc.stop+step, stop, step)
+
+def _slice_array_anystep(arr, slices: list[slice], backend: ArrayBackend):
+    """Workaround for PyTorch's current inability (https://github.com/pytorch/pytorch/issues/59786)
+    to perform slices with a negative step size."""
+    if backend.impl in ['numpy','pytorch']:
+        posstep_slices = []
+        flip_dims = []
+        for i,slc in enumerate(slices):
+            if slc.step is not None and slc.step < 0:
+                posstep_slices.append(_flip_slice(slc))
+                if slc.stop != slc.start:
+                    flip_dims.append(i)
+            else:
+                posstep_slices.append(slc)
+        return backend.array_namespace.flip(arr[tuple(posstep_slices)], axis=flip_dims)
+    else:
+        return arr[slices]
+
+def _make_left_slice_positivestepped(lslc: slice, rslc: slice) -> tuple[slice, slice]:
+    """Flip the steps in both slices so that `lslc` has positive step. If that
+    is already the case, leave both as they are."""
+    if lslc.step is not None and lslc.step < 0:
+        return (_flip_slice(lslc), _flip_slice(rslc))
+    else:
+        return (lslc, rslc)
+
+def _make_left_slices_positivestepped(lslcs: tuple[slice, ...], rslcs: tuple[slice, ...]
+                                     ) -> tuple[tuple[slice, ...], tuple[slice, ...]]:
+    """Multi-slice version of `_make_left_slice_positivestepped`."""
+    tweaked_slices = [_make_left_slice_positivestepped(lslc, rslc)
+                        for lslc, rslc in zip(lslcs, rslcs)]
+    return ( tuple(lslc for lslc, _ in tweaked_slices)
+           , tuple(rslc for _, rslc in tweaked_slices) )
+
 def _apply_padding(lhs_arr, rhs_arr, offset, pad_mode, direction):
     """Apply padding to ``lhs_arr`` according to ``pad_mode``.
 
@@ -714,16 +767,22 @@ def _apply_padding(lhs_arr, rhs_arr, offset, pad_mode, direction):
                 lhs_slc_l, rhs_slc_l, lhs_slc_r, rhs_slc_r = map(
                     tuple, [lhs_slc_l, rhs_slc_l, lhs_slc_r, rhs_slc_r])
 
-                lhs_arr[lhs_slc_l] = lhs_arr[rhs_slc_l]
-                lhs_arr[lhs_slc_r] = lhs_arr[rhs_slc_r]
+                try:
+                    lhs_arr[lhs_slc_l] = _slice_array_anystep(lhs_arr, rhs_slc_l, backend=backend)
+                    lhs_arr[lhs_slc_r] = _slice_array_anystep(lhs_arr, rhs_slc_r, backend=backend)
+                except ValueError:
+                    raise ValueError(f"Problem with slices {rhs_slc_l=}, {rhs_slc_r=} for {pad_mode=}")
             else:
                 lhs_slc_l[axis] = pad_slc_inner_l
                 lhs_slc_r[axis] = pad_slc_inner_r
                 lhs_slc_l, rhs_slc_l, lhs_slc_r, rhs_slc_r = map(
                     tuple, [lhs_slc_l, rhs_slc_l, lhs_slc_r, rhs_slc_r])
 
-                lhs_arr[lhs_slc_l] += lhs_arr[rhs_slc_l]
-                lhs_arr[lhs_slc_r] += lhs_arr[rhs_slc_r]
+                lhs_slc_pos, rhs_slc_adp = _make_left_slices_positivestepped(lhs_slc_l, rhs_slc_l)
+                lhs_arr[lhs_slc_pos] += _slice_array_anystep(lhs_arr, rhs_slc_adp, backend=backend)
+
+                lhs_slc_pos, rhs_slc_adp = _make_left_slices_positivestepped(lhs_slc_r, rhs_slc_r)
+                lhs_arr[lhs_slc_pos] += _slice_array_anystep(lhs_arr, rhs_slc_adp, backend=backend)
 
         elif pad_mode == 'order0':
             # The `_padding_slices_inner` helper returns the slices for the
