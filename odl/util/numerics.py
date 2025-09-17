@@ -497,7 +497,11 @@ def resize_array(arr, newshp, offset=None, pad_mode='constant', pad_const=0,
         else:
             # Apply adjoint padding to a copy of the input and copy the inner
             # part when finished
-            tmp = arr.copy()
+            # TODO (Justus) copying to a temporary is inefficient and largely
+            # defeats the point of using in-place updates. This could be avoided
+            # by changin `_apply_padding` to read data from its RHS, and writing
+            # directly to `out`.
+            tmp = backend.array_constructor(arr, copy=True)
             _apply_padding(tmp, out, offset, pad_mode, 'adjoint')
             _assign_intersection(out, tmp, offset)
 
@@ -812,10 +816,10 @@ def _apply_padding(lhs_arr, rhs_arr, offset, pad_mode, direction):
                                               dtype=lhs_arr.dtype)
 
                 # Calculate the order 1 moments
-                moment1_l = np.sum(arange_l * lhs_arr[rhs_slc_l],
+                moment1_l = ns.sum(arange_l * lhs_arr[rhs_slc_l],
                                    axis=axis, keepdims=True,
                                    dtype=lhs_arr.dtype)
-                moment1_r = np.sum(arange_r * lhs_arr[rhs_slc_r],
+                moment1_r = ns.sum(arange_r * lhs_arr[rhs_slc_r],
                                    axis=axis, keepdims=True,
                                    dtype=lhs_arr.dtype)
 
