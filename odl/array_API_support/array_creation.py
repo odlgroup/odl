@@ -82,7 +82,7 @@ def empty(impl, shape, dtype=None, device=None):
     """
     Returns an uninitialized array having a specified shape.
     """
-    return _helper_from_impl('empty', impl, shape=shape, dtype=dtype, device=device)
+    return _helper_from_impl('empty', impl, shape, dtype=dtype, device=device)
 
 def empty_like(x, dtype=None, device=None):
     """
@@ -120,7 +120,7 @@ def linspace(impl, start, stop, num, dtype=None, device=None, endpoint=True):
     """
     Returns evenly spaced numbers over a specified interval.
     """
-    return _helper_from_impl('linspace', impl, start=start, stop=stop, num=num, dtype=dtype, device=device, endpoint=endpoint)
+    return _helper_from_impl('linspace', impl, start, stop, num, dtype=dtype, device=device, endpoint=endpoint)
 
 def meshgrid(impl, *arrays, indexing='xy'):
     """    	
