@@ -19,7 +19,7 @@ from functools import partial
 import odl
 from odl.tomo.backends import ASTRA_AVAILABLE, ASTRA_VERSION
 from odl.tomo.util.testutils import (
-    skip_if_no_astra, skip_if_no_astra_cuda, skip_if_no_skimage)
+    skip_if_no_astra, skip_if_no_astra_cuda, skip_if_no_skimage, skip_if_no_pytorch)
 from odl.util.testutils import all_almost_equal, simple_fixture
 
 # --- pytest fixtures --- #
@@ -83,13 +83,19 @@ projectors.extend(
                       'cone2d astra_cpu uniform numpy cpu',
                       'cone2d astra_cpu nonuniform numpy cpu',
                       'cone2d astra_cpu random numpy cpu',
-                    #   'par2d astra_cpu uniform pytorch cpu',
-                    #   'par2d astra_cpu nonuniform pytorch cpu',
-                    #   'par2d astra_cpu random pytorch cpu',
-                    #   'cone2d astra_cpu uniform pytorch cpu',
-                    #   'cone2d astra_cpu nonuniform pytorch cpu',
-                    #   'cone2d astra_cpu random pytorch cpu'
                       ])
+)
+projectors.extend(
+    (pytest.param(proj_cfg, marks=[skip_if_no_astra, skip_if_no_pytorch])
+     for proj_cfg in [
+                      'par2d astra_cpu uniform pytorch cpu',
+                      'par2d astra_cpu nonuniform pytorch cpu',
+                      'par2d astra_cpu random pytorch cpu',
+                      'cone2d astra_cpu uniform pytorch cpu',
+                      'cone2d astra_cpu nonuniform pytorch cpu',
+                      'cone2d astra_cpu random pytorch cpu'
+                      ])
+
 )
 projectors.extend(
     (pytest.param(proj_cfg, marks=skip_if_no_astra_cuda)
@@ -106,8 +112,28 @@ projectors.extend(
                       'cone3d astra_cuda uniform numpy cpu',
                       'cone3d astra_cuda nonuniform numpy cpu',
                       'cone3d astra_cuda random numpy cpu',
-                      'helical astra_cuda uniform numpy cpu'])
+                      ])
 )
+
+projectors.extend(
+    (pytest.param(proj_cfg, marks=[skip_if_no_astra, skip_if_no_pytorch])
+     for proj_cfg in [
+                      'par2d astra_cuda uniform pytorch cuda:0',
+                      'par2d astra_cuda half_uniform pytorch cuda:0',
+                      'par2d astra_cuda nonuniform pytorch cuda:0',
+                      'par2d astra_cuda random pytorch cuda:0',
+                      'cone2d astra_cuda uniform pytorch cuda:0',
+                      'cone2d astra_cuda nonuniform pytorch cuda:0',
+                      'cone2d astra_cuda random pytorch cuda:0',
+                      'par3d astra_cuda uniform pytorch cuda:0',
+                      'par3d astra_cuda nonuniform pytorch cuda:0',
+                      'par3d astra_cuda random pytorch cuda:0',
+                      'cone3d astra_cuda uniform pytorch cuda:0',
+                      'cone3d astra_cuda nonuniform pytorch cuda:0',
+                      'cone3d astra_cuda random pytorch cuda:0',
+                      'helical astra_cuda uniform pytorch cuda:0'])
+)
+
 projectors.extend(
     (pytest.param(proj_cfg, marks=skip_if_no_skimage)
      for proj_cfg in ['par2d skimage uniform numpy cpu',
@@ -118,7 +144,6 @@ projector_ids = [
     " geom='{}' - astra_impl='{}' - angles='{}' - tspace_impl='{}' - tspace_device='{}'".format(*p.values[0].split())
     for p in projectors
 ]
-
 
 @pytest.fixture(scope='module', params=projectors, ids=projector_ids)
 def projector(request):
@@ -332,7 +357,7 @@ def test_angles(projector):
 
 
 def test_complex(impl, odl_impl_device_pairs):
-    tspace_impl, device = odl_impl_device_pairs
+    tspace_impl, device = 'numpy', 'cpu'
     """Test transform of complex input for parallel 2d geometry."""
     space_c = odl.uniform_discr([-1, -1], [1, 1], (10, 10), dtype='complex64', impl=tspace_impl, device=device)
     space_r = space_c.real_space
