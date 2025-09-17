@@ -176,11 +176,11 @@ def test_resizing_op_call(odl_tspace_impl):
             out = res_op(space.one())
             true_res = np.zeros((8, 2), dtype=dtype)
             true_res[:4, :] = 1
-            assert np.array_equal(out, true_res)
+            assert all_equal(out, true_res)
 
             out = res_space.element()
             res_op(space.one(), out=out)
-            assert np.array_equal(out, true_res)
+            assert all_equal(out, true_res)
 
 
 def test_resizing_op_deriv(padding):
