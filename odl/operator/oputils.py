@@ -109,8 +109,15 @@ def matrix_representation(op):
                         'components'.format(op.range))
 
     # Generate the matrix
-    dtype = np.promote_types(op.domain.dtype, op.range.dtype)
-    matrix = np.zeros(op.range.shape + op.domain.shape, dtype=dtype)
+    if isinstance(op.domain, TensorSpace):
+        namespace = op.domain.array_namespace
+        device    = op.domain.device
+    else:
+        namespace = op[0][0].domain.array_namespace
+        device    = op[0][0].domain.device
+    dtype  = namespace.result_type(op.domain.dtype, op.range.dtype)
+    matrix = namespace.zeros(
+        op.range.shape + op.domain.shape, dtype=dtype, device=device)
     tmp_ran = op.range.element()  # Store for reuse in loop
     tmp_dom = op.domain.zero()  # Store for reuse in loop
 
