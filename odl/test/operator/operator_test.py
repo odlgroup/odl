@@ -258,9 +258,9 @@ def test_linear_operator_call(dom_eq_ran_mat):
     op = MatrixOperator(mat)
     _, backend = get_array_and_backend(mat)
     assert op.is_linear
-
     xarr, x = noise_elements(op.domain)
-    check_call(op, x, np.matmul(mat, xarr))
+
+    check_call(op, x, backend.array_namespace.matmul(mat, xarr))
 
 
 def test_linear_operator_adjoint(dom_eq_ran_mat):
@@ -270,7 +270,7 @@ def test_linear_operator_adjoint(dom_eq_ran_mat):
     op = MatrixOperator(mat)
     _, backend = get_array_and_backend(mat)
     xarr, x = noise_elements(op.range)
-    check_call(op.adjoint, x, np.matmul(mat.T, xarr))
+    check_call(op.adjoint, x, backend.array_namespace.matmul(mat.T, xarr))
 
 
 def test_linear_operator_addition(dom_eq_ran_mat):
@@ -470,12 +470,12 @@ def test_arithmetic(dom_eq_ran_mat):
     check_call((op * y) * y, x, op((y * y) * x))
     check_call(op + z, x, op(x) + z)
     check_call(op - z, x, op(x) - z)
-    # check_call(z + op, x, z + op(x))
-    # check_call(z - op, x, z - op(x))
-    # check_call(op + scalar, x, op(x) + scalar)
-    # check_call(op - scalar, x, op(x) - scalar)
-    # check_call(scalar + op, x, scalar + op(x))
-    # check_call(scalar - op, x, scalar - op(x))
+    check_call(z + op, x, z + op(x))
+    check_call(z - op, x, z - op(x))
+    check_call(op + scalar, x, op(x) + scalar)
+    check_call(op - scalar, x, op(x) - scalar)
+    check_call(scalar + op, x, scalar + op(x))
+    check_call(scalar - op, x, scalar - op(x))
 
 
 def test_operator_pointwise_product(dom_eq_ran_mat):
