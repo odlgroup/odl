@@ -902,6 +902,7 @@ class MatrixOperator(Operator):
                 weighting = domain.weighting
             range = tensor_space(range_shape, 
                                  impl = self.array_backend.impl,
+                                 device=self.device,
                                  dtype=range_dtype,
                                  weighting=weighting,
                                  exponent=domain.exponent)
