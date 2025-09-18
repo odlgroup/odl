@@ -13,15 +13,30 @@ import odl
 from odl.util.testutils import all_almost_equal, simple_fixture
 
 
-base_op = simple_fixture(
-    'base_op',
-    [odl.IdentityOperator(odl.rn(3)),
-     odl.BroadcastOperator(odl.IdentityOperator(odl.rn(3)), 2),
-     odl.ReductionOperator(odl.IdentityOperator(odl.rn(3)), 2),
-     odl.DiagonalOperator(odl.IdentityOperator(odl.rn(3)), 2),
-     ],
-    fmt=' {name}={value.__class__.__name__}')
+# base_op = simple_fixture(
+#     'base_op',
+#     [odl.IdentityOperator(odl.rn(3)),
+#      odl.BroadcastOperator(odl.IdentityOperator(odl.rn(3)), 2),
+#      odl.ReductionOperator(odl.IdentityOperator(odl.rn(3)), 2),
+#      odl.DiagonalOperator(odl.IdentityOperator(odl.rn(3)), 2),
+#      ],
+#     fmt=' {name}={value.__class__.__name__}')
 
+op_name = simple_fixture(name='op_name', params=['Identity', 'Broadcast', 'Reduction', 'Diagonal'])
+
+@pytest.fixture(scope="module", )
+def base_op(odl_impl_device_pairs, op_name):
+    impl, device = odl_impl_device_pairs
+    space = odl.rn(3, impl=impl, device=device)
+    if op_name == 'Identity':
+        op = odl.IdentityOperator(space)
+    elif op_name == 'Broadcast':
+        op = odl.BroadcastOperator(odl.IdentityOperator(space), 2)
+    elif op_name == 'Reduction':
+        op = odl.ReductionOperator(odl.IdentityOperator(space), 2)
+    elif op_name == 'Diagonal':
+        op = odl.DiagonalOperator(odl.IdentityOperator(space), 2)
+    return op
 
 def test_pspace_op_init(base_op):
     """Test initialization with different base operators."""
@@ -94,9 +109,9 @@ def test_pspace_op_adjoint(base_op):
     assert all_almost_equal(adj(y), true_adj(y))
 
 
-def test_pspace_op_weighted_init():
-
-    r3 = odl.rn(3)
+def test_pspace_op_weighted_init(odl_impl_device_pairs):
+    impl, device = odl_impl_device_pairs
+    r3=odl.rn(3, impl=impl, device=device)
     ran = odl.ProductSpace(r3, 2, weighting=[1, 2])
     A = odl.IdentityOperator(r3)
 
@@ -105,8 +120,9 @@ def test_pspace_op_weighted_init():
                                   [0]], range=ran)
 
 
-def test_pspace_op_sum_call():
-    r3 = odl.rn(3)
+def test_pspace_op_sum_call(odl_impl_device_pairs):
+    impl, device = odl_impl_device_pairs
+    r3=odl.rn(3, impl=impl, device=device)
     A = odl.IdentityOperator(r3)
     op = odl.ProductSpaceOperator([[A, A]])
 
@@ -118,8 +134,9 @@ def test_pspace_op_sum_call():
     assert all_almost_equal(op(z, out=op.range.element())[0], x + y)
 
 
-def test_pspace_op_project_call():
-    r3 = odl.rn(3)
+def test_pspace_op_project_call(odl_impl_device_pairs):
+    impl, device = odl_impl_device_pairs
+    r3=odl.rn(3, impl=impl, device=device)
     A = odl.IdentityOperator(r3)
     op = odl.ProductSpaceOperator([[A],
                                    [A]])
@@ -133,8 +150,9 @@ def test_pspace_op_project_call():
     assert x == op(z, out=op.range.element())[1]
 
 
-def test_pspace_op_diagonal_call():
-    r3 = odl.rn(3)
+def test_pspace_op_diagonal_call(odl_impl_device_pairs):
+    impl, device = odl_impl_device_pairs
+    r3=odl.rn(3, impl=impl, device=device)
     A = odl.IdentityOperator(r3)
     op = odl.ProductSpaceOperator([[A, 0],
                                    [0, A]])
@@ -147,8 +165,9 @@ def test_pspace_op_diagonal_call():
     assert z == op(z, out=op.range.element())
 
 
-def test_pspace_op_swap_call():
-    r3 = odl.rn(3)
+def test_pspace_op_swap_call(odl_impl_device_pairs):
+    impl, device = odl_impl_device_pairs
+    r3=odl.rn(3, impl=impl, device=device)
     A = odl.IdentityOperator(r3)
     op = odl.ProductSpaceOperator([[0, A],
                                    [A, 0]])
@@ -162,8 +181,9 @@ def test_pspace_op_swap_call():
     assert result == op(z, out=op.range.element())
 
 
-def test_comp_proj():
-    r3 = odl.rn(3)
+def test_comp_proj(odl_impl_device_pairs):
+    impl, device = odl_impl_device_pairs
+    r3=odl.rn(3, impl=impl, device=device)
     r3xr3 = odl.ProductSpace(r3, 2)
 
     x = r3xr3.element([[1, 2, 3],
@@ -177,8 +197,9 @@ def test_comp_proj():
     assert x[1] == proj_1(x, out=proj_1.range.element())
 
 
-def test_comp_proj_slice():
-    r3 = odl.rn(3)
+def test_comp_proj_slice(odl_impl_device_pairs):
+    impl, device = odl_impl_device_pairs
+    r3=odl.rn(3, impl=impl, device=device)
     r33 = odl.ProductSpace(r3, 3)
 
     x = r33.element([[1, 2, 3],
@@ -190,8 +211,9 @@ def test_comp_proj_slice():
     assert x[0:2] == proj(x, out=proj.range.element())
 
 
-def test_comp_proj_indices():
-    r3 = odl.rn(3)
+def test_comp_proj_indices(odl_impl_device_pairs):
+    impl, device = odl_impl_device_pairs
+    r3=odl.rn(3, impl=impl, device=device)
     r33 = odl.ProductSpace(r3, 3)
 
     x = r33.element([[1, 2, 3],
@@ -203,8 +225,9 @@ def test_comp_proj_indices():
     assert x[[0, 2]] == proj(x, out=proj.range.element())
 
 
-def test_comp_proj_adjoint():
-    r3 = odl.rn(3)
+def test_comp_proj_adjoint(odl_impl_device_pairs):
+    impl, device = odl_impl_device_pairs
+    r3=odl.rn(3, impl=impl, device=device)
     r3xr3 = odl.ProductSpace(r3, 2)
 
     x = r3.element([1, 2, 3])
@@ -224,8 +247,9 @@ def test_comp_proj_adjoint():
     assert result_1 == proj_1.adjoint(x, out=proj_1.domain.element())
 
 
-def test_comp_proj_adjoint_slice():
-    r3 = odl.rn(3)
+def test_comp_proj_adjoint_slice(odl_impl_device_pairs):
+    impl, device = odl_impl_device_pairs
+    r3=odl.rn(3, impl=impl, device=device)
     r33 = odl.ProductSpace(r3, 3)
 
     x = r33[0:2].element([[1, 2, 3],
