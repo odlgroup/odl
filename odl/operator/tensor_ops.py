@@ -170,7 +170,7 @@ class PointwiseNorm(PointwiseTensorFieldOperator):
             raise TypeError('`vfspace` {!r} is not a ProductSpace '
                             'instance'.format(vfspace))
         super(PointwiseNorm, self).__init__(
-            domain=vfspace, range=vfspace[0], base_space=vfspace[0],
+            domain=vfspace, range=vfspace[0].real_space, base_space=vfspace[0],
             linear=False)
 
         # Need to check for product space shape once higher order tensors
