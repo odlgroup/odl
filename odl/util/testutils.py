@@ -16,7 +16,7 @@ import warnings
 from builtins import object
 from contextlib import contextmanager
 from time import time
-from odl.array_API_support.comparisons import allclose, isclose
+from odl.array_API_support.comparisons import allclose, isclose, all_equal as odl_all_equal
 import numpy as np
 
 from odl.util.utility import is_string, run_from_ipython
@@ -178,7 +178,7 @@ def all_almost_equal_array(v1, v2, ndigits):
 def all_almost_equal(iter1, iter2, ndigits=None):
     """Return ``True`` if all elements in ``a`` and ``b`` are almost equal."""
     try:
-        if iter1 is iter2 or iter1 == iter2:
+        if iter1 is iter2 or odl_all_equal(iter1, iter2):
             return True
     except ValueError:
         pass
