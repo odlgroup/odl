@@ -1196,6 +1196,10 @@ class TensorSpace(LinearSpace):
             if operation=='multiply':
                 warnings.warn("The composition of a LinearSpaceElement and an Operator using the * operator is deprecated and will be removed in future ODL versions. Please replace * with @.")
                 return x2.__rmul__(x1)
+            elif operation =='add':
+                return x2.__radd__(x1)
+            elif operation =='subtract':
+                return x2.__rsub__(x1)
             else:
                 raise TypeError(f"Attempted numerical operation {operation} between two incompatible objects ({type(x1)=}, {type(x2)=})")
 
