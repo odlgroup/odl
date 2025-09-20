@@ -1250,7 +1250,8 @@ class SamplingOperator(Operator):
         if self.variant not in ('point_eval', 'integrate'):
             raise ValueError('`variant` {!r} not understood'.format(variant))
 
-        ran = tensor_space(self.sampling_points[0].size, dtype=domain.dtype)
+        # Propagating the impl and device of the range
+        ran = tensor_space(self.sampling_points[0].size, dtype=domain.dtype, impl=domain.impl, device=domain.device)
         super(SamplingOperator, self).__init__(domain, ran, linear=True)
 
     @property
@@ -1439,16 +1440,19 @@ class WeightedSumSamplingOperator(Operator):
         # Convert a list of index arrays to linear index array
         indices_flat = np.ravel_multi_index(self.sampling_points,
                                             dims=range.shape)
-        if np.isscalar(indices_flat):
-            self._indices_flat = np.array([indices_flat], dtype=int)
-        else:
-            self._indices_flat = indices_flat
+
+        ### Always converting the indices to the right data type 
+        self._indices_flat = range.array_backend.array_constructor(indices_flat, dtype=int, device=range.device)
 
         self.__variant = str(variant).lower()
         if self.variant not in ('dirac', 'char_fun'):
             raise ValueError('`variant` {!r} not understood'.format(variant))
+        
+        # Recording the namespace for bincount
+        self.namespace = range.array_backend.array_namespace
 
-        domain = tensor_space(self.sampling_points[0].size, dtype=range.dtype)
+        # Propagating the impl and device of the range
+        domain = tensor_space(self.sampling_points[0].size, dtype=range.dtype, impl=range.impl, device=range.device)
         super(WeightedSumSamplingOperator, self).__init__(
             domain, range, linear=True)
 
@@ -1464,7 +1468,7 @@ class WeightedSumSamplingOperator(Operator):
 
     def _call(self, x):
         """Sum all values if indices are given multiple times."""
-        y = np.bincount(self._indices_flat, weights=x.data,
+        y = self.namespace.bincount(self._indices_flat, weights=x.data,
                         minlength=self.range.size)
 
         out = y.reshape(self.range.shape)
