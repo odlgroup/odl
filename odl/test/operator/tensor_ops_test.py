@@ -27,14 +27,13 @@ matrix_dtype = simple_fixture(
 
 
 @pytest.fixture(scope='module')
-def matrix(matrix_dtype):
-    dtype = np.dtype(matrix_dtype)
-    if np.issubdtype(dtype, np.floating):
-        return np.ones((3, 4), dtype=dtype)
-    elif np.issubdtype(dtype, np.complexfloating):
-        return np.ones((3, 4), dtype=dtype) * (1 + 1j)
-    else:
-        assert 0
+def matrix(matrix_dtype, odl_impl_device_pairs):
+    impl, device = odl_impl_device_pairs
+    space = odl.rn((3, 4), impl=impl, device=device, dtype=matrix_dtype)
+    return space.one()
+
+    # else:
+    #     assert 0
 
 
 exponent = simple_fixture('exponent', [2.0, 1.0, float('inf'), 3.5, 1.5])
@@ -43,9 +42,10 @@ exponent = simple_fixture('exponent', [2.0, 1.0, float('inf'), 3.5, 1.5])
 # ---- PointwiseNorm ----
 
 
-def test_pointwise_norm_init_properties():
+def test_pointwise_norm_init_properties(odl_impl_device_pairs):
+    impl, device = odl_impl_device_pairs
     # 1d
-    fspace = odl.uniform_discr([0, 0], [1, 1], (2, 2))
+    fspace = odl.uniform_discr([0, 0], [1, 1], (2, 2), impl=impl, device=device)
     vfspace = ProductSpace(fspace, 1, exponent=1)
 
     # Make sure the code runs and test the properties
@@ -64,7 +64,7 @@ def test_pointwise_norm_init_properties():
     assert pwnorm.is_weighted
 
     # 3d
-    fspace = odl.uniform_discr([0, 0], [1, 1], (2, 2))
+    fspace = odl.uniform_discr([0, 0], [1, 1], (2, 2), impl=impl, device=device)
     vfspace = ProductSpace(fspace, 3, exponent=1)
 
     # Make sure the code runs and test the properties
@@ -96,16 +96,17 @@ def test_pointwise_norm_init_properties():
         PointwiseNorm(vfspace, weighting=[1, 0, 1])  # 0 invalid
 
 
-def test_pointwise_norm_real(exponent):
+def test_pointwise_norm_real(exponent, odl_impl_device_pairs):
+    impl, device = odl_impl_device_pairs
     # 1d
-    fspace = odl.uniform_discr([0, 0], [1, 1], (2, 2))
+    fspace = odl.uniform_discr([0, 0], [1, 1], (2, 2), impl=impl, device=device)
     vfspace = ProductSpace(fspace, 1)
     pwnorm = PointwiseNorm(vfspace, exponent)
 
-    testarr = np.array([[[1, 2],
-                         [3, 4]]])
+    testarr = fspace.array_backend.array_constructor([[[1, 2],
+                         [3, 4]]], dtype=float, device=device)
 
-    true_norm = np.linalg.norm(testarr, ord=exponent, axis=0)
+    true_norm = fspace.array_namespace.linalg.norm(testarr, ord=exponent, axis=0)
 
     func = vfspace.element(testarr)
     func_pwnorm = pwnorm(func)
@@ -116,18 +117,18 @@ def test_pointwise_norm_real(exponent):
     assert all_almost_equal(out, true_norm)
 
     # 3d
-    fspace = odl.uniform_discr([0, 0], [1, 1], (2, 2))
+    fspace = odl.uniform_discr([0, 0], [1, 1], (2, 2), impl=impl, device=device)
     vfspace = ProductSpace(fspace, 3)
     pwnorm = PointwiseNorm(vfspace, exponent)
 
-    testarr = np.array([[[1, 2],
+    testarr = fspace.array_backend.array_constructor([[[1, 2],
                          [3, 4]],
                         [[0, -1],
                          [0, 1]],
                         [[1, 1],
-                         [1, 1]]])
+                         [1, 1]]], dtype=float, device=device)
 
-    true_norm = np.linalg.norm(testarr, ord=exponent, axis=0)
+    true_norm = fspace.array_namespace.linalg.norm(testarr, ord=exponent, axis=0)
 
     func = vfspace.element(testarr)
     func_pwnorm = pwnorm(func)
@@ -138,47 +139,53 @@ def test_pointwise_norm_real(exponent):
     assert all_almost_equal(out, true_norm)
 
 
-def test_pointwise_norm_complex(exponent):
-    fspace = odl.uniform_discr([0, 0], [1, 1], (2, 2), dtype=complex)
+def test_pointwise_norm_complex(exponent, odl_impl_device_pairs):
+    impl, device = odl_impl_device_pairs
+    fspace = odl.uniform_discr([0, 0], [1, 1], (2, 2), dtype=complex, impl=impl, device=device)
     vfspace = ProductSpace(fspace, 3)
     pwnorm = PointwiseNorm(vfspace, exponent)
 
-    testarr = np.array([[[1 + 1j, 2],
+    testarr = fspace.array_backend.array_constructor([[[1 + 1j, 2],
                          [3, 4 - 2j]],
                         [[0, -1],
                          [0, 1]],
                         [[1j, 1j],
-                         [1j, 1j]]])
+                         [1j, 1j]]], device=device, dtype=complex)
 
-    true_norm = np.linalg.norm(testarr, ord=exponent, axis=0)
+    true_norm = fspace.array_namespace.linalg.norm(testarr, ord=exponent, axis=0)
 
     func = vfspace.element(testarr)
     func_pwnorm = pwnorm(func)
     assert all_almost_equal(func_pwnorm, true_norm)
 
-    out = fspace.element()
+    out = pwnorm.range.element()
     pwnorm(func, out=out)
-    assert all_almost_equal(out, true_norm)
+    assert all_almost_equal(out.real, true_norm)
 
 
-def test_pointwise_norm_weighted(exponent):
-    fspace = odl.uniform_discr([0, 0], [1, 1], (2, 2))
+def test_pointwise_norm_weighted(exponent, odl_impl_device_pairs):
+    impl, device = odl_impl_device_pairs
+    fspace = odl.uniform_discr([0, 0], [1, 1], (2, 2), impl=impl, device=device)
+
+    ns = fspace.array_namespace
+    backend = fspace.array_backend
+
     vfspace = ProductSpace(fspace, 3)
-    weight = np.array([1.0, 2.0, 3.0])
+    weight = backend.array_constructor([1.0, 2.0, 3.0], device=device)
     pwnorm = PointwiseNorm(vfspace, exponent, weighting=weight)
 
-    testarr = np.array([[[1, 2],
+    testarr = backend.array_constructor([[[1, 2],
                          [3, 4]],
                         [[0, -1],
                          [0, 1]],
                         [[1, 1],
-                         [1, 1]]])
+                         [1, 1]]], device=device, dtype=float)
 
     if exponent in (1.0, float('inf')):
-        true_norm = np.linalg.norm(weight[:, None, None] * testarr,
+        true_norm = ns.linalg.norm(weight[:, None, None] * testarr,
                                    ord=exponent, axis=0)
     else:
-        true_norm = np.linalg.norm(
+        true_norm = ns.linalg.norm(
             weight[:, None, None] ** (1 / exponent) * testarr, ord=exponent,
             axis=0)
 
@@ -191,10 +198,11 @@ def test_pointwise_norm_weighted(exponent):
     assert all_almost_equal(out, true_norm)
 
 
-def test_pointwise_norm_gradient_real(exponent):
+def test_pointwise_norm_gradient_real(exponent, odl_impl_device_pairs):
+    impl, device = odl_impl_device_pairs
     # The operator is not differentiable for exponent 'inf'
     if exponent == float('inf'):
-        fspace = odl.uniform_discr([0, 0], [1, 1], (2, 2))
+        fspace = odl.uniform_discr([0, 0], [1, 1], (2, 2), impl=impl, device=device)
         vfspace = ProductSpace(fspace, 1)
         pwnorm = PointwiseNorm(vfspace, exponent)
         point = vfspace.one()
@@ -203,7 +211,7 @@ def test_pointwise_norm_gradient_real(exponent):
         return
 
     # 1d
-    fspace = odl.uniform_discr([0, 0], [1, 1], (2, 2))
+    fspace = odl.uniform_discr([0, 0], [1, 1], (2, 2), impl=impl, device=device)
     vfspace = ProductSpace(fspace, 1)
     pwnorm = PointwiseNorm(vfspace, exponent)
 
@@ -223,7 +231,7 @@ def test_pointwise_norm_gradient_real(exponent):
     assert all_almost_equal(func_pwnorm(direction), expected_result)
 
     # 3d
-    fspace = odl.uniform_discr([0, 0], [1, 1], (2, 2))
+    fspace = odl.uniform_discr([0, 0], [1, 1], (2, 2), impl=impl, device=device)
     vfspace = ProductSpace(fspace, 3)
     pwnorm = PointwiseNorm(vfspace, exponent)
 
@@ -242,7 +250,10 @@ def test_pointwise_norm_gradient_real(exponent):
     assert all_almost_equal(func_pwnorm(direction), expected_result)
 
 
-def test_pointwise_norm_gradient_real_with_zeros(exponent):
+def test_pointwise_norm_gradient_real_with_zeros(
+        exponent,
+        odl_impl_device_pairs):
+    impl, device = odl_impl_device_pairs
     # The gradient is only well-defined in points with zeros if the exponent is
     # >= 2 and < inf
     if exponent < 2 or exponent == float('inf'):
@@ -250,14 +261,17 @@ def test_pointwise_norm_gradient_real_with_zeros(exponent):
                     'exponent')
 
     # 1d
-    fspace = odl.uniform_discr([0, 0], [1, 1], (2, 2))
+    fspace = odl.uniform_discr([0, 0], [1, 1], (2, 2), impl=impl, device=device)
     vfspace = ProductSpace(fspace, 1)
     pwnorm = PointwiseNorm(vfspace, exponent)
 
-    test_point = np.array([[[0, 0],  # This makes the point singular for p < 2
-                            [1, 2]]])
-    test_direction = np.array([[[1, 2],
-                                [4, 5]]])
+    backend = fspace.array_backend
+
+    # This makes the point singular for p < 2
+    test_point = backend.array_constructor(
+        [[[0, 0],  [1, 2]]], device=device)
+    test_direction = backend.array_constructor(
+        [[[1, 2], [4, 5]]], device=device)
 
     point = vfspace.element(test_point)
     direction = vfspace.element(test_direction)
@@ -266,22 +280,25 @@ def test_pointwise_norm_gradient_real_with_zeros(exponent):
     assert not odl.any(odl.isnan(func_pwnorm(direction)))
 
     # 3d
-    fspace = odl.uniform_discr([0, 0], [1, 1], (2, 2))
+    fspace = odl.uniform_discr([0, 0], [1, 1], (2, 2), impl=impl, device=device)
     vfspace = ProductSpace(fspace, 3)
     pwnorm = PointwiseNorm(vfspace, exponent)
 
-    test_point = np.array([[[0, 0],  # This makes the point singular for p < 2
-                            [1, 2]],
-                           [[3, 4],
-                            [0, 0]],  # This makes the point singular for p < 2
-                           [[5, 6],
-                            [7, 8]]])
-    test_direction = np.array([[[0, 1],
-                                [2, 3]],
-                               [[4, 5],
-                                [6, 7]],
-                               [[8, 9],
-                                [0, 1]]])
+    # This makes the point singular for p < 2
+    test_point = backend.array_constructor(
+        [[[0, 0],  
+        [1, 2]],
+        [[3, 4],
+        [0, 0]], 
+        [[5, 6],
+        [7, 8]]], device=device)
+    test_direction = backend.array_constructor(
+        [[[0, 1],
+        [2, 3]],
+        [[4, 5],
+        [6, 7]],
+        [[8, 9],
+        [0, 1]]], device=device)
 
     point = vfspace.element(test_point)
     direction = vfspace.element(test_direction)
@@ -292,8 +309,9 @@ def test_pointwise_norm_gradient_real_with_zeros(exponent):
 # ---- PointwiseInner ----
 
 
-def test_pointwise_inner_init_properties():
-    fspace = odl.uniform_discr([0, 0], [1, 1], (2, 2))
+def test_pointwise_inner_init_properties(odl_impl_device_pairs):
+    impl, device = odl_impl_device_pairs
+    fspace = odl.uniform_discr([0, 0], [1, 1], (2, 2), impl=impl, device=device)
     vfspace = ProductSpace(fspace, 3, exponent=2)
 
     # Make sure the code runs and test the properties
@@ -319,18 +337,23 @@ def test_pointwise_inner_init_properties():
     """
 
 
-def test_pointwise_inner_real():
+def test_pointwise_inner_real(odl_impl_device_pairs):
+    impl, device = odl_impl_device_pairs
     # 1d
-    fspace = odl.uniform_discr([0, 0], [1, 1], (2, 2))
+    fspace = odl.uniform_discr([0, 0], [1, 1], (2, 2), impl=impl, device=device)
+    
+    backend = fspace.array_backend
+    
     vfspace = ProductSpace(fspace, 1)
-    array = np.array([[[-1, -3],
-                       [2, 0]]])
+    array = backend.array_constructor(
+        [[[-1, -3], [2, 0]]], device=device)
+
     pwinner = PointwiseInner(vfspace, vecfield=array)
 
-    testarr = np.array([[[1, 2],
-                         [3, 4]]])
+    testarr = backend.array_constructor(
+        [[[1, 2], [3, 4]]], device=device)
 
-    true_inner = np.sum(testarr * array, axis=0)
+    true_inner = backend.array_namespace.sum(testarr * array, axis=0)
 
     func = vfspace.element(testarr)
     func_pwinner = pwinner(func)
@@ -341,24 +364,24 @@ def test_pointwise_inner_real():
     assert all_almost_equal(out, true_inner)
 
     # 3d
-    fspace = odl.uniform_discr([0, 0], [1, 1], (2, 2))
+    fspace = odl.uniform_discr([0, 0], [1, 1], (2, 2), impl=impl, device=device)
     vfspace = ProductSpace(fspace, 3)
-    array = np.array([[[-1, -3],
+    array =  backend.array_constructor([[[-1, -3],
                        [2, 0]],
                       [[0, 0],
                        [0, 1]],
                       [[-1, 1],
-                       [1, 1]]])
+                       [1, 1]]], device=device)
     pwinner = PointwiseInner(vfspace, vecfield=array)
 
-    testarr = np.array([[[1, 2],
+    testarr =  backend.array_constructor([[[1, 2],
                          [3, 4]],
                         [[0, -1],
                          [0, 1]],
                         [[1, 1],
-                         [1, 1]]])
+                         [1, 1]]], device=device)
 
-    true_inner = np.sum(testarr * array, axis=0)
+    true_inner =  backend.array_namespace.sum(testarr * array, axis=0)
 
     func = vfspace.element(testarr)
     func_pwinner = pwinner(func)
@@ -369,25 +392,30 @@ def test_pointwise_inner_real():
     assert all_almost_equal(out, true_inner)
 
 
-def test_pointwise_inner_complex():
-    fspace = odl.uniform_discr([0, 0], [1, 1], (2, 2), dtype=complex)
+def test_pointwise_inner_complex(odl_impl_device_pairs):
+    impl, device = odl_impl_device_pairs
+    fspace = odl.uniform_discr([0, 0], [1, 1], (2, 2), dtype=complex, impl=impl, device=device)
     vfspace = ProductSpace(fspace, 3)
-    array = np.array([[[-1 - 1j, -3],
+
+    backend = fspace.array_backend
+
+    array = backend.array_constructor([[[-1 - 1j, -3],
                        [2, 2j]],
                       [[-1j, 0],
                        [0, 1]],
                       [[-1, 1 + 2j],
-                       [1, 1]]])
+                       [1, 1]]], device=device)
+    
     pwinner = PointwiseInner(vfspace, vecfield=array)
 
-    testarr = np.array([[[1 + 1j, 2],
+    testarr = backend.array_constructor([[[1 + 1j, 2],
                          [3, 4 - 2j]],
                         [[0, -1],
                          [0, 1]],
                         [[1j, 1j],
-                         [1j, 1j]]])
+                         [1j, 1j]]], device=device)
 
-    true_inner = np.sum(testarr * array.conj(), axis=0)
+    true_inner = backend.array_namespace.sum(testarr * array.conj(), axis=0)
 
     func = vfspace.element(testarr)
     func_pwinner = pwinner(func)
@@ -398,27 +426,31 @@ def test_pointwise_inner_complex():
     assert all_almost_equal(out, true_inner)
 
 
-def test_pointwise_inner_weighted():
-    fspace = odl.uniform_discr([0, 0], [1, 1], (2, 2))
+def test_pointwise_inner_weighted(odl_impl_device_pairs):
+    impl, device = odl_impl_device_pairs
+    fspace = odl.uniform_discr([0, 0], [1, 1], (2, 2), impl=impl, device=device)
+
+    backend = fspace.array_backend
+
     vfspace = ProductSpace(fspace, 3)
-    array = np.array([[[-1, -3],
+    array = backend.array_constructor([[[-1, -3],
                        [2, 0]],
                       [[0, 0],
                        [0, 1]],
                       [[-1, 1],
-                       [1, 1]]])
+                       [1, 1]]], device=device)
 
-    weight = np.array([1.0, 2.0, 3.0])
+    weight = backend.array_constructor([1.0, 2.0, 3.0], device=device)
     pwinner = PointwiseInner(vfspace, vecfield=array, weighting=weight)
 
-    testarr = np.array([[[1, 2],
+    testarr = backend.array_constructor([[[1, 2],
                          [3, 4]],
                         [[0, -1],
                          [0, 1]],
                         [[1, 1],
-                         [1, 1]]])
+                         [1, 1]]], device=device)
 
-    true_inner = np.sum(weight[:, None, None] * testarr * array, axis=0)
+    true_inner = backend.array_namespace.sum(weight[:, None, None] * testarr * array, axis=0)
 
     func = vfspace.element(testarr)
     func_pwinner = pwinner(func)
@@ -429,16 +461,20 @@ def test_pointwise_inner_weighted():
     assert all_almost_equal(out, true_inner)
 
 
-def test_pointwise_inner_adjoint():
+def test_pointwise_inner_adjoint(odl_impl_device_pairs):
+    impl, device = odl_impl_device_pairs
     # 1d
-    fspace = odl.uniform_discr([0, 0], [1, 1], (2, 2), dtype=complex)
+    fspace = odl.uniform_discr([0, 0], [1, 1], (2, 2), dtype=complex, impl=impl, device=device)
+
+    backend = fspace.array_backend
+
     vfspace = ProductSpace(fspace, 1)
-    array = np.array([[[-1, -3],
-                       [2, 0]]])
+    array = backend.array_constructor([[[-1, -3],
+                       [2, 0]]], device=device)
     pwinner = PointwiseInner(vfspace, vecfield=array)
 
-    testarr = np.array([[1 + 1j, 2],
-                        [3, 4 - 2j]])
+    testarr = backend.array_constructor([[1 + 1j, 2],
+                        [3, 4 - 2j]], device=device)
 
     true_inner_adj = testarr[None, :, :] * array
 
@@ -451,18 +487,18 @@ def test_pointwise_inner_adjoint():
     assert all_almost_equal(out, true_inner_adj)
 
     # 3d
-    fspace = odl.uniform_discr([0, 0], [1, 1], (2, 2), dtype=complex)
+    fspace = odl.uniform_discr([0, 0], [1, 1], (2, 2), dtype=complex, impl=impl, device=device)
     vfspace = ProductSpace(fspace, 3)
-    array = np.array([[[-1 - 1j, -3],
+    array = backend.array_constructor([[[-1 - 1j, -3],
                        [2, 2j]],
                       [[-1j, 0],
                        [0, 1]],
                       [[-1, 1 + 2j],
-                       [1, 1]]])
+                       [1, 1]]], device=device)
     pwinner = PointwiseInner(vfspace, vecfield=array)
 
-    testarr = np.array([[1 + 1j, 2],
-                        [3, 4 - 2j]])
+    testarr = backend.array_constructor([[1 + 1j, 2],
+                        [3, 4 - 2j]], device=device)
 
     true_inner_adj = testarr[None, :, :] * array
 
@@ -475,20 +511,22 @@ def test_pointwise_inner_adjoint():
     assert all_almost_equal(out, true_inner_adj)
 
 
-def test_pointwise_inner_adjoint_weighted():
+def test_pointwise_inner_adjoint_weighted(odl_impl_device_pairs):
+    impl, device = odl_impl_device_pairs
     # Weighted product space only
-    fspace = odl.uniform_discr([0, 0], [1, 1], (2, 2), dtype=complex)
+    fspace = odl.uniform_discr([0, 0], [1, 1], (2, 2), dtype=complex, impl=impl, device=device)
+    backend = fspace.array_backend
     vfspace = ProductSpace(fspace, 3, weighting=[2, 4, 6])
-    array = np.array([[[-1 - 1j, -3],
+    array = backend.array_constructor([[[-1 - 1j, -3],
                        [2, 2j]],
                       [[-1j, 0],
                        [0, 1]],
                       [[-1, 1 + 2j],
-                       [1, 1]]])
+                       [1, 1]]], device=device)
     pwinner = PointwiseInner(vfspace, vecfield=array)
 
-    testarr = np.array([[1 + 1j, 2],
-                        [3, 4 - 2j]])
+    testarr = backend.array_constructor([[1 + 1j, 2],
+                        [3, 4 - 2j]], device=device)
 
     true_inner_adj = testarr[None, :, :] * array  # same as unweighted case
 
@@ -503,8 +541,8 @@ def test_pointwise_inner_adjoint_weighted():
     # Using different weighting in the inner product
     pwinner = PointwiseInner(vfspace, vecfield=array, weighting=[4, 8, 12])
 
-    testarr = np.array([[1 + 1j, 2],
-                        [3, 4 - 2j]])
+    testarr = backend.array_constructor([[1 + 1j, 2],
+                        [3, 4 - 2j]], device=device)
 
     true_inner_adj = 2 * testarr[None, :, :] * array  # w / v = (2, 2, 2)
 
@@ -520,10 +558,11 @@ def test_pointwise_inner_adjoint_weighted():
 # ---- PointwiseSum ----
 
 
-def test_pointwise_sum():
+def test_pointwise_sum(odl_impl_device_pairs):
+    impl, device = odl_impl_device_pairs
     """PointwiseSum currently depends on PointwiseInner, we verify that."""
 
-    fspace = odl.uniform_discr([0, 0], [1, 1], (2, 2))
+    fspace = odl.uniform_discr([0, 0], [1, 1], (2, 2), impl=impl, device=device)
     vfspace = ProductSpace(fspace, 3, exponent=2)
 
     # Make sure the code runs and test the properties
@@ -658,10 +697,16 @@ def test_matrix_op_call(matrix):
     assert all_almost_equal(out, true_result)
 
 
-def test_matrix_op_call_explicit():
+def test_matrix_op_call_explicit(odl_impl_device_pairs):
+    impl, device = odl_impl_device_pairs
     """Validate result from call to matrix op against explicit calculation."""
-    mat = np.ones((3, 2))
-    xarr = np.array([[[0, 1],
+
+    space = odl.rn((3,2), impl=impl, device=device)
+    mat = space.one().data
+
+    backend = space.array_backend
+
+    xarr = backend.array_constructor([[[0, 1],
                       [2, 3]],
                      [[4, 5],
                       [6, 7]]], dtype=float)
@@ -708,7 +753,8 @@ def test_matrix_op_adjoint(matrix):
     assert inner_ran == pytest.approx(inner_dom, rel=tol, abs=tol)
 
 
-def test_matrix_op_inverse():
+def test_matrix_op_inverse(odl_impl_device_pairs):
+    impl, device = odl_impl_device_pairs
     """Test if the inverse of matrix operators is correct."""
     dense_matrix = np.ones((3, 3)) + 4 * np.eye(3)  # invertible
     sparse_matrix = scipy.sparse.coo_matrix(dense_matrix)
@@ -733,7 +779,8 @@ def test_matrix_op_inverse():
     assert all_almost_equal(x, minv_m_x)
 
 
-def test_sampling_operator_adjoint():
+def test_sampling_operator_adjoint(odl_impl_device_pairs):
+    impl, device = odl_impl_device_pairs
     """Validate basic properties of `SamplingOperator.adjoint`."""
     # 1d space
     space = odl.uniform_discr([-1], [1], shape=(3))
