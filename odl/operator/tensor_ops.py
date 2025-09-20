@@ -22,8 +22,8 @@ from odl.set import ComplexNumbers, RealNumbers
 from odl.space import ProductSpace, tensor_space
 from odl.space.base_tensors import TensorSpace, Tensor
 from odl.space.weightings.weighting import ArrayWeighting
-from odl.util import dtype_repr, indent, signature_string, writable_array
-from odl.array_API_support import ArrayBackend, lookup_array_backend, abs as odl_abs, maximum, pow, sqrt, multiply, get_array_and_backend, can_cast
+from odl.util import dtype_repr, indent, signature_string
+from odl.array_API_support import ArrayBackend, lookup_array_backend, abs as odl_abs, maximum, pow, sqrt, multiply, get_array_and_backend, can_cast, all_equal
 
 __all__ = ('PointwiseNorm', 'PointwiseInner', 'PointwiseSum', 'MatrixOperator',
            'SamplingOperator', 'WeightedSumSamplingOperator',
@@ -192,24 +192,42 @@ class PointwiseNorm(PointwiseTensorFieldOperator):
             if hasattr(self.domain.weighting, 'array'):
                 self.__weights = self.domain.weighting.array
             elif hasattr(self.domain.weighting, 'const'):
-                self.__weights = (self.domain.weighting.const *
-                                  np.ones(len(self.domain)))
+                self.__weights = [self.domain.weighting.const *self.domain[i].one() for i in range(len(vfspace))]
             else:
                 raise ValueError('weighting scheme {!r} of the domain does '
                                  'not define a weighting array or constant'
                                  ''.format(self.domain.weighting))
-        elif np.isscalar(weighting):
-            if weighting <= 0:
-                raise ValueError('weighting constant must be positive, got '
-                                 '{}'.format(weighting))
-            self.__weights = float(weighting) * np.ones(len(self.domain))
+            self.__is_weighted = False
+
         else:
-            self.__weights = np.asarray(weighting, dtype='float64')
-            if (not np.all(self.weights > 0) or
-                    not np.all(np.isfinite(self.weights))):
-                raise ValueError('weighting array {} contains invalid '
-                                 'entries'.format(weighting))
-        self.__is_weighted = not np.array_equiv(self.weights, 1.0)
+            ### This is a bad situation: although we worked hard to get an elegant weighting, the PointwiseNorm just yanks all of that down the drain by reimplementing the norm operation and the input sanitisation just for a ProductSpace. 
+            ### EV reimplemented these two functionnalities but moving forward, this should be coerced into abiding to our new API
+
+            if isinstance(weighting, list) and all([isinstance(w, Tensor) for w in weighting]) :
+                self.__weights = weighting
+                self.__is_weighted = all([all_equal(w, 1) for w in weighting])
+            else:
+                if isinstance(weighting, (int, float)):
+                    weighting = [weighting for _ in range(len(self.domain))]
+
+                weighted_flag = []
+                for i in range(len(self.domain)):
+                    if weighting[i] <= 0:
+                        raise ValueError(f'weighting array weighting contains invalid entry {weighting[i]}')
+                    if weighting[i] in [1,1.0]:
+                        weighted_flag.append(False)
+                    else:
+                        weighted_flag.append(True)
+                self.__is_weighted = True if any(weighted_flag) else False
+
+                weighting = [
+                    self.domain[i].tspace.broadcast_to(weighting[i]) 
+                    for i in range(len(self.domain))
+                    ]
+                
+                self.__weights = []
+                for i in range(len(self.domain)):
+                    self.__weights.append(self.domain[i].element(weighting[i]))       
 
     @property
     def exponent(self):
@@ -395,7 +413,7 @@ class PointwiseInnerBase(PointwiseTensorFieldOperator):
             weightings with custom inner product, norm or dist.
         """
         if not isinstance(vfspace, ProductSpace):
-            raise TypeError('`vfsoace` {!r} is not a ProductSpace '
+            raise TypeError('`vfspace` {!r} is not a ProductSpace '
                             'instance'.format(vfspace))
         if adjoint:
             super(PointwiseInnerBase, self).__init__(
@@ -419,20 +437,46 @@ class PointwiseInnerBase(PointwiseTensorFieldOperator):
 
         # Handle weighting, including sanity checks
         if weighting is None:
+            self.__is_weighted =  False
             if hasattr(vfspace.weighting, 'array'):
                 self.__weights = vfspace.weighting.array
             elif hasattr(vfspace.weighting, 'const'):
-                self.__weights = (vfspace.weighting.const *
-                                  np.ones(len(vfspace)))
+                # Casting the constant to an array of constants is just bad
+                self.__weights = [vfspace.weighting.const *vfspace[i].one() for i in range(len(vfspace))]
             else:
                 raise ValueError('weighting scheme {!r} of the domain does '
                                  'not define a weighting array or constant'
                                  ''.format(vfspace.weighting))
-        elif np.isscalar(weighting):
-            self.__weights = float(weighting) * np.ones(len(vfspace))
+            
         else:
-            self.__weights = np.asarray(weighting, dtype='float64')
-        self.__is_weighted = not np.array_equiv(self.weights, 1.0)
+            # Check if the input has already been sanitised, i.e is it an odl.Tensor
+            if isinstance(weighting, list) and all([isinstance(w, Tensor) for w in weighting]) :
+                self.__weights = weighting
+                self.__is_weighted = all([all_equal(w, 1) for w in weighting])
+
+            # these are required to provide an array-API compatible weighting parsing.
+            else:
+                if isinstance(weighting, (int, float)):
+                    weighting = [weighting for i in range(len(vfspace))]
+
+                weighted_flag = []
+                for i in range(len(vfspace)):
+                    if weighting[i] <= 0:
+                        raise ValueError(f'weighting array weighting contains invalid entry {weighting[i]}')
+                    if weighting[i] in [1,1.0]:
+                        weighted_flag.append(False)
+                    else:
+                        weighted_flag.append(True)
+                self.__is_weighted = True if any(weighted_flag) else False
+
+                weighting = [
+                    vfspace[i].tspace.broadcast_to(weighting[i]) 
+                    for i in range(len(vfspace))
+                    ]
+                
+                self.__weights = []
+                for i in range(len(vfspace)):
+                    self.weights.append(vfspace[i].element(weighting[i]))
 
     @property
     def vecfield(self):
@@ -620,10 +664,12 @@ class PointwiseInnerAdjoint(PointwiseInnerBase):
 
         # Get weighting from range
         if hasattr(self.range.weighting, 'array'):
-            self.__ran_weights = self.range.weighting.array
+            ### The tolist() is an ugly tweak to recover a list from the pspace weighting.array which is stored in numpy 
+            self.__ran_weights = vfspace.element(self.range.weighting.array.tolist())
         elif hasattr(self.range.weighting, 'const'):
-            self.__ran_weights = (self.range.weighting.const *
-                                  np.ones(len(self.range)))
+            # Casting the constant to an array of constants is just bad
+            self.__ran_weights = [self.range.weighting.const *self.range[i].one() for i in range(len(self.range))]
+            
         else:
             raise ValueError('weighting scheme {!r} of the range does '
                              'not define a weighting array or constant'
@@ -634,8 +680,9 @@ class PointwiseInnerAdjoint(PointwiseInnerBase):
         for vfi, oi, ran_wi, dom_wi in zip(self.vecfield, out,
                                            self.__ran_weights, self.weights):
             vfi.multiply(f, out=oi)
-            if not np.isclose(ran_wi, dom_wi):
-                oi *= dom_wi / ran_wi
+            # Removed the optimisation here, it would require casting ran_wi as odl.TensorSpaceElement
+            # if not isclose(ran_wi, dom_wi).all():
+            oi *= dom_wi / ran_wi
 
     @property
     def adjoint(self):
