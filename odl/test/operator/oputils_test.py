@@ -78,7 +78,7 @@ def test_matrix_representation_lin_space_to_product(dom_eq_ran_mat):
     matrix_repr = matrix_representation(ABop)
 
     _, backend = get_array_and_backend(A)
-    assert matrix_repr.shape == (2, n, 2, n)
+    assert matrix_repr.shape == (2, n, 1, n)
     assert backend.to_cpu(
         backend.array_namespace.linalg.norm(A - matrix_repr[0, :, 0, :])) == pytest.approx(0)
     assert backend.to_cpu(
