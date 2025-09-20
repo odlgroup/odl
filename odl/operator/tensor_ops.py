@@ -25,6 +25,8 @@ from odl.space.weightings.weighting import ArrayWeighting
 from odl.util import dtype_repr, indent, signature_string
 from odl.array_API_support import ArrayBackend, lookup_array_backend, abs as odl_abs, maximum, pow, sqrt, multiply, get_array_and_backend, can_cast, all_equal
 
+from odl.sparse import is_sparse, get_sparse_matrix_impl
+
 __all__ = ('PointwiseNorm', 'PointwiseInner', 'PointwiseSum', 'MatrixOperator',
            'SamplingOperator', 'WeightedSumSamplingOperator',
            'FlatteningOperator')
@@ -859,9 +861,6 @@ class MatrixOperator(Operator):
         It produces a new tensor :math:`A \cdot T \in \mathbb{F}^{
         n_1 \times \dots \times n \times \dots \times n_d}`.
         """
-        # Lazy import to improve `import odl` time
-        import scipy.sparse
-
         def infer_backend_from(default_backend):
             if impl is not None:
                 self.__array_backend = lookup_array_backend(impl)
@@ -871,34 +870,60 @@ class MatrixOperator(Operator):
         def infer_device_from(default_device):
             self.__device = default_device if device is None else device
 
+        self.is_sparse = is_sparse(matrix)
+
+        if self.is_sparse:
+            self.sparse_backend = get_sparse_matrix_impl(matrix) 
+        else:
+            self.sparse_backend = None
+
         if domain is not None:
             infer_backend_from(domain.array_backend)
             infer_device_from(domain.device)
+            
         elif range is not None:
             infer_backend_from(range.array_backend)
             infer_device_from(range.device)
-        elif scipy.sparse.isspmatrix(matrix) or isinstance(matrix, list) or isinstance(matrix, tuple):
+
+        elif self.is_sparse:
+            if self.sparse_backend == 'scipy':
+                infer_backend_from(lookup_array_backend('numpy'))
+                infer_device_from('cpu')
+
+            elif self.sparse_backend == 'pytorch':
+                infer_backend_from(lookup_array_backend('pytorch'))
+                infer_device_from(matrix.device)
+                
+            else:
+                raise ValueError
+        
+        elif isinstance(matrix, (list, tuple)):
             infer_backend_from(lookup_array_backend('numpy'))
             infer_device_from('cpu')
         else:
             infer_backend_from(get_array_and_backend(matrix)[1])
             infer_device_from(matrix.device)
 
-        ns = self.array_backend.array_namespace
+        self.ns = self.array_backend.array_namespace
 
-        if scipy.sparse.isspmatrix(matrix):
-            if self.array_backend.impl != 'numpy':
-                raise TypeError("SciPy sparse matrices can only be used with NumPy on CPU, not {array_backend.impl}.")
-            if self.device != 'cpu':
-                raise TypeError("SciPy sparse matrices can only be used with NumPy on CPU, not {device}.")
+        if self.is_sparse:
+            if self.sparse_backend == 'scipy':
+                if self.array_backend.impl != 'numpy':
+                    raise TypeError(f"SciPy sparse matrices can only be used with NumPy on CPU, not {self.array_backend.impl}.")
+                if self.device != 'cpu':
+                    raise TypeError(f"SciPy sparse matrices can only be used with NumPy on CPU, not {device}.")
+            elif self.sparse_backend == 'pytorch':
+                if self.array_backend.impl != 'pytorch':
+                    raise TypeError(f"PyTorch sparse matrices can only be used with Pytorch, not {self.array_backend.impl}.")
             self.__matrix = matrix
+
         elif isinstance(matrix, Tensor):
             self.__matrix = matrix.data
-            self.__matrix = ns.asarray(matrix.data, device=self.__device, copy=AVOID_UNNECESSARY_COPY)
+            self.__matrix = self.ns.asarray(matrix.data, device=self.__device, copy=AVOID_UNNECESSARY_COPY)
             while len(self.__matrix.shape) < 2:
                 self.__matrix = self.__matrix[None]
         else:
-            self.__matrix = ns.asarray(matrix, device=self.__device, copy=AVOID_UNNECESSARY_COPY)
+            self.__matrix = self.ns.asarray(matrix, device=self.__device, copy=AVOID_UNNECESSARY_COPY)
             while len(self.__matrix.shape) < 2:
                 self.__matrix = self.__matrix[None]
 
@@ -923,7 +948,7 @@ class MatrixOperator(Operator):
                 raise TypeError('`domain` must be a `TensorSpace` '
                                 'instance, got {!r}'.format(domain))
 
-            if scipy.sparse.isspmatrix(self.matrix) and domain.ndim > 1:
+            if self.sparse_backend == 'scipy' and domain.ndim > 1:
                 raise ValueError('`domain.ndim` > 1 unsupported for '
                                  'scipy sparse matrices')
 
@@ -938,7 +963,7 @@ class MatrixOperator(Operator):
 
         if range is None:
             # Infer range
-            range_dtype = ns.result_type(
+            range_dtype = self.ns.result_type(
                 self.matrix.dtype, domain.dtype)
             range_dtype = self.array_backend.identifier_of_dtype(range_dtype)
             if (range_shape != domain.shape and
@@ -964,8 +989,8 @@ class MatrixOperator(Operator):
                                  ''.format(tuple(range_shape), range.shape))
 
         # Check compatibility of data types
-        result_dtype = ns.result_type(domain.dtype, self.matrix.dtype)
-        if not can_cast(ns, result_dtype, range.dtype):
+        result_dtype = self.ns.result_type(domain.dtype, self.matrix.dtype)
+        if not can_cast(self.ns, result_dtype, range.dtype):
             raise ValueError('result data type {} cannot be safely cast to '
                              'range data type {}'
                              ''.format(dtype_repr(result_dtype),
@@ -1028,41 +1053,31 @@ class MatrixOperator(Operator):
         -------
         inverse : `MatrixOperator`
         """
-        # Lazy import to improve `import odl` time
-        import scipy.sparse
-
-        if scipy.sparse.isspmatrix(self.matrix):
-            dense_matrix = self.matrix.toarray()
+        if self.is_sparse:
+            linalg_function = self.ns.sparse.linalg.inv
         else:
-            dense_matrix = self.matrix
+            linalg_function = self.ns.linalg.inv
 
-        return MatrixOperator(np.linalg.inv(dense_matrix),
-                              domain=self.range, range=self.domain,
-                              axis=self.axis)
+        return MatrixOperator(linalg_function(self.matrix),
+                                domain=self.range, range=self.domain,
+                                axis=self.axis, impl=self.domain.impl, device=self.domain.device)
 
     def _call(self, x):
         """Return ``self(x[, out])``."""
-        # Lazy import to improve `import odl` time
-        import scipy.sparse
 
-        ns = self.array_backend.array_namespace
-
-        if scipy.sparse.isspmatrix(self.matrix):
+        if self.is_sparse:
             out = self.matrix.dot(x.data)
         else:
-            dot = ns.tensordot(self.matrix, x.data, axes=([1], [self.axis]))
+            dot = self.ns.tensordot(self.matrix, x.data, axes=([1], [self.axis]))
             # New axis ends up as first, need to swap it to its place
-            out = ns.moveaxis(dot, 0, self.axis)
+            out = self.ns.moveaxis(dot, 0, self.axis)
 
         return out
 
     def __repr__(self):
         """Return ``repr(self)``."""
-        # Lazy import to improve `import odl` time
-        import scipy.sparse
-
         # Matrix printing itself in an executable way (for dense matrix)
-        if scipy.sparse.isspmatrix(self.matrix) or self.array_backend.impl != 'numpy':
+        if self.is_sparse or self.array_backend.impl != 'numpy':
             matrix_str = repr(self.matrix)
         else:
             matrix_str = np.array2string(self.matrix, separator=', ')
