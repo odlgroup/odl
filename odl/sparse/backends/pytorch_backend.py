@@ -11,7 +11,3 @@ pytorch_coo_tensor = SparseMatrixFormat(
     constructor = sparse_coo_tensor,
     is_of_this_sparse_format = is_sparse_COO
 )
-
-SUPPORTED_IMPLS = {
-    'COO':pytorch_coo_tensor
-    }

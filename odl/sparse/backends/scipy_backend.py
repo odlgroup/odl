@@ -8,7 +8,3 @@ scipy_coo_tensor = SparseMatrixFormat(
     constructor = coo_matrix,
     is_of_this_sparse_format = lambda x : isinstance(x, coo_matrix)
 )
-
-SUPPORTED_IMPLS = {
-    'COO':scipy_coo_tensor
-    }
