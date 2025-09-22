@@ -7,5 +7,6 @@ scipy_coo_tensor = SparseMatrixFormat(
     impl = 'scipy',
     constructor = coo_matrix,
     is_of_this_sparse_format = lambda x : isinstance(x, coo_matrix),
-    to_dense = lambda matrix: matrix.toarray()
+    to_dense = lambda matrix: matrix.toarray(),
+    matmul_spmatrix_with_vector = lambda matrix, x: matrix.dot(x)
 )

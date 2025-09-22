@@ -1064,12 +1064,7 @@ class MatrixOperator(Operator):
         """Return ``self(x[, out])``."""
 
         if self.is_sparse:
-            if self._sparse_format.impl == 'scipy':
-                out = self.matrix.dot(x.data)
-            elif self._sparse_format.impl == 'pytorch':
-                out = self.__arr_ns.matmul(self.matrix, x.data)
-            else:
-                raise NotImplementedError
+            out = self._sparse_format.matmul_spmatrix_with_vector(self.matrix, x.data)
         else:
             dot = self.__arr_ns.tensordot(self.matrix, x.data, axes=([1], [self.axis]))
             # New axis ends up as first, need to swap it to its place

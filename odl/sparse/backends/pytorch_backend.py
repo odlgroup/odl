@@ -1,4 +1,4 @@
-from torch import sparse_coo_tensor, Tensor, sparse_coo
+from torch import sparse_coo_tensor, Tensor, sparse_coo, matmul
 
 from .sparse_template import SparseMatrixFormat
 
@@ -10,5 +10,6 @@ pytorch_coo_tensor = SparseMatrixFormat(
     impl = 'pytorch',
     constructor = sparse_coo_tensor,
     is_of_this_sparse_format = is_sparse_COO,
-    to_dense = lambda matrix: matrix.to_dense()
+    to_dense = lambda matrix: matrix.to_dense(),
+    matmul_spmatrix_with_vector = matmul
 )
