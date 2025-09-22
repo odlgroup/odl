@@ -51,7 +51,7 @@ class SparseMatrix():
 def is_sparse(matrix):
     _initialize_if_needed()
     for instance in SUPPORTED_INSTANCES:
-        if instance.is_sparse(matrix):
+        if instance.is_of_this_sparse_format(matrix):
             return True
     return False
 
@@ -59,14 +59,14 @@ def get_sparse_matrix_impl(matrix):
     _initialize_if_needed()
     assert is_sparse(matrix), 'The matrix is not a supported sparse matrix'
     for instance in SUPPORTED_INSTANCES:
-        if instance.is_sparse(matrix):
+        if instance.is_of_this_sparse_format(matrix):
             return instance.impl
 
 def get_sparse_matrix_format(matrix):
     _initialize_if_needed()
     assert is_sparse(matrix), 'The matrix is not a supported sparse matrix'
     for instance in SUPPORTED_INSTANCES:
-        if instance.is_sparse(matrix):
+        if instance.is_of_this_sparse_format(matrix):
             return instance.sparse_format
 
 if __name__ == '__main__':

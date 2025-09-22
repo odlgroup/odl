@@ -8,7 +8,7 @@ class SparseMatrixFormat:
     sparse_format : str
     impl : str
     constructor : Callable
-    is_sparse : Callable
+    is_of_this_sparse_format : Callable[[object], bool]
     def __post_init__(self):
         if self.impl not in _registered_sparse_formats:
             _registered_sparse_formats[self.impl] = {}

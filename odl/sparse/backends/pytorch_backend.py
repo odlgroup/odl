@@ -9,7 +9,7 @@ pytorch_coo_tensor = SparseMatrixFormat(
     sparse_format='COO',
     impl = 'pytorch',
     constructor = sparse_coo_tensor,
-    is_sparse = is_sparse_COO
+    is_of_this_sparse_format = is_sparse_COO
 )
 
 SUPPORTED_IMPLS = {
