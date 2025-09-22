@@ -904,7 +904,7 @@ class MatrixOperator(Operator):
             infer_backend_from(get_array_and_backend(matrix)[1])
             infer_device_from(matrix.device)
 
-        self.ns = self.array_backend.array_namespace
+        self.__arr_ns = self.array_backend.array_namespace
 
         if self.is_sparse:
             if self.sparse_backend == 'scipy':
@@ -919,11 +919,11 @@ class MatrixOperator(Operator):
 
         elif isinstance(matrix, Tensor):
             self.__matrix = matrix.data
-            self.__matrix = self.ns.asarray(matrix.data, device=self.__device, copy=AVOID_UNNECESSARY_COPY)
+            self.__matrix = self.__arr_ns.asarray(matrix.data, device=self.__device, copy=AVOID_UNNECESSARY_COPY)
             while len(self.__matrix.shape) < 2:
                 self.__matrix = self.__matrix[None]
         else:
-            self.__matrix = self.ns.asarray(matrix, device=self.__device, copy=AVOID_UNNECESSARY_COPY)
+            self.__matrix = self.__arr_ns.asarray(matrix, device=self.__device, copy=AVOID_UNNECESSARY_COPY)
             while len(self.__matrix.shape) < 2:
                 self.__matrix = self.__matrix[None]
 
@@ -963,7 +963,7 @@ class MatrixOperator(Operator):
 
         if range is None:
             # Infer range
-            range_dtype = self.ns.result_type(
+            range_dtype = self.__arr_ns.result_type(
                 self.matrix.dtype, domain.dtype)
             range_dtype = self.array_backend.identifier_of_dtype(range_dtype)
             if (range_shape != domain.shape and
@@ -989,8 +989,8 @@ class MatrixOperator(Operator):
                                  ''.format(tuple(range_shape), range.shape))
 
         # Check compatibility of data types
-        result_dtype = self.ns.result_type(domain.dtype, self.matrix.dtype)
-        if not can_cast(self.ns, result_dtype, range.dtype):
+        result_dtype = self.__arr_ns.result_type(domain.dtype, self.matrix.dtype)
+        if not can_cast(self.__arr_ns, result_dtype, range.dtype):
             raise ValueError('result data type {} cannot be safely cast to '
                              'range data type {}'
                              ''.format(dtype_repr(result_dtype),
@@ -1062,7 +1062,7 @@ class MatrixOperator(Operator):
                 raise NotImplementedError
         else:
             matrix = self.matrix
-        return MatrixOperator(self.ns.linalg.inv(matrix),
+        return MatrixOperator(self.__arr_ns.linalg.inv(matrix),
                                 domain=self.range, range=self.domain,
                                 axis=self.axis, impl=self.domain.impl, device=self.domain.device)
 
@@ -1073,13 +1073,13 @@ class MatrixOperator(Operator):
             if self.sparse_backend == 'scipy':
                 out = self.matrix.dot(x.data)
             elif self.sparse_backend == 'pytorch':
-                out = self.ns.matmul(self.matrix, x.data)
+                out = self.__arr_ns.matmul(self.matrix, x.data)
             else:
                 raise NotImplementedError
         else:
-            dot = self.ns.tensordot(self.matrix, x.data, axes=([1], [self.axis]))
+            dot = self.__arr_ns.tensordot(self.matrix, x.data, axes=([1], [self.axis]))
             # New axis ends up as first, need to swap it to its place
-            out = self.ns.moveaxis(dot, 0, self.axis)
+            out = self.__arr_ns.moveaxis(dot, 0, self.axis)
 
         return out
 
