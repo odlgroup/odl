@@ -1,8 +1,8 @@
 from scipy.sparse import coo_matrix
 
-from .sparse_template import SPARSE_MATRIX
+from .sparse_template import SparseMatrixFormat
     
-scipy_coo_tensor = SPARSE_MATRIX(
+scipy_coo_tensor = SparseMatrixFormat(
     sparse_format='COO',
     impl = 'scipy',
     constructor = coo_matrix,

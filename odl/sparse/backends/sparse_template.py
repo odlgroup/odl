@@ -5,7 +5,7 @@ _registered_sparse_implementations = {}
 _registered_sparse_formats = {}
 
 @dataclass
-class SPARSE_MATRIX:
+class SparseMatrixFormat:
     sparse_format : str
     impl : str
     constructor : Callable
