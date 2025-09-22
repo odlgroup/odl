@@ -19,7 +19,10 @@ from odl.operator.tensor_ops import (
     MatrixOperator, PointwiseInner, PointwiseNorm, PointwiseSum)
 from odl.space.pspace import ProductSpace
 from odl.util.testutils import (
-    all_almost_equal, all_equal, noise_element, noise_elements, simple_fixture)
+    all_almost_equal, all_equal, noise_element, noise_elements, simple_fixture, skip_if_no_pytorch)
+from odl.space.entry_points import tensor_space_impl_names
+from odl.sparse import SparseMatrix
+from odl.array_API_support import lookup_array_backend, get_array_and_backend
 
 matrix_dtype = simple_fixture(
     name='matrix_dtype',
@@ -38,7 +41,8 @@ def matrix(matrix_dtype, odl_impl_device_pairs):
 
 exponent = simple_fixture('exponent', [2.0, 1.0, float('inf'), 3.5, 1.5])
 
-
+sparse_matrix_backend = simple_fixture('backend', ['scipy', 'pytorch'])
+sparse_matrix_format = simple_fixture('format', ['COO'])
 # ---- PointwiseNorm ----
 
 
@@ -574,32 +578,137 @@ def test_pointwise_sum(odl_impl_device_pairs):
 
 
 # ---- MatrixOperator ---- #
+def sparse_scipy_input(sparse_matrix_format):
+    dense_matrix  = np.ones((3, 4))
+    if sparse_matrix_format == 'COO':
+        sparse_matrix = SparseMatrix('COO', 'scipy', dense_matrix)
+    else:
+        raise NotImplementedError
+    return dense_matrix, sparse_matrix
+    
+def sparse_pytorch_input(sparse_matrix_format, cuda_device):
+    assert sparse_matrix_format == 'COO', NotImplementedError
+    indices = [
+        #1st row|2nd row|3rd row
+        [0,0,0,0,1,1,1,1,2,2,2,2],
+        [0,1,2,3,0,1,2,3,0,1,2,3]
+        ]
+    values = [
+        1.0,1.0,1.0,1.0,
+        1.0,1.0,1.0,1.0,
+        1.0,1.0,1.0,1.0
+        ]
+    array = [
+        [1.0,1.0,1.0,1.0],
+        [1.0,1.0,1.0,1.0],
+        [1.0,1.0,1.0,1.0]
+        ]
+    backend = lookup_array_backend('pytorch')
+    dense_matrix = backend.array_constructor(array, device=cuda_device)
+    sparse_matrix = SparseMatrix('COO', 'pytorch', indices, values, device=cuda_device)
+    return dense_matrix, sparse_matrix   
 
 
-def test_matrix_op_init(matrix):
+
+sparse_configs = []
+sparse_configs.extend(
+    (pytest.param(proj_cfg)
+     for proj_cfg in ['COO scipy cpu'])
+)
+
+if 'pytorch' in tensor_space_impl_names():
+    pytorch_cfgs = []
+    for device in lookup_array_backend('pytorch').available_devices:
+        pytorch_cfgs.append(f'COO pytorch {device}')
+
+sparse_configs.extend(
+    (pytest.param(proj_cfg, marks=skip_if_no_pytorch)
+     for proj_cfg in pytorch_cfgs)
+)
+
+sparse_ids = [
+    " format='{}' - backend='{}' - device='{}' ".format(*s.values[0].split())
+    for s in sparse_configs
+]
+
+@pytest.fixture(scope='module', params=sparse_configs, ids=sparse_ids)
+def matrix_input(request):
+    format, backend, device = request.param.split()
+    if backend == 'scipy':
+        return sparse_scipy_input(format)
+    elif backend == 'pytorch':
+        return sparse_pytorch_input(format, device)
+    else:
+        raise ValueError
+    
+def invertible_sparse_scipy_input(sparse_matrix_format):
+    assert sparse_matrix_format == 'COO', NotImplementedError
+    dense_matrix  = np.ones((3, 3)) + 4.0 * np.eye(3)  # invertible
+    sparse_matrix = SparseMatrix('COO', 'scipy', dense_matrix)
+    return dense_matrix, sparse_matrix
+
+def invertible_sparse_pytorch_input(sparse_matrix_format, cuda_device):
+    assert sparse_matrix_format == 'COO', NotImplementedError
+    indices = [
+        #1st row|2nd row|3rd row
+        [0,0,0,1,1,1,2,2,2],
+        [0,1,2,0,1,2,0,1,2]
+        ]
+    values = [
+        5.0,1.0,1.0,
+        1.0,5.0,1.0,
+        1.0,1.0,5.0
+        ]
+    array = [
+        [5.0,1.0,1.0],
+        [1.0,5.0,1.0],
+        [1.0,1.0,5.0]
+        ]
+    backend = lookup_array_backend('pytorch')
+    dense_matrix = backend.array_constructor(array, device=cuda_device)
+    sparse_matrix = SparseMatrix('COO', 'pytorch', indices, values, device=cuda_device)
+    return dense_matrix, sparse_matrix   
+    
+@pytest.fixture(scope='module', params=sparse_configs, ids=sparse_ids)
+def invertible_matrix_input(request):
+    format, backend, device = request.param.split()
+    if backend == 'scipy':
+        return invertible_sparse_scipy_input(format)
+    elif backend == 'pytorch':
+        return invertible_sparse_pytorch_input(format, device)
+    else:
+        raise ValueError
+
+def test_matrix_op_init(matrix_input):
     """Test initialization and properties of matrix operators."""
-    dense_matrix = matrix
-    sparse_matrix = scipy.sparse.coo_matrix(dense_matrix)
+    dense_matrix, sparse_matrix = matrix_input
 
+    dense_matrix, backend = get_array_and_backend(dense_matrix)
+    impl = backend.impl
+    device = dense_matrix.device
     # Just check if the code runs
     MatrixOperator(dense_matrix)
     MatrixOperator(sparse_matrix)
 
     # Test default domain and range
     mat_op = MatrixOperator(dense_matrix)
-    assert mat_op.domain == odl.tensor_space(4, matrix.dtype)
-    assert mat_op.range == odl.tensor_space(3, matrix.dtype)
-    assert np.all(mat_op.matrix == dense_matrix)
+    assert mat_op.domain == odl.tensor_space(4, dense_matrix.dtype, impl=impl, device=device)
+    assert mat_op.range == odl.tensor_space(3, dense_matrix.dtype, impl=impl, device=device)
+    assert odl.all(mat_op.matrix == dense_matrix)
 
-    sparse_matrix = scipy.sparse.coo_matrix(dense_matrix)
     mat_op = MatrixOperator(sparse_matrix)
-    assert mat_op.domain == odl.tensor_space(4, matrix.dtype)
-    assert mat_op.range == odl.tensor_space(3, matrix.dtype)
-    assert (mat_op.matrix != sparse_matrix).getnnz() == 0
-
+    assert mat_op.domain == odl.tensor_space(4, dense_matrix.dtype, impl=impl, device=device)
+    assert mat_op.range == odl.tensor_space(3, dense_matrix.dtype, impl=impl, device=device)
+    if impl == 'numpy':
+        assert (mat_op.matrix != sparse_matrix).getnnz() == 0
+    # Pytorch does not support == and != betweend sparse tensors
+    elif impl == 'pytorch':
+        assert len(mat_op.matrix) == len(sparse_matrix) 
+    else:
+        raise NotImplementedError
     # Explicit domain and range
-    dom = odl.tensor_space(4, matrix.dtype)
-    ran = odl.tensor_space(3, matrix.dtype)
+    dom = odl.tensor_space(4, dense_matrix.dtype, impl=impl, device=device)
+    ran = odl.tensor_space(3, dense_matrix.dtype, impl=impl, device=device)
 
     mat_op = MatrixOperator(dense_matrix, domain=dom, range=ran)
     assert mat_op.domain == dom
@@ -611,55 +720,67 @@ def test_matrix_op_init(matrix):
 
     # Bad 1d sizes
     with pytest.raises(ValueError):
-        MatrixOperator(dense_matrix, domain=odl.cn(4), range=odl.cn(4))
+        MatrixOperator(dense_matrix, domain=odl.cn(4, impl=impl, device=device), range=odl.cn(4, impl=impl, device=device))
     with pytest.raises(ValueError):
-        MatrixOperator(dense_matrix, range=odl.cn(4))
+        MatrixOperator(dense_matrix, range=odl.cn(4, impl=impl, device=device))
     # Invalid range dtype
     with pytest.raises(ValueError):
-        MatrixOperator(dense_matrix.astype(complex), range=odl.rn(4))
+        if impl == 'numpy':
+            MatrixOperator(dense_matrix.astype(complex), range=odl.rn(4, impl=impl, device=device))
+        elif impl == 'pytorch':
+            MatrixOperator(dense_matrix.to(complex), range=odl.rn(4, impl=impl, device=device))
+        else:
+            raise NotImplementedError
 
     # Data type promotion
     # real space, complex matrix -> complex space
-    dom = odl.rn(4)
-    mat_op = MatrixOperator(dense_matrix.astype(complex), domain=dom)
+    dom = odl.rn(4, impl=impl, device=device)
+    if impl == 'numpy':
+        mat_op = MatrixOperator(dense_matrix.astype(complex), domain=dom, impl=impl, device=device)
+
+    elif impl == 'pytorch':
+        mat_op = MatrixOperator(dense_matrix.to(complex), domain=dom,
+        impl=impl, device=device)
+    else:
+        raise NotImplementedError
     assert mat_op.domain == dom
-    assert mat_op.range == odl.cn(3)
+    assert mat_op.range == odl.cn(3, impl=impl, device=device)
 
     # complex space, real matrix -> complex space
-    dom = odl.cn(4)
+    dom = odl.cn(4, impl=impl, device=device)
     mat_op = MatrixOperator(dense_matrix.real, domain=dom)
     assert mat_op.domain == dom
-    assert mat_op.range == odl.cn(3)
+    assert mat_op.range == odl.cn(3, impl=impl, device=device)
 
     # Multi-dimensional spaces
-    dom = odl.tensor_space((6, 5, 4), matrix.dtype)
-    ran = odl.tensor_space((6, 5, 3), matrix.dtype)
+    dom = odl.tensor_space((6, 5, 4), dense_matrix.dtype, impl=impl, device=device)
+    ran = odl.tensor_space((6, 5, 3), dense_matrix.dtype, impl=impl, device=device)
     mat_op = MatrixOperator(dense_matrix, domain=dom, axis=2)
     assert mat_op.range == ran
     mat_op = MatrixOperator(dense_matrix, domain=dom, range=ran, axis=2)
     assert mat_op.range == ran
 
     with pytest.raises(ValueError):
-        bad_dom = odl.tensor_space((6, 6, 6), matrix.dtype)  # wrong shape
+        bad_dom = odl.tensor_space((6, 6, 6), dense_matrix.dtype)  # wrong shape
         MatrixOperator(dense_matrix, domain=bad_dom)
     with pytest.raises(ValueError):
-        dom = odl.tensor_space((6, 5, 4), matrix.dtype)
-        bad_ran = odl.tensor_space((6, 6, 6), matrix.dtype)  # wrong shape
+        dom = odl.tensor_space((6, 5, 4), dense_matrix.dtype)
+        bad_ran = odl.tensor_space((6, 6, 6), dense_matrix.dtype)  # wrong shape
         MatrixOperator(dense_matrix, domain=dom, range=bad_ran)
     with pytest.raises(ValueError):
         MatrixOperator(dense_matrix, domain=dom, axis=1)
     with pytest.raises(ValueError):
         MatrixOperator(dense_matrix, domain=dom, axis=0)
     with pytest.raises(ValueError):
-        bad_ran = odl.tensor_space((6, 3, 4), matrix.dtype)
+        bad_ran = odl.tensor_space((6, 3, 4), dense_matrix.dtype, impl=impl, device=device)
         MatrixOperator(dense_matrix, domain=dom, range=bad_ran, axis=2)
     with pytest.raises(ValueError):
-        bad_dom_for_sparse = odl.rn((6, 5, 4))
-        MatrixOperator(sparse_matrix, domain=bad_dom_for_sparse, axis=2)
+        bad_dom_for_sparse = odl.rn((6, 5, 4), impl=impl, device=device)
+        MatrixOperator(sparse_matrix, domain=bad_dom_for_sparse, axis=2, impl=impl, device=device)
 
     # Init with uniform_discr space (subclass of TensorSpace)
-    dom = odl.uniform_discr(0, 1, 4, dtype=dense_matrix.dtype)
-    ran = odl.uniform_discr(0, 1, 3, dtype=dense_matrix.dtype)
+    dom = odl.uniform_discr(0, 1, 4, dtype=dense_matrix.dtype, impl=impl, device=device)
+    ran = odl.uniform_discr(0, 1, 3, dtype=dense_matrix.dtype, impl=impl, device=device)
     MatrixOperator(dense_matrix, domain=dom, range=ran)
 
     # Make sure this runs and returns something string-like
@@ -667,17 +788,24 @@ def test_matrix_op_init(matrix):
     assert repr(mat_op) > ''
 
 
-def test_matrix_op_call(matrix):
+def test_matrix_op_call_implicit(matrix_input):
     """Validate result from calls to matrix operators against Numpy."""
-    dense_matrix = matrix
-    sparse_matrix = scipy.sparse.coo_matrix(dense_matrix)
+    dense_matrix, sparse_matrix = matrix_input
+
+    dense_matrix, backend = get_array_and_backend(dense_matrix)
+    impl = backend.impl
+    device = dense_matrix.device
+    ns = backend.array_namespace
 
     # Default 1d case
     dmat_op = MatrixOperator(dense_matrix)
     smat_op = MatrixOperator(sparse_matrix)
     xarr, x = noise_elements(dmat_op.domain)
-
-    true_result = dense_matrix.dot(xarr)
+    # if impl == 'numpy':
+    #     true_result = dense_matrix.dot(xarr)
+    # elif impl == 'pytorch':
+    
+    true_result = ns.tensordot(dense_matrix, xarr, axes=([1], [0]))
     assert all_almost_equal(dmat_op(x), true_result)
     assert all_almost_equal(smat_op(x), true_result)
     out = dmat_op.range.element()
@@ -687,10 +815,12 @@ def test_matrix_op_call(matrix):
     assert all_almost_equal(out, true_result)
 
     # Multi-dimensional case
-    domain = odl.rn((2, 2, 4))
+    
+
+    domain = odl.rn((2, 2, 4),impl=impl,device=device)
     mat_op = MatrixOperator(dense_matrix, domain, axis=2)
     xarr, x = noise_elements(mat_op.domain)
-    true_result = np.moveaxis(np.tensordot(dense_matrix, xarr, (1, 2)), 0, 2)
+    true_result = ns.moveaxis(ns.tensordot(dense_matrix, xarr, axes=([1], [2])), 0, 2)
     assert all_almost_equal(mat_op(x), true_result)
     out = mat_op.range.element()
     mat_op(x, out=out)
@@ -705,31 +835,40 @@ def test_matrix_op_call_explicit(odl_impl_device_pairs):
     mat = space.one().data
 
     backend = space.array_backend
+    ns = space.array_namespace
 
     xarr = backend.array_constructor([[[0, 1],
                       [2, 3]],
                      [[4, 5],
-                      [6, 7]]], dtype=float)
+                      [6, 7]]], dtype=float, device=device)
 
     # Multiplication along `axis` with `mat` is the same as summation
     # along `axis` and stacking 3 times along the same axis
     for axis in range(3):
-        mat_op = MatrixOperator(mat, domain=odl.rn(xarr.shape),
+        mat_op = MatrixOperator(mat, domain=odl.rn(xarr.shape, impl=impl, device=device),
                                 axis=axis)
         result = mat_op(xarr)
-        true_result = np.repeat(np.sum(xarr, axis=axis, keepdims=True),
+        if impl == 'numpy':
+            true_result = ns.repeat(ns.sum(xarr, axis=axis, keepdims=True),
                                 repeats=3, axis=axis)
+        elif impl == 'pytorch':
+            true_result = ns.repeat_interleave(ns.sum(xarr, axis=axis, keepdims=True),
+                                repeats=3, axis=axis)
+        else:
+            raise ValueError(f'Not implemented for impl = {impl}')
         assert result.shape == true_result.shape
         assert odl.allclose(result, true_result)
 
 
-def test_matrix_op_adjoint(matrix):
+def test_matrix_op_adjoint(matrix_input):
     """Test if the adjoint of matrix operators is correct."""
-    dense_matrix = matrix
-    sparse_matrix = scipy.sparse.coo_matrix(dense_matrix)
+    dense_matrix, sparse_matrix = matrix_input
 
-    tol = 2 * matrix.size * np.finfo(matrix.dtype).resolution
-
+    dense_matrix, backend = get_array_and_backend(dense_matrix)
+    impl = backend.impl
+    device = dense_matrix.device
+    ns = backend.array_namespace
+    tol = 2 * len(dense_matrix) * ns.finfo(dense_matrix.dtype).resolution
     # Default 1d case
     dmat_op = MatrixOperator(dense_matrix)
     smat_op = MatrixOperator(sparse_matrix)
@@ -744,8 +883,8 @@ def test_matrix_op_adjoint(matrix):
     assert inner_ran == pytest.approx(inner_dom, rel=tol, abs=tol)
 
     # Multi-dimensional case
-    domain = odl.tensor_space((2, 2, 4), matrix.dtype)
-    mat_op = MatrixOperator(dense_matrix, domain, axis=2)
+    domain = odl.tensor_space((2, 2, 4), impl=impl, device=device)
+    mat_op = MatrixOperator(dense_matrix, domain, axis=2, impl=impl, device=device)
     x = noise_element(mat_op.domain)
     y = noise_element(mat_op.range)
     inner_ran = mat_op(x).inner(y)
@@ -753,11 +892,9 @@ def test_matrix_op_adjoint(matrix):
     assert inner_ran == pytest.approx(inner_dom, rel=tol, abs=tol)
 
 
-def test_matrix_op_inverse(odl_impl_device_pairs):
-    impl, device = odl_impl_device_pairs
+def test_matrix_op_inverse(invertible_matrix_input):
     """Test if the inverse of matrix operators is correct."""
-    dense_matrix = np.ones((3, 3)) + 4 * np.eye(3)  # invertible
-    sparse_matrix = scipy.sparse.coo_matrix(dense_matrix)
+    dense_matrix, sparse_matrix = invertible_matrix_input
 
     # Default 1d case
     dmat_op = MatrixOperator(dense_matrix)
@@ -771,7 +908,10 @@ def test_matrix_op_inverse(odl_impl_device_pairs):
     assert all_almost_equal(x, msinv_ms_x)
 
     # Multi-dimensional case
-    domain = odl.tensor_space((2, 2, 3), dense_matrix.dtype)
+    dense_matrix, backend = get_array_and_backend(dense_matrix)
+    impl = backend.impl
+    device = dense_matrix.device
+    domain = odl.tensor_space((2, 2, 3), impl=impl, device=device)
     mat_op = MatrixOperator(dense_matrix, domain, axis=2)
     x = noise_element(mat_op.domain)
     m_x = mat_op(x)
@@ -783,7 +923,7 @@ def test_sampling_operator_adjoint(odl_impl_device_pairs):
     impl, device = odl_impl_device_pairs
     """Validate basic properties of `SamplingOperator.adjoint`."""
     # 1d space
-    space = odl.uniform_discr([-1], [1], shape=(3))
+    space = odl.uniform_discr([-1], [1], shape=(3), impl=impl, device=device)
     sampling_points = [[0, 1, 1, 0]]
     x = space.element([1, 2, 3])
     op = odl.SamplingOperator(space, sampling_points)
@@ -793,7 +933,7 @@ def test_sampling_operator_adjoint(odl_impl_device_pairs):
     assert op.adjoint(op(x)).inner(x) == pytest.approx(op(x).inner(op(x)))
 
     # 2d space
-    space = odl.uniform_discr([-1, -1], [1, 1], shape=(2, 3))
+    space = odl.uniform_discr([-1, -1], [1, 1], shape=(2, 3), impl=impl, device=device)
     x = space.element([[1, 2, 3],
                        [4, 5, 6]])
     sampling_points = [[0, 1, 1, 0],
