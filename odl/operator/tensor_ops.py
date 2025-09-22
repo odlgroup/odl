@@ -1053,12 +1053,7 @@ class MatrixOperator(Operator):
         inverse : `MatrixOperator`
         """    
         if self.is_sparse:
-            if self._sparse_format.impl == 'scipy':
-                matrix = self.matrix.toarray()
-            elif self._sparse_format.impl == 'pytorch':
-                matrix = self.matrix.to_dense()
-            else:
-                raise NotImplementedError
+            matrix = self._sparse_format.to_dense(self.matrix)
         else:
             matrix = self.matrix
         return MatrixOperator(self.__arr_ns.linalg.inv(matrix),
