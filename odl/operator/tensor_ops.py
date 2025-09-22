@@ -948,7 +948,7 @@ class MatrixOperator(Operator):
                 raise TypeError('`domain` must be a `TensorSpace` '
                                 'instance, got {!r}'.format(domain))
 
-            if self.sparse_backend == 'scipy' and domain.ndim > 1:
+            if self.is_sparse and domain.ndim > 1:
                 raise ValueError('`domain.ndim` > 1 unsupported for '
                                  'scipy sparse matrices')
 
@@ -1052,13 +1052,17 @@ class MatrixOperator(Operator):
         Returns
         -------
         inverse : `MatrixOperator`
-        """
+        """    
         if self.is_sparse:
-            linalg_function = self.ns.sparse.linalg.inv
+            if self.sparse_backend == 'scipy':
+                matrix = self.matrix.toarray()
+            elif self.sparse_backend == 'pytorch':
+                matrix = self.matrix.to_dense()
+            else:
+                raise NotImplementedError
         else:
-            linalg_function = self.ns.linalg.inv
-
-        return MatrixOperator(linalg_function(self.matrix),
+            matrix = self.matrix
+        return MatrixOperator(self.ns.linalg.inv(matrix),
                                 domain=self.range, range=self.domain,
                                 axis=self.axis, impl=self.domain.impl, device=self.domain.device)
 
@@ -1066,7 +1070,12 @@ class MatrixOperator(Operator):
         """Return ``self(x[, out])``."""
 
         if self.is_sparse:
-            out = self.matrix.dot(x.data)
+            if self.sparse_backend == 'scipy':
+                out = self.matrix.dot(x.data)
+            elif self.sparse_backend == 'pytorch':
+                out = self.ns.matmul(self.matrix, x.data)
+            else:
+                raise NotImplementedError
         else:
             dot = self.ns.tensordot(self.matrix, x.data, axes=([1], [self.axis]))
             # New axis ends up as first, need to swap it to its place
