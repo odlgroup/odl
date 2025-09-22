@@ -18,11 +18,17 @@ from contextlib import contextmanager
 from time import time
 from odl.array_API_support.comparisons import allclose, isclose, all_equal as odl_all_equal
 import numpy as np
+import pytest
 
 from odl.util.utility import is_string, run_from_ipython
 from odl.util.dtype_utils import (
     is_boolean_dtype, is_signed_int_dtype, is_unsigned_int_dtype,
     is_floating_dtype, is_complex_dtype)
+
+skip_if_no_pytorch = pytest.mark.skipif(
+        "not 'pytorch' in odl.space.entry_points.TENSOR_SPACE_IMPLS",
+        reason='pytorch not available not available',
+    )
 
 from itertools import zip_longest
 __all__ = (

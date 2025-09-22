@@ -160,6 +160,13 @@ for impl in tensor_space_impl_names():
 
 odl_impl_device_pairs = simple_fixture(name='impl_device', params=IMPL_DEVICE_PAIRS)
 
+if 'pytorch' in tensor_space_impl_names():
+    CUDA_DEVICES = []
+    for device in lookup_array_backend('pytorch').available_devices:
+        CUDA_DEVICES.append(device)
+
+cuda_device = simple_fixture(name='cuda_device', params=CUDA_DEVICES)
+
 odl_elem_order = simple_fixture(name='order', params=['C'])
 
 odl_reduction = simple_fixture('reduction', ['sum', 'prod', 'min', 'max'])
