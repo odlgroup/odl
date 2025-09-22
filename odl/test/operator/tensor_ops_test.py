@@ -621,10 +621,10 @@ if 'pytorch' in tensor_space_impl_names():
     for device in lookup_array_backend('pytorch').available_devices:
         pytorch_cfgs.append(f'COO pytorch {device}')
 
-sparse_configs.extend(
-    (pytest.param(proj_cfg, marks=skip_if_no_pytorch)
-     for proj_cfg in pytorch_cfgs)
-)
+    sparse_configs.extend(
+        (pytest.param(proj_cfg, marks=skip_if_no_pytorch)
+         for proj_cfg in pytorch_cfgs)
+    )
 
 sparse_ids = [
     " format='{}' - backend='{}' - device='{}' ".format(*s.values[0].split())
