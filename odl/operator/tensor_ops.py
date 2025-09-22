@@ -25,7 +25,7 @@ from odl.space.weightings.weighting import ArrayWeighting
 from odl.util import dtype_repr, indent, signature_string
 from odl.array_API_support import ArrayBackend, lookup_array_backend, abs as odl_abs, maximum, pow, sqrt, multiply, get_array_and_backend, can_cast, all_equal
 
-from odl.sparse import is_sparse, get_sparse_matrix_impl
+from odl.sparse import is_sparse, get_sparse_matrix_impl, lookup_sparse_format
 
 __all__ = ('PointwiseNorm', 'PointwiseInner', 'PointwiseSum', 'MatrixOperator',
            'SamplingOperator', 'WeightedSumSamplingOperator',
@@ -870,12 +870,7 @@ class MatrixOperator(Operator):
         def infer_device_from(default_device):
             self.__device = default_device if device is None else device
 
-        self.is_sparse = is_sparse(matrix)
-
-        if self.is_sparse:
-            self.sparse_backend = get_sparse_matrix_impl(matrix) 
-        else:
-            self.sparse_backend = None
+        self._sparse_format = lookup_sparse_format(matrix)
 
         if domain is not None:
             infer_backend_from(domain.array_backend)
@@ -886,11 +881,11 @@ class MatrixOperator(Operator):
             infer_device_from(range.device)
 
         elif self.is_sparse:
-            if self.sparse_backend == 'scipy':
+            if self._sparse_format.impl == 'scipy':
                 infer_backend_from(lookup_array_backend('numpy'))
                 infer_device_from('cpu')
 
-            elif self.sparse_backend == 'pytorch':
+            elif self._sparse_format.impl == 'pytorch':
                 infer_backend_from(lookup_array_backend('pytorch'))
                 infer_device_from(matrix.device)
                 
@@ -907,12 +902,12 @@ class MatrixOperator(Operator):
         self.__arr_ns = self.array_backend.array_namespace
 
         if self.is_sparse:
-            if self.sparse_backend == 'scipy':
+            if self._sparse_format.impl == 'scipy':
                 if self.array_backend.impl != 'numpy':
                     raise TypeError(f"SciPy sparse matrices can only be used with NumPy on CPU, not {self.array_backend.impl}.")
                 if self.device != 'cpu':
                     raise TypeError(f"SciPy sparse matrices can only be used with NumPy on CPU, not {device}.")
-            elif self.sparse_backend == 'pytorch':
+            elif self._sparse_format.impl == 'pytorch':
                 if self.array_backend.impl != 'pytorch':
                     raise TypeError(f"PyTorch sparse matrices can only be used with Pytorch, not {self.array_backend.impl}.")
             self.__matrix = matrix
@@ -999,6 +994,10 @@ class MatrixOperator(Operator):
         super(MatrixOperator, self).__init__(domain, range, linear=True)
 
     @property
+    def is_sparse(self):
+        return self._sparse_format is not None
+
+    @property
     def matrix(self):
         """Matrix representing this operator."""
         return self.__matrix
@@ -1054,9 +1053,9 @@ class MatrixOperator(Operator):
         inverse : `MatrixOperator`
         """    
         if self.is_sparse:
-            if self.sparse_backend == 'scipy':
+            if self._sparse_format.impl == 'scipy':
                 matrix = self.matrix.toarray()
-            elif self.sparse_backend == 'pytorch':
+            elif self._sparse_format.impl == 'pytorch':
                 matrix = self.matrix.to_dense()
             else:
                 raise NotImplementedError
@@ -1070,9 +1069,9 @@ class MatrixOperator(Operator):
         """Return ``self(x[, out])``."""
 
         if self.is_sparse:
-            if self.sparse_backend == 'scipy':
+            if self._sparse_format.impl == 'scipy':
                 out = self.matrix.dot(x.data)
-            elif self.sparse_backend == 'pytorch':
+            elif self._sparse_format.impl == 'pytorch':
                 out = self.__arr_ns.matmul(self.matrix, x.data)
             else:
                 raise NotImplementedError
