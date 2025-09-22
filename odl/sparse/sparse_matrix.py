@@ -1,7 +1,9 @@
 
-from odl.sparse.backends.sparse_template import _registered_sparse_formats
+from odl.sparse.backends.sparse_template import SparseMatrixFormat, _registered_sparse_formats
 
 import odl.sparse.backends.scipy_backend
+
+from typing import Optional
 
 
 IS_INITIALIZED = False
@@ -18,11 +20,6 @@ def _initialize_if_needed():
             except ModuleNotFoundError:
                 pass
         IS_INITIALIZED = True
-
-def _supported_formats():
-    return [ sp_fmt
-            for sp_bkend in _registered_sparse_formats.values()
-            for sp_fmt in sp_bkend.values() ]
 
 class SparseMatrix():    
     """
@@ -49,27 +46,27 @@ class SparseMatrix():
         sparse_impl = _registered_sparse_formats[impl][format]
 
         return sparse_impl.constructor(*args, **kwargs)
+
+def _lookup_sparse_format(matrix: object) -> Optional[SparseMatrixFormat]:
+    _initialize_if_needed()
+    for sp_bkend in _registered_sparse_formats.values():
+        for sp_fmt in sp_bkend.values():
+            if sp_fmt.is_of_this_sparse_format(matrix):
+                return sp_fmt
+    return None
     
 def is_sparse(matrix):
-    _initialize_if_needed()
-    for instance in _supported_formats():
-        if instance.is_of_this_sparse_format(matrix):
-            return True
-    return False
+    return (_lookup_sparse_format(matrix) is not None)
 
 def get_sparse_matrix_impl(matrix):
-    _initialize_if_needed()
-    assert is_sparse(matrix), 'The matrix is not a supported sparse matrix'
-    for instance in _supported_formats():
-        if instance.is_of_this_sparse_format(matrix):
-            return instance.impl
+    instance = _lookup_sparse_format(matrix)
+    assert instance is not None, 'The matrix is not a supported sparse matrix'
+    return instance.impl
 
 def get_sparse_matrix_format(matrix):
-    _initialize_if_needed()
-    assert is_sparse(matrix), 'The matrix is not a supported sparse matrix'
-    for instance in _supported_formats():
-        if instance.is_of_this_sparse_format(matrix):
-            return instance.sparse_format
+    instance = _lookup_sparse_format(matrix)
+    assert instance is not None, 'The matrix is not a supported sparse matrix'
+    return instance.sparse_format
 
 if __name__ == '__main__':
     print(SparseMatrix('COO', 'pytorch', 
