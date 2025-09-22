@@ -47,7 +47,7 @@ class SparseMatrix():
 
         return sparse_impl.constructor(*args, **kwargs)
 
-def _lookup_sparse_format(matrix: object) -> Optional[SparseMatrixFormat]:
+def lookup_sparse_format(matrix: object) -> Optional[SparseMatrixFormat]:
     _initialize_if_needed()
     for sp_bkend in _registered_sparse_formats.values():
         for sp_fmt in sp_bkend.values():
@@ -56,15 +56,15 @@ def _lookup_sparse_format(matrix: object) -> Optional[SparseMatrixFormat]:
     return None
     
 def is_sparse(matrix):
-    return (_lookup_sparse_format(matrix) is not None)
+    return (lookup_sparse_format(matrix) is not None)
 
 def get_sparse_matrix_impl(matrix):
-    instance = _lookup_sparse_format(matrix)
+    instance = lookup_sparse_format(matrix)
     assert instance is not None, 'The matrix is not a supported sparse matrix'
     return instance.impl
 
 def get_sparse_matrix_format(matrix):
-    instance = _lookup_sparse_format(matrix)
+    instance = lookup_sparse_format(matrix)
     assert instance is not None, 'The matrix is not a supported sparse matrix'
     return instance.sparse_format
 
