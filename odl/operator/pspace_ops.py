@@ -240,9 +240,6 @@ class ProductSpaceOperator(Operator):
     def _convert_to_spmatrix(operators):
         """Convert an array-like object of operators to a sparse matrix."""
 
-        # Lazy import to improve `import odl` time
-        # import scipy.sparse
-
         # Convert ops to sparse representation. This is not trivial because
         # operators can be indexable themselves and give the wrong impression
         # of an extra dimension. So we have to infer the shape manually
@@ -380,9 +377,6 @@ class ProductSpaceOperator(Operator):
             [ 0.,  0.,  0.]
         ])
         """
-        # Lazy import to improve `import odl` time
-        import scipy.sparse
-
         # Short circuit optimization
         if self.is_linear:
             return self
@@ -434,9 +428,6 @@ class ProductSpaceOperator(Operator):
             [ 1.,  2.,  3.]
         ])
         """
-        # Lazy import to improve `import odl` time
-        import scipy.sparse
-
         adjoint_ops = [op.adjoint for op in self.ops.data]
         data = np.empty(len(adjoint_ops), dtype=object)
         data[:] = adjoint_ops
@@ -1145,8 +1136,6 @@ class DiagonalOperator(ProductSpaceOperator):
         >>> op.operators
         (IdentityOperator(rn(3)), IdentityOperator(rn(3)))
         """
-        # Lazy import to improve `import odl` time
-        import scipy.sparse
 
         if (len(operators) == 2 and
                 isinstance(operators[0], Operator) and
