@@ -10,6 +10,8 @@
 
 from __future__ import division
 import numpy as np
+import os 
+os.environ['SCIPY_ARRAY_API']='1'
 import scipy.special
 import pytest
 
@@ -33,17 +35,17 @@ space_ids = [' space={} '.format(p) for p in space_params]
 
 
 @pytest.fixture(scope="module", ids=space_ids, params=space_params)
-def space(request, odl_tspace_impl):
+def space(request, odl_impl_device_pairs):
     name = request.param.strip()
-    impl = odl_tspace_impl
+    impl, device = odl_impl_device_pairs
 
     if name == 'r10':
-        return odl.rn(10, impl=impl)
+        return odl.rn(10, impl=impl, device=device)
     elif name == 'uniform_discr':
-        return odl.uniform_discr(0, 1, 7, impl=impl)
+        return odl.uniform_discr(0, 1, 7, impl=impl, device=device)
     elif name == 'power_space_unif_discr':
         # Discretization parameters
-        space = odl.uniform_discr(0, 1, 7, impl=impl)
+        space = odl.uniform_discr(0, 1, 7, impl=impl, device=device)
         return odl.ProductSpace(space, 2)
 
 # --- functional tests --- #
@@ -67,7 +69,7 @@ def test_L1_norm(space, sigma):
     #                            |  x_i + sigma, if x_i < -sigma
     #                      z_i = {  0,           if -sigma <= x_i <= sigma
     #                            |  x_i - sigma, if x_i > sigma
-    tmp = np.zeros(space.shape)
+    tmp = space.zero().asarray()
     orig = x.asarray()
     tmp[orig > sigma] = orig[orig > sigma] - sigma
     tmp[orig < -sigma] = orig[orig < -sigma] + sigma
@@ -77,7 +79,7 @@ def test_L1_norm(space, sigma):
     # Test convex conjugate - expecting 0 if |x|_inf <= 1, infty else
     func_cc = func.convex_conj
     norm_larger_than_one = 1.1 * x / odl.max(odl.abs(x))
-    assert func_cc(norm_larger_than_one) == np.inf
+    assert func_cc(norm_larger_than_one) == float('inf')
 
     norm_less_than_one = 0.9 * x / odl.max(odl.abs(x))
     assert func_cc(norm_less_than_one) == 0
@@ -333,7 +335,7 @@ def test_kullback_leibler(space):
     assert cc_cc_func(x) == pytest.approx(func(x))
 
 
-def test_kullback_leibler_cross_entorpy(space):
+def test_kullback_leibler_cross_entropy(space):
     """Test the kullback leibler cross entropy and its convex conjugate."""
     # The prior needs to be positive
     prior = noise_element(space)
@@ -387,10 +389,19 @@ def test_kullback_leibler_cross_entorpy(space):
     assert all_almost_equal(cc_func.gradient(x), expected_result)
 
     # The proximal of the convex conjugate
-    arr = (prior * odl.exp(x)).asarray()
-    x_arr = x.asarray()
-    expected_result = (x_arr -
-                       scipy.special.lambertw(sigma * arr).real)
+    if isinstance(space, odl.ProductSpace):
+        device  = space[0].device
+        backend = space[0].array_backend
+    else:
+        device = space.device
+        backend = space.array_backend
+    arr = backend.to_cpu((prior * odl.exp(x)).asarray())
+    x_arr = backend.to_cpu(x.asarray())
+
+    
+    expected_result = x_arr - scipy.special.lambertw(sigma * arr).real
+    if device != 'cpu':
+        expected_result = expected_result.to(device)
     if not all_almost_equal(cc_func.proximal(sigma)(x), expected_result):
         print(f'{cc_func.proximal(sigma)(x)=}')
         print(f'{expected_result=}')
