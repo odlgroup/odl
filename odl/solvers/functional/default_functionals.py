@@ -1126,8 +1126,6 @@ class KullbackLeibler(Functional):
         If any components of ``x`` is non-positive, the value is positive
         infinity.
         """
-        # Lazy import to improve `import odl` time
-        import scipy.special
 
         with np.errstate(invalid='ignore', divide='ignore'):
             if self.prior is None:
@@ -1260,8 +1258,6 @@ class KullbackLeiblerConvexConj(Functional):
         If any components of ``x`` is larger than or equal to 1, the value is
         positive infinity.
         """
-        # Lazy import to improve `import odl` time
-        import scipy.special
 
         with np.errstate(invalid='ignore'):
             if self.prior is None:
@@ -1407,8 +1403,6 @@ class KullbackLeiblerCrossEntropy(Functional):
         If any components of ``x`` is non-positive, the value is positive
         infinity.
         """
-        # Lazy import to improve `import odl` time
-        # import scipy.special
         
         with np.errstate(invalid='ignore', divide='ignore'):
             if self.prior is None:
