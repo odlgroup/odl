@@ -533,9 +533,9 @@ class TensorSpace(LinearSpace):
         else:
             return self._astype(dtype_identifier)
 
-    def asdevice(self, device):
+    def to_device(self, device):
         _ = check_device(self.impl, device)
-        return self._asdevice(device)
+        return self._to_device(device)
         
     def element(self, inp=None, device=None, copy=None):
 
@@ -836,8 +836,8 @@ class TensorSpace(LinearSpace):
 
         return type(self)(self.shape, dtype=dtype, device=self.device, **kwargs)
     
-    def _asdevice(self, device:str):
-        """Internal helper for `asdevice`.
+    def _to_device(self, device:str):
+        """Internal helper for `to_device`.
 
         Subclasses with differing init parameters should overload this
         method.
@@ -845,7 +845,7 @@ class TensorSpace(LinearSpace):
         kwargs = {}
         weighting = getattr(self, "weighting", None)
         if weighting is not None:
-            kwargs["weighting"] = weighting.asdevice(device)
+            kwargs["weighting"] = weighting.to_device(device)
 
         return type(self)(self.shape, dtype=self.dtype, device=device, **kwargs)
     
