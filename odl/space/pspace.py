@@ -12,7 +12,6 @@ from __future__ import absolute_import, division, print_function
 
 from itertools import product
 from numbers import Integral, Number
-import operator
 import numpy as np
 
 import warnings
