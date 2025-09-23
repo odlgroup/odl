@@ -537,6 +537,10 @@ class TensorSpace(LinearSpace):
         _ = check_device(self.impl, device)
         return self._to_device(device)
         
+    def to_impl(self, impl):
+        _ = check_device(impl, self.device)
+        return self._to_impl(impl)
+        
     def element(self, inp=None, device=None, copy=None):
 
         # Most of the cases further below deal with conversions from various array types.
@@ -848,6 +852,22 @@ class TensorSpace(LinearSpace):
             kwargs["weighting"] = weighting.to_device(device)
 
         return type(self)(self.shape, dtype=self.dtype, device=device, **kwargs)
+    
+    def _to_impl(self, impl:str):
+        """Internal helper for `to_impl`.
+
+        Subclasses with structure other than just backend-specific ℝⁿ spaces should
+        overload this method.
+        """
+        # Lazy import to avoid cyclic dependency
+        from odl.space.space_utils import tensor_space
+
+        kwargs = {}
+        weighting = getattr(self, "weighting", None)
+        if weighting is not None:
+            kwargs["weighting"] = weighting.to_impl(impl)
+
+        return tensor_space(shape=self.shape, dtype=self.dtype_identifier, impl=impl, device=self.device, **kwargs)
     
     def _dist(self, x1, x2):
         """Return the distance between ``x1`` and ``x2``.
