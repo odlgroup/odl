@@ -66,7 +66,7 @@ class Weighting(object):
         must be stored on that device."""
         return self.__device
 
-    def asdevice(self, device):
+    def to_device(self, device):
         """Return a version of the same weighting, but with any internal arrays stored
         on a different device."""
         raise NotImplementedError("Abstract method")
@@ -584,9 +584,10 @@ class ArrayWeighting(Weighting):
         weighting array itself."""
         return self.array.shape
 
-    def asdevice(self, device):
+    def to_device(self, device):
         _, backend = get_array_and_backend(self.array)
-        return ArrayWeighting(array = backend.to_device(self.array, device=device), impl=self.impl, device=device, exponent=self.exponent)
+        return ArrayWeighting(array=backend.array_namespace.to_device(self.array, device=device),
+                              impl=self.impl, device=device, exponent=self.exponent)
 
     def is_valid(self):
         """Return True if the array is a valid weight, i.e. positive."""
@@ -750,7 +751,7 @@ class ConstWeighting(Weighting):
         """A constant weight can be applied to any shape."""
         return ()
 
-    def asdevice(self, device):
+    def to_device(self, device):
         return ConstWeighting(const = self.const, impl=self.impl, device=device, exponent=self.exponent)
 
     def __eq__(self, other):
