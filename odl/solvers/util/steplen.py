@@ -135,7 +135,7 @@ class BacktrackingLineSearch(LineSearch):
         # machine epsilon.
         if max_num_iter is None:
             try:
-                dtype = self.function.domain.dtype
+                dtype = self.function.domain.dtype_identifier
             except AttributeError:
                 dtype = float
             eps = 10 * np.finfo(dtype).resolution
