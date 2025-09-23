@@ -586,7 +586,8 @@ class ArrayWeighting(Weighting):
 
     def asdevice(self, device):
         _, backend = get_array_and_backend(self.array)
-        return ArrayWeighting(array = backend.to_device(self.array, device=device), impl=self.impl, device=device, exponent=self.exponent)
+        return ArrayWeighting(array=backend.array_namespace.to_device(self.array, device=device),
+                              impl=self.impl, device=device, exponent=self.exponent)
 
     def is_valid(self):
         """Return True if the array is a valid weight, i.e. positive."""
