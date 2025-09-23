@@ -21,7 +21,7 @@ from odl.set.sets import ComplexNumbers, RealNumbers
 from odl.set.space import (
     LinearSpace, LinearSpaceElement, LinearSpaceTypeError,
     SupportedNumOperationParadigms, NumOperationParadigmSupport)
-from odl.array_API_support import ArrayBackend, lookup_array_backend
+from odl.array_API_support import ArrayBackend, lookup_array_backend, check_device
 from odl.util import (
     array_str, indent, is_complex_dtype,
     is_numeric_dtype, is_real_floating_dtype, safe_int_conv,
@@ -532,6 +532,10 @@ class TensorSpace(LinearSpace):
                 return self._astype(dtype_identifier)
         else:
             return self._astype(dtype_identifier)
+
+    def asdevice(self, device):
+        _ = check_device(self.impl, device)
+        return self._asdevice(device)
         
     def element(self, inp=None, device=None, copy=None):
 
@@ -831,6 +835,19 @@ class TensorSpace(LinearSpace):
                 kwargs["weighting"] = weighting
 
         return type(self)(self.shape, dtype=dtype, device=self.device, **kwargs)
+    
+    def _asdevice(self, device:str):
+        """Internal helper for `asdevice`.
+
+        Subclasses with differing init parameters should overload this
+        method.
+        """
+        kwargs = {}
+        weighting = getattr(self, "weighting", None)
+        if weighting is not None:
+            kwargs["weighting"] = weighting.asdevice(device)
+
+        return type(self)(self.shape, dtype=self.dtype, device=device, **kwargs)
     
     def _dist(self, x1, x2):
         """Return the distance between ``x1`` and ``x2``.
