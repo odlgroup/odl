@@ -1585,6 +1585,26 @@ class Tensor(LinearSpaceElement):
         """
         return self.space.astype(dtype).element(self.data.astype(dtype))
     
+    def to_device(self, device: str):
+        """Return a copy of this element with the same values stored on
+        a different computational device.
+
+        Parameters
+        ----------
+        device :
+            Identifier of the desired storage location. Which ones are
+            supported depends on the array backend (`impl`). Always
+            allowed is `'cpu'`, but GPU alternatives like `'cuda:0'`
+            can offer better performance if available.
+
+        Returns
+        -------
+        newelem : `NumpyTensor`
+            Version of this element with its data array on the desired device.
+        """
+        return self.space.to_device(device).element(
+                  self.array_backend.to_device(self.data, device))
+    
     def set_zero(self):
         """Set this element to zero.
 
