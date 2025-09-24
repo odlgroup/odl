@@ -533,11 +533,44 @@ class TensorSpace(LinearSpace):
         else:
             return self._astype(dtype_identifier)
 
-    def to_device(self, device):
+    def to_device(self, device: str):
+        """Return a copy of this space with storage on a different computational device.
+        Mathematically this is the same space. It also uses the same backend for
+        array operations.
+
+        Parameters
+        ----------
+        device :
+            Where elements of this space store their arrays. The default spaces
+            store on `'cpu'`. Which alternatives are possible depends on the 
+            backend (`impl`) and hardware availability.
+
+        Returns
+        -------
+        newspace : `TensorSpace`
+            Version of this space with selected device."""
         _ = check_device(self.impl, device)
         return self._to_device(device)
         
     def to_impl(self, impl):
+        """Return a copy of this space using a different array-backend.
+        Mathematically this is the same space, but the computational performance
+        can be very different.
+
+        Parameters
+        ----------
+        impl :
+            Identifier of the target backend. Must correspond to a registered
+            `ArrayBackend`. See `odl.space.entry_points.tensor_space_impl_names`
+            for available options.
+            Both `impl` and the implementation of the original space must support
+            the same device, most typically `'cpu'`. If you want to use GPU storage,
+            use a separate call to `TensorSpace.to_device`.
+
+        Returns
+        -------
+        newspace : `TensorSpace`
+            Version of this space with selected backend."""
         _ = check_device(impl, self.device)
         return self._to_impl(impl)
         
