@@ -51,6 +51,8 @@ class DeviceChangeOperator(Operator):
             Spaces of vectors. Usually only one of them is specified; if both are
             given, they must be identical save for the device.
         domain_device, range_device : `str`, optional
+            Device specifiers such as `'cpu'` or `'cuda:0'`. Which ones are
+            supported depends on the backend and hardware.
             If e.g. `domain` and `range_device` are specified, the range will be
             chosen as `domain.to_device(range_device)`, vice versa.
         """
@@ -96,6 +98,74 @@ class DeviceChangeOperator(Operator):
 
     def __str__(self):
         return f"{self.__class__.__name__}(domain={str(self.domain)}, range_device={str(self.range.device)})"
+
+class ImplChangeOperator(Operator):
+    """An operator that is mathematically the identity, but whose domain and codomain
+    differ in what backend they use for their arrays.
+    This is useful as an adaptor between operators that need to use different backend
+    for some reason, for example one operator implemented through bespoke C code and
+    one operator implemented with PyTorch neural networks.
+    Note that it is usually more efficient to keep your whole pipeline on a single
+    backend and device, if possible.
+    """
+    def __init__(self, domain=None, range=None, domain_impl=None, range_impl=None):
+        """Create an operator tying two equivalent spaces with different storage together.
+
+        Parameters
+        ----------
+        domain, range : `TensorSpace`, optional
+            Spaces of vectors. Usually only one of them is specified; if both are
+            given, they must be identical save for the backend (`impl`).
+        domain_impl, range_impl : `str`, optional
+            Backend identifier. Must correspond to a registered backend,
+            cf. `odl.space.entry_points.tensor_space_impl_names`.
+            If e.g. `domain` and `range_impl` are specified, the range will be
+            chosen as `domain.to_impl(range_impl)`, vice versa.
+            The device of the space must be usable simultaneously with both of
+            the backends.
+        """
+        if range is None:
+            assert impl is not None
+            assert range_impl is not None
+            assert domain_impl is None or domain_impl == domain.impl
+            range = domain.to_impl(range_impl)
+        elif domain is None:
+            assert range is not None
+            assert domain_impl is not None
+            assert range_impl is None or range_impl == range.impl
+            domain = range.to_impl(domain_impl)
+        else:
+            assert domain_impl is None or domain_impl == domain.impl
+            assert range_impl is None or range_impl == range.impl
+            assert(domain.to_impl(range.impl) == range)
+        super().__init__(domain, range=range, linear=True)
+
+    def _call(self, x):
+        """Copy data to the intended backend."""
+        return x.to_impl(self.range.impl)
+
+    @property
+    def inverse(self):
+        """Operator that copies data back to the original backend."""
+        return ImplChangeOperator(domain=self.range, range=self.domain)
+
+    @property
+    def adjoint(self):
+        """Adjoint is the same as inverse, as backend change is mathematically
+        the identity."""
+        return self.inverse
+
+    def norm(self, estimate=False, **kwargs):
+        """Return the operator norm of this operator. This is 1, as the
+        operator is mathematically the identity."""
+        return 1
+
+    def __repr__(self):
+        """Represent the operator by its domain and the impl of the range."""
+        return f"{self.__class__.__name__}(domain={repr(self.domain)}, range_impl={repr(self.range.impl)})"
+
+    def __str__(self):
+        return f"{self.__class__.__name__}(domain={str(self.domain)}, range_impl={str(self.range.impl)})"
 
 class PointwiseTensorFieldOperator(Operator):
 
