@@ -39,12 +39,16 @@ class DeviceChangeOperator(Operator):
         if range is None:
             assert domain is not None
             assert range_device is not None
+            assert domain_device is None or domain_device == domain.device
             range = domain.to_device(range_device)
         elif domain is None:
             assert range is not None
             assert domain_device is not None
+            assert range_device is None or range_device == range.device
             domain = range.to_device(domain_device)
         else:
+            assert domain_device is None or domain_device == domain.device
+            assert range_device is None or range_device == range.device
             assert(domain.to_device(range.device) == range)
         super().__init__(domain, range=range, linear=True)
 
