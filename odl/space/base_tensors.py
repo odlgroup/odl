@@ -1605,6 +1605,41 @@ class Tensor(LinearSpaceElement):
         return self.space.to_device(device).element(
                   self.array_backend.to_device(self.data, device))
     
+    def to_impl(self, impl: str):
+        """Return a copy of this element with the same values stored using
+        a different array backend.
+
+        Parameters
+        ----------
+        impl :
+            Identifier of the target backend. Must correspond to a registered
+            `ArrayBackend`. See `odl.space.entry_points.tensor_space_impl_names`
+            for available options.
+            Both `impl` and the implementation of the original space must support
+            the same device, most typically `'cpu'`. If you want to use GPU storage,
+            use a separate call to `Tensor.to_device`.
+
+        Returns
+        -------
+        newelem : `Tensor`
+            Version of this element with its data array using the desired backend.
+        """
+        new_backend = lookup_array_backend(impl)
+        new_data = new_backend.array_namespace.from_dlpack(self.data)
+
+        # TODO (Justus) this is a workaround for inconsistent behaviour by
+        # DLPack / the array backends. DLPack tries to avoid a copy and makes
+        # the result readonly, which is not fully supported and causes various problems.
+        # Making an explicit copy avoids this, but is not ideal from a performance
+        # perspective. It might make sense to add a `copy` argument that controls
+        # this, and/or exception handling.
+        # Perhaps in the future it will also just work by leaving it up to DLPack.
+        new_data = new_backend.array_constructor(new_data, copy=True)
+
+        assert str(new_data.device) == self.device, f"Error when transferring array from {self.impl} to {impl}: device changed from {self.device} to {new_data.device}. Ensure to use a device supported by both backends."
+        assert _universal_dtype_identifier(new_data.dtype) == self.dtype_identifier, f"Error when transferring array from {self.impl} to {impl}: dtype changed from {self.dtype} to {new_data.dtype}. Ensure to use a dtype supported by both backends."
+        return self.space.to_impl(impl).element(new_data)
+    
     def set_zero(self):
         """Set this element to zero.
 
