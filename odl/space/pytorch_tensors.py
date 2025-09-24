@@ -81,6 +81,7 @@ if PYTORCH_AVAILABLE:
     available_devices = device_strings,
     to_cpu = lambda x: x if isinstance(x, (int, float, bool, complex)) else x.detach().cpu(),
     to_numpy = to_numpy,
+    to_device = lambda x, device: x.to(device)
    )
 else:
     pytorch_array_backend = None

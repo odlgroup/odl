@@ -591,8 +591,7 @@ class ArrayWeighting(Weighting):
 
     def to_device(self, device):
         _, backend = get_array_and_backend(self.array)
-        return ArrayWeighting(array=backend.array_namespace.to_device(self.array, device=device),
-                              impl=self.impl, device=device, exponent=self.exponent)
+        return ArrayWeighting(array = backend.to_device(self.array, device=device), impl=self.impl, device=device, exponent=self.exponent)
 
     def to_impl(self, impl):
         new_backend = lookup_array_backend(impl)

@@ -19,6 +19,12 @@ import array_api_compat.numpy as xp
 
 __all__ = ('NumpyTensorSpace','numpy_array_backend')
 
+def _npy_to_device(x, device):
+    if device == 'cpu':
+        return x
+    else:
+        raise ValueError(f"NumPy only supports device CPU, not {device}.")
+
 numpy_array_backend = ArrayBackend(
     impl = 'numpy',
     available_dtypes = {
@@ -45,6 +51,7 @@ numpy_array_backend = ArrayBackend(
     available_devices = ['cpu'],
     to_cpu = lambda x: x,
     to_numpy = lambda x : x,
+    to_device = _npy_to_device
  )
 
 class NumpyTensorSpace(TensorSpace):

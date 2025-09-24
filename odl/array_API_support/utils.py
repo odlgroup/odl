@@ -70,6 +70,7 @@ class ArrayBackend:
     available_devices : list[str]
     to_cpu : Callable
     to_numpy: Callable
+    to_device: Callable
     def __post_init__(self):
         if self.impl in _registered_array_backends:
             raise KeyError(f"An array-backend with the identifier {self.impl} is already registered. Every backend needs to have a unique identifier.")
