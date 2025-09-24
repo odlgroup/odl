@@ -35,7 +35,25 @@ _SUPPORTED_DIFF_METHODS = ('central', 'forward', 'backward')
 
 
 class DeviceChangeOperator(Operator):
+    """An operator that is mathematically the identity, but whose domain and codomain
+    differ in where they store their arrays.
+    This is useful as an adaptor between operators that need to use different devices
+    for some reason.
+    Note that it is usually more efficient to implement your whole pipeline on a single
+    device, if possible.
+    """
     def __init__(self, domain=None, range=None, domain_device=None, range_device=None):
+        """Create an operator tying two equivalent spaces with different storage together.
+
+        Parameters
+        ----------
+        domain, range : `TensorSpace`, optional
+            Spaces of vectors. Usually only one of them is specified; if both are
+            given, they must be identical save for the device.
+        domain_device, range_device : `str`, optional
+            If e.g. `domain` and `range_device` are specified, the range will be
+            chosen as `domain.to_device(range_device)`, vice versa.
+        """
         if range is None:
             assert domain is not None
             assert range_device is not None
