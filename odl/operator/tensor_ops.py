@@ -29,10 +29,51 @@ from odl.sparse import is_sparse, get_sparse_matrix_impl, lookup_sparse_format
 
 __all__ = ('PointwiseNorm', 'PointwiseInner', 'PointwiseSum', 'MatrixOperator',
            'SamplingOperator', 'WeightedSumSamplingOperator',
-           'FlatteningOperator')
+           'FlatteningOperator', 'DeviceChangeOperator')
 
 _SUPPORTED_DIFF_METHODS = ('central', 'forward', 'backward')
 
+
+class DeviceChangeOperator(Operator):
+    def __init__(self, domain=None, range=None, domain_device=None, range_device=None):
+        if range is None:
+            assert domain is not None
+            assert range_device is not None
+            range = domain.to_device(range_device)
+        elif domain is None:
+            assert range is not None
+            assert domain_device is not None
+            domain = range.to_device(domain_device)
+        else:
+            assert(domain.to_device(range.device) == range)
+        super().__init__(domain, range=range, linear=True)
+
+    def _call(self, x):
+        """Copy data to the intended device."""
+        return x.to_device(self.range.device)
+
+    @property
+    def inverse(self):
+        """Operator that copies data back to the original device."""
+        return DeviceChangeOperator(domain=self.range, range=self.domain)
+
+    @property
+    def adjoint(self):
+        """Adjoint is the same as inverse, as device change is mathematically
+        the identity."""
+        return self.inverse
+
+    def norm(self, estimate=False, **kwargs):
+        """Return the operator norm of this operator. This is 1, as the
+        operator is mathematically the identity."""
+        return 1
+
+    def __repr__(self):
+        """Represent the operator by its domain and the device of the range."""
+        return f"{self.__class__.__name__}(domain={repr(self.domain)}, range_device={repr(self.range.device)})"
+
+    def __str__(self):
+        return f"{self.__class__.__name__}(domain={str(self.domain)}, range_device={str(self.range.device)})"
 
 class PointwiseTensorFieldOperator(Operator):
 
