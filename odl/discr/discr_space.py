@@ -386,6 +386,18 @@ class DiscretizedSpace(TensorSpace):
         return type(self)(
             self.partition, tspace, axis_labels=self.axis_labels)
 
+    def _to_device(self, device:str):
+        """Internal helper for `to_device`."""
+        tspace = self.tspace.to_device(device)
+        return type(self)(
+            self.partition, tspace, axis_labels=self.axis_labels)
+    
+    def _to_impl(self, impl:str):
+        """Internal helper for `to_impl`."""
+        tspace = self.tspace.to_impl(impl)
+        return type(self)(
+            self.partition, tspace, axis_labels=self.axis_labels)
+    
     # --- Slicing
 
     # TODO: add `byaxis`_out when discretized tensor-valued functions are
