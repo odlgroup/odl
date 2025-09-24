@@ -1580,7 +1580,7 @@ class Tensor(LinearSpaceElement):
 
         Returns
         -------
-        newelem : `NumpyTensor`
+        newelem : `Tensor`
             Version of this element with given data type.
         """
         return self.space.astype(dtype).element(self.data.astype(dtype))
@@ -1599,7 +1599,7 @@ class Tensor(LinearSpaceElement):
 
         Returns
         -------
-        newelem : `NumpyTensor`
+        newelem : `Tensor`
             Version of this element with its data array on the desired device.
         """
         return self.space.to_device(device).element(
