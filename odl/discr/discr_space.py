@@ -358,7 +358,7 @@ class DiscretizedSpace(TensorSpace):
             return self.element_type(self, inp)
         elif callable(inp):
             func = sampling_function(
-                inp, self.domain, out_dtype=self.dtype_identifier,
+                inp, self.domain, out_dtype=self.dtype_identifier, impl=self.impl, device=self.device
             )
             sampled = point_collocation(func, self.meshgrid, **kwargs)
             return self.element_type(
