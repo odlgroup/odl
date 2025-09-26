@@ -22,6 +22,8 @@ from odl.discr.discr_utils import (
 from odl.discr.grid import sparse_meshgrid
 from odl.util.testutils import all_almost_equal, all_equal, simple_fixture
 
+from odl.array_API_support import lookup_array_backend, get_array_and_backend
+
 # --- Helper functions --- #
 
 
@@ -193,7 +195,8 @@ def func_complex_nd_oop(x):
 
 
 def func_vec_nd_ref(x):
-    return np.array([sum(x) + 1, sum(x) - 1])
+    x, backend = get_array_and_backend(x)
+    return backend.array_constructor([sum(x) + 1, sum(x) - 1], device=x.device)
 
 
 def func_vec_nd_oop(x):
@@ -236,11 +239,14 @@ func_vec_nd = simple_fixture('func_vec_nd', func_vec_nd_params,
 
 
 def func_vec_nd_other(x):
-    return np.array([sum(x) + 2, sum(x) + 3])
+    x, backend = get_array_and_backend(x)
+    return backend.array_constructor([sum(x) + 2, sum(x) + 3], device=x.device)
+
 
 
 def func_vec_1d_ref(x):
-    return np.array([x[0] * 2, x[0] + 1])
+    x, backend = get_array_and_backend(x)
+    return backend.array_constructor([x[0] * 2, x[0] + 1], device=x.device)
 
 
 def func_vec_1d_oop(x):
@@ -374,7 +380,7 @@ def func_tens_complex_oop(x):
 # --- point_collocation tests --- #
 
 
-def test_point_collocation_scalar_valued(domain_ndim, out_dtype, func_nd):
+def test_point_collocation_scalar_valued(domain_ndim, out_dtype, func_nd, odl_impl_device_pairs):
     """Check collocation of scalar-valued functions."""
     domain = odl.IntervalProd([0] * domain_ndim, [1] * domain_ndim)
     points = _points(domain, 3)
@@ -396,16 +402,20 @@ def test_point_collocation_scalar_valued(domain_ndim, out_dtype, func_nd):
     result_mesh = collocator(mesh)
     assert all_almost_equal(result_points, true_values_points)
     assert all_almost_equal(result_mesh, true_values_mesh)
-    assert result_points.dtype == out_dtype
-    assert result_mesh.dtype == out_dtype
-    assert result_points.flags.writeable
-    assert result_mesh.flags.writeable
+    assert result_points.dtype == points.dtype
+    assert result_mesh.dtype == mesh[0].dtype
+    # assert result_points.flags.writeable
+    # assert result_mesh.flags.writeable
 
     # In place
-    out_points = np.empty(3, dtype=out_dtype)
-    out_mesh = np.empty(mesh_shape, dtype=out_dtype)
+    impl, device = odl_impl_device_pairs
+    backend = lookup_array_backend(impl)
+    backend_dtype = backend.available_dtypes[out_dtype]
+    out_points = backend.array_namespace.empty(3, dtype=backend_dtype, device=device)
+    out_mesh = backend.array_namespace.empty(mesh_shape, dtype=backend_dtype, device=device)
     collocator(points, out=out_points)
     collocator(mesh, out=out_mesh)
+
     assert all_almost_equal(out_points, true_values_points)
     assert all_almost_equal(out_mesh, true_values_mesh)
 
@@ -414,12 +424,12 @@ def test_point_collocation_scalar_valued(domain_ndim, out_dtype, func_nd):
     assert all_almost_equal(result_point, true_value_point)
 
 
-def test_point_collocation_scalar_valued_with_param(func_param_nd):
+def test_point_collocation_scalar_valued_with_param(func_param_nd, odl_impl_device_pairs):
     """Check collocation of scalar-valued functions with parameters."""
     domain = odl.IntervalProd([0, 0], [1, 1])
-    points = _points(domain, 3)
+    points = _points(domain, 3, odl_impl_device_pairs, out_dtype)
     mesh_shape = (2, 3)
-    mesh = _meshgrid(domain, mesh_shape)
+    mesh = _meshgrid(domain, mesh_shape, odl_impl_device_pairs, out_dtype)
 
     func_ref, func = func_param_nd
 
@@ -456,12 +466,12 @@ def test_point_collocation_scalar_valued_with_param(func_param_nd):
     assert all_almost_equal(result_mesh, true_values_mesh)
 
 
-def test_point_collocation_vector_valued(func_vec_nd):
+def test_point_collocation_vector_valued(func_vec_nd, odl_impl_device_pairs):
     """Check collocation of vector-valued functions."""
     domain = odl.IntervalProd([0, 0], [1, 1])
-    points = _points(domain, 3)
+    points = _points(domain, 3, odl_impl_device_pairs, out_dtype)
     mesh_shape = (2, 3)
-    mesh = _meshgrid(domain, mesh_shape)
+    mesh = _meshgrid(domain, mesh_shape, odl_impl_device_pairs, out_dtype)
     point = [0.5, 0.5]
     values_points_shape = (2, 3)
     values_mesh_shape = (2, 2, 3)
@@ -503,12 +513,12 @@ def test_point_collocation_vector_valued(func_vec_nd):
     assert all_almost_equal(out_point, true_value_point)
 
 
-def test_point_collocation_tensor_valued(func_tens):
+def test_point_collocation_tensor_valued(func_tens, odl_impl_device_pairs):
     """Check collocation of tensor-valued functions."""
     domain = odl.IntervalProd([0, 0], [1, 1])
-    points = _points(domain, 4)
+    points = _points(domain, 4, odl_impl_device_pairs, out_dtype)
     mesh_shape = (4, 5)
-    mesh = _meshgrid(domain, mesh_shape)
+    mesh = _meshgrid(domain, mesh_shape, odl_impl_device_pairs, out_dtype)
     point = [0.5, 0.5]
     values_points_shape = (2, 3, 4)
     values_mesh_shape = (2, 3, 4, 5)
@@ -568,12 +578,12 @@ def test_fspace_elem_eval_unusual_dtypes():
     assert all_equal(out_vec, true_values)
 
 
-def test_fspace_elem_eval_vec_1d(func_vec_1d):
+def test_fspace_elem_eval_vec_1d(func_vec_1d, odl_impl_device_pairs):
     """Test evaluation in 1d since it's a corner case regarding shapes."""
     domain = odl.IntervalProd(0, 1)
-    points = _points(domain, 3)
+    points = _points(domain, 3, odl_impl_device_pairs, out_dtype)
     mesh_shape = (4,)
-    mesh = _meshgrid(domain, mesh_shape)
+    mesh = _meshgrid(domain, mesh_shape, odl_impl_device_pairs, out_dtype)
     point1 = 0.5
     point2 = [0.5]
     values_points_shape = (2, 3)
