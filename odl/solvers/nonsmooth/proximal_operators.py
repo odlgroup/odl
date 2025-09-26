@@ -22,16 +22,20 @@ Foundations and Trends in Optimization, 1 (2014), pp 127-239.
 """
 
 from __future__ import print_function, division, absolute_import
+
+import warnings
+
 import numpy as np
 import math
 from odl.operator import (
     Operator, IdentityOperator, ConstantOperator, DiagonalOperator,
     PointwiseNorm, MultiplyOperator)
-from odl.space import ProductSpace
+from odl.space.pspace import ProductSpaceElement
+from odl.space.base_tensors import Tensor
 from odl.set.space import LinearSpace, LinearSpaceElement
 from odl.array_API_support.element_wise import maximum, minimum, abs, divide, sign, square, sqrt, less_equal, logical_not, exp
 from odl.array_API_support.statistical import sum
-from odl.util.scipy_compatibility import lambertw
+from odl.util.scipy_compatibility import lambertw, scipy_lambertw
 from odl.util.dtype_utils import is_complex_dtype
 
 
@@ -1916,25 +1920,51 @@ def proximal_convex_conj_kl_cross_entropy(space, lam=1, g=None):
             sigma : positive float
             """
             self.sigma = float(sigma)
+            nonlocal g
+            self.g = g
             super(ProximalConvexConjKLCrossEntropy, self).__init__(
                 domain=space, range=space, linear=False)
 
         def _call(self, x, out):
             """Return ``self(x, out=out)``."""
             # Lazy import to improve `import odl` time
-
-            if g is None:
-                # If g is None, it is taken as the one element
-                # Different branches of lambertw is not an issue, see Notes
-                lambw = lambertw(
-                    (self.sigma / lam) * exp(x / lam))
+            if isinstance(x, ProductSpaceElement) and x[0].space.device!= 'cpu':
+                warnings.warn(f'The function ``_call`` of ``ProximalConvexConjKLCrossEntropy`` involves a ``lambertw`` call. At present, ODL relies on scipy to perform it and it does not support GPU inputs for that specific function. As such, the input will be moved to the cpu, which will slow down the algorithm.', stacklevel=2)
+                # FML
+                namespace = x[0].space.array_namespace
+                if g is None:
+                    lambw = [scipy_lambertw(
+                        (self.sigma / lam) * namespace.exp(sub_x.to('cpu') / lam)) for sub_x in x.asarray()]
+                else:
+                    lambw = [scipy_lambertw(
+                        (self.sigma / lam) * sub_g.to('cpu')*  namespace.exp(sub_x.to('cpu') / lam)) for (sub_g, sub_x) in zip(self.g.asarray(), x.asarray())]
+                    if not is_complex_dtype(self.domain.dtype):
+                        lambw = [lambw_.real for lambw_ in lambw]
+            elif isinstance(x, Tensor) and x.space.device!= 'cpu':
+                namespace = x.space.array_namespace
+                if g is None:
+                    lambw = scipy_lambertw(
+                        (self.sigma / lam) * namespace.exp(x.asarray().to('cpu') / lam))
+                else:
+                    lambw = scipy_lambertw(
+                        (self.sigma / lam) * self.g.asarray().to('cpu')*  namespace.exp(x.asarray().to('cpu') / lam)) 
+                    if not is_complex_dtype(self.domain.dtype):
+                        lambw = [lambw_.real for lambw_ in lambw]
             else:
-                # Different branches of lambertw is not an issue, see Notes
-                lambw = lambertw(
-                    (self.sigma / lam) * g * exp(x / lam))
+                print('ELSE branch')
+                print(type(x))
+                if g is None:
+                    # If g is None, it is taken as the one element
+                    # Different branches of lambertw is not an issue, see Notes
+                    lambw = lambertw(
+                        (self.sigma / lam) * exp(x / lam))
+                else:
+                    # Different branches of lambertw is not an issue, see Notes
+                    lambw = lambertw(
+                        (self.sigma / lam) * self.g * exp(x / lam))
 
-            if not is_complex_dtype(self.domain.dtype):
-                lambw = lambw.real
+                if not is_complex_dtype(self.domain.dtype):
+                    lambw = lambw.real
 
             lambw = x.space.element(lambw)
 

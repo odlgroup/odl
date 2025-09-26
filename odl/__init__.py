@@ -14,7 +14,8 @@ restricted to) inverse problems.
 
 from __future__ import absolute_import
 
-from os import pardir, path
+from os import pardir, path, environ
+environ['SCIPY_ARRAY_API']='1'
 
 import numpy as np
 

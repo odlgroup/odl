@@ -72,12 +72,13 @@ def iterative_solver(request):
 @pytest.fixture(scope="module",
                 params=['MatVec',
                         'Identity'])
-def optimization_problem(request):
+def optimization_problem(request, odl_impl_device_pairs):
     problem_name = request.param
-
+    impl, device = odl_impl_device_pairs
     if problem_name == 'MatVec':
         # Define problem
         op_arr = np.eye(5) * 5 + np.ones([5, 5])
+        space = odl.tensor_space((5,5), impl=impl, device=device)
         op = odl.MatrixOperator(op_arr)
 
         # Simple right hand side
@@ -89,7 +90,7 @@ def optimization_problem(request):
         return op, x, rhs
     elif problem_name == 'Identity':
         # Define problem
-        space = odl.uniform_discr(0, 1, 5)
+        space = odl.uniform_discr(0, 1, 5, impl = impl, device=device)
         op = odl.IdentityOperator(space)
 
         # Simple right hand side
@@ -111,9 +112,10 @@ def test_solver(optimization_problem, iterative_solver):
     assert all_almost_equal(op(x), rhs, ndigits=2)
 
 
-def test_steepst_descent():
+def test_steepst_descent(odl_impl_device_pairs):
     """Test steepest descent on the rosenbrock function in 3d."""
-    space = odl.rn(3)
+    impl, device = odl_impl_device_pairs
+    space = odl.rn(3, impl = impl, device=device)
     scale = 1  # only mildly ill-behaved
     rosenbrock = odl.solvers.RosenbrockFunctional(space, scale)
 

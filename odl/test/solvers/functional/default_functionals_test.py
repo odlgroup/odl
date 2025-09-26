@@ -10,6 +10,8 @@
 
 from __future__ import division
 import numpy as np
+import os 
+os.environ['SCIPY_ARRAY_API']='1'
 import scipy.special
 import pytest
 
@@ -333,7 +335,7 @@ def test_kullback_leibler(space):
     assert cc_cc_func(x) == pytest.approx(func(x))
 
 
-def test_kullback_leibler_cross_entorpy(space):
+def test_kullback_leibler_cross_entropy(space):
     """Test the kullback leibler cross entropy and its convex conjugate."""
     # The prior needs to be positive
     prior = noise_element(space)
@@ -387,10 +389,19 @@ def test_kullback_leibler_cross_entorpy(space):
     assert all_almost_equal(cc_func.gradient(x), expected_result)
 
     # The proximal of the convex conjugate
-    arr = (prior * odl.exp(x)).asarray()
-    x_arr = x.asarray()
-    expected_result = (x_arr -
-                       scipy.special.lambertw(sigma * arr).real)
+    if isinstance(space, odl.ProductSpace):
+        device  = space[0].device
+        backend = space[0].array_backend
+    else:
+        device = space.device
+        backend = space.array_backend
+    arr = backend.to_cpu((prior * odl.exp(x)).asarray())
+    x_arr = backend.to_cpu(x.asarray())
+
+    
+    expected_result = x_arr - scipy.special.lambertw(sigma * arr).real
+    if device != 'cpu':
+        expected_result = expected_result.to(device)
     if not all_almost_equal(cc_func.proximal(sigma)(x), expected_result):
         print(f'{cc_func.proximal(sigma)(x)=}')
         print(f'{expected_result=}')

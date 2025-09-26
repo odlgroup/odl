@@ -66,6 +66,16 @@ class Weighting(object):
         must be stored on that device."""
         return self.__device
 
+    def to_device(self, device):
+        """Return a version of the same weighting, but with any internal arrays stored
+        on a different device."""
+        raise NotImplementedError("Abstract method")
+
+    def to_impl(self, impl):
+        """Return a version of the same weighting, but with any internal arrays stored
+        with a different array backend (e.g. `'pytorch'` instead of `'numpy'`)."""
+        raise NotImplementedError("Abstract method")
+
     @property
     def shape(self):
         """A tuple of numbers, denoting the shape that arrays need to have to be
@@ -579,6 +589,22 @@ class ArrayWeighting(Weighting):
         weighting array itself."""
         return self.array.shape
 
+    def to_device(self, device):
+        _, backend = get_array_and_backend(self.array)
+        return ArrayWeighting(array = backend.to_device(self.array, device=device), impl=self.impl, device=device, exponent=self.exponent)
+
+    def to_impl(self, impl):
+        new_backend = lookup_array_backend(impl)
+        new_array = new_backend.array_namespace.from_dlpack(self.array)
+
+        # TODO the following is likely to fail in case e.g. torch-cuda is sent to 'numpy'.
+        # It is required to first use `to_device('cpu')`, then `to_impl`.
+        # It would be useful to add a device argument that allows changing backend and device in
+        # one step. This is currently hampered by missing `device` argument to `from_dlpack` in Torch.
+        assert(new_array.device == device)
+
+        return ArrayWeighting(array=new_array, impl=impl, device=device, exponent=self.exponent)
+
     def is_valid(self):
         """Return True if the array is a valid weight, i.e. positive."""
         return np.all(np.greater(self.array, 0))
@@ -740,6 +766,12 @@ class ConstWeighting(Weighting):
     def shape(self):
         """A constant weight can be applied to any shape."""
         return ()
+
+    def to_device(self, device):
+        return ConstWeighting(const = self.const, impl=self.impl, device=device, exponent=self.exponent)
+
+    def to_impl(self, impl):
+        return ConstWeighting(const = self.const, impl=impl, device=self.device, exponent=self.exponent)
 
     def __eq__(self, other):
         """Return ``self == other``.

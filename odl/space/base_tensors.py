@@ -21,7 +21,7 @@ from odl.set.sets import ComplexNumbers, RealNumbers
 from odl.set.space import (
     LinearSpace, LinearSpaceElement, LinearSpaceTypeError,
     SupportedNumOperationParadigms, NumOperationParadigmSupport)
-from odl.array_API_support import ArrayBackend, lookup_array_backend
+from odl.array_API_support import ArrayBackend, lookup_array_backend, check_device
 from odl.util import (
     array_str, indent, is_complex_dtype,
     is_numeric_dtype, is_real_floating_dtype, safe_int_conv,
@@ -532,6 +532,47 @@ class TensorSpace(LinearSpace):
                 return self._astype(dtype_identifier)
         else:
             return self._astype(dtype_identifier)
+
+    def to_device(self, device: str):
+        """Return a copy of this space with storage on a different computational device.
+        Mathematically this is the same space. It also uses the same backend for
+        array operations.
+
+        Parameters
+        ----------
+        device :
+            Where elements of this space store their arrays. The default spaces
+            store on `'cpu'`. Which alternatives are possible depends on the 
+            backend (`impl`) and hardware availability.
+
+        Returns
+        -------
+        newspace : `TensorSpace`
+            Version of this space with selected device."""
+        _ = check_device(self.impl, device)
+        return self._to_device(device)
+        
+    def to_impl(self, impl):
+        """Return a copy of this space using a different array-backend.
+        Mathematically this is the same space, but the computational performance
+        can be very different.
+
+        Parameters
+        ----------
+        impl :
+            Identifier of the target backend. Must correspond to a registered
+            `ArrayBackend`. See `odl.space.entry_points.tensor_space_impl_names`
+            for available options.
+            Both `impl` and the implementation of the original space must support
+            the same device, most typically `'cpu'`. If you want to use GPU storage,
+            use a separate call to `TensorSpace.to_device`.
+
+        Returns
+        -------
+        newspace : `TensorSpace`
+            Version of this space with selected backend."""
+        _ = check_device(impl, self.device)
+        return self._to_impl(impl)
         
     def element(self, inp=None, device=None, copy=None):
 
@@ -831,6 +872,35 @@ class TensorSpace(LinearSpace):
                 kwargs["weighting"] = weighting
 
         return type(self)(self.shape, dtype=dtype, device=self.device, **kwargs)
+    
+    def _to_device(self, device:str):
+        """Internal helper for `to_device`.
+
+        Subclasses with differing init parameters should overload this
+        method.
+        """
+        kwargs = {}
+        weighting = getattr(self, "weighting", None)
+        if weighting is not None:
+            kwargs["weighting"] = weighting.to_device(device)
+
+        return type(self)(self.shape, dtype=self.dtype, device=device, **kwargs)
+    
+    def _to_impl(self, impl:str):
+        """Internal helper for `to_impl`.
+
+        Subclasses with structure other than just backend-specific ℝⁿ spaces should
+        overload this method.
+        """
+        # Lazy import to avoid cyclic dependency
+        from odl.space.space_utils import tensor_space
+
+        kwargs = {}
+        weighting = getattr(self, "weighting", None)
+        if weighting is not None:
+            kwargs["weighting"] = weighting.to_impl(impl)
+
+        return tensor_space(shape=self.shape, dtype=self.dtype_identifier, impl=impl, device=self.device, **kwargs)
     
     def _dist(self, x1, x2):
         """Return the distance between ``x1`` and ``x2``.
@@ -1510,10 +1580,65 @@ class Tensor(LinearSpaceElement):
 
         Returns
         -------
-        newelem : `NumpyTensor`
+        newelem : `Tensor`
             Version of this element with given data type.
         """
         return self.space.astype(dtype).element(self.data.astype(dtype))
+    
+    def to_device(self, device: str):
+        """Return a copy of this element with the same values stored on
+        a different computational device.
+
+        Parameters
+        ----------
+        device :
+            Identifier of the desired storage location. Which ones are
+            supported depends on the array backend (`impl`). Always
+            allowed is `'cpu'`, but GPU alternatives like `'cuda:0'`
+            can offer better performance if available.
+
+        Returns
+        -------
+        newelem : `Tensor`
+            Version of this element with its data array on the desired device.
+        """
+        return self.space.to_device(device).element(
+                  self.array_backend.to_device(self.data, device))
+    
+    def to_impl(self, impl: str):
+        """Return a copy of this element with the same values stored using
+        a different array backend.
+
+        Parameters
+        ----------
+        impl :
+            Identifier of the target backend. Must correspond to a registered
+            `ArrayBackend`. See `odl.space.entry_points.tensor_space_impl_names`
+            for available options.
+            Both `impl` and the implementation of the original space must support
+            the same device, most typically `'cpu'`. If you want to use GPU storage,
+            use a separate call to `Tensor.to_device`.
+
+        Returns
+        -------
+        newelem : `Tensor`
+            Version of this element with its data array using the desired backend.
+        """
+        new_backend = lookup_array_backend(impl)
+        new_data = new_backend.array_namespace.from_dlpack(self.data)
+
+        # TODO (Justus) this is a workaround for inconsistent behaviour by
+        # DLPack / the array backends. DLPack tries to avoid a copy and makes
+        # the result readonly, which is not fully supported and causes various problems.
+        # Making an explicit copy avoids this, but is not ideal from a performance
+        # perspective. It might make sense to add a `copy` argument that controls
+        # this, and/or exception handling.
+        # Perhaps in the future it will also just work by leaving it up to DLPack.
+        new_data = new_backend.array_constructor(new_data, copy=True)
+
+        assert str(new_data.device) == self.device, f"Error when transferring array from {self.impl} to {impl}: device changed from {self.device} to {new_data.device}. Ensure to use a device supported by both backends."
+        assert _universal_dtype_identifier(new_data.dtype) == self.dtype_identifier, f"Error when transferring array from {self.impl} to {impl}: dtype changed from {self.dtype} to {new_data.dtype}. Ensure to use a dtype supported by both backends."
+        return self.space.to_impl(impl).element(new_data)
     
     def set_zero(self):
         """Set this element to zero.

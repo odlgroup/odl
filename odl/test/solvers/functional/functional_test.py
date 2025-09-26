@@ -37,18 +37,18 @@ space_ids = [' space={} '.format(p) for p in space_params]
 
 
 @pytest.fixture(scope="module", ids=space_ids, params=space_params)
-def space(request, odl_tspace_impl):
+def space(request, odl_impl_device_pairs):
     name = request.param.strip()
-    impl = odl_tspace_impl
+    impl, device = odl_impl_device_pairs
 
     if name == 'r10':
-        return odl.rn(10, impl=impl)
+        return odl.rn(10, impl=impl, device=device)
     elif name == 'uniform_discr':
         # Discretization parameters
-        return odl.uniform_discr(0, 1, 7, impl=impl)
+        return odl.uniform_discr(0, 1, 7, impl=impl, device=device)
     elif name == 'power_space_unif_discr':
         # Discretization parameters
-        space = odl.uniform_discr(0, 1, 7, impl=impl)
+        space = odl.uniform_discr(0, 1, 7, impl=impl, device=device)
         return odl.ProductSpace(space, 2)
 
 

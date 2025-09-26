@@ -24,10 +24,11 @@ from warnings import warn
 
 import numpy as np
 
-from odl.array_API_support import asarray
+from odl.array_API_support import asarray, lookup_array_backend, ArrayBackend
 
 from odl.util.npy_compat import AVOID_UNNECESSARY_COPY
 
+from odl.util.dtype_utils import _universal_dtype_identifier
 from odl.util import (
     dtype_repr, is_real_dtype, is_string, is_valid_input_array,
     is_valid_input_meshgrid, out_shape_from_array, out_shape_from_meshgrid,
@@ -941,10 +942,10 @@ def _func_out_type(func):
     return has_out, out_optional
 
 
-def _broadcast_nested_list(arr_lists, element_shape, ndim):
+def _broadcast_nested_list(arr_lists, element_shape, ndim, backend: ArrayBackend):
     """ A generalisation of `np.broadcast_to`, applied to an arbitrarily
     deep list (or tuple) eventually containing arrays or scalars. """
-    if isinstance(arr_lists, np.ndarray) or np.isscalar(arr_lists):
+    if isinstance(arr_lists, backend.array_type) or np.isscalar(arr_lists):
         if ndim == 1:
             # As usual, 1d is tedious to deal with. This
             # code deals with extra dimensions in result
@@ -954,13 +955,13 @@ def _broadcast_nested_list(arr_lists, element_shape, ndim):
             shp = getattr(arr_lists, 'shape', ())
             if shp and shp[0] == 1:
                 arr_lists = arr_lists.reshape(arr_lists.shape[1:])
-        return np.broadcast_to(arr_lists, element_shape)
+        return backend.array_namespace.broadcast_to(arr_lists, element_shape)
     else:
-        return [_broadcast_nested_list(row, element_shape, ndim)
+        return [_broadcast_nested_list(row, element_shape, ndim, backend=backend)
                  for row in arr_lists]
 
 
-def sampling_function(func_or_arr, domain, out_dtype=None):
+def sampling_function(func_or_arr, domain, out_dtype=None, impl: str ='numpy', device: str ='cpu'):
     """Return a function that can be used for sampling.
 
     For examples on this function's usage, see `point_collocation`.
@@ -995,7 +996,7 @@ def sampling_function(func_or_arr, domain, out_dtype=None):
     Returns
     -------
     func : function
-        Wrapper function that has an optional ``out`` argument.
+        Wrapper function that has no optional ``out`` argument.
     """
     if out_dtype is None:
         val_shape = None
@@ -1072,14 +1073,12 @@ def sampling_function(func_or_arr, domain, out_dtype=None):
         has_out, out_optional = _func_out_type(func)
         if not has_out:
             # Out-of-place-only
-            func_ip = partial(_default_ip, func)
             func_oop = func
         elif out_optional:
             # Dual-use
-            func_ip = func_oop = func
+            func_oop = func
         else:
             # In-place-only
-            func_ip = func
             func_oop = partial(_default_oop, func)
 
     else:
@@ -1202,12 +1201,12 @@ def sampling_function(func_or_arr, domain, out_dtype=None):
                             else:
                                 out_comp[:] = f(x, **kwargs)
 
-        func_ip = func_oop = array_wrapper_func
+        func_oop = array_wrapper_func
 
-    return _make_dual_use_func(func_ip, func_oop, domain, out_dtype)
+    return _make_single_use_func(func_oop, domain, out_dtype, impl=impl, device=device)
 
 
-def _make_dual_use_func(func_ip, func_oop, domain, out_dtype):
+def _make_single_use_func(func_oop, domain, out_dtype, impl: str ='numpy', device: str ='cpu'):
     """Return a unifying wrapper function with optional ``out`` argument."""
 
     # Default to `ndim=1` for unusual domains that do not define a dimension
@@ -1223,7 +1222,7 @@ def _make_dual_use_func(func_ip, func_oop, domain, out_dtype):
 
     tensor_valued = val_shape != ()
 
-    def dual_use_func(x, out=None, **kwargs):
+    def dual_use_func(x, **kwargs):
         """Wrapper function with optional ``out`` argument.
 
         This function closes over two other functions, one for in-place,
@@ -1320,13 +1319,18 @@ def _make_dual_use_func(func_ip, func_oop, domain, out_dtype):
             raise ValueError('input contains points outside the domain {!r}'
                              ''.format(domain))
 
+        backend = lookup_array_backend(impl)
+        array_ns = backend.array_namespace
+        x = backend.array_constructor(x, device=device)
+        backend_scalar_out_dtype = backend.available_dtypes[_universal_dtype_identifier(scalar_out_dtype)]
+
         if scalar_in:
             out_shape = val_shape
         else:
             out_shape = val_shape + scalar_out_shape
 
         # Call the function and check out shape, before or after
-        if out is None:
+        if True:
 
             # The out-of-place evaluation path
 
@@ -1350,12 +1354,14 @@ def _make_dual_use_func(func_ip, func_oop, domain, out_dtype):
                 # errors
                 out = func_oop(x, **kwargs)
 
-            if isinstance(out, np.ndarray) or np.isscalar(out):
+            if isinstance(out, backend.array_type) or np.isscalar(out):
                 # Cast to proper dtype if needed, also convert to array if out
                 # is a scalar.
-                out = np.asarray(out, dtype=scalar_out_dtype)
+                out = backend.array_constructor(out,
+                                                dtype=backend_scalar_out_dtype,
+                                                device=device)
                 if scalar_in:
-                    out = np.squeeze(out)
+                    out = array_ns.squeeze(out)
                 elif ndim == 1 and out.shape == (1,) + out_shape:
                     out = out.reshape(out_shape)
 
@@ -1363,20 +1369,16 @@ def _make_dual_use_func(func_ip, func_oop, domain, out_dtype):
                     # Broadcast the returned element, but not in the
                     # scalar case. The resulting array may be read-only,
                     # in which case we copy.
-                    out = np.broadcast_to(out, out_shape)
-                    if not out.flags.writeable:
-                        out = out.copy()
+                    out = array_ns.broadcast_to(out, out_shape)
+                    out = backend.array_constructor(out, copy=True)
 
             elif tensor_valued:
                 # The out object can be any array-like of objects with shapes
                 # that should all be broadcastable to scalar_out_shape.
-                try:
-                    out_arr = np.asarray(out)
-                except ValueError:
-                    out_arr = np.asarray(_broadcast_nested_list(
-                                             out, scalar_out_shape, ndim=ndim))
+                out_arr = backend.array_constructor(_broadcast_nested_list(
+                                             out, scalar_out_shape, ndim=ndim, backend=backend), device=device)
 
-                if out_arr.dtype != scalar_out_dtype:
+                if out_arr.dtype != backend_scalar_out_dtype:
                     raise ValueError(
                         'result is of dtype {}, expected {}'
                         ''.format(dtype_repr(out_arr.dtype),
@@ -1389,33 +1391,6 @@ def _make_dual_use_func(func_ip, func_oop, domain, out_dtype):
                 # TODO(kohr-h): improve message
                 raise RuntimeError('bad output of function call')
 
-        else:
-            # The in-place evaluation path
-
-            if not isinstance(out, np.ndarray):
-                raise TypeError(
-                    'output must be a `numpy.ndarray` got {!r}'
-                    ''.format(out)
-                )
-            if out_shape != (1,) and out.shape != out_shape:
-                raise ValueError(
-                    'output has shape, expected {} from input'
-                    ''.format(out.shape, out_shape)
-                )
-            if out.dtype != scalar_out_dtype:
-                raise ValueError(
-                    '`out` is of dtype {}, expected {}'
-                    ''.format(out.dtype, scalar_out_dtype)
-                )
-
-            if ndim == 1 and not tensor_valued:
-                # TypeError for meshgrid in 1d, but expected array (see above)
-                try:
-                    func_ip(x, out, **kwargs)
-                except TypeError:
-                    func_ip(x[0], out, **kwargs)
-            else:
-                func_ip(x, out=out, **kwargs)
 
         # If we are to output a scalar, convert the result
 
