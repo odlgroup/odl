@@ -256,6 +256,13 @@ def get_array_and_backend(x, must_be_contiguous=False):
     else:
         raise ValueError(f"The registered array backends are {list(_registered_array_backends.keys())}. The argument provided is a {type(x)}, check that the backend you want to use is supported and has been correctly instanciated.")
 
+def is_array_supported(x):
+    for backend in _registered_array_backends.values():
+        backend : ArrayBackend
+        if isinstance(x, backend.array_type):
+            return True
+    return False
+
 def check_device(impl:str, device: Union[str, object]) -> str:
     """
     Checks the device argument.
