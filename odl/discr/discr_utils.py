@@ -22,13 +22,17 @@ from functools import partial
 from itertools import product
 from warnings import warn
 
+from typing import Callable, List, Tuple
+from odl.set.domain import IntervalProd
+
 import numpy as np
 
-from odl.array_API_support import asarray, lookup_array_backend, ArrayBackend
+from odl.array_API_support import asarray, lookup_array_backend, ArrayBackend, get_array_and_backend
+from odl.array_API_support.utils import is_array_supported
 
 from odl.util.npy_compat import AVOID_UNNECESSARY_COPY
 
-from odl.util.dtype_utils import _universal_dtype_identifier
+from odl.util.dtype_utils import _universal_dtype_identifier, is_floating_dtype
 from odl.util import (
     dtype_repr, is_real_dtype, is_string, is_valid_input_array,
     is_valid_input_meshgrid, out_shape_from_array, out_shape_from_meshgrid,
@@ -960,8 +964,88 @@ def _broadcast_nested_list(arr_lists, element_shape, ndim, backend: ArrayBackend
         return [_broadcast_nested_list(row, element_shape, ndim, backend=backend)
                  for row in arr_lists]
 
+def sampling_function(
+    func : Callable | list | tuple, 
+    domain : IntervalProd, 
+    out_dtype : str | None, 
+    impl: str ='numpy', 
+    device: str ='cpu'
+    ):
+    def _infer_dtype(out_dtype : str | None):
+        if out_dtype is None:
+            out_dtype = 'float64'
+        else:
+            assert is_floating_dtype(out_dtype)
+        # This is to replicate the old behaviour:
+        # np.dtype('float64') = ()
+        val_shape = ()
+        return out_dtype, val_shape
+    
+    def _sanitise_callable(func: Callable) -> Callable:
+        # Get default implementations if necessary
+        has_out, out_optional = _func_out_type(func)
+        
+        if has_out:
+            raise NotImplementedError('Currently, not implemented for in-place functions')
+        
+        return func
 
-def sampling_function(func_or_arr, domain, out_dtype=None, impl: str ='numpy', device: str ='cpu'):
+    def _sanitise_array_of_callables(funcs : List | Tuple):
+        def array_wrapper_func(x, **kwargs):
+            results = []
+            if is_array_supported(x):     
+                # If we have a list of callables, we must store the output of each callable called on the input in a list, and transform this into a a np.array OR a torch.nested.nested_tensor based on x 
+                for func in funcs:
+                    assert isinstance(func, Callable)
+                    func = _sanitise_callable(func)
+                    results.append(func(x, **kwargs))
+            elif isinstance(x, (list, tuple)):
+                assert len(funcs) == len(x)
+                
+                for func, x_ in zip(funcs, x):
+                    assert isinstance(func, Callable)
+                    func = _sanitise_callable(func)
+                    results.append(func(x_, **kwargs))
+            else:
+               raise TypeError(f'{type(x)}')
+            return results
+        return array_wrapper_func
+
+    def _sanitise_input_function(func: Callable | list | tuple):
+        '''
+        This function aims at unpacking the input function `func`.
+        The former API expects a callable or array-like (of callables)
+        A callable (or each callable) must take a single input and may
+        accept one output parameter called ``out``, and should return
+        its result.
+        '''
+        if isinstance(func, Callable):
+            return _sanitise_callable(func)
+        elif isinstance(func, (list, tuple)):
+            return _sanitise_array_of_callables(func)
+        else:
+            raise NotImplementedError('The function to sample must be either a Callable or an array-like (list, tuple) of callables.')
+    
+    def _make_sampling_function(
+            func:  Callable | list | tuple, 
+            domain: IntervalProd, 
+            out_dtype : str, 
+            impl: str ='numpy', 
+            device: str ='cpu'
+            ):
+        return 0
+    ### We begin by sanitising the inputs: 
+    # 1) the dtype
+    out_dtype = _infer_dtype(out_dtype)
+    # 2) the func_or_arr
+    func = _sanitise_input_function(func)
+
+    ### We then create the function
+    return func
+
+
+
+def old_sampling_function(func_or_arr, domain, out_dtype=None, impl: str ='numpy', device: str ='cpu'):
     """Return a function that can be used for sampling.
 
     For examples on this function's usage, see `point_collocation`.
