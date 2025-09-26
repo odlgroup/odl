@@ -465,6 +465,8 @@ def resize_array(arr, newshp, offset=None, pad_mode='constant', pad_const=0,
             pad_const_scl = pad_const.reshape([])
         else:
             pad_const_scl = backend.array_constructor([pad_const], dtype=out.dtype)
+        if pad_const_scl != pad_const:
+            raise ValueError(f"Padding constant {pad_const} cannot be safely converted to {out.dtype}.")
 
     # Handle direction
     direction, direction_in = str(direction).lower(), direction
