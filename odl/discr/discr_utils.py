@@ -991,10 +991,7 @@ def sampling_function(
             out_dtype = 'float64'
         else:
             assert is_floating_dtype(out_dtype)
-        # This is to replicate the old behaviour:
-        # np.dtype('float64') = ()
-        val_shape = ()
-        return out_dtype, val_shape
+        return out_dtype
 
     def _sanitise_callable(func: Callable) -> Callable:
         # Get default implementations if necessary
@@ -1005,21 +1002,16 @@ def sampling_function(
 
         return func
 
-    def _sanitise_array_of_callables(funcs : List | Tuple):
-        raise NotImplementedError('The sampling function cannot be instantiated with a list-like of callables.')
-
-    def _sanitise_input_function(func: Callable | list | tuple):
+    def _sanitise_input_function(func: Callable):
         '''
         This function aims at unpacking the input function `func`.
         The former API expects a callable or array-like (of callables)
-        A callable (or each callable) must take a single input and may
-        accept one output parameter called ``out``, and should return
-        its result.
+        The new API checks 
         '''
         if isinstance(func, Callable):
             return _sanitise_callable(func)
         elif isinstance(func, (list, tuple)):
-            return _sanitise_array_of_callables(func)
+            raise NotImplementedError('The sampling function cannot be instantiated with a list-like of callables.')
         else:
             raise NotImplementedError('The function to sample must be either a Callable or an array-like (list, tuple) of callables.')
 

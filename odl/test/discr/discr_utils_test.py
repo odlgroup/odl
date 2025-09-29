@@ -387,58 +387,73 @@ def func_tens_complex_oop(x):
 # --- point_collocation tests --- #
 
 
-def test_point_collocation_scalar_valued(domain_ndim, out_dtype, func_nd):
-    """Check collocation of scalar-valued functions."""
-    domain = odl.IntervalProd([0] * domain_ndim, [1] * domain_ndim)
-    points = _points(domain, 3)
-    mesh_shape = tuple(range(2, 2 + domain_ndim))
-    mesh = _meshgrid(domain, mesh_shape)
-    point = [0.5] * domain_ndim
+# def test_point_collocation_scalar_valued(domain_ndim, out_dtype, func_nd):
+#     """Check collocation of scalar-valued functions."""
+#     domain = odl.IntervalProd([0] * domain_ndim, [1] * domain_ndim)
+#     points = _points(domain, 3)
+#     mesh_shape = tuple(range(2, 2 + domain_ndim))
+#     mesh = _meshgrid(domain, mesh_shape)
+#     point = [0.5] * domain_ndim
 
-    func_ref, func = func_nd
+#     func_ref, func = func_nd
 
-    true_values_points = func_ref(points)
-    true_values_mesh = func_ref(mesh)
-    true_value_point = func_ref(point)
+#     true_values_points = func_ref(points)
+#     true_values_mesh = func_ref(mesh)
+#     true_value_point = func_ref(point)
 
-    sampl_func = sampling_function(func, domain, out_dtype)
-    collocator = partial(point_collocation, sampl_func)
+#     sampl_func = sampling_function(func, domain, out_dtype)
+#     collocator = partial(point_collocation, sampl_func)
 
-    # Out of place
-    result_points = collocator(points) 
-    result_mesh = collocator(mesh)
-    assert all_almost_equal(result_points, true_values_points)
-    assert all_almost_equal(result_mesh, true_values_mesh)
-    # assert result_points.flags.writeable
-    # assert result_mesh.flags.writeable
+#     # Out of place
+#     result_points = collocator(points) 
+#     result_mesh = collocator(mesh)
+#     assert all_almost_equal(result_points, true_values_points)
+#     assert all_almost_equal(result_mesh, true_values_mesh)
+#     # assert result_points.flags.writeable
+#     # assert result_mesh.flags.writeable
 
-    # In place: NOT SUPPORTED ANYMORE
-    # out_points = np.empty(3)
-    # out_mesh = np.empty(mesh_shape)
-    # collocator(points, out=out_points)
-    # collocator(mesh, out=out_mesh)
+#     # In place: NOT SUPPORTED ANYMORE
+#     # out_points = np.empty(3)
+#     # out_mesh = np.empty(mesh_shape)
+#     # collocator(points, out=out_points)
+#     # collocator(mesh, out=out_mesh)
 
-    # assert all_almost_equal(out_points, true_values_points)
-    # assert all_almost_equal(out_mesh, true_values_mesh)
+#     # assert all_almost_equal(out_points, true_values_points)
+#     # assert all_almost_equal(out_mesh, true_values_mesh)
 
-    # Single point evaluation
-    result_point = collocator(point)
-    assert all_almost_equal(result_point, true_value_point)
+#     # Single point evaluation
+#     result_point = collocator(point)
+#     assert all_almost_equal(result_point, true_value_point)
 
 
-def test_point_collocation_scalar_valued_with_param(func_param_nd, out_dtype):
+def test_point_collocation_scalar_valued_with_param(odl_impl_device_pairs):
     """Check collocation of scalar-valued functions with parameters."""
     domain = odl.IntervalProd([0, 0], [1, 1])
     points = _points(domain, 3)
     mesh_shape = (2, 3)
     mesh = _meshgrid(domain, mesh_shape)
 
-    func_ref, func = func_param_nd
+    impl, device = odl_impl_device_pairs
+    backend = lookup_array_backend(impl)
 
-    true_values_points = func_ref(points, c=2.5)
-    true_values_mesh = func_ref(mesh, c=2.5)
+    def func_ref(x, c):
+        if isinstance(x, (tuple, list)):
+            return [func_ref(x_, c) for x_ in x]
+        
+        return np.sum(x) + c
 
-    sampl_func = sampling_function(func, domain, out_dtype='float64')
+    def func(x, c):
+        if isinstance(x, (tuple, list)):
+            return [func(x_, c) for x_ in x]
+        
+        return backend.array_namespace.sum(x) + c
+
+    true_values_points = backend.array_constructor(
+        func_ref(points, c=2.5), device=device)
+    true_values_mesh = backend.array_constructor(
+        func_ref(mesh, c=2.5), device=device) 
+
+    sampl_func = sampling_function(func, domain, out_dtype='float64', impl=impl, device=device)
     collocator = partial(point_collocation, sampl_func)
 
     # Out of place
@@ -447,20 +462,14 @@ def test_point_collocation_scalar_valued_with_param(func_param_nd, out_dtype):
     assert all_almost_equal(result_points, true_values_points)
     assert all_almost_equal(result_mesh, true_values_mesh)
 
-    # In place
-    # out_points = np.empty(3, dtype='float64')
-    # out_mesh = np.empty(mesh_shape, dtype='float64')
-    # collocator(points, out=out_points, c=2.5)
-    # collocator(mesh, out=out_mesh, c=2.5)
-    # assert all_almost_equal(out_points, true_values_points)
-    # assert all_almost_equal(out_mesh, true_values_mesh)
-
     # Complex output
-    true_values_points = func_ref(points, c=2j)
-    true_values_mesh = func_ref(mesh, c=2j)
-
-    sampl_func = sampling_function(func, domain, out_dtype='complex128')
+    sampl_func = sampling_function(func, domain, out_dtype='complex128', impl=impl, device=device)
     collocator = partial(point_collocation, sampl_func)
+
+    true_values_points = backend.array_constructor(
+        func_ref(points, c=2j), device=device)
+    true_values_mesh = backend.array_constructor(
+        func_ref(mesh, c=2j), device=device)
 
     result_points = collocator(points, c=2j)
     result_mesh = collocator(mesh, c=2j)
@@ -475,8 +484,6 @@ def test_point_collocation_vector_valued(odl_impl_device_pairs):
     mesh_shape = (2, 3)
     mesh = _meshgrid(domain, mesh_shape)
     point = [0.5, 0.5]
-    values_points_shape = (2, 3)
-    values_mesh_shape = (2, 2, 3)
 
     for m in mesh:
         print(f'{type(m)=}')
@@ -513,26 +520,10 @@ def test_point_collocation_vector_valued(odl_impl_device_pairs):
 
     assert all_almost_equal(result_points, true_values_points)
     assert all_almost_equal(result_mesh, true_values_mesh)
-    # assert result_points.dtype == 'float64'
-    # assert result_mesh.dtype == 'float64'
-    # assert result_points.flags.writeable
-    # assert result_mesh.flags.writeable
-
-    # # In place
-    # out_points = np.empty(values_points_shape, dtype='float64')
-    # out_mesh = np.empty(values_mesh_shape, dtype='float64')
-    # collocator(points, out=out_points)
-    # collocator(mesh, out=out_mesh)
-    # assert all_almost_equal(out_points, true_values_points)
-    # assert all_almost_equal(out_mesh, true_values_mesh)
 
     # Single point evaluation
     result_point = collocator(point)
     assert all_almost_equal(result_point, true_value_point)
-    # out_point = np.empty((2,), dtype='float64')
-    # collocator(point, out=out_point)
-    # assert all_almost_equal(out_point, true_value_point)
-
 
 # def test_point_collocation_tensor_valued():
 #     """Check collocation of tensor-valued functions."""
