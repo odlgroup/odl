@@ -89,10 +89,17 @@ def cuboid(space, min_pt=None, max_pt=None):
 
     def phantom(x):
         result = True
-
         for xi, xmin, xmax in zip(x, min_pt, max_pt):
+            xmin = space.array_backend.array_constructor(
+                xmin, device=space.device
+            )
+            xmax = space.array_backend.array_constructor(
+                xmax, device=space.device
+            )
             result = (result &
-                      np.less_equal(xmin, xi) & np.less_equal(xi, xmax))
+                      space.array_namespace.less_equal(xmin, xi) & 
+                      space.array_namespace.less_equal(xi, xmax)
+            )
         return result
 
     return space.element(phantom)
