@@ -485,13 +485,16 @@ def test_point_collocation_vector_valued(odl_impl_device_pairs):
     mesh = _meshgrid(domain, mesh_shape)
     point = [0.5, 0.5]
 
-    for m in mesh:
-        print(f'{type(m)=}')
-    import torch
+    impl, device = odl_impl_device_pairs
+    backend = lookup_array_backend(impl)
+    ns = backend.array_namespace
     def func_vec_nd_ref(x):
         return (np.sin(x[0])+ np.sin(x[1])+ 1, np.sin(x[0])+np.sin(x[1]) -1 )
     def func_vec_nd_torch(x):
-        return (torch.sin(x[0])+torch.sin(x[1])+ 1, torch.sin(x[0])+torch.sin(x[1]) -1 )
+        return (
+            ns.sin(x[0])+ ns.sin(x[1])+ 1,  
+            ns.sin(x[0])+ ns.sin(x[1])- 1 
+        )
     
     impl, device = odl_impl_device_pairs
     func_ref = func_vec_nd_ref

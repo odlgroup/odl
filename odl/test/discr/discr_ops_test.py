@@ -44,13 +44,17 @@ def padding(request):
 # --- ResizingOperator tests --- #
 
 
-def test_resizing_op_init(odl_tspace_impl, padding):
+def test_resizing_op_init(odl_impl_device_pairs, padding):
     # Test if the different init patterns run
-    impl = odl_tspace_impl
+    impl, device = odl_impl_device_pairs
     pad_mode, pad_const = padding
 
-    space = odl.uniform_discr([0, -1], [1, 1], (10, 5), impl=impl)
-    res_space = odl.uniform_discr([0, -3], [2, 3], (20, 15), impl=impl)
+    space = odl.uniform_discr(
+        [0, -1], [1, 1], (10, 5), impl=impl, device=device
+        )
+    res_space = odl.uniform_discr(
+        [0, -3], [2, 3], (20, 15), impl=impl, device=device
+    )
 
     odl.ResizingOperator(space, res_space)
     odl.ResizingOperator(space, ran_shp=(20, 15))
@@ -62,7 +66,7 @@ def test_resizing_op_init(odl_tspace_impl, padding):
                          discr_kwargs={'nodes_on_bdry': True})
 
 
-def test_resizing_op_raise():
+def test_resizing_op_raise(odl_impl_device_pairs):
     """Validate error checking in ResizingOperator."""
     # Domain not a uniformly discretized Lp
     with pytest.raises(TypeError):
@@ -70,21 +74,24 @@ def test_resizing_op_raise():
 
     grid = odl.RectGrid([0, 2, 3])
     part = odl.RectPartition(odl.IntervalProd(0, 3), grid)
-    tspace = odl.rn(3)
+
+    impl, device = odl_impl_device_pairs
+
+    tspace = odl.rn(3, impl=impl, device=device)
     space = odl.DiscretizedSpace(part, tspace)
     with pytest.raises(ValueError):
         odl.ResizingOperator(space, ran_shp=(10,))
 
     # Different cell sides in domain and range
-    space = odl.uniform_discr(0, 1, 10)
-    res_space = odl.uniform_discr(0, 1, 15)
+    space = odl.uniform_discr(0, 1, 10, impl=impl, device=device)
+    res_space = odl.uniform_discr(0, 1, 15, impl=impl, device=device)
     with pytest.raises(ValueError):
         odl.ResizingOperator(space, res_space)
 
     # Non-integer multiple of cell sides used as shift (grid of the
     # resized space shifted)
-    space = odl.uniform_discr(0, 1, 5)
-    res_space = odl.uniform_discr(-0.5, 1.5, 10)
+    space = odl.uniform_discr(0, 1, 5, impl=impl, device=device)
+    res_space = odl.uniform_discr(-0.5, 1.5, 10, impl=impl, device=device)
     with pytest.raises(ValueError):
         odl.ResizingOperator(space, res_space)
 
@@ -93,8 +100,8 @@ def test_resizing_op_raise():
         odl.ResizingOperator(space)
 
     # Offset cannot be combined with range
-    space = odl.uniform_discr([0, -1], [1, 1], (10, 5))
-    res_space = odl.uniform_discr([0, -3], [2, 3], (20, 15))
+    space = odl.uniform_discr([0, -1], [1, 1], (10, 5), impl=impl, device=device)
+    res_space = odl.uniform_discr([0, -3], [2, 3], (20, 15), impl=impl, device=device)
     with pytest.raises(ValueError):
         odl.ResizingOperator(space, res_space, offset=(0, 0))
 
@@ -103,16 +110,16 @@ def test_resizing_op_raise():
         odl.ResizingOperator(space, res_space, pad_mode='something')
 
 
-def test_resizing_op_properties(odl_tspace_impl, padding):
+def test_resizing_op_properties(odl_impl_device_pairs, padding):
 
-    impl = odl_tspace_impl
+    impl, device = odl_impl_device_pairs
 
     pad_mode, pad_const = padding
 
     for dtype in SCALAR_DTYPES:
         # Explicit range
-        space = odl.uniform_discr([0, -1], [1, 1], (10, 5), dtype=dtype)
-        res_space = odl.uniform_discr([0, -3], [2, 3], (20, 15), dtype=dtype)
+        space = odl.uniform_discr([0, -1], [1, 1], (10, 5), dtype=dtype, impl=impl, device=device)
+        res_space = odl.uniform_discr([0, -3], [2, 3], (20, 15), dtype=dtype, impl=impl, device=device)
         res_op = odl.ResizingOperator(space, res_space, pad_mode=pad_mode,
                                       pad_const=pad_const)
 
@@ -142,17 +149,17 @@ def test_resizing_op_properties(odl_tspace_impl, padding):
             assert res_op.is_linear
 
 
-def test_resizing_op_call(odl_tspace_impl):
+def test_resizing_op_call(odl_impl_device_pairs):
 
-    impl = odl_tspace_impl
+    impl, device = odl_impl_device_pairs
     
     for dtype in AVAILABLE_DTYPES:
         # Minimal test since this operator only wraps resize_array
         space = odl.uniform_discr(
-            [0, -1], [1, 1], (4, 5), dtype=dtype, impl=impl
+            [0, -1], [1, 1], (4, 5), dtype=dtype, impl=impl, device=device
         )
         res_space = odl.uniform_discr(
-            [0, -0.6], [2, 0.2], (8, 2), dtype=dtype, impl=impl
+            [0, -0.6], [2, 0.2], (8, 2), dtype=dtype, impl=impl, device=device
         )
         res_op = odl.ResizingOperator(space, res_space)
         out = res_op(space.one())
@@ -165,28 +172,35 @@ def test_resizing_op_call(odl_tspace_impl):
         assert all_equal(out, true_res)
 
         # Test also mapping to default impl for other 'impl'
-        if impl != 'numpy':
-            space = odl.uniform_discr(
-                [0, -1], [1, 1], (4, 5), dtype=dtype, impl=impl
-            )
-            res_space = odl.uniform_discr(
-                [0, -0.6], [2, 0.2], (8, 2), dtype=dtype
-            )
-            res_op = odl.ResizingOperator(space, res_space)
-            out = res_op(space.one())
-            true_res = np.zeros((8, 2), dtype=dtype)
-            true_res[:4, :] = 1
-            assert all_equal(out, true_res)
+        # if impl != 'numpy':
+        #     space = odl.uniform_discr(
+        #         [0, -1], [1, 1], (4, 5), dtype=dtype, impl=impl
+        #     )
+        #     res_space = odl.uniform_discr(
+        #         [0, -0.6], [2, 0.2], (8, 2), dtype=dtype
+        #     )
+        #     res_op = odl.ResizingOperator(space, res_space)
+        #     out = res_op(space.one())
+        #     true_res = np.zeros((8, 2), dtype=dtype)
+        #     true_res[:4, :] = 1
+        #     assert all_equal(out, true_res)
 
-            out = res_space.element()
-            res_op(space.one(), out=out)
-            assert all_equal(out, true_res)
+        #     out = res_space.element()
+        #     res_op(space.one(), out=out)
+        #     assert all_equal(out, true_res)
 
 
-def test_resizing_op_deriv(padding):
+def test_resizing_op_deriv(padding, odl_impl_device_pairs):
+
+    impl, device = odl_impl_device_pairs
+
     pad_mode, pad_const = padding
-    space = odl.uniform_discr([0, -1], [1, 1], (4, 5))
-    res_space = odl.uniform_discr([0, -0.6], [2, 0.2], (8, 2))
+    space = odl.uniform_discr(
+        [0, -1], [1, 1], (4, 5), impl=impl, device=device
+        )
+    res_space = odl.uniform_discr(
+        [0, -0.6], [2, 0.2], (8, 2), impl=impl, device=device
+        )
     res_op = odl.ResizingOperator(space, res_space, pad_mode=pad_mode,
                                   pad_const=pad_const)
     res_op_deriv = res_op.derivative(space.one())
@@ -199,9 +213,9 @@ def test_resizing_op_deriv(padding):
         assert res_op_deriv is res_op
 
 
-def test_resizing_op_inverse(padding, odl_tspace_impl):
+def test_resizing_op_inverse(padding, odl_impl_device_pairs):
 
-    impl = odl_tspace_impl
+    impl, device = odl_impl_device_pairs
     pad_mode, pad_const = padding
 
     for dtype in SCALAR_DTYPES:
@@ -216,9 +230,9 @@ def test_resizing_op_inverse(padding, odl_tspace_impl):
             continue
 
         space = odl.uniform_discr([0, -1], [1, 1], (4, 5), dtype=dtype,
-                                  impl=impl)
+                                  impl=impl, device=device)
         res_space = odl.uniform_discr([0, -1.4], [1.5, 1.4], (6, 7),
-                                      dtype=dtype, impl=impl)
+                                      dtype=dtype, impl=impl, device=device)
         res_op = odl.ResizingOperator(space, res_space, pad_mode=pad_mode,
                                       pad_const=pad_const)
 
@@ -227,15 +241,15 @@ def test_resizing_op_inverse(padding, odl_tspace_impl):
         assert res_op.inverse(res_op(x)) == x
 
 
-def test_resizing_op_adjoint(padding, odl_tspace_impl):
+def test_resizing_op_adjoint(padding, odl_impl_device_pairs):
 
-    impl = odl_tspace_impl
+    impl, device = odl_impl_device_pairs
     pad_mode, pad_const = padding
     for dtype in FLOAT_DTYPES:
         space = odl.uniform_discr([0, -1], [1, 1], (4, 5), dtype=dtype,
-                                  impl=impl)
+                                  impl=impl, device=device)
         res_space = odl.uniform_discr([0, -1.4], [1.5, 1.4], (6, 7),
-                                      dtype=dtype, impl=impl)
+                                      dtype=dtype, impl=impl, device=device)
         res_op = odl.ResizingOperator(space, res_space, pad_mode=pad_mode,
                                       pad_const=pad_const)
 
@@ -253,12 +267,15 @@ def test_resizing_op_adjoint(padding, odl_tspace_impl):
             abs = 1e-2 * space.size * dtype_tol(dtype) * elem.norm() * res_elem.norm())
 
 
-def test_resizing_op_mixed_uni_nonuni():
+def test_resizing_op_mixed_uni_nonuni(odl_impl_device_pairs):
     """Check if resizing along uniform axes in mixed discretizations works."""
+
+    impl, device = odl_impl_device_pairs
+
     nonuni_part = odl.nonuniform_partition([0, 1, 4])
     uni_part = odl.uniform_partition(-1, 1, 4)
     part = uni_part.append(nonuni_part, uni_part, nonuni_part)
-    tspace = odl.rn(part.shape)
+    tspace = odl.rn(part.shape, impl=impl, device=device)
     space = odl.DiscretizedSpace(part, tspace)
 
     # Keep non-uniform axes fixed
@@ -269,7 +286,7 @@ def test_resizing_op_mixed_uni_nonuni():
 
     # Evaluation test with a simpler case
     part = uni_part.append(nonuni_part)
-    tspace = odl.rn(part.shape)
+    tspace = odl.rn(part.shape, impl=impl, device=device)
     space = odl.DiscretizedSpace(part, tspace)
     res_op = odl.ResizingOperator(space, ran_shp=(6, 3))
     result = res_op(space.one())

@@ -242,9 +242,12 @@ def test_element_from_function_1d(odl_impl_device_pairs):
     space = odl.uniform_discr(-1, 1, 4, impl=impl, device=device)
     points = space.points().squeeze()
 
+    backend = lookup_array_backend(impl)
+    namespace = backend.array_namespace 
     # Without parameter
     def f(x):
-        return x * 2 + np.maximum(x, 0)
+        zero = namespace.zeros_like(x)
+        return x * 2 + namespace.maximum(x, zero)
 
     elem_f = space.element(f)
     true_elem = [x * 2 + max(x, 0) for x in points]
@@ -252,7 +255,8 @@ def test_element_from_function_1d(odl_impl_device_pairs):
 
     # Without parameter, using same syntax as in higher dimensions
     def f(x):
-        return x[0] * 2 + np.maximum(x[0], 0)
+        zero = namespace.zeros_like(x[0])
+        return x[0] * 2 + namespace.maximum(x[0], zero)
 
     elem_f = space.element(f)
     true_elem = [x * 2 + max(x, 0) for x in points]
@@ -261,7 +265,8 @@ def test_element_from_function_1d(odl_impl_device_pairs):
     # With parameter
     def f(x, **kwargs):
         c = kwargs.pop('c', 0)
-        return x * c + np.maximum(x, 0)
+        zero = namespace.zeros_like(x)
+        return x * c + namespace.maximum(x, zero)
 
     elem_f_default = space.element(f)
     true_elem = [x * 0 + max(x, 0) for x in points]
@@ -288,9 +293,13 @@ def test_element_from_function_2d(odl_impl_device_pairs):
     space = odl.uniform_discr([-1, -1], [1, 1], (2, 3), impl=impl, device=device)
     points = space.points()
 
+    backend = lookup_array_backend(impl)
+    namespace = backend.array_namespace 
+
     # Without parameter
     def f(x):
-        return x[0] ** 2 + np.maximum(x[1], 0)
+        zero = namespace.zeros_like(x[0])
+        return x[0] ** 2 + namespace.maximum(x[1], zero)
 
     elem_f = space.element(f)
     true_elem = np.reshape(
@@ -300,8 +309,8 @@ def test_element_from_function_2d(odl_impl_device_pairs):
 
     # With parameter
     def f(x, **kwargs):
-        c = kwargs.pop('c', 0)
-        return x[0] ** 2 + np.maximum(x[1], c)
+        c = kwargs.pop('c', 0) * namespace.ones_like(x[0])
+        return x[0] ** 2 + namespace.maximum(x[1], c)
 
     elem_f_default = space.element(f)
     true_elem = np.reshape(
@@ -883,7 +892,7 @@ def test_norm_nonuniform(odl_impl_device_pairs):
     tspace = odl.rn(part.size, weighting=weights, impl=impl, device=device)
     discr = odl.DiscretizedSpace(part, tspace)
 
-    sqrt = discr.element(lambda x: np.sqrt(x))
+    sqrt = discr.element(lambda x: backend.array_namespace.sqrt(x))
 
     # Exact norm is the square root of the integral from 0 to 5 of x,
     # which is sqrt(5**2 / 2)
