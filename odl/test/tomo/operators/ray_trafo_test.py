@@ -331,12 +331,17 @@ def test_angles(projector):
     # Verify correct maximum angle. The line is defined by the equation
     # x1 = 10 - 2 * x0, i.e. the slope -2. Thus the angle arctan(1/2) should
     # give the maximum projection values.
-    expected = ns.arctan2(1, 2)
+    expected = np.arctan2(1, 2)
     assert np.fmod(maximum_angle, np.pi) == pytest.approx(expected, abs=0.1)
 
     # Find the pixel where the projection has a maximum at that angle
     axes = () if projector.domain.ndim == 2 else 1
     ind_pixel = ns.argmax(ns.max(result[ind_angle], axis=axes))
+    
+    # We must convert the ind_pixel back to a float on the cpu
+    if projector.domain.tspace.impl == 'pytorch':
+        ind_pixel = int(ind_pixel.detach().cpu())
+
     max_pixel = projector.geometry.det_partition[ind_pixel, ...].mid_pt[0]
 
     # The line is at distance 2 * sqrt(5) from the origin, which translates
@@ -357,7 +362,7 @@ def test_angles(projector):
 
 
 def test_complex(impl, odl_impl_device_pairs):
-    tspace_impl, device = 'numpy', 'cpu'
+    tspace_impl, device = odl_impl_device_pairs
     """Test transform of complex input for parallel 2d geometry."""
     space_c = odl.uniform_discr([-1, -1], [1, 1], (10, 10), dtype='complex64', impl=tspace_impl, device=device)
     space_r = space_c.real_space
