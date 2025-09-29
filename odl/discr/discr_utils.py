@@ -964,11 +964,26 @@ def _broadcast_nested_list(arr_lists, element_shape, ndim, backend: ArrayBackend
         return [_broadcast_nested_list(row, element_shape, ndim, backend=backend)
                  for row in arr_lists]
 
+def _send_nested_list_to_backend(
+        arr_lists, backend : ArrayBackend, device, dtype
+        ):
+    if backend.impl == 'numpy':
+        return arr_lists
+
+    if isinstance(arr_lists, np.ndarray) or np.isscalar(arr_lists):
+        return backend.array_constructor(arr_lists, device=device, dtype=dtype)
+
+    elif isinstance(arr_lists, (tuple,list)):
+        return [_send_nested_list_to_backend(arr, backend, device, dtype) for arr in arr_lists]
+
+    else:
+        raise TypeError(f'Type of input {type(arr_lists)} not supported.')
+
 def sampling_function(
-    func : Callable | list | tuple, 
-    domain : IntervalProd, 
-    out_dtype : str | None, 
-    impl: str ='numpy', 
+    func : Callable | list | tuple,
+    domain : IntervalProd,
+    out_dtype : str | None,
+    impl: str ='numpy',
     device: str ='cpu'
     ):
     def _infer_dtype(out_dtype : str | None):
@@ -980,36 +995,18 @@ def sampling_function(
         # np.dtype('float64') = ()
         val_shape = ()
         return out_dtype, val_shape
-    
+
     def _sanitise_callable(func: Callable) -> Callable:
         # Get default implementations if necessary
         has_out, out_optional = _func_out_type(func)
-        
+
         if has_out:
-            raise NotImplementedError('Currently, not implemented for in-place functions')
-        
+            raise NotImplementedError('Currently, not implemented for out-of-place functions')
+
         return func
 
     def _sanitise_array_of_callables(funcs : List | Tuple):
-        def array_wrapper_func(x, **kwargs):
-            results = []
-            if is_array_supported(x):     
-                # If we have a list of callables, we must store the output of each callable called on the input in a list, and transform this into a a np.array OR a torch.nested.nested_tensor based on x 
-                for func in funcs:
-                    assert isinstance(func, Callable)
-                    func = _sanitise_callable(func)
-                    results.append(func(x, **kwargs))
-            elif isinstance(x, (list, tuple)):
-                assert len(funcs) == len(x)
-                
-                for func, x_ in zip(funcs, x):
-                    assert isinstance(func, Callable)
-                    func = _sanitise_callable(func)
-                    results.append(func(x_, **kwargs))
-            else:
-               raise TypeError(f'{type(x)}')
-            return results
-        return array_wrapper_func
+        raise NotImplementedError('The sampling function cannot be instantiated with a list-like of callables.')
 
     def _sanitise_input_function(func: Callable | list | tuple):
         '''
@@ -1025,23 +1022,15 @@ def sampling_function(
             return _sanitise_array_of_callables(func)
         else:
             raise NotImplementedError('The function to sample must be either a Callable or an array-like (list, tuple) of callables.')
-    
-    def _make_sampling_function(
-            func:  Callable | list | tuple, 
-            domain: IntervalProd, 
-            out_dtype : str, 
-            impl: str ='numpy', 
-            device: str ='cpu'
-            ):
-        return 0
-    ### We begin by sanitising the inputs: 
+
+    ### We begin by sanitising the inputs:
     # 1) the dtype
     out_dtype = _infer_dtype(out_dtype)
     # 2) the func_or_arr
     func = _sanitise_input_function(func)
 
     ### We then create the function
-    return func
+    return _make_single_use_func(func, domain, out_dtype, impl, device)
 
 
 
@@ -1373,7 +1362,7 @@ def _make_single_use_func(func_oop, domain, out_dtype, impl: str ='numpy', devic
         if is_valid_input_meshgrid(x, ndim):
             scalar_in = False
             scalar_out_shape = out_shape_from_meshgrid(x)
-            scalar_out = False
+
             # Avoid operations on tuples like x * 2 by casting to array
             if ndim == 1:
                 x = x[0][None, ...]
@@ -1381,12 +1370,12 @@ def _make_single_use_func(func_oop, domain, out_dtype, impl: str ='numpy', devic
             x = np.asarray(x)
             scalar_in = False
             scalar_out_shape = out_shape_from_array(x)
-            scalar_out = False
+
         elif x in domain:
             x = np.atleast_2d(x).T  # make a (d, 1) array
             scalar_in = True
             scalar_out_shape = (1,)
-            scalar_out = (out is None and not tensor_valued)
+
         else:
             # Unknown input
             txt_1d = ' or (n,)' if ndim == 1 else ''
@@ -1405,47 +1394,46 @@ def _make_single_use_func(func_oop, domain, out_dtype, impl: str ='numpy', devic
 
         backend = lookup_array_backend(impl)
         array_ns = backend.array_namespace
-        x = backend.array_constructor(x, device=device)
         backend_scalar_out_dtype = backend.available_dtypes[_universal_dtype_identifier(scalar_out_dtype)]
+
+        x = _send_nested_list_to_backend(
+            x, backend, device, backend_scalar_out_dtype)
 
         if scalar_in:
             out_shape = val_shape
         else:
             out_shape = val_shape + scalar_out_shape
 
-        # Call the function and check out shape, before or after
-        if True:
-
-            # The out-of-place evaluation path
-
-            if ndim == 1:
-                try:
-                    out = func_oop(x, **kwargs)
-                except (TypeError, IndexError):
-                    # TypeError is raised if a meshgrid was used but the
-                    # function expected an array (1d only). In this case we try
-                    # again with the first meshgrid vector.
-                    # IndexError is raised in expressions like x[x > 0] since
-                    # "x > 0" evaluates to 'True', i.e. 1, and that index is
-                    # out of range for a meshgrid tuple of length 1 :-). To get
-                    # the real errors with indexing, we check again for the
-                    # same scenario (scalar output when not valid) as in the
-                    # first case.
-                    out = func_oop(x[0], **kwargs)
-
-            else:
-                # Here we don't catch exceptions since they are likely true
-                # errors
+        if ndim == 1:
+            try:
                 out = func_oop(x, **kwargs)
+            except (TypeError, IndexError):
+                # TypeError is raised if a meshgrid was used but the
+                # function expected an array (1d only). In this case we try
+                # again with the first meshgrid vector.
+                # IndexError is raised in expressions like x[x > 0] since
+                # "x > 0" evaluates to 'True', i.e. 1, and that index is
+                # out of range for a meshgrid tuple of length 1 :-). To get
+                # the real errors with indexing, we check again for the
+                # same scenario (scalar output when not valid) as in the
+                # first case.
+                out = func_oop(x[0], **kwargs)
 
+        else:
+            # Here we don't catch exceptions since they are likely true
+            # errors
+            out = func_oop(x, **kwargs)
+
+        def _process_array(out):
             if isinstance(out, backend.array_type) or np.isscalar(out):
-                # Cast to proper dtype if needed, also convert to array if out
-                # is a scalar.
-                out = backend.array_constructor(out,
-                                                dtype=backend_scalar_out_dtype,
-                                                device=device)
+                # Cast to proper dtype if needed, also convert to array if out  is a scalar.
+                out = backend.array_constructor(
+                    out,
+                    dtype=backend_scalar_out_dtype,
+                    device=device
+                    )
                 if scalar_in:
-                    out = array_ns.squeeze(out)
+                    out = array_ns.squeeze(out,0)
                 elif ndim == 1 and out.shape == (1,) + out_shape:
                     out = out.reshape(out_shape)
 
@@ -1455,39 +1443,16 @@ def _make_single_use_func(func_oop, domain, out_dtype, impl: str ='numpy', devic
                     # in which case we copy.
                     out = array_ns.broadcast_to(out, out_shape)
                     out = backend.array_constructor(out, copy=True)
+                return out
 
-            elif tensor_valued:
-                # The out object can be any array-like of objects with shapes
-                # that should all be broadcastable to scalar_out_shape.
-                out_arr = backend.array_constructor(_broadcast_nested_list(
-                                             out, scalar_out_shape, ndim=ndim, backend=backend), device=device)
+            elif isinstance(out, (tuple, list)):
+                result = []
+                assert len(out) != 0
+                for sub_out in out:
+                    result.append(_process_array(sub_out))
+                return result
 
-                if out_arr.dtype != backend_scalar_out_dtype:
-                    raise ValueError(
-                        'result is of dtype {}, expected {}'
-                        ''.format(dtype_repr(out_arr.dtype),
-                                  dtype_repr(scalar_out_dtype))
-                    )
-
-                out = out_arr.reshape(out_shape)
-
-            else:
-                # TODO(kohr-h): improve message
-                raise RuntimeError('bad output of function call')
-
-
-        # If we are to output a scalar, convert the result
-
-        # Numpy < 1.12 does not implement __complex__ for arrays (in contrast
-        # to __float__), so we have to fish out the scalar ourselves.
-        if scalar_out:
-            scalar = out.ravel()[0].item()
-            if is_real_dtype(out_dtype):
-                return float(scalar)
-            else:
-                return complex(scalar)
-        else:
-            return out
+        return _process_array(out)
 
     return dual_use_func
 
