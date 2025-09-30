@@ -17,7 +17,8 @@ from odl.discr.diff_ops import (
     Divergence, Gradient, Laplacian, PartialDerivative, finite_diff)
 from odl.util.testutils import (
     all_almost_equal, all_equal, dtype_tol, noise_element, simple_fixture)
-from odl.array_API_support.utils import get_array_and_backend
+from odl.array_API_support import get_array_and_backend, all_equal as odl_all_equal
+
 # --- pytest fixtures --- #
 
 
@@ -85,47 +86,47 @@ def test_finite_diff_explicit(data):
     # default: out=None, axis=0, dx=1.0, zero_padding=None, method='forward'
     diff = finite_diff(arr, axis=0, dx=1.0, out=None,
                        pad_mode='constant')
-    assert all_equal(diff, finite_diff(arr, axis=0))
+    assert odl_all_equal(diff, finite_diff(arr, axis=0))
 
     # boundary: one-sided second-order accurate forward/backward difference
     diff = finite_diff(arr, axis=0, dx=1.0, out=None,
                        method='central', pad_mode='order2')
     diff_ex[0] = -(3 * arr[0] - 4 * arr[1] + arr[2]) / 2.0
     diff_ex[-1] = (3 * arr[-1] - 4 * arr[-2] + arr[-3]) / 2.0
-    assert all_equal(diff, diff_ex)
+    assert odl_all_equal(diff, diff_ex)
 
     # non-unit step length
     dx = 0.5
     diff = finite_diff(arr, axis=0, dx=dx, method='central', out=None,
                        pad_mode='order2')
-    assert all_equal(diff, diff_ex / dx)
+    assert odl_all_equal(diff, diff_ex / dx)
 
     # boundary: second-order accurate central differences with zero padding
     diff = finite_diff(arr, axis=0, method='central', pad_mode='constant',
                        pad_const=0)
     diff_ex[0] = arr[1] / 2.0
     diff_ex[-1] = -arr[-2] / 2.0
-    assert all_equal(diff, diff_ex)
+    assert odl_all_equal(diff, diff_ex)
 
     # boundary: one-sided first-order forward/backward difference without zero
     # padding
     diff = finite_diff(arr, axis=0, method='central', pad_mode='order1')
     diff_ex[0] = arr[1] - arr[0]  # 1st-order accurate forward difference
     diff_ex[-1] = arr[-1] - arr[-2]  # 1st-order accurate backward diff.
-    assert all_equal(diff, diff_ex)
+    assert odl_all_equal(diff, diff_ex)
 
     # different edge order really differ
     df1 = finite_diff(arr, axis=0, method='central', pad_mode='order1')
     df2 = finite_diff(arr, axis=0, method='central', pad_mode='order2')
-    assert all_equal(df1[1:-1], diff_ex[1:-1])
-    assert all_equal(df2[1:-1], diff_ex[1:-1])
+    assert odl_all_equal(df1[1:-1], diff_ex[1:-1])
+    assert odl_all_equal(df2[1:-1], diff_ex[1:-1])
     assert df1[0] != df2[0]
     assert df1[-1] != df2[-1]
 
     # in-place evaluation
     out = ns.zeros_like(arr)
     assert out is finite_diff(arr, axis=0, out=out)
-    assert all_equal(out, finite_diff(arr, axis=0))
+    assert odl_all_equal(out, finite_diff(arr, axis=0))
     assert out is not finite_diff(arr, axis=0)
 
     # axis
@@ -133,10 +134,10 @@ def test_finite_diff_explicit(data):
                     [1., 3., 5., 7., 9.]])
     df0 = finite_diff(arr, axis=0, pad_mode='order1')
     darr0 = 1 * ns.ones(arr.shape)
-    assert all_equal(df0, darr0)
+    assert odl_all_equal(df0, darr0)
     darr1 = 2 * ns.ones(arr.shape)
     df1 = finite_diff(arr, axis=1, pad_mode='order1')
-    assert all_equal(df1, darr1)
+    assert odl_all_equal(df1, darr1)
 
     # complex arrays
     arr = backend.array_constructor([0., 1., 2., 3., 4.]) + 1j * backend.array_constructor([10., 9., 8., 7.,
@@ -251,8 +252,8 @@ def test_part_deriv(space, method, padding):
         # Compare to helper function
         dx = space.cell_sides[axis]
         diff = finite_diff(dom_vec_arr, axis=axis, dx=dx, method=method,
-                           pad_mode=pad_mode,
-                           pad_const=pad_const)
+                        pad_mode=pad_mode,
+                        pad_const=pad_const)
 
         partial_vec = partial(dom_vec)
         assert all_almost_equal(partial_vec, diff)
@@ -274,9 +275,10 @@ def test_part_deriv(space, method, padding):
 # --- Gradient --- #
 
 
-def test_gradient_init():
+def test_gradient_init(odl_impl_device_pairs):
     """Check initialization of ``Gradient``."""
-    space = odl.uniform_discr([0, 0], [1, 1], (4, 5))
+    impl, device = odl_impl_device_pairs
+    space = odl.uniform_discr([0, 0], [1, 1], (4, 5), impl=impl, device=device)
     vspace = space ** 2
 
     op = Gradient(space)
@@ -326,8 +328,8 @@ def test_gradient(space, method, padding):
     # computation of gradient components with helper function
     for axis, dx in enumerate(space.cell_sides):
         diff = finite_diff(dom_vec_arr, axis=axis, dx=dx, method=method,
-                           pad_mode=pad_mode,
-                           pad_const=pad_const)
+                        pad_mode=pad_mode,
+                        pad_const=pad_const)
 
         assert all_almost_equal(grad_vec[axis].asarray(), diff)
 
@@ -357,9 +359,10 @@ def test_gradient(space, method, padding):
 # --- Divergence --- #
 
 
-def test_divergence_init():
+def test_divergence_init(odl_impl_device_pairs):
     """Check initialization of ``Divergence``."""
-    space = odl.uniform_discr([0, 0], [1, 1], (4, 5))
+    impl, device = odl_impl_device_pairs
+    space = odl.uniform_discr([0, 0], [1, 1], (4, 5), impl=impl, device=device)
     vspace = space ** 2
 
     op = Divergence(vspace)
@@ -398,19 +401,19 @@ def test_divergence(space, method, padding):
 
     # Operator instance
     div = Divergence(range=space, method=method,
-                     pad_mode=pad_mode,
-                     pad_const=pad_const)
+                    pad_mode=pad_mode,
+                    pad_const=pad_const)
 
     # Apply operator
     dom_vec = noise_element(div.domain)
     div_dom_vec = div(dom_vec)
 
     # computation of divergence with helper function
-    expected_result = space.array_namespace.zeros(space.shape)
+    expected_result = space.array_namespace.zeros(space.shape, dtype=space.dtype, device=space.device)
     for axis, dx in enumerate(space.cell_sides):
         expected_result += finite_diff(dom_vec[axis], axis=axis, dx=dx,
-                                       method=method, pad_mode=pad_mode,
-                                       pad_const=pad_const)
+                                    method=method, pad_mode=pad_mode,
+                                    pad_const=pad_const)
 
     assert all_almost_equal(expected_result, div_dom_vec.asarray())
 
@@ -431,9 +434,10 @@ def test_divergence(space, method, padding):
 
 # --- Laplacian --- #
 
-def test_laplacian_init():
+def test_laplacian_init(odl_impl_device_pairs):
     """Check initialization of ``Laplacian``."""
-    space = odl.uniform_discr([0, 0], [1, 1], (4, 5))
+    impl, device = odl_impl_device_pairs
+    space = odl.uniform_discr([0, 0], [1, 1], (4, 5), impl=impl, device=device)
 
     op = Laplacian(space)
     assert repr(op) != ''
@@ -466,14 +470,14 @@ def test_laplacian(space, padding):
     div_dom_vec = lap(dom_vec)
 
     # computation of divergence with helper function
-    expected_result = space.array_namespace.zeros(space.shape)
+    expected_result = space.array_namespace.zeros(space.shape, device=space.device, dtype=space.dtype)
     for axis, dx in enumerate(space.cell_sides):
         diff_f = finite_diff(dom_vec.asarray(), axis=axis, dx=dx ** 2,
-                             method='forward', pad_mode=pad_mode,
-                             pad_const=pad_const)
+                            method='forward', pad_mode=pad_mode,
+                            pad_const=pad_const)
         diff_b = finite_diff(dom_vec.asarray(), axis=axis, dx=dx ** 2,
-                             method='backward', pad_mode=pad_mode,
-                             pad_const=pad_const)
+                            method='backward', pad_mode=pad_mode,
+                            pad_const=pad_const)
         expected_result += diff_f - diff_b
 
     assert all_almost_equal(expected_result, div_dom_vec.asarray())

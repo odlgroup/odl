@@ -232,7 +232,12 @@ def _check_interp_input(x, f):
         x_is_scalar = False
         x_type = 'meshgrid'
     else:
-        x = np.asarray(x)
+        ### Parsing the input
+        if isinstance(x, (int,float,complex, list, tuple)):
+            x = np.asarray(x)
+        else:
+            x, _ = get_array_and_backend(x)
+
         if f.ndim == 1 and x.shape == ():
             x_is_scalar = True
             x = x.reshape((1, 1))
@@ -349,8 +354,8 @@ def nearest_interpolator(f, coord_vecs):
       arithmetic operations on the values, in contrast to other
       interpolation methods.
     """
-    f = np.asarray(f)
-
+    # f = np.asarray(f)
+    f, backend = get_array_and_backend(f)
     # TODO(kohr-h): pass reasonable options on to the interpolator
     def nearest_interp(x, out=None):
         """Interpolating function with vectorization."""
@@ -537,7 +542,7 @@ class _Interpolator(object):
         input_type : {'array', 'meshgrid'}
             Type of expected input values in ``__call__``.
         """
-        values = np.asarray(values)
+        values, backend = get_array_and_backend(values)
         typ_ = str(input_type).lower()
         if typ_ not in ('array', 'meshgrid'):
             raise ValueError('`input_type` ({}) not understood'
@@ -560,6 +565,10 @@ class _Interpolator(object):
         self.coord_vecs = tuple(np.asarray(p) for p in coord_vecs)
         self.values = values
         self.input_type = input_type
+
+        self.backend = backend
+        self.namespace = backend.array_namespace
+        self.device = values.device
 
     def __call__(self, x, out=None):
         """Do the interpolation.
@@ -604,9 +613,8 @@ class _Interpolator(object):
             out_shape = out_shape_from_meshgrid(x)
 
         if out is not None:
-            if not isinstance(out, np.ndarray):
-                raise TypeError('`out` {!r} not a `numpy.ndarray` '
-                                'instance'.format(out))
+            if not isinstance(out, self.backend.array_type):
+                raise TypeError(f'The provided out argument is not an expected {type(self.backend.array_type)} but a {type(out)}')
             if out.shape != out_shape:
                 raise ValueError('output shape {} not equal to expected '
                                  'shape {}'.format(out.shape, out_shape))
@@ -809,19 +817,29 @@ class _PerAxisInterpolator(_Interpolator):
         if out is None:
             out_shape = out_shape_from_meshgrid(norm_distances)
             out_dtype = self.values.dtype
-            out = np.zeros(out_shape, dtype=out_dtype)
+            out = self.namespace.zeros(
+                out_shape, dtype=out_dtype, device=self.device
+                )
         else:
             out[:] = 0.0
 
         # Weights and indices (per axis)
         low_weights, high_weights, edge_indices = _create_weight_edge_lists(
             indices, norm_distances, self.interp)
+        # low_weights  = self.backend.array_constructor(
+        #     low_weights, device=self.device)
+        # high_weights = self.backend.array_constructor(
+        #     high_weights, device=self.device)
+        # edge_indices = self.backend.array_constructor(
+        #     edge_indices, device=self.device)
 
         # Iterate over all possible combinations of [i, i+1] for each
         # axis, resulting in a loop of length 2**ndim
         for lo_hi, edge in zip(product(*([['l', 'h']] * len(indices))),
                                product(*edge_indices)):
-            weight = np.array([1.0], dtype=self.values.dtype)
+            weight = self.backend.array_constructor(
+                [1.0], dtype=self.values.dtype, device=self.device
+                )
             # TODO(kohr-h): determine best summation order from array strides
             for lh, w_lo, w_hi in zip(lo_hi, low_weights, high_weights):
 
@@ -830,12 +848,18 @@ class _PerAxisInterpolator(_Interpolator):
                 # (n, 1, 1, ...) -> (n, m, 1, ...) -> ...
                 # Hence, it is faster to build up the weight array instead
                 # of doing full-size operations from the beginning.
+                # Emilien : This array-API compatibility is horribly slow ( sending the individual floats to the gpu while iterating is a hack around the inhomogeneous dimensions returned by _create_weight_edge_lists)
                 if lh == 'l':
-                    weight = weight * w_lo
+                    weight = weight * self.backend.array_constructor(
+            w_lo, device=self.device)
                 else:
-                    weight = weight * w_hi
-            out += np.asarray(self.values[edge]) * weight[vslice]
-        return np.array(out, copy=AVOID_UNNECESSARY_COPY, ndmin=1)
+                    weight = weight * self.backend.array_constructor(
+            w_hi, device=self.device)
+            out += self.backend.array_constructor(self.values[edge], device=self.device) * weight[vslice]
+        # return np.array(out, copy=AVOID_UNNECESSARY_COPY, ndmin=1)
+        return self.backend.array_constructor(
+            out, copy=AVOID_UNNECESSARY_COPY, device=self.device
+            )
 
 
 class _LinearInterpolator(_PerAxisInterpolator):

@@ -734,9 +734,12 @@ class Laplacian(PointwiseTensorFieldOperator):
         else:
             out.set_zero()
 
-        x_arr = x.asarray()
         out_arr = out.asarray()
-        tmp = np.empty(out.shape, out.dtype)
+
+        x_arr, backend = get_array_and_backend(x)
+        tmp = backend.array_namespace.empty(
+            shape=out.shape, dtype=out.dtype,device=x.device
+            )
 
         ndim = self.domain.ndim
         dx = self.domain.cell_sides
@@ -832,11 +835,14 @@ def _finite_diff_numpy(f_arr, axis, dx=1.0, method='forward', out=None,
     if pad_mode not in _SUPPORTED_PAD_MODES:
         raise ValueError('`pad_mode` {} not understood'
                          ''.format(pad_mode))
-
-    pad_const = np.array([pad_const], dtype = f_arr.dtype)
+    
+    f_arr, backend = get_array_and_backend(f_arr)
+    namespace = backend.array_namespace
+    device = f_arr.device
+    pad_const = backend.array_constructor([pad_const], dtype=f_arr.dtype, device=device)
 
     if out is None:
-        out = np.empty_like(f_arr)
+        out = namespace.empty_like(f_arr, dtype=f_arr.dtype, device=device)
     else:
         if out.shape != f_arr.shape:
             raise ValueError('expected output shape {}, got {}'
@@ -852,11 +858,11 @@ def _finite_diff_numpy(f_arr, axis, dx=1.0, method='forward', out=None,
 
     # Swap axes so that the axis of interest is first. In NumPy (but not PyTorch),
     # this is a O(1) operation and is done to simplify the code below.
-    out, out_in = np.swapaxes(out, 0, axis), out
-    f_arr = np.swapaxes(f_arr, 0, axis)
+    out, out_in = namespace.swapaxes(out, 0, axis), out
+    f_arr = namespace.swapaxes(f_arr, 0, axis)
 
     def fd_subtraction(a, b):
-        np.subtract(a, b, out=out[1:-1])
+        namespace.subtract(a, b, out=out[1:-1])
 
     # Interior of the domain of f
     if method == 'central':
@@ -1059,7 +1065,8 @@ def _finite_diff_pytorch(f_arr, axis, dx=1.0, method='forward',
                 pad_mode='constant', pad_const=0):
     """ PyTorch-specific version of `finite_diff`. Notice that this has no output argument. """
 
-    import torch
+    f_arr, backend = get_array_and_backend(f_arr)
+    namespace = backend.array_namespace
 
     ndim = f_arr.ndim
 
@@ -1109,7 +1116,8 @@ def _finite_diff_pytorch(f_arr, axis, dx=1.0, method='forward',
     # Kernel for convolution that expresses the finite-difference operator on, at least,
     # the interior of the domain of f
     def as_kernel(mat):
-        return torch.tensor(mat, dtype=dtype, device=f_arr.device)
+        return namespace.tensor(mat, dtype=dtype, device=f_arr.device)
+    
     if method == 'central':
         fd_kernel = as_kernel([[[[-1],[0],[1]]]]) / (2*dx)
     elif method == 'forward':
@@ -1119,13 +1127,12 @@ def _finite_diff_pytorch(f_arr, axis, dx=1.0, method='forward',
 
     if pad_mode == 'constant':
         if pad_const==0:
-            result = torch.conv2d(f_arr, fd_kernel, padding='same')
+            result = namespace.conv2d(f_arr, fd_kernel, padding='same')
         else:
-            padding_arr = torch.ones_like(f_arr[:,:,0:1,:]) * pad_const
-            result = torch.conv2d( torch.cat([padding_arr, f_arr, padding_arr], dim=-2)
-                               , fd_kernel, padding='valid' )
-    elif pad_mode == 'periodic':
-        result = torch.conv2d(f_arr, fd_kernel, padding='circular')
+            padding_arr = namespace.ones_like(f_arr[:,:,0:1,:]) * pad_const
+            result = namespace.conv2d( 
+                namespace.cat([padding_arr, f_arr, padding_arr], dim=-2), fd_kernel, padding='valid' 
+                )
 
     else:
         raise NotImplementedError(f'{pad_mode=} not implemented for PyTorch')
@@ -1233,18 +1240,22 @@ def finite_diff(f, axis, dx=1.0, method='forward', out=None,
     True
     """
     _, backend = get_array_and_backend(f)
-    if backend.impl=='pytorch':
-        import torch
+    if pad_mode == 'constant' and backend.impl=='pytorch':
         if out is None:
-            return _finite_diff_pytorch(torch.tensor(f.data), axis, dx=dx, method=method,
-                pad_mode=pad_mode, pad_const=pad_const)
-        else:
-            assert(isinstance(out, torch.Tensor)), f"{type(out)=}"
-            out[:] = _finite_diff_pytorch(f.data, axis, dx=dx, method=method,
-                pad_mode=pad_mode, pad_const=pad_const)
+            return _finite_diff_pytorch(
+                f, axis, dx=dx, method=method, pad_mode=pad_mode, pad_const=pad_const
+                )
+        assert isinstance(out, backend.array_type), f"{type(out)=}"
+        if out.shape != f.shape:
+            raise ValueError('expected output shape {}, got {}'
+                             ''.format(f.shape, out.shape))
+        out[:] = _finite_diff_pytorch(
+            f, axis, dx=dx, method=method, pad_mode=pad_mode, pad_const=pad_const
+            )
+        return out
     else:
-        return _finite_diff_numpy(np.asarray(f.data), axis, dx=dx, method=method, out=out,
-                pad_mode=pad_mode, pad_const=pad_const)
+        return _finite_diff_numpy(
+            f, axis, dx=dx, method=method, out=out, pad_mode=pad_mode, pad_const=pad_const)
 
 
 

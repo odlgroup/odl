@@ -649,11 +649,18 @@ def test_point_collocation_vector_valued(odl_impl_device_pairs):
 
 # --- interpolation tests --- #
 
-
-def test_nearest_interpolation_1d_complex():
+def test_nearest_interpolation_1d_complex(odl_impl_device_pairs):
     """Test nearest neighbor interpolation in 1d with complex values."""
     coord_vecs = [[0.1, 0.3, 0.5, 0.7, 0.9]]
-    f = np.array([0 + 1j, 1 + 2j, 2 + 3j, 3 + 4j, 4 + 5j], dtype="complex128")
+
+    impl, device = odl_impl_device_pairs
+    backend = lookup_array_backend(impl)
+    dtype = backend.available_dtypes["complex128"]
+    f = backend.array_constructor(
+        [0 + 1j, 1 + 2j, 2 + 3j, 3 + 4j, 4 + 5j], 
+        dtype=dtype, device=device
+        )
+    
     interpolator = nearest_interpolator(f, coord_vecs)
 
     # Evaluate at single point
@@ -666,7 +673,7 @@ def test_nearest_interpolation_1d_complex():
     # Should also work with a (1, N) array
     pts = pts[None, :]
     assert all_equal(interpolator(pts), true_arr)
-    out = np.empty(4, dtype='complex128')
+    out = backend.array_namespace.empty(4, dtype=dtype, device=device)
     interpolator(pts, out=out)
     assert all_equal(out, true_arr)
     # Input meshgrid, with and without output array
@@ -678,13 +685,18 @@ def test_nearest_interpolation_1d_complex():
     assert all_equal(out, true_mg)
 
 
-def test_nearest_interpolation_2d():
+def test_nearest_interpolation_2d(odl_impl_device_pairs):
     """Test nearest neighbor interpolation in 2d."""
     coord_vecs = [[0.125, 0.375, 0.625, 0.875], [0.25, 0.75]]
-    f = np.array([[0, 1],
+
+    impl, device = odl_impl_device_pairs
+    backend = lookup_array_backend(impl)
+    dtype = backend.available_dtypes["float64"]
+    
+    f = backend.array_constructor([[0, 1],
                   [2, 3],
                   [4, 5],
-                  [6, 7]], dtype="float64")
+                  [6, 7]], dtype=dtype, device=device)
     interpolator = nearest_interpolator(f, coord_vecs)
 
     # Evaluate at single point
@@ -695,7 +707,7 @@ def test_nearest_interpolation_2d():
                     [1.0, 1.0]])
     true_arr = [3, 7]
     assert all_equal(interpolator(pts.T), true_arr)
-    out = np.empty(2, dtype='float64')
+    out = backend.array_namespace.empty(2, dtype=dtype, device=device)
     interpolator(pts.T, out=out)
     assert all_equal(out, true_arr)
     # Input meshgrid, with and without output array
@@ -704,11 +716,11 @@ def test_nearest_interpolation_2d():
     true_mg = [[2, 3],
                [6, 7]]
     assert all_equal(interpolator(mg), true_mg)
-    out = np.empty((2, 2), dtype='float64')
+    out = backend.array_namespace.empty((2, 2), dtype=dtype, device=device)
     interpolator(mg, out=out)
     assert all_equal(out, true_mg)
 
-
+# Why should that be supported for PyTorch?
 def test_nearest_interpolation_2d_string():
     """Test nearest neighbor interpolation in 2d with string values."""
     coord_vecs = [[0.125, 0.375, 0.625, 0.875], [0.25, 0.75]]
@@ -740,10 +752,17 @@ def test_nearest_interpolation_2d_string():
     assert all_equal(out, true_mg)
 
 
-def test_linear_interpolation_1d():
+def test_linear_interpolation_1d(odl_impl_device_pairs):
     """Test linear interpolation in 1d."""
     coord_vecs = [[0.1, 0.3, 0.5, 0.7, 0.9]]
-    f = np.array([1, 2, 3, 4, 5], dtype="float64")
+    impl, device = odl_impl_device_pairs
+    backend = lookup_array_backend(impl)
+    dtype = backend.available_dtypes["float64"]
+    
+    f = backend.array_constructor(
+        [1, 2, 3, 4, 5], dtype=dtype, device=device
+        )
+    
     interpolator = linear_interpolator(f, coord_vecs)
 
     # Evaluate at single point
@@ -753,17 +772,25 @@ def test_linear_interpolation_1d():
 
     # Input array, with and without output array
     pts = np.array([0.4, 0.0, 0.65, 0.95])
-    true_arr = [2.5, 0.5, 3.75, 3.75]
+    true_arr =  backend.array_constructor([2.5, 0.5, 3.75, 3.75], dtype=dtype, device=device)
     assert all_almost_equal(interpolator(pts), true_arr)
 
 
-def test_linear_interpolation_2d():
+def test_linear_interpolation_2d(odl_impl_device_pairs):
     """Test linear interpolation in 2d."""
     coord_vecs = [[0.125, 0.375, 0.625, 0.875], [0.25, 0.75]]
-    f = np.array([[1, 2],
-                  [3, 4],
-                  [5, 6],
-                  [7, 8]], dtype='float64')
+
+    impl, device = odl_impl_device_pairs
+    backend = lookup_array_backend(impl)
+    dtype = backend.available_dtypes["float64"]
+
+    f = backend.array_constructor(
+            [[1, 2],
+            [3, 4],
+            [5, 6],
+            [7, 8]], dtype=dtype, device=device
+        )
+    
     interpolator = linear_interpolator(f, coord_vecs)
 
     # Evaluate at single point
@@ -776,6 +803,8 @@ def test_linear_interpolation_2d():
         + l1 * (1 - l2) * f[1, 0]
         + l1 * l2 * f[1, 1]
     )
+    if impl == 'pytorch':
+        true_val = true_val.detach().cpu()
     assert val == pytest.approx(true_val)
 
     # Input array, with and without output array
@@ -799,7 +828,7 @@ def test_linear_interpolation_2d():
     true_arr = [true_val_1, true_val_2, true_val_3]
     assert all_equal(interpolator(pts.T), true_arr)
 
-    out = np.empty(3, dtype='float64')
+    out = backend.array_namespace.empty(3, dtype=dtype, device=device)
     interpolator(pts.T, out=out)
     assert all_equal(out, true_arr)
 
@@ -828,19 +857,25 @@ def test_linear_interpolation_2d():
     true_mg = [[true_val_11, true_val_12],
                [true_val_21, true_val_22]]
     assert all_equal(interpolator(mg), true_mg)
-    out = np.empty((2, 2), dtype='float64')
+    out = backend.array_namespace.empty((2, 2), dtype=dtype, device=device)
     interpolator(mg, out=out)
     assert all_equal(out, true_mg)
 
 
-def test_per_axis_interpolation():
+def test_per_axis_interpolation(odl_impl_device_pairs):
     """Test different interpolation schemes per axis."""
     coord_vecs = [[0.125, 0.375, 0.625, 0.875], [0.25, 0.75]]
     interp = ['linear', 'nearest']
-    f = np.array([[1, 2],
-                  [3, 4],
-                  [5, 6],
-                  [7, 8]], dtype='float64')
+    impl, device = odl_impl_device_pairs
+    backend = lookup_array_backend(impl)
+    dtype = backend.available_dtypes["float64"]
+
+    f = backend.array_constructor(
+            [[1, 2],
+            [3, 4],
+            [5, 6],
+            [7, 8]], dtype=dtype, device=device
+        )
     interpolator = per_axis_interpolator(f, coord_vecs, interp)
 
     # Evaluate at single point
@@ -848,6 +883,8 @@ def test_per_axis_interpolation():
     l1 = (0.3 - 0.125) / (0.375 - 0.125)
     # 0.5 equally far from both neighbors -> NN chooses 0.75
     true_val = (1 - l1) * f[0, 1] + l1 * f[1, 1]
+    if impl == 'pytorch':
+        true_val = true_val.detach().cpu()
     assert val == pytest.approx(true_val)
 
     # Input array, with and without output array
@@ -863,7 +900,7 @@ def test_per_axis_interpolation():
     true_arr = [true_val_1, true_val_2, true_val_3]
     assert all_equal(interpolator(pts.T), true_arr)
 
-    out = np.empty(3, dtype='float64')
+    out = backend.array_namespace.empty(3, dtype=dtype, device=device)
     interpolator(pts.T, out=out)
     assert all_equal(out, true_arr)
 
@@ -879,20 +916,26 @@ def test_per_axis_interpolation():
     true_mg = [[true_val_11, true_val_12],
                [true_val_21, true_val_22]]
     assert all_equal(interpolator(mg), true_mg)
-    out = np.empty((2, 2), dtype='float64')
+    out = backend.array_namespace.empty((2, 2), dtype=dtype, device=device)
     interpolator(mg, out=out)
     assert all_equal(out, true_mg)
 
 
-def test_collocation_interpolation_identity():
+def test_collocation_interpolation_identity(odl_impl_device_pairs):
     """Check if collocation is left-inverse to interpolation."""
     # Interpolation followed by collocation on the same grid should be
     # the identity
     coord_vecs = [[0.125, 0.375, 0.625, 0.875], [0.25, 0.75]]
-    f = np.array([[1, 2],
-                  [3, 4],
-                  [5, 6],
-                  [7, 8]], dtype='float64')
+    impl, device = odl_impl_device_pairs
+    backend = lookup_array_backend(impl)
+    dtype = backend.available_dtypes["float64"]
+
+    f = backend.array_constructor(
+            [[1, 2],
+            [3, 4],
+            [5, 6],
+            [7, 8]], dtype=dtype, device=device
+        )
     interpolators = [
         nearest_interpolator(f, coord_vecs),
         linear_interpolator(f, coord_vecs),
