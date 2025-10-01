@@ -1065,8 +1065,8 @@ def _finite_diff_pytorch(f_arr, axis, dx=1.0, method='forward',
                 pad_mode='constant', pad_const=0):
     """ PyTorch-specific version of `finite_diff`. Notice that this has no output argument. """
 
-    f_arr, backend = get_array_and_backend(f_arr)
-    namespace = backend.array_namespace
+    f_arr, _ = get_array_and_backend(f_arr)
+    import torch
 
     ndim = f_arr.ndim
 
@@ -1116,7 +1116,7 @@ def _finite_diff_pytorch(f_arr, axis, dx=1.0, method='forward',
     # Kernel for convolution that expresses the finite-difference operator on, at least,
     # the interior of the domain of f
     def as_kernel(mat):
-        return namespace.tensor(mat, dtype=dtype, device=f_arr.device)
+        return torch.tensor(mat, dtype=dtype, device=f_arr.device)
     
     if method == 'central':
         fd_kernel = as_kernel([[[[-1],[0],[1]]]]) / (2*dx)
@@ -1127,11 +1127,11 @@ def _finite_diff_pytorch(f_arr, axis, dx=1.0, method='forward',
 
     if pad_mode == 'constant':
         if pad_const==0:
-            result = namespace.conv2d(f_arr, fd_kernel, padding='same')
+            result = torch.conv2d(f_arr, fd_kernel, padding='same')
         else:
-            padding_arr = namespace.ones_like(f_arr[:,:,0:1,:]) * pad_const
-            result = namespace.conv2d( 
-                namespace.cat([padding_arr, f_arr, padding_arr], dim=-2), fd_kernel, padding='valid' 
+            padding_arr = torch.ones_like(f_arr[:,:,0:1,:]) * pad_const
+            result = torch.conv2d( 
+                torch.cat([padding_arr, f_arr, padding_arr], dim=-2), fd_kernel, padding='valid' 
                 )
 
     else:

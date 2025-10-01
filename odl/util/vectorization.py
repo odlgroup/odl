@@ -61,12 +61,24 @@ def out_shape_from_meshgrid(mesh):
     if len(mesh) == 1:
         return (len(mesh[0]),)
     else:
-        return np.broadcast(*mesh).shape
-
-
+        # Ragged arrays are a liability in the current implementation
+        _, backend = get_array_and_backend(mesh[0])
+        namespace = backend.array_namespace
+        if backend.impl == 'numpy':
+            return namespace.broadcast(*mesh).shape
+        elif backend.impl == 'pytorch':
+            mesh_size = namespace.broadcast_shapes(
+                    *(t.shape for t in mesh))
+            return list(mesh_size)
+        else:
+            raise NotImplementedError(f'Not implemented for impl {backend.impl}')   
+              
 def out_shape_from_array(arr):
     """Get the output shape from an array."""
-    arr = np.asarray(arr)
+    if isinstance(arr, (float, int, complex, list, tuple)):
+        arr = np.asarray(arr)
+    else:
+        arr,_ = get_array_and_backend(arr)
     if arr.ndim == 1:
         return arr.shape
     else:

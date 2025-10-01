@@ -19,7 +19,7 @@ from odl.operator import Operator, PointwiseInner
 from odl.space import ProductSpace
 from odl.space.pspace import ProductSpaceElement
 from odl.util import indent, signature_string
-from odl.array_API_support import exp
+from odl.array_API_support import exp, lookup_array_backend
 
 __all__ = ('LinDeformFixedTempl', 'LinDeformFixedDisp', 'linear_deform')
 
@@ -79,11 +79,20 @@ def linear_deform(template, displacement, interp='linear', out=None):
     array([ 0. ,  0. ,  1. ,  0.5,  0. ])
     """
     points = template.space.points()
+    if isinstance(displacement, ProductSpaceElement):
+        impl, device = displacement[0].impl, displacement[0].device
+        backend = lookup_array_backend(impl)
+    else:
+        raise ValueError(f'{type(displacement)}')
+    
+    points = backend.array_constructor(points, device=device)
+    
     for i, vi in enumerate(displacement):
         points[:, i] += vi.asarray().ravel()
     templ_interpolator = per_axis_interpolator(
         template, coord_vecs=template.space.grid.coord_vectors, interp=interp
     )
+
     values = templ_interpolator(points.T, out=out)
     return values.reshape(template.space.shape)
 

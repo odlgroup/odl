@@ -588,11 +588,13 @@ class _Interpolator(object):
             Interpolated values. If ``out`` was given, the returned
             object is a reference to it.
         """
-        if self.input_type == 'meshgrid':
-            # Given a meshgrid, the evaluation will be on a ragged array.
-            x = np.asarray(x, dtype=object)
-        else:
-            x = np.asarray(x)
+
+        def sanitise_input(x):
+            if self.input_type == 'meshgrid':
+                return [sanitise_input(x_) for x_ in x]
+            return get_array_and_backend(x)[0]
+
+        x = sanitise_input(x)
 
         ndim = len(self.coord_vecs)
         scalar_out = False
@@ -640,19 +642,30 @@ class _Interpolator(object):
         # compute distance to lower edge in unity units
         norm_distances = []
 
+        x, backend = get_array_and_backend(x)
+
+        local_vecs = backend.array_constructor(self.coord_vecs, device=x.device)
+
         # iterate through dimensions
-        for xi, cvec in zip(x, self.coord_vecs):
+        for xi, cvec in zip(x, local_vecs):
             try:
-                xi = np.asarray(xi).astype(self.values.dtype, casting='safe')
+                xi = backend.array_constructor(
+                    xi, device=x.device, dtype=self.values.dtype
+                    )
             except TypeError:
                 warn("Unable to infer accurate dtype for"
                   +" interpolation coefficients, defaulting to `float`.")
                 xi = np.asarray(xi, dtype=float)
-
-            idcs = np.searchsorted(cvec, xi) - 1
+            xi, _ = get_array_and_backend(xi, must_be_contiguous=True)
+            idcs = backend.array_namespace.searchsorted(cvec, xi) - 1
 
             idcs[idcs < 0] = 0
-            idcs[idcs > cvec.size - 2] = cvec.size - 2
+            if backend.impl == 'numpy':
+                idcs[idcs > cvec.size - 2] = cvec.size - 2
+            elif backend.impl == 'pytorch':
+                idcs[idcs > cvec.size()[0] - 2] = cvec.size()[0] - 2
+            else:
+                raise(f'Not implemented for backend {backend.impl}')
             index_vecs.append(idcs)
 
             norm_distances.append((xi - cvec[idcs]) /
@@ -713,13 +726,14 @@ def _compute_nearest_weights_edge(idcs, ndist):
 
     # For "too low" nodes, the lower neighbor gets weight zero;
     # "too high" gets 1.
-    w_lo = np.where(ndist < 0.5, 1.0, 0.0)
+    ndist, backend = get_array_and_backend(ndist)
+    w_lo = backend.array_namespace.where(ndist < 0.5, 1.0, 0.0)
     w_lo[lo] = 0
     w_lo[hi] = 1
 
     # For "too high" nodes, the upper neighbor gets weight zero;
     # "too low" gets 1.
-    w_hi = np.where(ndist < 0.5, 0.0, 1.0)
+    w_hi = backend.array_namespace.where(ndist < 0.5, 0.0, 1.0)
     w_hi[lo] = 1
     w_hi[hi] = 0
 
@@ -734,12 +748,12 @@ def _compute_nearest_weights_edge(idcs, ndist):
 
 def _compute_linear_weights_edge(idcs, ndist):
     """Helper for linear interpolation."""
-    ndist = np.asarray(ndist)
+    ndist, backend = get_array_and_backend(ndist)
 
     # Get out-of-bounds indices from the norm_distances. Negative
     # means "too low", larger than or equal to 1 means "too high"
-    lo = np.where(ndist < 0)
-    hi = np.where(ndist > 1)
+    lo = backend.array_namespace.where(ndist < 0, ndist, 0).nonzero()
+    hi = backend.array_namespace.where(ndist > 1, ndist, 0).nonzero()
 
     # For "too low" nodes, the lower neighbor gets weight zero;
     # "too high" gets 2 - yi (since yi >= 1)
@@ -749,7 +763,13 @@ def _compute_linear_weights_edge(idcs, ndist):
 
     # For "too high" nodes, the upper neighbor gets weight zero;
     # "too low" gets 1 + yi (since yi < 0)
-    w_hi = np.copy(ndist)
+    if backend.impl == 'numpy':
+        w_hi = backend.array_namespace.copy(ndist)
+    elif backend.impl =='pytorch':
+        w_hi = backend.array_namespace.clone(ndist)
+    else:
+        raise NotImplementedError(f'Not implemented for impl {backend.impl}')   
+    
     w_hi[lo] += 1
     w_hi[hi] = 0
 

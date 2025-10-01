@@ -17,6 +17,8 @@ import odl
 from odl.deform import LinDeformFixedDisp, LinDeformFixedTempl
 from odl.util.testutils import simple_fixture
 
+from odl.array_API_support import get_array_and_backend, exp
+
 # --- pytest fixtures --- #
 
 
@@ -26,12 +28,12 @@ ndim = simple_fixture('ndim', [1, 2, 3])
 
 
 @pytest.fixture
-def space(request, ndim, dtype, odl_impl_device_pairs):
+def space(ndim, dtype, odl_impl_device_pairs):
     """Provide a space for unit tests."""
     impl, device = odl_impl_device_pairs
-    supported_dtypes = odl.lookup_array_backend(impl).available_dtypes
-    # if np.dtype(dtype) not in supported_dtypes:
-    #     pytest.skip('dtype not available for this backend')
+    # supported_dtypes = odl.lookup_array_backend(impl).available_dtypes
+    # # if np.dtype(dtype) not in supported_dtypes:
+    # #     pytest.skip('dtype not available for this backend')
 
     return odl.uniform_discr(
         [-1] * ndim, [1] * ndim, [20] * ndim, impl=impl, dtype=dtype, device=device
@@ -61,16 +63,27 @@ def prod(x):
     return prod
 
 
-def template_function(x):
+def numpy_template_function(x):
     """Gaussian function with std SIGMA."""
     return np.exp(-sum(xi ** 2 for xi in x) / SIGMA ** 2)
 
+def torch_template_function(x):
+    """Gaussian function with std SIGMA."""
+    import torch
+    return torch.exp(-sum(xi ** 2 for xi in x) / SIGMA ** 2)
 
-def template_grad_factory(n):
+def numpy_template_grad_factory(n):
     """Gradient of the gaussian."""
     def template_grad_i(i):
         # Indirection for lambda capture
-        return lambda x: -2 * x[i] / SIGMA ** 2 * template_function(x)
+        return lambda x: -2 * x[i] / SIGMA ** 2 * numpy_template_function(x)
+    return [template_grad_i(i) for i in range(n)]
+
+def torch_template_grad_factory(n):
+    """Gradient of the gaussian."""
+    def template_grad_i(i):
+        # Indirection for lambda capture
+        return lambda x: -2 * x[i] / SIGMA ** 2 * torch_template_function(x)
     return [template_grad_i(i) for i in range(n)]
 
 
@@ -91,7 +104,7 @@ def disp_field_factory(n):
     return lst
 
 
-def exp_div_inv_disp(x):
+def numpy_exp_div_inv_disp(x):
     """Exponential of the divergence of the displacement field.
 
     In 1d: exp(- EPS)
@@ -101,16 +114,30 @@ def exp_div_inv_disp(x):
     return np.exp(- EPS * (prod(x[1:]) + (len(x) - 1)))
 
 
+def torch_exp_div_inv_disp(x):
+    """Exponential of the divergence of the displacement field.
+
+    In 1d: exp(- EPS)
+    In 2d: exp(- EPS * (y + 1))
+    In 2d: exp(- EPS * (yz + 2))
+    """
+    import torch
+    return torch.exp(- EPS * (prod(x[1:]) + (len(x) - 1)))
+
+
 def displaced_points(x):
     """Displaced coordinate points."""
     disp = [dsp(x) for dsp in disp_field_factory(len(x))]
     return [xi + di for xi, di in zip(x, disp)]
 
 
-def deformed_template(x):
+def numpy_deformed_template(x):
     """Deformed template."""
-    return template_function(displaced_points(x))
+    return numpy_template_function(displaced_points(x))
 
+def torch_deformed_template(x):
+    """Deformed template."""
+    return torch_template_function(displaced_points(x))
 
 def vector_field_factory(n):
     """Vector field for the gradient.
@@ -125,9 +152,9 @@ def vector_field_factory(n):
     return [vector_field_i(i) for i in range(n)]
 
 
-def template_deformed_grad_factory(n):
+def numpy_template_deformed_grad_factory(n):
     """Deformed gradient."""
-    templ_grad = template_grad_factory(n)
+    templ_grad = numpy_template_grad_factory(n)
 
     def template_deformed_gradi(i):
         # Indirection for lambda capture
@@ -135,27 +162,55 @@ def template_deformed_grad_factory(n):
 
     return [template_deformed_gradi(i) for i in range(n)]
 
+def torch_template_deformed_grad_factory(n):
+    """Deformed gradient."""
+    templ_grad = torch_template_grad_factory(n)
 
-def fixed_templ_deriv(x):
+    def template_deformed_gradi(i):
+        # Indirection for lambda capture
+        return lambda x: templ_grad[i](displaced_points(x))
+
+    return [template_deformed_gradi(i) for i in range(n)]
+
+def numpy_fixed_templ_deriv(x):
     """Derivative taken in disp_field and evaluated in vector_field."""
-    dg = [tdgf(x) for tdgf in template_deformed_grad_factory(len(x))]
+    dg = [tdgf(x) for tdgf in numpy_template_deformed_grad_factory(len(x))]
+    v = [vff(x) for vff in vector_field_factory(len(x))]
+    return sum(dgi * vi for dgi, vi in zip(dg, v))
+
+def torch_fixed_templ_deriv(x):
+    """Derivative taken in disp_field and evaluated in vector_field."""
+    dg = [tdgf(x) for tdgf in torch_template_deformed_grad_factory(len(x))]
     v = [vff(x) for vff in vector_field_factory(len(x))]
     return sum(dgi * vi for dgi, vi in zip(dg, v))
 
 
-def inv_deformed_template(x):
+def numpy_inv_deformed_template(x):
     """Analytic inverse deformation of the template function."""
     disp = [dsp(x) for dsp in disp_field_factory(len(x))]
     disp_x = [xi - di for xi, di in zip(x, disp)]
-    return template_function(disp_x)
+    return numpy_template_function(disp_x)
+
+def torch_inv_deformed_template(x):
+    """Analytic inverse deformation of the template function."""
+    disp = [dsp(x) for dsp in disp_field_factory(len(x))]
+    disp_x = [xi - di for xi, di in zip(x, disp)]
+    return torch_template_function(disp_x)
 
 
 # --- LinDeformFixedTempl --- #
 
 
-def test_fixed_templ_init():
+def test_fixed_templ_init(odl_impl_device_pairs):
     """Test init and props of linearized deformation with fixed template."""
-    space = odl.uniform_discr(0, 1, 5)
+    impl, device = odl_impl_device_pairs
+    space = odl.uniform_discr(0, 1, 5, impl=impl,device=device)
+
+    if impl == 'numpy':
+        template_function = numpy_template_function 
+    else:
+        template_function = torch_template_function
+
     template = space.element(template_function)
 
     # Valid input
@@ -169,15 +224,38 @@ def test_fixed_templ_init():
         # template_function not a DiscretizedSpaceElement
         LinDeformFixedTempl(template_function)
 
+@pytest.fixture
+def space(odl_impl_device_pairs):
+    """Provide a space for unit tests."""
+    impl, device = odl_impl_device_pairs
+    ndim = 2
+    # supported_dtypes = odl.lookup_array_backend(impl).available_dtypes
+    # # if np.dtype(dtype) not in supported_dtypes:
+    # #     pytest.skip('dtype not available for this backend')
+
+    return odl.uniform_discr(
+        [-1] * ndim, [1] * ndim, [20] * ndim, impl=impl, device=device
+    )
+
 
 def test_fixed_templ_call(space, interp):
     """Test call of linearized deformation with fixed template."""
     # Define the analytic template as the hat function and its gradient
+    if space.impl == 'numpy':
+        template_function = numpy_template_function 
+        deformed_template = numpy_deformed_template
+    else:
+        if space.dtype_identifier == 'complex128':
+            return 
+        template_function = torch_template_function
+        deformed_template = torch_deformed_template
+
     template = space.element(template_function)
     deform_op = LinDeformFixedTempl(template, interp=interp)
 
     # Calculate result and exact result
     true_deformed_templ = space.element(deformed_template)
+
     deformed_templ = deform_op(disp_field_factory(space.ndim))
 
     # Verify that the result is within error limits
@@ -190,6 +268,13 @@ def test_fixed_templ_deriv(space, interp):
     """Test derivative of linearized deformation with fixed template."""
     if not space.is_real:
         pytest.skip('derivative not implemented for complex dtypes')
+
+    if space.impl == 'numpy':
+        template_function = numpy_template_function 
+        fixed_templ_deriv = numpy_fixed_templ_deriv
+    else:
+        template_function = torch_template_function
+        fixed_templ_deriv = torch_fixed_templ_deriv
 
     # Set up template and displacement field
     template = space.element(template_function)
@@ -213,9 +298,10 @@ def test_fixed_templ_deriv(space, interp):
 # --- LinDeformFixedDisp --- #
 
 
-def test_fixed_disp_init():
+def test_fixed_disp_init(odl_impl_device_pairs):
     """Test init and props of lin. deformation with fixed displacement."""
-    space = odl.uniform_discr(0, 1, 5)
+    impl, device=odl_impl_device_pairs
+    space = odl.uniform_discr(0, 1, 5, impl=impl, device=device)
     disp_field = space.tangent_bundle.element(
         disp_field_factory(space.ndim))
 
@@ -246,6 +332,15 @@ def test_fixed_disp_init():
 
 def test_fixed_disp_call(space, interp):
     """Test call of lin. deformation with fixed displacement."""
+    if space.impl == 'numpy':
+        template_function = numpy_template_function 
+        deformed_template = numpy_deformed_template
+    else:
+        if space.dtype_identifier == 'complex128':
+            return 
+        template_function = torch_template_function
+        deformed_template = torch_deformed_template
+
     template = space.element(template_function)
     disp_field = space.real_space.tangent_bundle.element(
         disp_field_factory(space.ndim))
@@ -265,6 +360,13 @@ def test_fixed_disp_call(space, interp):
 
 def test_fixed_disp_inv(space, interp):
     """Test inverse of lin. deformation with fixed displacement."""
+    if space.impl == 'numpy':
+        template_function = numpy_template_function 
+    else:
+        if space.dtype_identifier == 'complex128':
+            return 
+        template_function = torch_template_function
+        
     # Set up template and displacement field
     template = space.element(template_function)
     disp_field = space.real_space.tangent_bundle.element(
@@ -289,6 +391,18 @@ def test_fixed_disp_inv(space, interp):
 def test_fixed_disp_adj(space, interp):
     """Test adjoint of lin. deformation with fixed displacement."""
     # Set up template and displacement field
+
+    if space.impl == 'numpy':
+        template_function = numpy_template_function 
+        inv_deformed_template = numpy_inv_deformed_template
+        exp_div_inv_disp = numpy_exp_div_inv_disp
+    else:
+        if space.dtype_identifier == 'complex128':
+            return 
+        template_function = torch_template_function
+        inv_deformed_template = torch_inv_deformed_template
+        exp_div_inv_disp = torch_exp_div_inv_disp
+
     template = space.element(template_function)
     disp_field = space.real_space.tangent_bundle.element(
         disp_field_factory(space.ndim))
