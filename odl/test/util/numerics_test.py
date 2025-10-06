@@ -378,7 +378,7 @@ def test_fast_1d_tensor_mult_error():
     x, y, z = (np.arange(size, dtype='float64') for size in shape)
 
     # No ndarray to operate on
-    with pytest.raises(TypeError):
+    with pytest.raises(ValueError):
         fast_1d_tensor_mult([[0, 0], [0, 0]], [x, x])
 
     # No 1d arrays given
