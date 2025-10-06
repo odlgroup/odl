@@ -231,9 +231,12 @@ def fast_1d_tensor_mult(ndarr, onedim_arrs, axes=None, out=None):
         Result of the modification. If ``out`` was given, the returned
         object is a reference to it.
     """
+    ndarr, backend = get_array_and_backend(ndarr)
+    device = ndarr.device
     if out is None:
-        out = np.array(ndarr, copy=True)
+        out = backend.array_constructor(ndarr, copy=True, device=device)
     else:
+        assert out.device == device, f'The input and out arguments are on different devices : {out.device} and {device}'
         out[:] = ndarr  # Self-assignment is free if out is ndarr
 
     if not onedim_arrs:
@@ -260,17 +263,20 @@ def fast_1d_tensor_mult(ndarr, onedim_arrs, axes=None, out=None):
     if any(a.ndim != 1 for a in alist):
         raise ValueError('only 1d arrays allowed')
 
-    if len(axes) < out.ndim:
+    if True:#len(axes) < out.ndim:
         # Make big factor array (start with 0d)
-        factor = np.array(1.0)
+        factor = backend.array_constructor(1.0, device=device)
         for ax, arr in zip(axes, alist):
             # Meshgrid-style slice
             slc = [None] * out.ndim
             slc[ax] = slice(None)
-            factor = factor * arr[tuple(slc)]
+            factor = factor * backend.array_constructor(
+                arr[tuple(slc)], device=device
+                ) 
 
         out *= factor
 
+    # this seems to be for performance, we have disabled it to make progress and will adress it later :-) 
     else:
         # Hybrid approach
 
@@ -280,21 +286,25 @@ def fast_1d_tensor_mult(ndarr, onedim_arrs, axes=None, out=None):
         last_arr = alist[axes.index(last_ax)]
 
         # Build the semi-big array and multiply
-        factor = np.array(1.0)
+        factor = backend.array_constructor(1.0, device=device)
         for ax, arr in zip(axes, alist):
             if ax == last_ax:
                 continue
 
             slc = [None] * out.ndim
             slc[ax] = slice(None)
-            factor = factor * arr[tuple(slc)]
+            factor = factor * backend.array_constructor(
+                arr[tuple(slc)], device=device
+                ) 
 
         out *= factor
 
         # Finally multiply by the remaining 1d array
         slc = [None] * out.ndim
         slc[last_ax] = slice(None)
-        out *= last_arr[tuple(slc)]
+        out *= backend.array_constructor(
+            last_arr[tuple(slc)], device=device
+        )
 
     return out
 
