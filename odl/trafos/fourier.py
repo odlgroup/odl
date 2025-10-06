@@ -32,11 +32,11 @@ __all__ = ('DiscreteFourierTransform', 'DiscreteFourierTransformInverse',
            'FourierTransform', 'FourierTransformInverse')
 
 
-_SUPPORTED_FOURIER_IMPLS = ('numpy',)
-_DEFAULT_FOURIER_IMPL = 'numpy'
+_SUPPORTED_FOURIER_IMPLS = ('default','numpy')
+_DEFAULT_FOURIER_IMPL = 'default'
 if PYFFTW_AVAILABLE:
     _SUPPORTED_FOURIER_IMPLS += ('pyfftw',)
-    _DEFAULT_FOURIER_IMPL = 'pyfftw'
+    # _DEFAULT_FOURIER_IMPL = 'pyfftw'
 
 
 class DiscreteFourierTransformBase(Operator):
@@ -138,7 +138,7 @@ class DiscreteFourierTransformBase(Operator):
             if range.shape != ran_shape:
                 raise ValueError('expected range shape {}, got {}.'
                                  ''.format(ran_shape, range.shape))
-            if range.dtype != ran_dtype:
+            if range.dtype_identifier != ran_dtype:
                 raise ValueError('expected range data type {}, got {}.'
                                  ''.format(dtype_repr(ran_dtype),
                                            dtype_repr(range.dtype)))
@@ -175,9 +175,13 @@ class DiscreteFourierTransformBase(Operator):
         # TODO: Implement zero padding
         if self.impl == 'numpy':
             out[:] = self._call_numpy(x.asarray())
-        else:
+        elif self.impl=='pyfftw':
             out[:] = self._call_pyfftw(x.asarray(), out.asarray(), **kwargs)
-
+        else:
+            if self.domain.impl == 'numpy' and PYFFTW_AVAILABLE:
+                out[:] = self._call_pyfftw(x.asarray(), out.asarray(), **kwargs)
+            else:
+                out[:] = self._call_array_API(x.asarray())
     @property
     def impl(self):
         """Backend for the FFT implementation."""
@@ -218,6 +222,21 @@ class DiscreteFourierTransformBase(Operator):
         """Inverse Fourier transform.
 
         Abstract method.
+        """
+        raise NotImplementedError('abstract method')
+    
+    def _call_array_API(self, x):
+        """Return ``self(x)`` using the array-API low-level FFT.
+
+        Parameters
+        ----------
+        x : `ArrayLike`
+            Input array to be transformed
+
+        Returns
+        -------
+        out : `ArrayLike`
+            Result of the transform
         """
         raise NotImplementedError('abstract method')
 
@@ -449,6 +468,28 @@ class DiscreteFourierTransform(DiscreteFourierTransformBase):
         super(DiscreteFourierTransform, self).__init__(
             inverse=False, domain=domain, range=range, axes=axes,
             sign=sign, halfcomplex=halfcomplex, impl=impl)
+        
+    def _call_array_API(self, x):
+        """Return ``self(x)`` using the low-level array-API FFT.
+
+        See Also
+        --------
+        DiscreteFourierTransformBase._call_array_API
+        """
+        # assert isinstance(x, np.ndarray)
+        backend = self.domain.array_backend
+        namespace = backend.array_namespace
+
+        if self.halfcomplex:
+            return namespace.fft.rfftn(x, axes=self.axes)
+        else:
+            if self.sign == '-':
+                return namespace.fft.fftn(x, axes=self.axes)
+            else:
+                # Need to undo Numpy IFFT scaling
+                return (
+                    namespace.prod(namespace.take(self.domain.shape, self.axes)) * namespace.fft.ifftn(x, axes=self.axes)
+                    )
 
     def _call_numpy(self, x):
         """Return ``self(x)`` using numpy.
@@ -508,7 +549,7 @@ class DiscreteFourierTransform(DiscreteFourierTransformBase):
         sign = '+' if self.sign == '-' else '-'
         return DiscreteFourierTransformInverse(
             domain=self.range, range=self.domain, axes=self.axes,
-            halfcomplex=self.halfcomplex, sign=sign)
+            halfcomplex=self.halfcomplex, sign=sign, impl=self.impl)
 
 
 class DiscreteFourierTransformInverse(DiscreteFourierTransformBase):
@@ -603,6 +644,32 @@ class DiscreteFourierTransformInverse(DiscreteFourierTransformBase):
             inverse=True, domain=range, range=domain, axes=axes,
             sign=sign, halfcomplex=halfcomplex, impl=impl)
 
+    def _call_array_API(self, x):
+        """Return ``self(x)`` using the low-level array-API functions.
+
+        Parameters
+        ----------
+        x : `ArrayLike`
+            Input array to be transformed
+
+        Returns
+        -------
+        out : `ArrayLike`
+            Result of the transform
+        """
+        namespace = self.domain.array_backend.array_namespace
+
+        if self.halfcomplex:
+            return namespace.fft.irfftn(x, axes=self.axes)
+        else:
+            if self.sign == '+':
+                return namespace.fft.ifftn(x, axes=self.axes)
+            else:
+                return (
+                    namespace.fft.fftn(x, axes=self.axes) /
+                        namespace.prod(namespace.take(self.domain.shape, self.axes))
+                        )
+
     def _call_numpy(self, x):
         """Return ``self(x)`` using numpy.
 
@@ -692,7 +759,7 @@ class DiscreteFourierTransformInverse(DiscreteFourierTransformBase):
         sign = '-' if self.sign == '+' else '+'
         return DiscreteFourierTransform(
             domain=self.range, range=self.domain, axes=self.axes,
-            halfcomplex=self.halfcomplex, sign=sign)
+            halfcomplex=self.halfcomplex, sign=sign, impl=self.impl)
 
 
 class FourierTransformBase(Operator):
@@ -909,9 +976,14 @@ class FourierTransformBase(Operator):
         # TODO: Implement zero padding
         if self.impl == 'numpy':
             out[:] = self._call_numpy(x.asarray())
-        else:
+        elif self.impl == 'pyfftw':
             # 0-overhead assignment if asarray() does not copy
             out[:] = self._call_pyfftw(x.asarray(), out.asarray(), **kwargs)
+        else:
+            if self.domain.impl == 'numpy' and PYFFTW_AVAILABLE:
+                out[:] = self._call_pyfftw(x.asarray(), out.asarray(), **kwargs)
+            else:
+                out[:] = self._call_array_API(x.asarray())
 
     def _call_numpy(self, x):
         """Return ``self(x)`` for numpy back-end.
@@ -924,6 +996,21 @@ class FourierTransformBase(Operator):
         Returns
         -------
         out : `numpy.ndarray`
+            Result of the transform
+        """
+        raise NotImplementedError('abstract method')
+    
+    def _call_array_API(self, x):
+        """Return ``self(x)`` for the default array-API back-end.
+
+        Parameters
+        ----------
+        x : `ArrayLike`
+            Array representing the function to be transformed
+
+        Returns
+        -------
+        out : `ArrayLike`
             Result of the transform
         """
         raise NotImplementedError('abstract method')
