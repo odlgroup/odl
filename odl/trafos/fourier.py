@@ -25,7 +25,7 @@ from odl.trafos.util import (
 from odl.util import (
     complex_dtype, conj_exponent, dtype_repr, is_complex_dtype,
     is_real_floating_dtype, normalized_axes_tuple, normalized_scalar_param_list)
-
+from odl.util.dtype_utils import _universal_dtype_identifier
 from odl.array_API_support import lookup_array_backend
 
 __all__ = ('DiscreteFourierTransform', 'DiscreteFourierTransformInverse',
@@ -132,7 +132,7 @@ class DiscreteFourierTransformBase(Operator):
             shape = np.atleast_1d(ran_shape)
             range = uniform_discr(
                 [0] * len(shape), shape - 1, shape, ran_dtype, impl,
-                nodes_on_bdry=True, exponent=conj_exponent(domain.exponent))
+                nodes_on_bdry=True, exponent=conj_exponent(domain.exponent), impl=domain.impl, device=domain.device)
 
         else:
             if range.shape != ran_shape:
@@ -488,7 +488,7 @@ class DiscreteFourierTransform(DiscreteFourierTransformBase):
             else:
                 # Need to undo Numpy IFFT scaling
                 return (
-                    namespace.prod(namespace.take(self.domain.shape, self.axes)) * namespace.fft.ifftn(x, axes=self.axes)
+                    np.prod(np.take(self.domain.shape, self.axes)) * namespace.fft.ifftn(x, axes=self.axes)
                     )
 
     def _call_numpy(self, x):
@@ -667,7 +667,7 @@ class DiscreteFourierTransformInverse(DiscreteFourierTransformBase):
             else:
                 return (
                     namespace.fft.fftn(x, axes=self.axes) /
-                        namespace.prod(namespace.take(self.domain.shape, self.axes))
+                        np.prod(np.take(self.domain.shape, self.axes))
                         )
 
     def _call_numpy(self, x):
@@ -873,14 +873,6 @@ class FourierTransformBase(Operator):
         if not isinstance(domain, DiscretizedSpace):
             raise TypeError('domain {!r} is not a `DiscretizedSpace` instance'
                             ''.format(domain))
-        if domain.impl != 'numpy':
-            raise NotImplementedError(
-                'Only Numpy-based data spaces are supported, got {}'
-                ''.format(domain.tspace))
-
-        # axes
-        axes = kwargs.pop('axes', np.arange(domain.ndim))
-        self.__axes = normalized_axes_tuple(axes, domain.ndim)
 
         # Implementation
         if impl is None:
@@ -889,6 +881,15 @@ class FourierTransformBase(Operator):
         if impl not in _SUPPORTED_FOURIER_IMPLS:
             raise ValueError("`impl` '{}' not supported".format(impl_in))
         self.__impl = impl
+
+        if self.impl != 'default' and domain.impl != 'numpy':
+            raise NotImplementedError(
+                f'Only Numpy-based data spaces are supported for non-default FFT backends, got {domain.tspace}'
+            )
+
+        # axes
+        axes = kwargs.pop('axes', np.arange(domain.ndim))
+        self.__axes = normalized_axes_tuple(axes, domain.ndim)
 
         # Handle half-complex yes/no and shifts
         halfcomplex = kwargs.pop('halfcomplex', True)
@@ -934,7 +935,7 @@ class FourierTransformBase(Operator):
             # self._halfcomplex and self._axes need to be set for this
             range = reciprocal_space(domain, axes=self.axes,
                                      halfcomplex=self.halfcomplex,
-                                     shift=self.shifts)
+                                     shift=self.shifts, impl=domain.impl, device=domain.device)
 
         if inverse:
             super(FourierTransformBase, self).__init__(
@@ -1388,6 +1389,46 @@ class FourierTransform(FourierTransformBase):
             out, real_grid=self.domain.grid, recip_grid=self.range.grid,
             shift=self.shifts, axes=self.axes, sign=self.sign,
             interp='nearest', op='multiply', out=out)
+    
+    def _call_array_API(self, x):
+        """Return ``self(x)`` for the array-API back-end.
+
+        Parameters
+        ----------
+        x : `ArrayLike`
+            Array representing the function to be transformed
+
+        Returns
+        -------
+        out : `ArrayLike`
+            Result of the transform
+        """
+        # Pre-processing before calculating the DFT
+        # Note: since the FFT call is out-of-place, it does not matter if
+        # preprocess produces real or complex output in the R2C variant.
+        # There is no significant time difference between (full) R2C and
+        # C2C DFT in Numpy.
+        backend = self.domain.array_backend
+        preproc = self._preprocess(x)
+        dtype = _universal_dtype_identifier(preproc.dtype)
+        # The actual call to the FFT library, out-of-place unfortunately
+        if self.halfcomplex:
+            out = backend.array_namespace.fft.rfftn(preproc, axes=self.axes)
+        else:
+            if self.sign == '-':
+                out = backend.array_constructor(
+                    backend.array_namespace.fft.fftn(preproc, axes=self.axes), dtype=backend.available_dtypes[complex_dtype(dtype)], 
+                    copy=AVOID_UNNECESSARY_COPY
+                )
+            else:
+                out = backend.array_namespace.fft.ifftn(preproc, axes=self.axes)
+                # Numpy's FFT normalizes by 1 / prod(shape[axes]), we
+                # need to undo that
+                out *= np.prod(np.take(self.domain.shape, self.axes))
+
+        # Post-processing accounting for shift, scaling and interpolation
+        self._postprocess(out, out=out)
+        return out
 
     def _call_numpy(self, x):
         """Return ``self(x)`` for numpy back-end.
@@ -1408,7 +1449,7 @@ class FourierTransform(FourierTransformBase):
         # There is no significant time difference between (full) R2C and
         # C2C DFT in Numpy.
         preproc = self._preprocess(x)
-        dtype = lookup_array_backend('numpy').get_dtype_identifier(dtype=preproc.dtype)
+        dtype = _universal_dtype_identifier(preproc.dtype)
         # The actual call to the FFT library, out-of-place unfortunately
         if self.halfcomplex:
             out = np.fft.rfftn(preproc, axes=self.axes)
@@ -1631,6 +1672,48 @@ class FourierTransformInverse(FourierTransformBase):
                 out = self._tmp_r
         return dft_preprocess_data(
             x, shift=self.shifts, axes=self.axes, sign=self.sign, out=out)
+
+    def _call_array_API(self, x):
+        """Return ``self(x)`` for array-API back-end.
+
+        Parameters
+        ----------
+        x : `ArrayLike`
+            Array representing the function to be transformed
+
+        Returns
+        -------
+        out : `ArrayLike`
+            Result of the transform
+        """
+        # Pre-processing before calculating the DFT
+        preproc = self._preprocess(x)
+        namespace = self.domain.array_backend.array_namespace
+
+        # The actual call to the FFT library
+        # Normalization by 1 / prod(shape[axes]) is done by Numpy's FFT if
+        # one of the "i" functions is used. For sign='-' we need to do it
+        # ourselves.
+        if self.halfcomplex:
+            s = np.asarray(self.range.shape)[list(self.axes)]
+            s = list(s)
+            out = namespace.fft.irfftn(preproc, axes=self.axes, s=s)
+        else:
+            if self.sign == '-':
+                out = namespace.fft.fftn(preproc, axes=self.axes)
+                out /= np.prod(np.take(self.domain.shape, self.axes))
+            else:
+                out = namespace.fft.ifftn(preproc, axes=self.axes)
+
+        # Post-processing in IFT = pre-processing in FT (in-place)
+        self._postprocess(out, out=out)
+        if self.halfcomplex:
+            assert is_real_floating_dtype(out.dtype)
+
+        if self.range.field == RealNumbers():
+            return out.real
+        else:
+            return out
 
     def _call_numpy(self, x):
         """Return ``self(x)`` for numpy back-end.
