@@ -8,6 +8,7 @@ import array_api_compat as xp
 # ODL imports
 from odl.array_API_support import ArrayBackend, lookup_array_backend
 from odl.array_API_support.utils import _registered_array_backends
+from typing import Optional
 
 __all__ = (
     'is_available_dtype',
@@ -180,7 +181,7 @@ def is_real_dtype(dtype: "str | Number |xp.dtype") -> bool:
     """Return ``True`` if ``dtype`` is a real (including integer) type."""
     return _universal_dtype_identifier(dtype) in REAL_DTYPES
 
-def real_dtype(dtype: "str | Number |xp.dtype", default=None) -> str:
+def real_dtype(dtype: "str | Number |xp.dtype", default=None, backend: Optional[ArrayBackend] =None) -> str:
     """
     Returns the real counterpart of ``dtype`` if it exists
     Parameters
@@ -190,12 +191,23 @@ def real_dtype(dtype: "str | Number |xp.dtype", default=None) -> str:
     default :
         Object to be returned if no real counterpart is found for
         ``dtype``, except for ``None``, in which case an error is raised.
+    backend :
+        If given, the result dtype will be returned in its version
+        specific to that backend (e.g. `torch.float32`), otherwise as a plain string.
     """
     dtype = _universal_dtype_identifier(dtype)
+    def for_backend(dt):
+        if backend is None:
+            return dt
+        else:
+            try:
+                return backend.available_dtypes[dt]
+            except KeyError:
+                raise ValueError(f"Real version of {dtype} not available on {backend}.")
     if dtype in REAL_DTYPES:
-        return dtype
+        return for_backend(dtype)
     elif dtype in COMPLEX_DTYPES:
-        return TYPE_PROMOTION_COMPLEX_TO_REAL[dtype]
+        return for_backend(TYPE_PROMOTION_COMPLEX_TO_REAL[dtype])
     else:
         if default is None:
             raise ValueError(
@@ -203,12 +215,20 @@ def real_dtype(dtype: "str | Number |xp.dtype", default=None) -> str:
         else:
             return default
         
-def complex_dtype(dtype: "str | Number |xp.dtype", default=None) -> str:
+def complex_dtype(dtype: "str | Number |xp.dtype", default=None, backend: Optional[ArrayBackend] =None) -> str:
     dtype = _universal_dtype_identifier(dtype)
+    def for_backend(dt):
+        if backend is None:
+            return dt
+        else:
+            try:
+                return backend.available_dtypes[dt]
+            except KeyError:
+                raise ValueError(f"Complex version of {dtype} not available on {backend}.")
     if dtype in COMPLEX_DTYPES:
-        return dtype
+        return for_backend(dtype)
     elif dtype in REAL_DTYPES:
-        return TYPE_PROMOTION_REAL_TO_COMPLEX[dtype]
+        return for_backend(TYPE_PROMOTION_REAL_TO_COMPLEX[dtype])
     else:
         if default is None:
             raise ValueError(
