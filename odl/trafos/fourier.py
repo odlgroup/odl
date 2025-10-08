@@ -131,7 +131,7 @@ class DiscreteFourierTransformBase(Operator):
 
             shape = np.atleast_1d(ran_shape)
             range = uniform_discr(
-                [0] * len(shape), shape - 1, shape, ran_dtype, impl,
+                [0] * len(shape), shape - 1, shape, ran_dtype,
                 nodes_on_bdry=True, exponent=conj_exponent(domain.exponent), impl=domain.impl, device=domain.device)
 
         else:
