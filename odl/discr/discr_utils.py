@@ -32,7 +32,7 @@ from odl.array_API_support.utils import is_array_supported
 
 from odl.util.npy_compat import AVOID_UNNECESSARY_COPY
 
-from odl.util.dtype_utils import _universal_dtype_identifier, is_floating_dtype
+from odl.util.dtype_utils import _universal_dtype_identifier, is_floating_dtype, real_dtype
 from odl.util import (
     dtype_repr, is_real_dtype, is_string, is_valid_input_array,
     is_valid_input_meshgrid, out_shape_from_array, out_shape_from_meshgrid,
@@ -590,9 +590,9 @@ class _Interpolator(object):
         """
         if self.input_type == 'meshgrid':
             # Given a meshgrid, the evaluation will be on a ragged array.
-            x = np.asarray(x, dtype=object)
+            x = [get_array_and_backend(x_)[0] for x_ in x]
         else:
-            x = np.asarray(x)
+            x = get_array_and_backend(x)[0]
 
         ndim = len(self.coord_vecs)
         scalar_out = False
@@ -642,21 +642,26 @@ class _Interpolator(object):
 
         # iterate through dimensions
         for xi, cvec in zip(x, self.coord_vecs):
-            try:
-                xi = np.asarray(xi).astype(self.values.dtype, casting='safe')
-            except TypeError:
-                warn("Unable to infer accurate dtype for"
-                  +" interpolation coefficients, defaulting to `float`.")
-                xi = np.asarray(xi, dtype=float)
+            # try:
+            xi = self.backend.array_constructor(xi, dtype = real_dtype(self.values.dtype, backend=self.backend), device=self.device)
+            cvec = self.backend.array_constructor(cvec, dtype = real_dtype(self.values.dtype, backend=self.backend), device=self.device)
+            # except TypeError:
+            #     warn("Unable to infer accurate dtype for"
+            #       +" interpolation coefficients, defaulting to `float`.")
+            #     xi = np.asarray(xi, dtype=float)
 
-            idcs = np.searchsorted(cvec, xi) - 1
+            idcs = self.namespace.searchsorted(cvec, xi) - 1
 
             idcs[idcs < 0] = 0
-            idcs[idcs > cvec.size - 2] = cvec.size - 2
+            idcs[idcs > len(cvec) - 2] = len(cvec) - 2
             index_vecs.append(idcs)
 
-            norm_distances.append((xi - cvec[idcs]) /
+            try:
+             norm_distances.append((xi - cvec[idcs]) /
                                   (cvec[idcs + 1] - cvec[idcs]))
+            except Exception as e:
+                print(f"{type(xi)=}, {type(cvec)=}")
+                raise e
 
         return index_vecs, norm_distances
 
@@ -704,7 +709,7 @@ scipy.interpolate.RegularGridInterpolator.html>`_ class.
             return self.values[idx_res]
 
 
-def _compute_nearest_weights_edge(idcs, ndist):
+def _compute_nearest_weights_edge(idcs, ndist, backend):
     """Helper for nearest interpolation mimicing the linear case."""
     # Get out-of-bounds indices from the norm_distances. Negative
     # means "too low", larger than or equal to 1 means "too high"
@@ -713,13 +718,13 @@ def _compute_nearest_weights_edge(idcs, ndist):
 
     # For "too low" nodes, the lower neighbor gets weight zero;
     # "too high" gets 1.
-    w_lo = np.where(ndist < 0.5, 1.0, 0.0)
+    w_lo = backend.array_namespace.where(ndist < 0.5, 1.0, 0.0)
     w_lo[lo] = 0
     w_lo[hi] = 1
 
     # For "too high" nodes, the upper neighbor gets weight zero;
     # "too low" gets 1.
-    w_hi = np.where(ndist < 0.5, 0.0, 1.0)
+    w_hi = backend.array_namespace.where(ndist < 0.5, 0.0, 1.0)
     w_hi[lo] = 1
     w_hi[hi] = 0
 
@@ -732,14 +737,14 @@ def _compute_nearest_weights_edge(idcs, ndist):
     return w_lo, w_hi, edge
 
 
-def _compute_linear_weights_edge(idcs, ndist):
+def _compute_linear_weights_edge(idcs, ndist, backend):
     """Helper for linear interpolation."""
-    ndist = np.asarray(ndist)
+    assert(isinstance(ndist, backend.array_type))
 
     # Get out-of-bounds indices from the norm_distances. Negative
     # means "too low", larger than or equal to 1 means "too high"
-    lo = np.where(ndist < 0)
-    hi = np.where(ndist > 1)
+    lo = backend.array_namespace.where(ndist < 0, ndist, 0).nonzero()
+    hi = backend.array_namespace.where(ndist > 1, ndist, 0).nonzero()
 
     # For "too low" nodes, the lower neighbor gets weight zero;
     # "too high" gets 2 - yi (since yi >= 1)
@@ -749,7 +754,7 @@ def _compute_linear_weights_edge(idcs, ndist):
 
     # For "too high" nodes, the upper neighbor gets weight zero;
     # "too low" gets 1 + yi (since yi < 0)
-    w_hi = np.copy(ndist)
+    w_hi = backend.array_constructor(ndist, copy=True)
     w_hi[lo] += 1
     w_hi[hi] = 0
 
@@ -762,16 +767,16 @@ def _compute_linear_weights_edge(idcs, ndist):
     return w_lo, w_hi, edge
 
 
-def _create_weight_edge_lists(indices, norm_distances, interp):
+def _create_weight_edge_lists(indices, norm_distances, interp, backend):
     # Pre-calculate indices and weights (per axis)
     low_weights = []
     high_weights = []
     edge_indices = []
     for i, (idcs, yi, s) in enumerate(zip(indices, norm_distances, interp)):
         if s == 'nearest':
-            w_lo, w_hi, edge = _compute_nearest_weights_edge(idcs, yi)
+            w_lo, w_hi, edge = _compute_nearest_weights_edge(idcs, yi, backend=backend)
         elif s == 'linear':
-            w_lo, w_hi, edge = _compute_linear_weights_edge(idcs, yi)
+            w_lo, w_hi, edge = _compute_linear_weights_edge(idcs, yi, backend=backend)
         else:
             raise ValueError('invalid `interp` {}'.format(interp))
 
@@ -825,7 +830,7 @@ class _PerAxisInterpolator(_Interpolator):
 
         # Weights and indices (per axis)
         low_weights, high_weights, edge_indices = _create_weight_edge_lists(
-            indices, norm_distances, self.interp)
+            indices, norm_distances, self.interp, backend=self.backend)
         # low_weights  = self.backend.array_constructor(
         #     low_weights, device=self.device)
         # high_weights = self.backend.array_constructor(
