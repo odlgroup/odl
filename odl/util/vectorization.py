@@ -26,7 +26,11 @@ def is_valid_input_array(x, ndim=None):
     try:
         x, backend = get_array_and_backend(x)
     except ValueError:
-        return False
+        # raising a ValueError here will be problematic when cheking lists/tuple.
+        if isinstance(x, (list, tuple)):
+            x = np.asarray(x)
+        else:
+            return False
 
     if ndim is None or ndim == 1:
         return x.ndim == 1 and x.size > 1 or x.ndim == 2 and x.shape[0] == 1
