@@ -722,37 +722,6 @@ def test_nearest_interpolation_2d(odl_impl_device_pairs):
     interpolator(mg, out=out)
     assert all_equal(out, true_mg)
 
-# Why should that be supported for PyTorch?
-def test_nearest_interpolation_2d_string():
-    """Test nearest neighbor interpolation in 2d with string values."""
-    coord_vecs = [[0.125, 0.375, 0.625, 0.875], [0.25, 0.75]]
-    f = np.array([['m', 'y'],
-                  ['s', 't'],
-                  ['r', 'i'],
-                  ['n', 'g']], dtype='U1')
-    interpolator = nearest_interpolator(f, coord_vecs)
-
-    # Evaluate at single point
-    val = interpolator([0.3, 0.6])  # closest to index (1, 1) -> 3
-    assert val == u't'
-    # Input array, with and without output array
-    pts = np.array([[0.3, 0.6],
-                    [1.0, 1.0]])
-    true_arr = np.array(['t', 'g'], dtype='U1')
-    assert all_equal(interpolator(pts.T), true_arr)
-    out = np.empty(2, dtype='U1')
-    interpolator(pts.T, out=out)
-    assert all_equal(out, true_arr)
-    # Input meshgrid, with and without output array
-    mg = sparse_meshgrid([0.3, 1.0], [0.4, 1.0])
-    # Indices: (1, 3) x (0, 1)
-    true_mg = np.array([['s', 't'],
-                        ['n', 'g']], dtype='U1')
-    assert all_equal(interpolator(mg), true_mg)
-    out = np.empty((2, 2), dtype='U1')
-    interpolator(mg, out=out)
-    assert all_equal(out, true_mg)
-
 
 def test_linear_interpolation_1d(odl_impl_device_pairs):
     """Test linear interpolation in 1d."""
