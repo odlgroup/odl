@@ -655,6 +655,8 @@ def test_nearest_interpolation_1d_complex(odl_impl_device_pairs):
 
     impl, device = odl_impl_device_pairs
     backend = lookup_array_backend(impl)
+    if impl == 'pytorch':
+        pytest.skip('Interpolator class not implemented for pytorch complex dtypes')
     dtype = backend.available_dtypes["complex128"]
     f = backend.array_constructor(
         [0 + 1j, 1 + 2j, 2 + 3j, 3 + 4j, 4 + 5j], 
