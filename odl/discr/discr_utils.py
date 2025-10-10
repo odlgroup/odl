@@ -699,8 +699,9 @@ scipy.interpolate.RegularGridInterpolator.html>`_ class.
     def _evaluate(self, indices, norm_distances, out=None):
         """Evaluate nearest interpolation."""
         idx_res = []
-        for i, yi in zip(indices, norm_distances):
-            idx_res.append(np.where(yi < .5, i, i + 1))
+        
+        for i, yi in zip(indices, norm_distances):            
+            idx_res.append(self.namespace.where(yi < .5, i, i + 1))
         idx_res = tuple(idx_res)
         if out is not None:
             out[:] = self.values[idx_res]
@@ -743,9 +744,14 @@ def _compute_linear_weights_edge(idcs, ndist, backend):
 
     # Get out-of-bounds indices from the norm_distances. Negative
     # means "too low", larger than or equal to 1 means "too high"
-    lo = backend.array_namespace.where(ndist < 0, ndist, 0).nonzero()
-    hi = backend.array_namespace.where(ndist > 1, ndist, 0).nonzero()
-
+    if backend.impl == 'numpy': 
+        lo = backend.array_namespace.where(ndist < 0, ndist, 0).nonzero()
+        hi = backend.array_namespace.where(ndist > 1, ndist, 0).nonzero()
+    elif backend.impl == 'pytorch': 
+        lo = backend.array_namespace.where(ndist < 0, ndist, 0).nonzero(as_tuple=True)
+        hi = backend.array_namespace.where(ndist > 1, ndist, 0).nonzero(as_tuple=True)
+    else:
+        raise NotImplementedError
     # For "too low" nodes, the lower neighbor gets weight zero;
     # "too high" gets 2 - yi (since yi >= 1)
     w_lo = (1 - ndist)
@@ -831,12 +837,6 @@ class _PerAxisInterpolator(_Interpolator):
         # Weights and indices (per axis)
         low_weights, high_weights, edge_indices = _create_weight_edge_lists(
             indices, norm_distances, self.interp, backend=self.backend)
-        # low_weights  = self.backend.array_constructor(
-        #     low_weights, device=self.device)
-        # high_weights = self.backend.array_constructor(
-        #     high_weights, device=self.device)
-        # edge_indices = self.backend.array_constructor(
-        #     edge_indices, device=self.device)
 
         # Iterate over all possible combinations of [i, i+1] for each
         # axis, resulting in a loop of length 2**ndim
