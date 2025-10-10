@@ -328,16 +328,6 @@ def nearest_interpolator(f, coord_vecs):
            [ 2.,  3.],
            [ 6.,  7.]])
 
-    With nearest neighbor interpolation, we can also use non-scalar data
-    types like strings:
-
-    >>> part = odl.uniform_partition(0, 3, 6)
-    >>> part.coord_vectors  # grid points
-    (array([ 0.25,  0.75,  1.25,  1.75,  2.25,  2.75]),)
-    >>> f = ['s', 't', 'r', 'i', 'n', 'g']
-    >>> interpolator = nearest_interpolator(f, part.coord_vectors)
-    >>> print(interpolator(0.9))
-    t
 
     See Also
     --------
