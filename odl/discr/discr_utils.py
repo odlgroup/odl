@@ -19,10 +19,9 @@ import inspect
 import sys
 from builtins import object
 from functools import partial
-from itertools import product
-from warnings import warn
+from itertools import product   
 
-from typing import Callable, List, Tuple
+from typing import Callable
 from odl.set.domain import IntervalProd
 
 import numpy as np
@@ -32,7 +31,7 @@ from odl.array_API_support.utils import is_array_supported
 
 from odl.util.npy_compat import AVOID_UNNECESSARY_COPY
 
-from odl.util.dtype_utils import _universal_dtype_identifier, is_floating_dtype, real_dtype
+from odl.util.dtype_utils import _universal_dtype_identifier, is_floating_dtype, real_dtype, is_int_dtype
 from odl.util import (
     dtype_repr, is_real_dtype, is_string, is_valid_input_array,
     is_valid_input_meshgrid, out_shape_from_array, out_shape_from_meshgrid,
@@ -633,15 +632,15 @@ class _Interpolator(object):
         # iterate through dimensions
         for xi, cvec in zip(x, self.coord_vecs):
             # try:
-            xi = self.backend.array_constructor(xi, dtype = real_dtype(self.values.dtype, backend=self.backend), device=self.device)
-            cvec = self.backend.array_constructor(cvec, dtype = real_dtype(self.values.dtype, backend=self.backend), device=self.device)
-            # except TypeError:
-            #     warn("Unable to infer accurate dtype for"
-            #       +" interpolation coefficients, defaulting to `float`.")
-            #     xi = np.asarray(xi, dtype=float)
-
+            if is_floating_dtype(self.values.dtype):
+                dtype = real_dtype(self.values.dtype, backend=self.backend)
+            elif is_int_dtype(self.values.dtype):
+                dtype = real_dtype(float, backend=self.backend)
+            else:
+                raise ValueError(f'Values can only be integers or float, not {type(self.values)}')
+            xi = self.backend.array_constructor(xi, dtype = dtype, device=self.device)
+            cvec = self.backend.array_constructor(cvec, dtype = dtype, device=self.device)
             idcs = self.namespace.searchsorted(cvec, xi) - 1
-
             idcs[idcs < 0] = 0
             idcs[idcs > len(cvec) - 2] = len(cvec) - 2
             index_vecs.append(idcs)
