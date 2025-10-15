@@ -860,9 +860,9 @@ class CallbackShowConvergence(Callback):
         self.ax.set_ylabel('function value')
         self.ax.set_title(title)
         if logx:
-            self.ax.set_xscale("log", nonposx='clip')
+            self.ax.set_xscale("log")
         if logy:
-            self.ax.set_yscale("log", nonposy='clip')
+            self.ax.set_yscale("log")
 
     def __call__(self, x):
         """Implement ``self(x)``."""
