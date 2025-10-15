@@ -13,6 +13,7 @@ from __future__ import absolute_import, division, print_function
 import numpy as np
 
 from odl.util import npy_random_seed
+from odl.space.base_tensors import Tensor
 
 __all__ = ('white_noise', 'poisson_noise', 'salt_pepper_noise',
            'uniform_noise')
@@ -61,8 +62,12 @@ def white_noise(space, mean=0, stddev=1, seed=None):
                     loc=mean.imag, scale=stddev, size=space.shape)
                 values = real + 1j * imag
             else:
-                values = np.random.normal(
-                    loc=mean, scale=stddev, size=space.shape)
+                if isinstance(mean, Tensor):
+                    values = np.random.normal(
+                        loc=mean.data, scale=stddev, size=space.shape)
+                else:
+                    values = np.random.normal(
+                        loc=mean, scale=stddev, size=space.shape)
 
     return space.element(values)
 
