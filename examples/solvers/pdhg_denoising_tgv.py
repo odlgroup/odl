@@ -49,7 +49,7 @@ phantom.show(title='Phantom')
 
 # Create sinogram of forward projected phantom with noise
 data = A(phantom)
-data += odl.phantom.white_noise(A.range) * np.mean(data) * 0.1
+data += odl.phantom.white_noise(A.range) * odl.mean(data) * 0.1
 
 data.show(title='Simulated Data')
 
@@ -107,7 +107,7 @@ g = odl.solvers.SeparableSum(l2_norm, l1_norm_1, l1_norm_2)
 # Estimated operator norm, add 10 percent to ensure ||K||_2^2 * sigma * tau < 1
 op_norm = 1.1 * odl.power_method_opnorm(op)
 
-niter = 400  # Number of iterations
+niter = 100  # Number of iterations
 tau = 1.0 / op_norm  # Step size for the primal variable
 sigma = 1.0 / op_norm  # Step size for the dual variable
 

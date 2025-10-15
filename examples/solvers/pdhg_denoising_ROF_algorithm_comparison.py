@@ -16,14 +16,14 @@ https://odlgroup.github.io/odl/guide/pdhg_guide.html in the ODL documentation.
 """
 
 import numpy as np
-import scipy.misc
+import skimage
 import odl
 import matplotlib.pyplot as plt
 
 # --- define setting --- #
 
 # Read test image: use only every second pixel, convert integer to float
-image = scipy.misc.ascent()[::2, ::2].astype('float')
+image = skimage.data.camera().astype('float')
 shape = image.shape
 
 # Rescale max to 1
@@ -90,7 +90,7 @@ class CallbackStore(odl.solvers.util.callback.Callback):
 callback = (odl.solvers.CallbackPrintIteration() & CallbackStore())
 
 # number of iterations
-niter = 500
+niter = 100
 
 # %% Run Algorithms
 
@@ -158,23 +158,23 @@ obj_ergodic_alg3 = callback.callbacks[1].obj_function_values_ergodic
 # show images
 plt.figure(0)
 ax1 = plt.subplot(231)
-ax1.imshow(orig, clim=[0, 1], cmap='gray')
+ax1.imshow(orig.data, clim=[0, 1], cmap='gray')
 ax1.title.set_text('Original Image')
 
 ax2 = plt.subplot(232)
-ax2.imshow(noisy, clim=[0, 1], cmap='gray')
+ax2.imshow(noisy.data, clim=[0, 1], cmap='gray')
 ax2.title.set_text('Noisy Image')
 
 ax3 = plt.subplot(234)
-ax3.imshow(x_alg1, clim=[0, 1], cmap='gray')
+ax3.imshow(x_alg1.data, clim=[0, 1], cmap='gray')
 ax3.title.set_text('Algo 1')
 
 ax4 = plt.subplot(235)
-ax4.imshow(x_alg2, clim=[0, 1], cmap='gray')
+ax4.imshow(x_alg2.data, clim=[0, 1], cmap='gray')
 ax4.title.set_text('Algo 2')
 
 ax5 = plt.subplot(236)
-ax5.imshow(x_alg3, clim=[0, 1], cmap='gray')
+ax5.imshow(x_alg3.data, clim=[0, 1], cmap='gray')
 ax5.title.set_text('Algo 3')
 
 # show function values

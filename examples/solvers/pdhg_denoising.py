@@ -11,12 +11,12 @@ https://odlgroup.github.io/odl/guide/pdhg_guide.html in the ODL documentation.
 """
 
 import numpy as np
-import scipy.misc
+import skimage
 import odl
 
 # Read test image: use only every second pixel, convert integer to float,
 # and rotate to get the image upright
-image = np.rot90(scipy.misc.ascent()[::2, ::2], 3).astype('float')
+image = np.rot90(skimage.data.camera()).astype('float')
 shape = image.shape
 
 # Rescale max to 1
@@ -29,7 +29,7 @@ space = odl.uniform_discr([0, 0], shape, shape)
 orig = space.element(image)
 
 # Add noise
-image += 0.1 * odl.phantom.white_noise(orig.space)
+orig += 0.1 * odl.phantom.white_noise(orig.space)
 
 # Data of noisy image
 noisy = space.element(image)
@@ -59,7 +59,7 @@ f = odl.solvers.IndicatorNonnegativity(op.domain)
 # Estimated operator norm, add 10 percent to ensure ||K||_2^2 * sigma * tau < 1
 op_norm = 1.1 * odl.power_method_opnorm(op, xstart=noisy)
 
-niter = 200  # Number of iterations
+niter = 100  # Number of iterations
 tau = 1.0 / op_norm  # Step size for the primal variable
 sigma = 1.0 / op_norm  # Step size for the dual variable
 

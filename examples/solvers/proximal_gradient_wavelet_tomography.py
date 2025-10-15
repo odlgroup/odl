@@ -41,7 +41,7 @@ discr_phantom = odl.phantom.shepp_logan(space, modified=True)
 
 # Create sinogram of forward projected phantom with noise
 data = ray_trafo(discr_phantom)
-data += odl.phantom.white_noise(ray_trafo.range) * np.mean(data) * 0.1
+data += odl.phantom.white_noise(ray_trafo.range) * odl.mean(data) * 0.1
 
 
 # --- Set up the inverse problem --- #
@@ -85,7 +85,7 @@ def callb(x):
 # Run the algorithm (FISTA)
 x = data_discrepancy.domain.zero()
 odl.solvers.accelerated_proximal_gradient(
-    x, f=regularizer, g=data_discrepancy, niter=400, gamma=gamma,
+    x, f=regularizer, g=data_discrepancy, niter=100, gamma=gamma,
     callback=callb)
 
 # Display images

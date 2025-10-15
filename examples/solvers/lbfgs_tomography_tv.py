@@ -22,7 +22,7 @@ import odl
 # Reconstruction space: discretized functions on the rectangle
 # [-20, 20]^2 with 200 samples per dimension.
 reco_space = odl.uniform_discr(
-    min_pt=[-20, -20], max_pt=[20, 20], shape=[200, 200])
+    min_pt=[-20, -20], max_pt=[20, 20], shape=[200, 200], dtype='float32')
 
 # Make a parallel beam geometry with flat detector
 # Angles: uniformly spaced, n = 400, min = 0, max = pi
@@ -43,7 +43,7 @@ discr_phantom = odl.phantom.shepp_logan(reco_space, modified=True)
 
 # Create sinogram of forward projected phantom with noise
 data = ray_trafo(discr_phantom)
-data += odl.phantom.white_noise(ray_trafo.range) * np.mean(data) * 0.1
+data += odl.phantom.white_noise(ray_trafo.range) * odl.mean(data) * 0.1
 
 # --- Set up optimization problem and solve --- #
 

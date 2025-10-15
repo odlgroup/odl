@@ -21,7 +21,6 @@ with a separable sum ``g`` of functionals and the stacked operator ``L``:
 See the documentation of the `admm_linearized` solver for further details.
 """
 
-import numpy as np
 import odl
 
 # --- Set up the forward operator (ray transform) --- #
@@ -42,7 +41,7 @@ ray_trafo = odl.tomo.RayTransform(reco_space, geometry)
 # Create phantom and noisy projection data
 phantom = odl.phantom.shepp_logan(reco_space, modified=True)
 data = ray_trafo(phantom)
-data += odl.phantom.white_noise(ray_trafo.range) * np.mean(data) * 0.1
+data += odl.phantom.white_noise(ray_trafo.range) * odl.mean(data) * 0.1
 
 # --- Set up the inverse problem --- #
 

@@ -52,7 +52,9 @@ def print_objective(x):
     """Calculate the objective value and prints it."""
     value = 0
     for minp, maxp in rectangles:
-        x_proj = np.minimum(np.maximum(x, minp), maxp)
+        x_proj = odl.minimum(
+            odl.maximum(x, x.space.element(minp)), x.space.element(maxp)
+            )
         value += (x - x_proj).norm()
     print('Point = [{:.4f}, {:.4f}], Value = {:.4f}'.format(x[0], x[1], value))
 

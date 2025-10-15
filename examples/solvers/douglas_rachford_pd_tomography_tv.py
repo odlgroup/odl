@@ -41,7 +41,9 @@ data_matching = 'exact'
 
 # Reconstruction space: discretized functions on the rectangle
 # [-20, 20]^2 with 512 samples per dimension.
-space = odl.uniform_discr(min_pt=[-20, -20], max_pt=[20, 20], shape=[512, 512])
+space = odl.uniform_discr(
+    min_pt=[-20, -20], max_pt=[20, 20], shape=[512, 512], dtype='float32'
+    )
 
 # Make a parallel beam geometry with flat detector
 # Angles: uniformly spaced, n = 22, min = 0, max = pi
@@ -112,7 +114,7 @@ callback = (odl.solvers.CallbackShow('Iterates', step=5, clim=[0, 1]) &
 x = ray_trafo.domain.zero()
 odl.solvers.douglas_rachford_pd(x, f, g, lin_ops,
                                 tau=0.1, sigma=[0.1, 0.02], lam=1.5,
-                                niter=200, callback=callback)
+                                niter=100, callback=callback)
 
 # Compare with filtered back-projection
 fbp_recon = odl.tomo.fbp_op(ray_trafo)(data)

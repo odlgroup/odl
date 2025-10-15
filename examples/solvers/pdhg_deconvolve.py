@@ -39,7 +39,7 @@ phantom = odl.phantom.shepp_logan(space, modified=True)
 
 # Create the convolved version of the phantom
 data = convolution(phantom)
-data += odl.phantom.white_noise(convolution.range) * np.mean(data) * 0.1
+data += odl.phantom.white_noise(convolution.range) * odl.mean(data) * 0.1
 data.show('Convolved Data')
 
 # Set up PDHG:
@@ -67,7 +67,7 @@ g = odl.solvers.SeparableSum(l2_norm_squared, l1_norm)
 # Estimated operator norm, add 10 percent to ensure ||K||_2^2 * sigma * tau < 1
 op_norm = 1.1 * odl.power_method_opnorm(op)
 
-niter = 300  # Number of iterations
+niter = 100  # Number of iterations
 tau = 10.0 / op_norm  # Step size for the primal variable
 sigma = 0.1 / op_norm  # Step size for the dual variables
 

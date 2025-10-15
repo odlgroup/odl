@@ -26,12 +26,12 @@ https://odlgroup.github.io/odl/guide/pdhg_guide.html in the ODL documentation.
 """
 
 import numpy as np
-import scipy.misc
+import skimage
 import odl
 import matplotlib.pyplot as plt
 
 # Define ground truth, space and noisy data
-image = np.rot90(scipy.misc.ascent()[::2, ::2].astype('float'), 3)
+image = np.rot90(skimage.data.camera().astype('float'), 3)
 shape = image.shape
 image /= image.max()
 space = odl.uniform_discr([0, 0], shape, shape)

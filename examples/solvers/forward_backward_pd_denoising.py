@@ -8,11 +8,11 @@ where ``grad`` is the spatial gradient and ``g`` the given noisy data.
 """
 
 import numpy as np
-import scipy.misc
+import skimage
 import odl
 
 # Load image
-image = np.rot90(scipy.misc.ascent()[::2, ::2], 3)
+image = np.rot90(skimage.data.camera(), 3)
 
 # Reading the size
 n, m = image.shape
@@ -53,6 +53,6 @@ callback = (odl.solvers.CallbackShow(step=20, clim=[0, 255]) &
 
 # Call the solver. x is updated in-place with the consecutive iterates.
 odl.solvers.forward_backward_pd(x, f, g, lin_ops, h, tau=1.0,
-                                sigma=[0.01], niter=1000, callback=callback)
+                                sigma=[0.01], niter=100, callback=callback)
 
 x.show(title='Reconstruction', force_show=True)

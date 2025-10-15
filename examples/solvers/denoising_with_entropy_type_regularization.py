@@ -13,13 +13,13 @@ references therein.
 """
 
 import numpy as np
-import scipy.misc
+import skimage
 import odl
 
 
 # Read test image:
 # convert integer values to float, and rotate to get the image upright
-image = np.rot90(scipy.misc.ascent()[::2, ::2], 3).astype('float')
+image = np.rot90(skimage.data.camera()).astype('float')
 shape = image.shape
 
 # Rescale
