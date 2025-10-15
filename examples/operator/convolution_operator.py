@@ -14,7 +14,7 @@ class Convolution(odl.Operator):
         """Initialize a convolution operator with a known kernel."""
 
         # Store the kernel
-        self.kernel = kernel
+        self.kernel = kernel.data
 
         # Initialize the Operator class by calling its __init__ method.
         # This sets properties such as domain and range and allows the other
@@ -24,7 +24,7 @@ class Convolution(odl.Operator):
 
     def _call(self, x):
         """Implement calling the operator by calling scipy."""
-        return scipy.signal.fftconvolve(self.kernel, x, mode='same')
+        return scipy.signal.fftconvolve(self.kernel, x.data, mode='same')
 
     @property
     def adjoint(self):
