@@ -292,7 +292,7 @@ def proximal_arg_scaling(prox_factory, scaling):
     # Since these checks are computationally expensive, we do not execute them
     # unconditionally, but only if the scaling factor is a scalar:
     domain = prox_factory(1.0).domain
-    if isinstance(scaling, (int, float)):
+    if isinstance(scaling, (int, float, complex)):
         if scaling == 0:
             return proximal_const_func(domain)
         elif scaling.imag != 0:
