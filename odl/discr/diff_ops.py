@@ -567,11 +567,11 @@ class Divergence(PointwiseTensorFieldOperator):
 
         backend = self.range.array_backend
 
-        def directional_derivative(axis, dd_out=None):
+        def directional_derivative(axis, out=None):
             return finite_diff( x[axis], axis=axis, dx=dx[axis]
                               , method=self.method, pad_mode=self.pad_mode
                               , pad_const=self.pad_const
-                              , out=dd_out )
+                              , out=out )
 
         if out is None:
             result = directional_derivative(0)
