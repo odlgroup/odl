@@ -195,6 +195,9 @@ class AstraCudaImpl:
                 if self.vol_space.impl == 'pytorch':
                     warnings.warn("You requested an out-of-place transform with PyTorch. This will require cloning the data and will allocate extra memory", RuntimeWarning)
                 proj_data = out.data[None] if self.proj_ndim==2 else out.data
+                if self.geometry.ndim == 3:
+                    proj_data = proj_data.transpose(*self.transpose_tuple)                    
+
             else:
                 proj_data = empty(
                     impl   = self.proj_space.impl,
