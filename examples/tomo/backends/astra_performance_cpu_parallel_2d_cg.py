@@ -12,7 +12,7 @@ hardware used.
 import astra
 import numpy as np
 import matplotlib.pyplot as plt
-import scipy.misc
+import skimage
 import odl
 from odl.util.testutils import timer
 
@@ -23,7 +23,7 @@ domain_size = np.array([512, 512])
 n_angles = 180
 det_size = 362
 niter = 20
-phantom = np.rot90(scipy.misc.ascent().astype('float'), -1)
+phantom = np.rot90(skimage.data.camera().astype('float'), -1)
 
 
 # --- ASTRA ---
@@ -70,7 +70,7 @@ astra.projector.delete(proj_id)
 # --- ODL ---
 
 # Create reconstruction space
-reco_space = odl.uniform_discr(-domain_size / 2, domain_size / 2, domain_size)
+reco_space = odl.uniform_discr(-domain_size / 2, domain_size / 2, domain_size,dtype='float32')
 
 # Create geometry
 geometry = odl.tomo.parallel_beam_geometry(reco_space, n_angles, det_size)

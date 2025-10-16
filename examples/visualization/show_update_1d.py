@@ -7,7 +7,7 @@ import numpy as np
 n = 100
 m = 20
 space = odl.uniform_discr(0, 5, n)
-elem = space.element(np.sin)
+elem = space.element(lambda x : np.sin(x))
 
 # Pre-create a plot and set some property, here the plot limits in the y axis.
 fig = plt.figure()

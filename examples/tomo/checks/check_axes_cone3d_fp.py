@@ -50,9 +50,9 @@ detector_partition = odl.uniform_partition(det_min_pt, det_max_pt, det_shape)
 assert np.allclose(detector_partition.cell_sides, 1)
 
 # Sum manually using Numpy
-sum_along_x = np.sum(phantom, axis=0)
-sum_along_y = np.sum(phantom, axis=1)
-sum_along_z = np.sum(phantom, axis=2)
+sum_along_x = odl.sum(phantom, axis=0)
+sum_along_y = odl.sum(phantom, axis=1)
+sum_along_z = odl.sum(phantom, axis=2)
 
 
 # %% Test case 1: axis = [0, 0, 1] -- setup
@@ -78,7 +78,7 @@ proj_data = ray_trafo(phantom)
 # axis = [0, 0, 1], 0 degrees
 proj_data.show(indices=[0, None, None],
                title='Projection at 0 Degrees, Axis [0, 0, 1], u = x, v = z')
-sum_along_y.show('Sum Along Y Axis')
+# sum_along_y.show('Sum Along Y Axis')
 # Check axes in geometry
 axes_sum_y = geometry.det_axes(np.deg2rad(0))
 assert np.allclose(axes_sum_y[0], [1, 0, 0])
@@ -92,7 +92,7 @@ assert np.allclose(axes_sum_y[1], [0, 0, 1])
 # axis = [0, 0, 1], 90 degrees
 proj_data.show(indices=[1, None, None],
                title='Projection at 90 Degrees, Axis [0, 0, 1], u = y, v = z')
-sum_along_x.show('Sum Along X Axis')
+# sum_along_x.show('Sum Along X Axis')
 # Check axes in geometry
 axes_sum_x = geometry.det_axes(np.deg2rad(90))
 assert np.allclose(axes_sum_x[0], [0, 1, 0])
@@ -122,7 +122,7 @@ proj_data = ray_trafo(phantom)
 # axis = [0, 1, 0], 0 degrees
 proj_data.show(indices=[0, None, None],
                title='Projection at 0 Degrees, Axis [0, 1, 0], u = x, v = y')
-sum_along_z.show('Sum along z axis')
+# sum_along_z.show('Sum along z axis')
 # Check geometry axes
 axes_sum_z = geometry.det_axes(np.deg2rad(0))
 assert np.allclose(axes_sum_z[0], [1, 0, 0])

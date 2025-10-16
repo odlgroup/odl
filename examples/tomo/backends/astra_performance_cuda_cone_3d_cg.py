@@ -24,7 +24,7 @@ det_size = 512
 niter = 10
 
 # Create reconstruction space
-reco_space = odl.uniform_discr(-domain_size / 2, domain_size / 2, domain_size)
+reco_space = odl.uniform_discr(-domain_size / 2, domain_size / 2, domain_size, dtype='float32')
 
 # Create geometry
 apart = odl.uniform_partition(0, 2 * np.pi, n_angles)

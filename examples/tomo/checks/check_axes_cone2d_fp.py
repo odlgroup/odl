@@ -50,8 +50,8 @@ detector_partition = odl.uniform_partition(det_min_pt, det_max_pt, det_shape)
 assert np.allclose(detector_partition.cell_sides, 1)
 
 # Sum manually using Numpy
-sum_along_x = np.sum(phantom, axis=0)
-sum_along_y = np.sum(phantom, axis=1)
+sum_along_x = odl.sum(phantom, axis=0)
+sum_along_y = odl.sum(phantom, axis=1)
 
 geometry = odl.tomo.FanBeamGeometry(angle_partition, detector_partition,
                                     src_radius, det_radius)

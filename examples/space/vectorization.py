@@ -11,7 +11,7 @@ from odl.discr.discr_utils import sampling_function
 def performance_example():
     # Simple function, already supports vectorization
     f_vec = sampling_function(
-        lambda x: x ** 2, domain=odl.IntervalProd(0, 1)
+        lambda x: x ** 2, domain=odl.IntervalProd(0, 1), out_dtype='float32'
     )
 
     # Vectorized with NumPy's poor man's vectorization function

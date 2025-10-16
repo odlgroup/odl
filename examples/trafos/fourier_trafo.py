@@ -5,7 +5,7 @@ import odl
 
 # Discretized space: discretized functions on the rectangle [-1, 1] x [-1, 1]
 # with 512 samples per dimension and complex data type (for full FT).
-space = odl.uniform_discr([-1, -1], [1, 1], (512, 512), dtype='complex')
+space = odl.uniform_discr([-1, -1], [1, 1], (512, 512), dtype='complex64')
 
 # Make the Fourier transform operator on this space. The range is calculated
 # automatically. The default backend is numpy.fft.

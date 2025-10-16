@@ -12,7 +12,7 @@ import numpy as np
 import odl
 
 space = odl.uniform_discr(0, 5, 100)
-elem = space.element(np.sin)
+elem = space.element(lambda x : np.sin(x))
 
 # Get figure object
 fig = elem.show(title='Sine Functions')
