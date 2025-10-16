@@ -180,8 +180,6 @@ def projector(request):
         # Geometry
         dpart = odl.uniform_partition(-30, 30, m)
         geom = odl.tomo.Parallel2dGeometry(apart, dpart)
-        # Ray transform
-        return odl.tomo.RayTransform(reco_space, geom, impl=astra_impl)
 
     elif geom == 'par3d':
         # Reconstruction space
@@ -191,8 +189,6 @@ def projector(request):
         # Geometry
         dpart = odl.uniform_partition([-30] * 2, [30] * 2, [m] * 2)
         geom = odl.tomo.Parallel3dAxisGeometry(apart, dpart)
-        # Ray transform
-        return odl.tomo.RayTransform(reco_space, geom, impl=astra_impl)
 
     elif geom == 'cone2d':
         # Reconstruction space
@@ -202,8 +198,6 @@ def projector(request):
         dpart = odl.uniform_partition(-30, 30, m)
         geom = odl.tomo.FanBeamGeometry(apart, dpart, src_radius=200,
                                         det_radius=100)
-        # Ray transform
-        return odl.tomo.RayTransform(reco_space, geom, impl=astra_impl)
 
     elif geom == 'cone3d':
         # Reconstruction space
@@ -213,8 +207,6 @@ def projector(request):
         dpart = odl.uniform_partition([-60] * 2, [60] * 2, [m] * 2)
         geom = odl.tomo.ConeBeamGeometry(apart, dpart,
                                          src_radius=200, det_radius=100)
-        # Ray transform
-        return odl.tomo.RayTransform(reco_space, geom, impl=astra_impl)
 
     elif geom == 'helical':
         # Reconstruction space
@@ -225,10 +217,11 @@ def projector(request):
         dpart = odl.uniform_partition([-30, -3], [30, 3], [m] * 2)
         geom = odl.tomo.ConeBeamGeometry(apart, dpart, pitch=5.0,
                                          src_radius=200, det_radius=100)
-        # Ray transform
-        return odl.tomo.RayTransform(reco_space, geom, impl=astra_impl)
     else:
         raise ValueError('geom not valid')
+    
+    # Ray transform
+    return odl.tomo.RayTransform(reco_space, geom, impl=astra_impl, use_cache=False)
 
 
 @pytest.fixture(scope='module',
