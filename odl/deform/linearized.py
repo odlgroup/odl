@@ -12,9 +12,9 @@ from __future__ import absolute_import, division, print_function
 
 import numpy as np
 
-from odl.discr import DiscretizedSpace, Divergence, Gradient
-from odl.discr.discr_space import DiscretizedSpaceElement
-from odl.discr.discr_utils import _normalize_interp, per_axis_interpolator
+from odl.core.discr import DiscretizedSpace, Divergence, Gradient
+from odl.core.discr.discr_space import DiscretizedSpaceElement
+from odl.core.discr.discr_utils import _normalize_interp, per_axis_interpolator
 from odl.operator import Operator, PointwiseInner
 from odl.core.space import ProductSpace
 from odl.core.space.pspace import ProductSpaceElement

@@ -1097,7 +1097,7 @@ def uniform_grid_fromintv(intv_prod, shape, nodes_on_bdry=True):
     See Also
     --------
     uniform_grid : Create a uniform grid directly.
-    odl.discr.partition.uniform_partition_fromintv :
+    odl.core.discr.partition.uniform_partition_fromintv :
         divide interval product into equally sized subsets
     """
     if not isinstance(intv_prod, IntervalProd):
@@ -1207,7 +1207,7 @@ def uniform_grid(min_pt, max_pt, shape, nodes_on_bdry=True):
     --------
     uniform_grid_fromintv :
         sample a given interval product
-    odl.discr.partition.uniform_partition :
+    odl.core.discr.partition.uniform_partition :
         divide implicitly defined interval product into equally
         sized subsets
 

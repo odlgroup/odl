@@ -14,7 +14,7 @@ import numpy as np
 
 from odl.core.util.npy_compat import AVOID_UNNECESSARY_COPY
 
-from odl.discr import uniform_partition
+from odl.core.discr import uniform_partition
 from odl.tomo.geometry.detector import (
     CircularDetector, CylindricalDetector, Flat1dDetector, Flat2dDetector,
     SphericalDetector)

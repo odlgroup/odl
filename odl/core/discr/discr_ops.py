@@ -12,10 +12,10 @@ from __future__ import absolute_import, division, print_function
 
 import numpy as np
 
-from odl.discr.discr_space import DiscretizedSpace
-from odl.discr.discr_utils import (
+from odl.core.discr.discr_space import DiscretizedSpace
+from odl.core.discr.discr_utils import (
     _normalize_interp, per_axis_interpolator, point_collocation)
-from odl.discr.partition import uniform_partition
+from odl.core.discr.partition import uniform_partition
 from odl.operator import Operator
 from odl.core.space import tensor_space
 from odl.core.util import (

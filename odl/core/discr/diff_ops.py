@@ -13,7 +13,7 @@ from __future__ import absolute_import, division, print_function
 import numpy as np
 from math import prod
 
-from odl.discr.discr_space import DiscretizedSpace
+from odl.core.discr.discr_space import DiscretizedSpace
 from odl.operator.tensor_ops import PointwiseTensorFieldOperator
 from odl.core.space import ProductSpace
 from odl.core.util import indent, signature_string, writable_array

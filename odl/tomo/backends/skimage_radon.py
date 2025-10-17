@@ -14,9 +14,9 @@ import warnings
 
 import numpy as np
 
-from odl.discr import (
+from odl.core.discr import (
     DiscretizedSpace, uniform_discr_frompartition, uniform_partition)
-from odl.discr.discr_utils import linear_interpolator, point_collocation
+from odl.core.discr.discr_utils import linear_interpolator, point_collocation
 from odl.tomo.backends.util import _add_default_complex_impl
 from odl.tomo.geometry import Geometry, Parallel2dGeometry
 from odl.core.util.utility import writable_array

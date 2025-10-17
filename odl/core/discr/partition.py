@@ -20,7 +20,7 @@ import numpy as np
 
 from odl.core.util.npy_compat import AVOID_UNNECESSARY_COPY
 
-from odl.discr.grid import RectGrid, uniform_grid_fromintv
+from odl.core.discr.grid import RectGrid, uniform_grid_fromintv
 from odl.core.set import IntervalProd
 from odl.core.util import (
     normalized_index_expression, normalized_nodes_on_bdry,
@@ -291,7 +291,7 @@ class RectPartition(object):
 
         See Also
         --------
-        odl.discr.grid.RectGrid.points
+        odl.core.discr.grid.RectGrid.points
         """
         return self.grid.points(order)
 
@@ -694,7 +694,7 @@ class RectPartition(object):
 
         See Also
         --------
-        odl.discr.grid.RectGrid.squeeze
+        odl.core.discr.grid.RectGrid.squeeze
         odl.core.set.domain.IntervalProd.squeeze
         """
         if axis is None:

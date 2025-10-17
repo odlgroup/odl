@@ -11,7 +11,7 @@ import numpy as np
 import pytest
 
 import odl
-from odl.discr.grid import sparse_meshgrid
+from odl.core.discr.grid import sparse_meshgrid
 from odl.core.util import is_int_dtype
 from odl.core.util.testutils import all_equal
 from odl.core.util.vectorization import (

@@ -16,10 +16,10 @@ import numpy as np
 import pytest
 
 import odl
-from odl.discr.discr_utils import (
+from odl.core.discr.discr_utils import (
     linear_interpolator, nearest_interpolator, per_axis_interpolator,
     point_collocation, sampling_function)
-from odl.discr.grid import sparse_meshgrid
+from odl.core.discr.grid import sparse_meshgrid
 from odl.core.util.testutils import all_almost_equal, all_equal, simple_fixture
 
 from odl.core.array_API_support import lookup_array_backend, get_array_and_backend

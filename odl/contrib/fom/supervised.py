@@ -14,7 +14,7 @@ import numpy as np
 
 import odl
 from odl.contrib.fom.util import spherical_sum
-from odl.discr.grid import sparse_meshgrid
+from odl.core.discr.grid import sparse_meshgrid
 
 __all__ = ('mean_squared_error', 'mean_absolute_error',
            'mean_value_difference', 'standard_deviation_difference',

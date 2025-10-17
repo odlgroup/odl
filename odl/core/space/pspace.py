@@ -1537,7 +1537,7 @@ class ProductSpaceElement(LinearSpaceElement):
 
         See Also
         --------
-        odl.discr.discr_space.DiscretizedSpaceElement.show :
+        odl.core.discr.discr_space.DiscretizedSpaceElement.show :
             Display of a discretized function
         odl.core.space.base_tensors.Tensor.show :
             Display of sequence type data

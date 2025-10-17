@@ -1807,7 +1807,7 @@ class Tensor(LinearSpaceElement):
         --------
         odl.core.util.graphics.show_discrete_data : Underlying implementation
         """
-        from odl.discr import uniform_grid
+        from odl.core.discr import uniform_grid
         from odl.core.util.graphics import show_discrete_data
 
         # Default to showing x-y slice "in the middle"

@@ -12,7 +12,7 @@ from __future__ import absolute_import, division, print_function
 
 import numpy as np
 
-from odl.discr import DiscretizedSpace
+from odl.core.discr import DiscretizedSpace
 from odl.operator import Operator
 from odl.trafos.backends.pywt_bindings import (
     PYWT_AVAILABLE, precompute_raveled_slices, pywt_pad_mode, pywt_wavelet)

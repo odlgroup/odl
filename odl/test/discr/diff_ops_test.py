@@ -13,7 +13,7 @@ from __future__ import division
 import pytest
 
 import odl
-from odl.discr.diff_ops import (
+from odl.core.discr.diff_ops import (
     Divergence, Gradient, Laplacian, PartialDerivative, finite_diff)
 from odl.core.util.testutils import (
     all_almost_equal, all_equal, dtype_tol, noise_element, simple_fixture)

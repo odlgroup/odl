@@ -57,7 +57,7 @@ np.set_printoptions(linewidth=71)
 # visible (otherwise one gets errors like "... has no attribute __all__")
 from .core.set import *
 from .core.array_API_support import *
-from .discr import *
+from .core.discr import *
 from .operator import *
 from .core.space import *
 
@@ -77,6 +77,5 @@ from .core.util import test
 
 
 # Amend `__all__`
-__all__ += discr.__all__
 __all__ += operator.__all__
 __all__ += ('test',)

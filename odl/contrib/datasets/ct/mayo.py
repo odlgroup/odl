@@ -24,7 +24,7 @@ import odl
 import tqdm
 
 from dicom.datadict import DicomDictionary, NameDict, CleanName
-from odl.discr.discr_utils import linear_interpolator
+from odl.core.discr.discr_utils import linear_interpolator
 from odl.contrib.datasets.ct.mayo_dicom_dict import new_dict_items
 
 # Update the DICOM dictionary with the extra Mayo tags

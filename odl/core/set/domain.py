@@ -358,7 +358,7 @@ class IntervalProd(Set):
 
         Implicit meshgrids defined by coordinate vectors:
 
-        >>> from odl.discr.grid import sparse_meshgrid
+        >>> from odl.core.discr.grid import sparse_meshgrid
         >>> vec1 = (-1, -0.9, -0.7)
         >>> vec2 = (0, 0, 0)
         >>> vec3 = (2.5, 2.75, 3)
@@ -713,7 +713,7 @@ class IntervalProd(Set):
                [-1. ,  3. ,  0.5],
                [-0.5,  3. ,  0.5]])
         """
-        from odl.discr.grid import RectGrid
+        from odl.core.discr.grid import RectGrid
 
         minmax_vecs = [0] * self.ndim
         for axis in np.where(~self.nondegen_byaxis)[0]:

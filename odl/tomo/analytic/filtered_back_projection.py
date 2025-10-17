@@ -10,7 +10,7 @@
 from __future__ import print_function, division, absolute_import
 import numpy as np
 
-from odl.discr import ResizingOperator
+from odl.core.discr import ResizingOperator
 from odl.trafos import FourierTransform, PYFFTW_AVAILABLE
 
 

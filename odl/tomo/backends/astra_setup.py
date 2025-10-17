@@ -29,7 +29,7 @@ import warnings
 
 import numpy as np
 
-from odl.discr import DiscretizedSpace, DiscretizedSpaceElement
+from odl.core.discr import DiscretizedSpace, DiscretizedSpaceElement
 from odl.tomo.geometry import (
     DivergentBeamGeometry, Flat1dDetector, Flat2dDetector, Geometry,
     ParallelBeamGeometry)

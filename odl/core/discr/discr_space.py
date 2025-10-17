@@ -16,8 +16,8 @@ from contextlib import contextmanager
 
 import numpy as np
 
-from odl.discr.discr_utils import point_collocation, sampling_function
-from odl.discr.partition import (
+from odl.core.discr.discr_utils import point_collocation, sampling_function
+from odl.core.discr.partition import (
     RectPartition, uniform_partition, uniform_partition_fromintv)
 from odl.core.set import IntervalProd, RealNumbers
 from odl.core.set.space import LinearSpace, SupportedNumOperationParadigms, NumOperationParadigmSupport
@@ -1203,7 +1203,7 @@ def uniform_discr_frompartition(partition, dtype=None, impl='numpy', **kwargs):
     uniform_discr : implicit uniform Lp discretization
     uniform_discr_fromspace : uniform Lp discretization from an existing
         function space
-    odl.discr.partition.uniform_partition :
+    odl.core.discr.partition.uniform_partition :
         partition of the function domain
     """
     if not isinstance(partition, RectPartition):
@@ -1432,7 +1432,7 @@ def uniform_discr_fromdiscr(discr, min_pt=None, max_pt=None,
     See Also
     --------
     uniform_discr : implicit uniform Lp discretization
-    odl.discr.partition.uniform_partition :
+    odl.core.discr.partition.uniform_partition :
         underlying domain partitioning scheme
 
     Examples

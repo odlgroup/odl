@@ -5,7 +5,7 @@ import timeit
 import numpy as np
 
 import odl
-from odl.discr.discr_utils import sampling_function
+from odl.core.discr.discr_utils import sampling_function
 
 
 def performance_example():

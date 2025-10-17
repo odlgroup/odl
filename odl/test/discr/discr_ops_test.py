@@ -14,7 +14,7 @@ import numpy as np
 import pytest
 
 import odl
-from odl.discr.discr_ops import _SUPPORTED_RESIZE_PAD_MODES
+from odl.core.discr.discr_ops import _SUPPORTED_RESIZE_PAD_MODES
 from odl.core.util.testutils import dtype_tol, noise_element, all_equal
 
 from odl.core.util.dtype_utils import AVAILABLE_DTYPES, SCALAR_DTYPES, FLOAT_DTYPES, REAL_DTYPES

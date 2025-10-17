@@ -11,7 +11,7 @@ import pytest
 import numpy as np
 
 import odl
-from odl.discr.grid import RectGrid, uniform_grid, sparse_meshgrid
+from odl.core.discr.grid import RectGrid, uniform_grid, sparse_meshgrid
 from odl.core.util.testutils import all_equal
 
 

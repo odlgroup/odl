@@ -14,7 +14,7 @@ import numpy as np
 
 from odl.core.util.npy_compat import AVOID_UNNECESSARY_COPY
 
-from odl.discr import RectPartition
+from odl.core.discr import RectPartition
 from odl.tomo.geometry.detector import Detector
 from odl.tomo.util import axis_rotation_matrix, is_inside_bounds
 

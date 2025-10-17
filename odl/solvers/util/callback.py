@@ -571,7 +571,7 @@ class CallbackShow(Callback):
 
     See Also
     --------
-    odl.discr.discr_space.DiscretizedSpaceElement.show
+    odl.core.discr.discr_space.DiscretizedSpaceElement.show
     odl.core.space.base_tensors.Tensor.show
     """
 

@@ -14,7 +14,7 @@ import numpy as np
 
 from odl.core.util.npy_compat import AVOID_UNNECESSARY_COPY
 
-from odl.discr import uniform_partition
+from odl.core.discr import uniform_partition
 from odl.tomo.geometry.detector import Flat1dDetector, Flat2dDetector
 from odl.tomo.geometry.geometry import AxisOrientedGeometry, Geometry
 from odl.tomo.util import euler_matrix, is_inside_bounds, transform_system

@@ -79,7 +79,7 @@ def point_collocation(func, points, out=None, **kwargs):
     --------
     Sample a 1D function:
 
-    >>> from odl.discr.grid import sparse_meshgrid
+    >>> from odl.core.discr.grid import sparse_meshgrid
     >>> domain = odl.IntervalProd(0, 5)
     >>> func = sampling_function(lambda x: x ** 2, domain)
     >>> mesh = sparse_meshgrid([1, 2, 3])
@@ -169,7 +169,7 @@ def point_collocation(func, points, out=None, **kwargs):
     See Also
     --------
     make_func_for_sampling : wrap a function
-    odl.discr.grid.RectGrid.meshgrid
+    odl.core.discr.grid.RectGrid.meshgrid
     numpy.meshgrid
 
     References
@@ -320,7 +320,7 @@ def nearest_interpolator(f, coord_vecs):
     ...               [0.0, 3.0]]).T  # 3 points at once
     >>> interpolator(x)
     array([ 6.,  4.,  3.])
-    >>> from odl.discr.grid import sparse_meshgrid
+    >>> from odl.core.discr.grid import sparse_meshgrid
     >>> mesh = sparse_meshgrid([0.0, 0.4, 1.0], [1.5, 3.5])
     >>> interpolator(mesh)  # 3x2 grid of points
     array([[ 2.,  3.],
@@ -414,7 +414,7 @@ def linear_interpolator(f, coord_vecs):
     ...               [0.0, 3.0]]).T  # 3 points at once
     >>> interpolator(x)
     array([ 4.1 ,  1.8 ,  1.45])
-    >>> from odl.discr.grid import sparse_meshgrid
+    >>> from odl.core.discr.grid import sparse_meshgrid
     >>> mesh = sparse_meshgrid([0.0, 0.5, 1.0], [1.5, 3.5])
     >>> interpolator(mesh)  # 3x2 grid of points
     array([[ 0.85,  1.65],
@@ -481,7 +481,7 @@ def per_axis_interpolator(f, coord_vecs, interp):
     ...               [0.0, 3.0]]).T  # 3 points at once
     >>> interpolator(x)
     array([ 4. ,  2. ,  1.5])
-    >>> from odl.discr.grid import sparse_meshgrid
+    >>> from odl.core.discr.grid import sparse_meshgrid
     >>> mesh = sparse_meshgrid([0.0, 0.5, 1.0], [1.5, 3.5])
     >>> interpolator(mesh)  # 3x2 grid of points
     array([[ 1. ,  1.5],

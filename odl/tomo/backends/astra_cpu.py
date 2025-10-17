@@ -12,7 +12,7 @@ from __future__ import absolute_import, division, print_function
 
 import warnings
 import numpy as np
-from odl.discr import DiscretizedSpace, DiscretizedSpaceElement
+from odl.core.discr import DiscretizedSpace, DiscretizedSpaceElement
 from odl.tomo.backends.astra_setup import (
     astra_algorithm, astra_data, astra_projection_geometry, astra_projector,
     astra_volume_geometry)

@@ -14,7 +14,7 @@ import numpy as np
 
 from odl.core.util.npy_compat import AVOID_UNNECESSARY_COPY
 
-from odl.discr import (
+from odl.core.discr import (
     DiscretizedSpace, uniform_discr_frompartition, uniform_grid,
     uniform_partition_fromgrid)
 from odl.core.set import RealNumbers
