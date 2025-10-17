@@ -13,7 +13,7 @@ from __future__ import absolute_import, division, print_function
 from builtins import object
 from copy import copy, deepcopy
 
-from odl.diagnostics.examples import samples
+from odl.core.diagnostics.examples import samples
 from odl.core.set import Field
 from odl.core.util.testutils import fail_counter
 

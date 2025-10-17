@@ -65,7 +65,7 @@ from .core.space import *
 # we only import the modules themselves
 from . import contrib
 from . import deform
-from . import diagnostics
+from .core import diagnostics
 from .core import phantom
 from . import solvers
 from . import tomo

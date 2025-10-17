@@ -32,7 +32,7 @@ gaussian = ft.range.element(lambda x: np.exp(-(x[0] ** 2 + x[1] ** 2) * c))
 convolution = ft.inverse * gaussian * ft
 
 # Optional: Run diagnostics to assure the adjoint is properly implemented
-# odl.diagnostics.OperatorTest(conv_op).run_tests()
+# odl.core.diagnostics.OperatorTest(conv_op).run_tests()
 
 # Create phantom
 phantom = odl.core.phantom.shepp_logan(space, modified=True)
