@@ -15,7 +15,7 @@ import odl
 from odl.set.sets import ComplexNumbers, RealNumbers
 from odl.util.testutils import (
     all_equal, all_almost_equal, noise_elements, noise_element, simple_fixture)
-from odl.array_API_support.utils import get_array_and_backend
+from odl.core.array_API_support.utils import get_array_and_backend
 
 exponent = simple_fixture('exponent', [2.0, 1.0, float('inf'), 0.5, 1.5])
 

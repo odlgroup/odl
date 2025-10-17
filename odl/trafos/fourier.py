@@ -26,7 +26,7 @@ from odl.util import (
     complex_dtype, conj_exponent, dtype_repr, is_complex_dtype,
     is_real_floating_dtype, normalized_axes_tuple, normalized_scalar_param_list)
 from odl.util.dtype_utils import _universal_dtype_identifier
-from odl.array_API_support import lookup_array_backend
+from odl.core.array_API_support import lookup_array_backend
 
 __all__ = ('DiscreteFourierTransform', 'DiscreteFourierTransformInverse',
            'FourierTransform', 'FourierTransformInverse')

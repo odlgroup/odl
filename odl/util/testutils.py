@@ -16,7 +16,7 @@ import warnings
 from builtins import object
 from contextlib import contextmanager
 from time import time
-from odl.array_API_support.comparisons import allclose, isclose, all_equal as odl_all_equal
+from odl.core.array_API_support.comparisons import allclose, isclose, all_equal as odl_all_equal
 import numpy as np
 import pytest
 

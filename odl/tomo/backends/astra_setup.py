@@ -34,7 +34,7 @@ from odl.tomo.geometry import (
     DivergentBeamGeometry, Flat1dDetector, Flat2dDetector, Geometry,
     ParallelBeamGeometry)
 from odl.tomo.util.utility import euler_matrix
-from odl.array_API_support import get_array_and_backend
+from odl.core.array_API_support import get_array_and_backend
 
 try:
     import astra

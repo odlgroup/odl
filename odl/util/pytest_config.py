@@ -17,7 +17,7 @@ from os import path
 import numpy as np
 
 import odl
-from odl.array_API_support import lookup_array_backend
+from odl.core.array_API_support import lookup_array_backend
 from odl.space.entry_points import tensor_space_impl_names
 from odl.trafos.backends import PYFFTW_AVAILABLE, PYWT_AVAILABLE
 from odl.util.testutils import simple_fixture

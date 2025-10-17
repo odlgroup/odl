@@ -14,8 +14,8 @@ import math
 import numpy as np
 
 from odl.util import array_str, signature_string, indent, is_real_dtype
-from odl.array_API_support.utils import get_array_and_backend
-from odl.array_API_support.comparisons import all_equal
+from odl.core.array_API_support.utils import get_array_and_backend
+from odl.core.array_API_support.comparisons import all_equal
 
 __all__ = ('MatrixWeighting', 'ArrayWeighting', 'ConstWeighting',
            'CustomInner', 'CustomNorm', 'CustomDist')

@@ -2,7 +2,7 @@ import pytest
 
 import odl
 
-from odl.array_API_support.comparisons  import all_equal
+from odl.core.array_API_support.comparisons  import all_equal
 
 from odl.util.pytest_config import IMPL_DEVICE_PAIRS
 from odl.util.testutils import (

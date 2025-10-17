@@ -22,7 +22,7 @@ from odl.util.testutils import (
     all_almost_equal, all_equal, noise_element, noise_elements, simple_fixture, skip_if_no_pytorch)
 from odl.space.entry_points import tensor_space_impl_names
 from odl.sparse import SparseMatrix
-from odl.array_API_support import lookup_array_backend, get_array_and_backend
+from odl.core.array_API_support import lookup_array_backend, get_array_and_backend
 
 matrix_dtype = simple_fixture(
     name='matrix_dtype',

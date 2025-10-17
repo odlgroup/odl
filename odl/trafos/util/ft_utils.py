@@ -23,7 +23,7 @@ from odl.util import (
     is_complex_dtype, is_numeric_dtype, is_real_dtype,
     is_real_floating_dtype, is_string, normalized_axes_tuple,
     normalized_scalar_param_list)
-from odl.array_API_support import get_array_and_backend, ArrayBackend
+from odl.core.array_API_support import get_array_and_backend, ArrayBackend
 
 from odl.util.dtype_utils import _universal_dtype_identifier
 

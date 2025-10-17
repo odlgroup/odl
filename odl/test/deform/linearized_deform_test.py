@@ -17,7 +17,7 @@ import odl
 from odl.deform import LinDeformFixedDisp, LinDeformFixedTempl
 from odl.util.testutils import simple_fixture
 
-from odl.array_API_support import get_array_and_backend, exp
+from odl.core.array_API_support import get_array_and_backend, exp
 
 # --- pytest fixtures --- #
 

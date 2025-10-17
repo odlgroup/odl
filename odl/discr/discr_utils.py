@@ -26,8 +26,8 @@ from odl.set.domain import IntervalProd
 
 import numpy as np
 
-from odl.array_API_support import asarray, lookup_array_backend, ArrayBackend, get_array_and_backend
-from odl.array_API_support.utils import is_array_supported
+from odl.core.array_API_support import asarray, lookup_array_backend, ArrayBackend, get_array_and_backend
+from odl.core.array_API_support.utils import is_array_supported
 
 from odl.util.npy_compat import AVOID_UNNECESSARY_COPY
 

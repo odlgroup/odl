@@ -21,7 +21,7 @@ from odl.operator.operator import Operator
 from odl.set import ComplexNumbers, Field, LinearSpace, RealNumbers
 from odl.set.space import LinearSpaceElement
 from odl.space import ProductSpace
-from odl.array_API_support import sqrt, conj
+from odl.core.array_API_support import sqrt, conj
 
 __all__ = ('ScalingOperator', 'ZeroOperator', 'IdentityOperator',
            'LinCombOperator', 'MultiplyOperator', 'PowerOperator',

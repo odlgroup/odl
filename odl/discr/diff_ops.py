@@ -17,7 +17,7 @@ from odl.discr.discr_space import DiscretizedSpace
 from odl.operator.tensor_ops import PointwiseTensorFieldOperator
 from odl.space import ProductSpace
 from odl.util import indent, signature_string, writable_array
-from odl.array_API_support import asarray, get_array_and_backend
+from odl.core.array_API_support import asarray, get_array_and_backend
 
 __all__ = ('PartialDerivative', 'Gradient', 'Divergence', 'Laplacian')
 

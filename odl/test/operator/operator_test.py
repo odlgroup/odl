@@ -24,7 +24,7 @@ from odl.operator.operator import _dispatch_call_args, _function_signature
 from odl.util.testutils import (
     all_almost_equal, noise_element, noise_elements, simple_fixture)
 
-from odl.array_API_support.utils import get_array_and_backend, lookup_array_backend
+from odl.core.array_API_support.utils import get_array_and_backend, lookup_array_backend
 
 try:
     getargspec = inspect.getfullargspec

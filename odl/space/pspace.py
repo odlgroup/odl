@@ -23,7 +23,7 @@ from odl.set.space import (LinearSpaceElement,
 from .weightings.weighting import (
     ArrayWeighting, ConstWeighting, CustomDist, CustomInner, CustomNorm,
     Weighting)
-from odl.array_API_support.utils import get_array_and_backend
+from odl.core.array_API_support.utils import get_array_and_backend
 from odl.util import indent, is_real_dtype, signature_string
 
 __all__ = ('ProductSpace',)

@@ -23,7 +23,7 @@ from odl.util import (
     noise_element, skip_if_no_pyfftw)
 from odl.util.testutils import simple_fixture
 
-from odl.array_API_support import allclose
+from odl.core.array_API_support import allclose
 
 # --- pytest fixtures --- #
 

@@ -22,7 +22,7 @@ from odl.space.npy_tensors import (
 from odl.util.testutils import (
     all_almost_equal, all_equal, noise_array, noise_element, noise_elements,
     isclose, simple_fixture)
-from odl.array_API_support import lookup_array_backend
+from odl.core.array_API_support import lookup_array_backend
 from odl.util.pytest_config import IMPL_DEVICE_PAIRS
 
 from odl.util.dtype_utils import is_complex_dtype

@@ -12,7 +12,7 @@ from __future__ import print_function, division, absolute_import
 import numpy as np
 
 from odl.util.npy_compat import AVOID_UNNECESSARY_COPY
-from odl.array_API_support import lookup_array_backend
+from odl.core.array_API_support import lookup_array_backend
 
 from odl.space.base_tensors import default_dtype
 

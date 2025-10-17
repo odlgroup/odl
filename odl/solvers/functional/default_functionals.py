@@ -29,7 +29,7 @@ from odl.solvers.nonsmooth.proximal_operators import (
 from odl.space import ProductSpace
 from odl.util import conj_exponent
 
-from odl.array_API_support import (all as odl_all,
+from odl.core.array_API_support import (all as odl_all,
 abs as odl_abs, sign, pow, square, log, isfinite, exp,
 max, min, sum as odl_sum)
 from odl.util.scipy_compatibility import xlogy

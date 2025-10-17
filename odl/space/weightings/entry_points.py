@@ -1,4 +1,4 @@
-from odl.array_API_support import get_array_and_backend, lookup_array_backend
+from odl.core.array_API_support import get_array_and_backend, lookup_array_backend
 from .weighting import ConstWeighting, ArrayWeighting, CustomInner, CustomNorm, CustomDist
 
 def space_weighting(

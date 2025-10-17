@@ -20,7 +20,7 @@ from odl.tomo.backends.util import _add_default_complex_impl
 from odl.tomo.geometry import (
     DivergentBeamGeometry, Geometry, ParallelBeamGeometry)
 from odl.util import writable_array
-from odl.array_API_support import lookup_array_backend, get_array_and_backend
+from odl.core.array_API_support import lookup_array_backend, get_array_and_backend
 try:
     import astra
 except ImportError:

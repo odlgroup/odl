@@ -6,8 +6,8 @@ from functools import lru_cache
 # Third-Party import
 import array_api_compat as xp
 # ODL imports
-from odl.array_API_support import ArrayBackend, lookup_array_backend
-from odl.array_API_support.utils import _registered_array_backends
+from odl.core.array_API_support import ArrayBackend, lookup_array_backend
+from odl.core.array_API_support.utils import _registered_array_backends
 from typing import Optional
 
 __all__ = (

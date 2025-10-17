@@ -15,7 +15,7 @@ from odl.operator.oputils import matrix_representation, power_method_opnorm
 from odl.operator.pspace_ops import ProductSpaceOperator
 from odl.util.testutils import all_almost_equal, noise_elements
 
-from odl.array_API_support.utils import get_array_and_backend
+from odl.core.array_API_support.utils import get_array_and_backend
 
 @pytest.fixture(scope="module", ids=['True', 'False'], params=[True, False])
 def dom_eq_ran_mat(odl_impl_device_pairs):

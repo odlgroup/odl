@@ -19,7 +19,7 @@ from odl.operator import Operator, PointwiseInner
 from odl.space import ProductSpace
 from odl.space.pspace import ProductSpaceElement
 from odl.util import indent, signature_string
-from odl.array_API_support import exp, lookup_array_backend
+from odl.core.array_API_support import exp, lookup_array_backend
 
 __all__ = ('LinDeformFixedTempl', 'LinDeformFixedDisp', 'linear_deform')
 

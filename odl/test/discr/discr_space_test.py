@@ -20,7 +20,7 @@ from odl.space.npy_tensors import NumpyTensor
 from odl.util.dtype_utils import COMPLEX_DTYPES, DTYPE_SHORTHANDS
 from odl.util.testutils import (
     all_almost_equal, all_equal, noise_elements, simple_fixture, default_precision_dict)
-from odl.array_API_support import lookup_array_backend
+from odl.core.array_API_support import lookup_array_backend
 # --- Pytest fixtures --- #
 
 

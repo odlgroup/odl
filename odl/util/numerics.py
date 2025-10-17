@@ -13,7 +13,7 @@ from __future__ import absolute_import, division, print_function
 import numpy as np
 from odl.util.normalize import normalized_scalar_param_list, safe_int_conv
 from odl.util.dtype_utils import real_dtype
-from odl.array_API_support.utils import ArrayBackend, get_array_and_backend
+from odl.core.array_API_support.utils import ArrayBackend, get_array_and_backend
 
 __all__ = (
     'apply_on_boundary',

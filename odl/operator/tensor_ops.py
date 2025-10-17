@@ -23,7 +23,7 @@ from odl.space import ProductSpace, tensor_space
 from odl.space.base_tensors import TensorSpace, Tensor
 from odl.space.weightings.weighting import ArrayWeighting
 from odl.util import dtype_repr, indent, signature_string
-from odl.array_API_support import ArrayBackend, lookup_array_backend, abs as odl_abs, maximum, pow, sqrt, multiply, get_array_and_backend, can_cast, all_equal
+from odl.core.array_API_support import ArrayBackend, lookup_array_backend, abs as odl_abs, maximum, pow, sqrt, multiply, get_array_and_backend, can_cast, all_equal
 
 from odl.sparse import is_sparse, get_sparse_matrix_impl, lookup_sparse_format
 

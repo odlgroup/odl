@@ -26,7 +26,7 @@ from odl.tomo.geometry import (
     ConeBeamGeometry, FanBeamGeometry, Geometry, Parallel2dGeometry,
     Parallel3dAxisGeometry)
 from odl.discr.discr_space import DiscretizedSpaceElement
-from odl.array_API_support import empty, get_array_and_backend
+from odl.core.array_API_support import empty, get_array_and_backend
 
 try:
     import astra

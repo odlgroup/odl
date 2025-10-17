@@ -13,7 +13,7 @@ import math
 
 from odl.solvers.util import ConstantLineSearch
 
-from odl.array_API_support import sqrt
+from odl.core.array_API_support import sqrt
 
 __all__ = ('steepest_descent', 'adam')
 

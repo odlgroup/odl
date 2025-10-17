@@ -22,7 +22,7 @@ from odl.discr.discr_utils import (
 from odl.discr.grid import sparse_meshgrid
 from odl.util.testutils import all_almost_equal, all_equal, simple_fixture
 
-from odl.array_API_support import lookup_array_backend, get_array_and_backend
+from odl.core.array_API_support import lookup_array_backend, get_array_and_backend
 
 # --- Helper functions --- #
 

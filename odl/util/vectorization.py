@@ -13,7 +13,7 @@ from builtins import object
 from functools import wraps
 import numpy as np
 
-from odl.array_API_support import get_array_and_backend
+from odl.core.array_API_support import get_array_and_backend
 
 
 __all__ = ('is_valid_input_array', 'is_valid_input_meshgrid',
