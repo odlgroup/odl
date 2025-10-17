@@ -1586,6 +1586,10 @@ class WeightedSumSamplingOperator(Operator):
         # Convert a list of index arrays to linear index array
         indices_flat = np.ravel_multi_index(self.sampling_points,
                                             dims=range.shape)
+        if np.isscalar(indices_flat):
+            indices_flat = np.array([indices_flat], dtype=int)
+        else:
+            indices_flat = np.array(indices_flat, dtype=int)
 
         ### Always converting the indices to the right data type 
         self._indices_flat = range.array_backend.array_constructor(indices_flat, dtype=int, device=range.device)
