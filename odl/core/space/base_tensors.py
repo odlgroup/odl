@@ -208,7 +208,7 @@ class TensorSpace(LinearSpace):
     def _init_weighting(self, **kwargs):
         weighting = kwargs.pop("weighting", None)    
         if weighting is None:
-            self.__weighting = odl.space_weighting(impl=self.impl, device=self.device, **kwargs)
+            self.__weighting = odl.core.space_weighting(impl=self.impl, device=self.device, **kwargs)
         else:
             if issubclass(type(weighting), Weighting):
                 if weighting.impl != self.impl:
@@ -228,7 +228,7 @@ class TensorSpace(LinearSpace):
                         {weighting.shape} and {self.shape}" 
                     )
             elif hasattr(weighting, '__array__') or isinstance(weighting, (int, float)) or isinstance(weighting, (tuple, list)):
-                self.__weighting = odl.space_weighting(impl=self.impl, device=self.device, weight=weighting, **kwargs)
+                self.__weighting = odl.core.space_weighting(impl=self.impl, device=self.device, weight=weighting, **kwargs)
             else:
                 raise TypeError(
                     f"""Wrong type of 'weighting' argument. Only floats, array-like and odl.Weightings are accepted 
@@ -561,7 +561,7 @@ class TensorSpace(LinearSpace):
         ----------
         impl :
             Identifier of the target backend. Must correspond to a registered
-            `ArrayBackend`. See `odl.space.entry_points.tensor_space_impl_names`
+            `ArrayBackend`. See `odl.core.space.entry_points.tensor_space_impl_names`
             for available options.
             Both `impl` and the implementation of the original space must support
             the same device, most typically `'cpu'`. If you want to use GPU storage,
@@ -893,7 +893,7 @@ class TensorSpace(LinearSpace):
         overload this method.
         """
         # Lazy import to avoid cyclic dependency
-        from odl.space.space_utils import tensor_space
+        from odl.core.space.space_utils import tensor_space
 
         kwargs = {}
         weighting = getattr(self, "weighting", None)
@@ -1613,7 +1613,7 @@ class Tensor(LinearSpaceElement):
         ----------
         impl :
             Identifier of the target backend. Must correspond to a registered
-            `ArrayBackend`. See `odl.space.entry_points.tensor_space_impl_names`
+            `ArrayBackend`. See `odl.core.space.entry_points.tensor_space_impl_names`
             for available options.
             Both `impl` and the implementation of the original space must support
             the same device, most typically `'cpu'`. If you want to use GPU storage,

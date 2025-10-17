@@ -16,8 +16,8 @@ import pytest
 
 import odl
 from odl.core.set.space import LinearSpaceTypeError
-from odl.space.entry_points import TENSOR_SPACE_IMPLS
-from odl.space.npy_tensors import (
+from odl.core.space.entry_points import TENSOR_SPACE_IMPLS
+from odl.core.space.npy_tensors import (
     NumpyTensor, NumpyTensorSpace)
 from odl.core.util.testutils import (
     all_almost_equal, all_equal, noise_array, noise_element, noise_elements,
@@ -101,11 +101,11 @@ def test_init_tspace(floating_tspace):
     device = floating_tspace.device
 
     # Weights
-    constant_weighting = odl.space_weighting(
+    constant_weighting = odl.core.space_weighting(
         impl,
         weight = 1.5
         )
-    array_weighting    = odl.space_weighting(
+    array_weighting    = odl.core.space_weighting(
         impl,
         device, 
         weight = _pos_array(odl.rn(
@@ -628,7 +628,7 @@ def test_pdist(odl_impl_device_pairs, exponent):
         odl.rn(DEFAULT_SHAPE, exponent=exponent, impl=impl, device=device),
         odl.cn(DEFAULT_SHAPE, exponent=exponent, impl=impl, device=device)
         ]
-    # cls = odl.space.entry_points.tensor_space_impl(impl)
+    # cls = odl.core.space.entry_points.tensor_space_impl(impl)
 
     # if complex in cls.available_dtypes:
     #     spaces.append(odl.cn(DEFAULT_SHAPE, exponent=exponent, impl=impl))
@@ -770,7 +770,7 @@ def test_transpose(odl_impl_device_pairs):
         odl.rn(DEFAULT_SHAPE, impl=impl, device=device),
         odl.cn(DEFAULT_SHAPE, impl=impl, device=device)
         ]
-    # cls = odl.space.entry_points.tensor_space_impl(impl)
+    # cls = odl.core.space.entry_points.tensor_space_impl(impl)
     # if complex in cls.available_dtypes():
     #     spaces.append(odl.cn(DEFAULT_SHAPE, impl=impl))
 
@@ -933,8 +933,8 @@ def test_array_weighting_init(real_tspace):
     weight_arr = _pos_array(real_tspace)
     weight_elem = real_tspace.element(weight_arr)
 
-    weighting_arr  = odl.space_weighting(impl, device=real_tspace.device, weight=weight_arr, exponent=exponent)
-    weighting_elem = odl.space_weighting(impl, device=real_tspace.device, 
+    weighting_arr  = odl.core.space_weighting(impl, device=real_tspace.device, weight=weight_arr, exponent=exponent)
+    weighting_elem = odl.core.space_weighting(impl, device=real_tspace.device, 
     weight=weight_elem, exponent=exponent)
 
     assert isinstance(weighting_arr.weight, array_backend.array_type)
@@ -947,11 +947,11 @@ def test_array_weighting_array_is_valid(odl_impl_device_pairs):
     space = odl.rn(DEFAULT_SHAPE, impl=impl, device=device)
     weight_arr = _pos_array(space)
 
-    assert odl.space_weighting(impl, weight=weight_arr, device=device)
+    assert odl.core.space_weighting(impl, weight=weight_arr, device=device)
     # Invalid
     weight_arr[0] = 0
     with pytest.raises(ValueError):
-        odl.space_weighting(impl, weight=weight_arr, device=device)
+        odl.core.space_weighting(impl, weight=weight_arr, device=device)
 
 
 def test_array_weighting_equals(odl_impl_device_pairs):
@@ -961,13 +961,13 @@ def test_array_weighting_equals(odl_impl_device_pairs):
     weight_arr = _pos_array(space)
     weight_elem = space.element(weight_arr)
 
-    weighting_arr = odl.space_weighting(impl, weight=weight_arr, device=device)
-    weighting_arr2 = odl.space_weighting(impl, weight=weight_arr, device=device)
-    weighting_elem = odl.space_weighting(impl, weight=weight_elem, device=device)
-    weighting_elem_copy = odl.space_weighting(impl, weight=weight_elem.copy(), device=device)
-    weighting_elem2 = odl.space_weighting(impl, weight=weight_elem, device=device)
-    weighting_other_arr = odl.space_weighting(impl, weight=weight_arr +1 , device=device)
-    weighting_other_exp = odl.space_weighting(impl, weight=weight_arr +1, exponent=1, device=device)
+    weighting_arr = odl.core.space_weighting(impl, weight=weight_arr, device=device)
+    weighting_arr2 = odl.core.space_weighting(impl, weight=weight_arr, device=device)
+    weighting_elem = odl.core.space_weighting(impl, weight=weight_elem, device=device)
+    weighting_elem_copy = odl.core.space_weighting(impl, weight=weight_elem.copy(), device=device)
+    weighting_elem2 = odl.core.space_weighting(impl, weight=weight_elem, device=device)
+    weighting_other_arr = odl.core.space_weighting(impl, weight=weight_arr +1 , device=device)
+    weighting_other_exp = odl.core.space_weighting(impl, weight=weight_arr +1, exponent=1, device=device)
 
     assert weighting_arr == weighting_arr2
     assert weighting_arr == weighting_elem
@@ -984,9 +984,9 @@ def test_array_weighting_equiv(odl_impl_device_pairs):
     weight_arr = _pos_array(space)
     weight_elem = space.element(weight_arr)
     different_arr = weight_arr + 1
-    w_arr = odl.space_weighting(impl, weight=weight_arr, device=device)
-    w_elem = odl.space_weighting(impl, weight=weight_elem, device=device)
-    w_different_arr = odl.space_weighting(impl, weight=different_arr, device=device)
+    w_arr = odl.core.space_weighting(impl, weight=weight_arr, device=device)
+    w_elem = odl.core.space_weighting(impl, weight=weight_elem, device=device)
+    w_different_arr = odl.core.space_weighting(impl, weight=different_arr, device=device)
 
     ns = space.array_namespace
 
@@ -998,10 +998,10 @@ def test_array_weighting_equiv(odl_impl_device_pairs):
 
     # Test shortcuts in the implementation
     const_arr = ns.ones(space.shape, device=device) * 1.5
-    w_const_arr = odl.space_weighting(impl, weight=const_arr, device=device)
-    w_const = odl.space_weighting(impl, weight=1.5, device=device)
-    w_wrong_const = odl.space_weighting(impl, weight=1, device=device)
-    w_wrong_exp = odl.space_weighting(impl, weight=1.5, exponent=1, device=device)
+    w_const_arr = odl.core.space_weighting(impl, weight=const_arr, device=device)
+    w_const = odl.core.space_weighting(impl, weight=1.5, device=device)
+    w_wrong_const = odl.core.space_weighting(impl, weight=1, device=device)
+    w_wrong_exp = odl.core.space_weighting(impl, weight=1.5, exponent=1, device=device)
 
     assert w_const_arr.equiv(w_const)
     assert not w_const_arr.equiv(w_wrong_const)
@@ -1018,7 +1018,7 @@ def test_array_weighting_inner(tspace):
     [xarr, yarr], [x, y] = noise_elements(tspace, 2)
 
     weight_arr = _pos_array(tspace)
-    weighting = odl.space_weighting(
+    weighting = odl.core.space_weighting(
         impl = tspace.impl, 
         weight = weight_arr,
         device = tspace.device
@@ -1031,7 +1031,7 @@ def test_array_weighting_inner(tspace):
 
     # Exponent != 2 -> no inner product, should raise
     with pytest.raises(NotImplementedError):
-        odl.space_weighting(impl = tspace.impl, weight =weight_arr, exponent=1.0, device = tspace.device).inner(x.data, y.data)
+        odl.core.space_weighting(impl = tspace.impl, weight =weight_arr, exponent=1.0, device = tspace.device).inner(x.data, y.data)
 
 
 def test_array_weighting_norm(tspace, exponent):
@@ -1041,7 +1041,7 @@ def test_array_weighting_norm(tspace, exponent):
     xarr, x = noise_elements(tspace)
 
     weight_arr = _pos_array(tspace)
-    weighting = odl.space_weighting(impl = tspace.impl, weight=weight_arr, exponent=exponent, device =tspace.device)
+    weighting = odl.core.space_weighting(impl = tspace.impl, weight=weight_arr, exponent=exponent, device =tspace.device)
 
     if exponent == float('inf'):
         true_norm = ns.linalg.vector_norm(
@@ -1063,7 +1063,7 @@ def test_array_weighting_dist(tspace, exponent):
     [xarr, yarr], [x, y] = noise_elements(tspace, n=2)
 
     weight_arr = _pos_array(tspace)
-    weighting = odl.space_weighting(impl = tspace.impl, weight=weight_arr, exponent=exponent, device=tspace.device)
+    weighting = odl.core.space_weighting(impl = tspace.impl, weight=weight_arr, exponent=exponent, device=tspace.device)
 
     if exponent == float('inf'):
         true_dist = ns.linalg.norm(
@@ -1082,13 +1082,13 @@ def test_const_weighting_init(odl_impl_device_pairs, exponent):
     """Test initialization of constant weightings."""
     impl, device = odl_impl_device_pairs
     # Just test if the code runs
-    odl.space_weighting(impl=impl, weight=1.5, exponent=exponent, device=device)
+    odl.core.space_weighting(impl=impl, weight=1.5, exponent=exponent, device=device)
     with pytest.raises(ValueError):
-        odl.space_weighting(impl=impl, weight=0, exponent=exponent, device=device)
+        odl.core.space_weighting(impl=impl, weight=0, exponent=exponent, device=device)
     with pytest.raises(ValueError):
-        odl.space_weighting(impl=impl, weight=-1.5, exponent=exponent, device=device)
+        odl.core.space_weighting(impl=impl, weight=-1.5, exponent=exponent, device=device)
     with pytest.raises(ValueError):
-        odl.space_weighting(impl=impl, weight=float('inf'), exponent=exponent, device=device)
+        odl.core.space_weighting(impl=impl, weight=float('inf'), exponent=exponent, device=device)
 
 
 def test_const_weighting_comparison(tspace):
@@ -1097,16 +1097,16 @@ def test_const_weighting_comparison(tspace):
     ns = tspace.array_namespace
     constant = 1.5
 
-    w_const = odl.space_weighting(impl=odl_tspace_impl, weight=constant)
-    w_const2 = odl.space_weighting(impl=odl_tspace_impl, weight=constant)
-    w_other_const = odl.space_weighting(impl=odl_tspace_impl, weight=constant+1)
-    w_other_exp = odl.space_weighting(impl=odl_tspace_impl, weight=constant, exponent = 1)
+    w_const = odl.core.space_weighting(impl=odl_tspace_impl, weight=constant)
+    w_const2 = odl.core.space_weighting(impl=odl_tspace_impl, weight=constant)
+    w_other_const = odl.core.space_weighting(impl=odl_tspace_impl, weight=constant+1)
+    w_other_exp = odl.core.space_weighting(impl=odl_tspace_impl, weight=constant, exponent = 1)
 
     const_arr = constant * ns.ones(DEFAULT_SHAPE)
 
-    w_const_arr = odl.space_weighting(impl=odl_tspace_impl, weight=const_arr)
+    w_const_arr = odl.core.space_weighting(impl=odl_tspace_impl, weight=const_arr)
     other_const_arr = (constant + 1) * ns.ones(DEFAULT_SHAPE)
-    w_other_const_arr =  odl.space_weighting(impl=odl_tspace_impl, weight=other_const_arr)
+    w_other_const_arr =  odl.core.space_weighting(impl=odl_tspace_impl, weight=other_const_arr)
 
     assert w_const == w_const
     assert w_const == w_const2
@@ -1138,12 +1138,12 @@ def test_const_weighting_inner(tspace):
     constant = 1.5
     true_result_const = constant * ns.vecdot(yarr.ravel(), xarr.ravel())
 
-    w_const = odl.space_weighting(impl=tspace.impl, weight=constant)
+    w_const = odl.core.space_weighting(impl=tspace.impl, weight=constant)
 
     assert w_const.inner(x, y) == true_result_const
 
     # Exponent != 2 -> no inner
-    w_const = odl.space_weighting(impl=tspace.impl, weight=constant, exponent=1)
+    w_const = odl.core.space_weighting(impl=tspace.impl, weight=constant, exponent=1)
     with pytest.raises(NotImplementedError):
         w_const.inner(x, y)
 
@@ -1162,7 +1162,7 @@ def test_const_weighting_norm(tspace, exponent):
 
     true_norm = float(factor * ns.linalg.norm(xarr.ravel(), ord=exponent))
 
-    w_const =  odl.space_weighting(impl=tspace.impl, weight=constant, exponent=exponent)
+    w_const =  odl.core.space_weighting(impl=tspace.impl, weight=constant, exponent=exponent)
 
     array_backend = tspace.array_backend
     real_dtype = array_backend.identifier_of_dtype(tspace.real_dtype)
@@ -1194,7 +1194,7 @@ def test_const_weighting_dist(tspace, exponent):
     else:
         factor = constant ** (1 / exponent)
     true_dist = float(factor * ns.linalg.norm((xarr - yarr).ravel(), ord=exponent))
-    w_const = w_const = odl.space_weighting(impl=tspace.impl, weight=constant, exponent=exponent)
+    w_const = w_const = odl.core.space_weighting(impl=tspace.impl, weight=constant, exponent=exponent)
 
     array_backend = tspace.array_backend
     real_dtype = array_backend.identifier_of_dtype(tspace.real_dtype)
@@ -1230,9 +1230,9 @@ def test_custom_inner(tspace):
     def dot(x,y):
         return ns.dot(x,y)
     
-    w = odl.space_weighting(impl=tspace.impl, inner=inner_lspacelement)
-    w_same = odl.space_weighting(impl=tspace.impl, inner=inner_lspacelement)
-    w_other = odl.space_weighting(impl=tspace.impl, inner=dot)
+    w = odl.core.space_weighting(impl=tspace.impl, inner=inner_lspacelement)
+    w_same = odl.core.space_weighting(impl=tspace.impl, inner=inner_lspacelement)
+    w_other = odl.core.space_weighting(impl=tspace.impl, inner=dot)
 
     assert w == w
     assert w == w_same
@@ -1248,7 +1248,7 @@ def test_custom_inner(tspace):
     assert isclose( w.dist(x, y), true_dist, rtol=rtol)
 
     with pytest.raises(ValueError):
-        odl.space_weighting(impl=tspace.impl, inner=inner, weight = 1)
+        odl.core.space_weighting(impl=tspace.impl, inner=inner, weight = 1)
 
 
 def test_custom_norm(tspace):
@@ -1262,9 +1262,9 @@ def test_custom_norm(tspace):
     def other_norm(x):
         return ns.linalg.norm(x, ord=1)
 
-    w = odl.space_weighting(impl=tspace.impl, norm=norm)
-    w_same = odl.space_weighting(impl=tspace.impl, norm=norm)
-    w_other = odl.space_weighting(impl=tspace.impl, norm=other_norm)
+    w = odl.core.space_weighting(impl=tspace.impl, norm=norm)
+    w_same = odl.core.space_weighting(impl=tspace.impl, norm=norm)
+    w_other = odl.core.space_weighting(impl=tspace.impl, norm=other_norm)
 
     assert w == w
     assert w == w_same
@@ -1280,7 +1280,7 @@ def test_custom_norm(tspace):
     pytest.approx(tspace.dist(x, y), true_dist)
 
     with pytest.raises(ValueError):
-        odl.space_weighting(impl=tspace.impl, norm=norm, weight = 1)
+        odl.core.space_weighting(impl=tspace.impl, norm=norm, weight = 1)
 
 
 def test_custom_dist(tspace):
@@ -1296,9 +1296,9 @@ def test_custom_dist(tspace):
     def other_dist(x, y):
         return ns.linalg.norm(x - y, ord=1)
 
-    w = odl.space_weighting(impl=tspace.impl, dist=dist_lspace_element)
-    w_same = odl.space_weighting(impl=tspace.impl, dist=dist_lspace_element)
-    w_other = odl.space_weighting(impl=tspace.impl, dist=other_dist)
+    w = odl.core.space_weighting(impl=tspace.impl, dist=dist_lspace_element)
+    w_same = odl.core.space_weighting(impl=tspace.impl, dist=dist_lspace_element)
+    w_other = odl.core.space_weighting(impl=tspace.impl, dist=other_dist)
 
     assert w == w
     assert w == w_same
@@ -1314,7 +1314,7 @@ def test_custom_dist(tspace):
     pytest.approx(tspace.dist(x, y), true_dist)
 
     with pytest.raises(ValueError):
-        odl.space_weighting(impl=tspace.impl, dist=dist, weight = 1)
+        odl.core.space_weighting(impl=tspace.impl, dist=dist, weight = 1)
 
 def test_reduction(tspace):
     """Check that the generated docstrings are not empty."""

@@ -26,7 +26,7 @@ from odl.solvers.nonsmooth.proximal_operators import (
     proximal_convex_conj_l1_l2, proximal_convex_conj_l2,
     proximal_convex_conj_linfty, proximal_huber, proximal_l1, proximal_l1_l2,
     proximal_l2, proximal_l2_squared, proximal_linfty)
-from odl.space import ProductSpace
+from odl.core.space import ProductSpace
 from odl.core.util import conj_exponent
 
 from odl.core.array_API_support import (all as odl_all,

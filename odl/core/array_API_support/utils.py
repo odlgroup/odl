@@ -238,11 +238,11 @@ def get_array_and_backend(x, must_be_contiguous=False):
     Traceback (most recent call last):
     ValueError: f"The registered array backends are ['numpy']. The argument provided is a list, check that the backend you want to use is supported and has been correctly instanciated."
     """
-    from odl.space.base_tensors import Tensor
+    from odl.core.space.base_tensors import Tensor
     if isinstance(x, Tensor):
         return x.asarray(must_be_contiguous=must_be_contiguous), x.space.array_backend
 
-    from odl.space.pspace import ProductSpaceElement
+    from odl.core.space.pspace import ProductSpaceElement
     if isinstance(x, ProductSpaceElement):
         return get_array_and_backend(x.asarray(), must_be_contiguous=must_be_contiguous)
 

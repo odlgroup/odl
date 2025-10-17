@@ -26,7 +26,7 @@ from odl.core.util.dtype_utils import (
     is_floating_dtype, is_complex_dtype)
 
 skip_if_no_pytorch = pytest.mark.skipif(
-        "not 'pytorch' in odl.space.entry_points.TENSOR_SPACE_IMPLS",
+        "not 'pytorch' in odl.core.space.entry_points.TENSOR_SPACE_IMPLS",
         reason='pytorch not available not available',
     )
 
@@ -355,7 +355,7 @@ def noise_array(space):
     odl.core.set.space.LinearSpace.examples : Examples of elements
         typical to the space.
     """
-    from odl.space import ProductSpace
+    from odl.core.space import ProductSpace
     if isinstance(space, ProductSpace):
 
         if space.is_power_space:

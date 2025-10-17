@@ -21,10 +21,10 @@ from odl.discr.partition import (
     RectPartition, uniform_partition, uniform_partition_fromintv)
 from odl.core.set import IntervalProd, RealNumbers
 from odl.core.set.space import LinearSpace, SupportedNumOperationParadigms, NumOperationParadigmSupport
-from odl.space import ProductSpace
-from odl.space.base_tensors import Tensor, TensorSpace, default_dtype
-from odl.space.entry_points import tensor_space_impl
-from odl.space.weightings.weighting import ConstWeighting
+from odl.core.space import ProductSpace
+from odl.core.space.base_tensors import Tensor, TensorSpace, default_dtype
+from odl.core.space.entry_points import tensor_space_impl
+from odl.core.space.weightings.weighting import ConstWeighting
 from odl.core.util import (
     apply_on_boundary, array_str, dtype_str, is_floating_dtype,
     is_numeric_dtype, normalized_nodes_on_bdry, normalized_scalar_param_list,

@@ -13,7 +13,7 @@ import numpy as np
 
 from odl.solvers.functional.functional import Functional
 from odl.operator import Operator, MatrixOperator
-from odl.space.base_tensors import TensorSpace
+from odl.core.space.base_tensors import TensorSpace
 
 
 __all__ = ('RosenbrockFunctional',)

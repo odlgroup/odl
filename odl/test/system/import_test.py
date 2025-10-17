@@ -14,8 +14,8 @@ import odl
 def test_all_imports():
     # Create Cn
     odl.cn(3)
-    odl.space.cn(3)
-    C3 = odl.space.space_utils.cn(3)
+    odl.core.space.cn(3)
+    C3 = odl.core.space.space_utils.cn(3)
 
     # Three ways of creating the identity
     odl.IdentityOperator(C3)

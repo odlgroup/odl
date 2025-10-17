@@ -16,8 +16,8 @@ from odl.discr import DiscretizedSpace, Divergence, Gradient
 from odl.discr.discr_space import DiscretizedSpaceElement
 from odl.discr.discr_utils import _normalize_interp, per_axis_interpolator
 from odl.operator import Operator, PointwiseInner
-from odl.space import ProductSpace
-from odl.space.pspace import ProductSpaceElement
+from odl.core.space import ProductSpace
+from odl.core.space.pspace import ProductSpaceElement
 from odl.core.util import indent, signature_string
 from odl.core.array_API_support import exp, lookup_array_backend
 

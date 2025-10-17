@@ -44,6 +44,6 @@ else:
         reason='skimage not available',
     )
     skip_if_no_pytorch = pytest.mark.skipif(
-        "not 'pytorch' in odl.space.entry_points.TENSOR_SPACE_IMPLS",
+        "not 'pytorch' in odl.core.space.entry_points.TENSOR_SPACE_IMPLS",
         reason='pytorch not available not available',
     )

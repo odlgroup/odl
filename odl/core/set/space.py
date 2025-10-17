@@ -417,7 +417,7 @@ class LinearSpace(Set):
         >>> r2 ** (4, 2)
         ProductSpace(ProductSpace(rn(2), 4), 2)
         """
-        from odl.space import ProductSpace
+        from odl.core.space import ProductSpace
 
         try:
             shape = (int(shape),)
@@ -447,7 +447,7 @@ class LinearSpace(Set):
         >>> r2 * r3
         ProductSpace(rn(2), rn(3))
         """
-        from odl.space import ProductSpace
+        from odl.core.space import ProductSpace
 
         if not isinstance(other, LinearSpace):
             raise TypeError('Can only multiply with `LinearSpace`, got {!r}'

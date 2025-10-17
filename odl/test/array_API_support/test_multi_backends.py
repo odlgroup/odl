@@ -10,7 +10,7 @@ except ImportError:
     pass
 
 skip_if_no_pytorch = pytest.mark.skipif(
-        "'pytorch' not in odl.space.entry_points.TENSOR_SPACE_IMPLS",
+        "'pytorch' not in odl.core.space.entry_points.TENSOR_SPACE_IMPLS",
         reason='PYTORCH not available',
     )
 

@@ -11,7 +11,7 @@
 from __future__ import absolute_import, division, print_function
 
 from odl.core.set.space import LinearSpaceElement
-from odl.space.base_tensors import Tensor, TensorSpace
+from odl.core.space.base_tensors import Tensor, TensorSpace
 from odl.core.util import is_numeric_dtype
 from odl.core.array_API_support import ArrayBackend
 
@@ -204,9 +204,9 @@ class PyTorchTensorSpace(TensorSpace):
 
         See Also
         --------
-        odl.space.space_utils.rn : constructor for real tensor spaces
-        odl.space.space_utils.cn : constructor for complex tensor spaces
-        odl.space.space_utils.tensor_space :
+        odl.core.space.space_utils.rn : constructor for real tensor spaces
+        odl.core.space.space_utils.cn : constructor for complex tensor spaces
+        odl.core.space.space_utils.tensor_space :
             constructor for tensor spaces of arbitrary scalar data type
 
         Notes

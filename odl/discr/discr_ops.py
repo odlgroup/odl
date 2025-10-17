@@ -17,7 +17,7 @@ from odl.discr.discr_utils import (
     _normalize_interp, per_axis_interpolator, point_collocation)
 from odl.discr.partition import uniform_partition
 from odl.operator import Operator
-from odl.space import tensor_space
+from odl.core.space import tensor_space
 from odl.core.util import (
     normalized_scalar_param_list, resize_array, safe_int_conv, writable_array)
 from odl.core.util.numerics import _SUPPORTED_RESIZE_PAD_MODES

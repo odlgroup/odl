@@ -14,10 +14,10 @@ import numpy as np
 from odl.core.util.npy_compat import AVOID_UNNECESSARY_COPY
 from odl.core.array_API_support import lookup_array_backend
 
-from odl.space.base_tensors import default_dtype
+from odl.core.space.base_tensors import default_dtype
 
 from odl.core.util.dtype_utils import is_available_dtype, is_complex_dtype, is_floating_dtype
-from odl.space.entry_points import tensor_space_impl, tensor_space_impl_names
+from odl.core.space.entry_points import tensor_space_impl, tensor_space_impl_names
 
 __all__ = ('vector', 'tensor_space', 'cn', 'rn')
 
@@ -35,7 +35,7 @@ def vector(array, dtype=None, impl='numpy', device = 'cpu'):
         By default, the space type is inferred from the input data.
     impl : str, optional
         Impmlementation back-end for the space. See
-        `odl.space.entry_points.tensor_space_impl_names` for available
+        `odl.core.space.entry_points.tensor_space_impl_names` for available
         options.
 
     Returns
@@ -104,7 +104,7 @@ def tensor_space(shape, dtype='float64', impl='numpy', device = 'cpu', **kwargs)
         Data type of each element. Defaults to float64
     impl : str, optional
         Impmlementation back-end for the space. See
-        `odl.space.entry_points.tensor_space_impl_names` for available
+        `odl.core.space.entry_points.tensor_space_impl_names` for available
         options.
     kwargs :
         Extra keyword arguments passed to the space constructor.
@@ -164,7 +164,7 @@ def cn(shape, dtype='complex128', impl='numpy', device='cpu', **kwargs):
         Defaults to complex128
     impl (str) : str, optional
         Impmlementation back-end for the space. See
-        `odl.space.entry_points.tensor_space_impl_names` for available
+        `odl.core.space.entry_points.tensor_space_impl_names` for available
         options.
     kwargs :
         Extra keyword arguments passed to the space constructor.

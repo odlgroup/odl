@@ -20,7 +20,7 @@ import numpy as np
 from odl.operator.operator import Operator
 from odl.core.set import ComplexNumbers, Field, LinearSpace, RealNumbers
 from odl.core.set.space import LinearSpaceElement
-from odl.space import ProductSpace
+from odl.core.space import ProductSpace
 from odl.core.array_API_support import sqrt, conj
 
 __all__ = ('ScalingOperator', 'ZeroOperator', 'IdentityOperator',

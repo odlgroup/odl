@@ -15,8 +15,8 @@ import numpy as np
 import odl
 import pytest
 from odl.discr.discr_space import DiscretizedSpace, DiscretizedSpaceElement
-from odl.space.base_tensors import TensorSpace, default_dtype
-from odl.space.npy_tensors import NumpyTensor
+from odl.core.space.base_tensors import TensorSpace, default_dtype
+from odl.core.space.npy_tensors import NumpyTensor
 from odl.core.util.dtype_utils import COMPLEX_DTYPES, DTYPE_SHORTHANDS
 from odl.core.util.testutils import (
     all_almost_equal, all_equal, noise_elements, simple_fixture, default_precision_dict)
@@ -743,7 +743,7 @@ def test_real_imag(odl_elem_order, odl_impl_device_pairs):
     impl, device = odl_impl_device_pairs
     """Check if real and imaginary parts can be read and written to."""
     order = odl_elem_order
-    tspace_cls = odl.space.entry_points.tensor_space_impl(impl)
+    tspace_cls = odl.core.space.entry_points.tensor_space_impl(impl)
     for dtype in COMPLEX_DTYPES:
         cdiscr = odl.uniform_discr([0, 0], [1, 1], [2, 2], dtype=dtype, impl=impl, device=device)
         rdiscr = cdiscr.real_space

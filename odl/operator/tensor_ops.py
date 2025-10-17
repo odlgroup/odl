@@ -19,9 +19,9 @@ from odl.core.util.npy_compat import AVOID_UNNECESSARY_COPY
 
 from odl.operator.operator import Operator
 from odl.core.set import ComplexNumbers, RealNumbers
-from odl.space import ProductSpace, tensor_space
-from odl.space.base_tensors import TensorSpace, Tensor
-from odl.space.weightings.weighting import ArrayWeighting
+from odl.core.space import ProductSpace, tensor_space
+from odl.core.space.base_tensors import TensorSpace, Tensor
+from odl.core.space.weightings.weighting import ArrayWeighting
 from odl.core.util import dtype_repr, indent, signature_string
 from odl.core.array_API_support import ArrayBackend, lookup_array_backend, abs as odl_abs, maximum, pow, sqrt, multiply, get_array_and_backend, can_cast, odl_all_equal
 
@@ -118,7 +118,7 @@ class ImplChangeOperator(Operator):
             given, they must be identical save for the backend (`impl`).
         domain_impl, range_impl : `str`, optional
             Backend identifier. Must correspond to a registered backend,
-            cf. `odl.space.entry_points.tensor_space_impl_names`.
+            cf. `odl.core.space.entry_points.tensor_space_impl_names`.
             If e.g. `domain` and `range_impl` are specified, the range will be
             chosen as `domain.to_impl(range_impl)`, vice versa.
             The device of the space must be usable simultaneously with both of
@@ -189,7 +189,7 @@ class PointwiseTensorFieldOperator(Operator):
 
     See Also
     --------
-    odl.space.pspace.ProductSpace
+    odl.core.space.pspace.ProductSpace
     """
 
     def __init__(self, domain, range, base_space, linear=False):

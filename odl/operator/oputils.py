@@ -12,8 +12,8 @@ from __future__ import absolute_import, division, print_function
 
 import numpy as np
 from future.utils import native
-from odl.space import ProductSpace
-from odl.space.base_tensors import TensorSpace
+from odl.core.space import ProductSpace
+from odl.core.space.base_tensors import TensorSpace
 from odl.core.util import nd_iterator
 from odl.core.util.testutils import noise_element
 

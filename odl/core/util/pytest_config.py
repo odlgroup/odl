@@ -18,7 +18,7 @@ import numpy as np
 
 import odl
 from odl.core.array_API_support import lookup_array_backend
-from odl.space.entry_points import tensor_space_impl_names
+from odl.core.space.entry_points import tensor_space_impl_names
 from odl.trafos.backends import PYFFTW_AVAILABLE, PYWT_AVAILABLE
 from odl.core.util.testutils import simple_fixture
 from odl.core.util.dtype_utils import INTEGER_DTYPES, FLOAT_DTYPES, COMPLEX_DTYPES

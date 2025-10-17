@@ -9,7 +9,7 @@
 """Entry points for adding more spaces to ODL using external packages.
 
 External packages can add an implementation of `TensorSpace` by hooking
-into the setuptools entry point ``'odl.space'`` and exposing the methods
+into the setuptools entry point ``'odl.core.space'`` and exposing the methods
 ``tensor_space_impl`` and ``tensor_space_impl_names``.
 
 This is used with functions such as `rn`, `cn`, `tensor_space` or
@@ -22,9 +22,9 @@ NumpyTensorSpace : Numpy-based implementation of `TensorSpace`
 
 from __future__ import print_function, division, absolute_import
 
-from odl.space.npy_tensors import NumpyTensorSpace
+from odl.core.space.npy_tensors import NumpyTensorSpace
 
-# We don't expose anything to odl.space
+# We don't expose anything to odl.core.space
 __all__ = ()
 
 IS_INITIALIZED = False
@@ -40,7 +40,7 @@ def _initialize_if_needed():
         torch_module = importlib.util.find_spec("torch")
         if torch_module is not None:
             try:
-                from odl.space.pytorch_tensors import PyTorchTensorSpace
+                from odl.core.space.pytorch_tensors import PyTorchTensorSpace
                 TENSOR_SPACE_IMPLS['pytorch'] = PyTorchTensorSpace
             except ModuleNotFoundError:
                 pass

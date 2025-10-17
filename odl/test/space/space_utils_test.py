@@ -10,7 +10,7 @@ from __future__ import division
 
 import odl
 from odl import vector
-from odl.space.entry_points import TENSOR_SPACE_IMPLS
+from odl.core.space.entry_points import TENSOR_SPACE_IMPLS
 from odl.core.util.testutils import all_equal, default_precision_dict
 import pytest 
 

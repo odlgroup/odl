@@ -572,7 +572,7 @@ class CallbackShow(Callback):
     See Also
     --------
     odl.discr.discr_space.DiscretizedSpaceElement.show
-    odl.space.base_tensors.Tensor.show
+    odl.core.space.base_tensors.Tensor.show
     """
 
     def __init__(self, title=None, step=1, saveto=None, **kwargs):

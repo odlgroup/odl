@@ -30,8 +30,8 @@ import math
 from odl.operator import (
     Operator, IdentityOperator, ConstantOperator, DiagonalOperator,
     PointwiseNorm, MultiplyOperator)
-from odl.space.pspace import ProductSpaceElement
-from odl.space.base_tensors import Tensor
+from odl.core.space.pspace import ProductSpaceElement
+from odl.core.space.base_tensors import Tensor
 from odl.core.set.space import LinearSpace, LinearSpaceElement
 from odl.core.array_API_support.element_wise import maximum, minimum, abs, divide, sign, square, sqrt, less_equal, logical_not, exp
 from odl.core.array_API_support.statistical import sum

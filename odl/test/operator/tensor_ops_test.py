@@ -17,10 +17,10 @@ import odl
 import pytest
 from odl.operator.tensor_ops import (
     MatrixOperator, PointwiseInner, PointwiseNorm, PointwiseSum)
-from odl.space.pspace import ProductSpace
+from odl.core.space.pspace import ProductSpace
 from odl.core.util.testutils import (
     all_almost_equal, all_equal, noise_element, noise_elements, simple_fixture, skip_if_no_pytorch)
-from odl.space.entry_points import tensor_space_impl_names
+from odl.core.space.entry_points import tensor_space_impl_names
 from odl.sparse import SparseMatrix
 from odl.core.array_API_support import lookup_array_backend, get_array_and_backend
 

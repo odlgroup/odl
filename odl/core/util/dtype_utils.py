@@ -105,7 +105,7 @@ def _universal_dtype_identifier(dtype: "str | Number |xp.dtype", array_backend_s
     If that argument is not provided, all registered backends are taken into consideration.
     """
     # Lazy import 
-    from odl.space.entry_points import TENSOR_SPACE_IMPLS
+    from odl.core.space.entry_points import TENSOR_SPACE_IMPLS
 
     original_dtype = dtype
     shorthand_elaboration = ""

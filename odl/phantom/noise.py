@@ -13,7 +13,7 @@ from __future__ import absolute_import, division, print_function
 import numpy as np
 
 from odl.core.util import npy_random_seed
-from odl.space.base_tensors import Tensor
+from odl.core.space.base_tensors import Tensor
 
 __all__ = ('white_noise', 'poisson_noise', 'salt_pepper_noise',
            'uniform_noise')
@@ -48,7 +48,7 @@ def white_noise(space, mean=0, stddev=1, seed=None):
     salt_pepper_noise
     numpy.random.normal
     """
-    from odl.space import ProductSpace
+    from odl.core.space import ProductSpace
 
     with npy_random_seed(seed):
         if isinstance(space, ProductSpace):
@@ -104,7 +104,7 @@ def uniform_noise(space, low=0, high=1, seed=None):
     white_noise
     numpy.random.normal
     """
-    from odl.space import ProductSpace
+    from odl.core.space import ProductSpace
 
     with npy_random_seed(seed):
         if isinstance(space, ProductSpace):
@@ -158,7 +158,7 @@ def poisson_noise(intensity, seed=None):
     uniform_noise
     numpy.random.poisson
     """
-    from odl.space import ProductSpace
+    from odl.core.space import ProductSpace
 
     with npy_random_seed(seed):
         if isinstance(intensity.space, ProductSpace):
@@ -210,7 +210,7 @@ def salt_pepper_noise(vector, fraction=0.05, salt_vs_pepper=0.5,
     poisson_noise
     uniform_noise
     """
-    from odl.space import ProductSpace
+    from odl.core.space import ProductSpace
 
     # Validate input parameters
     fraction, fraction_in = float(fraction), fraction

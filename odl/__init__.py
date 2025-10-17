@@ -59,7 +59,7 @@ from .core.set import *
 from .core.array_API_support import *
 from .discr import *
 from .operator import *
-from .space import *
+from .core.space import *
 
 # More "advanced" subpackages keep their namespaces separate from top-level,
 # we only import the modules themselves
@@ -79,5 +79,4 @@ from .core.util import test
 # Amend `__all__`
 __all__ += discr.__all__
 __all__ += operator.__all__
-__all__ += space.__all__
 __all__ += ('test',)
