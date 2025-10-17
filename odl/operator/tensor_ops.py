@@ -23,7 +23,7 @@ from odl.space import ProductSpace, tensor_space
 from odl.space.base_tensors import TensorSpace, Tensor
 from odl.space.weightings.weighting import ArrayWeighting
 from odl.util import dtype_repr, indent, signature_string
-from odl.core.array_API_support import ArrayBackend, lookup_array_backend, abs as odl_abs, maximum, pow, sqrt, multiply, get_array_and_backend, can_cast, all_equal
+from odl.core.array_API_support import ArrayBackend, lookup_array_backend, abs as odl_abs, maximum, pow, sqrt, multiply, get_array_and_backend, can_cast, odl_all_equal
 
 from odl.sparse import is_sparse, get_sparse_matrix_impl, lookup_sparse_format
 
@@ -340,7 +340,7 @@ class PointwiseNorm(PointwiseTensorFieldOperator):
 
             if isinstance(weighting, list) and all([isinstance(w, Tensor) for w in weighting]) :
                 self.__weights = weighting
-                self.__is_weighted = all([all_equal(w, 1) for w in weighting])
+                self.__is_weighted = all([odl_all_equal(w, 1) for w in weighting])
             else:
                 if isinstance(weighting, (int, float)):
                     weighting = [weighting for _ in range(len(self.domain))]
@@ -587,7 +587,7 @@ class PointwiseInnerBase(PointwiseTensorFieldOperator):
             # Check if the input has already been sanitised, i.e is it an odl.Tensor
             if isinstance(weighting, list) and all([isinstance(w, Tensor) for w in weighting]) :
                 self.__weights = weighting
-                self.__is_weighted = all([all_equal(w, 1) for w in weighting])
+                self.__is_weighted = all([odl_all_equal(w, 1) for w in weighting])
 
             # these are required to provide an array-API compatible weighting parsing.
             else:

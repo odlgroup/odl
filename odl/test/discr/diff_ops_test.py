@@ -17,7 +17,7 @@ from odl.discr.diff_ops import (
     Divergence, Gradient, Laplacian, PartialDerivative, finite_diff)
 from odl.util.testutils import (
     all_almost_equal, all_equal, dtype_tol, noise_element, simple_fixture)
-from odl.core.array_API_support import get_array_and_backend, all_equal as odl_all_equal
+from odl.core.array_API_support import get_array_and_backend, odl_all_equal
 
 # --- pytest fixtures --- #
 

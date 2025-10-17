@@ -30,7 +30,7 @@ import numpy as np
 __all__ = (
     "all",    
     "allclose",
-    "all_equal",
+    "odl_all_equal",
     "any",
     "isclose"
 )
@@ -100,10 +100,14 @@ def allclose(x, y, rtol=1e-05, atol=1e-08, equal_nan=False):
     """
     return _helper(x, 'allclose', y=y, rtol=rtol, atol=atol, equal_nan=equal_nan)
 
-def all_equal(x, y):
+def odl_all_equal(x, y):
     """
     Test whether all array elements along a given axis evaluate to True.
-    Note: This is not a Python Array API method, but a composition for convenience
+    Note: This is not a Python Array API method, but a composition for convenience.
+    It requires both sides of the comparison to use the same implementation, like
+    other array-API functions, to avoid inefficient copying / restructuring.
+    For a more flexible equality check useful for testing purposes, consider
+    `all_equal` from `odl.testutils`.
     """
     return _helper(_helper(x, 'equal', y=y), 'all')
 

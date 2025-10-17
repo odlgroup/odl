@@ -15,7 +15,7 @@ import numpy as np
 
 from odl.util import array_str, signature_string, indent, is_real_dtype
 from odl.core.array_API_support.utils import get_array_and_backend
-from odl.core.array_API_support.comparisons import all_equal
+from odl.core.array_API_support.comparisons import odl_all_equal
 
 __all__ = ('MatrixWeighting', 'ArrayWeighting', 'ConstWeighting',
            'CustomInner', 'CustomNorm', 'CustomDist')
@@ -626,7 +626,7 @@ class ArrayWeighting(Weighting):
             return True
 
         return (super(ArrayWeighting, self).__eq__(other) and
-                all_equal(self.array, other.array))
+                odl_all_equal(self.array, other.array))
 
     def __hash__(self):
         """Return ``hash(self)``."""
@@ -653,10 +653,10 @@ class ArrayWeighting(Weighting):
             return other.equiv(self)
         elif isinstance(other, ConstWeighting):
             # return np.array_equiv(self.array, other.const)
-            return all_equal(self.array, other.const)
+            return odl_all_equal(self.array, other.const)
         else:
             # return np.array_equal(self.array, other.array)
-            return all_equal(self.array, other.array)
+            return odl_all_equal(self.array, other.array)
 
     @property
     def repr_part(self):

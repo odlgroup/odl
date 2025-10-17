@@ -13,7 +13,7 @@ elementwise_comparison = simple_fixture(
     )
 
 reduction_comparison = simple_fixture(
-    'reduction', ["allclose", "all_equal"]
+    'reduction', ["allclose", "odl_all_equal"]
     )
 
 truth_value_comparison = simple_fixture(
@@ -52,7 +52,7 @@ def test_reduction(float_tspace, reduction_comparison):
     if reduction_comparison == 'allclose':
         arr_fn = getattr(ns, reduction_comparison)
         
-    elif reduction_comparison == 'all_equal':
+    elif reduction_comparison == 'odl_all_equal':
         all_fn   = getattr(ns, 'all')
         equal_fn = getattr(ns, 'equal')
         def arr_fn(x, y):

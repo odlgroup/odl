@@ -2,7 +2,7 @@ import pytest
 
 import odl
 
-from odl.core.array_API_support.comparisons  import all_equal
+from odl.core.array_API_support.comparisons  import odl_all_equal
 
 from odl.util.pytest_config import IMPL_DEVICE_PAIRS
 from odl.util.testutils import (
@@ -56,7 +56,7 @@ def test_keepdims_function(float_tspace, keepdims_function, keepdims):
     x_arr, x = noise_elements(float_tspace, 1)
     y = odl_fn(x, keepdims=keepdims)
     y_arr = arr_fn(x_arr, keepdims=keepdims)
-    assert all_equal(y, y_arr)
+    assert odl_all_equal(y, y_arr)
 
 def test_cumulative_function(float_tspace, cumulative_function, axis):
     ns = float_tspace.array_namespace
@@ -66,4 +66,4 @@ def test_cumulative_function(float_tspace, cumulative_function, axis):
     x_arr, x = noise_elements(float_tspace, 1)
     y = odl_fn(x, axis=axis)
     y_arr = arr_fn(x_arr, axis=axis)
-    assert all_equal(y, y_arr)
+    assert odl_all_equal(y, y_arr)

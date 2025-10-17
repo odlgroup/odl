@@ -2,6 +2,8 @@ import pytest
 
 import odl
 
+from odl.core.array_API_support import odl_all_equal
+
 from odl.util.pytest_config import IMPL_DEVICE_PAIRS
 from odl.util.testutils import (
     noise_elements, simple_fixture)
@@ -46,7 +48,7 @@ def test_from_array(float_tspace, from_array):
         pytest.skip("Skipping equality check for empty_like")
     
     else:
-        assert odl.all_equal(y_arr, y)
+        assert odl_all_equal(y_arr, y)
 
 # Pytorch and Numpy API still vary, making the systematic testing of these functions premature
 # def test_from_impl(float_tspace, from_impl):
@@ -86,6 +88,6 @@ def test_from_array(float_tspace, from_array):
 #         kwargs['k'] = 2
 
 #     print(args, kwargs)
-#     assert odl.all_equal(
+#     assert odl_all_equal(
 #         arr_fn(*args, **kwargs), odl_fn(*args, **kwargs)
     # )

@@ -16,7 +16,7 @@ import warnings
 from builtins import object
 from contextlib import contextmanager
 from time import time
-from odl.core.array_API_support.comparisons import allclose, isclose, all_equal as odl_all_equal
+from odl.core.array_API_support.comparisons import allclose, isclose, odl_all_equal
 import numpy as np
 import pytest
 
@@ -115,7 +115,11 @@ def dtype_tol(dtype, default=None):
 
 
 def all_equal(iter1, iter2):
-    """Return ``True`` if all elements in ``a`` and ``b`` are equal."""
+    """Return ``True`` if all elements in ``a`` and ``b`` are equal.
+    This is a more forgiving version of `odl_all_equal`, allowing also comparisons
+    between e.g. a list and a `LinearSpaceElement` rather than requiring both sides
+    to be compatible."""
+
     # Direct comparison for scalars, tuples or lists
 
     from odl.set.space import LinearSpaceElement

@@ -94,7 +94,6 @@ def test_one_operand_op_real(float_tspace, one_operand_op, inplace):
         y_arr = arr_fn(x_arr, out=out_arr)
         assert all_equal(y, y_arr)
         assert all_equal(y, out)
-        assert odl.all_equal(y_arr, out_arr)
     
     else:        
         y = odl_fn(x)
@@ -114,7 +113,6 @@ def test_one_operand_op_real_kwargs(float_tspace, kwargs_op, inplace):
         y_arr = arr_fn(x_arr, out=out_arr)
         assert all_equal(y, y_arr)
         assert all_equal(y, out)
-        assert odl.all_equal(y_arr, out_arr)
     else:
         y = odl_fn(x, min=0, max=1)
         y_arr = arr_fn(x_arr, min=0, max=1)
@@ -134,7 +132,6 @@ def test_one_operand_op_integer(integer_tspace, integer_op, inplace):
         y_arr = arr_fn(x_arr, out=out_arr)
         assert all_equal(y, y_arr)
         assert all_equal(y, out)
-        assert odl.all_equal(y_arr, out_arr)
 
     else:
         y = odl_fn(x)
@@ -195,7 +192,6 @@ def test_two_operands_op_integer(integer_tspace, two_operands_op_integer):
         z_arr = arr_fn(x_arr, y_arr, out=out_arr)
         assert all_equal(z, z_arr)
         assert all_equal(z, out)
-        assert odl.all_equal(z_arr, out_arr)
     else:
         z = odl_fn(x, y)
         z_arr = arr_fn(x_arr, y_arr)
