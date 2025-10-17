@@ -14,7 +14,7 @@ from numbers import Integral
 
 import numpy as np
 
-from odl.operator import (
+from odl.core.operator import (
     ConstantOperator, DiagonalOperator, Operator, PointwiseNorm,
     ScalingOperator, ZeroOperator)
 from odl.solvers.functional.functional import (
@@ -829,7 +829,7 @@ class IdentityFunctional(ScalingFunctional):
 
     See Also
     --------
-    odl.operator.default_ops.IdentityOperator
+    odl.core.operator.default_ops.IdentityOperator
     """
 
     def __init__(self, field):

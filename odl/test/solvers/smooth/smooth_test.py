@@ -11,7 +11,7 @@
 from __future__ import division
 import pytest
 import odl
-from odl.operator import OpNotImplementedError
+from odl.core.operator import OpNotImplementedError
 
 
 nonlinear_cg_beta = odl.core.util.testutils.simple_fixture('nonlinear_cg_beta',

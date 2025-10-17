@@ -19,8 +19,8 @@ def test_all_imports():
 
     # Three ways of creating the identity
     odl.IdentityOperator(C3)
-    odl.operator.IdentityOperator(C3)
-    odl.operator.default_ops.IdentityOperator(C3)
+    odl.core.operator.IdentityOperator(C3)
+    odl.core.operator.default_ops.IdentityOperator(C3)
 
     # Test that utility needs to be explicitly imported
     odl.core.util.print_utils.array_str

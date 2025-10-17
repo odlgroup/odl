@@ -27,7 +27,7 @@ import warnings
 
 import numpy as np
 import math
-from odl.operator import (
+from odl.core.operator import (
     Operator, IdentityOperator, ConstantOperator, DiagonalOperator,
     PointwiseNorm, MultiplyOperator)
 from odl.core.space.pspace import ProductSpaceElement

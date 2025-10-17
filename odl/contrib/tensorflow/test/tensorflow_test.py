@@ -32,7 +32,7 @@ def test_as_tensorflow_layer():
     x_tf = tf.constant(x)[None, ..., None]
     z_tf = tf.constant(z)[None, ..., None]
 
-    # Create tensorflow layer from odl operator
+    # Create tensorflow layer from odl core.operator
     odl_op_layer = odl.contrib.tensorflow.as_tensorflow_layer(
         odl_op, 'MatrixOperator')
     y_tf = odl_op_layer(x_tf)

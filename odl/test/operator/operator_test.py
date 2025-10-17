@@ -20,7 +20,7 @@ from odl import (
     OperatorComp, OperatorLeftScalarMult, OperatorLeftVectorMult,
     OperatorRightScalarMult, OperatorRightVectorMult, OperatorSum,
     OpRangeError, OpTypeError)
-from odl.operator.operator import _dispatch_call_args, _function_signature
+from odl.core.operator.operator import _dispatch_call_args, _function_signature
 from odl.core.util.testutils import (
     all_almost_equal, noise_element, noise_elements, simple_fixture)
 

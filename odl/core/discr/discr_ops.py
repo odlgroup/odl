@@ -16,7 +16,7 @@ from odl.core.discr.discr_space import DiscretizedSpace
 from odl.core.discr.discr_utils import (
     _normalize_interp, per_axis_interpolator, point_collocation)
 from odl.core.discr.partition import uniform_partition
-from odl.operator import Operator
+from odl.core.operator import Operator
 from odl.core.space import tensor_space
 from odl.core.util import (
     normalized_scalar_param_list, resize_array, safe_int_conv, writable_array)

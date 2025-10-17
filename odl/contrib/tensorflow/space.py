@@ -13,7 +13,7 @@ import tensorflow as tf
 
 from odl.core.set import LinearSpace, RealNumbers
 from odl.core.set.space import LinearSpaceElement
-from odl.operator import Operator
+from odl.core.operator import Operator
 
 
 __all__ = ('TensorflowSpace', 'TensorflowSpaceOperator')

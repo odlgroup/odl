@@ -12,7 +12,7 @@ from __future__ import print_function, division, absolute_import
 
 import numpy as np
 
-from odl.operator import Operator
+from odl.core.operator import Operator
 
 
 __all__ = ('douglas_rachford_pd', 'douglas_rachford_pd_stepsize')

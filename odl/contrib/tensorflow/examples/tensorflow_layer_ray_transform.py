@@ -22,7 +22,7 @@ ray_transform = odl.tomo.RayTransform(space, geometry)
 x = tf.constant(np.asarray(ray_transform.domain.one()))
 z = tf.constant(np.asarray(ray_transform.range.one()))
 
-# Create tensorflow layer from odl operator
+# Create tensorflow layer from odl core.operator
 odl_op_layer = odl.contrib.tensorflow.as_tensorflow_layer(
     ray_transform, 'RayTransform')
 

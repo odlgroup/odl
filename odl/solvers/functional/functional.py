@@ -11,10 +11,10 @@
 from __future__ import print_function, division, absolute_import
 import numpy as np
 
-from odl.operator.operator import (
+from odl.core.operator.operator import (
     Operator, OperatorComp, OperatorLeftScalarMult, OperatorRightScalarMult,
     OperatorRightVectorMult, OperatorSum, OperatorPointwiseProduct)
-from odl.operator.default_ops import (IdentityOperator, ConstantOperator)
+from odl.core.operator.default_ops import (IdentityOperator, ConstantOperator)
 from odl.solvers.nonsmooth import (proximal_arg_scaling, proximal_translation,
                                    proximal_quadratic_perturbation,
                                    proximal_const_func, proximal_convex_conj)

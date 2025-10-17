@@ -727,7 +727,7 @@ class Operator(object):
             if norm is not None:
                 return norm
             else:
-                from odl.operator.oputils import power_method_opnorm
+                from odl.core.operator.oputils import power_method_opnorm
                 self.__norm = power_method_opnorm(self, **kwargs)
                 return self.__norm
 

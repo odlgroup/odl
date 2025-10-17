@@ -69,9 +69,9 @@ Dy = odl.PartialDerivative(U, 1, method='backward', pad_mode='symmetric')
 # TODO: As the weighted space is currently not supported in ODL we find a
 # workaround.
 # W = odl.ProductSpace(U, 3, weighting=[1, 1, 2])
-# sym_gradient = odl.operator.ProductSpaceOperator(
+# sym_gradient = odl.core.operator.ProductSpaceOperator(
 #    [[Dx, 0], [0, Dy], [0.5*Dy, 0.5*Dx]], range=W)
-E = odl.operator.ProductSpaceOperator(
+E = odl.core.operator.ProductSpaceOperator(
     [[Dx, 0], [0, Dy], [0.5 * Dy, 0.5 * Dx], [0.5 * Dy, 0.5 * Dx]])
 W = E.range
 

@@ -888,7 +888,7 @@ class LinearSpaceElement(object):
         >>> x.T(y)
         13.0
         """
-        from odl.operator import InnerProductOperator
+        from odl.core.operator import InnerProductOperator
         return InnerProductOperator(self.copy())
 
     def __array__(self):

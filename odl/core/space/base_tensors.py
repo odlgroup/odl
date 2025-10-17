@@ -1194,7 +1194,7 @@ class TensorSpace(LinearSpace):
                 result_data = fn_in_place(x1.data, out=out.data, **kwargs)
             return self.astype(self.array_backend.get_dtype_identifier(array=result_data)).element(result_data) 
         
-        from odl.operator import Operator
+        from odl.core.operator import Operator
         if not isinstance(x1, (int, float, complex, Tensor, ProductSpaceElement, Operator)):
             raise TypeError(f'The type of the left operand {type(x1)} is not supported.')
         

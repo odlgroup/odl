@@ -12,7 +12,7 @@ from __future__ import print_function, division, absolute_import
 from builtins import next
 import numpy as np
 
-from odl.operator import IdentityOperator, OperatorComp, OperatorSum
+from odl.core.operator import IdentityOperator, OperatorComp, OperatorSum
 from odl.core.util import normalized_scalar_param_list
 
 

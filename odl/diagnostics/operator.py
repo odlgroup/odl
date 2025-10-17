@@ -15,7 +15,7 @@ from builtins import object
 import numpy as np
 
 from odl.diagnostics.examples import samples
-from odl.operator import power_method_opnorm
+from odl.core.operator import power_method_opnorm
 from odl.core.util.testutils import fail_counter
 
 __all__ = ('OperatorTest',)

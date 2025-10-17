@@ -13,7 +13,7 @@ import numpy as np
 import pytest
 
 import odl
-from odl.operator import OpTypeError
+from odl.core.operator import OpTypeError
 from odl.core.util.testutils import (
     all_almost_equal, dtype_ndigits, dtype_tol, noise_element, simple_fixture)
 from odl.solvers.functional.default_functionals import (
@@ -312,13 +312,13 @@ def test_functional_composition(space):
     # (e.g. wrong range)
     scalar = 2.1
     wrong_space = odl.uniform_discr(1, 2, 10)
-    op_wrong = odl.operator.ScalingOperator(wrong_space, scalar)
+    op_wrong = odl.core.operator.ScalingOperator(wrong_space, scalar)
 
     with pytest.raises(OpTypeError):
         func * op_wrong
 
     # Test composition with operator from the right
-    op = odl.operator.ScalingOperator(space, scalar)
+    op = odl.core.operator.ScalingOperator(space, scalar)
     func_op_comp = func * op
     assert isinstance(func_op_comp, odl.solvers.Functional)
 
@@ -346,7 +346,7 @@ def test_functional_sum(space):
     func2 = odl.solvers.L2Norm(space)
 
     # Verify that an error is raised if one operand is "wrong"
-    op = odl.operator.IdentityOperator(space)
+    op = odl.core.operator.IdentityOperator(space)
     with pytest.raises(OpTypeError):
         func1 + op
 

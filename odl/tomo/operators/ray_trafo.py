@@ -15,7 +15,7 @@ from collections import OrderedDict
 import numpy as np
 
 from odl.core.discr import DiscretizedSpace
-from odl.operator import Operator
+from odl.core.operator import Operator
 from odl.core.space.weightings.weighting import ConstWeighting
 from odl.tomo.backends import (
     ASTRA_AVAILABLE, ASTRA_CUDA_AVAILABLE, SKIMAGE_AVAILABLE)

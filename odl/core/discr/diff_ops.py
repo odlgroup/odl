@@ -14,7 +14,7 @@ import numpy as np
 from math import prod
 
 from odl.core.discr.discr_space import DiscretizedSpace
-from odl.operator.tensor_ops import PointwiseTensorFieldOperator
+from odl.core.operator.tensor_ops import PointwiseTensorFieldOperator
 from odl.core.space import ProductSpace
 from odl.core.util import indent, signature_string, writable_array
 from odl.core.array_API_support import asarray, get_array_and_backend

@@ -58,7 +58,7 @@ np.set_printoptions(linewidth=71)
 from .core.set import *
 from .core.array_API_support import *
 from .core.discr import *
-from .operator import *
+from .core.operator import *
 from .core.space import *
 
 # More "advanced" subpackages keep their namespaces separate from top-level,
@@ -77,5 +77,4 @@ from .core.util import test
 
 
 # Amend `__all__`
-__all__ += operator.__all__
 __all__ += ('test',)

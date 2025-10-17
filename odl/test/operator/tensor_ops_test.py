@@ -15,7 +15,7 @@ import scipy.sparse
 
 import odl
 import pytest
-from odl.operator.tensor_ops import (
+from odl.core.operator.tensor_ops import (
     MatrixOperator, PointwiseInner, PointwiseNorm, PointwiseSum)
 from odl.core.space.pspace import ProductSpace
 from odl.core.util.testutils import (

@@ -15,7 +15,7 @@ import numpy as np
 from odl.core.discr import DiscretizedSpace, Divergence, Gradient
 from odl.core.discr.discr_space import DiscretizedSpaceElement
 from odl.core.discr.discr_utils import _normalize_interp, per_axis_interpolator
-from odl.operator import Operator, PointwiseInner
+from odl.core.operator import Operator, PointwiseInner
 from odl.core.space import ProductSpace
 from odl.core.space.pspace import ProductSpaceElement
 from odl.core.util import indent, signature_string

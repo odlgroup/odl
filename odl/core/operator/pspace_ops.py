@@ -12,8 +12,8 @@ from __future__ import print_function, division, absolute_import
 from numbers import Integral
 import numpy as np
 
-from odl.operator.operator import Operator
-from odl.operator.default_ops import ZeroOperator
+from odl.core.operator.operator import Operator
+from odl.core.operator.default_ops import ZeroOperator
 from odl.core.space import ProductSpace
 from odl.core.util import COOMatrix
 

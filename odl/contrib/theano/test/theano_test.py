@@ -33,7 +33,7 @@ def test_theano_operator():
     x_theano = T.dvector()
     dy_theano = T.dvector()
 
-    # Create Theano layer from odl operator
+    # Create Theano layer from odl core.operator
     odl_op_layer = odl.contrib.theano.TheanoOperator(odl_op)
 
     # Build computation graphs
@@ -71,7 +71,7 @@ def test_theano_gradient():
     # Create Theano placeholder
     x_theano = T.dvector()
 
-    # Create Theano layers from odl operators
+    # Create Theano layers from odl core.operators
     odl_op_layer = odl.contrib.theano.TheanoOperator(odl_op)
     odl_cost_layer = odl.contrib.theano.TheanoOperator(odl_cost)
 

@@ -11,8 +11,8 @@ import numpy as np
 import pytest
 
 import odl
-from odl.operator.oputils import matrix_representation, power_method_opnorm
-from odl.operator.pspace_ops import ProductSpaceOperator
+from odl.core.operator.oputils import matrix_representation, power_method_opnorm
+from odl.core.operator.pspace_ops import ProductSpaceOperator
 from odl.core.util.testutils import all_almost_equal, noise_elements
 
 from odl.core.array_API_support.utils import get_array_and_backend

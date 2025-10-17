@@ -340,7 +340,7 @@ class ProductSpace(LinearSpace):
                     xl.space._elementwise_num_operation(operation=operation, x1=xl, out=out.parts[i], namespace=namespace, **kwargs)
                 return out
 
-        from odl.operator import Operator
+        from odl.core.operator import Operator
         if isinstance(x2, Operator):
             warnings.warn("The composition of a LinearSpaceElement and an Operator using the * operator is deprecated and will be removed in future ODL versions. Please replace * with @.")
             return x2.__rmul__(x1)

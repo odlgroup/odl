@@ -17,7 +17,7 @@ from copy import copy
 from numbers import Number
 import numpy as np
 
-from odl.operator.operator import Operator
+from odl.core.operator.operator import Operator
 from odl.core.set import ComplexNumbers, Field, LinearSpace, RealNumbers
 from odl.core.set.space import LinearSpaceElement
 from odl.core.space import ProductSpace
