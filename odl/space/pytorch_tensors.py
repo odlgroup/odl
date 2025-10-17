@@ -10,7 +10,7 @@
 
 from __future__ import absolute_import, division, print_function
 
-from odl.set.space import LinearSpaceElement
+from odl.core.set.space import LinearSpaceElement
 from odl.space.base_tensors import Tensor, TensorSpace
 from odl.core.util import is_numeric_dtype
 from odl.core.array_API_support import ArrayBackend

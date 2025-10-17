@@ -19,8 +19,8 @@ import numpy as np
 from odl.discr.discr_utils import point_collocation, sampling_function
 from odl.discr.partition import (
     RectPartition, uniform_partition, uniform_partition_fromintv)
-from odl.set import IntervalProd, RealNumbers
-from odl.set.space import LinearSpace, SupportedNumOperationParadigms, NumOperationParadigmSupport
+from odl.core.set import IntervalProd, RealNumbers
+from odl.core.set.space import LinearSpace, SupportedNumOperationParadigms, NumOperationParadigmSupport
 from odl.space import ProductSpace
 from odl.space.base_tensors import Tensor, TensorSpace, default_dtype
 from odl.space.entry_points import tensor_space_impl

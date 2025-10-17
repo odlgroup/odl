@@ -17,8 +17,8 @@ import numpy as np
 import warnings
 from contextlib import contextmanager
 
-from odl.set import LinearSpace
-from odl.set.space import (LinearSpaceElement,
+from odl.core.set import LinearSpace
+from odl.core.set.space import (LinearSpaceElement,
     SupportedNumOperationParadigms, NumOperationParadigmSupport)
 from .weightings.weighting import (
     ArrayWeighting, ConstWeighting, CustomDist, CustomInner, CustomNorm,

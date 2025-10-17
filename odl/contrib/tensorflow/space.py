@@ -11,8 +11,8 @@
 from __future__ import print_function, division, absolute_import
 import tensorflow as tf
 
-from odl.set import LinearSpace, RealNumbers
-from odl.set.space import LinearSpaceElement
+from odl.core.set import LinearSpace, RealNumbers
+from odl.core.set.space import LinearSpaceElement
 from odl.operator import Operator
 
 

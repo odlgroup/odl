@@ -33,7 +33,6 @@ __all__ = (
     'tomo',
     'trafos',
     'ufunc_ops',
-    'util',
 )
 
 # Set package version
@@ -56,11 +55,11 @@ np.set_printoptions(linewidth=71)
 # Import all names from "core" subpackages into the top-level namespace;
 # the `__all__` collection is extended later to make import errors more
 # visible (otherwise one gets errors like "... has no attribute __all__")
+from .core.set import *
+from .core.array_API_support import *
 from .discr import *
 from .operator import *
-from .set import *
 from .space import *
-from .core import *
 
 # More "advanced" subpackages keep their namespaces separate from top-level,
 # we only import the modules themselves
@@ -72,15 +71,13 @@ from . import solvers
 from . import tomo
 from . import trafos
 # from . import ufunc_ops
-from .core import util
 
 # Add `test` function to global namespace so users can run `odl.test()`
 from .core.util import test
 
+
 # Amend `__all__`
 __all__ += discr.__all__
 __all__ += operator.__all__
-__all__ += set.__all__
 __all__ += space.__all__
-__all__ += core.__all__
 __all__ += ('test',)

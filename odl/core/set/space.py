@@ -16,7 +16,7 @@ import numpy as np
 from numbers import Number
 from typing import Union
 
-from odl.set.sets import Field, Set, UniversalSet
+from odl.core.set.sets import Field, Set, UniversalSet
 
 
 __all__ = ('LinearSpace', 'UniversalSpace')

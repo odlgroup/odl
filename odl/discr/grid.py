@@ -15,7 +15,7 @@ space with a certain structure which is exploited to minimize storage.
 from __future__ import print_function, division, absolute_import
 import numpy as np
 
-from odl.set import Set, IntervalProd
+from odl.core.set import Set, IntervalProd
 from odl.core.util import (
     normalized_index_expression, normalized_scalar_param_list, safe_int_conv,
     array_str, signature_string, indent, npy_printoptions)
@@ -327,7 +327,7 @@ class RectGrid(Set):
         See Also
         --------
         max
-        odl.set.domain.IntervalProd.min
+        odl.core.set.domain.IntervalProd.min
 
         Examples
         --------
@@ -358,7 +358,7 @@ class RectGrid(Set):
         See Also
         --------
         min
-        odl.set.domain.IntervalProd.max
+        odl.core.set.domain.IntervalProd.max
 
         Examples
         --------

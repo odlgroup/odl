@@ -15,8 +15,8 @@ import sys
 from builtins import object
 from numbers import Integral, Number
 
-from odl.set import Field, LinearSpace, Set
-from odl.set.space import LinearSpaceElement
+from odl.core.set import Field, LinearSpace, Set
+from odl.core.set.space import LinearSpaceElement
 
 __all__ = (
     'Operator',

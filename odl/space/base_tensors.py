@@ -17,8 +17,8 @@ from contextlib import contextmanager
 import numpy as np
 
 import odl
-from odl.set.sets import ComplexNumbers, RealNumbers
-from odl.set.space import (
+from odl.core.set.sets import ComplexNumbers, RealNumbers
+from odl.core.set.space import (
     LinearSpace, LinearSpaceElement, LinearSpaceTypeError,
     SupportedNumOperationParadigms, NumOperationParadigmSupport)
 from odl.core.array_API_support import ArrayBackend, lookup_array_backend, check_device

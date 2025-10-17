@@ -10,7 +10,7 @@ from __future__ import division
 import pytest
 
 import odl
-from odl.set.sets import (EmptySet, UniversalSet, Strings, ComplexNumbers,
+from odl.core.set.sets import (EmptySet, UniversalSet, Strings, ComplexNumbers,
                           RealNumbers, Integers)
 
 

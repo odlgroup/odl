@@ -16,7 +16,7 @@ from odl.core.util.npy_compat import AVOID_UNNECESSARY_COPY
 
 from odl.discr import DiscretizedSpace, uniform_discr
 from odl.operator import Operator
-from odl.set import ComplexNumbers, RealNumbers
+from odl.core.set import ComplexNumbers, RealNumbers
 from odl.trafos.backends.pyfftw_bindings import (
     PYFFTW_AVAILABLE, _flag_pyfftw_to_odl, pyfftw_call)
 from odl.trafos.util import (

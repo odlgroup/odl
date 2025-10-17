@@ -122,7 +122,7 @@ def all_equal(iter1, iter2):
 
     # Direct comparison for scalars, tuples or lists
 
-    from odl.set.space import LinearSpaceElement
+    from odl.core.set.space import LinearSpaceElement
 
     if isinstance(iter1, LinearSpaceElement) and isinstance(iter2, LinearSpaceElement):
         return iter1 == iter2
@@ -352,7 +352,7 @@ def noise_array(space):
     --------
     noise_element
     noise_elements
-    odl.set.space.LinearSpace.examples : Examples of elements
+    odl.core.set.space.LinearSpace.examples : Examples of elements
         typical to the space.
     """
     from odl.space import ProductSpace
@@ -412,7 +412,7 @@ def noise_element(space):
     ----------
     space : `LinearSpace`
         Space in which to create an element. The
-        `odl.set.space.LinearSpace.element` method of the space needs to
+        `odl.core.set.space.LinearSpace.element` method of the space needs to
         accept input of `numpy.ndarray` type.
 
     Returns
@@ -430,7 +430,7 @@ def noise_element(space):
     --------
     noise_array
     noise_elements
-    odl.set.space.LinearSpace.examples : Examples of elements typical
+    odl.core.set.space.LinearSpace.examples : Examples of elements typical
         to the space.
     """
     return space.element(noise_array(space))
@@ -456,7 +456,7 @@ def noise_elements(space, n=1):
     ----------
     space : `LinearSpace`
         Space in which to create an element. The
-        `odl.set.space.LinearSpace.element` method of the space needs to
+        `odl.core.set.space.LinearSpace.element` method of the space needs to
         accept input of `numpy.ndarray` type.
     n : int, optional
         Number of elements to create.

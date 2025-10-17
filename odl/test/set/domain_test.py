@@ -13,7 +13,7 @@ import pytest
 
 import odl
 from odl.discr.grid import sparse_meshgrid
-from odl.set.domain import IntervalProd
+from odl.core.set.domain import IntervalProd
 from odl.core.util.testutils import all_equal
 
 

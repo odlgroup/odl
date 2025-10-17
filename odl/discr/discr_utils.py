@@ -22,7 +22,7 @@ from functools import partial
 from itertools import product   
 
 from typing import Callable
-from odl.set.domain import IntervalProd
+from odl.core.set.domain import IntervalProd
 
 import numpy as np
 

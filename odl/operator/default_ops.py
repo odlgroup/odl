@@ -18,8 +18,8 @@ from numbers import Number
 import numpy as np
 
 from odl.operator.operator import Operator
-from odl.set import ComplexNumbers, Field, LinearSpace, RealNumbers
-from odl.set.space import LinearSpaceElement
+from odl.core.set import ComplexNumbers, Field, LinearSpace, RealNumbers
+from odl.core.set.space import LinearSpaceElement
 from odl.space import ProductSpace
 from odl.core.array_API_support import sqrt, conj
 

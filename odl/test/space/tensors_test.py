@@ -15,7 +15,7 @@ import math
 import pytest
 
 import odl
-from odl.set.space import LinearSpaceTypeError
+from odl.core.set.space import LinearSpaceTypeError
 from odl.space.entry_points import TENSOR_SPACE_IMPLS
 from odl.space.npy_tensors import (
     NumpyTensor, NumpyTensorSpace)

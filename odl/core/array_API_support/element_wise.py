@@ -121,7 +121,7 @@ def _apply_element_wise(operation: str, x1, x2=None, out=None, **kwargs):
     """
     # Lazy import of LinearSpaceElement and Operator for dispatching call
     from odl.operator import Operator
-    from odl.set.space import LinearSpaceElement
+    from odl.core.set.space import LinearSpaceElement
     assert not isinstance(x1, Operator) or not isinstance(x2, Operator), f"ODL's array-API support for element-wise functions does not allow ODL Operators"
     if isinstance(x1, LinearSpaceElement):
         return x1.space._elementwise_num_operation(operation=operation, x1=x1, x2=x2, out=out, **kwargs)

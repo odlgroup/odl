@@ -12,7 +12,7 @@ import pytest
 import operator
 
 import odl
-from odl.set.sets import ComplexNumbers, RealNumbers
+from odl.core.set.sets import ComplexNumbers, RealNumbers
 from odl.core.util.testutils import (
     all_equal, all_almost_equal, noise_elements, noise_element, simple_fixture)
 from odl.core.array_API_support.utils import get_array_and_backend

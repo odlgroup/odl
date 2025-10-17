@@ -21,7 +21,7 @@ import numpy as np
 from odl.core.util.npy_compat import AVOID_UNNECESSARY_COPY
 
 from odl.discr.grid import RectGrid, uniform_grid_fromintv
-from odl.set import IntervalProd
+from odl.core.set import IntervalProd
 from odl.core.util import (
     normalized_index_expression, normalized_nodes_on_bdry,
     normalized_scalar_param_list, safe_int_conv,
@@ -193,7 +193,7 @@ class RectPartition(object):
 
         See Also
         --------
-        odl.set.domain.IntervalProd.min
+        odl.core.set.domain.IntervalProd.min
         """
         return self.set.min()
 
@@ -202,7 +202,7 @@ class RectPartition(object):
 
         See Also
         --------
-        odl.set.domain.IntervalProd.max
+        odl.core.set.domain.IntervalProd.max
         """
         return self.set.max()
 
@@ -695,7 +695,7 @@ class RectPartition(object):
         See Also
         --------
         odl.discr.grid.RectGrid.squeeze
-        odl.set.domain.IntervalProd.squeeze
+        odl.core.set.domain.IntervalProd.squeeze
         """
         if axis is None:
             rng = range(self.ndim)

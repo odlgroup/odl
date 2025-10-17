@@ -32,7 +32,7 @@ from odl.operator import (
     PointwiseNorm, MultiplyOperator)
 from odl.space.pspace import ProductSpaceElement
 from odl.space.base_tensors import Tensor
-from odl.set.space import LinearSpace, LinearSpaceElement
+from odl.core.set.space import LinearSpace, LinearSpaceElement
 from odl.core.array_API_support.element_wise import maximum, minimum, abs, divide, sign, square, sqrt, less_equal, logical_not, exp
 from odl.core.array_API_support.statistical import sum
 from odl.core.util.scipy_compatibility import lambertw, scipy_lambertw
