@@ -810,9 +810,9 @@ def test_source_shifts_3d(odl_impl_device_pairs):
     y_ffs = op_ffs(phantom)
     y1 = op1(phantom)
     y2 = op2(phantom)
-    assert odl.all_equal(odl.mean(y_ffs[::2], axis=(1, 2)),
+    assert all_equal(odl.mean(y_ffs[::2], axis=(1, 2)),
                             odl.mean(y1, axis=(1, 2)))
-    assert odl.all_equal(odl.mean(y_ffs[1::2], axis=(1, 2)),
+    assert all_equal(odl.mean(y_ffs[1::2], axis=(1, 2)),
                             odl.mean(y2, axis=(1, 2)))
     im = op_ffs.adjoint(y_ffs).asarray()
     im_combined = (op1.adjoint(y1).asarray() + op2.adjoint(y2).asarray())
