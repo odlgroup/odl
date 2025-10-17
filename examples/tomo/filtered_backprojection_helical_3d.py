@@ -46,7 +46,7 @@ windowed_fbp = fbp * odl.tomo.tam_danielson_window(ray_trafo)
 
 
 # Create a discrete Shepp-Logan phantom (modified version)
-phantom = odl.phantom.shepp_logan(space, modified=True)
+phantom = odl.core.phantom.shepp_logan(space, modified=True)
 
 # Create projection data by calling the ray transform on the phantom
 proj_data = ray_trafo(phantom)

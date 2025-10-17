@@ -29,7 +29,7 @@ def test_astra_cpu_projector_parallel2d(odl_impl_device_pairs):
     impl, device = odl_impl_device_pairs 
     # Create reco space and a phantom
     reco_space = odl.uniform_discr([-4, -5], [4, 5], (4, 5), dtype='float32', impl=impl, device=device)
-    phantom = odl.phantom.cuboid(reco_space, min_pt=[0, 0], max_pt=[4, 5])
+    phantom = odl.core.phantom.cuboid(reco_space, min_pt=[0, 0], max_pt=[4, 5])
 
     # Create parallel geometry
     angle_part = odl.uniform_partition(0, 2 * np.pi, 8)
@@ -61,7 +61,7 @@ def test_astra_cpu_projector_fanflat(odl_impl_device_pairs):
     # Create reco space and a phantom
     impl, device = odl_impl_device_pairs
     reco_space = odl.uniform_discr([-4, -5], [4, 5], (4, 5), dtype='float32', impl=impl, device=device)
-    phantom = odl.phantom.cuboid(reco_space, min_pt=[0, 0], max_pt=[4, 5])
+    phantom = odl.core.phantom.cuboid(reco_space, min_pt=[0, 0], max_pt=[4, 5])
 
     # Create fan beam geometry with flat detector
     angle_part = odl.uniform_partition(0, 2 * np.pi, 8)

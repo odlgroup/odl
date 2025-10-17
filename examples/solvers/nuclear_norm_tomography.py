@@ -50,15 +50,15 @@ forward_op = odl.DiagonalOperator(ray_trafo, 2)
 # information in the  second component.
 # We do this by using a sub-set of the ellipses in the well known Shepp-Logan
 # phantom.
-ellipses = odl.phantom.shepp_logan_ellipsoids(space.ndim, modified=True)
+ellipses = odl.core.phantom.shepp_logan_ellipsoids(space.ndim, modified=True)
 phantom = forward_op.domain.element(
-    [odl.phantom.ellipsoid_phantom(space, ellipses[:2]),
-     odl.phantom.ellipsoid_phantom(space, ellipses)])
+    [odl.core.phantom.ellipsoid_phantom(space, ellipses[:2]),
+     odl.core.phantom.ellipsoid_phantom(space, ellipses)])
 phantom.show('phantom')
 
 # Create data where second channel is highly noisy (SNR = 1)
 data = forward_op(phantom)
-data[1] += odl.phantom.white_noise(forward_op.range[1]) * odl.mean(data[1])
+data[1] += odl.core.phantom.white_noise(forward_op.range[1]) * odl.mean(data[1])
 data.show('data')
 
 # Set up gradient and vectorial gradient

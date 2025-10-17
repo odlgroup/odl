@@ -37,11 +37,11 @@ ray_trafo = odl.tomo.RayTransform(space, geometry)
 
 
 # Create phantom
-discr_phantom = odl.phantom.shepp_logan(space, modified=True)
+discr_phantom = odl.core.phantom.shepp_logan(space, modified=True)
 
 # Create sinogram of forward projected phantom with noise
 data = ray_trafo(discr_phantom)
-data += odl.phantom.white_noise(ray_trafo.range) * odl.mean(data) * 0.1
+data += odl.core.phantom.white_noise(ray_trafo.range) * odl.mean(data) * 0.1
 
 
 # --- Set up the inverse problem --- #

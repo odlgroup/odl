@@ -61,7 +61,7 @@ A = ( PointwiseSquare_PyTorch(domain=space)
     )
 
 # Create phantom, as example input
-phantom = odl.phantom.shepp_logan(phantom_space, modified=True)
+phantom = odl.core.phantom.shepp_logan(phantom_space, modified=True)
 
 torch_input = phantom.data.detach().clone()
 

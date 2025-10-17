@@ -21,8 +21,8 @@ space = odl.uniform_discr(
     min_pt=[-20, -20], max_pt=[20, 20], shape=[300, 300])
 
 # Create phantom
-data = odl.phantom.shepp_logan(space, modified=True)
-data = odl.phantom.salt_pepper_noise(data)
+data = odl.core.phantom.shepp_logan(space, modified=True)
+data = odl.core.phantom.salt_pepper_noise(data)
 
 # Create gradient operator
 grad = odl.Gradient(space)

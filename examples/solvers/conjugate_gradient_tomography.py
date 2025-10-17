@@ -36,11 +36,11 @@ ray_trafo = odl.tomo.RayTransform(reco_space, geometry)
 
 
 # Create phantom
-discr_phantom = odl.phantom.shepp_logan(reco_space, modified=True)
+discr_phantom = odl.core.phantom.shepp_logan(reco_space, modified=True)
 
 # Create sinogram of forward projected phantom with noise
 data = ray_trafo(discr_phantom)
-data += odl.phantom.white_noise(ray_trafo.range) * odl.mean(data) * 0.1
+data += odl.core.phantom.white_noise(ray_trafo.range) * odl.mean(data) * 0.1
 
 # Optionally pass callback to the solver to display intermediate results
 callback = (odl.solvers.CallbackPrintIteration() &

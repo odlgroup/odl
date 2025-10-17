@@ -29,7 +29,7 @@ space = odl.uniform_discr([0, 0], shape, shape)
 orig = space.element(image)
 
 # Add noise
-orig += 0.1 * odl.phantom.white_noise(orig.space)
+orig += 0.1 * odl.core.phantom.white_noise(orig.space)
 
 # Data of noisy image
 noisy = space.element(image)

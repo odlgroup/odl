@@ -350,7 +350,7 @@ def test_gradient(space, method, padding):
     lin_size = 3
     for ndim in [1, 3, 6]:
         space = odl.uniform_discr([0.] * ndim, [1.] * ndim, [lin_size] * ndim)
-        dom_vec = odl.phantom.cuboid(space, [0.2] * ndim, [0.8] * ndim)
+        dom_vec = odl.core.phantom.cuboid(space, [0.2] * ndim, [0.8] * ndim)
 
         grad = Gradient(space, method=method, pad_mode=pad_mode,
                         pad_const=pad_const)

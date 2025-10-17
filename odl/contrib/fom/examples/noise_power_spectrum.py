@@ -10,14 +10,14 @@ space = odl.uniform_discr(
     min_pt=[-20, -20], max_pt=[20, 20], shape=[512, 512])
 
 # Create a discrete Shepp-Logan phantom (modified version)
-phantom = odl.phantom.shepp_logan(space, modified=True)
+phantom = odl.core.phantom.shepp_logan(space, modified=True)
 phantom.show('phantom')
 
 # Create some data with noise
 op = odl.tomo.RayTransform(space,
                            odl.tomo.parallel_beam_geometry(space))
 fbp_op = odl.tomo.fbp_op(op, filter_type='Hann', frequency_scaling=0.5)
-noisy_data = op(phantom) + odl.phantom.white_noise(op.range)
+noisy_data = op(phantom) + odl.core.phantom.white_noise(op.range)
 reconstruction = fbp_op(noisy_data)
 reconstruction.show('reconstruction')
 

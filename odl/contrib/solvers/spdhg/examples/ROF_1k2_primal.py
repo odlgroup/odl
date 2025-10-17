@@ -54,7 +54,7 @@ groundtruth = X.element(image_gray)
 clim = [0, 1]
 
 # create data
-data = odl.phantom.white_noise(X, mean=groundtruth, stddev=0.1, seed=1807)
+data = odl.core.phantom.white_noise(X, mean=groundtruth, stddev=0.1, seed=1807)
 
 # save images and data
 if not os.path.exists('{}/groundtruth.png'.format(folder_main)):

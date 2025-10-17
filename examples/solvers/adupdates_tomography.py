@@ -48,7 +48,7 @@ RANDOM = True         # Choose the oder of the inner iterations at random?
 reco_space = odl.uniform_discr(min_pt=[-40.0, -40.0],
                                max_pt=[40.0, 40.0],
                                shape=[1024, 1024])
-phantom = odl.phantom.shepp_logan(reco_space, modified=True)
+phantom = odl.core.phantom.shepp_logan(reco_space, modified=True)
 
 # Create the forward operators. They correspond to a fully sampled parallel
 # beam geometry.
@@ -74,7 +74,7 @@ else:
 # Create the artificial data.
 data_spaces = [op.range for op in ray_trafos]
 noisefree_data = [op(phantom) for op in ray_trafos]
-data = [proj + 0.10 * np.ptp(proj) * odl.phantom.white_noise(proj.space)
+data = [proj + 0.10 * np.ptp(proj) * odl.core.phantom.white_noise(proj.space)
         for proj in noisefree_data]
 
 # Functionals and operators for the total variation. This is the l1 norm of the

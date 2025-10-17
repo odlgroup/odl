@@ -182,7 +182,7 @@ def test_adjoint(projector):
         rtol = 0.05
 
     # Create Shepp-Logan phantom
-    vol = odl.phantom.shepp_logan(projector.domain, modified=True)
+    vol = odl.core.phantom.shepp_logan(projector.domain, modified=True)
 
     # Calculate projection
     proj = projector(vol)
@@ -198,7 +198,7 @@ def test_adjoint_of_adjoint(projector):
     """Test RayTransform adjoint of adjoint."""
 
     # Create Shepp-Logan phantom
-    vol = odl.phantom.shepp_logan(projector.domain, modified=True)
+    vol = odl.core.phantom.shepp_logan(projector.domain, modified=True)
 
     # Calculate projection
     proj = projector(vol)
@@ -224,7 +224,7 @@ def test_reconstruction(projector):
         pytest.skip('reconstruction with CG is hopeless with so few angles')
 
     # Create Shepp-Logan phantom
-    vol = odl.phantom.shepp_logan(projector.domain, modified=True)
+    vol = odl.core.phantom.shepp_logan(projector.domain, modified=True)
 
     # Project data
     projections = projector(vol)

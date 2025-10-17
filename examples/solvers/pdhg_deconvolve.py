@@ -35,11 +35,11 @@ convolution = ft.inverse * gaussian * ft
 # odl.diagnostics.OperatorTest(conv_op).run_tests()
 
 # Create phantom
-phantom = odl.phantom.shepp_logan(space, modified=True)
+phantom = odl.core.phantom.shepp_logan(space, modified=True)
 
 # Create the convolved version of the phantom
 data = convolution(phantom)
-data += odl.phantom.white_noise(convolution.range) * odl.mean(data) * 0.1
+data += odl.core.phantom.white_noise(convolution.range) * odl.mean(data) * 0.1
 data.show('Convolved Data')
 
 # Set up PDHG:

@@ -56,7 +56,7 @@ ray_trafo = odl.BroadcastOperator(*ray_trafos)
 
 
 # Create phantom
-phantom = odl.phantom.shepp_logan(space, modified=True)
+phantom = odl.core.phantom.shepp_logan(space, modified=True)
 
 # Create sinogram of forward projected phantom with noise
 data = ray_trafo(phantom)

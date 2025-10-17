@@ -24,7 +24,7 @@ img_max_pt = np.array(img_shape, dtype=float) / 2
 img_min_pt = -img_max_pt
 reco_space = odl.uniform_discr(img_min_pt + shift, img_max_pt + shift,
                                img_shape, dtype='float32')
-phantom = odl.phantom.indicate_proj_axis(reco_space)
+phantom = odl.core.phantom.indicate_proj_axis(reco_space)
 
 assert np.allclose(reco_space.cell_sides, 1)
 

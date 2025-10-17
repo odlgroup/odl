@@ -20,8 +20,8 @@ import matplotlib.pyplot as plt
 # Define ground truth, space and noisy data
 shape = [100, 100]
 space = odl.uniform_discr([0, 0], shape, shape)
-orig = odl.phantom.smooth_cuboid(space)
-d = odl.phantom.salt_pepper_noise(orig, fraction=0.2)
+orig = odl.core.phantom.smooth_cuboid(space)
+d = odl.core.phantom.salt_pepper_noise(orig, fraction=0.2)
 
 # Define objective functional
 op = odl.Gradient(space)  # operator

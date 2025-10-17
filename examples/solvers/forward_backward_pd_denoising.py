@@ -22,7 +22,7 @@ space = odl.uniform_discr([0, 0], [n, m], [n, m])
 
 # Create data, noise and noisy data
 data = space.element(image)
-noise = odl.phantom.white_noise(space) * 10.0
+noise = odl.core.phantom.white_noise(space) * 10.0
 noisy_data = data + noise
 data.show('Original Data')
 noisy_data.show('Noisy Nata')

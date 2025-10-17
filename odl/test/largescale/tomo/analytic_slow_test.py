@@ -170,7 +170,7 @@ def test_fbp_reconstruction(projector):
     """Test filtered back-projection with various projectors."""
 
     # Create Shepp-Logan phantom
-    vol = odl.phantom.shepp_logan(projector.domain, modified=False)
+    vol = odl.core.phantom.shepp_logan(projector.domain, modified=False)
 
     # Project data
     projections = projector(vol)
@@ -212,7 +212,7 @@ def test_fbp_reconstruction_filters(filter_type, frequency_scaling, weighting):
     projector = tomo.RayTransform(discr_reco_space, geom, impl='astra_cuda')
 
     # Create Shepp-Logan phantom
-    vol = odl.phantom.shepp_logan(projector.domain, modified=False)
+    vol = odl.core.phantom.shepp_logan(projector.domain, modified=False)
 
     # Project data
     projections = projector(vol)

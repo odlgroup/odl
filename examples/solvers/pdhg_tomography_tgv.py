@@ -47,12 +47,12 @@ A = odl.tomo.RayTransform(U, geometry)
 # --- Generate artificial data --- #
 
 # Create phantom
-phantom = odl.phantom.tgv_phantom(U)
+phantom = odl.core.phantom.tgv_phantom(U)
 phantom.show(title='Phantom')
 
 # Create sinogram of forward projected phantom with noise
 data = A(phantom)
-data += odl.phantom.white_noise(A.range) * odl.mean(data) * 0.1
+data += odl.core.phantom.white_noise(A.range) * odl.mean(data) * 0.1
 
 data.show(title='Simulated Data (Sinogram)')
 

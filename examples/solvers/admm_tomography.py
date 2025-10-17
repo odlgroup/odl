@@ -39,9 +39,9 @@ ray_trafo = odl.tomo.RayTransform(reco_space, geometry)
 # --- Generate artificial data --- #
 
 # Create phantom and noisy projection data
-phantom = odl.phantom.shepp_logan(reco_space, modified=True)
+phantom = odl.core.phantom.shepp_logan(reco_space, modified=True)
 data = ray_trafo(phantom)
-data += odl.phantom.white_noise(ray_trafo.range) * odl.mean(data) * 0.1
+data += odl.core.phantom.white_noise(ray_trafo.range) * odl.mean(data) * 0.1
 
 # --- Set up the inverse problem --- #
 

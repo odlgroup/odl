@@ -21,7 +21,7 @@ ray_transform = odl.tomo.RayTransform(space, geometry,
 recon_op = tomo.elekta_icon_fbp(ray_transform)
 
 # Create simplified phantom
-phantom = odl.phantom.shepp_logan(space, modified=True)
+phantom = odl.core.phantom.shepp_logan(space, modified=True)
 
 # Create artificial data
 projections = ray_transform(phantom)

@@ -27,7 +27,7 @@ import odl
 templ_space = odl.uniform_discr([-1, -1], [1, 1], (100, 100))
 
 # The template is a rectangle of size 1.0 x 0.5
-template = odl.phantom.cuboid(templ_space, [-0.5, -0.25], [0.5, 0.25])
+template = odl.core.phantom.cuboid(templ_space, [-0.5, -0.25], [0.5, 0.25])
 
 # Create a product space for displacement field
 disp_field_space = templ_space.tangent_bundle

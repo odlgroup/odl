@@ -27,7 +27,7 @@ def test_operator(dtype, shape):
 
     op = odl.contrib.pyshearlab.PyShearlabOperator(space, num_scales=2)
 
-    phantom = odl.phantom.shepp_logan(space, True)
+    phantom = odl.core.phantom.shepp_logan(space, True)
 
     # Test evaluation
     y = op(phantom)

@@ -13,7 +13,7 @@ from __future__ import absolute_import, division, print_function
 import numpy as np
 
 from odl.core.discr import DiscretizedSpace
-from odl.phantom.geometric import ellipsoid_phantom
+from odl.core.phantom.geometric import ellipsoid_phantom
 
 __all__ = ('shepp_logan_ellipsoids', 'shepp_logan', 'forbild')
 
@@ -90,7 +90,7 @@ def shepp_logan_ellipsoids(ndim, modified=False):
 
     See Also
     --------
-    odl.phantom.geometric.ellipsoid_phantom :
+    odl.core.phantom.geometric.ellipsoid_phantom :
         Function for creating arbitrary ellipsoids phantoms
     shepp_logan : Create a phantom with these ellipsoids
 
@@ -141,9 +141,9 @@ def shepp_logan(space, modified=False, min_pt=None, max_pt=None):
     See Also
     --------
     forbild : Similar phantom but with more complexity. Only supports 2d.
-    odl.phantom.geometric.defrise : Geometry test phantom
+    odl.core.phantom.geometric.defrise : Geometry test phantom
     shepp_logan_ellipsoids : Get the parameters that define this phantom
-    odl.phantom.geometric.ellipsoid_phantom :
+    odl.core.phantom.geometric.ellipsoid_phantom :
         Function for creating arbitrary ellipsoid phantoms
 
     References

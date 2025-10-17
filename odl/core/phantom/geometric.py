@@ -50,7 +50,7 @@ def cuboid(space, min_pt=None, max_pt=None):
     middle of the space domain and extends halfway towards all sides:
 
     >>> space = odl.uniform_discr([0, 0], [1, 1], [4, 6])
-    >>> odl.phantom.cuboid(space)
+    >>> odl.core.phantom.cuboid(space)
     uniform_discr([ 0.,  0.], [ 1.,  1.], (4, 6)).element(
         [[ 0.,  0.,  0.,  0.,  0.,  0.],
          [ 0.,  1.,  1.,  1.,  1.,  0.],
@@ -61,7 +61,7 @@ def cuboid(space, min_pt=None, max_pt=None):
     By specifying the corners, the cuboid can be arbitrarily placed and
     scaled:
 
-    >>> odl.phantom.cuboid(space, [0.25, 0], [0.75, 0.5])
+    >>> odl.core.phantom.cuboid(space, [0.25, 0], [0.75, 0.5])
     uniform_discr([ 0.,  0.], [ 1.,  1.], (4, 6)).element(
         [[ 0.,  0.,  0.,  0.,  0.,  0.],
          [ 1.,  1.,  1.,  0.,  0.,  0.],
@@ -142,7 +142,7 @@ def defrise(space, nellipses=8, alternating=False, min_pt=None, max_pt=None):
 
     See Also
     --------
-    odl.phantom.transmission.shepp_logan
+    odl.core.phantom.transmission.shepp_logan
     """
     ellipses = defrise_ellipses(space.ndim, nellipses=nellipses,
                                 alternating=alternating)
@@ -165,9 +165,9 @@ def defrise_ellipses(ndim, nellipses=8, alternating=False):
 
     See Also
     --------
-    odl.phantom.geometric.ellipsoid_phantom :
+    odl.core.phantom.geometric.ellipsoid_phantom :
         Function for creating arbitrary ellipsoids phantoms
-    odl.phantom.transmission.shepp_logan_ellipsoids
+    odl.core.phantom.transmission.shepp_logan_ellipsoids
     """
     ellipses = []
     if ndim == 2:
@@ -242,7 +242,7 @@ def indicate_proj_axis(space, scale_structures=0.5):
      [ 0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.]]
 
     >>> space = odl.uniform_discr([0] * 3, [1] * 3, [8, 8, 8])
-    >>> phantom = odl.phantom.indicate_proj_axis(space).asarray()
+    >>> phantom = odl.core.phantom.indicate_proj_axis(space).asarray()
     >>> axis_sum_0 = np.sum(phantom, axis=0)
     >>> print(odl.core.util.array_str(axis_sum_0, nprint=10))
     [[ 0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.],
@@ -665,11 +665,11 @@ def ellipsoid_phantom(space, ellipsoids, min_pt=None, max_pt=None):
 
     See Also
     --------
-    odl.phantom.transmission.shepp_logan : Classical Shepp-Logan phantom,
+    odl.core.phantom.transmission.shepp_logan : Classical Shepp-Logan phantom,
         typically used for transmission imaging
-    odl.phantom.transmission.shepp_logan_ellipsoids : Ellipses for the
+    odl.core.phantom.transmission.shepp_logan_ellipsoids : Ellipses for the
         Shepp-Logan phantom
-    odl.phantom.geometric.defrise_ellipses : Ellipses for the
+    odl.core.phantom.geometric.defrise_ellipses : Ellipses for the
         Defrise phantom
     """
     if space.ndim == 2:

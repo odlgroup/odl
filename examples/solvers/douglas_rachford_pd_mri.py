@@ -26,8 +26,8 @@ sampling_mask = ft.range.element(sampling_points)
 mri_op = sampling_mask @ ft
 
 # Create noisy MRI data
-phantom = odl.phantom.shepp_logan(space, modified=True)
-noisy_data = mri_op(phantom) + odl.phantom.white_noise(mri_op.range) * 0.1
+phantom = odl.core.phantom.shepp_logan(space, modified=True)
+noisy_data = mri_op(phantom) + odl.core.phantom.white_noise(mri_op.range) * 0.1
 phantom.show('Phantom')
 noisy_data.show('Noisy MRI Data')
 

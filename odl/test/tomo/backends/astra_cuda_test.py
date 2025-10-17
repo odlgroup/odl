@@ -86,7 +86,7 @@ def test_astra_cuda_projector(space_and_geometry):
 
     # Create reco space and a phantom
     vol_space, geom = space_and_geometry
-    phantom = odl.phantom.cuboid(vol_space)
+    phantom = odl.core.phantom.cuboid(vol_space)
 
     # Make projection space
     proj_space = odl.uniform_discr_frompartition(

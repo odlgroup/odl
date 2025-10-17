@@ -105,8 +105,8 @@ def test_filter_image_fft(fft_impl):
 
 
 def test_mean_squared_error(space):
-    true = odl.phantom.white_noise(space)
-    data = odl.phantom.white_noise(space)
+    true = odl.core.phantom.white_noise(space)
+    data = odl.core.phantom.white_noise(space)
 
     result = fom.mean_squared_error(data, true)
     expected = np.mean((true - data) ** 2)
@@ -115,8 +115,8 @@ def test_mean_squared_error(space):
 
 
 def test_mean_absolute_error(space):
-    true = odl.phantom.white_noise(space)
-    data = odl.phantom.white_noise(space)
+    true = odl.core.phantom.white_noise(space)
+    data = odl.core.phantom.white_noise(space)
 
     result = fom.mean_absolute_error(data, true)
     expected = np.mean(np.abs(true - data))
@@ -126,8 +126,8 @@ def test_mean_absolute_error(space):
 
 def test_psnr(space):
     """Test the ``psnr`` fom."""
-    true = odl.phantom.white_noise(space)
-    data = odl.phantom.white_noise(space)
+    true = odl.core.phantom.white_noise(space)
+    data = odl.core.phantom.white_noise(space)
     zero = space.zero()
 
     # Check the corner cases
@@ -159,7 +159,7 @@ def test_psnr(space):
 
 
 def test_ssim(space):
-    ground_truth = odl.phantom.white_noise(space)
+    ground_truth = odl.core.phantom.white_noise(space)
 
     # SSIM of true image should be either
     # * 1 with force_lower_is_better == False,
@@ -181,7 +181,7 @@ def test_ssim(space):
 
     # SSIM with ground truth zero should always give zero if not normalized
     # and 1/2 otherwise.
-    data = odl.phantom.white_noise(space)
+    data = odl.core.phantom.white_noise(space)
 
     result = fom.ssim(data, space.zero())
     assert result == pytest.approx(0)

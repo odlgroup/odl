@@ -56,7 +56,7 @@ geometry = odl.tomo.Parallel2dGeometry(angle_partition, detector_partition)
 ray_trafo = odl.tomo.RayTransform(space, geometry)
 
 # Create sinogram
-phantom = odl.phantom.shepp_logan(space, modified=True)
+phantom = odl.core.phantom.shepp_logan(space, modified=True)
 data = ray_trafo(phantom)
 
 # --- Create functionals for solving the optimization problem ---
@@ -86,7 +86,7 @@ elif data_matching == 'inexact':
     eps = 5.0
 
     # Add noise to data
-    raw_noise = odl.phantom.white_noise(ray_trafo.range)
+    raw_noise = odl.core.phantom.white_noise(ray_trafo.range)
     data += raw_noise * eps / raw_noise.norm()
 
     # Create indicator

@@ -11,7 +11,7 @@ space = odl.uniform_discr([-1, -1], [1, 1], (256, 256))
 wavelet_op = odl.trafos.WaveletTransform(space, wavelet='Haar', nlevels=2)
 
 # Create a phantom and its wavelet transfrom and display them.
-phantom = odl.phantom.shepp_logan(space, modified=True)
+phantom = odl.core.phantom.shepp_logan(space, modified=True)
 phantom.show(title='Shepp-Logan Phantom')
 
 # Note that the wavelet transform is a vector in rn.

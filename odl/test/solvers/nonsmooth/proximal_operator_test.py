@@ -518,12 +518,12 @@ def test_proximal_arg_scaling():
     x = space.one()
 
     # Set the scaling parameters.
-    for alpha in [2, odl.phantom.noise.uniform_noise(space, 1, 10)]:
+    for alpha in [2, odl.core.phantom.noise.uniform_noise(space, 1, 10)]:
         # Scale the proximal factories
         prox_scaled = odl.solvers.proximal_arg_scaling(prox_factory, alpha)
 
         # Set the step size.
-        for sigma in [2, odl.phantom.noise.uniform_noise(space, 1, 10)]:
+        for sigma in [2, odl.core.phantom.noise.uniform_noise(space, 1, 10)]:
             # Evaluation of the proximals
             p = prox_scaled(sigma)(x)
 

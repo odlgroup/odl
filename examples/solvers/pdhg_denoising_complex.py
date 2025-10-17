@@ -30,7 +30,7 @@ space = odl.uniform_discr([0, 0], shape, shape, dtype='complex64')
 orig = space.element(image)
 
 # Add noise
-noisy = orig + 0.05 * odl.phantom.white_noise(orig.space)
+noisy = orig + 0.05 * odl.core.phantom.white_noise(orig.space)
 
 # Gradient operator
 gradient = odl.Gradient(space)

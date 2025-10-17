@@ -2600,7 +2600,7 @@ class Huber(Functional):
 
         Compare Huber- and L1-norm for vanishing smoothing ``gamma=0``:
 
-        >>> x = odl.phantom.white_noise(space)
+        >>> x = odl.core.phantom.white_noise(space)
         >>> huber_norm = odl.solvers.Huber(space, gamma=0)
         >>> l1_norm = odl.solvers.L1Norm(space)
         >>> abs(huber_norm(x) - l1_norm(x)) < tol
@@ -2610,7 +2610,7 @@ class Huber(Functional):
 
         >>> domain = odl.uniform_discr([0, 0], [1, 1], [5, 5])
         >>> space = odl.ProductSpace(domain, 2)
-        >>> x = odl.phantom.white_noise(space)
+        >>> x = odl.core.phantom.white_noise(space)
         >>> huber_norm = odl.solvers.Huber(space, gamma=0)
         >>> l1_norm = odl.solvers.GroupL1Norm(space, 2)
         >>> abs(huber_norm(x) - l1_norm(x)) < tol
@@ -2691,7 +2691,7 @@ class Huber(Functional):
 
         >>> space = odl.uniform_discr(0, 1, 14)
         >>> norm_one = space.one().norm()
-        >>> x = odl.phantom.white_noise(space)
+        >>> x = odl.core.phantom.white_noise(space)
         >>> huber_norm = odl.solvers.Huber(space, gamma=0.1)
         >>> grad = huber_norm.gradient(x)
         >>> tol = 1e-5
@@ -2703,7 +2703,7 @@ class Huber(Functional):
         >>> domain = odl.uniform_discr([0, 0], [1, 1], [5, 5])
         >>> space = odl.ProductSpace(domain, 2)
         >>> norm_one = space.one().norm()
-        >>> x = odl.phantom.white_noise(space)
+        >>> x = odl.core.phantom.white_noise(space)
         >>> huber_norm = odl.solvers.Huber(space, gamma=0.2)
         >>> grad = huber_norm.gradient(x)
         >>> tol = 1e-5

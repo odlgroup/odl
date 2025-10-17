@@ -270,7 +270,7 @@ if __name__ == '__main__':
     white_noise(discr).show('white_noise 2d')
     uniform_noise(discr).show('uniform_noise 2d')
 
-    vector = odl.phantom.shepp_logan(discr, modified=True)
+    vector = odl.core.phantom.shepp_logan(discr, modified=True)
     poisson_noise(vector * 100).show('poisson_noise 2d')
     salt_pepper_noise(vector).show('salt_pepper_noise 2d')
 

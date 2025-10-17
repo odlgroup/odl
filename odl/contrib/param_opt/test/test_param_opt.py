@@ -27,7 +27,7 @@ fom = simple_fixture('fom',
 
 def test_optimal_parameters_one_parameter(space, fom):
     """Tests if optimal_parameters works for some simple examples."""
-    noise = [odl.phantom.white_noise(space) for _ in range(2)]
+    noise = [odl.core.phantom.white_noise(space) for _ in range(2)]
     phantoms = noise.copy()
     data = noise.copy()
 
@@ -45,7 +45,7 @@ def test_optimal_parameters_one_parameter(space, fom):
 
 def test_optimal_parameters_two_parameters(space, fom):
     """Tests if optimal_parameters works for some simple examples."""
-    noise = [odl.phantom.white_noise(space) for _ in range(2)]
+    noise = [odl.core.phantom.white_noise(space) for _ in range(2)]
     # Normalize to reduce test fails due to randomness
     noise = [noise_elem / noise_elem.norm() for noise_elem in noise]
     phantoms = noise.copy()

@@ -31,15 +31,15 @@ geometry = odl.tomo.parallel_beam_geometry(space)
 ray_trafo = odl.tomo.RayTransform(space, geometry)
 
 # Define true phantoms
-phantoms = [odl.phantom.shepp_logan(space, modified=True),
-            odl.phantom.derenzo_sources(space)]
+phantoms = [odl.core.phantom.shepp_logan(space, modified=True),
+            odl.core.phantom.derenzo_sources(space)]
 
 # Define noisy data
 data = []
 for phantom in phantoms:
     noiseless_data = ray_trafo(phantom)
     noise_scale = (1 / signal_to_noise) * np.mean(noiseless_data)
-    noise = noise_scale * odl.phantom.white_noise(ray_trafo.range)
+    noise = noise_scale * odl.core.phantom.white_noise(ray_trafo.range)
     noisy_data = noiseless_data + noise
     data.append(noisy_data)
 

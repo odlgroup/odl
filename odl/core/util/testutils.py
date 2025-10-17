@@ -328,7 +328,7 @@ def noise_array(space):
     Notes
     -----
     This method is intended for internal testing purposes. For more explicit
-    example elements see ``odl.phantoms`` and ``LinearSpaceElement.examples``.
+    example elements see ``odl.core.phantoms`` and ``LinearSpaceElement.examples``.
 
     Parameters
     ----------
@@ -406,7 +406,7 @@ def noise_element(space):
     Notes
     -----
     This method is intended for internal testing purposes. For more explicit
-    example elements see ``odl.phantoms`` and ``LinearSpaceElement.examples``.
+    example elements see ``odl.core.phantoms`` and ``LinearSpaceElement.examples``.
 
     Parameters
     ----------
@@ -450,7 +450,7 @@ def noise_elements(space, n=1):
     Notes
     -----
     This method is intended for internal testing purposes. For more explicit
-    example elements see ``odl.phantoms`` and ``LinearSpaceElement.examples``.
+    example elements see ``odl.core.phantoms`` and ``LinearSpaceElement.examples``.
 
     Parameters
     ----------

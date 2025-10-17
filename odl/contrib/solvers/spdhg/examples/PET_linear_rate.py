@@ -88,7 +88,7 @@ if not os.path.exists(file_data):
          for sino_support in sinogram_support])
     background = 10 * smoothed_support + 10
     background *= counts_background / background.ufuncs.sum()
-    data = odl.phantom.poisson_noise(factors * sinogram + background,
+    data = odl.core.phantom.poisson_noise(factors * sinogram + background,
                                      seed=1807)
 
     arr = np.empty(3, dtype=object)

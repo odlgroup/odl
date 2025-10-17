@@ -22,9 +22,9 @@ ray_transform = odl.tomo.RayTransform(space, geometry)
 grad = odl.Gradient(space)
 
 # Create data
-phantom = odl.phantom.shepp_logan(space, True)
+phantom = odl.core.phantom.shepp_logan(space, True)
 data = ray_transform(phantom)
-noisy_data = data + odl.phantom.white_noise(data.space)
+noisy_data = data + odl.core.phantom.white_noise(data.space)
 
 # Create tensorflow layers from odl core.operators
 ray_transform_layer = odl.contrib.tensorflow.as_tensorflow_layer(

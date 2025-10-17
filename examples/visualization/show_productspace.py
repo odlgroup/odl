@@ -11,7 +11,7 @@ pspace = odl.ProductSpace(space, m)
 # Making a product space element where each component consists of a
 # Shepp-Logan phantom multiplied by the constant i, where i is the
 # index of the product space component.
-elem = pspace.element([odl.phantom.shepp_logan(space, modified=True) * i
+elem = pspace.element([odl.core.phantom.shepp_logan(space, modified=True) * i
                        for i in range(m)])
 
 # By default 4 uniformly spaced elements are shown. Since there are 7 in

@@ -42,13 +42,13 @@ class Convolution(odl.Operator):
 space = odl.uniform_discr([-1, -1], [1, 1], [100, 100])
 
 # Convolution kernel, a small centered rectangle
-kernel = odl.phantom.cuboid(space, [-0.05, -0.05], [0.05, 0.05])
+kernel = odl.core.phantom.cuboid(space, [-0.05, -0.05], [0.05, 0.05])
 
 # Create convolution operator
 A = Convolution(kernel)
 
 # Create phantom (the "unknown" solution)
-phantom = odl.phantom.shepp_logan(space, modified=True)
+phantom = odl.core.phantom.shepp_logan(space, modified=True)
 
 # Apply convolution to phantom to create data
 g = A(phantom)

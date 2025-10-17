@@ -36,7 +36,7 @@ shape = image.shape
 image /= image.max()
 space = odl.uniform_discr([0, 0], shape, shape)
 orig = space.element(image.copy())
-d = odl.phantom.white_noise(space, orig, 0.1)
+d = odl.core.phantom.white_noise(space, orig, 0.1)
 
 # Define objective functional
 op = odl.Gradient(space)  # operator

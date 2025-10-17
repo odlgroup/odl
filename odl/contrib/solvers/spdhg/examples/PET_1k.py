@@ -87,7 +87,7 @@ if not os.path.exists(file_data):
                              for s in sino_supp])
     background = 10 * smooth_supp + 10
     background *= counts_background / background.ufuncs.sum()
-    data = odl.phantom.poisson_noise(factors * sino + background, seed=1807)
+    data = odl.core.phantom.poisson_noise(factors * sino + background, seed=1807)
 
     arr = np.empty(3, dtype=object)
     arr[0] = data

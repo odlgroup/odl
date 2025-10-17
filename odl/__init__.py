@@ -66,7 +66,7 @@ from .core.space import *
 from . import contrib
 from . import deform
 from . import diagnostics
-from . import phantom
+from .core import phantom
 from . import solvers
 from . import tomo
 from . import trafos

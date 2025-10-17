@@ -26,7 +26,7 @@ vol_max_pt = np.array(vol_shape, dtype=float) / 2
 vol_min_pt = -vol_max_pt
 reco_space = odl.uniform_discr(vol_min_pt + shift, vol_max_pt + shift,
                                vol_shape, dtype='float32')
-phantom = odl.phantom.indicate_proj_axis(reco_space)
+phantom = odl.core.phantom.indicate_proj_axis(reco_space)
 
 assert np.allclose(reco_space.cell_sides, 1)
 

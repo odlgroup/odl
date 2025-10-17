@@ -44,8 +44,8 @@ fbp = odl.tomo.fbp_op(ray_trafo)
 
 
 # Create a discrete Shepp-Logan phantom (modified version)
-phantom = (odl.phantom.shepp_logan(reco_space, modified=True) +
-           1j * odl.phantom.cuboid(reco_space))
+phantom = (odl.core.phantom.shepp_logan(reco_space, modified=True) +
+           1j * odl.core.phantom.cuboid(reco_space))
 
 # Create projection data by calling the ray transform on the phantom
 proj_data = ray_trafo(phantom)

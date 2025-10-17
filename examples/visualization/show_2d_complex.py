@@ -9,5 +9,5 @@ issues with this example.
 import odl
 
 space = odl.uniform_discr([0, 0], [1, 1], [100, 100], dtype=complex)
-phantom = odl.phantom.shepp_logan(space, modified=True) * (1 + 0.5j)
+phantom = odl.core.phantom.shepp_logan(space, modified=True) * (1 + 0.5j)
 phantom.show(force_show=True)

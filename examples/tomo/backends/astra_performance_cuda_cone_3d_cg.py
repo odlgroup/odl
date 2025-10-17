@@ -34,7 +34,7 @@ geometry = odl.tomo.ConeBeamGeometry(apart, dpart,
                                      src_radius=500, det_radius=500)
 
 
-phantom = odl.phantom.shepp_logan(reco_space, modified=True).asarray()
+phantom = odl.core.phantom.shepp_logan(reco_space, modified=True).asarray()
 
 # --- ASTRA ---
 

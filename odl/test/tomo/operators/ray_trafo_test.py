@@ -269,7 +269,7 @@ def test_adjoint(projector):
         rtol = 0.05
 
     # Create Shepp-Logan phantom
-    vol = odl.phantom.shepp_logan(projector.domain, modified=True)
+    vol = odl.core.phantom.shepp_logan(projector.domain, modified=True)
 
     # Calculate projection
     proj = projector(vol)
@@ -285,7 +285,7 @@ def test_adjoint_of_adjoint(projector):
     """Test Ray transform adjoint of adjoint."""
 
     # Create Shepp-Logan phantom
-    vol = odl.phantom.shepp_logan(projector.domain, modified=True)
+    vol = odl.core.phantom.shepp_logan(projector.domain, modified=True)
 
     # Calculate projection
     proj = projector(vol)
@@ -366,8 +366,8 @@ def test_complex(impl, odl_impl_device_pairs):
     
     ray_trafo_c = odl.tomo.RayTransform(space_c, geom, impl=impl)
     ray_trafo_r = odl.tomo.RayTransform(space_r, geom, impl=impl)
-    vol = odl.phantom.shepp_logan(space_c)
-    vol.imag = odl.phantom.cuboid(space_r)
+    vol = odl.core.phantom.shepp_logan(space_c)
+    vol.imag = odl.core.phantom.cuboid(space_r)
 
     data = ray_trafo_c(vol)
     true_data_re = ray_trafo_r(vol.real)
@@ -538,7 +538,7 @@ def test_detector_shifts_2d(impl, odl_impl_device_pairs):
     d = 10
     space = odl.uniform_discr([-1] * 2, [1] * 2, [d] * 2, dtype='float32', impl=tspace_impl, device=device)
     ns = space.array_namespace
-    phantom = odl.phantom.cuboid(space, [-1 / 3] * 2, [1 / 3] * 2)
+    phantom = odl.core.phantom.cuboid(space, [-1 / 3] * 2, [1 / 3] * 2)
 
     full_angle = 2 * np.pi
     n_angles = 2 * 10
@@ -600,7 +600,7 @@ def test_source_shifts_2d(odl_impl_device_pairs):
     d = 10
     space = odl.uniform_discr([-1] * 2, [1] * 2, [d] * 2, dtype='float32', impl=tspace_impl, device=device)
     ns = space.array_namespace
-    phantom = odl.phantom.cuboid(space, [-1 / 3] * 2, [1 / 3] * 2)
+    phantom = odl.core.phantom.cuboid(space, [-1 / 3] * 2, [1 / 3] * 2)
 
     full_angle = 2 * np.pi
     n_angles = 2 * 10
@@ -681,7 +681,7 @@ def test_detector_shifts_3d(impl, odl_impl_device_pairs):
     d = 100
     space = odl.uniform_discr([-1] * 3, [1] * 3, [d] * 3, dtype='float32', impl=tspace_impl, device=device)
     ns = space.array_namespace
-    phantom = odl.phantom.cuboid(space, [-1 / 3] * 3, [1 / 3] * 3)
+    phantom = odl.core.phantom.cuboid(space, [-1 / 3] * 3, [1 / 3] * 3)
 
     full_angle = 2 * np.pi
     n_angles = 2 * 100
@@ -738,7 +738,7 @@ def test_source_shifts_3d(odl_impl_device_pairs):
     d = 10
     space = odl.uniform_discr([-1] * 3, [1] * 3, [d] * 3, dtype='float32', impl=impl, device=device)
     ns = space.array_namespace
-    phantom = odl.phantom.cuboid(space, [-1 / 3] * 3, [1 / 3] * 3)
+    phantom = odl.core.phantom.cuboid(space, [-1 / 3] * 3, [1 / 3] * 3)
 
     full_angle = 2 * np.pi
     n_angles = 2 * 10

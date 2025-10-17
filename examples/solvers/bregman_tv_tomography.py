@@ -52,9 +52,9 @@ geometry = odl.tomo.parallel_beam_geometry(reco_space, num_angles=100)
 ray_trafo = odl.tomo.RayTransform(reco_space, geometry)
 
 # Create phantom, forward project to create sinograms, and add 10% noise
-discr_phantom = odl.phantom.shepp_logan(reco_space, modified=True)
+discr_phantom = odl.core.phantom.shepp_logan(reco_space, modified=True)
 noise_free_data = ray_trafo(discr_phantom)
-noise = odl.phantom.white_noise(ray_trafo.range)
+noise = odl.core.phantom.white_noise(ray_trafo.range)
 noise *= 0.10 / noise.norm() * noise_free_data.norm()
 data = noise_free_data + noise
 

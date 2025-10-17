@@ -9,7 +9,7 @@ issues with this example.
 import odl
 
 space = odl.uniform_discr([0, 0], [1, 1], [100, 100])
-phantom = odl.phantom.shepp_logan(space, modified=True)
+phantom = odl.core.phantom.shepp_logan(space, modified=True)
 
 # Show all data
 phantom.show()

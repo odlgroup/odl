@@ -73,7 +73,7 @@ Y = A.range
 
 # create data
 background = 200 * Y[2].one()
-data = odl.phantom.poisson_noise(A[2](groundtruth) + background, seed=1807)
+data = odl.core.phantom.poisson_noise(A[2](groundtruth) + background, seed=1807)
 
 # save images and data
 if not os.path.exists('{}/groundtruth.png'.format(folder_main)):
@@ -102,7 +102,7 @@ file_target = '{}/target.npy'.format(folder_main)
 if not os.path.exists(file_target):
 
     # compute norm of operator
-    normA = tol_norm * A.norm(estimate=True, xstart=odl.phantom.white_noise(X))
+    normA = tol_norm * A.norm(estimate=True, xstart=odl.core.phantom.white_noise(X))
 
     sigma, tau = [gamma / normA] * 2  # set step size parameters
     x_opt, y_opt = X.zero(), Y.zero()  # initialise variables
@@ -200,7 +200,7 @@ for alg in ['pdhg', 'da_pdhg', 'da_spdhg_uni3']:
         file_normA = '{}/norms_{}subsets.npy'.format(folder_main, 1)
 
         if not os.path.exists(file_normA):
-            xstart = odl.phantom.white_noise(X)
+            xstart = odl.core.phantom.white_noise(X)
 
             norm_estimate = A.norm(estimate=True, xstart=xstart)
             normA = [tol_norm * norm_estimate]
@@ -214,7 +214,7 @@ for alg in ['pdhg', 'da_pdhg', 'da_spdhg_uni3']:
         file_normA = '{}/norms_{}subsets.npy'.format(folder_main, n)
 
         if not os.path.exists(file_normA):
-            xstart = odl.phantom.white_noise(X)
+            xstart = odl.core.phantom.white_noise(X)
 
             norm_estimate = A[2].norm(estimate=True, xstart=xstart)
             normA = [2, 2, tol_norm * norm_estimate]

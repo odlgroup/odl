@@ -10,8 +10,8 @@
 
 from __future__ import absolute_import, division, print_function
 
-from odl.phantom.geometric import ellipsoid_phantom
-from odl.phantom.phantom_utils import cylinders_from_ellipses
+from odl.core.phantom.geometric import ellipsoid_phantom
+from odl.core.phantom.phantom_utils import cylinders_from_ellipses
 
 __all__ = ('derenzo_sources',)
 
